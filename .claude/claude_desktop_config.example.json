@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "wms-dev-accelerator": {
+      "command": "node",
+      "args": [
+        "REPLACE_WITH_FULL_PATH_TO\\tools\\mcp-server\\dist\\index.js"
+      ],
+      "env": {
+        "WMS_WORKSPACE_ROOT": "REPLACE_WITH_FULL_PATH_TO_PROJECT"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "REPLACE_WITH_FULL_PATH_TO_PROJECT"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "REPLACE_WITH_YOUR_GITHUB_TOKEN"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://user:password@localhost:5432/wms"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "REPLACE_WITH_YOUR_BRAVE_API_KEY"
+      }
+    }
+  }
+}
