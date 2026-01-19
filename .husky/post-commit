@@ -1,0 +1,12 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Auto-push to GitHub after each verified commit
+# This hook runs after a commit is made
+
+echo "🚀 Auto-pushing to GitHub..."
+
+# Push to origin with the current branch
+git push origin HEAD
+
+echo "✅ Pushed to GitHub successfully"
