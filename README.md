@@ -14,6 +14,8 @@ A production-ready WMS built with clean architecture principles, featuring real-
 
 **Setting up MCP servers?** See [MCP_SETUP.md](MCP_SETUP.md) for custom AI tools
 
+**Working as a team?** See [TEAM_COLLABORATION.md](TEAM_COLLABORATION.md) for safe workflow
+
 **Team collaboration?** See [TEAM_OPERATIONS.md](TEAM_OPERATIONS.md)
 
 **Advanced AI features?** See [ENHANCEMENTS_SUMMARY.md](ENHANCEMENTS_SUMMARY.md) 🚀
@@ -306,9 +308,20 @@ npm run test:e2e
 
 ---
 
+## Team Repository
+
+**Repository**: https://github.com/opsui/opsui-wmsv2
+
+This is a team repository with automatic synchronization. See [TEAM_COLLABORATION.md](TEAM_COLLABORATION.md) for working safely with multiple team members.
+
 ## Auto-Push Configuration
 
-This repository is configured to automatically push to GitHub after every commit. The post-commit hook in `.husky/post-commit` ensures all changes are synced to [https://github.com/HeinrichtSmith/opsui-wmsv2](https://github.com/HeinrichtSmith/opsui-wmsv2) whenever a commit is made by Cline, GLM, or Claude Code.
+This repository is configured to automatically push to GitHub after every commit with team-safe safeguards:
+- Pulls latest changes before pushing
+- Detects and prevents merge conflicts
+- Only pushes when it's safe to do so
+
+The post-commit hook in `.husky/post-commit` ensures all changes are synced to the team repository whenever a commit is made by Cline, GLM, or Claude Code.
 
 ## License
 

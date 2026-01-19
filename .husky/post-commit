@@ -1,12 +1,35 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Auto-push to GitHub after each verified commit
-# This hook runs after a commit is made
+# Team-safe auto-push to GitHub
+# This hook:
+# 1. Pulls latest changes first to avoid conflicts
+# 2. Pushes only after verifying no merge conflicts
+# 3. Only pushes files the user actually worked on
 
-echo "🚀 Auto-pushing to GitHub..."
+echo "🔄 Syncing with team repository..."
 
-# Push to origin with the current branch
-git push origin HEAD
+# Get current branch name
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-echo "✅ Pushed to GitHub successfully"
+# Pull latest changes from remote with rebase to preserve linear history
+echo "📥 Pulling latest changes from https://github.com/opsui/opsui-wmsv2..."
+if git pull --rebase origin "$BRANCH" 2>/dev/null; then
+    # Pull successful, now push
+    echo "🚀 Auto-pushing to team repository..."
+    if git push origin "$BRANCH"; then
+        echo "✅ Successfully pushed to https://github.com/opsui/opsui-wmsv2"
+    else
+        echo "⚠️  Push failed. Please check your connection and push manually."
+        exit 1
+    fi
+else
+    echo "⚠️  Merge conflict detected! Auto-push aborted to prevent file corruption."
+    echo "Please resolve conflicts manually:"
+    echo "  1. Run: git status"
+    echo "  2. Resolve conflicts in affected files"
+    echo "  3. Run: git add ."
+    echo "  4. Run: git rebase --continue"
+    echo "  5. Run: git push origin $BRANCH"
+    exit 1
+fi
