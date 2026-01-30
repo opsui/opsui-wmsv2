@@ -172,7 +172,6 @@ export class ShippingService {
     // Get orders
     const result = await client.query(
       `SELECT
-        o.id,
         o.order_id,
         o.customer_name,
         o.status,
@@ -194,7 +193,7 @@ export class ShippingService {
     );
 
     const orders = result.rows.map(row => ({
-      id: row.id,
+      id: row.order_id,
       orderId: row.order_id,
       customerName: row.customer_name || 'N/A',
       status: row.status,
