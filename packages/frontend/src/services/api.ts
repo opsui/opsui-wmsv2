@@ -1229,6 +1229,53 @@ export const usePackerOrders = (packerId: string, enabled: boolean = true) => {
   });
 };
 
+// ============================================================================
+// SHIPPED ORDERS
+// ============================================================================
+
+export interface ShippedOrdersFilters {
+  page?: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  carrier?: string;
+  search?: string;
+  sortBy?: 'shippedAt' | 'customerName' | 'totalValue';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export const useShippedOrders = (filters: ShippedOrdersFilters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.page) params.append('page', filters.page.toString());
+  if (filters.limit) params.append('limit', filters.limit.toString());
+  if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+  if (filters.dateTo) params.append('dateTo', filters.dateTo);
+  if (filters.carrier) params.append('carrier', filters.carrier);
+  if (filters.search) params.append('search', filters.search);
+  if (filters.sortBy) params.append('sortBy', filters.sortBy);
+  if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+
+  return useQuery({
+    queryKey: ['orders', 'shipped', filters],
+    queryFn: () => apiClient.get(`/orders/shipped?${params}`),
+    staleTime: 30000, // Cache for 30 seconds
+  });
+};
+
+export const useExportShippedOrders = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderIds: string[]) => {
+      const response = await apiClient.post('/orders/shipped/export', { orderIds });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['orders', 'shipped']);
+    },
+  });
+};
+
 export const useStockControllerActivity = (
   options?: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>
 ) => {

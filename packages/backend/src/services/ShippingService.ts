@@ -70,6 +70,240 @@ export class ShippingService {
   }
 
   // ==========================================================================
+  // SHIPPED ORDERS METHODS
+  // ==========================================================================
+
+  /**
+   * Get all shipped orders with filters and pagination
+   */
+  async getShippedOrders(filters?: {
+    status?: string;
+    carrierId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    orders: Array<{
+      id: string;
+      orderId: string;
+      customerName: string;
+      status: string;
+      priority: string;
+      itemCount: number;
+      totalValue: number;
+      shippedAt: string;
+      deliveredAt?: string;
+      trackingNumber?: string;
+      carrier?: string;
+      shippingAddress: string;
+      shippedBy: string;
+    }>;
+    stats: {
+      totalShipped: number;
+      totalValue: number;
+      delivered: number;
+      pendingDelivery: number;
+    };
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const client = await getPool();
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 20;
+    const offset = (page - 1) * limit;
+
+    // Build WHERE conditions
+    const conditions: string[] = ["o.status = 'SHIPPED'"];
+    const params: any[] = [];
+    let paramCount = 1;
+
+    if (filters?.carrierId) {
+      conditions.push(`s.carrier_id = $${paramCount}`);
+      params.push(filters.carrierId);
+      paramCount++;
+    }
+
+    if (filters?.startDate) {
+      conditions.push(`s.shipped_at >= $${paramCount}`);
+      params.push(filters.startDate);
+      paramCount++;
+    }
+
+    if (filters?.endDate) {
+      conditions.push(`s.shipped_at <= $${paramCount}`);
+      params.push(filters.endDate);
+      paramCount++;
+    }
+
+    if (filters?.search) {
+      conditions.push(`(
+        o.order_id ILIKE $${paramCount} OR
+        s.tracking_number ILIKE $${paramCount} OR
+        s.ship_to_address::text ILIKE $${paramCount}
+      )`);
+      params.push(`%${filters.search}%`);
+      paramCount++;
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Build ORDER BY clause
+    const sortBy = filters?.sortBy || 'shipped_at';
+    const sortOrder = filters?.sortOrder || 'desc';
+    const orderBy = `${sortBy} ${sortOrder.toUpperCase()}`;
+
+    // Get total count
+    const countResult = await client.query(
+      `SELECT COUNT(*) as count
+       FROM orders o
+       LEFT JOIN shipments s ON o.order_id = s.order_id
+       WHERE ${whereClause}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].count, 10);
+    const totalPages = Math.ceil(total / limit);
+
+    // Get orders
+    const result = await client.query(
+      `SELECT
+        o.id,
+        o.order_id,
+        o.customer_name,
+        o.status,
+        o.priority,
+        o.item_count,
+        o.total_value,
+        s.shipped_at,
+        s.delivered_at,
+        s.tracking_number,
+        s.carrier_id,
+        s.ship_to_address,
+        s.shipped_by
+       FROM orders o
+       LEFT JOIN shipments s ON o.order_id = s.order_id
+       WHERE ${whereClause}
+       ORDER BY ${orderBy}
+       LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
+      [...params, limit, offset]
+    );
+
+    const orders = result.rows.map(row => ({
+      id: row.id,
+      orderId: row.order_id,
+      customerName: row.customer_name || 'N/A',
+      status: row.status,
+      priority: row.priority,
+      itemCount: parseInt(row.item_count, 10),
+      totalValue: parseFloat(row.total_value) || 0,
+      shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : new Date().toISOString(),
+      deliveredAt: row.delivered_at ? new Date(row.delivered_at).toISOString() : undefined,
+      trackingNumber: row.tracking_number,
+      carrier: row.carrier_id,
+      shippingAddress: typeof row.ship_to_address === 'string'
+        ? row.ship_to_address
+        : JSON.stringify(row.ship_to_address),
+      shippedBy: row.shipped_by || 'System',
+    }));
+
+    // Get stats
+    const statsResult = await client.query(
+      `SELECT
+        COUNT(*) as total_shipped,
+        COALESCE(SUM(o.total_value), 0) as total_value,
+        COUNT(*) FILTER (WHERE s.delivered_at IS NOT NULL) as delivered,
+        COUNT(*) FILTER (WHERE s.delivered_at IS NULL) as pending_delivery
+       FROM orders o
+       LEFT JOIN shipments s ON o.order_id = s.order_id
+       WHERE o.status = 'SHIPPED'`
+    );
+
+    const stats = {
+      totalShipped: parseInt(statsResult.rows[0].total_shipped, 10),
+      totalValue: parseFloat(statsResult.rows[0].total_value) || 0,
+      delivered: parseInt(statsResult.rows[0].delivered, 10),
+      pendingDelivery: parseInt(statsResult.rows[0].pending_delivery, 10),
+    };
+
+    return {
+      orders,
+      stats,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  /**
+   * Export shipped orders to CSV
+   */
+  async exportShippedOrdersToCSV(orderIds: string[]): Promise<string> {
+    const client = await getPool();
+
+    const result = await client.query(
+      `SELECT
+        o.order_id,
+        o.customer_name,
+        o.status,
+        o.priority,
+        o.item_count,
+        o.total_value,
+        s.shipped_at,
+        s.delivered_at,
+        s.tracking_number,
+        s.carrier_id,
+        s.ship_to_address,
+        s.shipped_by
+       FROM orders o
+       LEFT JOIN shipments s ON o.order_id = s.order_id
+       WHERE o.order_id = ANY($1)
+       ORDER BY s.shipped_at DESC`,
+      [orderIds]
+    );
+
+    // Build CSV
+    const headers = [
+      'Order ID',
+      'Customer Name',
+      'Status',
+      'Priority',
+      'Item Count',
+      'Total Value',
+      'Shipped At',
+      'Delivered At',
+      'Tracking Number',
+      'Carrier',
+      'Shipping Address',
+      'Shipped By',
+    ];
+
+    const rows = result.rows.map(row => [
+      row.order_id,
+      row.customer_name || 'N/A',
+      row.status,
+      row.priority,
+      row.item_count,
+      row.total_value,
+      row.shipped_at || '',
+      row.delivered_at || '',
+      row.tracking_number || '',
+      row.carrier_id || '',
+      typeof row.ship_to_address === 'string'
+        ? `"${row.ship_to_address.replace(/"/g, '""')}"`
+        : JSON.stringify(row.ship_to_address),
+      row.shipped_by || 'System',
+    ]);
+
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  }
+
+  // ==========================================================================
   // SHIPMENT METHODS
   // ==========================================================================
 

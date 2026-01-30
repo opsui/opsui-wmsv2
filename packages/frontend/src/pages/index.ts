@@ -26,6 +26,7 @@ export * from './ReportsPage';
 export * from './IntegrationsPage';
 export { default as RMAPage } from './RMAPage';
 export { default as SalesPage } from './SalesPage';
+export { default as ShippedOrdersPage } from './ShippedOrdersPage';
 export { default as AdminSettingsPage } from './AdminSettingsPage';
 export { default as UserRolesPage } from './UserRolesPage';
 export { default as RolesManagementPage } from './RolesManagementPage';

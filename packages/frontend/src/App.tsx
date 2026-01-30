@@ -18,6 +18,7 @@ import {
   PickingPage,
   PackingQueuePage,
   PackingPage,
+  ShippedOrdersPage,
   StockControlPage,
   InwardsGoodsPage,
   ProductionPage,
@@ -464,6 +465,18 @@ function AppInner() {
           element={
             <ProtectedRoute requiredRoles={[UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR]}>
               <PackingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Shipping routes */}
+        <Route
+          path="/shipped-orders"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PACKER]}
+            >
+              <ShippedOrdersPage />
             </ProtectedRoute>
           }
         />

@@ -45,6 +45,64 @@ router.get(
 );
 
 // ============================================================================
+// SHIPPED ORDERS ROUTES
+// ============================================================================
+
+/**
+ * GET /api/shipping/orders
+ * Get all shipped orders with filters
+ */
+router.get(
+  '/orders',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      status: req.query.status as string | undefined,
+      carrierId: req.query.carrierId as string | undefined,
+      startDate: req.query.startDate as string | undefined,
+      endDate: req.query.endDate as string | undefined,
+      search: req.query.search as string | undefined,
+      sortBy: req.query.sortBy as string | undefined,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc' | undefined,
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
+    };
+
+    const result = await shippingService.getShippedOrders(filters);
+    res.json(result);
+  })
+);
+
+/**
+ * GET /api/shipping/orders/export
+ * Export shipped orders to CSV
+ */
+router.get(
+  '/orders/export',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { orderIds } = req.query;
+
+    if (!orderIds || typeof orderIds !== 'string') {
+      res.status(400).json({
+        error: 'orderIds parameter is required',
+        code: 'MISSING_ORDER_IDS',
+      });
+      return;
+    }
+
+    const ids = orderIds.split(',');
+    const csvData = await shippingService.exportShippedOrdersToCSV(ids);
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="shipped-orders-${Date.now()}.csv"`
+    );
+    res.send(csvData);
+  })
+);
+
+// ============================================================================
 // SHIPMENT ROUTES
 // ============================================================================
 

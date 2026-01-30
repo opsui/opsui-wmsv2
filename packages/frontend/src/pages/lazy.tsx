@@ -88,6 +88,12 @@ export const LazyRMAPage = createLazyPage(() => import('./RMAPage'));
 export const LazySalesPage = createLazyPage(() => import('./SalesPage'));
 
 // ============================================================================
+// SHIPPING PAGES
+// ============================================================================
+
+export const LazyShippedOrdersPage = createLazyPage(() => import('./ShippedOrdersPage'));
+
+// ============================================================================
 // ADMIN PAGES
 // ============================================================================
 
