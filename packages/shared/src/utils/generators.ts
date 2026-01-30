@@ -10,15 +10,14 @@
 
 /**
  * Generate a unique order ID
- * Format: ORD-YYYYMMDD-XXXX
- * Example: ORD-20240115-0001
+ * Format: SO{number}
+ * Example: SO6334
+ * Uses random number generation for variety while keeping it short
  */
 export function generateOrderId(date: Date = new Date()): string {
-  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000)
-    .toString()
-    .padStart(4, '0');
-  return `ORD-${dateStr}-${random}`;
+  // Generate a random 4-digit number (1000-9999)
+  const orderNum = Math.floor(Math.random() * 9000) + 1000;
+  return `SO${orderNum}`;
 }
 
 /**
@@ -65,12 +64,14 @@ export function generateTransactionId(date: Date = new Date()): string {
 
 /**
  * Generate a unique state change ID
- * Format: OSC-YYYYMMDD-XXXX-XXXXXXXX
+ * Format: OSC-YYYYMMDD-XXXXXXXXXXX-XXXX (milliseconds + random suffix)
+ * Updated to prevent duplicates when multiple state changes happen quickly
  */
 export function generateStateChangeId(date: Date = new Date()): string {
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const time = Date.now().toString().slice(-8);
-  return `OSC-${dateStr}-${time}`;
+  const millis = Math.floor(date.getTime()).toString().padStart(11, '0');
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `OSC-${dateStr}-${millis}-${random}`;
 }
 
 /**

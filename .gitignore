@@ -47,3 +47,32 @@ coverage/
 # Database
 *.db
 *.sqlite
+
+# Temporary and legacy scripts
+packages/backend/scripts/legacy/
+packages/backend/scripts/debug/
+packages/backend/scripts/db-checks/
+packages/backend/scripts/tests/
+
+# Empty files
+*.nul
+nul
+
+# Problematic environment paths
+%APPDATA%/
+%USERPROFILE%/
+
+# Cache directories
+.wms-cache/
+.ai-loop/.ai-cache/
+
+# Test results
+test-results/
+playwright/
+
+# Temporary settings
+temp_settings.json
+
+# Python scripts (temporary)
+*.py
+!packages/backend/scripts/*.py

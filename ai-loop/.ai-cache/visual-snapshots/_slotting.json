@@ -1,0 +1,290 @@
+{
+  "route": "/slotting",
+  "timestamp": "2026-01-23T05:51:10.543Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "1",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "ExceptionsOrders requiring attention",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 115
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Order Queue33 orders pending",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 181
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Active Staff0 staff members active",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 247
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "View all in Dashboard",
+      "visible": true,
+      "position": {
+        "x": 751.875,
+        "y": 340
+      },
+      "size": {
+        "width": 280,
+        "height": 16
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-2xl",
+      "text": "Slotting Optimization",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 97
+      },
+      "size": {
+        "width": 290.59375,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "ABC Analysis",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 356
+      },
+      "size": {
+        "width": 1166,
+        "height": 28
+      }
+    },
+    {
+      "selector": "SELECT#analysis-days.flex",
+      "text": "30 Days60 Days90 Days180 Days",
+      "visible": true,
+      "position": {
+        "x": 156.28125,
+        "y": 400
+      },
+      "size": {
+        "width": 908.09375,
+        "height": 44
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Run Analysis",
+      "visible": true,
+      "position": {
+        "x": 1080.375,
+        "y": 400
+      },
+      "size": {
+        "width": 142.625,
+        "height": 44
+      }
+    },
+    {
+      "selector": "H3.font-semibold",
+      "text": "Class A - High Velocity",
+      "visible": true,
+      "position": {
+        "x": 74,
+        "y": 485
+      },
+      "size": {
+        "width": 344,
+        "height": 24
+      }
+    },
+    {
+      "selector": "H3.font-semibold",
+      "text": "Class B - Medium Velocity",
+      "visible": true,
+      "position": {
+        "x": 468,
+        "y": 485
+      },
+      "size": {
+        "width": 344,
+        "height": 24
+      }
+    },
+    {
+      "selector": "H3.font-semibold",
+      "text": "Class C - Low Velocity",
+      "visible": true,
+      "position": {
+        "x": 862,
+        "y": 485
+      },
+      "size": {
+        "width": 344,
+        "height": 24
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 16 buttons, 0 inputs, 0 links, 0 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Slotting Optimization\"."
+}

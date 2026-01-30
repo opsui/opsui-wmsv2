@@ -15,14 +15,16 @@ import { logger } from '../config/logger';
 /**
  * Rate limiter for authentication endpoints
  * Prevents brute force attacks on login
+ * DISABLED in development mode
  */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 100, // 100 attempts per window (increased for development)
   message: 'Too many authentication attempts, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
   skipFailedRequests: false, // Count failed requests
+  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
   handler: (req: Request, res: Response) => {
     logger.warn('Rate limit exceeded', {
       ip: req.ip,
@@ -39,6 +41,7 @@ export const authRateLimiter = rateLimit({
 
 /**
  * Rate limiter for general API endpoints
+ * DISABLED in development mode
  */
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -47,6 +50,7 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipFailedRequests: false,
+  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
   handler: (req: Request, res: Response) => {
     logger.warn('API rate limit exceeded', {
       ip: req.ip,
@@ -63,6 +67,7 @@ export const apiRateLimiter = rateLimit({
 
 /**
  * Stricter rate limiter for write operations (POST, PUT, DELETE, PATCH)
+ * DISABLED in development mode
  */
 export const writeOperationRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -70,6 +75,7 @@ export const writeOperationRateLimiter = rateLimit({
   message: 'Too many write operations, please slow down',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
   handler: (req: Request, res: Response) => {
     logger.warn('Write operation rate limit exceeded', {
       ip: req.ip,

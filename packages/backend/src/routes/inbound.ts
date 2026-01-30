@@ -62,10 +62,11 @@ router.post(
       !lineItems ||
       lineItems.length === 0
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const asn = await inboundReceivingService.createASN({
@@ -132,10 +133,11 @@ router.patch(
     const { status } = req.body;
 
     if (!status) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Status is required',
         code: 'MISSING_STATUS',
       });
+      return;
     }
 
     const asn = await inboundReceivingService.updateASNStatus(asnId, status);
@@ -160,10 +162,11 @@ router.post(
 
     // Validate required fields
     if (!receiptType || !lineItems || lineItems.length === 0) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const receipt = await inboundReceivingService.createReceipt({
@@ -268,10 +271,11 @@ router.patch(
     const { quantityPutaway, status } = req.body;
 
     if (quantityPutaway === undefined || quantityPutaway <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Valid quantityPutaway is required',
         code: 'INVALID_QUANTITY',
       });
+      return;
     }
 
     const task = await inboundReceivingService.updatePutawayTask({

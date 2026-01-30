@@ -7,7 +7,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { useOrder, useCompletePacking } from '@/services/api';
+import { useOrder, useCompletePacking, nzcApi } from '@/services/api';
 import {
   Card,
   CardHeader,
@@ -16,8 +16,11 @@ import {
   ScanInput,
   Button,
   Header,
+  UnclaimModal,
+  ConfirmDialog,
 } from '@/components/shared';
-import { showSuccess, showError, useAuthStore } from '@/stores';
+import { useToast } from '@/components/shared';
+import { useAuthStore } from '@/stores';
 import {
   CheckIcon,
   ExclamationTriangleIcon,
@@ -30,7 +33,7 @@ import {
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
 import { usePageTracking } from '@/hooks/usePageTracking';
-import { Carrier, Address } from '@opsui/shared';
+import { Carrier, Address, NZCQuote } from '@opsui/shared';
 
 // ============================================================================
 // COMPONENT
@@ -42,6 +45,7 @@ export function PackingPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
   const userRole = useAuthStore(state => state.user?.role);
+  const { showToast } = useToast();
 
   // Track current page for admin dashboard
   usePageTracking({ view: orderId ? `Packing ${orderId}` : 'Packing' });
@@ -50,16 +54,37 @@ export function PackingPage() {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [scanError, setScanError] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  // Unclaim modal state
+  const [showUnclaimModal, setShowUnclaimModal] = useState(false);
+  const [isUnclaiming, setIsUnclaiming] = useState(false);
   const [undoLoading, setUndoLoading] = useState<Record<number, boolean>>({});
+
+  // Confirm dialog states
+  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>({ isOpen: false, index: -1, item: null });
+  const [completeShipmentConfirm, setCompleteShipmentConfirm] = useState<{ isOpen: boolean; skippedItems: any[] }>({ isOpen: false, skippedItems: [] });
 
   // Shipping details state
   const [showShippingForm, setShowShippingForm] = useState(false);
+  const shippingFormRef = useRef<HTMLDivElement>(null);
   const [selectedCarrierId, setSelectedCarrierId] = useState('');
   const [serviceType, setServiceType] = useState('Ground');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [totalWeight, setTotalWeight] = useState('1.0');
   const [totalPackages, setTotalPackages] = useState('1');
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
+
+  // NZC-specific state
+  const [nzcRates, setNzcRates] = useState<NZCQuote[]>([]);
+  const [selectedQuote, setSelectedQuote] = useState<NZCQuote | null>(null);
+  const [nzcLabel, setNzcLabel] = useState<{ data: string; contentType: string } | null>(null);
+  const [isFetchingRates, setIsFetchingRates] = useState(false);
+  const [shipmentCreated, setShipmentCreated] = useState(false);
+  const [nzcConnote, setNzcConnote] = useState<string>('');
+
+  // Helper to convert lbs to kg for NZC API
+  const lbsToKg = (lbs: number): number => Math.round((lbs * 0.453592) * 100) / 100;
 
   // Fetch carriers for shipping form
   const { data: carriers = [] } = useQuery({
@@ -97,7 +122,7 @@ export function PackingPage() {
       isClaimingRef.current = false;
       const errorMsg = error.response?.data?.error || error.message || 'Failed to claim order';
       setClaimError(errorMsg);
-      showError(errorMsg);
+      showToast(errorMsg, 'error');
     },
   });
 
@@ -225,10 +250,85 @@ export function PackingPage() {
     }
   }, [order]);
 
+  // Auto-show shipping form when all items are verified
+  useEffect(() => {
+    if (allVerified && !showShippingForm) {
+      console.log('[PackingPage] All items verified, auto-showing shipping form');
+      setShowShippingForm(true);
+    } else if (!allVerified && showShippingForm) {
+      // Hide shipping form if not all verified (user might have undone verification)
+      setShowShippingForm(false);
+    }
+  }, [allVerified]);
+
+  // Scroll shipping form into view when it appears
+  useEffect(() => {
+    if (showShippingForm && shippingFormRef.current) {
+      shippingFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showShippingForm]);
+
   // Reset scan error when current task changes
   useEffect(() => {
     setScanError(null);
   }, [currentItemIndex]);
+
+  // Fetch NZC rates when NZC carrier is selected
+  useEffect(() => {
+    const fetchNZCRates = async () => {
+      const isNZCCarrier = carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
+
+      if (!isNZCCarrier || !totalWeight || !totalPackages) {
+        setNzcRates([]);
+        setSelectedQuote(null);
+        return;
+      }
+
+      setIsFetchingRates(true);
+      try {
+        const response = await nzcApi.getRates({
+          destination: {
+            name: order?.customerName || 'Customer',
+            company: 'Customer Company',
+            addressLine1: '456 Customer Ave',
+            city: 'Auckland',
+            state: '',
+            postalCode: '1010',
+            country: 'NZ',
+          },
+          packages: [{
+            length: 10,
+            width: 10,
+            height: 10,
+            weight: lbsToKg(parseFloat(totalWeight)),
+            units: parseInt(totalPackages),
+          }],
+        });
+
+        if (response.Quotes && response.Quotes.length > 0) {
+          setNzcRates(response.Quotes);
+          // Auto-select the first quote
+          setSelectedQuote(response.Quotes[0]);
+        } else {
+          setNzcRates([]);
+          setSelectedQuote(null);
+          if (response.Rejected && response.Rejected.length > 0) {
+            showToast(`NZC rejected: ${response.Rejected.map(r => r.Reason).join(', ')}`, 'error');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching NZC rates:', error);
+        setNzcRates([]);
+        setSelectedQuote(null);
+      } finally {
+        setIsFetchingRates(false);
+      }
+    };
+
+    // Debounce rate fetching
+    const timeoutId = setTimeout(fetchNZCRates, 500);
+    return () => clearTimeout(timeoutId);
+  }, [selectedCarrierId, totalWeight, totalPackages, carriers, order]);
 
   if (!orderId) {
     return <div>No order ID provided</div>;
@@ -302,7 +402,13 @@ export function PackingPage() {
 
   const handleScan = async (value: string) => {
     if (!currentItem) {
-      showError('No current item to verify');
+      showToast('No current item to verify', 'success');
+      return;
+    }
+
+    // Prevent duplicate scans while verification is in progress
+    if (isVerifying) {
+      console.log('[PackingPage] Scan ignored - verification in progress');
       return;
     }
 
@@ -317,73 +423,106 @@ export function PackingPage() {
     if (!isValidScan) {
       const expectedBarcodes = currentItem.barcode ? currentItem.barcode : currentItem.sku;
       setScanError(`Wrong scan! Expected: ${expectedBarcodes}, scanned: ${scannedValue}`);
-      showError(`Wrong barcode scanned`);
+      showToast(`Wrong barcode scanned`, 'error');
       return;
     }
 
     // Check if already fully verified
     const currentVerified = currentItem.verifiedQuantity || 0;
     if (currentVerified >= currentItem.quantity) {
-      showError('This item is already fully verified');
+      showToast('This item is already fully verified', 'success');
       setScanValue('');
       return;
     }
 
     // Verify packing item via API
+    setIsVerifying(true);
     try {
       await apiClient.post(`/orders/${orderId}/verify-packing`, {
-        orderItemId: currentItem.orderItemId,
+        order_item_id: currentItem.orderItemId,
         quantity: 1,
       });
 
-      showSuccess('Item verified!');
+      showToast('Item verified!', 'success');
       setScanValue('');
 
-      // Refetch order data to get updated state
-      await refetch();
+      // Calculate the new verified quantity (current + 1)
+      const newVerified = currentVerified + 1;
 
-      // Move to next item if current one is complete
-      const remaining = currentItem.quantity - currentVerified - 1;
-      if (remaining <= 0) {
-        // Item complete, move to next
-        if (!order.items) return;
-        const nextIncompleteIndex = order.items.findIndex(
-          (item, idx) =>
+      // Optimistically update the cache to show immediate UI feedback
+      queryClient.setQueryData(['orders', orderId], (oldData: any) => {
+        if (!oldData?.items) return oldData;
+
+        const updatedItems = oldData.items.map((item: any, idx: number) =>
+          idx === currentItemIndex && item.orderItemId === currentItem.orderItemId
+            ? { ...item, verifiedQuantity: newVerified }
+            : item
+        );
+
+        console.log('[PackingPage] Optimistic update:', {
+          itemIndex: currentItemIndex,
+          oldVerified: currentVerified,
+          newVerified,
+          sku: currentItem.sku
+        });
+
+        return { ...oldData, items: updatedItems };
+      });
+
+      // Check if item is now complete and move to next
+      if (newVerified >= currentItem.quantity) {
+        // Find next incomplete item using the optimistically updated data
+        const orderData = queryClient.getQueryData(['orders', orderId]) as any;
+        if (!orderData?.items) return;
+
+        const nextIncompleteIndex = orderData.items.findIndex(
+          (item: any, idx: number) =>
             idx > currentItemIndex &&
             (item.verifiedQuantity || 0) < item.quantity &&
             item.status !== 'SKIPPED'
         );
 
+        console.log('[PackingPage] Item complete, finding next:', {
+          currentItemIndex,
+          nextIncompleteIndex,
+          totalItems: orderData.items.length
+        });
+
         if (nextIncompleteIndex !== -1) {
+          console.log('[PackingPage] Moving to next item:', nextIncompleteIndex);
           setCurrentItemIndex(nextIncompleteIndex);
+        } else {
+          console.log('[PackingPage] No more incomplete items');
         }
       }
     } catch (error) {
       setScanError(error instanceof Error ? error.message : 'Verification failed');
-      showError(error instanceof Error ? error.message : 'Failed to verify item');
+      showToast(error instanceof Error ? error.message : 'Failed to verify item', 'error');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
   const handleSkipItem = async () => {
     if (!currentItem) {
-      showError('No current item to report');
+      showToast('No current item to report', 'error');
       return;
     }
 
     // Confirm before reporting problem
     const reason = prompt('Report a Problem\n\nPlease provide a reason for reporting this item:');
     if (!reason || !reason.trim()) {
-      showError('Reason is required');
+      showToast('Reason is required', 'error');
       return;
     }
 
     try {
       await apiClient.post(`/orders/${orderId}/skip-packing-item`, {
-        orderItemId: currentItem.orderItemId,
+        order_item_id: currentItem.orderItemId,
         reason: reason.trim(),
       });
 
-      showSuccess('Problem reported successfully!');
+      showToast('Problem reported successfully!', 'success');
 
       // Refetch order data to get updated state
       await refetch();
@@ -406,7 +545,7 @@ export function PackingPage() {
         refetch();
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to report problem');
+      showToast(error instanceof Error ? error.message : 'Failed to report problem');
     }
   };
 
@@ -414,9 +553,12 @@ export function PackingPage() {
     const item = order?.items?.[index];
     if (!item) return;
 
-    const confirmed = confirm(`Do you want to revert the skip for ${item.name} (${item.sku})?`);
+    setUnskipConfirm({ isOpen: true, index, item });
+  };
 
-    if (!confirmed) return;
+  const confirmUnskipItem = async () => {
+    const { index, item } = unskipConfirm;
+    if (!item) return;
 
     try {
       // Update item status back to PENDING
@@ -424,7 +566,8 @@ export function PackingPage() {
         status: 'PENDING',
       });
 
-      showSuccess('Skip reverted successfully!');
+      showToast('Skip reverted successfully!', 'success');
+      setUnskipConfirm({ isOpen: false, index: -1, item: null });
 
       // Refetch order data to get updated state
       await refetch();
@@ -436,7 +579,7 @@ export function PackingPage() {
         setScanError(null);
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to revert skip');
+      showToast(error instanceof Error ? error.message : 'Failed to revert skip');
     }
   };
 
@@ -456,7 +599,7 @@ export function PackingPage() {
 
       const item = latestOrder?.items?.[index];
       if (!item) {
-        showError('Item not found');
+        showToast('Item not found', 'success');
         return;
       }
 
@@ -470,7 +613,7 @@ export function PackingPage() {
       });
 
       if (currentVerified <= 0) {
-        showError(
+        showToast(
           'No verified items to undo. The item may have already been undone or never verified.'
         );
         await refetch(); // Refresh to show current state
@@ -487,7 +630,7 @@ export function PackingPage() {
         ) || '';
 
       if (!reason.trim()) {
-        showError('Reason is required to undo a verification');
+        showToast('Reason is required to undo a verification', 'success');
         return;
       }
 
@@ -498,7 +641,7 @@ export function PackingPage() {
           reason: reason.trim(),
         });
 
-        showSuccess('Verification undone!');
+        showToast('Verification undone!', 'success');
 
         // Force invalidate query cache and refetch
         queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
@@ -521,15 +664,15 @@ export function PackingPage() {
         if (errorMsg.includes('Cannot undo more items than verified')) {
           // State changed between our fetch and the request - refresh and inform user
           await refetch();
-          showError('State has changed. Please try again.');
+          showToast('State has changed. Please try again.', 'success');
         } else {
-          showError(errorMsg);
+          showToast(errorMsg);
           await refetch(); // Always refresh on error to sync state
         }
       }
     } catch (error) {
       console.error('Undo verification failed:', error);
-      showError('Failed to undo verification. Please try again.');
+      showToast('Failed to undo verification. Please try again.', 'success');
       await refetch();
     } finally {
       setUndoLoading(prev => ({ ...prev, [index]: false }));
@@ -541,25 +684,39 @@ export function PackingPage() {
     setShowShippingForm(true);
   };
 
+  const confirmCreateShipment = async () => {
+    // This is called after user confirms the skipped items dialog
+    // Continue with the actual shipment creation logic
+    await executeCreateShipment();
+  };
+
   const handleCreateShipment = async () => {
     // Validate shipping details
     if (!selectedCarrierId) {
-      showError('Please select a carrier');
+      showToast('Please select a carrier', 'success');
       return;
     }
 
-    if (!trackingNumber.trim()) {
-      showError('Please enter a tracking number');
+    // For NZC carrier, we need a selected quote
+    const isNZCCarrier = carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
+    if (isNZCCarrier && !selectedQuote) {
+      showToast('Please select a shipping rate/quote', 'success');
+      return;
+    }
+
+    // For non-NZC carriers, require manual tracking number
+    if (!isNZCCarrier && !trackingNumber.trim()) {
+      showToast('Please enter a tracking number', 'success');
       return;
     }
 
     if (!totalWeight || parseFloat(totalWeight) <= 0) {
-      showError('Please enter a valid weight');
+      showToast('Please enter a valid weight', 'success');
       return;
     }
 
     if (!totalPackages || parseInt(totalPackages) <= 0) {
-      showError('Please enter a valid number of packages');
+      showToast('Please enter a valid number of packages', 'success');
       return;
     }
 
@@ -568,18 +725,8 @@ export function PackingPage() {
 
     if (skippedItems && skippedItems.length > 0) {
       // Show confirmation dialog for skipped items
-      const itemSummary = skippedItems
-        .map(item => `" ${item.name} (${item.sku}) - ${item.skipReason || 'No reason provided'}`)
-        .join('\n');
-
-      const confirmed = confirm(
-        `The following items were skipped and could not be verified:\n\n${itemSummary}\n\n` +
-          `Are you sure you want to complete this order? These items will remain unverified.`
-      );
-
-      if (!confirmed) {
-        return;
-      }
+      setCompleteShipmentConfirm({ isOpen: true, skippedItems });
+      return;
     }
 
     setIsCreatingShipment(true);
@@ -590,87 +737,145 @@ export function PackingPage() {
         name: 'Main Warehouse',
         company: 'Your Company',
         addressLine1: '123 Warehouse St',
-        city: 'Warehouse City',
-        state: 'WC',
-        postalCode: '12345',
-        country: 'US',
+        city: 'Wellington',
+        state: '',
+        postalCode: '6011',
+        country: 'NZ',
       };
 
       const shipToAddress: Address = {
         name: order?.customerName || 'Customer',
         addressLine1: '456 Customer Ave',
-        city: 'Customer City',
-        state: 'CC',
-        postalCode: '54321',
-        country: 'US',
+        city: 'Auckland',
+        state: '',
+        postalCode: '1010',
+        country: 'NZ',
       };
 
-      const shipmentResponse = await apiClient.post('/shipping/shipments', {
-        orderId,
-        carrierId: selectedCarrierId,
-        serviceType,
-        shippingMethod: 'STANDARD',
-        shipFromAddress,
-        shipToAddress,
-        totalWeight: parseFloat(totalWeight),
-        totalPackages: parseInt(totalPackages),
-        createdBy: currentUser?.userId,
-      });
+      if (isNZCCarrier) {
+        // NZC Flow: Create shipment via NZC API, get label, complete packing
+        if (!selectedQuote) {
+          showToast('Please select a shipping rate/quote', 'success');
+          setIsCreatingShipment(false);
+          return;
+        }
 
-      const shipment = shipmentResponse.data;
-      showSuccess(`Shipment created! Tracking: ${shipment.trackingNumber || 'Pending'}`);
+        const weightKg = lbsToKg(parseFloat(totalWeight));
 
-      // Now complete packing
-      await completePackingMutation.mutateAsync({
-        orderId,
-        dto: {
+        // Create shipment with NZC
+        const nzcShipment = await nzcApi.createShipment({
+          destination: {
+            name: shipToAddress.name,
+            company: shipToAddress.company,
+            addressLine1: shipToAddress.addressLine1,
+            city: shipToAddress.city,
+            state: shipToAddress.state,
+            postalCode: shipToAddress.postalCode,
+            country: shipToAddress.country,
+          },
+          packages: [{
+            length: 10,  // Default package size - in production, get from order items
+            width: 10,
+            height: 10,
+            weight: weightKg,
+            units: parseInt(totalPackages),
+          }],
+          quoteId: selectedQuote.QuoteId,
+        });
+
+        const connote = nzcShipment.ConsignmentNo;
+        setNzcConnote(connote);
+        setShipmentCreated(true);
+
+        // Get label
+        const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
+        setNzcLabel(label);
+
+        showToast(`NZC Shipment created! Connote: ${connote}`);
+
+        // Create shipment record in database
+        await apiClient.post('/shipping/shipments', {
           orderId,
-          packerId: order.packerId || '',
-        },
-      });
+          carrierId: selectedCarrierId,
+          serviceType: selectedQuote.Service,
+          shippingMethod: 'STANDARD',
+          shipFromAddress,
+          shipToAddress,
+          totalWeight: parseFloat(totalWeight),
+          totalPackages: parseInt(totalPackages),
+          createdBy: currentUser?.userId,
+        });
 
-      showSuccess('Order packed and shipped successfully!');
-      navigate('/packing');
+        // Complete packing
+        await completePackingMutation.mutateAsync({
+          orderId,
+          dto: {
+            orderId,
+            packerId: order.packerId || '',
+          },
+        });
+
+        showToast('Order packed and shipped successfully!', 'success');
+      } else {
+        // Standard Flow: Create shipment record with manual tracking number
+        const shipmentResponse = await apiClient.post('/shipping/shipments', {
+          orderId,
+          carrierId: selectedCarrierId,
+          serviceType,
+          shippingMethod: 'STANDARD',
+          shipFromAddress,
+          shipToAddress,
+          totalWeight: parseFloat(totalWeight),
+          totalPackages: parseInt(totalPackages),
+          createdBy: currentUser?.userId,
+        });
+
+        const shipment = shipmentResponse.data;
+
+        // Add tracking number if provided
+        if (trackingNumber.trim()) {
+          await apiClient.post(`/shipping/shipments/${shipment.shipmentId}/tracking`, {
+            trackingNumber: trackingNumber.trim(),
+          });
+        }
+
+        showToast(`Shipment created! Tracking: ${trackingNumber || 'Pending'}`);
+
+        // Complete packing
+        await completePackingMutation.mutateAsync({
+          orderId,
+          dto: {
+            orderId,
+            packerId: order.packerId || '',
+          },
+        });
+
+        showToast('Order packed and shipped successfully!', 'success');
+        navigate('/packing');
+      }
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to create shipment');
+      showToast(error instanceof Error ? error.message : 'Failed to create shipment');
     } finally {
       setIsCreatingShipment(false);
     }
   };
 
-  const handleBackToVerification = () => {
-    setShowShippingForm(false);
+  const handleUnclaimOrder = async () => {
+    setShowUnclaimModal(true);
   };
 
-  const handleUnclaimOrder = async () => {
-    const reason = prompt(
-      `You are about to unclaim this order.\n\n` +
-        `The order will return to PICKED status.\n\n` +
-        `Please provide a reason for unclaiming:`
-    );
-
-    if (!reason || !reason.trim()) {
-      showError('Reason is required to unclaim this order');
-      return;
-    }
-
-    const confirmed = confirm(
-      `Are you sure you want to unclaim order ${orderId}?\n\n` +
-        `This action cannot be undone.\n\n` +
-        `Reason: ${reason.trim()}`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  const handleConfirmUnclaim = async (reason: string, notes: string) => {
+    setIsUnclaiming(true);
     try {
+      const fullReason = notes.trim() ? `${reason}\n\nAdditional notes: ${notes.trim()}` : reason;
+
       await apiClient.post(`/orders/${orderId}/unclaim-packing`, {
         packer_id: order.packerId || currentUser?.userId,
-        reason: reason.trim(),
+        reason: fullReason,
       });
 
-      showSuccess('Order unclaimed and returned to PICKED status!');
+      showToast('Order unclaimed and returned to PICKED status!', 'success');
+      setShowUnclaimModal(false);
       hasClaimedRef.current = false;
       isClaimingRef.current = false;
       setClaimError(null);
@@ -679,7 +884,9 @@ export function PackingPage() {
       navigate('/packing');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to unclaim order';
-      showError(errorMsg);
+      showToast(errorMsg);
+    } finally {
+      setIsUnclaiming(false);
     }
   };
 
@@ -821,22 +1028,14 @@ export function PackingPage() {
             </Card>
           ) : (
             /* Step 2: Shipping Details Form */
-            <Card variant="glass" className="border-primary-500/50 border-2 shadow-glow card-hover">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleBackToVerification}
-                      className="text-gray-400 hover:text-white transition-colors"
-                      disabled={isCreatingShipment}
-                    >
-                      <ArrowLeftIcon className="h-5 w-5" />
-                    </button>
+            <div ref={shippingFormRef}>
+              <Card variant="glass" className="border-primary-500/50 border-2 shadow-glow card-hover">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
                     <span className="text-white">Shipping Details</span>
-                  </div>
-                  <span className="text-sm text-gray-400">Order: {order.orderId}</span>
-                </CardTitle>
-              </CardHeader>
+                    <span className="text-sm text-gray-400">Order: {order.orderId}</span>
+                  </CardTitle>
+                </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Carrier Selection */}
@@ -859,38 +1058,42 @@ export function PackingPage() {
                     </select>
                   </div>
 
-                  {/* Service Type */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                      Service Type *
-                    </label>
-                    <select
-                      value={serviceType}
-                      onChange={e => setServiceType(e.target.value)}
-                      disabled={isCreatingShipment || isViewMode}
-                      className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
-                    >
-                      <option value="Ground">Ground</option>
-                      <option value="Express">Express</option>
-                      <option value="Priority">Priority</option>
-                      <option value="Overnight">Overnight</option>
-                    </select>
-                  </div>
+                  {/* Service Type - Only show for non-NZC carriers */}
+                  {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode !== 'NZC' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                        Service Type *
+                      </label>
+                      <select
+                        value={serviceType}
+                        onChange={e => setServiceType(e.target.value)}
+                        disabled={isCreatingShipment || isViewMode}
+                        className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                      >
+                        <option value="Ground">Ground</option>
+                        <option value="Express">Express</option>
+                        <option value="Priority">Priority</option>
+                        <option value="Overnight">Overnight</option>
+                      </select>
+                    </div>
+                  )}
 
-                  {/* Tracking Number */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                      Tracking Number (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={trackingNumber}
-                      onChange={e => setTrackingNumber(e.target.value)}
-                      placeholder="Enter tracking number..."
-                      disabled={isCreatingShipment || isViewMode}
-                      className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                    />
-                  </div>
+                  {/* Tracking Number - Only show for non-NZC carriers */}
+                  {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode !== 'NZC' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                        Tracking Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingNumber}
+                        onChange={e => setTrackingNumber(e.target.value)}
+                        placeholder="Enter tracking number..."
+                        disabled={isCreatingShipment || isViewMode}
+                        className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                      />
+                    </div>
+                  )}
 
                   {/* Package Details */}
                   <div className="space-y-2">
@@ -936,18 +1139,98 @@ export function PackingPage() {
                   </div>
                 </div>
 
+                {/* NZC Rates Display */}
+                {nzcRates.length > 0 && (
+                  <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
+                    <h3 className="text-lg font-semibold text-white">Available Shipping Rates</h3>
+                    {isFetchingRates && (
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
+                        <span className="text-sm">Fetching rates...</span>
+                      </div>
+                    )}
+                    {!isFetchingRates && (
+                      <div className="space-y-2">
+                        {nzcRates.map((quote) => (
+                          <div
+                            key={quote.QuoteId}
+                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+                              selectedQuote?.QuoteId === quote.QuoteId
+                                ? 'bg-primary-500/20 border-primary-500'
+                                : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05]'
+                            }`}
+                            onClick={() => setSelectedQuote(quote)}
+                          >
+                            <div className="flex-1">
+                              <p className="font-semibold text-white">{quote.Service}</p>
+                              {quote.TransitDays && (
+                                <p className="text-sm text-gray-400">{quote.TransitDays} days transit</p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-primary-400">
+                                ${quote.TotalPrice.toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* NZC Label Display */}
+                {nzcLabel && (
+                  <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-white">Shipping Label</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">Connote:</span>
+                        <span className="font-mono text-primary-400">{nzcConnote}</span>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-2">
+                      <img
+                        src={`data:${nzcLabel.contentType};base64,${nzcLabel.data}`}
+                        alt="Shipping Label"
+                        className="w-full h-auto max-h-[400px] object-contain"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          // Open label in new tab for printing
+                          const window = window.open();
+                          if (window) {
+                            window.document.write(
+                              `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
+                                <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
+                              </body></html>`
+                            );
+                            window.document.close();
+                          }
+                        }}
+                      >
+                        <PrinterIcon className="h-4 w-4 mr-2" />
+                        Print Label
+                      </Button>
+                      {shipmentCreated && (
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => navigate('/packing')}
+                        >
+                          Done
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    fullWidth
-                    onClick={handleBackToVerification}
-                    disabled={isCreatingShipment}
-                  >
-                    <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                    Back
-                  </Button>
+                {!shipmentCreated && (
                   <Button
                     variant="success"
                     size="lg"
@@ -960,7 +1243,7 @@ export function PackingPage() {
                     <PrinterIcon className="h-5 w-5 mr-2" />
                     Create Shipment & Complete
                   </Button>
-                </div>
+                )}
 
                 {isViewMode && (
                   <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
@@ -971,6 +1254,7 @@ export function PackingPage() {
                 )}
               </CardContent>
             </Card>
+            </div>
           )
         ) : currentItem ? (
           /* Current Item to Scan */
@@ -1243,6 +1527,51 @@ export function PackingPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Unclaim Modal */}
+        <UnclaimModal
+          isOpen={showUnclaimModal}
+          onClose={() => setShowUnclaimModal(false)}
+          onConfirm={handleConfirmUnclaim}
+          orderId={orderId!}
+          isPicking={false}
+          isLoading={isUnclaiming}
+        />
+
+        {/* Unskip Item Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={unskipConfirm.isOpen}
+          onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
+          onConfirm={confirmUnskipItem}
+          title="Revert Skip"
+          message={`Do you want to revert the skip for ${unskipConfirm.item?.name} (${unskipConfirm.item?.sku})?`}
+          confirmText="Revert"
+          cancelText="Cancel"
+          variant="success"
+        />
+
+        {/* Complete Shipment with Skipped Items Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={completeShipmentConfirm.isOpen}
+          onClose={() => setCompleteShipmentConfirm({ isOpen: false, skippedItems: [] })}
+          onConfirm={confirmCreateShipment}
+          title="Complete Order with Skipped Items"
+          message={
+            <div className="text-left">
+              <p className="mb-3">The following items were skipped and could not be verified:</p>
+              <ul className="list-disc pl-5 mb-3 space-y-1">
+                {completeShipmentConfirm.skippedItems.map((item: any, i: number) => (
+                  <li key={i}>{item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}</li>
+                ))}
+              </ul>
+              <p>Are you sure you want to complete this order? These items will remain unverified.</p>
+            </div>
+          }
+          confirmText="Complete Order"
+          cancelText="Cancel"
+          variant="warning"
+          isLoading={isCreatingShipment}
+        />
       </main>
     </div>
   );

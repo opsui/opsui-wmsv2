@@ -1,0 +1,26 @@
+{
+  "id": "b633fe78-aa8b-4335-9e99-010981dcd977",
+  "timestamp": "2026-01-29T00:11:35.584Z",
+  "title": "WMS Real-World Usability Analysis - Missing Critical Pages",
+  "category": "other",
+  "problem": "Identified pages that exist in the codebase but are not accessible through routing or navigation, creating gaps in user workflows",
+  "solution": "Found 2 critical pages missing from routing: RouteOptimizationPage and BarcodeScanningPage. These pages exist with full implementations but have no routes in App.tsx, making them inaccessible to users",
+  "files": [
+    "packages/frontend/src/pages/RouteOptimizationPage.tsx",
+    "packages/frontend/src/pages/BarcodeScanningPage.tsx",
+    "packages/frontend/src/App.tsx",
+    "packages/frontend/src/components/shared/Header.tsx"
+  ],
+  "codeSnippet": "",
+  "tags": [
+    "usability",
+    "routing",
+    "navigation",
+    "missing-features"
+  ],
+  "metadata": {
+    "taskType": "feature",
+    "complexity": "medium"
+  },
+  "embedding": []
+}

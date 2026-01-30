@@ -6,7 +6,9 @@
  */
 
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button } from '@/components/shared';
+import { Card, CardHeader, CardTitle, CardContent, Header, Button, useToast, Pagination } from '@/components/shared';
+import { useAssets, useMaintenanceWorkOrders, useMaintenanceDashboard } from '@/services/api';
+import { useEffect, useState } from 'react';
 import {
   WrenchScrewdriverIcon,
   ClipboardDocumentListIcon,
@@ -211,109 +213,66 @@ function MaintenanceRequestCard({ request }: { request: MaintenanceRequest }) {
 function MaintenancePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = (searchParams.get('tab') as TabType) || 'dashboard';
+  const { showToast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Mock data for demonstration
-  const dashboard = {
-    openRequests: 3,
-    inProgress: 2,
-    completedToday: 5,
-    urgent: 1,
-    equipmentDown: 1,
-    equipmentNeedsService: 3,
+  // Fetch maintenance data from backend
+  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useMaintenanceDashboard();
+  const { data: workOrdersData, isLoading: isWorkOrdersLoading, error: workOrdersError } = useMaintenanceWorkOrders();
+  const { data: assetsData, isLoading: isAssetsLoading, error: assetsError } = useAssets();
+
+  // Show error toasts
+  useEffect(() => {
+    if (dashboardError) {
+      showToast('Failed to load maintenance dashboard', 'error');
+    }
+  }, [dashboardError, showToast]);
+
+  useEffect(() => {
+    if (workOrdersError) {
+      showToast('Failed to load work orders', 'error');
+    }
+  }, [workOrdersError, showToast]);
+
+  useEffect(() => {
+    if (assetsError) {
+      showToast('Failed to load assets', 'error');
+    }
+  }, [assetsError, showToast]);
+
+  // Use real data from backend or fallback to defaults
+  const dashboard = dashboardData || {
+    openRequests: 0,
+    inProgress: 0,
+    completedToday: 0,
+    urgent: 0,
+    equipmentDown: 0,
+    equipmentNeedsService: 0,
   };
 
-  const requests: MaintenanceRequest[] = [
-    {
-      requestId: 'MAINT-001',
-      title: 'Conveyor Belt Repair',
-      description: 'Belt 3A showing signs of wear and needs replacement',
-      equipment: 'Conveyor System - Belt 3A',
-      status: 'PENDING',
-      priority: 'HIGH',
-      createdAt: '2026-01-19',
-    },
-    {
-      requestId: 'MAINT-002',
-      title: 'Forklift Maintenance',
-      description: 'Scheduled maintenance for forklift #4',
-      equipment: 'Forklift #4',
-      status: 'IN_PROGRESS',
-      priority: 'NORMAL',
-      createdAt: '2026-01-18',
-      assignedTo: 'Maintenance Team A',
-    },
-    {
-      requestId: 'MAINT-003',
-      title: 'HVAC System Check',
-      description: 'Routine quarterly maintenance for warehouse HVAC',
-      equipment: 'HVAC System',
-      status: 'COMPLETED',
-      priority: 'LOW',
-      createdAt: '2026-01-17',
-      completedAt: '2026-01-19',
-    },
-  ];
+  const requests: MaintenanceRequest[] = workOrdersData?.workOrders || [];
+  const equipment: Equipment[] = assetsData?.assets || [];
 
-  const equipment: Equipment[] = [
-    {
-      id: 'EQ-001',
-      name: 'Conveyor Belt 3A',
-      location: 'Zone A - Row 3',
-      status: 'DOWN',
-      lastService: '2025-12-15',
-      nextService: '2026-01-20',
-    },
-    {
-      id: 'EQ-002',
-      name: 'Forklift #4',
-      location: 'Dock Area',
-      status: 'IN_SERVICE',
-      lastService: '2026-01-15',
-      nextService: '2026-02-15',
-    },
-    {
-      id: 'EQ-003',
-      name: 'Pallet Wrapper',
-      location: 'Shipping Area',
-      status: 'OPERATIONAL',
-      lastService: '2026-01-10',
-      nextService: '2026-04-10',
-    },
-    {
-      id: 'EQ-004',
-      name: 'HVAC System',
-      location: 'Building Central',
-      status: 'OPERATIONAL',
-      lastService: '2026-01-17',
-      nextService: '2026-04-17',
-    },
-    {
-      id: 'EQ-005',
-      name: 'Dock Door 1',
-      location: 'Loading Dock',
-      status: 'NEEDS_MAINTENANCE',
-      lastService: '2025-11-20',
-      nextService: '2026-01-25',
-    },
-    {
-      id: 'EQ-006',
-      name: 'Compactor',
-      location: 'Waste Area',
-      status: 'NEEDS_MAINTENANCE',
-      lastService: '2025-12-01',
-      nextService: '2026-01-22',
-    },
-  ];
+  // Show loading state
+  const isLoading = isDashboardLoading || isWorkOrdersLoading || isAssetsLoading;
+
+  // Pagination
+  const totalRequests = requests.length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRequests = requests.slice(startIndex, endIndex);
 
   const setTab = (tab: TabType) => {
     setSearchParams({ tab });
+    setCurrentPage(1); // Reset pagination when changing tabs
   };
 
   return (
     <div className="min-h-screen">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -326,8 +285,18 @@ function MaintenancePage() {
           </Button>
         </div>
 
+        {/* Loading Spinner */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              <p className="text-gray-400 text-sm">Loading maintenance data...</p>
+            </div>
+          </div>
+        )}
+
         {/* Dashboard Tab */}
-        {currentTab === 'dashboard' && (
+        {!isLoading && currentTab === 'dashboard' && (
           <div className="space-y-8">
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -432,7 +401,7 @@ function MaintenancePage() {
         )}
 
         {/* Requests Tab */}
-        {currentTab === 'requests' && (
+        {!isLoading && currentTab === 'requests' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -446,32 +415,242 @@ function MaintenancePage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {requests.map(request => (
+              {paginatedRequests.map(request => (
                 <MaintenanceRequestCard key={request.requestId} request={request} />
               ))}
             </div>
+
+            {/* Pagination */}
+            {totalRequests > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalRequests}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
           </div>
         )}
 
         {/* Schedule Tab */}
-        {currentTab === 'schedule' && (
+        {!isLoading && currentTab === 'schedule' && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white">Maintenance Schedule</h2>
               <p className="text-gray-400 text-sm mt-1">Calendar view of scheduled maintenance</p>
             </div>
+
+            {/* Upcoming Maintenance Timeline */}
             <Card variant="glass">
-              <CardContent className="p-12 text-center">
-                <ClockIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">Schedule View</h3>
-                <p className="text-gray-400">Calendar view of maintenance schedules coming soon</p>
+              <CardContent className="p-6">
+                {/* Combine equipment next service dates with maintenance requests */}
+                {(() => {
+                  const scheduledItems: Array<{
+                    id: string;
+                    title: string;
+                    type: 'equipment' | 'request';
+                    date: string;
+                    status: string;
+                    priority?: string;
+                  }> = [];
+
+                  // Add equipment scheduled services
+                  equipment.forEach(eq => {
+                    scheduledItems.push({
+                      id: eq.id,
+                      title: `${eq.name} - Scheduled Service`,
+                      type: 'equipment',
+                      date: eq.nextService,
+                      status: eq.status,
+                    });
+                  });
+
+                  // Add maintenance requests with created dates
+                  requests.forEach(req => {
+                    if (req.status === 'PENDING' || req.status === 'IN_PROGRESS') {
+                      scheduledItems.push({
+                        id: req.requestId,
+                        title: req.title,
+                        type: 'request',
+                        date: req.createdAt,
+                        status: req.status,
+                        priority: req.priority,
+                      });
+                    }
+                  });
+
+                  // Sort by date
+                  scheduledItems.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                  // Group by date
+                  const itemsByDate: Record<string, typeof scheduledItems> = {};
+                  scheduledItems.forEach(item => {
+                    const date = new Date(item.date).toLocaleDateString();
+                    if (!itemsByDate[date]) {
+                      itemsByDate[date] = [];
+                    }
+                    itemsByDate[date].push(item);
+                  });
+
+                  const sortedDates = Object.keys(itemsByDate).sort((a, b) => {
+                    return new Date(a).getTime() - new Date(b).getTime();
+                  });
+
+                  if (sortedDates.length === 0) {
+                    return (
+                      <div className="text-center py-12">
+                        <ClockIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-400">No scheduled maintenance</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {sortedDates.map((date, dateIndex) => (
+                        <div key={date} className="relative">
+                          {/* Date header */}
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="flex flex-col items-center">
+                              <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
+                                new Date(date) < new Date()
+                                  ? 'bg-warning-500/20 border-warning-500'
+                                  : 'bg-primary-500/20 border-primary-500'
+                              }`}>
+                                <span className={`text-xs font-bold ${
+                                  new Date(date) < new Date() ? 'text-warning-400' : 'text-primary-400'
+                                }`}>
+                                  {new Date(date).getDate()}
+                                </span>
+                              </div>
+                              {dateIndex < sortedDates.length - 1 && (
+                                <div className="w-0.5 h-full bg-gray-700 mt-2" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-white">
+                                {new Date(date).toLocaleDateString('en-US', {
+                                  weekday: 'long',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}
+                              </h3>
+                              <p className="text-sm text-gray-400">
+                                {itemsByDate[date].length} item{itemsByDate[date].length !== 1 ? 's' : ''} scheduled
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Items for this date */}
+                          <div className="ml-16 space-y-3">
+                            {itemsByDate[date].map(item => (
+                              <div
+                                key={item.id}
+                                className={`bg-white/5 border rounded-lg p-4 transition-colors ${
+                                  item.type === 'equipment'
+                                    ? 'border-gray-700 hover:border-gray-600'
+                                    : item.priority === 'URGENT'
+                                      ? 'border-error-500/50 bg-error-500/5'
+                                      : 'border-gray-700 hover:border-gray-600'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      {item.type === 'equipment' ? (
+                                        <WrenchScrewdriverIcon className="h-5 w-5 text-gray-400" />
+                                      ) : (
+                                        <ClipboardDocumentListIcon className="h-5 w-5 text-gray-400" />
+                                      )}
+                                      <h4 className="font-semibold text-white">{item.title}</h4>
+                                      {item.type === 'request' && item.priority && (
+                                        <PriorityBadge priority={item.priority} />
+                                      )}
+                                      {item.type === 'request' && (
+                                        <StatusBadge status={item.status} />
+                                      )}
+                                      {item.type === 'equipment' && (
+                                        <span
+                                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                                            item.status === 'OPERATIONAL'
+                                              ? 'bg-success-500/20 text-success-300'
+                                              : item.status === 'NEEDS_MAINTENANCE'
+                                                ? 'bg-warning-500/20 text-warning-300'
+                                                : item.status === 'DOWN'
+                                                  ? 'bg-error-500/20 text-error-300'
+                                                  : 'bg-primary-500/20 text-primary-300'
+                                          }`}
+                                        >
+                                          {item.status.replace('_', ' ')}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-gray-400 text-xs">ID: {item.id}</p>
+                                  </div>
+                                  <Button variant="secondary" size="sm">
+                                    {item.type === 'equipment' ? 'View Equipment' : 'View Request'}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card variant="glass" className="p-6">
+                <h3 className="text-sm text-gray-400 mb-2">Overdue</h3>
+                <p className="text-3xl font-bold text-warning-400">
+                  {
+                    equipment.filter(e => new Date(e.nextService) < new Date()).length +
+                    requests.filter(r => r.status === 'PENDING' && new Date(r.createdAt) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length
+                  }
+                </p>
+              </Card>
+              <Card variant="glass" className="p-6">
+                <h3 className="text-sm text-gray-400 mb-2">Due Today</h3>
+                <p className="text-3xl font-bold text-primary-400">
+                  {
+                    equipment.filter(e => {
+                      const serviceDate = new Date(e.nextService).toDateString();
+                      const today = new Date().toDateString();
+                      return serviceDate === today;
+                    }).length
+                  }
+                </p>
+              </Card>
+              <Card variant="glass" className="p-6">
+                <h3 className="text-sm text-gray-400 mb-2">This Week</h3>
+                <p className="text-3xl font-bold text-white">
+                  {
+                    equipment.filter(e => {
+                      const serviceDate = new Date(e.nextService);
+                      const now = new Date();
+                      const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                      return serviceDate >= now && serviceDate <= weekFromNow;
+                    }).length
+                  }
+                </p>
+              </Card>
+              <Card variant="glass" className="p-6">
+                <h3 className="text-sm text-gray-400 mb-2">Active Requests</h3>
+                <p className="text-3xl font-bold text-white">
+                  {requests.filter(r => r.status === 'IN_PROGRESS').length}
+                </p>
+              </Card>
+            </div>
           </div>
         )}
 
         {/* Equipment Tab */}
-        {currentTab === 'equipment' && (
+        {!isLoading && currentTab === 'equipment' && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-white">Equipment Registry</h2>

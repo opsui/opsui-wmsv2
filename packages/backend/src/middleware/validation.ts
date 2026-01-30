@@ -100,12 +100,12 @@ export const commonSchemas = {
   // ID validation
   id: Joi.string().required().min(1).max(100),
 
-  // Order ID
+  // Order ID - accepts both SO{number} and ORD-YYYYMMDD-XXX formats
   orderId: Joi.string()
-    .pattern(/^ORD-\d{8}-\d{4}$/)
+    .pattern(/^(SO[1-9][0-9]{3,4}|ORD-[0-9]{8}-[0-9]{3})$/)
     .required()
     .messages({
-      'string.pattern.base': 'Order ID must match format ORD-YYYYMMDD-XXXX',
+      'string.pattern.base': 'Order ID must match format SO{number} or ORD-YYYYMMDD-XXX',
     }),
 
   // SKU
@@ -197,10 +197,10 @@ export const schemas = {
     const pickTaskId = value.pickTaskId || value.pick_task_id;
 
     if (!binLocation) {
-      return helpers.error({ message: 'binLocation is required' });
+      return helpers.error('binLocation is required');
     }
     if (!pickTaskId) {
-      return helpers.error({ message: 'pickTaskId is required' });
+      return helpers.error('pickTaskId is required');
     }
 
     return value;

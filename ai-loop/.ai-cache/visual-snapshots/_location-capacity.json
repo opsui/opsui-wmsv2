@@ -1,0 +1,563 @@
+{
+  "route": "/location-capacity",
+  "timestamp": "2026-01-23T05:53:51.247Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "1",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "ExceptionsOrders requiring attention",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 115
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Order Queue33 orders pending",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 181
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Active Staff0 staff members active",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 247
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "View all in Dashboard",
+      "visible": true,
+      "position": {
+        "x": 751.875,
+        "y": 340
+      },
+      "size": {
+        "width": 280,
+        "height": 16
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-2xl",
+      "text": "Location Capacity",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 97
+      },
+      "size": {
+        "width": 405.421875,
+        "height": 32
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "New Rule",
+      "visible": true,
+      "position": {
+        "x": 1116.34375,
+        "y": 108
+      },
+      "size": {
+        "width": 131.65625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.px-6",
+      "text": "Overview",
+      "visible": true,
+      "position": {
+        "x": 33,
+        "y": 184
+      },
+      "size": {
+        "width": 139.546875,
+        "height": 55.171875
+      }
+    },
+    {
+      "selector": "BUTTON.px-6",
+      "text": "Rules",
+      "visible": true,
+      "position": {
+        "x": 172.546875,
+        "y": 184
+      },
+      "size": {
+        "width": 84.796875,
+        "height": 55.171875
+      }
+    },
+    {
+      "selector": "BUTTON.px-6",
+      "text": "Alerts",
+      "visible": true,
+      "position": {
+        "x": 257.34375,
+        "y": 184
+      },
+      "size": {
+        "width": 87.515625,
+        "height": 55.171875
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Overall Capacity Utilization",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 377.171875
+      },
+      "size": {
+        "width": 1166,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Location Capacities",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 473.671875
+      },
+      "size": {
+        "width": 163.296875,
+        "height": 28
+      }
+    },
+    {
+      "selector": "SELECT.px-3",
+      "text": "All TypesQuantityWeightVolume",
+      "visible": true,
+      "position": {
+        "x": 1014.21875,
+        "y": 469.171875
+      },
+      "size": {
+        "width": 107,
+        "height": 37
+      }
+    },
+    {
+      "selector": "INPUT.rounded",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1129.21875,
+        "y": 481.171875
+      },
+      "size": {
+        "width": 13,
+        "height": 13
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 579.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 640.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 701.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 762.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 823.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 884.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 945.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1006.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1067.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1128.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1189.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1250.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1311.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1372.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1433.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1494.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1555.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1616.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1171,
+        "y": 1677.171875
+      },
+      "size": {
+        "width": 16,
+        "height": 20
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 38 buttons, 1 inputs, 0 links, 1 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Location Capacity\"."
+}

@@ -6,7 +6,7 @@
  */
 
 import { reportsRepository } from '../repositories/ReportsRepository';
-import { pool } from '../db/client';
+import { getPool } from '../db/client';
 import {
   Report,
   ReportExecution,
@@ -46,12 +46,14 @@ export class ReportsService {
       status: ReportStatus.RUNNING,
       format,
       parameters,
+      executionTimeMs: 0,
     };
 
     try {
       // Build and execute the query
       const query = this.buildReportQuery(report, parameters);
-      const result = await pool.query(query.sql, query.params);
+      const poolClient = getPool();
+      const result = await poolClient.query(query.sql, query.params);
 
       // Process and format results
       const data = this.processResults(result.rows, report, parameters);
@@ -252,7 +254,7 @@ export class ReportsService {
       format,
       filters,
       fields,
-      status: ReportStatus.PENDING,
+      status: ReportStatus.DRAFT,
       createdBy,
     });
 
@@ -266,9 +268,192 @@ export class ReportsService {
    * Process export job (async)
    */
   private async processExportJob(jobId: string): Promise<void> {
-    // TODO: Implement actual export processing
-    // This would generate CSV/Excel files based on the job configuration
-    console.log('Processing export job:', jobId);
+    try {
+      // Get the export job details
+      const job = await reportsRepository.getExportJob(jobId);
+      if (!job) {
+        throw new Error(`Export job ${jobId} not found`);
+      }
+
+      // Update status to PROCESSING
+      await reportsRepository.updateExportJob(jobId, {
+        status: ReportStatus.RUNNING,
+      });
+
+      // Fetch data based on entity type
+      const data = await this.fetchExportData(job);
+
+      if (!data || data.length === 0) {
+        await reportsRepository.updateExportJob(jobId, {
+          status: ReportStatus.COMPLETED,
+          fileUrl: null, // No file generated for empty data
+          completedAt: new Date(),
+        });
+        return;
+      }
+
+      // Generate export file based on format
+      const fileUrl = await this.generateExportFile(data, job);
+
+      // Update job as completed
+      await reportsRepository.updateExportJob(jobId, {
+        status: ReportStatus.COMPLETED,
+        fileUrl,
+        completedAt: new Date(),
+        recordCount: data.length,
+      });
+
+      console.log(`Export job ${jobId} completed successfully with ${data.length} records`);
+    } catch (error: any) {
+      // Update job as failed
+      await reportsRepository.updateExportJob(jobId, {
+        status: ReportStatus.FAILED,
+        completedAt: new Date(),
+        errorMessage: error.message,
+      });
+      console.error(`Export job ${jobId} failed:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch data for export based on entity type
+   */
+  private async fetchExportData(job: ExportJob): Promise<any[]> {
+    const { entityType, fields, filters } = job;
+    const poolClient = getPool();
+
+    let sql = '';
+    let params: any[] = [];
+
+    // Build SELECT clause from fields
+    const selectFields = fields && fields.length > 0
+      ? fields.join(', ')
+      : '*';
+
+    // Determine table based on entity type
+    const tableMap: Record<string, string> = {
+      'orders': 'orders o LEFT JOIN users u ON o.picker_id = u.user_id',
+      'inventory': 'inventory',
+      'users': 'users',
+      'exceptions': 'order_exceptions',
+      'cycle_counts': 'cycle_counts',
+      'pick_tasks': 'pick_tasks',
+    };
+
+    const tableName = tableMap[entityType] || entityType;
+
+    sql = `SELECT ${selectFields} FROM ${tableName}`;
+
+    // Build WHERE clause from filters
+    if (filters && filters.length > 0) {
+      const whereClauses: string[] = [];
+      let paramIndex = 1;
+
+      for (const filter of filters) {
+        if (filter.field && filter.operator && filter.value !== undefined) {
+          const clause = this.applyFilter(filter, {}, paramIndex);
+          if (clause) {
+            whereClauses.push(clause.sql);
+            params.push(...clause.params);
+            paramIndex += clause.params.length;
+          }
+        }
+      }
+
+      if (whereClauses.length > 0) {
+        sql += ` WHERE ${whereClauses.join(' AND ')}`;
+      }
+    }
+
+    // Add order by
+    if (entityType === 'orders') {
+      sql += ' ORDER BY o.created_at DESC';
+    } else {
+      sql += ' ORDER BY created_at DESC';
+    }
+
+    const result = await poolClient.query(sql, params);
+    return result.rows;
+  }
+
+  /**
+   * Generate export file based on format
+   */
+  private async generateExportFile(data: any[], job: ExportJob): Promise<string> {
+    const { jobId, entityType, format } = job;
+    const fs = require('fs').promises;
+    const path = require('path');
+
+    // Create exports directory if it doesn't exist
+    const exportsDir = path.join(process.cwd(), 'exports');
+    await fs.mkdir(exportsDir, { recursive: true });
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `${entityType}_export_${jobId}_${timestamp}.${format.toLowerCase()}`;
+    const filePath = path.join(exportsDir, filename);
+    const relativeUrl = `/exports/${filename}`;
+
+    if (format === 'CSV') {
+      await this.generateCSV(data, filePath);
+    } else if (format === 'EXCEL') {
+      await this.generateExcel(data, filePath);
+    } else if (format === 'PDF') {
+      await this.generatePDF(data, filePath, entityType);
+    } else {
+      throw new Error(`Unsupported export format: ${format}`);
+    }
+
+    return relativeUrl;
+  }
+
+  /**
+   * Generate CSV file
+   */
+  private async generateCSV(data: any[], filePath: string): Promise<void> {
+    const fs = require('fs').promises;
+
+    if (data.length === 0) {
+      await fs.writeFile(filePath, '');
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const csvRows = [
+      headers.join(','),
+      ...data.map((row) =>
+        headers.map((header) => {
+          const value = row[header];
+          // Handle values that contain commas or quotes
+          if (value === null || value === undefined) return '';
+          const stringValue = String(value);
+          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+            return `"${stringValue.replace(/"/g, '""')}"`;
+          }
+          return stringValue;
+        }).join(',')
+      ),
+    ];
+
+    await fs.writeFile(filePath, csvRows.join('\n'));
+  }
+
+  /**
+   * Generate Excel file
+   */
+  private async generateExcel(data: any[], filePath: string): Promise<void> {
+    // For now, use CSV as a simple implementation
+    // In production, you would use a library like 'exceljs'
+    await this.generateCSV(data, filePath.replace('.xlsx', '.csv'));
+  }
+
+  /**
+   * Generate PDF file
+   */
+  private async generatePDF(data: any[], filePath: string, entityType: string): Promise<void> {
+    // For now, use CSV as a simple implementation
+    // In production, you would use a library like 'pdfkit'
+    await this.generateCSV(data, filePath.replace('.pdf', '.csv'));
   }
 }
 

@@ -44,6 +44,8 @@ import {
 import { inventoryRepository } from '../repositories/InventoryRepository';
 import { skuRepository } from '../repositories/SKURepository';
 import { logger } from '../config/logger';
+import { notificationService } from './NotificationService';
+import wsServer from '../websocket';
 
 // ============================================================================
 // INVENTORY SERVICE
@@ -153,6 +155,44 @@ export class InventoryService {
       quantity,
       orderId
     );
+
+    // Check for low stock after deduction
+    if (inventory.quantity <= inventory.minThreshold) {
+      const broadcaster = wsServer.getBroadcaster();
+      if (broadcaster) {
+        broadcaster.broadcastInventoryLow({
+          sku: inventory.sku,
+          binLocation: inventory.binLocation,
+          quantity: inventory.quantity,
+          minThreshold: inventory.minThreshold,
+          alertedAt: new Date(),
+        });
+      }
+
+      // Send low stock notification to stock controllers
+      // In production, would query for users with STOCK_CONTROLLER role
+      await notificationService.sendNotification({
+        userId: 'system', // Would be actual stock controller users
+        type: 'INVENTORY_LOW',
+        channel: 'IN_APP',
+        title: 'Low Stock Alert',
+        message: `SKU ${sku} at ${binLocation} is low (${inventory.quantity} units, min: ${inventory.minThreshold})`,
+        priority: 'HIGH',
+        data: {
+          sku: inventory.sku,
+          binLocation: inventory.binLocation,
+          quantity: inventory.quantity,
+          minThreshold: inventory.minThreshold,
+        },
+      });
+
+      logger.warn('Low stock detected', {
+        sku,
+        binLocation,
+        quantity: inventory.quantity,
+        minThreshold: inventory.minThreshold,
+      });
+    }
 
     logger.info('Inventory deducted', { sku, binLocation, quantity, orderId });
 
@@ -293,6 +333,30 @@ export class InventoryService {
       name: sku.name,
       category: sku.category,
       binLocations: sku.binLocations,
+    }));
+  }
+
+  // --------------------------------------------------------------------------
+  // GET ALL SKUS
+  // --------------------------------------------------------------------------
+
+  async getAllSKUs(limit: number = 100): Promise<
+    Array<{
+      sku: string;
+      name: string;
+      category: string;
+      barcode: string;
+      binLocations: string[];
+    }>
+  > {
+    const results = await skuRepository.getAllSKUs(true, limit);
+
+    return results.map(sku => ({
+      sku: sku.sku,
+      name: sku.name,
+      category: sku.category,
+      barcode: sku.barcode || '',
+      binLocations: sku.binLocations || [],
     }));
   }
 

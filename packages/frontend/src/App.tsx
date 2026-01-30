@@ -8,8 +8,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuthStore, useUIStore } from '@/stores';
-import { NotificationCenter } from '@/components/shared';
+import { NotificationCenter, ToastProvider, ErrorBoundary } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
+import webSocketService from '@/services/WebSocketService';
 import {
   LoginPage,
   DashboardPage,
@@ -25,13 +26,29 @@ import {
   SalesPage,
   AdminSettingsPage,
   UserRolesPage,
+  RolesManagementPage,
   ExceptionsPage,
   CycleCountingPage,
+  CycleCountDetailPage,
   LocationCapacityPage,
+  BinLocationsPage,
   QualityControlPage,
   BusinessRulesPage,
   ReportsPage,
   IntegrationsPage,
+  ProductSearchPage,
+  WavePickingPage,
+  ZonePickingPage,
+  SlottingPage,
+  RouteOptimizationPage,
+  DeveloperPage,
+  NotificationPreferencesPage,
+  NotificationsPage,
+  CycleCountKPIPage,
+  MobileScanningPage,
+  ScheduleManagementPage,
+  RootCauseAnalysisPage,
+  NotFoundPage,
 } from '@/pages';
 import { UserRole } from '@opsui/shared';
 
@@ -64,27 +81,13 @@ function ProtectedRoute({
 }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
-  const userRole = useAuthStore(state => state.user?.role);
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
-  const location = useLocation();
 
   // Use effective role (active role if set, otherwise base role) for authorization
   const effectiveRole = getEffectiveRole();
 
-  console.log(
-    '[ProtectedRoute] Path:',
-    location.pathname,
-    'baseRole:',
-    userRole,
-    'effectiveRole:',
-    effectiveRole,
-    'requiredRoles:',
-    requiredRoles
-  );
-
   // Not authenticated - redirect to login
   if (!isAuthenticated || !user) {
-    console.log('[ProtectedRoute] Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
@@ -92,46 +95,35 @@ function ProtectedRoute({
   if (requiredRoles && requiredRoles.length > 0) {
     const hasRole = effectiveRole ? requiredRoles.includes(effectiveRole) : false;
     if (!hasRole) {
-      console.log('[ProtectedRoute] User does not have required role, redirecting');
       // Redirect to appropriate page based on effective role
       if (effectiveRole === 'PICKER') {
-        console.log('[ProtectedRoute] Redirecting PICKER to /orders');
         return <Navigate to="/orders" replace />;
       }
       if (effectiveRole === 'PACKER') {
-        console.log('[ProtectedRoute] Redirecting PACKER to /packing');
         return <Navigate to="/packing" replace />;
       }
       if (effectiveRole === 'STOCK_CONTROLLER') {
-        console.log('[ProtectedRoute] Redirecting STOCK_CONTROLLER to /stock-control');
         return <Navigate to="/stock-control" replace />;
       }
       if (effectiveRole === ('INWARDS' as UserRole)) {
-        console.log('[ProtectedRoute] Redirecting INWARDS to /inwards');
         return <Navigate to="/inwards" replace />;
       }
       if (effectiveRole === ('PRODUCTION' as UserRole)) {
-        console.log('[ProtectedRoute] Redirecting PRODUCTION to /production');
         return <Navigate to="/production" replace />;
       }
       if (effectiveRole === ('MAINTENANCE' as UserRole)) {
-        console.log('[ProtectedRoute] Redirecting MAINTENANCE to /maintenance');
         return <Navigate to="/maintenance" replace />;
       }
       if (effectiveRole === ('SALES' as UserRole)) {
-        console.log('[ProtectedRoute] Redirecting SALES to /sales');
         return <Navigate to="/sales" replace />;
       }
       if (effectiveRole === ('RMA' as UserRole)) {
-        console.log('[ProtectedRoute] Redirecting RMA to /rma');
         return <Navigate to="/rma" replace />;
       }
-      console.log('[ProtectedRoute] Redirecting to /dashboard (default)');
       return <Navigate to="/dashboard" replace />;
     }
   }
 
-  console.log('[ProtectedRoute] Access granted, rendering children');
   return <>{children}</>;
 }
 
@@ -287,14 +279,18 @@ function NavigationTracker() {
     if (location.pathname === '/orders' || location.pathname === '/orders/') {
       displayView = 'Order Queue';
     } else if (location.pathname.includes('/orders/') && location.pathname.includes('/pick')) {
-      // Extract order ID from path like /orders/ORD-12345678-1234/pick
-      const match = location.pathname.match(/ORD-\d{8}-\d{4}/);
+      // Extract order ID from path like /orders/SO1234/pick or /orders/ORD-12345678-1234/pick
+      const soMatch = location.pathname.match(/SO\d{4}/);
+      const ordMatch = location.pathname.match(/ORD-\d{8}-\d{4}/);
+      const match = soMatch || ordMatch;
       displayView = match ? `Picking Order ${match[0]}` : 'Picking Order';
     } else if (location.pathname === '/packing' || location.pathname === '/packing/') {
       displayView = 'Packing Queue';
     } else if (location.pathname.includes('/packing/') && location.pathname.includes('/pack')) {
-      // Extract order ID from path like /packing/ORD-12345678-1234/pack
-      const match = location.pathname.match(/ORD-\d{8}-\d{4}/);
+      // Extract order ID from path like /packing/SO1234/pack or /packing/ORD-12345678-1234/pack
+      const soMatch = location.pathname.match(/SO\d{4}/);
+      const ordMatch = location.pathname.match(/ORD-\d{8}-\d{4}/);
+      const match = soMatch || ordMatch;
       displayView = match ? `Packing Order ${match[0]}` : 'Packing Order';
     } else if (location.pathname === '/dashboard') {
       displayView = 'Dashboard';
@@ -409,12 +405,6 @@ function AppInner() {
   // Auto-switch admin users back to ADMIN role when visiting admin pages
   useAdminRoleAutoSwitch();
 
-  // Debug: Log location changes
-  const location = useLocation();
-  useEffect(() => {
-    console.log('[App] Location changed:', location.pathname, location.search);
-  }, [location.pathname, location.search]);
-
   // Determine default route based on role
   const getDefaultRoute = () => {
     if (!isAuthenticated) return '/login';
@@ -490,7 +480,7 @@ function AppInner() {
         <Route
           path="/exceptions"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
+            <ProtectedRoute>
               <ExceptionsPage />
             </ProtectedRoute>
           }
@@ -570,8 +560,48 @@ function AppInner() {
         <Route
           path="/cycle-counting"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER, UserRole.PICKER]}>
               <CycleCountingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cycle-counting/:planId"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER, UserRole.PICKER]}>
+              <CycleCountDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cycle-counting/kpi"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}>
+              <CycleCountKPIPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cycle-counting/mobile/:planId"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER, UserRole.PICKER]}>
+              <MobileScanningPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cycle-counting/schedules"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
+              <ScheduleManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cycle-counting/root-cause"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}>
+              <RootCauseAnalysisPage />
             </ProtectedRoute>
           }
         />
@@ -580,6 +610,16 @@ function AppInner() {
           element={
             <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
               <LocationCapacityPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bin-locations"
+          element={
+            <ProtectedRoute
+              requiredRoles={['STOCK_CONTROLLER' as UserRole, UserRole.ADMIN, UserRole.SUPERVISOR]}
+            >
+              <BinLocationsPage />
             </ProtectedRoute>
           }
         />
@@ -618,6 +658,47 @@ function AppInner() {
           }
         />
 
+        {/* Warehouse Operations routes */}
+        <Route
+          path="/search"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PICKER, 'STOCK_CONTROLLER' as UserRole]}>
+              <ProductSearchPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/waves"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
+              <WavePickingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/zones"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
+              <ZonePickingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/slotting"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR]}>
+              <SlottingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/route-optimization"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PICKER]}>
+              <RouteOptimizationPage />
+            </ProtectedRoute>
+          }
+        />
         {/* User Roles route */}
         <Route
           path="/user-roles"
@@ -628,21 +709,63 @@ function AppInner() {
           }
         />
 
-        {/* Role Settings route */}
+        {/* Roles Management route - Custom roles with permissions */}
+        <Route
+          path="/roles-management"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+              <RolesManagementPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Role Settings route - accessible to all authenticated users */}
         <Route
           path="/role-settings"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+            <ProtectedRoute>
               <AdminSettingsPage />
             </ProtectedRoute>
           }
         />
 
+        {/* Notification Preferences route - accessible to all authenticated users */}
+        <Route
+          path="/notifications/preferences"
+          element={
+            <ProtectedRoute>
+              <NotificationPreferencesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Notifications page - accessible to all authenticated users */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Developer Panel - only in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <Route
+            path="/developer"
+            element={
+              <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+                <DeveloperPage />
+              </ProtectedRoute>
+            }
+          />
+        )}
+
         {/* Default route */}
         <Route path="/" element={<Navigate to={getDefaultRoute()} replace />} />
 
-        {/* Catch all - redirect to default */}
-        <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
+        {/* 404 Not Found page */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <NotificationCenter />
     </>
@@ -697,11 +820,46 @@ function App() {
     };
   }, []);
 
+  // WebSocket connection management
+  useEffect(() => {
+    const accessToken = useAuthStore.getState().tokens?.accessToken;
+
+    // Connect WebSocket when authenticated
+    if (accessToken && !webSocketService.isConnected()) {
+      webSocketService.connect();
+    }
+
+    // Subscribe to auth state changes
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      const token = state.tokens?.accessToken;
+      if (token && !webSocketService.isConnected()) {
+        webSocketService.connect();
+      } else if (!token && webSocketService.isConnected()) {
+        webSocketService.disconnect();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      // Disconnect WebSocket on unmount
+      webSocketService.disconnect();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppInner />
-      </BrowserRouter>
+      <ErrorBoundary>
+        <ToastProvider>
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <AppInner />
+          </BrowserRouter>
+        </ToastProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

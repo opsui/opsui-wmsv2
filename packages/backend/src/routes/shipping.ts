@@ -81,10 +81,11 @@ router.post(
       !totalWeight ||
       !totalPackages
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const shipment = await shippingService.createShipment({
@@ -150,10 +151,11 @@ router.get(
     const shipment = await shippingService.getShipmentByOrderId(orderId);
 
     if (!shipment) {
-      return res.status(404).json({
+      res.status(404).json({
         error: 'Shipment not found for this order',
         code: 'SHIPMENT_NOT_FOUND',
       });
+      return;
     }
 
     res.json(shipment);
@@ -172,10 +174,11 @@ router.patch(
     const { status } = req.body;
 
     if (!status) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Status is required',
         code: 'MISSING_STATUS',
       });
+      return;
     }
 
     const shipment = await shippingService.updateShipmentStatus(
@@ -200,10 +203,11 @@ router.post(
     const { trackingNumber, trackingUrl } = req.body;
 
     if (!trackingNumber) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'trackingNumber is required',
         code: 'MISSING_TRACKING_NUMBER',
       });
+      return;
     }
 
     const shipment = await shippingService.addTrackingNumber(
@@ -232,10 +236,11 @@ router.post(
 
     // Validate required fields
     if (!shipmentId || !packageNumber || !packageWeight) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const label = await shippingService.createShippingLabel({
@@ -300,10 +305,11 @@ router.post(
 
     // Validate required fields
     if (!shipmentId || !eventCode || !eventDescription || !eventDate) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const event = await shippingService.addTrackingEvent({

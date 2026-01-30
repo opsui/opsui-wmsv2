@@ -5,13 +5,15 @@
  * Provides tabbed interface for different quality control workflows.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DocumentPlusIcon,
   ClipboardDocumentCheckIcon,
   EyeIcon,
   TrashIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
+import { Pagination, Header, useToast, ConfirmDialog } from '@/components/shared';
 import {
   InspectionType,
   InspectionStatus,
@@ -29,7 +31,7 @@ import {
   useUpdateInspection,
   useDeleteChecklist,
 } from '../services/api';
-import { Header } from '@/components/shared';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 // ============================================================================
 // TYPES
@@ -126,37 +128,66 @@ interface InspectionModalProps {
 }
 
 function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProps) {
+  const { showToast } = useToast();
   const isEdit = !!inspection;
-  const [formData, setFormData] = useState({
-    inspectionType: inspection?.inspectionType || InspectionType.INCOMING,
-    referenceType: inspection?.referenceType || 'INVENTORY',
-    referenceId: inspection?.referenceId || '',
-    sku: inspection?.sku || '',
-    quantityInspected: inspection?.quantityInspected || 1,
-    location: inspection?.location || '',
-    lotNumber: inspection?.lotNumber || '',
-    notes: inspection?.notes || '',
-  });
-
   const createMutation = useCreateInspection();
   const updateMutation = useUpdateInspection();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (isEdit && inspection) {
-        await updateMutation.mutateAsync({
-          inspectionId: inspection.inspectionId,
-          updates: formData as any,
-        });
-      } else {
-        await createMutation.mutateAsync(formData as any);
+  // Form validation
+  const {
+    values: formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+    setFieldValue,
+  } = useFormValidation({
+    initialValues: {
+      inspectionType: inspection?.inspectionType || InspectionType.INCOMING,
+      referenceType: inspection?.referenceType || 'INVENTORY',
+      referenceId: inspection?.referenceId || '',
+      sku: inspection?.sku || '',
+      quantityInspected: inspection?.quantityInspected || 1,
+      location: inspection?.location || '',
+      lotNumber: inspection?.lotNumber || '',
+      notes: inspection?.notes || '',
+    },
+    validationRules: {
+      inspectionType: { required: true },
+      referenceType: { required: true },
+      referenceId: { required: true, minLength: 2 },
+      sku: { required: true, minLength: 2 },
+      quantityInspected: {
+        required: true,
+        custom: (value: number) => {
+          if (value < 1) {
+            return 'Must be at least 1';
+          }
+          return null;
+        },
+      },
+    },
+    onSubmit: async (values) => {
+      try {
+        if (isEdit && inspection) {
+          await updateMutation.mutateAsync({
+            inspectionId: inspection.inspectionId,
+            updates: values as any,
+          });
+          showToast('Inspection updated successfully', 'success');
+        } else {
+          await createMutation.mutateAsync(values as any);
+          showToast('Inspection created successfully', 'success');
+        }
+        onSuccess();
+        onClose();
+      } catch (error: any) {
+        console.error('Failed to save inspection:', error);
+        showToast(error?.message || 'Failed to save inspection', 'error');
+        throw error;
       }
-      onSuccess();
-    } catch (error) {
-      console.error('Failed to save inspection:', error);
-    }
-  };
+    },
+  });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -174,12 +205,13 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 Inspection Type *
               </label>
               <select
+                name="inspectionType"
                 required
                 value={formData.inspectionType}
-                onChange={e =>
-                  setFormData({ ...formData, inspectionType: e.target.value as InspectionType })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.inspectionType ? 'border-red-500' : 'border-gray-300'
+                }`}
               >
                 <option value={InspectionType.INCOMING}>Incoming</option>
                 <option value={InspectionType.OUTGOING}>Outgoing</option>
@@ -188,6 +220,7 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 <option value={InspectionType.DAMAGE}>Damage</option>
                 <option value={InspectionType.EXPIRATION}>Expiration</option>
               </select>
+              {errors.inspectionType && <p className="mt-1 text-sm text-red-500">{errors.inspectionType}</p>}
             </div>
 
             <div>
@@ -195,10 +228,13 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 Reference Type *
               </label>
               <select
+                name="referenceType"
                 required
                 value={formData.referenceType}
-                onChange={e => setFormData({ ...formData, referenceType: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.referenceType ? 'border-red-500' : 'border-gray-300'
+                }`}
               >
                 <option value="INVENTORY">Inventory</option>
                 <option value="ASN">ASN</option>
@@ -206,30 +242,39 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 <option value="ORDER">Order</option>
                 <option value="RETURN">Return</option>
               </select>
+              {errors.referenceType && <p className="mt-1 text-sm text-red-500">{errors.referenceType}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Reference ID *</label>
               <input
                 type="text"
+                name="referenceId"
                 required
                 value={formData.referenceId}
-                onChange={e => setFormData({ ...formData, referenceId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.referenceId ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter reference ID"
               />
+              {errors.referenceId && <p className="mt-1 text-sm text-red-500">{errors.referenceId}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
               <input
                 type="text"
+                name="sku"
                 required
                 value={formData.sku}
-                onChange={e => setFormData({ ...formData, sku: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.sku ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="Enter SKU"
               />
+              {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
 
             <div>
@@ -238,14 +283,16 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
               </label>
               <input
                 type="number"
+                name="quantityInspected"
                 required
                 min="1"
                 value={formData.quantityInspected}
-                onChange={e =>
-                  setFormData({ ...formData, quantityInspected: parseInt(e.target.value) })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.quantityInspected ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {errors.quantityInspected && <p className="mt-1 text-sm text-red-500">{errors.quantityInspected}</p>}
             </div>
 
             <div>
@@ -292,10 +339,10 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
             </button>
             <button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={isSubmitting}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {isEdit ? 'Update' : 'Create'} Inspection
+              {isSubmitting ? 'Saving...' : (isEdit ? 'Update' : 'Create') + ' Inspection'}
             </button>
           </div>
         </form>
@@ -316,6 +363,7 @@ interface ChecklistModalProps {
 
 function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) {
   const isEdit = !!checklist;
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     checklistName: checklist?.checklistName || '',
     description: checklist?.description || '',
@@ -369,21 +417,30 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
     e.preventDefault();
     try {
       await createMutation.mutateAsync(formData as any);
+      showToast('Checklist saved successfully', 'success');
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save checklist:', error);
+      showToast(error?.message || 'Failed to save checklist', 'error');
     }
   };
 
   const handleDelete = async () => {
+    const { showToast } = useToast();
     if (!checklist) return;
-    if (confirm('Are you sure you want to delete this checklist?')) {
-      try {
-        await deleteMutation.mutateAsync(checklist.checklistId);
-        onSuccess();
-      } catch (error) {
-        console.error('Failed to delete checklist:', error);
-      }
+    setDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteMutation.mutateAsync(checklist.checklistId);
+      showToast('Checklist deleted successfully', 'success');
+      onSuccess();
+    } catch (error: any) {
+      console.error('Failed to delete checklist:', error);
+      showToast(error?.message || 'Failed to delete checklist', 'error');
+    } finally {
+      setDeleteConfirm(false);
     }
   };
 
@@ -527,6 +584,18 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
             </button>
           </div>
         </form>
+
+        <ConfirmDialog
+          isOpen={deleteConfirm}
+          onClose={() => setDeleteConfirm(false)}
+          onConfirm={confirmDelete}
+          title="Delete Checklist"
+          message="Are you sure you want to delete this checklist? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+          isLoading={deleteMutation.isPending}
+        />
       </div>
     </div>
   );
@@ -546,6 +615,36 @@ export function QualityControlPage() {
   const [checklistModalOpen, setChecklistModalOpen] = useState(false);
   const [inspectionFilter, setInspectionFilter] = useState<string>('all');
   const [returnFilter, setReturnFilter] = useState<string>('all');
+
+  // Search states
+  const [inspectionsSearchTerm, setInspectionsSearchTerm] = useState('');
+  const [checklistsSearchTerm, setChecklistsSearchTerm] = useState('');
+  const [returnsSearchTerm, setReturnsSearchTerm] = useState('');
+
+  // Pagination state for inspections
+  const [inspectionsCurrentPage, setInspectionsCurrentPage] = useState(1);
+  const inspectionsPerPage = 10;
+
+  // Pagination state for checklists
+  const [checklistsCurrentPage, setChecklistsCurrentPage] = useState(1);
+  const checklistsPerPage = 10;
+
+  // Pagination state for returns
+  const [returnsCurrentPage, setReturnsCurrentPage] = useState(1);
+  const returnsPerPage = 10;
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setInspectionsCurrentPage(1);
+  }, [inspectionFilter, inspectionsSearchTerm]);
+
+  useEffect(() => {
+    setChecklistsCurrentPage(1);
+  }, [checklistsSearchTerm]);
+
+  useEffect(() => {
+    setReturnsCurrentPage(1);
+  }, [returnFilter, returnsSearchTerm]);
 
   // Fetch data
   const { data: inspectionsData, refetch: refetchInspections } = useQualityInspections({
@@ -573,10 +672,66 @@ export function QualityControlPage() {
       ? returns
       : returns.filter((r: ReturnAuthorization) => r.status === returnFilter);
 
+  // Search filters
+  const searchedInspections = filteredInspections.filter((inspection: QualityInspection) => {
+    if (!inspectionsSearchTerm.trim()) return true;
+    const query = inspectionsSearchTerm.toLowerCase();
+    return (
+      inspection.inspectionId.toLowerCase().includes(query) ||
+      inspection.sku.toLowerCase().includes(query) ||
+      inspection.inspectionType.toLowerCase().includes(query) ||
+      inspection.location?.toLowerCase().includes(query) ||
+      inspection.lotNumber?.toLowerCase().includes(query)
+    );
+  });
+
+  const searchedChecklists = checklists.filter((checklist: InspectionChecklist) => {
+    if (!checklistsSearchTerm.trim()) return true;
+    const query = checklistsSearchTerm.toLowerCase();
+    return (
+      checklist.checklistId.toLowerCase().includes(query) ||
+      checklist.checklistName.toLowerCase().includes(query) ||
+      checklist.inspectionType.toLowerCase().includes(query) ||
+      checklist.description?.toLowerCase().includes(query)
+    );
+  });
+
+  const searchedReturns = filteredReturns.filter((returnAuth: ReturnAuthorization) => {
+    if (!returnsSearchTerm.trim()) return true;
+    const query = returnsSearchTerm.toLowerCase();
+    return (
+      returnAuth.returnId.toLowerCase().includes(query) ||
+      returnAuth.orderId.toLowerCase().includes(query) ||
+      returnAuth.customerName?.toLowerCase().includes(query) ||
+      returnAuth.status.toLowerCase().includes(query)
+    );
+  });
+
+  // Paginate inspections
+  const inspectionsTotalPages = Math.ceil(searchedInspections.length / inspectionsPerPage);
+  const paginatedInspections = searchedInspections.slice(
+    (inspectionsCurrentPage - 1) * inspectionsPerPage,
+    inspectionsCurrentPage * inspectionsPerPage
+  );
+
+  // Paginate checklists
+  const checklistsTotalPages = Math.ceil(searchedChecklists.length / checklistsPerPage);
+  const paginatedChecklists = searchedChecklists.slice(
+    (checklistsCurrentPage - 1) * checklistsPerPage,
+    checklistsCurrentPage * checklistsPerPage
+  );
+
+  // Paginate returns
+  const returnsTotalPages = Math.ceil(searchedReturns.length / returnsPerPage);
+  const paginatedReturns = searchedReturns.slice(
+    (returnsCurrentPage - 1) * returnsPerPage,
+    returnsCurrentPage * returnsPerPage
+  );
+
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
@@ -647,21 +802,33 @@ export function QualityControlPage() {
           {/* Inspections Tab */}
           {activeTab === 'inspections' && (
             <div className="space-y-4">
-              {/* Filter */}
-              <div className="flex items-center space-x-4">
-                <label className="text-sm font-medium text-gray-300">Filter by Status:</label>
-                <select
-                  value={inspectionFilter}
-                  onChange={e => setInspectionFilter(e.target.value)}
-                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-sm text-white"
-                >
-                  <option value="all">All</option>
-                  <option value={InspectionStatus.PENDING}>Pending</option>
-                  <option value={InspectionStatus.IN_PROGRESS}>In Progress</option>
-                  <option value={InspectionStatus.PASSED}>Passed</option>
-                  <option value={InspectionStatus.FAILED}>Failed</option>
-                  <option value={InspectionStatus.CONDITIONAL_PASSED}>Conditional</option>
-                </select>
+              {/* Filter and Search */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <label className="text-sm font-medium text-gray-300">Filter by Status:</label>
+                  <select
+                    value={inspectionFilter}
+                    onChange={e => setInspectionFilter(e.target.value)}
+                    className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-sm text-white"
+                  >
+                    <option value="all">All</option>
+                    <option value={InspectionStatus.PENDING}>Pending</option>
+                    <option value={InspectionStatus.IN_PROGRESS}>In Progress</option>
+                    <option value={InspectionStatus.PASSED}>Passed</option>
+                    <option value={InspectionStatus.FAILED}>Failed</option>
+                    <option value={InspectionStatus.CONDITIONAL_PASSED}>Conditional</option>
+                  </select>
+                </div>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search inspections..."
+                    value={inspectionsSearchTerm}
+                    onChange={e => setInspectionsSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
               </div>
 
               {/* Inspections Table */}
@@ -690,14 +857,14 @@ export function QualityControlPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                    {filteredInspections.length === 0 ? (
+                    {paginatedInspections.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
-                          No inspections found
+                          {searchedInspections.length === 0 ? 'No inspections found' : 'No inspections on this page'}
                         </td>
                       </tr>
                     ) : (
-                      filteredInspections.map((inspection: QualityInspection) => (
+                      paginatedInspections.map((inspection: QualityInspection) => (
                         <tr key={inspection.inspectionId}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                             {inspection.inspectionId}
@@ -731,12 +898,37 @@ export function QualityControlPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination for Inspections */}
+              {inspectionsTotalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <Pagination
+                    currentPage={inspectionsCurrentPage}
+                    totalPages={inspectionsTotalPages}
+                    onPageChange={setInspectionsCurrentPage}
+                  />
+                </div>
+              )}
             </div>
           )}
 
           {/* Checklists Tab */}
           {activeTab === 'checklists' && (
             <div className="space-y-4">
+              {/* Search */}
+              <div className="flex justify-end">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search checklists..."
+                    value={checklistsSearchTerm}
+                    onChange={e => setChecklistsSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              </div>
+
               {/* Checklists Table */}
               <div className="glass-card rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-800">
@@ -760,14 +952,14 @@ export function QualityControlPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                    {checklists.length === 0 ? (
+                    {paginatedChecklists.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-400">
-                          No checklists found
+                          {searchedChecklists.length === 0 ? 'No checklists found' : 'No checklists on this page'}
                         </td>
                       </tr>
                     ) : (
-                      checklists.map((checklist: InspectionChecklist) => (
+                      paginatedChecklists.map((checklist: InspectionChecklist) => (
                         <tr key={checklist.checklistId}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                             {checklist.checklistId}
@@ -798,29 +990,52 @@ export function QualityControlPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination for Checklists */}
+              {checklistsTotalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <Pagination
+                    currentPage={checklistsCurrentPage}
+                    totalPages={checklistsTotalPages}
+                    onPageChange={setChecklistsCurrentPage}
+                  />
+                </div>
+              )}
             </div>
           )}
 
           {/* Returns Tab */}
           {activeTab === 'returns' && (
             <div className="space-y-4">
-              {/* Filter */}
-              <div className="flex items-center space-x-4">
-                <label className="text-sm font-medium text-gray-300">Filter by Status:</label>
-                <select
-                  value={returnFilter}
-                  onChange={e => setReturnFilter(e.target.value)}
-                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-sm text-white"
-                >
-                  <option value="all">All</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="RECEIVED">Received</option>
-                  <option value="INSPECTED">Inspected</option>
-                  <option value="PROCESSED">Processed</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
+              {/* Filter and Search */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <label className="text-sm font-medium text-gray-300">Filter by Status:</label>
+                  <select
+                    value={returnFilter}
+                    onChange={e => setReturnFilter(e.target.value)}
+                    className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-sm text-white"
+                  >
+                    <option value="all">All</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="RECEIVED">Received</option>
+                    <option value="INSPECTED">Inspected</option>
+                    <option value="PROCESSED">Processed</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                </div>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search returns..."
+                    value={returnsSearchTerm}
+                    onChange={e => setReturnsSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
               </div>
 
               {/* Returns Table */}
@@ -852,14 +1067,14 @@ export function QualityControlPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                    {filteredReturns.length === 0 ? (
+                    {paginatedReturns.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-400">
-                          No returns found
+                          {searchedReturns.length === 0 ? 'No returns found' : 'No returns on this page'}
                         </td>
                       </tr>
                     ) : (
-                      filteredReturns.map((returnAuth: ReturnAuthorization) => (
+                      paginatedReturns.map((returnAuth: ReturnAuthorization) => (
                         <tr key={returnAuth.returnId}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                             {returnAuth.returnId}
@@ -900,6 +1115,17 @@ export function QualityControlPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination for Returns */}
+              {returnsTotalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <Pagination
+                    currentPage={returnsCurrentPage}
+                    totalPages={returnsTotalPages}
+                    onPageChange={setReturnsCurrentPage}
+                  />
+                </div>
+              )}
             </div>
           )}
 

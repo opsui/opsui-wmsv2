@@ -5,8 +5,9 @@
  * - Unique design: Returns pipeline layout with stage-based navigation
  */
 
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button } from '@/components/shared';
+import { Card, CardHeader, CardTitle, CardContent, Header, Button, Pagination, useToast } from '@/components/shared';
 import {
   ArrowPathIcon,
   ClockIcon,
@@ -15,6 +16,7 @@ import {
   PlusIcon,
   TruckIcon,
   CubeIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 
 // ============================================================================
@@ -298,6 +300,30 @@ function RMAPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = (searchParams.get('tab') as TabType) || 'dashboard';
 
+  // Pagination state
+  const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
+  const [processingCurrentPage, setProcessingCurrentPage] = useState(1);
+  const [completedCurrentPage, setCompletedCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  // Search states
+  const [requestsSearchTerm, setRequestsSearchTerm] = useState('');
+  const [processingSearchTerm, setProcessingSearchTerm] = useState('');
+  const [completedSearchTerm, setCompletedSearchTerm] = useState('');
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setRequestsCurrentPage(1);
+  }, [requestsSearchTerm]);
+
+  useEffect(() => {
+    setProcessingCurrentPage(1);
+  }, [processingSearchTerm]);
+
+  useEffect(() => {
+    setCompletedCurrentPage(1);
+  }, [completedSearchTerm]);
+
   // Mock data for demonstration
   const dashboard = {
     pendingRequests: 5,
@@ -374,7 +400,7 @@ function RMAPage() {
     <div className="min-h-screen">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -494,62 +520,223 @@ function RMAPage() {
         {/* Requests Tab */}
         {currentTab === 'requests' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
                 <h2 className="text-2xl font-bold text-white">RMA Requests</h2>
                 <p className="text-gray-400 text-sm mt-1">
                   Pending return requests awaiting review
                 </p>
               </div>
-              <Button variant="primary" className="flex items-center gap-2">
-                <PlusIcon className="h-5 w-5" />
-                New Request
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search requests..."
+                    value={requestsSearchTerm}
+                    onChange={e => setRequestsSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                  />
+                </div>
+                <Button variant="primary" className="flex items-center gap-2">
+                  <PlusIcon className="h-5 w-5" />
+                  New Request
+                </Button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {requests
-                .filter(r => r.status === 'PENDING')
-                .map(request => (
-                  <RMARequestCard key={request.rmaId} request={request} />
-                ))}
-            </div>
+            {(() => {
+              const filteredRequests = requests.filter(r => {
+                if (r.status !== 'PENDING') return false;
+                if (!requestsSearchTerm.trim()) return true;
+                const query = requestsSearchTerm.toLowerCase();
+                return (
+                  r.rmaId?.toLowerCase().includes(query) ||
+                  r.customerName?.toLowerCase().includes(query) ||
+                  r.orderId?.toLowerCase().includes(query) ||
+                  r.sku?.toLowerCase().includes(query) ||
+                  r.productName?.toLowerCase().includes(query) ||
+                  r.reason?.toLowerCase().includes(query)
+                );
+              });
+              const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+              const paginatedRequests = filteredRequests.slice(
+                (requestsCurrentPage - 1) * itemsPerPage,
+                requestsCurrentPage * itemsPerPage
+              );
+              return (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {paginatedRequests.length === 0 ? (
+                      <Card variant="glass">
+                        <CardContent className="p-12 text-center">
+                          <p className="text-gray-400">No requests match your search</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      paginatedRequests.map(request => (
+                        <RMARequestCard key={request.rmaId} request={request} />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Pagination for Requests */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-6">
+                      <Pagination
+                        currentPage={requestsCurrentPage}
+                        totalPages={totalPages}
+                        onPageChange={setRequestsCurrentPage}
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
         {/* Processing Tab */}
         {currentTab === 'processing' && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Returns Processing</h2>
-              <p className="text-gray-400 text-sm mt-1">
-                Approved returns being inspected and processed
-              </p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white">Returns Processing</h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  Approved returns being inspected and processed
+                </p>
+              </div>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search processing..."
+                  value={processingSearchTerm}
+                  onChange={e => setProcessingSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {requests
-                .filter(r => ['APPROVED', 'RECEIVED', 'INSPECTING'].includes(r.status))
-                .map(request => (
-                  <RMARequestCard key={request.rmaId} request={request} />
-                ))}
-            </div>
+
+            {(() => {
+              const filteredRequests = requests.filter(r => {
+                if (!['APPROVED', 'RECEIVED', 'INSPECTING'].includes(r.status)) return false;
+                if (!processingSearchTerm.trim()) return true;
+                const query = processingSearchTerm.toLowerCase();
+                return (
+                  r.rmaId?.toLowerCase().includes(query) ||
+                  r.customerName?.toLowerCase().includes(query) ||
+                  r.orderId?.toLowerCase().includes(query) ||
+                  r.sku?.toLowerCase().includes(query) ||
+                  r.productName?.toLowerCase().includes(query) ||
+                  r.reason?.toLowerCase().includes(query)
+                );
+              });
+              const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+              const paginatedRequests = filteredRequests.slice(
+                (processingCurrentPage - 1) * itemsPerPage,
+                processingCurrentPage * itemsPerPage
+              );
+              return (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {paginatedRequests.length === 0 ? (
+                      <Card variant="glass">
+                        <CardContent className="p-12 text-center">
+                          <p className="text-gray-400">No processing items match your search</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      paginatedRequests.map(request => (
+                        <RMARequestCard key={request.rmaId} request={request} />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Pagination for Processing */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-6">
+                      <Pagination
+                        currentPage={processingCurrentPage}
+                        totalPages={totalPages}
+                        onPageChange={setProcessingCurrentPage}
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
         {/* Completed Tab */}
         {currentTab === 'completed' && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Completed Returns</h2>
-              <p className="text-gray-400 text-sm mt-1">History of all resolved RMA requests</p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white">Completed Returns</h2>
+                <p className="text-gray-400 text-sm mt-1">History of all resolved RMA requests</p>
+              </div>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search completed..."
+                  value={completedSearchTerm}
+                  onChange={e => setCompletedSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {requests
-                .filter(r => ['REFUNDED', 'REPLACED', 'REJECTED', 'CLOSED'].includes(r.status))
-                .map(request => (
-                  <RMARequestCard key={request.rmaId} request={request} />
-                ))}
-            </div>
+
+            {(() => {
+              const filteredRequests = requests.filter(r => {
+                if (!['REFUNDED', 'REPLACED', 'REJECTED', 'CLOSED'].includes(r.status)) return false;
+                if (!completedSearchTerm.trim()) return true;
+                const query = completedSearchTerm.toLowerCase();
+                return (
+                  r.rmaId?.toLowerCase().includes(query) ||
+                  r.customerName?.toLowerCase().includes(query) ||
+                  r.orderId?.toLowerCase().includes(query) ||
+                  r.sku?.toLowerCase().includes(query) ||
+                  r.productName?.toLowerCase().includes(query) ||
+                  r.reason?.toLowerCase().includes(query)
+                );
+              });
+              const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+              const paginatedRequests = filteredRequests.slice(
+                (completedCurrentPage - 1) * itemsPerPage,
+                completedCurrentPage * itemsPerPage
+              );
+              return (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {paginatedRequests.length === 0 ? (
+                      <Card variant="glass">
+                        <CardContent className="p-12 text-center">
+                          <p className="text-gray-400">No completed returns match your search</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      paginatedRequests.map(request => (
+                        <RMARequestCard key={request.rmaId} request={request} />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Pagination for Completed */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-6">
+                      <Pagination
+                        currentPage={completedCurrentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCompletedCurrentPage}
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </main>

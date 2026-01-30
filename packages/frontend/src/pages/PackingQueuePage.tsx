@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClaimOrderForPacking } from '@/services/api';
-import { Card, CardContent, Button, Header } from '@/components/shared';
+import { Card, CardContent, Button, Header, Pagination, useToast } from '@/components/shared';
 import { TaskStatusBadge } from '@/components/shared';
 import { OrderStatus, OrderPriority, type Order } from '@opsui/shared';
 import {
@@ -32,10 +32,19 @@ type TabType = 'my-orders' | 'waiting';
 
 export function PackingQueuePage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [filter, setFilter] = useState<'all' | 'high' | 'urgent'>('all');
   const [activeTab, setActiveTab] = useState<TabType>('waiting');
   const [searchQuery, setSearchQuery] = useState('');
   const currentUser = useAuthStore(state => state.user);
+
+  // Pagination for my orders
+  const [myOrdersCurrentPage, setMyOrdersCurrentPage] = useState(1);
+  const myOrdersPerPage = 6;
+
+  // Pagination for waiting orders
+  const [waitingCurrentPage, setWaitingCurrentPage] = useState(1);
+  const waitingPerPage = 6;
 
   // Get orders that are PICKED (ready for packing) - fetch full order details for accurate counts
   const {
@@ -187,12 +196,14 @@ export function PackingQueuePage() {
         { orderId, packerId: currentUser.userId },
         {
           onSuccess: () => {
+            showToast('Order claimed successfully', 'success');
             navigate(`/packing/${orderId}/pack`);
           },
         }
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to claim order:', error);
+      showToast(error?.message || 'Failed to claim order', 'error');
     }
   };
 
@@ -229,7 +240,7 @@ export function PackingQueuePage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -316,8 +327,12 @@ export function PackingQueuePage() {
                 </CardContent>
               </Card>
             ) : (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {searchedMyOrders.map((order: any) => (
+                {searchedMyOrders.slice(
+                  (myOrdersCurrentPage - 1) * myOrdersPerPage,
+                  myOrdersCurrentPage * myOrdersPerPage
+                ).map((order: any) => (
                   <Card
                     key={order.orderId}
                     variant="glass"
@@ -369,6 +384,18 @@ export function PackingQueuePage() {
                   </Card>
                 ))}
               </div>
+
+              {/* Pagination for My Orders */}
+              {searchedMyOrders.length > myOrdersPerPage && (
+                <div className="flex justify-center mt-6">
+                  <Pagination
+                    currentPage={myOrdersCurrentPage}
+                    totalPages={Math.ceil(searchedMyOrders.length / myOrdersPerPage)}
+                    onPageChange={setMyOrdersCurrentPage}
+                  />
+                </div>
+              )}
+            </>
             )}
           </>
         )}
@@ -422,7 +449,10 @@ export function PackingQueuePage() {
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredOrders.map((order: Order) => (
+                  {filteredOrders.slice(
+                    (waitingCurrentPage - 1) * waitingPerPage,
+                    waitingCurrentPage * waitingPerPage
+                  ).map((order: Order) => (
                     <Card
                       key={order.orderId}
                       variant="glass"
@@ -481,6 +511,17 @@ export function PackingQueuePage() {
                     </Card>
                   ))}
                 </div>
+
+                {/* Pagination for Waiting Orders */}
+                {filteredOrders.length > waitingPerPage && (
+                  <div className="flex justify-center mt-6">
+                    <Pagination
+                      currentPage={waitingCurrentPage}
+                      totalPages={Math.ceil(filteredOrders.length / waitingPerPage)}
+                      onPageChange={setWaitingCurrentPage}
+                    />
+                  </div>
+                )}
               </>
             )}
           </>

@@ -4,34 +4,59 @@
  * Interface for scheduling and performing cycle counts
  */
 
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   useCycleCountPlans,
-  useCycleCountTolerances,
   useCreateCycleCountPlan,
-  useStartCycleCount,
-  useCompleteCycleCount,
-  useReconcileCycleCount,
-  useCreateCycleCountEntry,
-  useUpdateVarianceStatus,
+  useStockControlInventory,
+  useBinLocations,
+  useAssignableUsers,
+  useCycleCountDashboard,
 } from '@/services/api';
 import { useAuthStore } from '@/stores';
-import { CycleCountStatus, CycleCountType, VarianceStatus, UserRole } from '@opsui/shared';
+import { CycleCountStatus, CycleCountType, UserRole } from '@opsui/shared';
 import {
   ClipboardDocumentListIcon,
   PlusIcon,
-  PlayIcon,
-  CheckIcon,
-  XMarkIcon,
-  ExclamationTriangleIcon,
   ChartBarIcon,
+  ClipboardDocumentCheckIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
-import { Header } from '@/components/shared';
+import { Header, Select, Pagination } from '@/components/shared';
+import { useToast } from '@/components/shared';
+import { useFormValidation } from '@/hooks/useFormValidation';
 
 // ============================================================================
 // COMPONENTS
 // ============================================================================
+
+// Tab Button Component
+function TabButton({
+  active,
+  onClick,
+  children,
+  icon: Icon,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+        active
+          ? 'bg-blue-600 text-white shadow-lg'
+          : 'text-gray-400 hover:text-white hover:bg-gray-800'
+      }`}
+    >
+      <Icon className="h-5 w-5" />
+      {children}
+    </button>
+  );
+}
 
 function StatusBadge({ status }: { status: CycleCountStatus }) {
   const styles = {
@@ -57,60 +82,144 @@ function StatusBadge({ status }: { status: CycleCountStatus }) {
   );
 }
 
-function VarianceStatusBadge({ status }: { status: VarianceStatus }) {
-  const styles = {
-    [VarianceStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
-    [VarianceStatus.APPROVED]: 'bg-green-100 text-green-800',
-    [VarianceStatus.REJECTED]: 'bg-red-100 text-red-800',
-    [VarianceStatus.AUTO_ADJUSTED]: 'bg-blue-100 text-blue-800',
-  };
-
-  const labels = {
-    [VarianceStatus.PENDING]: 'Pending Review',
-    [VarianceStatus.APPROVED]: 'Approved',
-    [VarianceStatus.REJECTED]: 'Rejected',
-    [VarianceStatus.AUTO_ADJUSTED]: 'Auto-Adjusted',
-  };
-
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
-      {labels[status]}
-    </span>
-  );
-}
-
 function CreateCycleCountModal({
   onClose,
   onSuccess,
+  assignableUsers,
 }: {
   onClose: () => void;
   onSuccess: () => void;
+  assignableUsers: Array<{ userId: string; name: string; role: string }>;
 }) {
   const { user } = useAuthStore();
+  const { showToast } = useToast();
   const createMutation = useCreateCycleCountPlan();
-  const [formData, setFormData] = useState({
-    planName: '',
-    countType: CycleCountType.AD_HOC,
-    scheduledDate: new Date().toISOString().split('T')[0],
-    location: '',
-    sku: '',
-    notes: '',
-  });
+  const [skuSearch, setSkuSearch] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createMutation.mutateAsync({
-        ...formData,
-        countBy: user!.userId,
-        createdBy: user!.userId,
-      });
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error('Failed to create cycle count plan:', error);
+  // Fetch SKUs and bin locations
+  const { data: inventoryData, isLoading: loadingInventory } = useStockControlInventory({
+    limit: 1000,
+  });
+  const { data: binsData, isLoading: loadingBins } = useBinLocations();
+
+  const skus = inventoryData?.items || [];
+  const binLocations = binsData || [];
+
+  // Filter SKUs based on search
+  const filteredSkus = skuSearch
+    ? skus.filter((item: any) =>
+        item.sku?.toLowerCase().includes(skuSearch.toLowerCase()) ||
+        item.name?.toLowerCase().includes(skuSearch.toLowerCase())
+      )
+    : skus;
+
+  // Deduplicate SKUs
+  const uniqueSkus = Array.from(
+    new Map(filteredSkus.map((item: any) => [item.sku, item])).values()
+  );
+
+  // Type-specific configuration
+  const getTypeConfig = (countType: string) => {
+    switch (countType) {
+      case CycleCountType.BLANKET:
+        return {
+          locationRequired: true,
+          locationLabel: 'Location *',
+          locationHint: 'Counts ALL items in selected location',
+          showSku: false,
+          notesPlaceholder: 'Any additional notes...',
+        };
+      case CycleCountType.ABC:
+        return {
+          locationRequired: false,
+          locationLabel: 'Location (Optional)',
+          locationHint: 'Counts high-value items based on ABC category',
+          showSku: true,
+          notesPlaceholder: 'Any additional notes...',
+        };
+      case CycleCountType.RECEIVING:
+        return {
+          locationRequired: false,
+          locationLabel: 'Location (Optional)',
+          locationHint: 'Count during receiving process',
+          showSku: true,
+          notesPlaceholder: 'Add PO # or shipment details here...',
+        };
+      case CycleCountType.SHIPPING:
+        return {
+          locationRequired: false,
+          locationLabel: 'Location (Optional)',
+          locationHint: 'Count during shipping process',
+          showSku: true,
+          notesPlaceholder: 'Add Order # or customer details here...',
+        };
+      default:
+        return {
+          locationRequired: false,
+          locationLabel: 'Location (Optional - leave blank for all locations)',
+          locationHint: '',
+          showSku: true,
+          notesPlaceholder: 'Additional instructions or notes...',
+        };
     }
   };
+
+  // Form validation
+  const {
+    values: formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+    setFieldValue,
+  } = useFormValidation({
+    initialValues: {
+      planName: '',
+      countType: CycleCountType.AD_HOC,
+      scheduledDate: new Date().toISOString().split('T')[0],
+      location: '',
+      sku: '',
+      notes: '',
+      assignedTo: user?.userId || '',
+    },
+    validationRules: {
+      planName: { required: true, minLength: 3, maxLength: 100 },
+      countType: { required: true },
+      scheduledDate: { required: true },
+      assignedTo: { required: true },
+      location: {
+        custom: (value: string) => {
+          const typeConfig = getTypeConfig(formData.countType);
+          if (typeConfig.locationRequired && !value) {
+            return 'Location is required for Blanket counts';
+          }
+          return null;
+        },
+      },
+    },
+    onSubmit: async (values) => {
+      try {
+        await createMutation.mutateAsync({
+          planName: values.planName,
+          countType: values.countType,
+          scheduledDate: values.scheduledDate,
+          location: values.location,
+          sku: values.sku,
+          notes: values.notes,
+          countBy: values.assignedTo,
+        });
+        showToast('Cycle count plan created successfully', 'success');
+        onSuccess();
+        onClose();
+      } catch (error: any) {
+        console.error('Failed to create cycle count plan:', error);
+        showToast(error?.message || 'Failed to create plan', 'error');
+        throw error;
+      }
+    },
+  });
+
+  const typeConfig = getTypeConfig(formData.countType);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -124,78 +233,170 @@ function CreateCycleCountModal({
             <label className="block text-sm font-medium text-gray-300 mb-1">Plan Name *</label>
             <input
               type="text"
+              name="planName"
               required
               value={formData.planName}
-              onChange={e => setFormData({ ...formData, planName: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+              onChange={handleChange}
+              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 ${
+                errors.planName ? 'border-red-500' : 'border-gray-700'
+              }`}
               placeholder="e.g., Zone A Weekly Count"
             />
+            {errors.planName && <p className="mt-1 text-sm text-red-400">{errors.planName}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Count Type *</label>
-            <select
+            <Select
               required
+              name="countType"
               value={formData.countType}
-              onChange={e =>
-                setFormData({ ...formData, countType: e.target.value as CycleCountType })
-              }
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
-            >
-              <option value={CycleCountType.AD_HOC}>Ad-Hoc Count</option>
-              <option value={CycleCountType.ABC}>ABC Analysis Count</option>
-              <option value={CycleCountType.BLANKET}>Blanket Count</option>
-              <option value={CycleCountType.SPOT_CHECK}>Spot Check</option>
-              <option value={CycleCountType.RECEIVING}>Receiving Count</option>
-              <option value={CycleCountType.SHIPPING}>Shipping Count</option>
-            </select>
+              options={[
+                { value: CycleCountType.AD_HOC, label: 'Ad-Hoc Count - General purpose counting' },
+                { value: CycleCountType.ABC, label: 'ABC Analysis - High-value items' },
+                { value: CycleCountType.BLANKET, label: 'Blanket Count - Count ALL items in a location' },
+                { value: CycleCountType.SPOT_CHECK, label: 'Spot Check - Random verification' },
+                { value: CycleCountType.RECEIVING, label: 'Receiving Count - During goods receipt' },
+                { value: CycleCountType.SHIPPING, label: 'Shipping Count - Before dispatch' },
+              ]}
+            />
+            {errors.countType && <p className="mt-1 text-sm text-red-400">{errors.countType}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Scheduled Date *</label>
-            <input
-              type="date"
+            <label className="block text-sm font-medium text-gray-300 mb-1">Assigned To *</label>
+            <Select
               required
-              value={formData.scheduledDate}
-              onChange={e => setFormData({ ...formData, scheduledDate: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+              name="assignedTo"
+              value={formData.assignedTo}
+              options={[
+                { value: '', label: 'Select a user...' },
+                ...assignableUsers.map(u => ({
+                  value: u.userId,
+                  label: `${u.name} (${u.role})`,
+                })),
+              ]}
             />
+            {errors.assignedTo && <p className="mt-1 text-sm text-red-400">{errors.assignedTo}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Location (Optional - leave blank for all locations)
+            <label className={`block text-sm font-medium text-gray-300 mb-1 ${typeConfig.locationRequired ? 'text-yellow-400' : ''}`}>
+              {typeConfig.locationLabel}
             </label>
-            <input
-              type="text"
+            <Select
+              name="location"
               value={formData.location}
-              onChange={e => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
-              placeholder="e.g., Zone-A"
+              required={typeConfig.locationRequired}
+              options={[
+                { value: '', label: typeConfig.locationRequired ? 'Select a location...' : 'All Locations' },
+                ...binLocations.map((bin: any) => ({
+                  value: bin.binId,
+                  label: `${bin.binId} ${bin.zone ? `(${bin.zone})` : ''}`,
+                })),
+              ]}
             />
+            {errors.location && <p className="mt-1 text-sm text-red-400">{errors.location}</p>}
+            {typeConfig.locationHint && <p className="text-xs text-blue-400 mt-1">{typeConfig.locationHint}</p>}
+            {loadingBins && <p className="text-xs text-gray-500 mt-1">Loading locations...</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              SKU (Optional - leave blank for all SKUs)
-            </label>
-            <input
-              type="text"
-              value={formData.sku}
-              onChange={e => setFormData({ ...formData, sku: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
-              placeholder="e.g., SKU-12345"
-            />
-          </div>
+          {typeConfig.showSku ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                SKUs (Optional - separate multiple SKUs with commas)
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="sku"
+                  value={formData.sku}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    handleChange({ ...e, target: { ...e.target, name: 'sku', value } } as React.ChangeEvent<HTMLInputElement>);
+                    // Get the last SKU after comma for search
+                    const lastCommaIndex = value.lastIndexOf(',');
+                    const searchValue = lastCommaIndex >= 0 ? value.slice(lastCommaIndex + 1).trim() : value;
+                    setSkuSearch(searchValue);
+                  }}
+                  onFocus={() => {
+                    // Get the last SKU after comma for search
+                    const lastCommaIndex = formData.sku.lastIndexOf(',');
+                    const searchValue = lastCommaIndex >= 0 ? formData.sku.slice(lastCommaIndex + 1).trim() : formData.sku;
+                    setSkuSearch(searchValue);
+                  }}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                  placeholder="Search SKUs (comma-separated)..."
+                  autoComplete="off"
+                />
+                {skuSearch && uniqueSkus.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {uniqueSkus.slice(0, 20).map((item: any, index: number) => (
+                      <div
+                        key={`${item.sku}-${index}`}
+                        onClick={() => {
+                          // Append SKU to existing ones with comma
+                          const currentSkus = formData.sku ? formData.sku.split(',').map(s => s.trim()).filter(s => s) : [];
+                          if (!currentSkus.includes(item.sku)) {
+                            const newSkus = [...currentSkus, item.sku].join(', ');
+                            setFieldValue('sku', newSkus);
+                          }
+                          setSkuSearch('');
+                        }}
+                        className="px-3 py-2 text-gray-300 hover:bg-gray-700 cursor-pointer text-sm"
+                      >
+                        <div className="font-medium">{item.sku}</div>
+                        <div className="text-xs text-gray-500">{item.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {loadingInventory && <p className="text-xs text-gray-500 mt-1">Loading SKUs...</p>}
+              {formData.sku && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formData.sku.split(',').map((s, i) => {
+                    const trimmedSku = s.trim();
+                    return trimmedSku ? (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-sm text-blue-400"
+                      >
+                        {trimmedSku}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentSkus = formData.sku.split(',').map(sku => sku.trim()).filter(sku => sku);
+                            const newSkus = currentSkus.filter((_, idx) => idx !== i).join(', ');
+                            setFieldValue('sku', newSkus);
+                          }}
+                          className="hover:text-blue-300"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <p className="text-sm text-blue-400">
+                <strong>Blanket Count:</strong> All SKUs in the selected location will be counted. Individual SKU selection is not available for this type.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
             <textarea
+              name="notes"
               value={formData.notes}
-              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              onChange={handleChange}
               rows={3}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
-              placeholder="Additional instructions or notes..."
+              placeholder={typeConfig.notesPlaceholder}
             />
           </div>
 
@@ -209,326 +410,14 @@ function CreateCycleCountModal({
             </button>
             <button
               type="submit"
-              disabled={createMutation.isPending}
+              disabled={isSubmitting || createMutation.isPending}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {createMutation.isPending ? 'Creating...' : 'Create Plan'}
+              {isSubmitting || createMutation.isPending ? 'Creating...' : 'Create Plan'}
             </button>
           </div>
         </form>
       </div>
-    </div>
-  );
-}
-
-function CountEntryModal({
-  plan,
-  onClose,
-  onSuccess,
-}: {
-  plan: any;
-  onClose: () => void;
-  onSuccess: () => void;
-}) {
-  const { user } = useAuthStore();
-  const createEntryMutation = useCreateCycleCountEntry();
-  const [formData, setFormData] = useState({
-    sku: '',
-    binLocation: '',
-    countedQuantity: 0,
-    notes: '',
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createEntryMutation.mutateAsync({
-        planId: plan.planId,
-        ...formData,
-      });
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error('Failed to create count entry:', error);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Record Count Entry</h2>
-          <p className="text-sm text-gray-500 mt-1">Plan: {plan.planName}</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
-            <input
-              type="text"
-              required
-              value={formData.sku}
-              onChange={e => setFormData({ ...formData, sku: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="SKU-12345"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bin Location *</label>
-            <input
-              type="text"
-              required
-              value={formData.binLocation}
-              onChange={e => setFormData({ ...formData, binLocation: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Zone-A-01-01"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Counted Quantity *
-            </label>
-            <input
-              type="number"
-              required
-              min="0"
-              value={formData.countedQuantity}
-              onChange={e =>
-                setFormData({ ...formData, countedQuantity: parseInt(e.target.value) || 0 })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea
-              value={formData.notes}
-              onChange={e => setFormData({ ...formData, notes: e.target.value })}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Any observations or issues..."
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={createEntryMutation.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {createEntryMutation.isPending ? 'Saving...' : 'Save Entry'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function PlanDetailModal({ plan, onClose }: { plan: any; onClose: () => void }) {
-  const startMutation = useStartCycleCount();
-  const completeMutation = useCompleteCycleCount();
-  const reconcileMutation = useReconcileCycleCount();
-  const [showEntryModal, setShowEntryModal] = useState(false);
-
-  const handleStart = async () => {
-    try {
-      await startMutation.mutateAsync(plan.planId);
-      onClose();
-    } catch (error) {
-      console.error('Failed to start cycle count:', error);
-    }
-  };
-
-  const handleComplete = async () => {
-    try {
-      await completeMutation.mutateAsync(plan.planId);
-      onClose();
-    } catch (error) {
-      console.error('Failed to complete cycle count:', error);
-    }
-  };
-
-  const handleReconcile = async () => {
-    try {
-      await reconcileMutation.mutateAsync({ planId: plan.planId });
-      onClose();
-    } catch (error) {
-      console.error('Failed to reconcile cycle count:', error);
-    }
-  };
-
-  const pendingVarianceCount =
-    plan.countEntries?.filter(
-      (e: any) => e.varianceStatus === VarianceStatus.PENDING && e.variance !== 0
-    ).length || 0;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 my-8">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-start">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">{plan.planName}</h2>
-            <div className="flex items-center gap-3 mt-2">
-              <StatusBadge status={plan.status} />
-              <span className="text-sm text-gray-500">
-                Scheduled: {new Date(plan.scheduledDate).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6">
-          {/* Plan Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Type</p>
-              <p className="font-medium">{plan.countType}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Assigned To</p>
-              <p className="font-medium">{plan.countBy}</p>
-            </div>
-            {plan.location && (
-              <div>
-                <p className="text-sm text-gray-500">Location</p>
-                <p className="font-medium">{plan.location}</p>
-              </div>
-            )}
-            {plan.sku && (
-              <div>
-                <p className="text-sm text-gray-500">SKU</p>
-                <p className="font-medium">{plan.sku}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-wrap gap-2 border-t pt-4">
-            {plan.status === CycleCountStatus.SCHEDULED && (
-              <button
-                onClick={handleStart}
-                disabled={startMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                <PlayIcon className="h-4 w-4" />
-                {startMutation.isPending ? 'Starting...' : 'Start Count'}
-              </button>
-            )}
-            {plan.status === CycleCountStatus.IN_PROGRESS && (
-              <>
-                <button
-                  onClick={() => setShowEntryModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  Add Entry
-                </button>
-                <button
-                  onClick={handleComplete}
-                  disabled={completeMutation.isPending}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  <CheckIcon className="h-4 w-4" />
-                  {completeMutation.isPending ? 'Completing...' : 'Complete Count'}
-                </button>
-              </>
-            )}
-            {plan.status === CycleCountStatus.COMPLETED && pendingVarianceCount === 0 && (
-              <button
-                onClick={handleReconcile}
-                disabled={reconcileMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-              >
-                <ChartBarIcon className="h-4 w-4" />
-                {reconcileMutation.isPending ? 'Reconciling...' : 'Reconcile'}
-              </button>
-            )}
-            {pendingVarianceCount > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg">
-                <ExclamationTriangleIcon className="h-4 w-4" />
-                {pendingVarianceCount} variance(s) pending review
-              </div>
-            )}
-          </div>
-
-          {/* Count Entries */}
-          {plan.countEntries && plan.countEntries.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Count Entries</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                        SKU
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                        Location
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                        System Qty
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                        Counted Qty
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                        Variance
-                      </th>
-                      <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {plan.countEntries.map((entry: any) => (
-                      <tr key={entry.entryId}>
-                        <td className="px-4 py-2 text-sm font-medium">{entry.sku}</td>
-                        <td className="px-4 py-2 text-sm">{entry.binLocation}</td>
-                        <td className="px-4 py-2 text-sm text-right">{entry.systemQuantity}</td>
-                        <td className="px-4 py-2 text-sm text-right">{entry.countedQuantity}</td>
-                        <td
-                          className={`px-4 py-2 text-sm text-right font-medium ${entry.variance !== 0 ? (entry.variance > 0 ? 'text-green-600' : 'text-red-600') : ''}`}
-                        >
-                          {entry.variance > 0 ? '+' : ''}
-                          {entry.variance}
-                        </td>
-                        <td className="px-4 py-2 text-sm text-center">
-                          <VarianceStatusBadge status={entry.varianceStatus} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {plan.notes && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
-              <p className="text-sm text-gray-600">{plan.notes}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {showEntryModal && (
-        <CountEntryModal plan={plan} onClose={() => setShowEntryModal(false)} onSuccess={onClose} />
-      )}
     </div>
   );
 }
@@ -538,11 +427,15 @@ function PlanDetailModal({ plan, onClose }: { plan: any; onClose: () => void }) 
 // ============================================================================
 
 export function CycleCountingPage() {
+    const { showToast } = useToast();
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'counts' | 'analytics'>('counts');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [searchTerm, setSearchTerm] = useState('');
 
   const {
     data: plansData,
@@ -552,17 +445,72 @@ export function CycleCountingPage() {
     status: filterStatus || undefined,
   });
 
+  // Debug logging (can be removed after verification)
+  // console.log('[CycleCountingPage] filterStatus:', filterStatus, 'plans:', plansData?.plans?.length, 'user:', user?.userId, user?.role);
+
+  // Fetch assignable users for the dropdown
+  const { data: assignableUsers = [] } = useAssignableUsers();
+
+  // Fetch KPI dashboard data for analytics tab
+  const { data: dashboard, isLoading: dashboardLoading } = useCycleCountDashboard();
+
   const plans = plansData?.plans || [];
+
+  // Search filtering
+  const filteredPlans = plans.filter((plan: any) => {
+    if (!searchTerm.trim()) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      plan.planName?.toLowerCase().includes(search) ||
+      plan.planId?.toLowerCase().includes(search) ||
+      plan.location?.toLowerCase().includes(search) ||
+      plan.sku?.toLowerCase().includes(search)
+    );
+  });
+
+  // Pagination
+  const paginatedPlans = filteredPlans.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const totalPages = Math.ceil(filteredPlans.length / itemsPerPage);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Debug: Log full plans data (can be removed after verification)
+  // if (plans.length > 0) {
+  //   console.log('[CycleCountingPage] Plans data:', JSON.stringify(plans, null, 2));
+  // }
+
+  const overallKPIs = dashboard?.overallKPIs;
+  const accuracyTrend = dashboard?.accuracyTrend || [];
+  const topDiscrepancies = dashboard?.topDiscrepancies || [];
+  const userPerformance = dashboard?.userPerformance || [];
+  const zonePerformance = dashboard?.zonePerformance || [];
+  const countTypeEffectiveness = dashboard?.countTypeEffectiveness || [];
+
+  // Helper to get user name from userId
+  const getUserName = (userId: string) => {
+    const foundUser = assignableUsers?.find(u => u.userId === userId);
+    return foundUser?.name || userId;
+  };
 
   const canCreatePlan =
     user?.role === UserRole.STOCK_CONTROLLER ||
     user?.role === UserRole.SUPERVISOR ||
     user?.role === UserRole.ADMIN;
 
+  const canViewAnalytics =
+    user?.role === UserRole.SUPERVISOR ||
+    user?.role === UserRole.ADMIN;
+
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
@@ -572,161 +520,478 @@ export function CycleCountingPage() {
                 Manage scheduled and ad-hoc inventory cycle counts
               </p>
             </div>
-            {canCreatePlan && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <PlusIcon className="h-5 w-5" />
-                New Cycle Count
-              </button>
-            )}
-          </div>
-
-          {/* Filters */}
-          <div className="glass-card rounded-lg p-4">
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
-                <select
-                  value={filterStatus}
-                  onChange={e => setFilterStatus(e.target.value)}
-                  className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white"
+            <div className="flex items-center gap-3">
+              {/* Tab Navigation */}
+              <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1">
+                <TabButton
+                  active={activeTab === 'counts'}
+                  onClick={() => setActiveTab('counts')}
+                  icon={ClipboardDocumentListIcon}
                 >
-                  <option value="">All Statuses</option>
-                  <option value={CycleCountStatus.SCHEDULED}>Scheduled</option>
-                  <option value={CycleCountStatus.IN_PROGRESS}>In Progress</option>
-                  <option value={CycleCountStatus.COMPLETED}>Completed</option>
-                  <option value={CycleCountStatus.RECONCILED}>Reconciled</option>
-                </select>
+                  Counts
+                </TabButton>
+                {canViewAnalytics && (
+                  <TabButton
+                    active={activeTab === 'analytics'}
+                    onClick={() => setActiveTab('analytics')}
+                    icon={ChartBarIcon}
+                  >
+                    Analytics
+                  </TabButton>
+                )}
               </div>
+              {activeTab === 'counts' && canCreatePlan && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Cycle Count
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Plans List */}
-          <div className="glass-card rounded-lg overflow-hidden">
-            {isLoading ? (
-              <div className="p-8 text-center text-gray-400">Loading cycle count plans...</div>
-            ) : plans.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
-                <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-4 text-gray-600" />
-                <p>No cycle count plans found</p>
-                {canCreatePlan && (
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="mt-4 text-blue-400 hover:text-blue-300"
-                  >
-                    Create your first cycle count plan
-                  </button>
+          {/* COUNTS TAB */}
+          {activeTab === 'counts' && (
+            <>
+              {/* Filters */}
+              <div className="glass-card rounded-lg p-4">
+                <div className="flex flex-wrap gap-4">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      placeholder="Search plans..."
+                      className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                    <Select
+                      value={filterStatus}
+                      onChange={e => setFilterStatus(e.target.value)}
+                      options={[
+                        { value: '', label: 'All Statuses' },
+                        { value: CycleCountStatus.SCHEDULED, label: 'Scheduled' },
+                        { value: CycleCountStatus.IN_PROGRESS, label: 'In Progress' },
+                        { value: CycleCountStatus.COMPLETED, label: 'Completed' },
+                        { value: CycleCountStatus.RECONCILED, label: 'Reconciled' },
+                      ]}
+                      className="w-48"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Plans List */}
+              <div className="glass-card rounded-lg overflow-hidden">
+                {isLoading ? (
+                  <div className="p-8 text-center text-gray-400">Loading cycle count plans...</div>
+                ) : plans.length === 0 ? (
+                  <div className="p-8 text-center text-gray-400">
+                    <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-4 text-gray-600" />
+                    <p>No cycle count plans found</p>
+                    {canCreatePlan && (
+                      <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="mt-4 text-blue-400 hover:text-blue-300"
+                      >
+                        Create your first cycle count plan
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-800">
+                      <thead className="bg-gray-900/50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            Plan Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            Type
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            Scheduled Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            Location/SKU
+                          </th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
+                            Entries
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            Assigned To
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                        {paginatedPlans.map((plan: any) => {
+                          const pendingVariances =
+                            plan.countEntries?.filter(
+                              (e: any) =>
+                                e.varianceStatus === 'PENDING' && e.variance !== 0
+                            ).length || 0;
+
+                          return (
+                            <tr key={plan.planId} className="hover:bg-gray-800/50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-white">{plan.planName}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-white">{plan.countType}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-white">
+                                  {new Date(plan.scheduledDate).toLocaleDateString()}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-white">
+                                  {plan.location || plan.sku || 'All Locations/SKUs'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <StatusBadge status={plan.status} />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <div className="text-sm text-white">
+                                  {plan.countEntries?.length || 0}
+                                  {pendingVariances > 0 && (
+                                    <span className="ml-2 text-yellow-400">
+                                      ({pendingVariances} pending)
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-white">
+                                  {plan.assignedToName || getUserName(plan.countBy)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <button
+                                  onClick={() => navigate(`/cycle-counting/${plan.planId}`)}
+                                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                                >
+                                  Edit
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+
+                    {totalPages > 1 && (
+                      <div className="mt-4 flex justify-center">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPageChange={(page) => {
+                            setCurrentPage(page);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-800">
-                  <thead className="bg-gray-900/50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        Plan Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        Scheduled Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        Location/SKU
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
-                        Entries
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                        Assigned To
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                    {plans.map((plan: any) => {
-                      const pendingVariances =
-                        plan.countEntries?.filter(
-                          (e: any) =>
-                            e.varianceStatus === VarianceStatus.PENDING && e.variance !== 0
-                        ).length || 0;
+            </>
+          )}
 
-                      return (
-                        <tr key={plan.planId} className="hover:bg-gray-800/50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-white">{plan.planName}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-white">{plan.countType}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-white">
-                              {new Date(plan.scheduledDate).toLocaleDateString()}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-white">
-                              {plan.location || plan.sku || 'All Locations/SKUs'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <StatusBadge status={plan.status} />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm text-white">
-                              {plan.countEntries?.length || 0}
-                              {pendingVariances > 0 && (
-                                <span className="ml-2 text-yellow-400">
-                                  ({pendingVariances} pending)
+          {/* ANALYTICS TAB */}
+          {activeTab === 'analytics' && canViewAnalytics && (
+            <div className="space-y-6">
+              {dashboardLoading ? (
+                <div className="glass-card rounded-xl p-12 text-center text-gray-400">
+                  Loading analytics...
+                </div>
+              ) : (
+                <>
+                  {/* Overall KPI Cards */}
+                  {overallKPIs && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <div className="glass-card rounded-xl p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-400">Total Counts</p>
+                            <p className="text-3xl font-bold mt-2 text-blue-400">{overallKPIs.totalCounts}</p>
+                            <p className="text-sm text-gray-500 mt-1">{overallKPIs.completedCounts} completed</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-blue-500/20">
+                            <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-400" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="glass-card rounded-xl p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-400">Completion Rate</p>
+                            <p className="text-3xl font-bold mt-2 text-green-400">{overallKPIs.completionRate.toFixed(1)}%</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-green-500/20">
+                            <ChartBarIcon className="h-8 w-8 text-green-400" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="glass-card rounded-xl p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-400">Average Accuracy</p>
+                            <p className="text-3xl font-bold mt-2 text-purple-400">{overallKPIs.averageAccuracy.toFixed(1)}%</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-purple-500/20">
+                            <ClipboardDocumentCheckIcon className="h-8 w-8 text-purple-400" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="glass-card rounded-xl p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-400">Pending Variances</p>
+                            <p className={`text-3xl font-bold mt-2 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                              {overallKPIs.pendingVariances}
+                            </p>
+                            {overallKPIs.highValueVarianceCount > 0 && (
+                              <p className="text-sm text-orange-400 mt-1">{overallKPIs.highValueVarianceCount} high severity</p>
+                            )}
+                          </div>
+                          <div className={`p-3 rounded-lg ${overallKPIs.pendingVariances > 0 ? 'bg-yellow-500/20' : 'bg-green-500/20'}`}>
+                            <ChartBarIcon className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Accuracy Trend Chart */}
+                  <div className="glass-card rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Accuracy Trend (Last 30 Days)</h3>
+                    <div className="relative h-48">
+                      <div className="flex items-end justify-between h-full gap-1">
+                        {accuracyTrend.map((point: any, index: number) => {
+                          const maxAccuracy = Math.max(...accuracyTrend.map((d: any) => d.accuracy), 100);
+                          const minAccuracy = Math.min(...accuracyTrend.map((d: any) => d.accuracy), 0);
+                          const height = ((point.accuracy - minAccuracy) / (maxAccuracy - minAccuracy)) * 100;
+                          return (
+                            <div key={index} className="flex-1 flex flex-col items-center gap-2 group">
+                              <div className="relative w-full flex items-end justify-center">
+                                <div
+                                  className="w-full bg-blue-500 hover:bg-blue-400 transition-all rounded-t"
+                                  style={{ height: `${Math.max(height, 5)}%` }}
+                                  title={`${point.period}: ${point.accuracy.toFixed(1)}%`}
+                                />
+                              </div>
+                              {accuracyTrend.length <= 10 && (
+                                <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
+                                  {new Date(point.period).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                 </span>
                               )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-white">{plan.countBy}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
-                              onClick={() => setSelectedPlan(plan)}
-                              className="text-blue-400 hover:text-blue-300"
-                            >
-                              View Details
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Two Column Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Top Discrepancies */}
+                    <div className="glass-card rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Top Discrepancy SKUs</h3>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <thead>
+                            <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                              <th className="pb-3">SKU</th>
+                              <th className="pb-3">Name</th>
+                              <th className="pb-3 text-right">Variance Count</th>
+                              <th className="pb-3 text-right">Avg Variance %</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-800">
+                            {topDiscrepancies.length === 0 ? (
+                              <tr>
+                                <td colSpan={4} className="py-8 text-center text-gray-500">No discrepancies found</td>
+                              </tr>
+                            ) : (
+                              topDiscrepancies.map((item: any, index: number) => (
+                                <tr key={index} className="hover:bg-gray-800/50">
+                                  <td className="py-3 font-medium text-white">{item.sku}</td>
+                                  <td className="py-3 text-gray-300">{item.name}</td>
+                                  <td className="py-3 text-right text-yellow-400">{item.varianceCount}</td>
+                                  <td className="py-3 text-right text-orange-400">{item.averageVariancePercent.toFixed(1)}%</td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Zone Performance */}
+                    <div className="glass-card rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">Zone Performance</h3>
+                      <div className="space-y-4">
+                        {zonePerformance.length === 0 ? (
+                          <p className="text-gray-500 text-center py-8">No zone data available</p>
+                        ) : (
+                          zonePerformance.map((zone: any, index: number) => (
+                            <div key={index} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium text-white">Zone {zone.zone}</span>
+                                <span className="text-sm text-gray-400">{zone.countsCompleted} counts • {zone.averageAccuracy.toFixed(1)}% accuracy</span>
+                              </div>
+                              <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full transition-all ${
+                                    zone.averageAccuracy >= 98 ? 'bg-green-500' :
+                                    zone.averageAccuracy >= 95 ? 'bg-yellow-500' :
+                                    'bg-red-500'
+                                  }`}
+                                  style={{ width: `${zone.averageAccuracy}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Performance */}
+                  <div className="glass-card rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">User Performance (Last 30 Days)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                            <th className="pb-3">User</th>
+                            <th className="pb-3 text-right">Counts Completed</th>
+                            <th className="pb-3 text-right">Items Counted</th>
+                            <th className="pb-3 text-right">Accuracy</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {userPerformance.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="py-8 text-center text-gray-500">No performance data available</td>
+                            </tr>
+                          ) : (
+                            userPerformance.map((user: any, index: number) => (
+                              <tr key={index} className="hover:bg-gray-800/50">
+                                <td className="py-3 font-medium text-white">{user.name}</td>
+                                <td className="py-3 text-right text-blue-400">{user.countsCompleted}</td>
+                                <td className="py-3 text-right text-gray-300">{user.itemsCounted}</td>
+                                <td className="py-3 text-right">
+                                  <span className={`px-2 py-1 rounded text-sm ${
+                                    user.averageAccuracy >= 98 ? 'bg-green-500/20 text-green-400' :
+                                    user.averageAccuracy >= 95 ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {user.averageAccuracy.toFixed(1)}%
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Count Type Effectiveness */}
+                  <div className="glass-card rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Count Type Effectiveness (Last 90 Days)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                            <th className="pb-3">Count Type</th>
+                            <th className="pb-3 text-right">Completed</th>
+                            <th className="pb-3 text-right">Accuracy</th>
+                            <th className="pb-3 text-right">Avg Duration</th>
+                            <th className="pb-3 text-right">Variance Detection</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {countTypeEffectiveness.map((type: any, index: number) => {
+                            const formatDuration = (hours: number) => {
+                              if (hours < 1) return `${Math.round(hours * 60)}m`;
+                              return `${hours.toFixed(1)}h`;
+                            };
+                            return (
+                              <tr key={index} className="hover:bg-gray-800/50">
+                                <td className="py-3 font-medium text-white">
+                                  {type.countType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                </td>
+                                <td className="py-3 text-right text-blue-400">{type.countsCompleted}</td>
+                                <td className="py-3 text-right">
+                                  <span className={`px-2 py-1 rounded text-sm ${
+                                    type.averageAccuracy >= 98 ? 'bg-green-500/20 text-green-400' :
+                                    type.averageAccuracy >= 95 ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
+                                  }`}>
+                                    {type.averageAccuracy.toFixed(1)}%
+                                  </span>
+                                </td>
+                                <td className="py-3 text-right text-gray-300">{formatDuration(type.averageDuration)}</td>
+                                <td className="py-3 text-right text-purple-400">{type.varianceDetectionRate.toFixed(1)}%</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Additional Stats Footer */}
+                  {overallKPIs && (
+                    <div className="glass-card rounded-xl p-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                        <div>
+                          <p className="text-2xl font-bold text-white">{overallKPIs.inProgressCounts}</p>
+                          <p className="text-sm text-gray-400 mt-1">In Progress</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-white">{overallKPIs.scheduledCounts}</p>
+                          <p className="text-sm text-gray-400 mt-1">Scheduled</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-white">{overallKPIs.totalItemsCounted}</p>
+                          <p className="text-sm text-gray-400 mt-1">Items Counted</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-white">{overallKPIs.totalVariances}</p>
+                          <p className="text-sm text-gray-400 mt-1">Total Variances</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {showCreateModal && (
             <CreateCycleCountModal
               onClose={() => setShowCreateModal(false)}
               onSuccess={() => {
                 setShowCreateModal(false);
-                refetch();
+                // Cache invalidation is handled by the mutation hook, no need to manually refetch
               }}
-            />
-          )}
-
-          {selectedPlan && (
-            <PlanDetailModal
-              plan={selectedPlan}
-              onClose={() => {
-                setSelectedPlan(null);
-                refetch();
-              }}
+              assignableUsers={assignableUsers}
             />
           )}
         </div>

@@ -20,23 +20,24 @@ export const rateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  // Skip rate limiting for health check endpoint
-  skip: req => req.path === '/health',
+  // Skip rate limiting for health check endpoint and in development
+  skip: req => req.path === '/health' || process.env.NODE_ENV !== 'production',
 });
 
 // ============================================================================
 // STRICT RATE LIMITER (for auth endpoints)
 // ============================================================================
 
-export const authRateLimiter = rateLimit({
+export const authRateLimiterSimple = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 100, // 100 attempts per window (increased for development)
   message: {
     error: 'Too many authentication attempts, please try again later',
     code: 'AUTH_RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
 });
 
 // ============================================================================
@@ -52,4 +53,5 @@ export const pickingRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
 });

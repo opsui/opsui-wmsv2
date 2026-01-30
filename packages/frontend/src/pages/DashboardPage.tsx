@@ -4,30 +4,30 @@
  * Supervisor dashboard showing real-time warehouse metrics
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
 import {
   useDashboardMetrics,
-  usePickerActivity,
-  usePickerOrders,
-  usePackerActivity,
-  usePackerOrders,
-  useStockControllerActivity,
-  useStockControllerTransactions,
+  useRoleActivity,
+  useRoleDetails,
+  useThroughputByRange,
+  useOrderStatusBreakdown,
+  useTopSKUs,
+  useAllPickersPerformance,
+  useAllPackersPerformance,
+  useAllStockControllersPerformance,
+  useOrderQueue,
+  useAuditLogs,
+  type AuditLog,
 } from '@/services/api';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button } from '@/components/shared';
+import { Card, CardContent, Header, RoleActivityCard, AuditLogsCard, ThroughputChart, OrderStatusChart, TopSKUsChart, PerformanceChart, Button, Pagination, type AuditLogFilters, MetricCardSkeleton, Skeleton, ListSkeleton } from '@/components/shared';
+import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
-import {
-  UsersIcon,
-  ShoppingBagIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  XMarkIcon,
-  DocumentTextIcon,
-  CubeIcon,
-  ClipboardDocumentListIcon,
-} from '@heroicons/react/24/outline';
-import { PageLoading } from '@/components/shared';
+import { UserRole, OrderStatus } from '@opsui/shared';
+import { UserGroupIcon, QueueListIcon, ArrowTrendingUpIcon, ExclamationTriangleIcon, XMarkIcon, EyeIcon, DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
+import { formatDate } from '@/lib/utils';
+import { useOrderUpdates, usePickUpdates, useInventoryUpdates, useNotifications } from '@/hooks/useWebSocket';
+import { useQueryClient } from '@tanstack/react-query';
 
 // ============================================================================
 // SUBCOMPONENTS
@@ -38,11 +38,13 @@ function MetricCard({
   value,
   icon: Icon,
   color = 'primary',
+  onClick,
 }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   color?: 'primary' | 'success' | 'warning' | 'error';
+  onClick?: () => void;
 }) {
   const colorStyles = {
     primary: 'bg-primary-500/10 text-primary-400 border border-primary-500/20',
@@ -52,23 +54,173 @@ function MetricCard({
   };
 
   return (
-    <Card variant="glass" className="card-hover group">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">
-              {title}
-            </p>
-            <p className="mt-3 text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
-              {value}
-            </p>
+    <div onClick={onClick} className={`${onClick ? 'cursor-pointer' : ''}`}>
+      <Card variant="glass" className="card-hover group">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">
+                {title}
+              </p>
+              <p className="mt-3 text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
+                {value}
+              </p>
+            </div>
+            <div className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300`}>
+              <Icon className="h-7 w-7" />
+            </div>
           </div>
-          <div className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300`}>
-            <Icon className="h-7 w-7" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Admin Orders Modal Component
+function AdminOrdersModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const pageSize = 10;
+  const { data: queueData, isLoading } = useOrderQueue({
+    status: 'PENDING' as OrderStatus,
+    page: currentPage,
+    limit: pageSize,
+    enabled: isOpen, // Only fetch when modal is actually open
+  });
+
+  const totalPages = queueData?.totalPages || 1;
+
+  // Filter orders based on search
+  const filteredOrders = queueData?.orders
+    ? queueData.orders.filter(order => {
+        if (!searchQuery.trim()) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+          order.orderId?.toLowerCase().includes(query) ||
+          order.customerName?.toLowerCase().includes(query) ||
+          order.status?.toLowerCase().includes(query)
+        );
+      })
+    : [];
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-6xl max-h-[80vh] dark:bg-gray-900 bg-white rounded-2xl dark:border border-gray-200 shadow-2xl animate-fade-in flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 dark:border-b border-gray-200">
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold dark:text-white text-gray-900">
+              All Orders (Admin View)
+            </h2>
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search orders..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+              />
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoading ? (
+            <ListSkeleton items={5} />
+          ) : !queueData?.orders || queueData.orders.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-400">No orders available</div>
+            </div>
+          ) : (
+            <>
+              {filteredOrders.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-gray-400">No orders match your search</div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredOrders.map((order) => (
+                  <Card
+                    key={order.orderId}
+                    variant="glass"
+                    className="p-4 dark:bg-white/[0.02] bg-gray-50/50 border-opacity-50"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold dark:text-white text-gray-900 truncate">
+                            {order.orderId}
+                          </h3>
+                          <OrderPriorityBadge priority={order.priority} />
+                          <OrderStatusBadge status={order.status} />
+                          <span className="text-xs px-2 py-0.5 rounded-full dark:bg-gray-700/50 bg-gray-200 dark:text-gray-400 text-gray-500 border dark:border-gray-600 border-gray-300">
+                            Read-only
+                          </span>
+                        </div>
+                        <p className="text-sm dark:text-gray-400 text-gray-600 truncate">
+                          {order.customerName}
+                        </p>
+                        <div className="mt-3 flex items-center gap-6 text-sm dark:text-gray-400 text-gray-600">
+                          <span>Items: <span className="dark:text-white text-gray-900 font-medium">{order.items?.length || 0}</span></span>
+                          <span>Progress: <span className="dark:text-white text-gray-900 font-medium">{order.progress}%</span></span>
+                          <span>Created: <span className="dark:text-white text-gray-900 font-medium">{formatDate(order.createdAt)}</span></span>
+                        </div>
+                      </div>
+                      {order.status === 'PICKING' && (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => window.location.href = `/orders/${order.orderId}/pick`}
+                          className="flex items-center gap-2 shrink-0"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                          Live View
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -77,75 +229,249 @@ function MetricCard({
 // ============================================================================
 
 export function DashboardPage() {
-  const navigate = useNavigate();
+    const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const canSupervise = useAuthStore(state => state.canSupervise);
-  const [selectedPicker, setSelectedPicker] = useState<{ id: string; name: string } | null>(null);
-  const [selectedPacker, setSelectedPacker] = useState<{ id: string; name: string } | null>(null);
-  const [selectedController, setSelectedController] = useState<{ id: string; name: string } | null>(
-    null
-  );
+  // Check if user has admin/supervisor as their BASE role (not active role)
+  // This is important for features like audit logs that require actual permissions
+  const hasBaseAdminRole = useAuthStore(state => {
+    const baseRole = state.user?.role;
+    return baseRole === UserRole.ADMIN || baseRole === UserRole.SUPERVISOR;
+  });
+  const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
+  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string; roleType: UserRole } | null>(null);
+  const [throughputRange, setThroughputRange] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'>('daily');
+  const [performanceRange, setPerformanceRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
+  const [performanceRole, setPerformanceRole] = useState<UserRole.PICKER | UserRole.PACKER | UserRole.STOCK_CONTROLLER>(UserRole.PICKER);
+  const [showAdminOrders, setShowAdminOrders] = useState(false);
+  const [scanType, setScanType] = useState<'pick' | 'pack' | 'verify' | 'all'>('pick');
+  const [topSKUsTimePeriod, setTopSKUsTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [activityView, setActivityView] = useState<'role-activity' | 'audit-logs'>('role-activity');
+  const [auditLogFilters, setAuditLogFilters] = useState<AuditLogFilters>({});
+
+  // ==========================================================================
+  // Real-time WebSocket Subscriptions
+  // ==========================================================================
+
+  // Subscribe to order updates to refresh metrics and order data
+  useOrderUpdates({
+    onOrderClaimed: (data) => {
+      // Refresh dashboard metrics and role activity when an order is claimed
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
+    },
+    onOrderCompleted: (data) => {
+      // Refresh all dashboard data when an order is completed
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['throughput'] });
+      queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
+      queryClient.invalidateQueries({ queryKey: ['top-skus'] });
+      showToast({
+        title: 'Order Completed',
+        message: `Order ${data.orderId} has been completed`,
+        type: 'success',
+        duration: 3000,
+      });
+    },
+    onOrderCancelled: (data) => {
+      // Refresh dashboard metrics when an order is cancelled
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
+      showToast({
+        title: 'Order Cancelled',
+        message: `Order ${data.orderId} has been cancelled`,
+        type: 'warning',
+        duration: 3000,
+      });
+    },
+    onPriorityChanged: (data) => {
+      // Refresh order queue when priority changes
+      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+    },
+  });
+
+  // Subscribe to pick updates to refresh performance metrics
+  usePickUpdates({
+    onPickCompleted: (data) => {
+      // Refresh performance data and metrics
+      queryClient.invalidateQueries({ queryKey: ['picker-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['packer-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    },
+    onPickStarted: (data) => {
+      // Refresh role activity when a pick starts
+      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
+    },
+    onZoneAssignment: (data) => {
+      // Refresh role activity when zones are assigned
+      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
+    },
+  });
+
+  // Subscribe to inventory updates
+  useInventoryUpdates({
+    onInventoryUpdated: (data) => {
+      // Refresh inventory-related metrics
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    },
+    onLowStock: (data) => {
+      // Show alert toast for low stock
+      showToast({
+        title: 'Low Stock Alert',
+        message: `SKU ${data.sku} is running low (${data.quantity} remaining)`,
+        type: 'error',
+        duration: 5000,
+      });
+    },
+  });
+
+  // Subscribe to notifications
+  useNotifications({
+    onNotification: (data) => {
+      // Show toast for notifications
+      showToast({
+        title: data.title || 'Notification',
+        message: data.message || '',
+        type: data.type === 'alert' ? 'error' : data.type === 'warning' ? 'warning' : 'info',
+        duration: 4000,
+      });
+    },
+  });
+
+  // ==========================================================================
+  // Data Hooks
+  // ==========================================================================
+
+  // Handle audit log filter changes
+  const handleAuditFiltersChange = (filters: AuditLogFilters) => {
+    setAuditLogFilters(filters);
+  };
 
   // Only fetch metrics if user has supervisor privileges
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics({
     enabled: canSupervise(),
   });
-  const { data: pickerActivity, isLoading: activityLoading } = usePickerActivity({
+
+  // Use generic role activity hook to fetch all role activities
+  const { data: roleActivitiesData, isLoading: roleActivitiesLoading } = useRoleActivity('all', {
     enabled: canSupervise(),
   });
-  const { data: packerActivity, isLoading: packerActivityLoading } = usePackerActivity({
+
+  // Graph data hooks
+  const { data: throughputData, isLoading: throughputLoading } = useThroughputByRange(throughputRange, {
     enabled: canSupervise(),
   });
 
-  // Fetch picker orders when a picker is selected
-  const { data: pickerOrders, isLoading: ordersLoading } = usePickerOrders(
-    selectedPicker?.id || '',
-    !!selectedPicker
+  const { data: orderStatusBreakdown, isLoading: statusBreakdownLoading, error: statusBreakdownError } = useOrderStatusBreakdown({
+    enabled: canSupervise(),
+  });
+
+  const { data: topSKUs, isLoading: topSKUsLoading } = useTopSKUs(10, scanType, topSKUsTimePeriod, {
+    enabled: canSupervise(),
+  });
+
+  // Calculate date range for performance based on selected time range
+  // Use useMemo to prevent date objects from changing on every render
+  const { startDate, endDate } = useMemo(() => {
+    const end = new Date();
+    const daysMap = {
+      daily: 1,
+      weekly: 7,
+      monthly: 30,
+      yearly: 365,
+    };
+    const days = daysMap[performanceRange];
+    const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
+    return { startDate: start, endDate: end };
+  }, [performanceRange]);
+
+  // Fetch performance data based on selected role
+  const { data: pickerPerformance, isLoading: pickerPerformanceLoading } = useAllPickersPerformance(
+    startDate,
+    endDate,
+    { enabled: canSupervise() && performanceRole === UserRole.PICKER }
   );
 
-  // Fetch packer orders when a packer is selected
-  const { data: packerOrders, isLoading: packerOrdersLoading } = usePackerOrders(
-    selectedPacker?.id || '',
-    !!selectedPacker
+  const { data: packerPerformance, isLoading: packerPerformanceLoading } = useAllPackersPerformance(
+    startDate,
+    endDate,
+    { enabled: canSupervise() && performanceRole === UserRole.PACKER }
   );
 
-  // Fetch stock controller transactions when a controller is selected
-  const { data: controllerTransactions, isLoading: controllerTransactionsLoading } =
-    useStockControllerTransactions(selectedController?.id || '', !!selectedController);
+  const { data: stockControllerPerformance, isLoading: stockControllerPerformanceLoading } = useAllStockControllersPerformance(
+    startDate,
+    endDate,
+    { enabled: canSupervise() && performanceRole === UserRole.STOCK_CONTROLLER }
+  );
 
-  // Fetch stock controller activity
-  const { data: stockControllerActivity, isLoading: stockControllerActivityLoading } =
-    useStockControllerActivity({
-      enabled: canSupervise(),
-    });
+  // Transform performance data to common format based on role
+  const performanceData = useMemo(() => {
+    const data = performanceRole === UserRole.PICKER
+      ? pickerPerformance
+      : performanceRole === UserRole.PACKER
+      ? packerPerformance
+      : stockControllerPerformance;
 
-  const handleViewOrder = (orderId: string) => {
-    console.log('[Dashboard] handleViewOrder called with orderId:', orderId);
+    if (!data || !Array.isArray(data)) return [];
 
-    // Determine if this is a picker or packer order based on which modal is open
-    const isPackerOrder = !!selectedPacker;
-    const isPickerOrder = !!selectedPicker;
+    return data.map((item: any) => ({
+      userId: performanceRole === UserRole.STOCK_CONTROLLER ? item.controllerId : performanceRole === UserRole.PACKER ? item.packerId : item.pickerId,
+      userName: performanceRole === UserRole.STOCK_CONTROLLER ? item.controllerName : performanceRole === UserRole.PACKER ? item.packerName : item.pickerName,
+      tasksCompleted: item.tasksCompleted,
+      ordersCompleted: performanceRole === UserRole.STOCK_CONTROLLER ? item.transactionsCompleted : item.ordersCompleted,
+      totalItemsProcessed: item.totalItemsProcessed,
+      averageTimePerTask: item.averageTimePerTask,
+    }));
+  }, [performanceRole, pickerPerformance, packerPerformance, stockControllerPerformance]);
 
-    // Close the modals
-    setSelectedPacker(null);
-    setSelectedPicker(null);
+  const performanceLoading = performanceRole === UserRole.PICKER
+    ? pickerPerformanceLoading
+    : performanceRole === UserRole.PACKER
+    ? packerPerformanceLoading
+    : stockControllerPerformanceLoading;
 
-    // Navigate to the appropriate page
-    if (isPackerOrder) {
-      console.log('[Dashboard] Navigating to packer order:', `/packing/${orderId}/pack`);
-      navigate(`/packing/${orderId}/pack`);
-    } else if (isPickerOrder) {
-      console.log('[Dashboard] Navigating to picker order:', `/orders/${orderId}/pick`);
-      navigate(`/orders/${orderId}/pick`);
-    } else {
-      // Fallback - if neither is set, try to determine from the route
-      // Default to packing page as that's more commonly accessed from dashboard
-      console.log(
-        '[Dashboard] No context, defaulting to packing page:',
-        `/packing/${orderId}/pack`
-      );
-      navigate(`/packing/${orderId}/pack`);
-    }
+  // Default activities object for all roles
+  const defaultActivities: Record<UserRole, any[]> = {
+    [UserRole.PICKER]: [],
+    [UserRole.PACKER]: [],
+    [UserRole.STOCK_CONTROLLER]: [],
+    [UserRole.INWARDS]: [],
+    [UserRole.PRODUCTION]: [],
+    [UserRole.SALES]: [],
+    [UserRole.MAINTENANCE]: [],
+    [UserRole.RMA]: [],
+    [UserRole.SUPERVISOR]: [],
+    [UserRole.ADMIN]: [],
   };
+
+  // Explicitly type roleActivities to ensure it satisfies Record<UserRole, any[]>
+  const roleActivities: Record<UserRole, any[]> = (roleActivitiesData ?? defaultActivities) as Record<UserRole, any[]>;
+
+  // Fetch audit logs (only for admin/supervisor)
+  // Pass filters from the component state for server-side filtering
+  const { data: auditLogsData, isLoading: auditLogsLoading } = useAuditLogs(
+    {
+      limit: 50,
+      offset: ((auditLogFilters.page || 1) - 1) * 50,
+      category: auditLogFilters.category || undefined,
+      action: auditLogFilters.action || undefined,
+      username: auditLogFilters.userEmail || undefined,
+      resourceType: auditLogFilters.resourceType || undefined,
+      startDate: auditLogFilters.startDate || undefined,
+      endDate: auditLogFilters.endDate || undefined,
+    },
+    { enabled: hasBaseAdminRole }
+  );
+  const auditLogs: AuditLog[] = (auditLogsData ?? []) as AuditLog[];
+
+  // Use generic role details hook for selected member
+  const { data: memberData, isLoading: memberDataLoading } = useRoleDetails(
+    selectedMember?.roleType || UserRole.PICKER,
+    selectedMember?.id || null,
+    !!selectedMember
+  );
 
   if (!canSupervise) {
     return (
@@ -163,18 +489,41 @@ export function DashboardPage() {
     );
   }
 
-  if (metricsLoading || activityLoading || packerActivityLoading) {
-    return <PageLoading message="Loading dashboard..." />;
-  }
-
-  if (!metrics) {
-    return <PageLoading message="Loading dashboard..." />;
+  if (metricsLoading || !metrics) {
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
+          <div className="animate-in">
+            <Skeleton variant="text" className="w-48 h-10 mb-2" />
+            <Skeleton variant="text" className="w-64 h-6" />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card variant="glass" className="p-6 h-80">
+              <Skeleton variant="text" className="w-32 h-6 mb-4" />
+              <Skeleton variant="rectangular" className="w-full h-60" />
+            </Card>
+            <Card variant="glass" className="p-6 h-80">
+              <Skeleton variant="text" className="w-32 h-6 mb-4" />
+              <Skeleton variant="rectangular" className="w-full h-60" />
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
+      <AdminOrdersModal isOpen={showAdminOrders} onClose={() => setShowAdminOrders(false)} />
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
         {/* Page Header */}
         <div className="animate-in">
           <h1 className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
@@ -190,1147 +539,101 @@ export function DashboardPage() {
           <MetricCard
             title="Active Staff"
             value={metrics.activePickers}
-            icon={UsersIcon}
+            icon={UserGroupIcon}
             color="primary"
           />
           <MetricCard
             title="Orders/Hour"
             value={metrics.ordersPickedPerHour}
-            icon={ClockIcon}
+            icon={ArrowTrendingUpIcon}
             color="success"
           />
           <MetricCard
             title="Queue Depth"
             value={metrics.queueDepth}
-            icon={ShoppingBagIcon}
+            icon={QueueListIcon}
             color="warning"
+            onClick={() => setShowAdminOrders(true)}
           />
           <MetricCard
             title="Exceptions"
             value={metrics.exceptions}
             icon={ExclamationTriangleIcon}
             color={metrics.exceptions > 0 ? 'error' : 'success'}
+            onClick={() => window.location.href = '/exceptions'}
           />
         </div>
 
-        {/* Throughput */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
-            <CardTitle>Throughput</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 sm:gap-6">
-              <div className="text-center p-3 sm:p-4 rounded-xl dark:bg-white/[0.02] bg-gray-50 dark:border-white/[0.05] border-gray-200">
-                <p className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
-                  {metrics.throughput.today}
-                </p>
-                <p className="text-xs sm:text-sm dark:text-gray-400 text-gray-600 mt-1">Today</p>
-              </div>
-              <div className="text-center p-3 sm:p-4 rounded-xl dark:bg-white/[0.02] bg-gray-50 dark:border-white/[0.05] border-gray-200">
-                <p className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
-                  {metrics.throughput.week}
-                </p>
-                <p className="text-xs sm:text-sm dark:text-gray-400 text-gray-600 mt-1">
-                  This Week
-                </p>
-              </div>
-              <div className="text-center p-3 sm:p-4 rounded-xl dark:bg-white/[0.02] bg-gray-50 dark:border-white/[0.05] border-gray-200">
-                <p className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
-                  {metrics.throughput.month}
-                </p>
-                <p className="text-xs sm:text-sm dark:text-gray-400 text-gray-600 mt-1">
-                  This Month
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ThroughputChart data={(throughputData as any) ?? []} isLoading={throughputLoading} onRangeChange={setThroughputRange} />
+          <OrderStatusChart data={orderStatusBreakdown ?? []} isLoading={statusBreakdownLoading} error={statusBreakdownError} />
+        </div>
 
-        {/* Picker Activity */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <CardTitle>Picker Activity</CardTitle>
-              <button
-                onClick={() => window.location.reload()}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm dark:text-primary-400 text-primary-600 dark:hover:text-primary-300 hover:text-primary-700 dark:bg-primary-500/10 bg-primary-50 dark:hover:bg-primary-500/20 hover:bg-primary-100 dark:border-primary-500/20 border-primary-500/30 rounded-xl transition-all duration-300 touch-target"
-                disabled={activityLoading}
-              >
-                <ClockIcon className="h-4 w-4" />
-                Refresh
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {activityLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="dark:text-gray-400 text-gray-500">Loading picker activity...</div>
-              </div>
-            ) : pickerActivity && Array.isArray(pickerActivity) && pickerActivity.length > 0 ? (
-              <div className="mobile-table-container">
-                <table className="min-w-full dark:divide-y dark:divide-white/[0.08] divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Picker
-                      </th>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Actions
-                      </th>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Location
-                      </th>
-                      {pickerActivity &&
-                        Array.isArray(pickerActivity) &&
-                        pickerActivity.some((p: any) => p.currentOrderId) && (
-                          <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                            Progress
-                          </th>
-                        )}
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Last Activity
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="dark:divide-y dark:divide-white/[0.05] divide-y divide-gray-200">
-                    {pickerActivity?.map((picker, idx) => {
-                      const lastViewedAt = picker.lastViewedAt;
-                      const timeSinceLastPick = lastViewedAt
-                        ? `${Math.floor((Date.now() - new Date(lastViewedAt).getTime()) / 1000)}s ago`
-                        : 'Never';
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TopSKUsChart data={topSKUs ?? []} isLoading={topSKUsLoading} limit={10} onScanTypeChange={setScanType} onTimePeriodChange={setTopSKUsTimePeriod} />
+          <PerformanceChart
+            data={performanceData}
+            isLoading={performanceLoading}
+            onRangeChange={setPerformanceRange}
+            onRoleChange={setPerformanceRole}
+          />
+        </div>
 
-                      // Use the status directly from the API response
-                      // The backend correctly determines ACTIVE vs IDLE based on current view and timestamp
-                      const status = picker.status || 'IDLE';
-                      const pickerId = picker.pickerId || `idx-${idx}`;
-
-                      // Format current view for better readability
-                      let displayView = picker.currentView || 'None';
-                      let viewLabel = 'badge-info';
-
-                      console.log(
-                        '[Dashboard] Processing picker:',
-                        picker.pickerName,
-                        'currentView:',
-                        picker.currentView,
-                        'status:',
-                        status
-                      );
-
-                      if (picker.currentView) {
-                        // Check for order queue - handle both "Order Queue" text and "/orders" path
-                        if (
-                          picker.currentView === 'Order Queue' ||
-                          picker.currentView === '/orders' ||
-                          picker.currentView === '/orders/' ||
-                          picker.currentView === 'Orders Page'
-                        ) {
-                          displayView = 'Order Queue';
-                          viewLabel = 'badge-primary';
-                        }
-                        // Check for picking page
-                        else if (
-                          picker.currentView.includes('Picking Order') ||
-                          picker.currentView.includes('/pick/') ||
-                          picker.currentView.includes('/orders/')
-                        ) {
-                          const orderMatch = picker.currentView.match(/ORD-\d{8}-\d{4}/);
-                          if (orderMatch) {
-                            displayView = `Picking ${orderMatch[0]}`;
-                            viewLabel = 'badge-success';
-                          } else {
-                            displayView = 'Picking';
-                            viewLabel = 'badge-success';
-                          }
-                        }
-                        // Check for profile page
-                        else if (
-                          picker.currentView.includes('Profile') ||
-                          picker.currentView.includes('/profile')
-                        ) {
-                          displayView = 'Profile';
-                          viewLabel = 'badge-info';
-                        }
-                        // Default: use the view name as-is
-                        else {
-                          displayView = picker.currentView;
-                          viewLabel = 'badge-info';
-                        }
-                      }
-
-                      console.log(
-                        '[Dashboard] Display view:',
-                        displayView,
-                        'Label:',
-                        viewLabel,
-                        'Status:',
-                        status
-                      );
-
-                      // Determine status badge style and text
-                      let statusBadge = '';
-                      if (status === 'ACTIVE' || status === 'PICKING') {
-                        statusBadge = 'badge-success';
-                      } else {
-                        statusBadge = 'badge-info';
-                      }
-
-                      return (
-                        <tr
-                          key={`picker-${pickerId}`}
-                          className="dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-2 sm:px-4 py-3 text-sm dark:text-white text-gray-900">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{picker.pickerName}</span>
-                              <span className="text-xs dark:text-gray-500 text-gray-500">
-                                ({picker.pickerId})
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-2 sm:px-4 py-3 text-sm">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() =>
-                                setSelectedPicker({ id: picker.pickerId, name: picker.pickerName })
-                              }
-                              className="text-xs touch-target"
-                            >
-                              <DocumentTextIcon className="h-3 w-3 mr-1" />
-                              View Orders
-                            </Button>
-                          </td>
-                          <td className="px-2 sm:px-4 py-3 text-sm dark:text-white text-gray-900 font-medium">
-                            <span className={viewLabel}>{displayView}</span>
-                          </td>
-                          {pickerActivity &&
-                            Array.isArray(pickerActivity) &&
-                            pickerActivity.some((p: any) => p.currentOrderId) && (
-                              <td className="px-2 sm:px-4 py-3 text-sm dark:text-white text-gray-900">
-                                {picker.currentOrderId ? `${picker.orderProgress}%` : '-'}
-                              </td>
-                            )}
-                          <td className="px-2 sm:px-4 py-3">
-                            <span className={statusBadge}>{status}</span>
-                          </td>
-                          <td className="px-2 sm:px-4 py-3 text-sm dark:text-gray-400 text-gray-600">
-                            {timeSinceLastPick}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16">
-                <UsersIcon className="h-12 w-12 sm:h-16 sm:w-16 dark:text-gray-600 text-gray-400 mb-4" />
-                <p className="text-sm dark:text-gray-400 text-gray-600">No active pickers</p>
-                <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
-                  Pickers will appear here when they claim orders
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Packer Activity */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
+        {/* Unified Role Activity / Audit Logs */}
+        <div className="flex flex-col gap-4">
+          {/* Toggle between Role Activity and Audit Logs - only for admin/supervisor */}
+          {hasBaseAdminRole && (
             <div className="flex items-center justify-between">
-              <CardTitle>Packer Activity</CardTitle>
-              <button
-                onClick={() => window.location.reload()}
-                className="flex items-center gap-2 px-4 py-2 text-sm dark:text-primary-400 text-primary-600 dark:hover:text-primary-300 hover:text-primary-700 dark:bg-primary-500/10 bg-primary-50 dark:hover:bg-primary-500/20 hover:bg-primary-100 dark:border-primary-500/20 border-primary-500/30 rounded-xl transition-all duration-300"
-                disabled={packerActivityLoading}
-              >
-                <ClockIcon className="h-4 w-4" />
-                Refresh
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {packerActivityLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="dark:text-gray-400 text-gray-500">Loading packer activity...</div>
-              </div>
-            ) : packerActivity && Array.isArray(packerActivity) && packerActivity.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full dark:divide-y dark:divide-white/[0.08] divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Packer
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Actions
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Location
-                      </th>
-                      {packerActivity &&
-                        Array.isArray(packerActivity) &&
-                        packerActivity.some((p: any) => p.currentOrderId) && (
-                          <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                            Progress
-                          </th>
-                        )}
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Last Activity
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="dark:divide-y dark:divide-white/[0.05] divide-y divide-gray-200">
-                    {packerActivity?.map((packer, idx) => {
-                      const lastViewedAt = packer.lastViewedAt;
-                      const timeSinceLastPack = lastViewedAt
-                        ? `${Math.floor((Date.now() - new Date(lastViewedAt).getTime()) / 1000)}s ago`
-                        : 'Never';
-
-                      // Use the status directly from the API response
-                      // The backend correctly determines ACTIVE vs IDLE based on current view and timestamp
-                      const status = packer.status || 'IDLE';
-                      const packerId = packer.packerId || `idx-${idx}`;
-
-                      // Format current view for better readability
-                      let displayView = packer.currentView || 'None';
-                      let viewLabel = 'badge-info';
-
-                      console.log(
-                        '[Dashboard] Processing packer:',
-                        packer.packerName,
-                        'currentView:',
-                        packer.currentView,
-                        'status:',
-                        status
-                      );
-
-                      if (packer.currentView) {
-                        // Check for packing queue - handle both "Packing Queue" text and "/packing" path
-                        if (
-                          packer.currentView === 'Packing Queue' ||
-                          packer.currentView === '/packing' ||
-                          packer.currentView === '/packing/' ||
-                          packer.currentView === 'Packing Page'
-                        ) {
-                          displayView = 'Packing Queue';
-                          viewLabel = 'badge-primary';
-                        }
-                        // Check for packing page (including "Packing ORD-" pattern)
-                        else if (
-                          packer.currentView.includes('Packing Order') ||
-                          packer.currentView.includes('/pack/') ||
-                          packer.currentView.includes('/packing/') ||
-                          packer.currentView.includes('Packing ORD-')
-                        ) {
-                          const orderMatch = packer.currentView.match(/ORD-\d{8}-\d{4}/);
-                          if (orderMatch) {
-                            displayView = `Packing ${orderMatch[0]}`;
-                            viewLabel = 'badge-success';
-                          } else {
-                            displayView = 'Packing';
-                            viewLabel = 'badge-success';
-                          }
-                        }
-                        // Check for profile page
-                        else if (
-                          packer.currentView.includes('Profile') ||
-                          packer.currentView.includes('/profile')
-                        ) {
-                          displayView = 'Profile';
-                          viewLabel = 'badge-info';
-                        }
-                        // Default: use view name as-is
-                        else {
-                          displayView = packer.currentView;
-                          viewLabel = 'badge-info';
-                        }
-                      }
-
-                      console.log(
-                        '[Dashboard] Display view:',
-                        displayView,
-                        'Label:',
-                        viewLabel,
-                        'Status:',
-                        status
-                      );
-
-                      // Determine status badge style and text
-                      let statusBadge = '';
-                      if (status === 'ACTIVE' || status === 'PACKING') {
-                        statusBadge = 'badge-success';
-                      } else {
-                        statusBadge = 'badge-info';
-                      }
-
-                      return (
-                        <tr
-                          key={`packer-${packerId}`}
-                          className="dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-4 py-3 text-sm dark:text-white text-gray-900">
-                            {packer.packerName}{' '}
-                            <span className="text-xs dark:text-gray-500 text-gray-500">
-                              ({packer.packerId})
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() =>
-                                setSelectedPacker({ id: packer.packerId, name: packer.packerName })
-                              }
-                              className="text-xs"
-                            >
-                              <DocumentTextIcon className="h-3 w-3 mr-1" />
-                              View Orders
-                            </Button>
-                          </td>
-                          <td className="px-4 py-3 text-sm dark:text-white text-gray-900 font-medium">
-                            <span className={viewLabel}>{displayView}</span>
-                          </td>
-                          {packerActivity &&
-                            Array.isArray(packerActivity) &&
-                            packerActivity.some((p: any) => p.currentOrderId) && (
-                              <td className="px-4 py-3 text-sm dark:text-white text-gray-900">
-                                {packer.currentOrderId ? `${packer.orderProgress}%` : '-'}
-                              </td>
-                            )}
-                          <td className="px-4 py-3">
-                            <span className={statusBadge}>{status}</span>
-                          </td>
-                          <td className="px-4 py-3 text-sm dark:text-gray-400 text-gray-600">
-                            {timeSinceLastPack}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16">
-                <CubeIcon className="h-16 w-16 dark:text-gray-600 text-gray-400 mb-4" />
-                <p className="text-sm dark:text-gray-400 text-gray-600">No active packers</p>
-                <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
-                  Packers will appear here when they claim orders
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Stock Controller Activity */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Stock Controller Activity</CardTitle>
-              <button
-                onClick={() => window.location.reload()}
-                className="flex items-center gap-2 px-4 py-2 text-sm dark:text-primary-400 text-primary-600 dark:hover:text-primary-300 hover:text-primary-700 dark:bg-primary-500/10 bg-primary-50 dark:hover:bg-primary-500/20 hover:bg-primary-100 dark:border-primary-500/20 border-primary-500/30 rounded-xl transition-all duration-300"
-                disabled={stockControllerActivityLoading}
-              >
-                <ClockIcon className="h-4 w-4" />
-                Refresh
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {stockControllerActivityLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="dark:text-gray-400 text-gray-500">
-                  Loading stock controller activity...
-                </div>
-              </div>
-            ) : stockControllerActivity &&
-              Array.isArray(stockControllerActivity) &&
-              stockControllerActivity.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full dark:divide-y dark:divide-white/[0.08] divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Stock Controller
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Actions
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
-                        Last Activity
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="dark:divide-y dark:divide-white/[0.05] divide-y divide-gray-200">
-                    {stockControllerActivity?.map((controller: any, idx) => {
-                      const lastViewedAt = controller.lastViewedAt;
-                      const timeSinceLastActivity = lastViewedAt
-                        ? `${Math.floor((Date.now() - new Date(lastViewedAt).getTime()) / 1000)}s ago`
-                        : 'Never';
-
-                      // Use the status directly from the API response
-                      // The backend correctly determines ACTIVE vs IDLE based on current view and timestamp
-                      const status = controller.status || 'IDLE';
-                      const controllerId = controller.controllerId || `idx-${idx}`;
-
-                      // Format current view for better readability
-                      let displayView = controller.currentView || 'None';
-                      let viewLabel = 'badge-info';
-
-                      console.log(
-                        '[Dashboard] Processing stock controller:',
-                        controller.controllerName,
-                        'currentView:',
-                        controller.currentView,
-                        'status:',
-                        status
-                      );
-
-                      if (controller.currentView) {
-                        // Check for stock control dashboard
-                        if (
-                          controller.currentView === 'Stock Control Dashboard' ||
-                          controller.currentView === '/stock-control' ||
-                          controller.currentView === '/stock-control/'
-                        ) {
-                          displayView = 'Stock Control';
-                          viewLabel = 'badge-primary';
-                        }
-                        // Check for inventory page
-                        else if (
-                          controller.currentView === 'Stock Control - Inventory' ||
-                          controller.currentView.includes('Inventory Management') ||
-                          controller.currentView === '/inventory'
-                        ) {
-                          displayView = 'Inventory Management';
-                          viewLabel = 'badge-success';
-                        }
-                        // Check for transactions page
-                        else if (
-                          controller.currentView === 'Stock Control - Transactions' ||
-                          controller.currentView.includes('Transactions') ||
-                          controller.currentView.includes('/transactions')
-                        ) {
-                          displayView = 'Transactions';
-                          viewLabel = 'badge-info';
-                        }
-                        // Check for quick actions page
-                        else if (
-                          controller.currentView === 'Stock Control - Quick Actions' ||
-                          controller.currentView.includes('Quick Actions')
-                        ) {
-                          displayView = 'Quick Actions';
-                          viewLabel = 'badge-warning';
-                        }
-                        // Check for profile page
-                        else if (
-                          controller.currentView.includes('Profile') ||
-                          controller.currentView.includes('/profile')
-                        ) {
-                          displayView = 'Profile';
-                          viewLabel = 'badge-info';
-                        }
-                        // Default: use view name as-is
-                        else {
-                          displayView = controller.currentView;
-                          viewLabel = 'badge-info';
-                        }
-                      }
-
-                      console.log(
-                        '[Dashboard] Display view:',
-                        displayView,
-                        'Label:',
-                        viewLabel,
-                        'Status:',
-                        status
-                      );
-
-                      // Determine status badge style and text
-                      let statusBadge = '';
-                      if (status === 'ACTIVE') {
-                        statusBadge = 'badge-success';
-                      } else {
-                        statusBadge = 'badge-info';
-                      }
-
-                      return (
-                        <tr
-                          key={`controller-${controllerId}`}
-                          className="dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-4 py-3 text-sm dark:text-white text-gray-900">
-                            {controller.controllerName}{' '}
-                            <span className="text-xs dark:text-gray-500 text-gray-500">
-                              ({controller.controllerId})
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() =>
-                                setSelectedController({
-                                  id: controller.controllerId,
-                                  name: controller.controllerName,
-                                })
-                              }
-                              className="text-xs"
-                            >
-                              <ClipboardDocumentListIcon className="h-3 w-3 mr-1" />
-                              View Activity
-                            </Button>
-                          </td>
-                          <td className="px-4 py-3 text-sm dark:text-white text-gray-900 font-medium">
-                            <span className={viewLabel}>{displayView}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={statusBadge}>{status}</span>
-                          </td>
-                          <td className="px-4 py-3 text-sm dark:text-gray-400 text-gray-600">
-                            {timeSinceLastActivity}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16">
-                <ClipboardDocumentListIcon className="h-16 w-16 dark:text-gray-600 text-gray-400 mb-4" />
-                <p className="text-sm dark:text-gray-400 text-gray-600">
-                  No active stock controllers
-                </p>
-                <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
-                  Stock controllers will appear here when they log in
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Picker Orders Modal */}
-        {selectedPicker && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-              {/* Background overlay */}
-              <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
-                onClick={() => setSelectedPicker(null)}
-              ></div>
-
-              {/* Modal panel */}
-              <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
-                {/* Modal header */}
-                <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 flex items-center justify-between dark:border-b border-b dark:border-white/[0.08] border-gray-200">
-                  <div>
-                    <h3 className="text-lg leading-6 font-semibold dark:text-white text-gray-900">
-                      {selectedPicker.name}'s Orders
-                    </h3>
-                    <p className="mt-1 text-sm dark:text-gray-400 text-gray-600">
-                      {pickerOrders?.length || 0} order{pickerOrders?.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedPicker(null)}
-                    className="dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 focus:outline-none transition-colors duration-200 hover:rotate-90 transform"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {/* Modal content */}
-                <div className="px-6 py-5 sm:px-6 max-h-96 overflow-y-auto">
-                  {ordersLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="dark:text-gray-400 text-gray-500">Loading orders...</div>
-                    </div>
-                  ) : pickerOrders && pickerOrders.length > 0 ? (
-                    <div className="space-y-3">
-                      {pickerOrders
-                        .sort((a: any, b: any) => {
-                          // Find the selected picker's current order ID from picker activity
-                          const selectedPickerActivity = Array.isArray(pickerActivity)
-                            ? pickerActivity.find((p: any) => p.pickerId === selectedPicker?.id)
-                            : undefined;
-
-                          // Orders currently being picked should come first
-                          const aIsPicking = selectedPickerActivity?.currentOrderId === a.orderId;
-                          const bIsPicking = selectedPickerActivity?.currentOrderId === b.orderId;
-
-                          if (aIsPicking && !bIsPicking) return -1;
-                          if (!aIsPicking && bIsPicking) return 1;
-
-                          // Then sort by status (TOTE/PENDING before PICKED)
-                          if (a.status !== 'PICKED' && b.status === 'PICKED') return -1;
-                          if (a.status === 'PICKED' && b.status !== 'PICKED') return 1;
-
-                          return 0;
-                        })
-                        .map((order: any) => {
-                          // Find selected picker's current order ID from picker activity
-                          const selectedPickerActivity = Array.isArray(pickerActivity)
-                            ? pickerActivity.find((p: any) => p.pickerId === selectedPicker?.id)
-                            : undefined;
-                          const isCurrentlyPicking =
-                            selectedPickerActivity?.currentOrderId === order.orderId;
-
-                          return (
-                            <div
-                              key={order.orderId}
-                              onClick={() => {
-                                console.log('[Dashboard] Order card clicked:', order.orderId);
-                                handleViewOrder(order.orderId);
-                              }}
-                              className="dark:border dark:border-white/[0.08] border border-gray-200 rounded-xl p-4 dark:hover:bg-primary-500/10 hover:bg-primary-50 dark:hover:border-primary-500/30 hover:border-primary-500/30 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="text-sm font-semibold dark:text-white text-gray-900">
-                                      {order.orderId}
-                                    </h4>
-                                    {/* Picking tag - only shown if currently being picked */}
-                                    {isCurrentlyPicking && (
-                                      <span className="badge badge-success">PICKING</span>
-                                    )}
-                                    {/* Picked tag - shown if order is fully picked (100% progress or status is PICKED) */}
-                                    {!isCurrentlyPicking &&
-                                      (order.status === 'PICKED' || order.progress === 100) && (
-                                        <span className="badge badge-primary">PICKED</span>
-                                      )}
-                                    {/* Tote tag - shown if in tote but not currently being picked and not fully picked */}
-                                    {!isCurrentlyPicking &&
-                                      order.status !== 'PICKED' &&
-                                      order.progress < 100 && (
-                                        <span className="badge badge-warning">TOTE</span>
-                                      )}
-                                    {/* Live View indicator - only shown if currently being picked */}
-                                    {isCurrentlyPicking && (
-                                      <span className="text-xs dark:text-primary-400 text-primary-600 font-medium">
-                                        • Live View
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-sm dark:text-gray-300 text-gray-600 mt-1">
-                                    {order.customerName}
-                                  </p>
-                                  <div className="mt-2 grid grid-cols-3 gap-4 text-xs dark:text-gray-400 text-gray-600">
-                                    <div>
-                                      <span className="font-medium dark:text-white text-gray-900">
-                                        Progress:
-                                      </span>{' '}
-                                      {order.progress}%
-                                    </div>
-                                    <div>
-                                      <span className="font-medium dark:text-white text-gray-900">
-                                        Items:
-                                      </span>{' '}
-                                      {order.itemCount || 0}
-                                    </div>
-                                    <div>
-                                      <span className="font-medium dark:text-white text-gray-900">
-                                        Priority:
-                                      </span>{' '}
-                                      {order.priority}
-                                    </div>
-                                  </div>
-
-                                  {/* Items to pick */}
-                                  {order.items && order.items.length > 0 && (
-                                    <div className="mt-3 space-y-2">
-                                      <p className="text-xs font-medium dark:text-gray-300 text-gray-600">
-                                        Items to Pick:
-                                      </p>
-                                      <div className="space-y-1">
-                                        {order.items.map((item: any, itemIdx: number) => {
-                                          const itemStatusColor =
-                                            item.status === 'FULLY_PICKED'
-                                              ? 'text-success-400 bg-success-500/10 border-success-500/20'
-                                              : item.status === 'PARTIAL_PICKED'
-                                                ? 'text-warning-400 bg-warning-500/10 border-warning-500/20'
-                                                : 'dark:text-gray-400 text-gray-500 dark:bg-white/[0.02] bg-gray-50 dark:border-white/[0.05] border-gray-200';
-
-                                          return (
-                                            <div
-                                              key={`${order.orderId}-item-${itemIdx}`}
-                                              className={`flex items-center justify-between text-xs p-2 rounded-lg border ${itemStatusColor}`}
-                                            >
-                                              <div className="flex items-center gap-2">
-                                                <span className="font-medium">{item.sku}</span>
-                                                <span className="dark:text-gray-500 text-gray-400">
-                                                  •
-                                                </span>
-                                                <span>{item.name}</span>
-                                              </div>
-                                              <div className="flex items-center gap-3">
-                                                <span>Loc: {item.binLocation}</span>
-                                                <span>
-                                                  {item.pickedQuantity}/{item.quantity}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <ShoppingBagIcon className="h-14 w-14 dark:text-gray-600 text-gray-400 mx-auto mb-4" />
-                      <p className="text-sm dark:text-gray-400 text-gray-600">No orders found</p>
-                      <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
-                        This picker hasn't claimed any orders yet
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Modal footer */}
-                <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse dark:border-t border-t dark:border-white/[0.08] border-gray-200">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setSelectedPicker(null)}
-                    className="w-full sm:w-auto sm:text-sm"
-                  >
-                    Close
-                  </Button>
-                </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActivityView('role-activity')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activityView === 'role-activity'
+                      ? 'dark:bg-blue-600 bg-blue-500 text-white'
+                      : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200'
+                  }`}
+                >
+                  <UserGroupIcon className="h-4 w-4 inline mr-2" />
+                  Role Activity
+                </button>
+                <button
+                  onClick={() => setActivityView('audit-logs')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activityView === 'audit-logs'
+                      ? 'dark:bg-blue-600 bg-blue-500 text-white'
+                      : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200'
+                  }`}
+                >
+                  <DocumentTextIcon className="h-4 w-4 inline mr-2" />
+                  Audit Logs
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Packer Orders Modal */}
-        {selectedPacker && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-              {/* Background overlay */}
-              <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
-                onClick={() => setSelectedPacker(null)}
-              ></div>
-
-              {/* Modal panel */}
-              <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
-                {/* Modal header */}
-                <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 flex items-center justify-between dark:border-b border-b dark:border-white/[0.08] border-gray-200">
-                  <div>
-                    <h3 className="text-lg leading-6 font-semibold dark:text-white text-gray-900">
-                      {selectedPacker.name}'s Orders
-                    </h3>
-                    <p className="mt-1 text-sm dark:text-gray-400 text-gray-600">
-                      {packerOrders?.length || 0} order{packerOrders?.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedPacker(null)}
-                    className="dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 focus:outline-none transition-colors duration-200 hover:rotate-90 transform"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {/* Modal content */}
-                <div className="px-6 py-5 sm:px-6 max-h-96 overflow-y-auto">
-                  {packerOrdersLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="dark:text-gray-400 text-gray-500">Loading orders...</div>
-                    </div>
-                  ) : packerOrders && packerOrders.length > 0 ? (
-                    <div className="space-y-3">
-                      {packerOrders
-                        .sort((a: any, b: any) => {
-                          // Find the selected packer's current order ID from packer activity
-                          const selectedPackerActivity = Array.isArray(packerActivity)
-                            ? packerActivity.find((p: any) => p.packerId === selectedPacker?.id)
-                            : undefined;
-
-                          // Orders currently being packed should come first
-                          const aIsPacking = selectedPackerActivity?.currentOrderId === a.orderId;
-                          const bIsPacking = selectedPackerActivity?.currentOrderId === b.orderId;
-
-                          if (aIsPacking && !bIsPacking) return -1;
-                          if (!aIsPacking && bIsPacking) return 1;
-
-                          // Then sort by status
-                          if (a.status !== 'PACKED' && b.status === 'PACKED') return -1;
-                          if (a.status === 'PACKED' && b.status !== 'PACKED') return 1;
-
-                          return 0;
-                        })
-                        .map((order: any) => {
-                          // Find the selected packer's current order ID from packer activity
-                          const selectedPackerActivity = Array.isArray(packerActivity)
-                            ? packerActivity.find((p: any) => p.packerId === selectedPacker?.id)
-                            : undefined;
-                          const isCurrentlyPacking =
-                            selectedPackerActivity?.currentOrderId === order.orderId;
-
-                          return (
-                            <div
-                              key={order.orderId}
-                              onClick={() => {
-                                console.log(
-                                  '[Dashboard] Packer order card clicked:',
-                                  order.orderId
-                                );
-                                handleViewOrder(order.orderId);
-                              }}
-                              className="dark:border dark:border-white/[0.08] border border-gray-200 rounded-xl p-4 dark:hover:bg-primary-500/10 hover:bg-primary-50 dark:hover:border-primary-500/30 hover:border-primary-500/30 cursor-pointer transition-all duration-300 hover:scale-[1.02]"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="text-sm font-semibold dark:text-white text-gray-900">
-                                      {order.orderId}
-                                    </h4>
-                                    {/* PACKING tag - packer is actively working on this order */}
-                                    {isCurrentlyPacking && (
-                                      <span className="badge badge-success">PACKING</span>
-                                    )}
-                                    {/* IN QUEUE tag - order is assigned to this packer but not actively being worked on */}
-                                    {!isCurrentlyPacking && order.status !== 'PICKED' && (
-                                      <span className="badge badge-primary">IN QUEUE</span>
-                                    )}
-                                    {/* WAITING tag - order is PICKED and NOT assigned to this packer (in general queue) */}
-                                    {!isCurrentlyPacking && order.status === 'PICKED' && (
-                                      <span className="badge badge-warning">WAITING</span>
-                                    )}
-                                    {/* Live View indicator - only shown if currently being packed */}
-                                    {isCurrentlyPacking && (
-                                      <span className="text-xs dark:text-primary-400 text-primary-600 font-medium">
-                                        • Live View
-                                      </span>
-                                    )}
-                                  </div>
-                                  <p className="text-sm dark:text-gray-300 text-gray-600 mt-1">
-                                    {order.customerName}
-                                  </p>
-                                  <div className="mt-2 grid grid-cols-3 gap-4 text-xs dark:text-gray-400 text-gray-600">
-                                    <div>
-                                      <span className="font-medium dark:text-white text-gray-900">
-                                        Progress:
-                                      </span>{' '}
-                                      {order.progress}%
-                                    </div>
-                                    <div>
-                                      <span className="font-medium dark:text-white text-gray-900">
-                                        Items:
-                                      </span>{' '}
-                                      {order.itemCount || 0}
-                                    </div>
-                                    <div>
-                                      <span className="font-medium dark:text-white text-gray-900">
-                                        Priority:
-                                      </span>{' '}
-                                      {order.priority}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <CubeIcon className="h-14 w-14 dark:text-gray-600 text-gray-400 mx-auto mb-4" />
-                      <p className="text-sm dark:text-gray-400 text-gray-600">No orders found</p>
-                      <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
-                        This packer hasn't claimed any orders yet
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Modal footer */}
-                <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse dark:border-t border-t dark:border-white/[0.08] border-gray-200">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setSelectedPacker(null)}
-                    className="w-full sm:w-auto sm:text-sm"
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stock Controller Activity Modal */}
-        {selectedController && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-              {/* Background overlay */}
-              <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
-                onClick={() => setSelectedController(null)}
-              ></div>
-
-              {/* Modal panel */}
-              <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
-                {/* Modal header */}
-                <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 flex items-center justify-between dark:border-b border-b dark:border-white/[0.08] border-gray-200">
-                  <div>
-                    <h3 className="text-lg leading-6 font-semibold dark:text-white text-gray-900">
-                      {selectedController.name}'s Activity
-                    </h3>
-                    <p className="mt-1 text-sm dark:text-gray-400 text-gray-600">
-                      {controllerTransactions?.length || 0} transaction
-                      {controllerTransactions?.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedController(null)}
-                    className="dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 focus:outline-none transition-colors duration-200 hover:rotate-90 transform"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {/* Modal content */}
-                <div className="px-6 py-5 sm:px-6 max-h-96 overflow-y-auto">
-                  {controllerTransactionsLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="dark:text-gray-400 text-gray-500">
-                        Loading transactions...
-                      </div>
-                    </div>
-                  ) : controllerTransactions && controllerTransactions.length > 0 ? (
-                    <div className="space-y-3">
-                      {controllerTransactions.map((transaction: any) => {
-                        // Format transaction type for display
-                        let typeBadge = 'badge-info';
-                        let displayType = transaction.type || 'UNKNOWN';
-
-                        switch (transaction.type) {
-                          case 'STOCK_IN':
-                            typeBadge = 'badge-success';
-                            displayType = 'Stock In';
-                            break;
-                          case 'STOCK_OUT':
-                            typeBadge = 'badge-warning';
-                            displayType = 'Stock Out';
-                            break;
-                          case 'TRANSFER':
-                            typeBadge = 'badge-primary';
-                            displayType = 'Transfer';
-                            break;
-                          case 'ADJUSTMENT':
-                            typeBadge = 'badge-warning';
-                            displayType = 'Adjustment';
-                            break;
-                          case 'STOCK_COUNT':
-                            typeBadge = 'badge-info';
-                            displayType = 'Stock Count';
-                            break;
-                          default:
-                            typeBadge = 'badge-info';
-                            displayType = transaction.type;
-                        }
-
-                        // Format timestamp
-                        const timestamp = transaction.createdAt
-                          ? new Date(transaction.createdAt).toLocaleString()
-                          : 'Unknown';
-
-                        return (
-                          <div
-                            key={transaction.transactionId}
-                            className="dark:border dark:border-white/[0.08] border border-gray-200 rounded-xl p-4 dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-all duration-300"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className={typeBadge}>{displayType}</span>
-                                  <h4 className="text-sm font-semibold dark:text-white text-gray-900">
-                                    {transaction.sku}
-                                  </h4>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4 text-xs dark:text-gray-400 text-gray-600">
-                                  <div>
-                                    <span className="font-medium dark:text-white text-gray-900">
-                                      Bin:
-                                    </span>{' '}
-                                    {transaction.binLocation || 'N/A'}
-                                  </div>
-                                  <div>
-                                    <span className="font-medium dark:text-white text-gray-900">
-                                      Quantity:
-                                    </span>{' '}
-                                    {transaction.quantityChange > 0
-                                      ? `+${transaction.quantityChange}`
-                                      : transaction.quantityChange}
-                                  </div>
-                                  <div className="col-span-2">
-                                    <span className="font-medium dark:text-white text-gray-900">
-                                      Reason:
-                                    </span>{' '}
-                                    {transaction.reason || 'N/A'}
-                                  </div>
-                                  <div className="col-span-2">
-                                    <span className="font-medium dark:text-white text-gray-900">
-                                      Time:
-                                    </span>{' '}
-                                    {timestamp}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <ClipboardDocumentListIcon className="h-14 w-14 dark:text-gray-600 text-gray-400 mx-auto mb-4" />
-                      <p className="text-sm dark:text-gray-400 text-gray-600">
-                        No transactions found
-                      </p>
-                      <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
-                        This stock controller hasn't performed any transactions yet
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Modal footer */}
-                <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse dark:border-t border-t dark:border-white/[0.08] border-gray-200">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setSelectedController(null)}
-                    className="w-full sm:w-auto sm:text-sm"
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          {activityView === 'audit-logs' && hasBaseAdminRole ? (
+            <AuditLogsCard
+              logs={auditLogs}
+              isLoading={auditLogsLoading}
+              onFiltersChange={handleAuditFiltersChange}
+              hasNextPage={auditLogs.length === 50}
+              hasPreviousPage={(auditLogFilters.page || 1) > 1}
+            />
+          ) : (
+            <RoleActivityCard
+              role={selectedRole}
+              onRoleChange={setSelectedRole}
+              activities={roleActivities}
+              isLoading={roleActivitiesLoading}
+              onViewOrders={(roleId, roleName, roleType) => setSelectedMember({ id: roleId, name: roleName, roleType })}
+              orders={memberData || []}
+              transactions={memberData || []}
+              ordersLoading={memberDataLoading}
+              transactionsLoading={memberDataLoading}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

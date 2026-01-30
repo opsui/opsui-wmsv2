@@ -66,6 +66,313 @@ export type UserRoleValue =
   | 'MAINTENANCE'
   | 'RMA';
 
+/**
+ * Permissions - Granular access control for custom roles
+ * Each permission represents a specific capability in the system
+ */
+export enum Permission {
+  // Order Management
+  VIEW_ORDERS = 'view_orders',
+  CREATE_ORDERS = 'create_orders',
+  EDIT_ORDERS = 'edit_orders',
+  DELETE_ORDERS = 'delete_orders',
+  ASSIGN_ORDERS = 'assign_orders',
+
+  // Picking Operations
+  VIEW_PICK_TASKS = 'view_pick_tasks',
+  CLAIM_PICK_TASK = 'claim_pick_task',
+  COMPLETE_PICK_TASK = 'complete_pick_task',
+  SKIP_PICK_TASK = 'skip_pick_task',
+
+  // Packing Operations
+  VIEW_PACK_TASKS = 'view_pack_tasks',
+  CLAIM_PACK_TASK = 'claim_pack_task',
+  COMPLETE_PACK_TASK = 'complete_pack_task',
+
+  // Inventory Management
+  VIEW_INVENTORY = 'view_inventory',
+  ADJUST_INVENTORY = 'adjust_inventory',
+  VIEW_STOCK_MOVEMENTS = 'view_stock_movements',
+
+  // Stock Control
+  PERFORM_CYCLE_COUNTS = 'perform_cycle_counts',
+  APPROVE_CYCLE_COUNTS = 'approve_cycle_counts',
+  MANAGE_LOCATIONS = 'manage_locations',
+  VIEW_LOCATION_CAPACITY = 'view_location_capacity',
+
+  // Inwards/Receiving
+  PROCESS_RECEIPTS = 'process_receipts',
+  MANAGE_PUTAWAYS = 'manage_putaways',
+
+  // Reporting & Analytics
+  VIEW_REPORTS = 'view_reports',
+  GENERATE_REPORTS = 'generate_reports',
+  EXPORT_DATA = 'export_data',
+
+  // User Management
+  VIEW_USERS = 'view_users',
+  CREATE_USERS = 'create_users',
+  EDIT_USERS = 'edit_users',
+  DELETE_USERS = 'delete_users',
+  MANAGE_USER_ROLES = 'manage_user_roles',
+  MANAGE_CUSTOM_ROLES = 'manage_custom_roles',
+
+  // Exceptions Management
+  VIEW_EXCEPTIONS = 'view_exceptions',
+  RESOLVE_EXCEPTIONS = 'resolve_exceptions',
+  APPROVE_EXCEPTION_RESOLUTIONS = 'approve_exception_resolutions',
+
+  // Business Rules
+  VIEW_BUSINESS_RULES = 'view_business_rules',
+  MANAGE_BUSINESS_RULES = 'manage_business_rules',
+
+  // Settings & Configuration
+  VIEW_SETTINGS = 'view_settings',
+  MANAGE_INTEGRATIONS = 'manage_integrations',
+
+  // Quality Control
+  PERFORM_QC_CHECKS = 'perform_qc_checks',
+  APPROVE_QC_RESULTS = 'approve_qc_results',
+
+  // Production
+  VIEW_PRODUCTION_TASKS = 'view_production_tasks',
+  MANAGE_PRODUCTION = 'manage_production',
+
+  // Sales
+  VIEW_SALES_ORDERS = 'view_sales_orders',
+  MANAGE_SALES = 'manage_sales',
+
+  // Maintenance
+  VIEW_MAINTENANCE_TASKS = 'view_maintenance_tasks',
+  MANAGE_MAINTENANCE = 'manage_maintenance',
+
+  // RMA (Returns)
+  VIEW_RMA_REQUESTS = 'view_rma_requests',
+  PROCESS_RMA = 'process_rma',
+
+  // Admin Full Access
+  ADMIN_FULL_ACCESS = 'admin_full_access',
+}
+
+/**
+ * Permission Groups - Logical grouping of permissions
+ */
+export const PERMISSION_GROUPS = {
+  ORDERS: [
+    Permission.VIEW_ORDERS,
+    Permission.CREATE_ORDERS,
+    Permission.EDIT_ORDERS,
+    Permission.DELETE_ORDERS,
+    Permission.ASSIGN_ORDERS,
+  ],
+  PICKING: [
+    Permission.VIEW_PICK_TASKS,
+    Permission.CLAIM_PICK_TASK,
+    Permission.COMPLETE_PICK_TASK,
+    Permission.SKIP_PICK_TASK,
+  ],
+  PACKING: [
+    Permission.VIEW_PACK_TASKS,
+    Permission.CLAIM_PACK_TASK,
+    Permission.COMPLETE_PACK_TASK,
+  ],
+  INVENTORY: [
+    Permission.VIEW_INVENTORY,
+    Permission.ADJUST_INVENTORY,
+    Permission.VIEW_STOCK_MOVEMENTS,
+  ],
+  STOCK_CONTROL: [
+    Permission.PERFORM_CYCLE_COUNTS,
+    Permission.APPROVE_CYCLE_COUNTS,
+    Permission.MANAGE_LOCATIONS,
+    Permission.VIEW_LOCATION_CAPACITY,
+  ],
+  INWARDS: [
+    Permission.PROCESS_RECEIPTS,
+    Permission.MANAGE_PUTAWAYS,
+  ],
+  REPORTS: [
+    Permission.VIEW_REPORTS,
+    Permission.GENERATE_REPORTS,
+    Permission.EXPORT_DATA,
+  ],
+  USERS: [
+    Permission.VIEW_USERS,
+    Permission.CREATE_USERS,
+    Permission.EDIT_USERS,
+    Permission.DELETE_USERS,
+    Permission.MANAGE_USER_ROLES,
+    Permission.MANAGE_CUSTOM_ROLES,
+  ],
+  EXCEPTIONS: [
+    Permission.VIEW_EXCEPTIONS,
+    Permission.RESOLVE_EXCEPTIONS,
+    Permission.APPROVE_EXCEPTION_RESOLUTIONS,
+  ],
+  SETTINGS: [
+    Permission.VIEW_SETTINGS,
+    Permission.MANAGE_INTEGRATIONS,
+    Permission.MANAGE_BUSINESS_RULES,
+  ],
+  QUALITY_CONTROL: [
+    Permission.PERFORM_QC_CHECKS,
+    Permission.APPROVE_QC_RESULTS,
+  ],
+  PRODUCTION: [
+    Permission.VIEW_PRODUCTION_TASKS,
+    Permission.MANAGE_PRODUCTION,
+  ],
+  SALES: [
+    Permission.VIEW_SALES_ORDERS,
+    Permission.MANAGE_SALES,
+  ],
+  MAINTENANCE: [
+    Permission.VIEW_MAINTENANCE_TASKS,
+    Permission.MANAGE_MAINTENANCE,
+  ],
+  RMA: [
+    Permission.VIEW_RMA_REQUESTS,
+    Permission.PROCESS_RMA,
+  ],
+} as const;
+
+/**
+ * Default permissions for each predefined role
+ */
+export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  [UserRole.PICKER]: [
+    Permission.VIEW_ORDERS,
+    Permission.VIEW_PICK_TASKS,
+    Permission.CLAIM_PICK_TASK,
+    Permission.COMPLETE_PICK_TASK,
+    Permission.SKIP_PICK_TASK,
+    Permission.VIEW_INVENTORY,
+  ],
+  [UserRole.PACKER]: [
+    Permission.VIEW_ORDERS,
+    Permission.VIEW_PACK_TASKS,
+    Permission.CLAIM_PACK_TASK,
+    Permission.COMPLETE_PACK_TASK,
+    Permission.VIEW_INVENTORY,
+  ],
+  [UserRole.STOCK_CONTROLLER]: [
+    Permission.VIEW_INVENTORY,
+    Permission.ADJUST_INVENTORY,
+    Permission.VIEW_STOCK_MOVEMENTS,
+    Permission.PERFORM_CYCLE_COUNTS,
+    Permission.APPROVE_CYCLE_COUNTS,
+    Permission.MANAGE_LOCATIONS,
+    Permission.VIEW_LOCATION_CAPACITY,
+  ],
+  [UserRole.INWARDS]: [
+    Permission.VIEW_INVENTORY,
+    Permission.PROCESS_RECEIPTS,
+    Permission.MANAGE_PUTAWAYS,
+    Permission.VIEW_STOCK_MOVEMENTS,
+  ],
+  [UserRole.SUPERVISOR]: [
+    Permission.VIEW_ORDERS,
+    Permission.ASSIGN_ORDERS,
+    Permission.VIEW_PICK_TASKS,
+    Permission.VIEW_PACK_TASKS,
+    Permission.VIEW_INVENTORY,
+    Permission.VIEW_EXCEPTIONS,
+    Permission.RESOLVE_EXCEPTIONS,
+    Permission.APPROVE_EXCEPTION_RESOLUTIONS,
+    Permission.VIEW_REPORTS,
+    Permission.PERFORM_CYCLE_COUNTS,
+    Permission.APPROVE_CYCLE_COUNTS,
+  ],
+  [UserRole.ADMIN]: [
+    // Order Management
+    Permission.VIEW_ORDERS,
+    Permission.CREATE_ORDERS,
+    Permission.EDIT_ORDERS,
+    Permission.DELETE_ORDERS,
+    Permission.ASSIGN_ORDERS,
+    // Picking Operations
+    Permission.VIEW_PICK_TASKS,
+    Permission.CLAIM_PICK_TASK,
+    Permission.COMPLETE_PICK_TASK,
+    Permission.SKIP_PICK_TASK,
+    // Packing Operations
+    Permission.VIEW_PACK_TASKS,
+    Permission.CLAIM_PACK_TASK,
+    Permission.COMPLETE_PACK_TASK,
+    // Inventory Management
+    Permission.VIEW_INVENTORY,
+    Permission.ADJUST_INVENTORY,
+    Permission.VIEW_STOCK_MOVEMENTS,
+    // Stock Control
+    Permission.PERFORM_CYCLE_COUNTS,
+    Permission.APPROVE_CYCLE_COUNTS,
+    Permission.MANAGE_LOCATIONS,
+    Permission.VIEW_LOCATION_CAPACITY,
+    // Inwards/Receiving
+    Permission.PROCESS_RECEIPTS,
+    Permission.MANAGE_PUTAWAYS,
+    // Reporting & Analytics
+    Permission.VIEW_REPORTS,
+    Permission.GENERATE_REPORTS,
+    Permission.EXPORT_DATA,
+    // User Management
+    Permission.VIEW_USERS,
+    Permission.CREATE_USERS,
+    Permission.EDIT_USERS,
+    Permission.DELETE_USERS,
+    Permission.MANAGE_USER_ROLES,
+    Permission.MANAGE_CUSTOM_ROLES,
+    // Exceptions Management
+    Permission.VIEW_EXCEPTIONS,
+    Permission.RESOLVE_EXCEPTIONS,
+    Permission.APPROVE_EXCEPTION_RESOLUTIONS,
+    // Business Rules
+    Permission.VIEW_BUSINESS_RULES,
+    Permission.MANAGE_BUSINESS_RULES,
+    // Settings & Configuration
+    Permission.VIEW_SETTINGS,
+    Permission.MANAGE_INTEGRATIONS,
+    // Quality Control
+    Permission.PERFORM_QC_CHECKS,
+    Permission.APPROVE_QC_RESULTS,
+    // Production
+    Permission.VIEW_PRODUCTION_TASKS,
+    Permission.MANAGE_PRODUCTION,
+    // Sales
+    Permission.VIEW_SALES_ORDERS,
+    Permission.MANAGE_SALES,
+    // Maintenance
+    Permission.VIEW_MAINTENANCE_TASKS,
+    Permission.MANAGE_MAINTENANCE,
+    // RMA (Returns)
+    Permission.VIEW_RMA_REQUESTS,
+    Permission.PROCESS_RMA,
+    // Admin Full Access
+    Permission.ADMIN_FULL_ACCESS,
+  ],
+  [UserRole.PRODUCTION]: [
+    Permission.VIEW_PRODUCTION_TASKS,
+    Permission.MANAGE_PRODUCTION,
+    Permission.VIEW_INVENTORY,
+  ],
+  [UserRole.SALES]: [
+    Permission.VIEW_SALES_ORDERS,
+    Permission.MANAGE_SALES,
+    Permission.VIEW_ORDERS,
+    Permission.VIEW_REPORTS,
+  ],
+  [UserRole.MAINTENANCE]: [
+    Permission.VIEW_MAINTENANCE_TASKS,
+    Permission.MANAGE_MAINTENANCE,
+  ],
+  [UserRole.RMA]: [
+    Permission.VIEW_RMA_REQUESTS,
+    Permission.PROCESS_RMA,
+    Permission.VIEW_ORDERS,
+    Permission.VIEW_INVENTORY,
+  ],
+};
+
 export enum BinType {
   SHELF = 'SHELF',
   FLOOR = 'FLOOR',
@@ -86,6 +393,8 @@ export enum TransactionType {
  * Categories of issues that can occur during order fulfillment
  */
 export enum ExceptionType {
+  UNCLAIM = 'UNCLAIM', // Picker/packer unclaimed the order
+  UNDO_PICK = 'UNDO_PICK', // Picker undid a pick (reduced picked quantity)
   SHORT_PICK = 'SHORT_PICK', // Less quantity picked than ordered
   SHORT_PICK_BACKORDER = 'SHORT_PICK_BACKORDER', // Short pick that triggers backorder
   DAMAGE = 'DAMAGE', // Item damaged during picking/handling
@@ -221,6 +530,32 @@ export interface BinLocation {
   active: boolean;
 }
 
+// ============================================================================
+// BIN LOCATION MANAGEMENT DTOs
+// ============================================================================
+
+/**
+ * Create Bin Location DTO
+ */
+export interface CreateBinLocationDTO {
+  binId: string;
+  zone: string;
+  aisle: string;
+  shelf: string;
+  type: BinType;
+}
+
+/**
+ * Update Bin Location DTO
+ */
+export interface UpdateBinLocationDTO {
+  zone?: string;
+  aisle?: string;
+  shelf?: string;
+  type?: BinType;
+  active?: boolean;
+}
+
 /**
  * PickTask - Atomic unit of work for a picker
  */
@@ -255,6 +590,31 @@ export interface User {
   currentTaskId?: string;
   createdAt: Date;
   lastLoginAt?: Date;
+  deletedAt?: Date | null; // Timestamp when user was marked for deletion (soft delete)
+}
+
+/**
+ * CustomRole - Custom user-defined roles with specific permissions
+ */
+export interface CustomRole {
+  roleId: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+  isSystem: boolean; // System roles are the predefined ones (PICKER, PACKER, etc.)
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * RolePermission - Junction table for role-permission mapping
+ */
+export interface RolePermission {
+  rolePermissionId: string;
+  roleId: string; // References either CustomRole or maps to UserRole enum
+  permission: Permission;
+  grantedAt: Date;
+  grantedBy: string; // User ID who granted this permission
 }
 
 /**
@@ -312,6 +672,7 @@ export interface OrderException {
 // ============================================================================
 // DTOs (Data Transfer Objects)
 // ============================================================================
+
 
 export interface LoginCredentials {
   email: string;
@@ -432,7 +793,26 @@ export interface PickerActivity {
   orderProgress: number;
   currentTask: string | null;
   lastViewedAt: Date | null;
-  status: 'ACTIVE' | 'IDLE';
+  status: 'ACTIVE' | 'IDLE' | 'PICKING' | 'INACTIVE';
+}
+
+export interface PackerActivity {
+  packerId: string;
+  packerName: string;
+  currentOrderId: string | null;
+  orderProgress: number;
+  currentTask: string | null;
+  lastViewedAt: Date | null;
+  status: 'ACTIVE' | 'IDLE' | 'PACKING' | 'INACTIVE';
+  currentView: string | null;
+}
+
+export interface StockControllerActivity {
+  controllerId: string;
+  controllerName: string;
+  lastViewedAt: Date | null;
+  status: 'ACTIVE' | 'IDLE' | 'INACTIVE';
+  currentView: string | null;
 }
 
 // ============================================================================
@@ -1079,6 +1459,520 @@ export interface ReconcileCycleCountDTO {
 }
 
 // ============================================================================
+// CYCLE COUNT KPI TYPES
+// ============================================================================
+
+/**
+ * Cycle Count KPI Summary
+ */
+export interface CycleCountKPI {
+  totalCounts: number;
+  completedCounts: number;
+  inProgressCounts: number;
+  scheduledCounts: number;
+  completionRate: number;
+  averageAccuracy: number;
+  totalItemsCounted: number;
+  totalVariances: number;
+  pendingVariances: number;
+  highValueVarianceCount: number;
+}
+
+/**
+ * Accuracy Trend Data Point
+ */
+export interface AccuracyTrend {
+  period: string;
+  accuracy: number;
+  totalCounts: number;
+}
+
+/**
+ * Top Discrepancy SKU
+ */
+export interface TopDiscrepancySKU {
+  sku: string;
+  name: string;
+  varianceCount: number;
+  totalVariance: number;
+  averageVariancePercent: number;
+}
+
+/**
+ * Count Performance by User
+ */
+export interface CountByUser {
+  userId: string;
+  name: string;
+  countsCompleted: number;
+  itemsCounted: number;
+  averageAccuracy: number;
+}
+
+/**
+ * Zone Performance Metrics
+ */
+export interface ZonePerformance {
+  zone: string;
+  countsCompleted: number;
+  itemsCounted: number;
+  averageAccuracy: number;
+  totalVariance: number;
+}
+
+/**
+ * Count Type Effectiveness
+ */
+export interface CountTypeEffectiveness {
+  countType: string;
+  countsCompleted: number;
+  averageAccuracy: number;
+  averageDuration: number;
+  varianceDetectionRate: number;
+}
+
+/**
+ * Daily Statistics
+ */
+export interface DailyStats {
+  date: string;
+  countsCompleted: number;
+  itemsCounted: number;
+  variancesFound: number;
+  accuracyRate: number;
+}
+
+/**
+ * Cycle Count Dashboard Data
+ */
+export interface CycleCountDashboard {
+  overallKPIs: CycleCountKPI;
+  accuracyTrend: AccuracyTrend[];
+  topDiscrepancies: TopDiscrepancySKU[];
+  userPerformance: CountByUser[];
+  zonePerformance: ZonePerformance[];
+  countTypeEffectiveness: CountTypeEffectiveness[];
+  dailyStats: DailyStats[];
+}
+
+// ============================================================================
+// INTERLEAVED COUNTING TYPES
+// ============================================================================
+
+/**
+ * Micro Count Result
+ */
+export interface MicroCount {
+  microCountId: string;
+  planId: string;
+  cycleCountEntryId: string;
+  sku: string;
+  binLocation: string;
+  systemQuantity: number;
+  countedQuantity: number;
+  variance: number;
+  variancePercent: number;
+  varianceStatus: 'MATCHED' | 'WITHIN_TOLERANCE' | 'REQUIRES_REVIEW';
+  autoAdjusted: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Create Micro Count DTO
+ */
+export interface CreateMicroCountDTO {
+  sku: string;
+  binLocation: string;
+  countedQuantity: number;
+  userId: string;
+  orderId?: string;
+  notes?: string;
+}
+
+/**
+ * Micro Count Statistics
+ */
+export interface MicroCountStats {
+  totalMicroCounts: number;
+  accurateCounts: number;
+  varianceCounts: number;
+  autoAdjustedCounts: number;
+  averageAccuracy: number;
+}
+
+// ============================================================================
+// CYCLE COUNTING ENHANCEMENT TYPES
+// ============================================================================
+
+/**
+ * Variance Severity Configuration
+ * Configurable severity thresholds for variance categorization
+ */
+export interface VarianceSeverityConfig {
+  configId: string;
+  severityLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  minVariancePercent: number;
+  maxVariancePercent: number;
+  requiresApproval: boolean;
+  requiresManagerApproval: boolean;
+  autoAdjust: boolean;
+  colorCode: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Variance Severity Determination Result
+ */
+export interface VarianceSeverityDetermination {
+  configId: string;
+  severityLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  requiresApproval: boolean;
+  requiresManagerApproval: boolean;
+  autoAdjust: boolean;
+  colorCode: string;
+}
+
+/**
+ * Recurring Count Schedule
+ * Automated recurring cycle count schedules
+ */
+export interface RecurringCountSchedule {
+  scheduleId: string;
+  scheduleName: string;
+  countType: CycleCountType;
+  frequencyType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY';
+  frequencyInterval: number;
+  location?: string;
+  sku?: string;
+  assignedTo: string;
+  nextRunDate: Date;
+  lastRunDate?: Date;
+  isActive: boolean;
+  createdBy: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Root Cause Category
+ * Reference categories for variance root cause analysis
+ */
+export interface RootCauseCategory {
+  categoryId: string;
+  categoryName: string;
+  categoryCode: string;
+  description?: string;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Variance Root Cause
+ * Links variance entries to root cause categories
+ */
+export interface VarianceRootCause {
+  rootCauseId: string;
+  entryId: string;
+  categoryId: string;
+  additionalNotes?: string;
+  createdBy: string;
+  createdAt: Date;
+}
+
+/**
+ * Root Cause Pareto Data
+ * Pareto analysis (80/20 rule) of root causes
+ */
+export interface RootCauseParetoData {
+  category: string;
+  categoryId: string;
+  count: number;
+  cumulativePercent: number;
+  totalVariance: number;
+  averageVariancePercent: number;
+}
+
+/**
+ * Category Breakdown
+ * Root cause breakdown with trend analysis
+ */
+export interface CategoryBreakdown {
+  category: string;
+  categoryId: string;
+  varianceCount: number;
+  averageVariancePercent: number;
+  totalVariance: number;
+  trend: 'INCREASING' | 'DECREASING' | 'STABLE';
+  trendPercent?: number;
+}
+
+/**
+ * Trending Root Cause
+ * Root causes that are trending (increasing problems)
+ */
+export interface TrendingRootCause {
+  category: string;
+  categoryId: string;
+  currentPeriodCount: number;
+  previousPeriodCount: number;
+  percentChange: number;
+  trendDirection: 'UP' | 'DOWN';
+  averageVariancePercent: number;
+}
+
+/**
+ * SKU Root Cause Analysis
+ * Root cause analysis for a specific SKU
+ */
+export interface SKURootCauseAnalysis {
+  sku: string;
+  skuName?: string;
+  totalVariances: number;
+  rootCauses: Array<{
+    category: string;
+    count: number;
+    percentOfTotal: number;
+  }>;
+  averageVariancePercent: number;
+  mostCommonCause: string;
+}
+
+/**
+ * Zone Root Cause Analysis
+ * Root cause analysis for a specific zone
+ */
+export interface ZoneRootCauseAnalysis {
+  zone: string;
+  totalVariances: number;
+  rootCauses: Array<{
+    category: string;
+    count: number;
+    percentOfTotal: number;
+  }>;
+  averageVariancePercent: number;
+  mostCommonCause: string;
+  topSKUs: Array<{
+    sku: string;
+    varianceCount: number;
+  }>;
+}
+
+// ============================================================================
+// CYCLE COUNTING ENHANCEMENT DTOs
+// ============================================================================
+
+/**
+ * Create Variance Severity Config DTO
+ */
+export interface CreateVarianceSeverityConfigDTO {
+  severityLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  minVariancePercent: number;
+  maxVariancePercent: number;
+  requiresApproval: boolean;
+  requiresManagerApproval: boolean;
+  autoAdjust: boolean;
+  colorCode: string;
+}
+
+/**
+ * Update Variance Severity Config DTO
+ */
+export interface UpdateVarianceSeverityConfigDTO {
+  severityLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  minVariancePercent?: number;
+  maxVariancePercent?: number;
+  requiresApproval?: boolean;
+  requiresManagerApproval?: boolean;
+  autoAdjust?: boolean;
+  colorCode?: string;
+  isActive?: boolean;
+}
+
+/**
+ * Create Recurring Schedule DTO
+ */
+export interface CreateRecurringScheduleDTO {
+  scheduleName: string;
+  countType: CycleCountType;
+  frequencyType: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY';
+  frequencyInterval: number;
+  location?: string;
+  sku?: string;
+  assignedTo: string;
+  nextRunDate: Date;
+  notes?: string;
+  createdBy: string;
+}
+
+/**
+ * Update Recurring Schedule DTO
+ */
+export interface UpdateRecurringScheduleDTO {
+  scheduleName?: string;
+  countType?: CycleCountType;
+  frequencyType?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY';
+  frequencyInterval?: number;
+  location?: string;
+  sku?: string;
+  assignedTo?: string;
+  nextRunDate?: Date;
+  isActive?: boolean;
+  notes?: string;
+}
+
+/**
+ * Record Root Cause DTO
+ */
+export interface RecordRootCauseDTO {
+  entryId: string;
+  categoryId: string;
+  additionalNotes?: string;
+  createdBy: string;
+}
+
+/**
+ * Create Root Cause Category DTO
+ */
+export interface CreateRootCauseCategoryDTO {
+  categoryName: string;
+  categoryCode: string;
+  description?: string;
+  displayOrder?: number;
+}
+
+// ============================================================================
+// RFID & AUTOMATION TYPES
+// ============================================================================
+
+/**
+ * RFID Tag Data
+ */
+export interface RFIDTag {
+  tagId: string;
+  epc: string;
+  sku?: string;
+  binLocation?: string;
+  lastScanned?: Date;
+  scanCount: number;
+}
+
+/**
+ * RFID Scan Result
+ */
+export interface RFIDScanResult {
+  tags: RFIDTag[];
+  scanDuration: number;
+  scanLocation: string;
+  scannedBy: string;
+  scannedAt: Date;
+}
+
+/**
+ * Automation Task Type
+ */
+export enum AutomationTaskType {
+  CYCLE_COUNT = 'CYCLE_COUNT',
+  INVENTORY_CHECK = 'INVENTORY_CHECK',
+  PICK = 'PICK',
+  PUTAWAY = 'PUTAWAY',
+  REPLENISHMENT = 'REPLENISHMENT',
+}
+
+/**
+ * Automation Task Status
+ */
+export enum AutomationTaskStatus {
+  PENDING = 'PENDING',
+  ASSIGNED = 'ASSIGNED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+}
+
+/**
+ * Automation Task
+ */
+export interface AutomationTask {
+  taskId: string;
+  taskType: AutomationTaskType;
+  status: AutomationTaskStatus;
+  assignedTo: string; // Robot ID, ASRS system, or automation equipment
+  priority: number;
+  location: string;
+  sku?: string;
+  quantity?: number;
+  metadata?: Record<string, unknown>;
+  result?: {
+    countedQuantity?: number;
+    variance?: number;
+    notes?: string;
+    completedAt?: Date;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+}
+
+/**
+ * Create Automation Task DTO
+ */
+export interface CreateAutomationTaskDTO {
+  taskType: AutomationTaskType;
+  assignedTo: string;
+  priority: number;
+  location: string;
+  sku?: string;
+  quantity?: number;
+  metadata?: Record<string, unknown>;
+  createdBy: string;
+}
+
+// ============================================================================
+// UNIT HIERARCHY TYPES
+// ============================================================================
+
+/**
+ * Unit Level - Hierarchy level for inventory units
+ */
+export enum UnitLevel {
+  PALLET = 'PALLET',
+  CASE = 'CASE',
+  EACH = 'EACH', // Individual item
+}
+
+/**
+ * Unit Conversion - Conversion rates between unit levels
+ */
+export interface UnitConversion {
+  sku: string;
+  fromLevel: UnitLevel;
+  toLevel: UnitLevel;
+  conversionFactor: number; // How many "to" units are in one "from" unit
+  // example: 1 PALLET = 48 CASES, 1 CASE = 12 EACH
+}
+
+/**
+ * Inventory Unit with Hierarchy
+ */
+export interface InventoryUnitWithHierarchy {
+  unitId: string;
+  sku: string;
+  binLocation: string;
+  quantity: number;
+  unitLevel: UnitLevel;
+  parentUnitId?: string; // For case items, which pallet they belong to
+  childUnitIds?: string[]; // For pallets, which cases belong to them
+  conversionFactor?: number; // If this is a CASE or PALLET, how many child units
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
 // LOCATION CAPACITY TYPES
 // ============================================================================
 
@@ -1449,6 +2343,98 @@ export interface CreateReturnAuthorizationDTO {
 }
 
 // ============================================================================
+// NZC (NZ COURIERS) API TYPES
+// ============================================================================
+
+/**
+ * NZC Label Format options
+ */
+export enum NZCLabelFormat {
+  PNG_100X175 = 'LABEL_PNG_100X175',
+  PNG_100X150 = 'LABEL_PNG_100X150',
+  PDF_100X175 = 'LABEL_PDF_100X175',
+  PDF = 'LABEL_PDF',
+}
+
+/**
+ * NZC Quote from rate response
+ */
+export interface NZCQuote {
+  QuoteId: string;
+  Carrier: string;
+  Service: string;
+  TotalPrice: number;
+  TransitDays?: number;
+  Description?: string;
+}
+
+/**
+ * NZC Rate Request DTO
+ */
+export interface NZCRateRequest {
+  destination: {
+    name?: string;
+    company?: string;
+    addressLine1: string;
+    city: string;
+    state?: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+    email?: string;
+  };
+  packages: Array<{
+    length?: number; // cm
+    width?: number; // cm
+    height?: number; // cm
+    weight: number; // kg (required)
+    units?: number;
+  }>;
+}
+
+/**
+ * NZC Rate Response
+ */
+export interface NZCRateResponse {
+  Quotes: NZCQuote[];
+  Suppressed: any[];
+  Rejected: Array<{
+    Carrier: string;
+    Reason: string;
+  }>;
+  ValidationErrors: Record<string, string>;
+}
+
+/**
+ * NZC Shipment Request DTO
+ */
+export interface NZCShipmentRequest extends NZCRateRequest {
+  quoteId: string;
+}
+
+/**
+ * NZC Shipment Response
+ */
+export interface NZCShipmentResponse {
+  ConsignmentNo: string;
+  ConsignmentId: string;
+  Packages: Array<{
+    ConsignmentNo: string;
+    ConsignmentId: string;
+  }>;
+}
+
+/**
+ * NZC Label Response
+ */
+export interface NZCLabelResponse {
+  connote: string;
+  format: string;
+  contentType: string;
+  data: string; // base64 encoded
+}
+
+// ============================================================================
 // PHASE 3: ADVANCED FEATURES - EXPORTS
 // ============================================================================
 
@@ -1465,3 +2451,10 @@ export * from './integrations';
 export * from './production';
 export * from './sales-crm';
 export * from './maintenance';
+
+// ============================================================================
+// NOTIFICATION SYSTEM - EXPORTS
+// ============================================================================
+
+// Export notification types
+export * from './notifications';

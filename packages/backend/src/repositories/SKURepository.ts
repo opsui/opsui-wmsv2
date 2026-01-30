@@ -34,6 +34,22 @@ export class SKURepository extends BaseRepository<SKU> {
   }
 
   // --------------------------------------------------------------------------
+  // GET ALL SKUS
+  // --------------------------------------------------------------------------
+
+  async getAllSKUs(activeOnly: boolean = true, limit: number = 100): Promise<SKU[]> {
+    const result = await query<SKU>(
+      `SELECT * FROM skus
+       ${activeOnly ? 'WHERE active = true' : ''}
+       ORDER BY name
+       LIMIT $1`,
+      [limit]
+    );
+
+    return result.rows;
+  }
+
+  // --------------------------------------------------------------------------
   // SEARCH SKUS
   // --------------------------------------------------------------------------
 

@@ -1,0 +1,446 @@
+{
+  "route": "/reports",
+  "timestamp": "2026-01-23T05:50:31.643Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "1",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "ExceptionsOrders requiring attention",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 115
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Order Queue33 orders pending",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 181
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Active Staff0 staff members active",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 247
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "View all in Dashboard",
+      "visible": true,
+      "position": {
+        "x": 751.875,
+        "y": 340
+      },
+      "size": {
+        "width": 280,
+        "height": 16
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-3xl",
+      "text": "Reports & Analytics",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 97
+      },
+      "size": {
+        "width": 1216,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.py-4",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 199
+      },
+      "size": {
+        "width": 88.046875,
+        "height": 55.171875
+      }
+    },
+    {
+      "selector": "BUTTON.py-4",
+      "text": "Dashboards",
+      "visible": true,
+      "position": {
+        "x": 152.046875,
+        "y": 199
+      },
+      "size": {
+        "width": 116.5625,
+        "height": 55.171875
+      }
+    },
+    {
+      "selector": "BUTTON.py-4",
+      "text": "Exports",
+      "visible": true,
+      "position": {
+        "x": 300.609375,
+        "y": 199
+      },
+      "size": {
+        "width": 87.1875,
+        "height": 55.171875
+      }
+    },
+    {
+      "selector": "BUTTON.px-4",
+      "text": "All Reports",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 279.171875
+      },
+      "size": {
+        "width": 117.15625,
+        "height": 42
+      }
+    },
+    {
+      "selector": "BUTTON.px-4",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 157.15625,
+        "y": 279.171875
+      },
+      "size": {
+        "width": 106.25,
+        "height": 42
+      }
+    },
+    {
+      "selector": "BUTTON.px-4",
+      "text": "Orders",
+      "visible": true,
+      "position": {
+        "x": 271.40625,
+        "y": 279.171875
+      },
+      "size": {
+        "width": 86.25,
+        "height": 42
+      }
+    },
+    {
+      "selector": "BUTTON.px-4",
+      "text": "Performance",
+      "visible": true,
+      "position": {
+        "x": 365.65625,
+        "y": 279.171875
+      },
+      "size": {
+        "width": 133.28125,
+        "height": 42
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "New Report",
+      "visible": true,
+      "position": {
+        "x": 1099.015625,
+        "y": 280.171875
+      },
+      "size": {
+        "width": 148.984375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Inventory Summary",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 370.171875
+      },
+      "size": {
+        "width": 251.671875,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.text-green-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 493.171875
+      },
+      "size": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 85,
+        "y": 493.171875
+      },
+      "size": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-gray-400",
+      "text": "Excel",
+      "visible": true,
+      "position": {
+        "x": 316.765625,
+        "y": 491.171875
+      },
+      "size": {
+        "width": 40.34375,
+        "height": 24
+      }
+    },
+    {
+      "selector": "BUTTON.text-gray-400",
+      "text": "PDF",
+      "visible": true,
+      "position": {
+        "x": 365.109375,
+        "y": 491.171875
+      },
+      "size": {
+        "width": 31.21875,
+        "height": 24
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Picking Performance",
+      "visible": true,
+      "position": {
+        "x": 470.328125,
+        "y": 370.171875
+      },
+      "size": {
+        "width": 174.703125,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.text-green-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 470.328125,
+        "y": 513.171875
+      },
+      "size": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-blue-400",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 498.328125,
+        "y": 513.171875
+      },
+      "size": {
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.text-gray-400",
+      "text": "Excel",
+      "visible": true,
+      "position": {
+        "x": 730.09375,
+        "y": 511.171875
+      },
+      "size": {
+        "width": 40.34375,
+        "height": 24
+      }
+    },
+    {
+      "selector": "BUTTON.text-gray-400",
+      "text": "PDF",
+      "visible": true,
+      "position": {
+        "x": 778.4375,
+        "y": 511.171875
+      },
+      "size": {
+        "width": 31.21875,
+        "height": 24
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 31 buttons, 0 inputs, 0 links, 0 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Reports & Analytics\"."
+}

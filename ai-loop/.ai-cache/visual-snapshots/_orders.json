@@ -1,0 +1,225 @@
+{
+  "route": "/orders",
+  "timestamp": "2026-01-23T23:20:55.819Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "ExceptionsOrders requiring attention",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 115
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Order Queue0 orders pending",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 181
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Active Staff0 staff members active",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 247
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "View all in Dashboard",
+      "visible": true,
+      "position": {
+        "x": 751.875,
+        "y": 464
+      },
+      "size": {
+        "width": 280,
+        "height": 16
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-2xl",
+      "text": "Order Queue",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 97
+      },
+      "size": {
+        "width": 1216,
+        "height": 36
+      }
+    },
+    {
+      "selector": "INPUT.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 304,
+        "y": 193
+      },
+      "size": {
+        "width": 672,
+        "height": 42
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 15 buttons, 1 inputs, 0 links, 0 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Order Queue\"."
+}

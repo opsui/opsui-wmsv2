@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useStockControlDashboard,
   useStockControlInventory,
@@ -24,8 +25,15 @@ import {
   Header,
   Button,
   SearchInput,
+  MetricCardSkeleton,
+  Skeleton,
+  TableSkeleton,
+  ListSkeleton,
 } from '@/components/shared';
+import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { useInventoryUpdates, useNotifications } from '@/hooks/useWebSocket';
 import {
   CubeIcon,
   ArrowPathIcon,
@@ -37,7 +45,6 @@ import {
   DocumentTextIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { PageLoading } from '@/components/shared';
 
 // ============================================================================
 // TYPES
@@ -101,109 +108,179 @@ function MetricCard({
 }
 
 function TransferModal({ onClose }: { onClose: () => void }) {
+  const { showToast } = useToast();
   const transferStock = useTransferStock();
-  const [sku, setSku] = useState('');
-  const [fromBin, setFromBin] = useState('');
-  const [toBin, setToBin] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [reason, setReason] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await transferStock.mutateAsync({
-        sku,
-        fromBin,
-        toBin,
-        quantity: parseInt(quantity),
-        reason,
-      });
-      onClose();
-    } catch (error) {
-      console.error('Transfer failed:', error);
-    }
-  };
+  // Form validation
+  const {
+    values: formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+  } = useFormValidation({
+    initialValues: {
+      sku: '',
+      fromBin: '',
+      toBin: '',
+      quantity: '',
+      reason: '',
+    },
+    validationRules: {
+      sku: {
+        required: true,
+      },
+      fromBin: {
+        required: true,
+        custom: (value: string) => {
+          if (!/^[A-Z]-\d{1,3}-\d{2}$/.test(value)) {
+            return 'Format must be Z-A-S (e.g., A-01-01)';
+          }
+          return null;
+        },
+      },
+      toBin: {
+        required: true,
+        custom: (value: string) => {
+          if (!/^[A-Z]-\d{1,3}-\d{2}$/.test(value)) {
+            return 'Format must be Z-A-S (e.g., A-01-01)';
+          }
+          return null;
+        },
+      },
+      quantity: {
+        required: true,
+        custom: (value: string) => {
+          const num = parseInt(value);
+          if (isNaN(num) || num <= 0) {
+            return 'Must be a positive number';
+          }
+          return null;
+        },
+      },
+      reason: {
+        required: true,
+        minLength: 5,
+      },
+    },
+    onSubmit: async (values) => {
+      try {
+        await transferStock.mutateAsync({
+          sku: values.sku,
+          fromBin: values.fromBin,
+          toBin: values.toBin,
+          quantity: parseInt(values.quantity),
+          reason: values.reason,
+        });
+        showToast('Stock transferred successfully', 'success');
+        onClose();
+      } catch (error: any) {
+        console.error('Transfer failed:', error);
+        showToast(error?.message || 'Transfer failed', 'error');
+        throw error;
+      }
+    },
+  });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full dark:bg-gray-900 bg-white border border-primary-500/30 shadow-2xl">
+        <CardHeader className="px-6 py-4 dark:bg-primary-500/10 bg-primary-50 border-b dark:border-primary-500/20 border-primary-200">
           <div className="flex items-center justify-between">
-            <CardTitle>Transfer Stock</CardTitle>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary-500/20">
+                <ArrowPathIcon className="h-6 w-6 text-primary-500" />
+              </div>
+              <CardTitle className="text-white">Transfer Stock</CardTitle>
+            </div>
+            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="p-6 dark:bg-gray-900 bg-white">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">SKU</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">SKU</label>
               <input
                 type="text"
-                required
-                value={sku}
-                onChange={e => setSku(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="sku"
+                value={formData.sku}
+                onChange={e => handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="Enter SKU"
               />
+              {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">From Bin</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">From Bin</label>
               <input
                 type="text"
-                required
-                value={fromBin}
-                onChange={e => setFromBin(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="fromBin"
+                value={formData.fromBin}
+                onChange={e => handleChange({ target: { name: 'fromBin', value: e.target.value.toUpperCase() } })}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.fromBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="e.g., A-01-01"
               />
+              {errors.fromBin && <p className="mt-1 text-sm text-red-500">{errors.fromBin}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">To Bin</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">To Bin</label>
               <input
                 type="text"
-                required
-                value={toBin}
-                onChange={e => setToBin(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="toBin"
+                value={formData.toBin}
+                onChange={e => handleChange({ target: { name: 'toBin', value: e.target.value.toUpperCase() } })}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.toBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="e.g., B-02-03"
               />
+              {errors.toBin && <p className="mt-1 text-sm text-red-500">{errors.toBin}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Quantity</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Quantity</label>
               <input
                 type="number"
-                required
-                min="1"
-                value={quantity}
-                onChange={e => setQuantity(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.quantity ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="Enter quantity"
               />
+              {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Reason</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Reason</label>
               <textarea
-                required
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="reason"
+                value={formData.reason}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none ${
+                  errors.reason ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="Enter reason for transfer"
-                rows={2}
+                rows={3}
               />
+              {errors.reason && <p className="mt-1 text-sm text-red-500">{errors.reason}</p>}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                disabled={transferStock.isPending}
+                disabled={isSubmitting}
                 className="flex-1"
               >
-                {transferStock.isPending ? 'Processing...' : 'Transfer'}
+                {isSubmitting ? 'Transferring...' : 'Transfer'}
               </Button>
             </div>
           </form>
@@ -214,97 +291,156 @@ function TransferModal({ onClose }: { onClose: () => void }) {
 }
 
 function AdjustmentModal({ onClose }: { onClose: () => void }) {
+  const { showToast } = useToast();
   const adjustInventory = useAdjustInventory();
-  const [sku, setSku] = useState('');
-  const [binLocation, setBinLocation] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [reason, setReason] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await adjustInventory.mutateAsync({
-        sku,
-        binLocation,
-        quantity: parseInt(quantity),
-        reason,
-      });
-      onClose();
-    } catch (error) {
-      console.error('Adjustment failed:', error);
-    }
-  };
+  // Form validation
+  const {
+    values: formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+  } = useFormValidation({
+    initialValues: {
+      sku: '',
+      binLocation: '',
+      quantity: '',
+      reason: '',
+    },
+    validationRules: {
+      sku: {
+        required: true,
+      },
+      binLocation: {
+        required: true,
+        custom: (value: string) => {
+          if (!/^[A-Z]-\d{1,3}-\d{2}$/.test(value)) {
+            return 'Format must be Z-A-S (e.g., A-01-01)';
+          }
+          return null;
+        },
+      },
+      quantity: {
+        required: true,
+        custom: (value: string) => {
+          const num = parseInt(value);
+          if (isNaN(num) || num === 0) {
+            return 'Must be a non-zero number';
+          }
+          return null;
+        },
+      },
+      reason: {
+        required: true,
+        minLength: 5,
+      },
+    },
+    onSubmit: async (values) => {
+      try {
+        await adjustInventory.mutateAsync({
+          sku: values.sku,
+          binLocation: values.binLocation,
+          quantity: parseInt(values.quantity),
+          reason: values.reason,
+        });
+        showToast('Inventory adjusted successfully', 'success');
+        onClose();
+      } catch (error: any) {
+        console.error('Adjustment failed:', error);
+        showToast(error?.message || 'Adjustment failed', 'error');
+        throw error;
+      }
+    },
+  });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full dark:bg-gray-900 bg-white border border-warning-500/30 shadow-2xl">
+        <CardHeader className="px-6 py-4 dark:bg-warning-500/10 bg-warning-50 border-b dark:border-warning-500/20 border-warning-200">
           <div className="flex items-center justify-between">
-            <CardTitle>Adjust Inventory</CardTitle>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-warning-500/20">
+                <PlusIcon className="h-6 w-6 text-warning-500" />
+              </div>
+              <CardTitle className="text-white">Adjust Inventory</CardTitle>
+            </div>
+            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="p-6 dark:bg-gray-900 bg-white">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">SKU</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">SKU</label>
               <input
                 type="text"
-                required
-                value={sku}
-                onChange={e => setSku(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="sku"
+                value={formData.sku}
+                onChange={e => handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
+                  errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="Enter SKU"
               />
+              {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Bin Location</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Bin Location</label>
               <input
                 type="text"
-                required
-                value={binLocation}
-                onChange={e => setBinLocation(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="binLocation"
+                value={formData.binLocation}
+                onChange={e => handleChange({ target: { name: 'binLocation', value: e.target.value.toUpperCase() } })}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
+                  errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="e.g., A-01-01"
               />
+              {errors.binLocation && <p className="mt-1 text-sm text-red-500">{errors.binLocation}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
                 Quantity (+ to add, - to remove)
               </label>
               <input
                 type="number"
-                required
-                value={quantity}
-                onChange={e => setQuantity(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="quantity"
+                value={formData.quantity}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
+                  errors.quantity ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="e.g., 5 or -5"
               />
+              {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Reason</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Reason</label>
               <textarea
-                required
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="reason"
+                value={formData.reason}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all resize-none ${
+                  errors.reason ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="Enter reason for adjustment"
-                rows={2}
+                rows={3}
               />
+              {errors.reason && <p className="mt-1 text-sm text-red-500">{errors.reason}</p>}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                disabled={adjustInventory.isPending}
+                disabled={isSubmitting}
                 className="flex-1"
               >
-                {adjustInventory.isPending ? 'Processing...' : 'Adjust'}
+                {isSubmitting ? 'Adjusting...' : 'Adjust'}
               </Button>
             </div>
           </form>
@@ -315,67 +451,107 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
 }
 
 function StockCountModal({ onClose }: { onClose: () => void }) {
+  const { showToast } = useToast();
   const createStockCount = useCreateStockCount();
-  const [binLocation, setBinLocation] = useState('');
-  const [type, setType] = useState<'FULL' | 'CYCLIC' | 'SPOT'>('SPOT');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await createStockCount.mutateAsync({ binLocation, type });
-      onClose();
-    } catch (error) {
-      console.error('Stock count creation failed:', error);
-    }
-  };
+  // Form validation
+  const {
+    values: formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+  } = useFormValidation({
+    initialValues: {
+      binLocation: '',
+      type: 'SPOT' as 'FULL' | 'CYCLIC' | 'SPOT',
+    },
+    validationRules: {
+      binLocation: {
+        required: true,
+        custom: (value: string) => {
+          if (!/^[A-Z]-\d{1,3}-\d{2}$/.test(value)) {
+            return 'Format must be Z-A-S (e.g., A-01-01)';
+          }
+          return null;
+        },
+      },
+      type: {
+        required: true,
+      },
+    },
+    onSubmit: async (values) => {
+      try {
+        await createStockCount.mutateAsync({ binLocation: values.binLocation, type: values.type });
+        showToast('Stock count created successfully', 'success');
+        onClose();
+      } catch (error: any) {
+        console.error('Stock count creation failed:', error);
+        showToast(error?.message || 'Failed to create stock count', 'error');
+        throw error;
+      }
+    },
+  });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full dark:bg-gray-900 bg-white border border-success-500/30 shadow-2xl">
+        <CardHeader className="px-6 py-4 dark:bg-success-500/10 bg-success-50 border-b dark:border-success-500/20 border-success-200">
           <div className="flex items-center justify-between">
-            <CardTitle>Create Stock Count</CardTitle>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-success-500/20">
+                <ClipboardDocumentListIcon className="h-6 w-6 text-success-500" />
+              </div>
+              <CardTitle className="text-white">Create Stock Count</CardTitle>
+            </div>
+            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="p-6 dark:bg-gray-900 bg-white">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Bin Location</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Bin Location</label>
               <input
                 type="text"
-                required
-                value={binLocation}
-                onChange={e => setBinLocation(e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="binLocation"
+                value={formData.binLocation}
+                onChange={e => handleChange({ target: { name: 'binLocation', value: e.target.value.toUpperCase() } })}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all ${
+                  errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
                 placeholder="e.g., A-01-01"
               />
+              {errors.binLocation && <p className="mt-1 text-sm text-red-500">{errors.binLocation}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Count Type</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Count Type</label>
               <select
-                value={type}
-                onChange={e => setType(e.target.value as 'FULL' | 'CYCLIC' | 'SPOT')}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all ${
+                  errors.type ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                }`}
               >
                 <option value="SPOT">Spot Count</option>
                 <option value="CYCLIC">Cyclic Count</option>
                 <option value="FULL">Full Count</option>
               </select>
+              {errors.type && <p className="mt-1 text-sm text-red-500">{errors.type}</p>}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
-                disabled={createStockCount.isPending}
+                disabled={isSubmitting}
                 className="flex-1"
               >
-                {createStockCount.isPending ? 'Creating...' : 'Create'}
+                {isSubmitting ? 'Creating...' : 'Create'}
               </Button>
             </div>
           </form>
@@ -394,7 +570,22 @@ function DashboardTab() {
   const { data: lowStock } = useLowStockReport(10);
 
   if (isLoading) {
-    return <PageLoading message="Loading dashboard..." />;
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+          <MetricCardSkeleton />
+        </div>
+        <Card variant="glass">
+          <CardContent className="p-6">
+            <Skeleton variant="text" className="w-48 h-6 mb-4" />
+            <TableSkeleton rows={5} columns={6} />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (isError || error || !dashboard) {
@@ -669,7 +860,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
       <Card variant="glass">
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-400">Loading inventory...</div>
+            <TableSkeleton rows={8} columns={8} />
           ) : data?.items && data.items.length > 0 ? (
             <>
               <div className="overflow-x-auto">
@@ -865,7 +1056,7 @@ function TransactionsTab() {
       <Card variant="glass">
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 text-center text-gray-400">Loading transactions...</div>
+            <TableSkeleton rows={8} columns={7} />
           ) : data?.transactions && data.transactions.length > 0 ? (
             <>
               <div className="overflow-x-auto">
@@ -983,43 +1174,70 @@ function QuickActionsTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card
           variant="glass"
-          className="card-hover cursor-pointer"
+          className="card-hover cursor-pointer border-primary-500/30 hover:border-primary-500/50 transition-all"
           onClick={() => setActiveModal('transfer')}
         >
-          <CardContent className="p-6 text-center">
-            <div className="inline-flex p-4 rounded-2xl bg-primary-500/10 text-primary-400 mb-4">
-              <ArrowPathIcon className="h-8 w-8" />
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-500/20 to-primary-500/10 border border-primary-500/30 shadow-lg">
+                <ArrowPathIcon className="h-10 w-10 text-primary-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Transfer Stock</h3>
+                <p className="text-base text-gray-300 leading-relaxed">
+                  Move inventory between bin locations
+                </p>
+              </div>
+              <div className="w-full pt-4 border-t border-white/10">
+                <span className="text-sm text-primary-400 font-medium">Click to transfer →</span>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Transfer Stock</h3>
-            <p className="text-sm text-gray-400">Move inventory between bin locations</p>
           </CardContent>
         </Card>
 
         <Card
           variant="glass"
-          className="card-hover cursor-pointer"
+          className="card-hover cursor-pointer border-warning-500/30 hover:border-warning-500/50 transition-all"
           onClick={() => setActiveModal('adjust')}
         >
-          <CardContent className="p-6 text-center">
-            <div className="inline-flex p-4 rounded-2xl bg-warning-500/10 text-warning-400 mb-4">
-              <PlusIcon className="h-8 w-8" />
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-warning-500/20 to-warning-500/10 border border-warning-500/30 shadow-lg">
+                <PlusIcon className="h-10 w-10 text-warning-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Adjust Inventory</h3>
+                <p className="text-base text-gray-300 leading-relaxed">
+                  Add or remove stock with reason
+                </p>
+              </div>
+              <div className="w-full pt-4 border-t border-white/10">
+                <span className="text-sm text-warning-400 font-medium">Click to adjust →</span>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Adjust Inventory</h3>
-            <p className="text-sm text-gray-400">Add or remove stock with reason</p>
           </CardContent>
         </Card>
 
         <Card
           variant="glass"
-          className="card-hover cursor-pointer"
+          className="card-hover cursor-pointer border-success-500/30 hover:border-success-500/50 transition-all"
           onClick={() => setActiveModal('count')}
         >
-          <CardContent className="p-6 text-center">
-            <div className="inline-flex p-4 rounded-2xl bg-success-500/10 text-success-400 mb-4">
-              <ClipboardDocumentListIcon className="h-8 w-8" />
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-success-500/20 to-success-500/10 border border-success-500/30 shadow-lg">
+                <ClipboardDocumentListIcon className="h-10 w-10 text-success-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Stock Count</h3>
+                <p className="text-base text-gray-300 leading-relaxed">
+                  Create a new stock count session
+                </p>
+              </div>
+              <div className="w-full pt-4 border-t border-white/10">
+                <span className="text-sm text-success-400 font-medium">Click to count →</span>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Stock Count</h3>
-            <p className="text-sm text-gray-400">Create a new stock count session</p>
           </CardContent>
         </Card>
       </div>
@@ -1036,9 +1254,50 @@ function QuickActionsTab() {
 // ============================================================================
 
 export function StockControlPage() {
-  const { user } = useAuthStore();
+    const { showToast } = useToast();
+  const queryClient = useQueryClient();
+  const { user, getEffectiveRole } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [quickSearchSku, setQuickSearchSku] = useState<string>('');
+
+  // ==========================================================================
+  // Real-time WebSocket Subscriptions
+  // ==========================================================================
+
+  // Subscribe to inventory updates for real-time stock changes
+  useInventoryUpdates({
+    onInventoryUpdated: (data) => {
+      // Refresh all stock control data when inventory changes
+      queryClient.invalidateQueries({ queryKey: ['stock-control'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
+    },
+    onLowStock: (data) => {
+      // Refresh low stock report and show alert
+      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
+      showToast({
+        title: 'Low Stock Alert',
+        message: `SKU ${data.sku} is running low (${data.quantity} remaining)`,
+        type: 'error',
+        duration: 5000,
+      });
+    },
+  });
+
+  // Subscribe to notifications for stock control alerts
+  useNotifications({
+    onNotification: (data) => {
+      // Show toast for stock control notifications
+      if (data.category === 'STOCK_CONTROL' || data.category === 'INVENTORY') {
+        showToast({
+          title: data.title || 'Stock Notification',
+          message: data.message || '',
+          type: data.type === 'alert' ? 'error' : data.type === 'warning' ? 'warning' : 'info',
+          duration: 4000,
+        });
+      }
+    },
+  });
 
   // Read active tab from URL query param, default to 'dashboard'
   const activeTab = (searchParams.get('tab') as TabType) || 'dashboard';
@@ -1050,12 +1309,20 @@ export function StockControlPage() {
 
   // Show loading while user is being fetched
   if (!user) {
-    return <PageLoading message="Loading..." />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <Skeleton variant="rectangular" height={200} className="rounded-lg" />
+        </div>
+      </div>
+    );
   }
 
   // Check if user has access (stock controller, supervisor, or admin)
+  // Use effective role (activeRole if set, otherwise base role) for authorization
+  const effectiveRole = getEffectiveRole();
   const hasAccess =
-    user.role === 'STOCK_CONTROLLER' || user.role === 'SUPERVISOR' || user.role === 'ADMIN';
+    effectiveRole === 'STOCK_CONTROLLER' || effectiveRole === 'SUPERVISOR' || effectiveRole === 'ADMIN';
 
   if (!hasAccess) {
     return (
@@ -1082,7 +1349,7 @@ export function StockControlPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Page Header */}
         <div className="animate-in">
           <h1 className="text-3xl font-bold text-white tracking-tight">Stock Control</h1>

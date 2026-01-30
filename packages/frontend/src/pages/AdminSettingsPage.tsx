@@ -8,9 +8,13 @@
  * - Account Settings
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button } from '@/components/shared';
+import { Card, CardHeader, CardTitle, CardContent, Header, Button, Badge, useToast } from '@/components/shared';
+import { useMyRoles } from '@/services/api';
+import { useAuthStore } from '@/stores';
+import { UserRole } from '@opsui/shared';
+import { getUserRoleColor, saveUserRoleColor } from '@/components/shared/Badge';
 import {
   CogIcon,
   ArrowLeftIcon,
@@ -32,8 +36,8 @@ import {
   SpeakerWaveIcon,
   UserIcon,
   KeyIcon,
+  SwatchIcon,
 } from '@heroicons/react/24/outline';
-import { UserRole } from '@opsui/shared';
 import { useUIStore, playSound } from '@/stores';
 
 // ============================================================================
@@ -55,6 +59,13 @@ const STORAGE_KEY = 'admin-role-visibility';
 // ============================================================================
 
 const DEFAULT_ROLES: RoleConfig[] = [
+  {
+    key: 'admin',
+    label: 'Admin View',
+    role: UserRole.ADMIN,
+    icon: CogIcon,
+    visible: true,
+  },
   {
     key: 'picking',
     label: 'Picking View',
@@ -123,7 +134,10 @@ function loadRoleVisibility(): Record<string, boolean> {
 
 function saveRoleVisibility(settings: Record<string, boolean>) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    // Merge with existing settings to preserve visibility for roles not in current update
+    const existing = loadRoleVisibility();
+    const merged = { ...existing, ...settings };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
   } catch (error) {
     console.error('Failed to save role visibility settings:', error);
   }
@@ -144,16 +158,25 @@ function getInitialRoles(): RoleConfig[] {
 interface RoleSettingCardProps {
   config: RoleConfig;
   onToggleVisibility: (key: string) => void;
+  isBaseRole: boolean;
+  canHide: boolean;
 }
 
-function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
+function RoleSettingCard({ config, onToggleVisibility, isBaseRole, canHide }: RoleSettingCardProps) {
   const Icon = config.icon;
+
+  // Base roles cannot be hidden at all
+  const isDisabled = isBaseRole;
 
   return (
     <Card
       variant="glass"
       className={`transition-all duration-300 ${
-        config.visible ? 'border-primary-500/30' : 'border-gray-700/50 opacity-60'
+        isBaseRole
+          ? 'border-error-500/30 bg-error-500/5'
+          : config.visible
+            ? 'border-primary-500/30'
+            : 'border-gray-700/50 opacity-60'
       }`}
     >
       <CardContent className="p-4">
@@ -162,9 +185,11 @@ function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
             {/* Role Icon */}
             <div
               className={`p-2 rounded-lg transition-all duration-300 ${
-                config.visible
-                  ? 'bg-primary-500/20 text-primary-400'
-                  : 'bg-gray-700/50 text-gray-500'
+                isBaseRole
+                  ? 'bg-error-500/20 text-error-400'
+                  : config.visible
+                    ? 'bg-primary-500/20 text-primary-400'
+                    : 'bg-gray-700/50 text-gray-500'
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -172,16 +197,31 @@ function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
 
             {/* Role Info */}
             <div>
-              <h3
-                className={`text-sm font-semibold transition-colors ${
-                  config.visible ? 'text-white' : 'text-gray-400'
-                }`}
-              >
-                {config.label}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3
+                  className={`text-sm font-semibold transition-colors ${
+                    isBaseRole
+                      ? 'text-error-400'
+                      : config.visible
+                        ? 'text-white'
+                        : 'text-gray-400'
+                  }`}
+                >
+                  {config.label}
+                </h3>
+                {isBaseRole && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-error-500/20 text-error-400 rounded">
+                    Base
+                  </span>
+                )}
+              </div>
               <p
                 className={`text-xs transition-colors ${
-                  config.visible ? 'text-gray-400' : 'text-gray-500'
+                  isBaseRole
+                    ? 'text-error-400/70'
+                    : config.visible
+                      ? 'text-gray-400'
+                      : 'text-gray-500'
                 }`}
               >
                 {config.role}
@@ -189,17 +229,41 @@ function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
             </div>
           </div>
 
-          {/* Visibility Toggle */}
+          {/* Visibility Toggle - Crossed Eye Icon for Base Role */}
           <button
             onClick={() => onToggleVisibility(config.key)}
-            className={`p-2 rounded-lg transition-all duration-300 ${
-              config.visible
-                ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
-                : 'bg-gray-700/50 text-gray-500 hover:bg-gray-700'
+            disabled={isDisabled || (config.visible && !canHide)}
+            className={`p-2 rounded-lg transition-all duration-300 relative ${
+              isDisabled
+                ? 'bg-error-500/20 text-error-400 cursor-not-allowed'
+                : config.visible && !canHide
+                  ? 'bg-error-500/20 text-error-400 cursor-not-allowed'
+                  : config.visible
+                    ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
+                    : 'bg-gray-700/50 text-gray-500 hover:bg-gray-700'
             }`}
-            title={config.visible ? 'Hide from role switcher' : 'Show in role switcher'}
+            title={
+              isDisabled
+                ? 'Cannot hide base role'
+                : config.visible && !canHide
+                  ? 'Cannot hide the last visible role'
+                  : config.visible
+                    ? 'Hide from role switcher'
+                    : 'Show in role switcher'
+            }
           >
-            {config.visible ? (
+            {isDisabled ? (
+              // Crossed eye icon for base roles (eye with X overlay)
+              <div className="relative h-4 w-4">
+                <EyeIcon className="h-4 w-4" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-3 h-0.5 bg-current rotate-45 absolute" />
+                  <div className="w-3 h-0.5 bg-current -rotate-45 absolute" />
+                </div>
+              </div>
+            ) : config.visible && !canHide ? (
+              <EyeSlashIcon className="h-4 w-4" />
+            ) : config.visible ? (
               <EyeIcon className="h-4 w-4" />
             ) : (
               <EyeSlashIcon className="h-4 w-4" />
@@ -243,9 +307,58 @@ function AdminSettingsPage() {
   const soundEnabled = useUIStore(state => state.soundEnabled);
   const setSoundEnabled = useUIStore(state => state.setSoundEnabled);
 
-  // Role switcher state
-  const [roles, setRoles] = useState<RoleConfig[]>(() => getInitialRoles());
+  // Fetch user's granted roles and base role
+  const { data: additionalRoles = [] } = useMyRoles();
+  const user = useAuthStore(state => state.user);
+
+  // Filter DEFAULT_ROLES to only include granted roles
+  // Use useMemo to prevent infinite re-renders when additionalRoles reference changes
+  const grantedRoles = useMemo(() => {
+    if (!user) return [];
+    // additionalRoles is an array of role strings directly
+    const grantedRoleList = [
+      user.role,
+      ...(additionalRoles || []),
+    ].filter(Boolean);
+    return DEFAULT_ROLES.filter(role => grantedRoleList.includes(role.role));
+  }, [user, additionalRoles]);
+
+  const [roles, setRoles] = useState<RoleConfig[]>(() => {
+    const visibility = loadRoleVisibility();
+    return grantedRoles.map(role => ({
+      ...role,
+      visible: visibility[role.key] !== false,
+    }));
+  });
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Per-user role color state
+  const [userRoleColor, setUserRoleColor] = useState<string>('#3b82f6');
+  const [hasColorChange, setHasColorChange] = useState(false);
+
+  // Update roles when granted roles change, using JSON comparison for stability
+  useEffect(() => {
+    const visibility = loadRoleVisibility();
+    const newRoles = grantedRoles.map(role => ({
+      ...role,
+      visible: visibility[role.key] !== false,
+    }));
+
+    // Only update if the roles array actually changed (prevent infinite loop)
+    const currentKeys = roles.map(r => r.key).sort().join(',');
+    const newKeys = newRoles.map(r => r.key).sort().join(',');
+    if (currentKeys !== newKeys) {
+      setRoles(newRoles);
+    }
+  }, [grantedRoles]);
+
+  // Load user's role color on mount
+  useEffect(() => {
+    if (user) {
+      const colorSetting = getUserRoleColor(user.userId, user.role);
+      setUserRoleColor(colorSetting.color);
+    }
+  }, [user]);
 
   const visibleCount = roles.filter(r => r.visible).length;
 
@@ -257,9 +370,22 @@ function AdminSettingsPage() {
 
   // Handle role visibility toggle
   const handleToggleVisibility = (key: string) => {
-    setRoles(prev =>
-      prev.map(role => (role.key === key ? { ...role, visible: !role.visible } : role))
-    );
+    setRoles(prev => {
+      const roleToToggle = prev.find(r => r.key === key);
+      if (!roleToToggle) return prev;
+
+      // Count total visible roles excluding the one being toggled
+      const visibleCount = prev.filter(r => r.key !== key && r.visible).length;
+
+      // Prevent hiding if this is the last visible role
+      if (roleToToggle.visible && visibleCount === 0) {
+        return prev; // Don't allow hiding the last visible role
+      }
+
+      return prev.map(role =>
+        role.key === key ? { ...role, visible: !role.visible } : role
+      );
+    });
     setHasChanges(true);
   };
 
@@ -284,8 +410,8 @@ function AdminSettingsPage() {
 
   // Reset role settings
   const handleResetRoleSettings = () => {
-    const defaultVisibility = DEFAULT_ROLES.reduce(
-      (acc, role) => ({
+    const defaultVisibility = grantedRoles.reduce(
+      (acc: Record<string, boolean>, role: RoleConfig) => ({
         ...acc,
         [role.key]: true,
       }),
@@ -293,8 +419,41 @@ function AdminSettingsPage() {
     );
 
     saveRoleVisibility(defaultVisibility);
-    setRoles(getInitialRoles());
+    setRoles(
+      grantedRoles.map(role => ({
+        ...role,
+        visible: true,
+      }))
+    );
     setHasChanges(false);
+  };
+
+  // Color handlers
+  const handleColorChange = (color: string) => {
+    setUserRoleColor(color);
+    setHasColorChange(true);
+  };
+
+  const handleSaveColor = () => {
+    if (user) {
+      saveUserRoleColor(user.userId, user.role, userRoleColor);
+      setHasColorChange(false);
+      playSound('success');
+
+      // Dispatch custom event to notify other components (like Header) of the color change
+      window.dispatchEvent(
+        new CustomEvent('role-color-changed', { detail: { userId: user.userId, role: user.role, color: userRoleColor } })
+      );
+    }
+  };
+
+  const handleResetColor = () => {
+    if (user) {
+      // Reset to default global color
+      const defaultColor = getUserRoleColor(user.userId, user.role).color;
+      setUserRoleColor(defaultColor);
+      setHasColorChange(false);
+    }
   };
 
   return (
@@ -346,10 +505,10 @@ function AdminSettingsPage() {
                             : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
                         }`}
                       >
-                        <Icon
-                          className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-primary-400' : ''}`}
-                        />
-                        {section.label}
+                        <div className="flex items-center justify-center w-4 flex-shrink-0">
+                          <Icon className={`h-4 w-4 ${isActive ? 'text-primary-400' : ''}`} />
+                        </div>
+                        <span className="text-left flex-1">{section.label}</span>
                       </button>
                     );
                   })}
@@ -377,14 +536,72 @@ function AdminSettingsPage() {
                   </CardContent>
                 </Card>
 
+                {/* My Role Badge Color */}
+                {user && (
+                  <Card variant="glass">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle>My Role Badge Color</CardTitle>
+                        {hasColorChange && (
+                          <div className="flex items-center gap-2">
+                            <Button variant="secondary" size="sm" onClick={handleResetColor}>
+                              Reset
+                            </Button>
+                            <Button variant="primary" size="sm" onClick={handleSaveColor}>
+                              Save Color
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <p className="text-sm text-gray-400 mb-4">
+                        Customize the badge color for your current role{' '}
+                        <Badge size="sm" customColor={userRoleColor}>{user.role}</Badge>
+                        . This color is personal to you and only affects how your role badge appears on your device.
+                      </p>
+                      <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
+                        {[
+                          '#ef4444', '#f97316', '#f59e0b',
+                          '#eab308', '#84cc16', '#10b981',
+                          '#06b6d4', '#3b82f6', '#6366f1',
+                          '#8b5cf6', '#d946ef', '#ec4899',
+                          '#f43f5e', '#64748b', '#71717a',
+                        ].map(color => (
+                          <button
+                            key={color}
+                            onClick={() => handleColorChange(color)}
+                            className={`w-full aspect-square rounded-md transition-all duration-200 ${
+                              userRoleColor === color
+                                ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-105 shadow-lg'
+                                : 'hover:scale-105 opacity-60 hover:opacity-100 hover:shadow-md'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                            aria-label={`Select ${color} for your role`}
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {roles.map(role => (
-                    <RoleSettingCard
-                      key={role.key}
-                      config={role}
-                      onToggleVisibility={handleToggleVisibility}
-                    />
-                  ))}
+                  {roles.map(role => {
+                    const isBaseRole = role.role === user?.role;
+                    // Check if this role can be hidden (at least one other role is visible)
+                    const canHide = roles.filter(r => r.key !== role.key && r.visible).length > 0;
+
+                    return (
+                      <RoleSettingCard
+                        key={role.key}
+                        config={role}
+                        onToggleVisibility={handleToggleVisibility}
+                        isBaseRole={isBaseRole}
+                        canHide={canHide}
+                      />
+                    );
+                  })}
                 </div>
 
                 {hasChanges && (
@@ -506,51 +723,55 @@ function AdminSettingsPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Sound Toggle */}
-                    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        {soundEnabled ? (
-                          <SpeakerWaveIcon className="h-6 w-6 text-green-400" />
-                        ) : (
-                          <SpeakerXMarkIcon className="h-6 w-6 text-gray-500" />
-                        )}
-                        <div>
-                          <h3 className="text-sm font-semibold text-white">Sound Effects</h3>
-                          <p className="text-xs text-gray-400">
-                            Play sounds for notifications and actions
-                          </p>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {soundEnabled ? (
+                            <SpeakerWaveIcon className="h-6 w-6 text-green-400" />
+                          ) : (
+                            <SpeakerXMarkIcon className="h-6 w-6 text-gray-500" />
+                          )}
+                          <div>
+                            <h3 className="text-sm font-semibold text-white">Sound Effects</h3>
+                            <p className="text-xs text-gray-400">
+                              Play sounds for notifications and actions
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <button
-                        onClick={() => setSoundEnabled(!soundEnabled)}
-                        className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-                          soundEnabled ? 'bg-primary-500' : 'bg-gray-700'
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
-                            soundEnabled ? 'translate-x-7' : ''
+                        <button
+                          onClick={() => setSoundEnabled(!soundEnabled)}
+                          className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+                            soundEnabled ? 'bg-primary-500' : 'bg-gray-700'
                           }`}
-                        />
-                      </button>
+                        >
+                          <span
+                            className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
+                              soundEnabled ? 'translate-x-7' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Test Sound Button */}
-                    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <BellIcon className="h-6 w-6 text-blue-400" />
-                        <div>
-                          <h3 className="text-sm font-semibold text-white">Test Sounds</h3>
-                          <p className="text-xs text-gray-400">Preview notification sounds</p>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <BellIcon className="h-6 w-6 text-blue-400" />
+                          <div>
+                            <h3 className="text-sm font-semibold text-white">Test Sounds</h3>
+                            <p className="text-xs text-gray-400">Preview notification sounds</p>
+                          </div>
                         </div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => playSound('success')}
+                          disabled={!soundEnabled}
+                        >
+                          Play Test Sound
+                        </Button>
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => playSound('success')}
-                        disabled={!soundEnabled}
-                      >
-                        Play Test Sound
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>

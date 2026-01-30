@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button } from '@/components/shared';
+import { Card, CardContent, CardHeader, CardTitle, Header, Button, Badge, useToast } from '@/components/shared';
 import {
   CogIcon,
   ArrowLeftIcon,
@@ -21,8 +21,12 @@ import {
   CogIcon as WrenchIcon,
   WrenchScrewdriverIcon,
   ArrowPathIcon,
+  SwatchIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
+import { useCurrentUser } from '@/services/api';
+import { getUserRoleColor, saveUserRoleColor } from '@/components/shared/Badge';
+import { playSound } from '@/stores';
 
 // ============================================================================
 // TYPES
@@ -44,13 +48,26 @@ const STORAGE_KEY = 'admin-role-visibility';
 
 const DEFAULT_ROLES: RoleConfig[] = [
   {
+    key: 'admin',
+    label: 'Admin View',
+    role: UserRole.ADMIN,
+    icon: CogIcon,
+    visible: true,
+  },
+  {
     key: 'picking',
     label: 'Picking View',
     role: UserRole.PICKER,
     icon: ClipboardDocumentListIcon,
     visible: true,
   },
-  { key: 'packing', label: 'Packing View', role: UserRole.PACKER, icon: CubeIcon, visible: true },
+  {
+    key: 'packing',
+    label: 'Packing View',
+    role: UserRole.PACKER,
+    icon: CubeIcon,
+    visible: true,
+  },
   {
     key: 'stock-control',
     label: 'Stock Control View',
@@ -86,18 +103,74 @@ const DEFAULT_ROLES: RoleConfig[] = [
     icon: WrenchScrewdriverIcon,
     visible: true,
   },
-  { key: 'rma', label: 'RMA View', role: 'RMA' as UserRole, icon: ArrowPathIcon, visible: true },
+  {
+    key: 'rma',
+    label: 'RMA View',
+    role: 'RMA' as UserRole,
+    icon: ArrowPathIcon,
+    visible: true,
+  },
 ];
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
+// Base roles that cannot be hidden - keys for quick lookup
+const BASE_ROLE_KEYS = new Set(['admin', 'picking', 'packing', 'stock-control']);
+const BASE_ROLES: Set<UserRole> = new Set([
+  UserRole.PICKER,
+  UserRole.PACKER,
+  UserRole.STOCK_CONTROLLER,
+  UserRole.ADMIN,
+  UserRole.SUPERVISOR,
+]);
+
+// Constant state for base roles - never changes, immune to all events
+const BASE_ROLE_STATE: RoleConfig[] = [
+  {
+    key: 'admin',
+    label: 'Admin View',
+    role: UserRole.ADMIN,
+    icon: CogIcon,
+    visible: true,
+  },
+  {
+    key: 'picking',
+    label: 'Picking View',
+    role: UserRole.PICKER,
+    icon: ClipboardDocumentListIcon,
+    visible: true,
+  },
+  {
+    key: 'packing',
+    label: 'Packing View',
+    role: UserRole.PACKER,
+    icon: CubeIcon,
+    visible: true,
+  },
+  {
+    key: 'stock-control',
+    label: 'Stock Control View',
+    role: UserRole.STOCK_CONTROLLER,
+    icon: ScaleIcon,
+    visible: true,
+  },
+];
+
+function isBaseRole(role: UserRole): boolean {
+  return BASE_ROLES.has(role);
+}
+
+function isBaseRoleKey(key: string): boolean {
+  return BASE_ROLE_KEYS.has(key);
+}
+
 function loadRoleVisibility(): Record<string, boolean> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      return JSON.parse(stored) as Record<string, boolean>;
     }
   } catch (error) {
     console.error('Failed to load role visibility settings:', error);
@@ -111,18 +184,34 @@ function loadRoleVisibility(): Record<string, boolean> {
 
 function saveRoleVisibility(settings: Record<string, boolean>) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    // Merge with existing settings to preserve visibility for roles not in current update
+    const existing = loadRoleVisibility();
+    const merged = { ...existing, ...settings };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    // Dispatch event for other tabs
+    window.dispatchEvent(new CustomEvent('role-visibility-changed', { detail: settings }));
   } catch (error) {
     console.error('Failed to save role visibility settings:', error);
   }
 }
 
 function getInitialRoles(): RoleConfig[] {
+  // Start with constant base roles - these can NEVER be modified
+  const baseRoles = BASE_ROLE_STATE.map(role => ({ ...role }));
+
+  // Load custom roles from localStorage
   const visibility = loadRoleVisibility();
-  return DEFAULT_ROLES.map(role => ({
-    ...role,
-    visible: visibility[role.key] !== false, // Default to true if not set
-  }));
+  const customRoles = DEFAULT_ROLES
+    .filter(role => !isBaseRoleKey(role.key))
+    .map(role => ({
+      ...role,
+      visible: visibility[role.key] !== false,
+    }));
+
+  const result = [...baseRoles, ...customRoles];
+  console.log('[getInitialRoles] Returning roles:', result.map(r => ({ key: r.key, role: r.role, visible: r.visible, isBase: isBaseRoleKey(r.key) })));
+  console.log('[getInitialRoles] BASE_ROLE_KEYS:', Array.from(BASE_ROLE_KEYS));
+  return result;
 }
 
 // ============================================================================
@@ -136,6 +225,18 @@ interface RoleSettingCardProps {
 
 function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
   const Icon = config.icon;
+  // Use key check instead of role check - more reliable
+  const isBase = isBaseRoleKey(config.key);
+
+  // Debug logging
+  console.log('[RoleSettingCard]', {
+    key: config.key,
+    role: config.role,
+    visible: config.visible,
+    isBase,
+    BASE_ROLE_KEYS: Array.from(BASE_ROLE_KEYS),
+    inSet: BASE_ROLE_KEYS.has(config.key)
+  });
 
   return (
     <Card
@@ -178,30 +279,50 @@ function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
           </div>
 
           {/* Visibility Toggle */}
-          <button
-            onClick={() => onToggleVisibility(config.key)}
-            className={`p-3 rounded-xl transition-all duration-300 ${
-              config.visible
-                ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
-                : 'bg-gray-700/50 text-gray-500 hover:bg-gray-700'
-            }`}
-            title={config.visible ? 'Hide from role switcher' : 'Show in role switcher'}
-          >
-            {config.visible ? (
-              <EyeIcon className="h-5 w-5" />
-            ) : (
+          {isBase ? (
+            // Base roles - disabled button with slashed eye icon
+            <div
+              className="p-3 rounded-xl bg-red-500/20 text-red-400 opacity-70 cursor-not-allowed pointer-events-none"
+              title="Base role cannot be hidden"
+            >
               <EyeSlashIcon className="h-5 w-5" />
-            )}
-          </button>
+            </div>
+          ) : (
+            // Custom roles - interactive toggle
+            <button
+              onClick={() => onToggleVisibility(config.key)}
+              className={`p-3 rounded-xl transition-all duration-300 ${
+                config.visible
+                  ? 'bg-success-500/20 text-success-400 hover:bg-success-500/30'
+                  : 'bg-gray-700/50 text-gray-500 hover:bg-gray-700'
+              }`}
+              title={config.visible ? 'Hide from role switcher' : 'Show in role switcher'}
+            >
+              {config.visible ? (
+                <EyeIcon className="h-5 w-5" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5" />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Status Indicator */}
         <div
           className={`mt-4 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 ${
-            config.visible ? 'bg-success-500/20 text-success-300' : 'bg-gray-700/50 text-gray-500'
+            isBase
+              ? 'bg-red-500/20 text-red-300'
+              : config.visible
+                ? 'bg-success-500/20 text-success-300'
+                : 'bg-gray-700/50 text-gray-500'
           }`}
         >
-          {config.visible ? (
+          {isBase ? (
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              Base role - always visible
+            </span>
+          ) : config.visible ? (
             <span className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-success-400 animate-pulse" />
               Visible in role switcher
@@ -223,35 +344,132 @@ function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
 // ============================================================================
 
 function RoleSettingsPage() {
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [roles, setRoles] = useState<RoleConfig[]>(() => getInitialRoles());
   const [hasChanges, setHasChanges] = useState(false);
+  const { data: currentUser } = useCurrentUser();
+
+  // Per-user role colors state - for all roles the user has
+  const [roleColors, setRoleColors] = useState<Record<string, string>>({});
+  const [hasColorChange, setHasColorChange] = useState(false);
 
   const visibleCount = roles.filter(r => r.visible).length;
 
+  // Get all user roles (base role + additional roles)
+  const getAllUserRoles = (): string[] => {
+    if (!currentUser) return [];
+    const roles = [currentUser.role];
+    if (currentUser.additionalRoles && currentUser.additionalRoles.length > 0) {
+      roles.push(...currentUser.additionalRoles);
+    }
+    return [...new Set(roles)]; // Deduplicate
+  };
+
+  // Load user's role colors on mount
+  useEffect(() => {
+    if (currentUser) {
+      const allRoles = getAllUserRoles();
+      const colors: Record<string, string> = {};
+      allRoles.forEach(role => {
+        colors[role] = getUserRoleColor(currentUser.userId, role).color;
+      });
+      setRoleColors(colors);
+    }
+  }, [currentUser]);
+
+  // CRITICAL: Clean localStorage on mount to ensure base roles are always visible
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Record<string, boolean>;
+        const cleaned: Record<string, boolean> = { ...parsed };
+
+        let needsSave = false;
+        for (const baseKey of BASE_ROLE_KEYS) {
+          if (cleaned[baseKey] !== true) {
+            console.log('[RoleSettingsPage] Force-enabling base role:', baseKey, 'was:', cleaned[baseKey]);
+            cleaned[baseKey] = true;
+            needsSave = true;
+          }
+        }
+
+        if (needsSave) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+          console.log('[RoleSettingsPage] Saved cleaned visibility settings:', cleaned);
+          // Reload roles with cleaned data
+          setRoles(getInitialRoles());
+        }
+      }
+    } catch (error) {
+      console.error('[RoleSettingsPage] Failed to clean localStorage:', error);
+    }
+  }, []); // Run once on mount
+
+  // Listen for role visibility changes from other components
+  // CRITICAL: Base roles are NEVER affected by events - only custom roles change
+  useEffect(() => {
+    const handleRoleVisibilityChanged = (e: Event) => {
+      const detail = (e as CustomEvent<Record<string, boolean>>).detail;
+
+      setRoles(prev => {
+        // ONLY update custom roles - base roles are filtered out and added back from constant
+        const customRoles = prev
+          .filter(role => !isBaseRoleKey(role.key))
+          .map(role => {
+            const visibility = detail[role.key];
+            // If the key exists in detail and is explicitly false, hide it
+            // Otherwise show it (default to visible)
+            return {
+              ...role,
+              visible: visibility !== false,
+            };
+          });
+
+        // Always prepend base roles from constant (never changes, never affected by events)
+        // Force visible: true for ALL base roles, regardless of event data
+        return [...BASE_ROLE_STATE.map(role => ({ ...role, visible: true })), ...customRoles];
+      });
+    };
+
+    window.addEventListener('role-visibility-changed', handleRoleVisibilityChanged);
+    return () => window.removeEventListener('role-visibility-changed', handleRoleVisibilityChanged);
+  }, []);
+
   const handleToggleVisibility = (key: string) => {
-    setRoles(prev =>
-      prev.map(role => (role.key === key ? { ...role, visible: !role.visible } : role))
-    );
-    setHasChanges(true);
+    // Prevent toggling base roles entirely
+    if (isBaseRoleKey(key)) {
+      return;
+    }
+
+    setRoles(prev => {
+      const newRoles = prev.map(role => {
+        if (role.key === key) {
+          return { ...role, visible: !role.visible };
+        }
+        return role;
+      });
+      setHasChanges(true);
+      return newRoles;
+    });
   };
 
   const handleSave = () => {
     const visibilitySettings = roles.reduce(
-      (acc, role) => ({
-        ...acc,
-        [role.key]: role.visible,
-      }),
+      (acc, role) => {
+        // Base roles are always saved as visible
+        if (isBaseRoleKey(role.key)) {
+          return { ...acc, [role.key]: true };
+        }
+        return { ...acc, [role.key]: role.visible };
+      },
       {} as Record<string, boolean>
     );
 
     saveRoleVisibility(visibilitySettings);
     setHasChanges(false);
-
-    // Dispatch custom event to notify other components (like Header) of the change
-    window.dispatchEvent(
-      new CustomEvent('role-visibility-changed', { detail: visibilitySettings })
-    );
+    showToast('Role visibility settings saved', 'success');
 
     // Navigate back to dashboard
     navigate('/dashboard');
@@ -270,6 +488,35 @@ function RoleSettingsPage() {
     saveRoleVisibility(defaultVisibility);
     setRoles(getInitialRoles());
     setHasChanges(false);
+  };
+
+  const handleColorChange = (role: string, color: string) => {
+    setRoleColors(prev => ({ ...prev, [role]: color }));
+    setHasColorChange(true);
+  };
+
+  const handleSaveColor = () => {
+    if (currentUser) {
+      // Save all role colors
+      Object.entries(roleColors).forEach(([role, color]) => {
+        saveUserRoleColor(currentUser.userId, role, color);
+      });
+      setHasColorChange(false);
+      playSound('success');
+    }
+  };
+
+  const handleResetColor = () => {
+    if (currentUser) {
+      // Reset all colors to defaults
+      const allRoles = getAllUserRoles();
+      const colors: Record<string, string> = {};
+      allRoles.forEach(role => {
+        colors[role] = getUserRoleColor(currentUser.userId, role).color;
+      });
+      setRoleColors(colors);
+      setHasColorChange(false);
+    }
   };
 
   return (
@@ -315,7 +562,7 @@ function RoleSettingsPage() {
                   Showing {visibleCount} of {roles.length} roles in switcher
                 </p>
                 <p className="text-xs text-gray-500">
-                  Hidden roles can still be accessed but won't appear in the dropdown menu
+                  Base roles (<span className="text-red-400">PICKER, PACKER, STOCK_CONTROLLER, ADMIN</span>) cannot be hidden. Custom roles can be toggled.
                 </p>
               </div>
               {hasChanges && (
@@ -324,6 +571,71 @@ function RoleSettingsPage() {
                   <span className="text-sm text-warning-300 font-medium">Unsaved changes</span>
                 </div>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* My Role Badge Colors */}
+        <Card variant="glass" className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <SwatchIcon className="h-6 w-6 text-primary-400" />
+                <CardTitle>My Role Badge Colors</CardTitle>
+              </div>
+              {hasColorChange && (
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" onClick={handleResetColor}>
+                    Reset
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={handleSaveColor}>
+                    Save Colors
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-400 mb-6">
+              Customize the badge color for each of your roles. These colors are personal to you and only affect how your role badges appear on your device.
+            </p>
+
+            {/* Color pickers for each user role */}
+            <div className="space-y-6">
+              {getAllUserRoles().map(role => (
+                <div key={role} className="border border-white/[0.08] rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Badge size="md" customColor={roleColors[role] || '#3b82f6'}>{role}</Badge>
+                      <span className="text-sm text-gray-400">
+                        {role === currentUser?.role ? '(Primary Role)' : '(Additional Role)'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+                    {[
+                      '#ef4444', '#f97316', '#f59e0b',
+                      '#eab308', '#84cc16', '#10b981',
+                      '#06b6d4', '#3b82f6', '#6366f1',
+                      '#8b5cf6', '#d946ef', '#ec4899',
+                      '#f43f5e', '#64748b', '#71717a',
+                    ].map(color => (
+                      <button
+                        key={color}
+                        onClick={() => handleColorChange(role, color)}
+                        className={`w-full aspect-square rounded-md transition-all duration-200 ${
+                          roleColors[role] === color
+                            ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-105 shadow-lg'
+                            : 'hover:scale-105 opacity-60 hover:opacity-100 hover:shadow-md'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        title={color}
+                        aria-label={`Select ${color} for ${role}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -383,6 +695,12 @@ function RoleSettingsPage() {
               <div>
                 <h4 className="text-white font-semibold mb-2">How it works</h4>
                 <ul className="text-sm text-gray-400 space-y-1">
+                  <li>
+                    • <strong className="text-red-300">Base roles (PICKER, PACKER, STOCK_CONTROLLER, ADMIN)</strong> are always visible and cannot be hidden
+                  </li>
+                  <li>
+                    • <strong className="text-gray-300">Custom roles</strong> can be shown or hidden based on your preferences
+                  </li>
                   <li>
                     • <strong className="text-gray-300">Visible roles</strong> appear in the role
                     switcher dropdown in the header

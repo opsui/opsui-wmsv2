@@ -57,10 +57,11 @@ router.get(
     const report = await reportsRepository.findById(reportId);
 
     if (!report) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Report not found',
       });
+      return;
     }
 
     res.json({
@@ -112,10 +113,11 @@ router.put(
     });
 
     if (!report) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Report not found',
       });
+      return;
     }
 
     res.json({
@@ -137,10 +139,11 @@ router.delete(
     const deleted = await reportsRepository.delete(reportId);
 
     if (!deleted) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Report not found',
       });
+      return;
     }
 
     res.json({
@@ -252,10 +255,11 @@ router.get(
     const dashboard = await reportsRepository.findDashboardById(dashboardId);
 
     if (!dashboard) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Dashboard not found',
       });
+      return;
     }
 
     res.json({
@@ -305,10 +309,11 @@ router.post(
     const userId = (req as any).user?.userId;
 
     if (!entityType || !fields || !Array.isArray(fields)) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: entityType, fields (array)',
       });
+      return;
     }
 
     const job = await reportsService.createExportJob(
@@ -333,10 +338,20 @@ router.post(
 router.get(
   '/export/:jobId',
   asyncHandler(async (req: Request, res: Response) => {
-    // TODO: Implement getExportJob in repository
+    const { jobId } = req.params;
+    const job = await reportsRepository.getExportJob(jobId);
+
+    if (!job) {
+      res.status(404).json({
+        success: false,
+        error: 'Export job not found',
+      });
+      return;
+    }
+
     res.json({
       success: true,
-      message: 'Export job status retrieval not yet implemented',
+      data: { job },
     });
   })
 );

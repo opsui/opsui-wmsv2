@@ -81,13 +81,18 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    if (!user.active) {
-      logger.warn('Login failed - inactive user', {
-        email: credentials.email,
-        userId: user.userId,
-      });
-      throw new UnauthorizedError('User account is inactive');
-    }
+    // Set user to active and update last login time
+    const { query } = await import('../db/client');
+    await query(
+      `UPDATE users
+       SET active = true,
+           last_login_at = NOW()
+       WHERE user_id = $1`,
+      [user.userId]
+    );
+
+    // User is now active (we just set it to true)
+    logger.info('User activated on login', { userId: user.userId });
 
     // Generate tokens
     const accessToken = generateToken({
@@ -220,7 +225,7 @@ export class AuthService {
       `UPDATE users
        SET current_view = NULL,
            current_view_updated_at = NOW(),
-           is_active = false
+           active = false
        WHERE user_id = $1`,
       [userId]
     );
@@ -268,23 +273,22 @@ export class AuthService {
     const { query } = await import('../db/client');
 
     // If view is empty string, clear the current_view (set to NULL)
-    // Otherwise, update the current_view and mark user as active
+    // Otherwise, update the current_view
     if (view === '') {
       await query(
         `UPDATE users
          SET current_view = NULL,
-             current_view_updated_at = NOW(),
-             is_active = false
+             current_view_updated_at = NOW()
          WHERE user_id = $1`,
         [userId]
       );
-      logger.info('Current view cleared (user marked idle)', { userId });
+      logger.info('Current view cleared', { userId });
     } else {
       await query(
         `UPDATE users
          SET current_view = $1,
              current_view_updated_at = NOW(),
-             is_active = true
+             active = true
          WHERE user_id = $2`,
         [view, userId]
       );
@@ -299,19 +303,21 @@ export class AuthService {
   async setIdle(userId: string): Promise<void> {
     const { query } = await import('../db/client');
 
-    // Set the user to IDLE by setting is_active to false
+    // Set the user to IDLE by setting active to false
     // This way:
     // 1. "Last Activity" shows the actual last time they were active (timestamp preserved)
-    // 2. "Status" becomes IDLE immediately (is_active = false)
-    // 3. "Location" is preserved (current_view remains unchanged)
+    // 2. "Status" becomes IDLE immediately (active = false)
+    // 3. "Location" is cleared to None (current_view set to NULL)
     await query(
       `UPDATE users
-       SET is_active = false
+       SET active = false,
+           current_view = NULL,
+           current_view_updated_at = NOW()
        WHERE user_id = $1`,
       [userId]
     );
 
-    logger.info('User set to IDLE (is_active=false, location preserved)', { userId });
+    logger.info('User set to IDLE (active=false, location cleared to None)', { userId });
   }
 
   // --------------------------------------------------------------------------

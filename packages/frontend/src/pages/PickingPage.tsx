@@ -16,10 +16,15 @@ import {
   ScanInput,
   Button,
   Header,
+  UnclaimModal,
+  UndoPickModal,
+  useToast,
+  ConfirmDialog,
 } from '@/components/shared';
 import { TaskStatusBadge } from '@/components/shared';
 import { formatBinLocation } from '@/lib/utils';
-import { showSuccess, showError, useAuthStore } from '@/stores';
+import { useAuthStore } from '@/stores';
+import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
 import {
   CheckIcon,
   XMarkIcon,
@@ -44,6 +49,7 @@ export function PickingPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
   const userRole = useAuthStore(state => state.user?.role);
+  const { showToast } = useToast();
 
   // Track current page for admin dashboard
   usePageTracking({ view: orderId ? PageViews.PICKING(orderId) : 'Picking' });
@@ -61,10 +67,59 @@ export function PickingPage() {
   const [substituteSku, setSubstituteSku] = useState('');
   const [exceptionStep, setExceptionStep] = useState<'type' | 'details' | 'confirm'>('type');
 
+  // Unclaim modal state
+  const [showUnclaimModal, setShowUnclaimModal] = useState(false);
+  const [isUnclaiming, setIsUnclaiming] = useState(false);
+
+  // Undo pick modal state
+  const [showUndoPickModal, setShowUndoPickModal] = useState(false);
+  const [isUndoingPick, setIsUndoingPick] = useState(false);
+  const [undoPickItemIndex, setUndoPickItemIndex] = useState<number | null>(null);
+
+  // Confirm dialog states
+  const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{ isOpen: boolean; skippedItems: any[] }>({ isOpen: false, skippedItems: [] });
+  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>({ isOpen: false, index: -1, item: null });
+
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const pickMutation = usePickItem();
   const completeMutation = useCompleteOrder();
   const logExceptionMutation = useLogException();
+
+  // ==========================================================================
+  // Real-time WebSocket Subscriptions
+  // ==========================================================================
+
+  // Subscribe to pick updates for this order
+  usePickUpdates({
+    onPickCompleted: (data) => {
+      // If this pick is for the current order, refresh the order data
+      if (data.orderId === orderId) {
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      }
+    },
+    onPickStarted: (data) => {
+      // If this pick is for the current order, refresh the order data
+      if (data.orderId === orderId) {
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      }
+    },
+  });
+
+  // Subscribe to zone updates (for zone reassignments during picking)
+  useZoneUpdates({
+    onZoneAssignment: (data) => {
+      // If this zone assignment affects the current user, refresh
+      if (data.pickerId === currentUser?.userId) {
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+        showToast({
+          title: 'Zone Assignment Updated',
+          message: `You have been assigned to ${data.zone}`,
+          type: 'info',
+          duration: 3000,
+        });
+      }
+    },
+  });
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
@@ -109,7 +164,7 @@ export function PickingPage() {
         setClaimError(`Failed to claim order: ${errorMsg}`);
       }
 
-      showError(errorMsg);
+      showToast(errorMsg, 'error');
     },
   });
 
@@ -248,9 +303,22 @@ export function PickingPage() {
     // Listen for visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Handle tab/window close - mark as IDLE and clear location before closing
+    const handleBeforeUnload = () => {
+      // Use sendBeacon for reliable delivery during page unload
+      // Call /auth/set-idle which sets status to IDLE and clears current_view (location) to None
+      const data = JSON.stringify({});
+      const blob = new Blob([data], { type: 'application/json' });
+      navigator.sendBeacon('/api/auth/set-idle', blob);
+      console.log('[PickingPage] Tab closing - marked picker as IDLE and cleared location to None');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [orderId]);
 
@@ -380,7 +448,7 @@ export function PickingPage() {
 
   const handleScan = async (value: string) => {
     if (!currentTask) {
-      showError('No current task to pick');
+      showToast('No current task to pick', 'error');
       return;
     }
 
@@ -398,7 +466,7 @@ export function PickingPage() {
       // Show barcode as primary expected value, with SKU as subtle alternative
       const expectedBarcodes = currentTask.barcode ? currentTask.barcode : currentTask.sku;
       setScanError(`Wrong scan! Expected: ${expectedBarcodes}, scanned: ${scanValue}`);
-      showError(`Wrong barcode scanned`);
+      showToast(`Wrong barcode scanned`, 'error');
       return;
     }
 
@@ -414,7 +482,7 @@ export function PickingPage() {
         },
       });
 
-      showSuccess('Item picked!');
+      showToast('Item picked!', 'success');
 
       // Refetch order data to get updated state
       await refetch();
@@ -432,7 +500,7 @@ export function PickingPage() {
       }
     } catch (error) {
       setScanError(error instanceof Error ? error.message : 'Pick failed');
-      showError(error instanceof Error ? error.message : 'Failed to pick item');
+      showToast(error instanceof Error ? error.message : 'Failed to pick item', 'error');
     }
 
     setScanValue('');
@@ -444,18 +512,8 @@ export function PickingPage() {
 
     if (skippedItems && skippedItems.length > 0) {
       // Show confirmation dialog for skipped items
-      const itemSummary = skippedItems
-        .map(item => `" ${item.name} (${item.sku}) - ${item.skipReason || 'No reason provided'}`)
-        .join('\n');
-
-      const confirmed = confirm(
-        `The following items were skipped and could not be found:\n\n${itemSummary}\n\n` +
-          `Are you sure you want to complete this order? These items will remain unpicked.`
-      );
-
-      if (!confirmed) {
-        return;
-      }
+      setCompleteOrderConfirm({ isOpen: true, skippedItems });
+      return;
     }
 
     try {
@@ -466,10 +524,27 @@ export function PickingPage() {
           pickerId: order.pickerId || '',
         },
       });
-      showSuccess('Order completed!');
+      showToast('Order completed!', 'success');
       navigate('/orders');
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to complete order');
+      showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
+    }
+  };
+
+  const confirmCompleteOrder = async () => {
+    try {
+      await completeMutation.mutateAsync({
+        orderId,
+        dto: {
+          orderId,
+          pickerId: order.pickerId || '',
+        },
+      });
+      showToast('Order completed!', 'success');
+      setCompleteOrderConfirm({ isOpen: false, skippedItems: [] });
+      navigate('/orders');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }
   };
 
@@ -477,9 +552,12 @@ export function PickingPage() {
     const item = order?.items[index];
     if (!item) return;
 
-    const confirmed = confirm(`Do you want to revert the skip for ${item.name} (${item.sku})?`);
+    setUnskipConfirm({ isOpen: true, index, item });
+  };
 
-    if (!confirmed) return;
+  const confirmUnskipItem = async () => {
+    const { index, item } = unskipConfirm;
+    if (!item) return;
 
     try {
       // Update pick task status back to PENDING
@@ -487,7 +565,8 @@ export function PickingPage() {
         status: 'PENDING',
       });
 
-      showSuccess('Skip reverted successfully!');
+      showToast('Skip reverted successfully!', 'success');
+      setUnskipConfirm({ isOpen: false, index: -1, item: null });
 
       // Refetch order data to get updated state
       await refetch();
@@ -499,7 +578,7 @@ export function PickingPage() {
         setScanError(null);
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to revert skip');
+      showToast(error instanceof Error ? error.message : 'Failed to revert skip', 'error');
     }
   };
 
@@ -510,92 +589,61 @@ export function PickingPage() {
     // Can only undo if there's something picked
     if (item.pickedQuantity <= 0) return;
 
-    // If item is fully picked, ask for reason (like skip)
-    const wasCompleted = item.pickedQuantity >= item.quantity;
-    let reason = '';
+    // Open the undo-pick modal instead of using prompt
+    setUndoPickItemIndex(index);
+    setShowUndoPickModal(true);
+  };
 
-    if (wasCompleted) {
-      reason =
-        prompt(
-          `You're about to remove items from ${item.name} (${item.sku}).\n\n` +
-            `This was fully picked (${item.pickedQuantity}/${item.quantity}).\n\n` +
-            `Please provide a reason for undoing this pick:`
-        ) || '';
+  const handleConfirmUndoPick = async (reason: string, notes: string) => {
+    const item = undoPickItemIndex !== null && order?.items ? order.items[undoPickItemIndex] : null;
+    if (!item || undoPickItemIndex === null) return;
 
-      if (!reason.trim()) {
-        showError('Reason is required to undo a completed item');
-        return;
-      }
-    } else {
-      // For partially picked items, still ask for reason
-      reason =
-        prompt(
-          `Remove 1 item from ${item.name} (${item.sku})?\n\n` +
-            `Current: ${item.pickedQuantity}/${item.quantity}\n\n` +
-            `After undo: ${item.pickedQuantity - 1}/${item.quantity}\n\n` +
-            `Please provide a reason:`
-        ) || '';
-
-      if (!reason.trim()) {
-        showError('Reason is required to undo a pick');
-        return;
-      }
-    }
-
+    setIsUndoingPick(true);
     try {
+      const fullReason = notes.trim() ? `${reason}\n\nAdditional notes: ${notes.trim()}` : reason;
+
       await apiClient.post(`/orders/${orderId}/undo-pick`, {
         pickTaskId: item.orderItemId,
         quantity: 1, // Always undo 1 at a time for safety
-        reason: reason.trim(),
+        reason: fullReason.trim(),
       });
 
-      showSuccess('Pick undone!');
+      showToast('Pick undone!', 'success');
+      setShowUndoPickModal(false);
+      setUndoPickItemIndex(null);
 
       // Refetch order data to get updated state
       await refetch();
 
       // If we undid current item, it stays current
       // If we undid an item above current one, navigate to that item
-      if (index < currentTaskIndex) {
-        setCurrentTaskIndex(index);
+      if (undoPickItemIndex < currentTaskIndex) {
+        setCurrentTaskIndex(undoPickItemIndex);
         setScanValue('');
         setScanError(null);
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to undo pick');
+      showToast(error instanceof Error ? error.message : 'Failed to undo pick', 'error');
+    } finally {
+      setIsUndoingPick(false);
     }
   };
 
   const handleUnclaimOrder = async () => {
-    const reason = prompt(
-      `You are about to unclaim this order and revert all your changes.\n\n` +
-        `All picked items will be reset to zero.\n` +
-        `Skipped items will be unskipped.\n` +
-        `The order will return to PENDING status.\n\n` +
-        `Please provide a reason for unclaiming:`
-    );
+    setShowUnclaimModal(true);
+  };
 
-    if (!reason || !reason.trim()) {
-      showError('Reason is required to unclaim this order');
-      return;
-    }
-
-    const confirmed = confirm(
-      `Are you sure you want to unclaim order ${orderId}?\n\n` +
-        `This action cannot be undone.\n\n` +
-        `Reason: ${reason.trim()}`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  const handleConfirmUnclaim = async (reason: string, notes: string) => {
+    setIsUnclaiming(true);
     try {
+      const fullReason = notes.trim() ? `${reason}\n\nAdditional notes: ${notes.trim()}` : reason;
+
       await apiClient.post(`/orders/${orderId}/unclaim`, {
-        reason: reason.trim(),
+        reason: fullReason,
       });
 
-      showSuccess('Order unclaimed and reset to PENDING!');
+      showToast('Order unclaimed and reset to PENDING!', 'success');
+      setShowUnclaimModal(false);
       hasClaimedRef.current = false; // Reset ref after unclaiming
       isClaimingRef.current = false; // Reset claiming ref to allow re-claiming if needed
       setClaimError(null); // Clear any previous claim errors
@@ -604,7 +652,9 @@ export function PickingPage() {
       navigate('/orders');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to unclaim order';
-      showError(errorMsg);
+      showToast(errorMsg, 'error');
+    } finally {
+      setIsUnclaiming(false);
     }
   };
 
@@ -625,13 +675,13 @@ export function PickingPage() {
     try {
       // Validate required fields before sending
       if (!currentTask.orderItemId) {
-        showError('Order item ID is missing. Please try refreshing the page.');
+        showToast('Order item ID is missing. Please try refreshing the page.', 'error');
         console.error('[PickingPage] Missing orderItemId:', currentTask);
         return;
       }
 
       if (!currentTask.sku) {
-        showError('SKU is missing. Please try refreshing the page.');
+        showToast('SKU is missing. Please try refreshing the page.', 'error');
         return;
       }
 
@@ -662,7 +712,7 @@ export function PickingPage() {
 
       await logExceptionMutation.mutateAsync(exceptionData);
 
-      showSuccess('Exception logged successfully!');
+      showToast('Exception logged successfully!', 'success');
       setShowExceptionModal(false);
 
       // Then skip the item after logging exception
@@ -679,7 +729,7 @@ export function PickingPage() {
         setScanError(null);
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'Failed to log exception');
+      showToast(error instanceof Error ? error.message : 'Failed to log exception', 'error');
     }
   };
 
@@ -1430,6 +1480,69 @@ export function PickingPage() {
             </div>
           </div>
         )}
+
+        {/* Unclaim Modal */}
+        <UnclaimModal
+          isOpen={showUnclaimModal}
+          onClose={() => setShowUnclaimModal(false)}
+          onConfirm={handleConfirmUnclaim}
+          orderId={orderId!}
+          isPicking={true}
+          isLoading={isUnclaiming}
+        />
+
+        {/* Undo Pick Modal */}
+        {undoPickItemIndex !== null && (
+          <UndoPickModal
+            isOpen={showUndoPickModal}
+            onClose={() => {
+              setShowUndoPickModal(false);
+              setUndoPickItemIndex(null);
+            }}
+            onConfirm={handleConfirmUndoPick}
+            itemName={order.items[undoPickItemIndex]?.name || ''}
+            sku={order.items[undoPickItemIndex]?.sku || ''}
+            currentQuantity={order.items[undoPickItemIndex]?.pickedQuantity || 0}
+            totalQuantity={order.items[undoPickItemIndex]?.quantity || 0}
+            wasCompleted={(order.items[undoPickItemIndex]?.pickedQuantity || 0) >= (order.items[undoPickItemIndex]?.quantity || 0)}
+            isLoading={isUndoingPick}
+          />
+        )}
+
+        {/* Complete Order Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={completeOrderConfirm.isOpen}
+          onClose={() => setCompleteOrderConfirm({ isOpen: false, skippedItems: [] })}
+          onConfirm={confirmCompleteOrder}
+          title="Complete Order with Skipped Items"
+          message={
+            <div className="text-left">
+              <p className="mb-3">The following items were skipped and could not be found:</p>
+              <ul className="list-disc pl-5 mb-3 space-y-1">
+                {completeOrderConfirm.skippedItems.map((item: any, i: number) => (
+                  <li key={i}>{item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}</li>
+                ))}
+              </ul>
+              <p>Are you sure you want to complete this order? These items will remain unpicked.</p>
+            </div>
+          }
+          confirmText="Complete Order"
+          cancelText="Cancel"
+          variant="warning"
+          isLoading={completeMutation.isPending}
+        />
+
+        {/* Unskip Item Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={unskipConfirm.isOpen}
+          onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
+          onConfirm={confirmUnskipItem}
+          title="Revert Skip"
+          message={`Do you want to revert the skip for ${unskipConfirm.item?.name} (${unskipConfirm.item?.sku})?`}
+          confirmText="Revert"
+          cancelText="Cancel"
+          variant="success"
+        />
       </main>
     </div>
   );

@@ -254,7 +254,7 @@ export class BusinessRulesService {
 
         case ConditionOperator.MATCHES_REGEX:
           try {
-            const regex = new RegExp(expectedValue);
+            const regex = new RegExp(String(expectedValue));
             result = regex.test(String(actualValue));
           } catch (e) {
             result = false;

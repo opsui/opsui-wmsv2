@@ -16,6 +16,23 @@ const router = Router();
 router.use(authenticate);
 
 // ============================================================================
+// DASHBOARD
+// ============================================================================
+
+/**
+ * GET /api/sales/dashboard
+ * Get sales dashboard statistics
+ * Access: All authenticated users
+ */
+router.get(
+  '/dashboard',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const dashboard = await salesService.getDashboard();
+    res.json(dashboard);
+  })
+);
+
+// ============================================================================
 // CUSTOMERS
 // ============================================================================
 

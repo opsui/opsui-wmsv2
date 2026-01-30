@@ -75,7 +75,8 @@ router.post(
   '/stock-count',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { binLocation, type } = req.body;
@@ -83,10 +84,11 @@ router.post(
     validateBinLocation(binLocation);
 
     if (!['FULL', 'CYCLIC', 'SPOT'].includes(type)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid count type. Must be FULL, CYCLIC, or SPOT',
         code: 'INVALID_TYPE',
       });
+      return;
     }
 
     const stockCount = await stockControlService.createStockCount(
@@ -107,17 +109,19 @@ router.post(
   '/stock-count/:countId/submit',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { countId } = req.params;
     const { items } = req.body;
 
     if (!Array.isArray(items)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Items must be an array',
         code: 'INVALID_ITEMS',
       });
+      return;
     }
 
     const result = await stockControlService.submitStockCount(countId, items, req.user.userId);
@@ -152,7 +156,8 @@ router.post(
   '/transfer',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { sku, fromBin, toBin, quantity, reason } = req.body;
@@ -162,17 +167,19 @@ router.post(
     validateBinLocation(toBin);
 
     if (typeof quantity !== 'number' || quantity <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Quantity must be a positive number',
         code: 'INVALID_QUANTITY',
       });
+      return;
     }
 
     if (!reason || typeof reason !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     const transfer = await stockControlService.transferStock(
@@ -196,7 +203,8 @@ router.post(
   '/adjust',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { sku, binLocation, quantity, reason } = req.body;
@@ -205,17 +213,19 @@ router.post(
     validateBinLocation(binLocation);
 
     if (typeof quantity !== 'number') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Quantity must be a number (positive to add, negative to remove)',
         code: 'INVALID_QUANTITY',
       });
+      return;
     }
 
     if (!reason || typeof reason !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     const adjustment = await stockControlService.adjustInventory(
@@ -293,16 +303,18 @@ router.post(
   '/reconcile',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { discrepancies } = req.body;
 
     if (!Array.isArray(discrepancies)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Discrepancies must be an array',
         code: 'INVALID_DISCREPANCIES',
       });
+      return;
     }
 
     const result = await stockControlService.reconcileDiscrepancies(discrepancies, req.user.userId);

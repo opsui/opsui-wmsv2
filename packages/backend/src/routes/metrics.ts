@@ -62,17 +62,85 @@ router.get(
   '/pickers',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    console.log('[MetricsRoute] /pickers query params:', req.query);
+
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     if (req.query.startDate) {
-      startDate.setTime(new Date(req.query.startDate as string).getTime());
+      const parsedStart = new Date(req.query.startDate as string);
+      if (!isNaN(parsedStart.getTime())) {
+        startDate.setTime(parsedStart.getTime());
+      }
     }
     if (req.query.endDate) {
-      endDate.setTime(new Date(req.query.endDate as string).getTime());
+      const parsedEnd = new Date(req.query.endDate as string);
+      if (!isNaN(parsedEnd.getTime())) {
+        endDate.setTime(parsedEnd.getTime());
+      }
     }
 
+    console.log('[MetricsRoute] Fetching picker performance from', startDate.toISOString(), 'to', endDate.toISOString());
     const performance = await metricsService.getAllPickersPerformance(startDate, endDate);
+    console.log('[MetricsRoute] Picker performance result:', performance?.length || 0, 'pickers');
+    res.json(performance);
+  })
+);
+
+/**
+ * GET /api/metrics/packers
+ * Get performance metrics for all packers
+ */
+router.get(
+  '/packers',
+  authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    if (req.query.startDate) {
+      const parsedStart = new Date(req.query.startDate as string);
+      if (!isNaN(parsedStart.getTime())) {
+        startDate.setTime(parsedStart.getTime());
+      }
+    }
+    if (req.query.endDate) {
+      const parsedEnd = new Date(req.query.endDate as string);
+      if (!isNaN(parsedEnd.getTime())) {
+        endDate.setTime(parsedEnd.getTime());
+      }
+    }
+
+    const performance = await metricsService.getAllPackersPerformance(startDate, endDate);
+    res.json(performance);
+  })
+);
+
+/**
+ * GET /api/metrics/stock-controllers
+ * Get performance metrics for all stock controllers
+ */
+router.get(
+  '/stock-controllers',
+  authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const endDate = new Date();
+    const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    if (req.query.startDate) {
+      const parsedStart = new Date(req.query.startDate as string);
+      if (!isNaN(parsedStart.getTime())) {
+        startDate.setTime(parsedStart.getTime());
+      }
+    }
+    if (req.query.endDate) {
+      const parsedEnd = new Date(req.query.endDate as string);
+      if (!isNaN(parsedEnd.getTime())) {
+        endDate.setTime(parsedEnd.getTime());
+      }
+    }
+
+    const performance = await metricsService.getAllStockControllersPerformance(startDate, endDate);
     res.json(performance);
   })
 );
@@ -104,15 +172,54 @@ router.get(
 );
 
 /**
+ * GET /api/metrics/orders/throughput
+ * Get throughput by time range
+ * Query params: range (daily|weekly|monthly|quarterly|yearly)
+ */
+router.get(
+  '/orders/throughput',
+  authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const range = (req.query.range as string) || 'daily';
+    // Validate range
+    const validRanges = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'];
+    if (!validRanges.includes(range)) {
+      res.status(400).json({ error: 'Invalid range. Must be one of: ' + validRanges.join(', ') });
+      return;
+    }
+    const throughput = await metricsService.getThroughputByRange(range as any);
+    res.json(throughput);
+  })
+);
+
+/**
  * GET /api/metrics/skus/top-picked
- * Get top SKUs by pick frequency
+ * Get top SKUs by scan type (pick, pack, verify, all)
+ * Query params: limit, scanType, timePeriod
  */
 router.get(
   '/skus/top-picked',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-    const topSKUs = await metricsService.getTopSKUsByPickFrequency(limit);
+    const scanType = (req.query.scanType as string) || 'pick';
+    const timePeriod = (req.query.timePeriod as string) || 'monthly';
+
+    // Validate scanType
+    const validScanTypes = ['pick', 'pack', 'verify', 'all'];
+    if (!validScanTypes.includes(scanType)) {
+      res.status(400).json({ error: 'Invalid scanType. Must be one of: ' + validScanTypes.join(', ') });
+      return;
+    }
+
+    // Validate timePeriod
+    const validTimePeriods = ['daily', 'weekly', 'monthly', 'yearly'];
+    if (!validTimePeriods.includes(timePeriod)) {
+      res.status(400).json({ error: 'Invalid timePeriod. Must be one of: ' + validTimePeriods.join(', ') });
+      return;
+    }
+
+    const topSKUs = await metricsService.getTopSKUsByScanType(scanType as any, limit, timePeriod as any);
     res.json(topSKUs);
   })
 );
@@ -223,7 +330,8 @@ router.get(
   authorize(UserRole.PICKER, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const endDate = new Date();

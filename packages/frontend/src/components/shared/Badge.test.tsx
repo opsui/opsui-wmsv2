@@ -25,49 +25,55 @@ describe('Badge Component', () => {
     it('applies default variant styles', () => {
       const { container } = renderWithProviders(<Badge>Default</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-gray-100', 'text-gray-800');
+      expect(badge).toHaveClass('badge', 'badge-info');
     });
 
     it('applies success variant styles', () => {
       const { container } = renderWithProviders(<Badge variant="success">Success</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-success-100', 'text-success-800');
+      expect(badge).toHaveClass('badge', 'badge-success');
     });
 
     it('applies warning variant styles', () => {
       const { container } = renderWithProviders(<Badge variant="warning">Warning</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-warning-100', 'text-warning-800');
+      expect(badge).toHaveClass('badge', 'badge-warning');
     });
 
     it('applies error variant styles', () => {
       const { container } = renderWithProviders(<Badge variant="error">Error</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-error-100', 'text-error-800');
+      expect(badge).toHaveClass('badge', 'badge-error');
     });
 
     it('applies info variant styles', () => {
       const { container } = renderWithProviders(<Badge variant="info">Info</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-primary-100', 'text-primary-800');
+      expect(badge).toHaveClass('badge', 'badge-info');
+    });
+
+    it('applies primary variant styles', () => {
+      const { container } = renderWithProviders(<Badge variant="primary">Primary</Badge>);
+      const badge = container.querySelector('span');
+      expect(badge).toHaveClass('badge', 'badge-primary');
     });
 
     it('applies small size styles', () => {
       const { container } = renderWithProviders(<Badge size="sm">Small</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('px-2', 'py-0.5', 'text-xs');
+      expect(badge).toHaveClass('px-2.5', 'py-1', 'text-xs');
     });
 
     it('applies medium size styles by default', () => {
       const { container } = renderWithProviders(<Badge size="md">Medium</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('px-2.5', 'py-0.5', 'text-sm');
+      expect(badge).toHaveClass('px-3', 'py-1.5', 'text-sm');
     });
 
     it('applies large size styles', () => {
       const { container } = renderWithProviders(<Badge size="lg">Large</Badge>);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('px-3', 'py-1', 'text-base');
+      expect(badge).toHaveClass('px-4', 'py-2', 'text-base');
     });
 
     it('merges custom className', () => {
@@ -117,11 +123,11 @@ describe('Badge Component', () => {
         <OrderStatusBadge status="CANCELLED" />
       );
 
-      expect(pendingContainer.querySelector('span')).toHaveClass('bg-primary-100');
-      expect(pickingContainer.querySelector('span')).toHaveClass('bg-warning-100');
-      expect(pickedContainer.querySelector('span')).toHaveClass('bg-success-100');
-      expect(shippedContainer.querySelector('span')).toHaveClass('bg-success-100');
-      expect(cancelledContainer.querySelector('span')).toHaveClass('bg-error-100');
+      expect(pendingContainer.querySelector('span')).toHaveClass('badge-info');
+      expect(pickingContainer.querySelector('span')).toHaveClass('badge-warning');
+      expect(pickedContainer.querySelector('span')).toHaveClass('badge-success');
+      expect(shippedContainer.querySelector('span')).toHaveClass('badge-success');
+      expect(cancelledContainer.querySelector('span')).toHaveClass('badge-error');
     });
   });
 
@@ -147,10 +153,10 @@ describe('Badge Component', () => {
         <OrderPriorityBadge priority="URGENT" />
       );
 
-      expect(lowContainer.querySelector('span')).toHaveClass('bg-primary-100');
-      expect(normalContainer.querySelector('span')).toHaveClass('bg-gray-100');
-      expect(highContainer.querySelector('span')).toHaveClass('bg-warning-100');
-      expect(urgentContainer.querySelector('span')).toHaveClass('bg-error-100');
+      expect(lowContainer.querySelector('span')).toHaveClass('badge-info');
+      expect(normalContainer.querySelector('span')).toHaveClass('badge-primary');
+      expect(highContainer.querySelector('span')).toHaveClass('badge-warning');
+      expect(urgentContainer.querySelector('span')).toHaveClass('badge-error');
     });
   });
 
@@ -181,25 +187,26 @@ describe('Badge Component', () => {
     it('applies info variant for progress < 50%', () => {
       const { container } = renderWithProviders(<ProgressBadge progress={25} />);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-primary-100');
+      expect(badge).toHaveClass('badge-info');
     });
 
-    it('applies warning variant for progress 50-99%', () => {
+    it('applies primary variant for progress 50-99%', () => {
       const { container } = renderWithProviders(<ProgressBadge progress={75} />);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-warning-100');
+      expect(badge).toHaveClass('badge-primary');
     });
 
     it('applies success variant for 100% progress', () => {
       const { container } = renderWithProviders(<ProgressBadge progress={100} />);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-success-100');
+      expect(badge).toHaveClass('badge-success');
     });
 
     it('handles edge case of exactly 50%', () => {
       const { container } = renderWithProviders(<ProgressBadge progress={50} />);
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-warning-100');
+      // Exactly 50% uses info variant (condition is > 50 for primary)
+      expect(badge).toHaveClass('badge-info');
     });
   });
 });

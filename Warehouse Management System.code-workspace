@@ -1,0 +1,123 @@
+{
+	"folders": [
+		{
+			"name": "Warehouse Management System",
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": {
+			"source.fixAll.eslint": "explicit",
+			"source.organizeImports": "explicit"
+		},
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.rulers": [
+			80,
+			120
+		],
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.trimAutoWhitespace": true,
+		"typescript.preferences.importModuleSpecifier": "relative",
+		"typescript.suggest.autoImports": true,
+		"typescript.suggest.completeFunctionCalls": true,
+		"typescript.inlayHints.parameterNames.enabled": "all",
+		"typescript.inlayHints.variableTypes.enabled": true,
+		"typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+		"files.autoSave": "afterDelay",
+		"files.autoSaveDelay": 1000,
+		"files.exclude": {
+			"**/.git": true,
+			"**/.DS_Store": true,
+			"**/node_modules": true,
+			"**/dist": true,
+			"**/build": true,
+			"**/.next": true,
+			"**/coverage": true
+		},
+		"files.watcherExclude": {
+			"**/.git/objects/**": true,
+			"**/.git/subtree-cache/**": true,
+			"**/node_modules/**": true,
+			"**/dist/**": true,
+			"**/build/**": true
+		},
+		"search.exclude": {
+			"**/node_modules": true,
+			"**/bower_components": true,
+			"**/dist": true,
+			"**/build": true,
+			"**/coverage": true,
+			"**/*.lock": true
+		},
+		"git.enableSmartCommit": true,
+		"git.autofetch": true,
+		"git.confirmSync": false,
+		"git.decorations.enabled": true,
+		"debug.console.closeOnEnd": false,
+		"debug.internalConsoleOptions": "openOnSessionStart",
+		"debug.saveBeforeStart": "allEditorsInActiveGroup",
+		"terminal.integrated.env.windows": {
+			"NODE_ENV": "development"
+		},
+		"terminal.integrated.scrollback": 10000,
+		"workbench.colorTheme": "One Dark Pro",
+		"workbench.iconTheme": "material-icon-theme",
+		"workbench.editor.enablePreview": false,
+		"workbench.editor.openPositioning": "last",
+		"extensions.ignoreRecommendations": false,
+		"extensions.showRecommendationsOnlyOnDemand": false,
+		"explorer.fileNesting.enabled": true,
+		"explorer.fileNesting.patterns": {
+			"*.ts": "${capture}.test.ts, ${capture}.spec.ts",
+			"*.tsx": "${capture}.test.tsx, ${capture}.spec.tsx",
+			"*.js": "${capture}.test.js, ${capture}.spec.js",
+			"*.jsx": "${capture}.test.jsx, ${capture}.spec.jsx",
+			"package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml",
+			"tsconfig.json": "tsconfig.*.json",
+			".env": ".env.*",
+			"README.md": "CHANGELOG.md, CONTRIBUTING.md, LICENSE"
+		},
+		"explorer.sortOrder": "type",
+		"breadcrumbs.enabled": true,
+		"breadcrumbs.filePath": "on",
+		"breadcrumbs.symbolPath": "on",
+		"editor.minimap.enabled": true,
+		"editor.minimap.renderCharacters": false,
+		"editor.minimap.maxColumn": 120,
+		"editor.scrollbar.vertical": "visible",
+		"editor.scrollbar.horizontal": "visible",
+		"editor.scrollbar.verticalScrollbarSize": 12,
+		"editor.scrollbar.horizontalScrollbarSize": 12,
+		"editor.guides.bracketPairs": true,
+		"editor.guides.indentation": true,
+		"editor.matchBrackets": "always",
+		"editor.links": true,
+		"editor.linkedEditing": true,
+		"editor.hover.delay": 300,
+		"editor.hover.sticky": true,
+		"editor.suggestSelection": "first",
+		"editor.quickSuggestions": {
+			"other": true,
+			"comments": false,
+			"strings": true
+		},
+		"editor.suggest.snippetsPreventQuickSuggestions": false,
+		"editor.wordBasedSuggestions": "matchingDocuments",
+		"editor.acceptSuggestionOnCommitCharacter": true,
+		"editor.acceptSuggestionOnEnter": "on",
+		"editor.tabCompletion": "on",
+		"editor.bracketPairColorization.enabled": true,
+		"editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+		"editor.unicodeHighlight.ambiguousCharacters": true,
+		"editor.unicodeHighlight.invisibleCharacters": true,
+		"editor.occurrencesHighlight": "multiFile",
+		"editor.selectionHighlight": true,
+		"editor.codeLens": true,
+		"editor.showUnused": true,
+		"editor.inlineSuggest.enabled": true,
+		"typescript.tsserver.experimental.enableProjectDiagnostics": true,
+		"editor.guides.highlightActiveIndentation": true
+	}
+}

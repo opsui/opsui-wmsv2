@@ -25,14 +25,13 @@ export class MetricsService {
     const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Active staff - count pickers and packers who are currently active (is_active = true)
+    // Active staff - count pickers and packers who are currently active (active = true)
     // This matches the logic in getPickerActivity for determining ACTIVE/PICKING status
     const activeStaffResult = await query(
       `SELECT COUNT(DISTINCT u.user_id) as count
        FROM users u
        WHERE u.active = true
          AND u.role IN ('PICKER', 'PACKER')
-         AND u.is_active = true
          AND u.current_view IS NOT NULL`
     );
 
@@ -172,12 +171,19 @@ export class MetricsService {
       averageTimePerTask: number;
     }>
   > {
+    logger.info('getAllPickersPerformance called with dates', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      startDateValid: !isNaN(startDate.getTime()),
+      endDateValid: !isNaN(endDate.getTime()),
+    });
+
     const result = await query(
       `SELECT
          u.user_id as picker_id,
          u.name as picker_name,
          COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') as tasks_completed,
-         COUNT(DISTINCT o.order_id) FILTER (WHERE o.status = 'SHIPPED') as orders_completed,
+         COUNT(DISTINCT o.order_id) FILTER (WHERE o.status IN ('PICKED', 'PACKING', 'PACKED', 'SHIPPED')) as orders_completed,
          COALESCE(SUM(pt.picked_quantity) FILTER (WHERE pt.status = 'COMPLETED'), 0) as total_picked,
          COALESCE(AVG(EXTRACT(EPOCH FROM (pt.completed_at - pt.started_at))), 0) as avg_time
        FROM users u
@@ -189,13 +195,123 @@ export class MetricsService {
       [startDate, endDate]
     );
 
+    logger.info('getAllPickersPerformance query result', {
+      rowCount: result.rowCount,
+      rows: result.rows,
+    });
+
     return result.rows.map(row => ({
-      pickerId: row.picker_id,
-      pickerName: row.picker_name,
-      tasksCompleted: parseInt(row.tasks_completed, 10),
-      ordersCompleted: parseInt(row.orders_completed, 10),
-      totalItemsPicked: parseInt(row.total_picked, 10),
-      averageTimePerTask: parseFloat(row.avg_time),
+      pickerId: row.pickerId,
+      pickerName: row.pickerName,
+      tasksCompleted: parseInt(row.tasksCompleted, 10),
+      ordersCompleted: parseInt(row.ordersCompleted, 10),
+      totalItemsPicked: parseInt(row.totalPicked, 10),
+      averageTimePerTask: parseFloat(row.avgTime),
+    }));
+  }
+
+  // --------------------------------------------------------------------------
+  // GET ALL PACKERS PERFORMANCE
+  // --------------------------------------------------------------------------
+
+  async getAllPackersPerformance(
+    startDate: Date,
+    endDate: Date
+  ): Promise<
+    Array<{
+      packerId: string;
+      packerName: string;
+      tasksCompleted: number;
+      ordersCompleted: number;
+      totalItemsProcessed: number;
+      averageTimePerTask: number;
+    }>
+  > {
+    logger.info('getAllPackersPerformance called with dates', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    });
+
+    const result = await query(
+      `SELECT
+         u.user_id as packer_id,
+         u.name as packer_name,
+         COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') as tasks_completed,
+         COUNT(DISTINCT o.order_id) FILTER (WHERE o.status IN ('PACKED', 'SHIPPED')) as orders_completed,
+         COALESCE(SUM(pt.packed_quantity) FILTER (WHERE pt.status = 'COMPLETED'), 0) as total_packed,
+         COALESCE(AVG(EXTRACT(EPOCH FROM (pt.completed_at - pt.started_at))), 0) as avg_time
+       FROM users u
+       INNER JOIN pack_tasks pt ON u.user_id = pt.packer_id
+       INNER JOIN orders o ON pt.order_id = o.order_id
+       WHERE pt.started_at >= $1 AND pt.started_at <= $2
+       GROUP BY u.user_id, u.name
+       ORDER BY tasks_completed DESC`,
+      [startDate, endDate]
+    );
+
+    logger.info('getAllPackersPerformance query result', {
+      rowCount: result.rowCount,
+    });
+
+    return result.rows.map(row => ({
+      packerId: row.packerId,
+      packerName: row.packerName,
+      tasksCompleted: parseInt(row.tasksCompleted, 10),
+      ordersCompleted: parseInt(row.ordersCompleted, 10),
+      totalItemsProcessed: parseInt(row.totalPacked, 10),
+      averageTimePerTask: parseFloat(row.avgTime),
+    }));
+  }
+
+  // --------------------------------------------------------------------------
+  // GET ALL STOCK CONTROLLERS PERFORMANCE
+  // --------------------------------------------------------------------------
+
+  async getAllStockControllersPerformance(
+    startDate: Date,
+    endDate: Date
+  ): Promise<
+    Array<{
+      controllerId: string;
+      controllerName: string;
+      tasksCompleted: number;
+      transactionsCompleted: number;
+      totalItemsProcessed: number;
+      averageTimePerTask: number;
+    }>
+  > {
+    logger.info('getAllStockControllersPerformance called with dates', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    });
+
+    const result = await query(
+      `SELECT
+         u.user_id as controller_id,
+         u.name as controller_name,
+         COUNT(*) as transactions_completed,
+         COALESCE(SUM(COALESCE(th.quantity_adjusted, 0) + COALESCE(th.quantity_received, 0)), 0) as total_processed,
+         COALESCE(AVG(EXTRACT(EPOCH FROM (th.completed_at - th.started_at))), 0) as avg_time
+       FROM users u
+       INNER JOIN transaction_history th ON u.user_id = th.performed_by
+       WHERE th.started_at >= $1 AND th.started_at <= $2
+         AND th.completed_at IS NOT NULL
+       GROUP BY u.user_id, u.name
+       ORDER BY transactions_completed DESC`,
+      [startDate, endDate]
+    );
+
+    logger.info('getAllStockControllersPerformance query result', {
+      rowCount: result.rowCount,
+    });
+
+    return result.rows.map(row => ({
+      controllerId: row.controllerId,
+      controllerName: row.controllerName,
+      tasksCompleted: parseInt(row.transactionsCompleted, 10),
+      transactionsCompleted: parseInt(row.transactionsCompleted, 10),
+      totalItemsProcessed: parseInt(row.totalProcessed, 10),
+      averageTimePerTask: parseFloat(row.avgTime),
     }));
   }
 
@@ -211,16 +327,16 @@ export class MetricsService {
       orderProgress: number;
       currentTask: string | null;
       lastViewedAt: Date | null;
-      status: 'ACTIVE' | 'IDLE' | 'PICKING';
+      status: 'ACTIVE' | 'IDLE' | 'PICKING' | 'INACTIVE';
       currentView: string | null;
     }>
   > {
-    // Step 1: Get all active pickers (filter by role)
-    // Use double-quoted AS alias to preserve camelCase naming (PostgreSQL lowercases unquoted aliases)
+    // Step 1: Get ALL pickers (filter by role), not just active ones
+    // The database client will map snake_case to camelCase automatically
     const activePickers = await query(`
-      SELECT user_id AS "userId", name
+      SELECT user_id, name, active
       FROM users
-      WHERE active = true AND role = 'PICKER'
+      WHERE role = 'PICKER'
       ORDER BY user_id
     `);
 
@@ -290,14 +406,14 @@ export class MetricsService {
       );
 
       // Get user data including current_view, is_active, and last login
-      // Use double-quoted AS aliases to preserve camelCase naming
+      // The database client will map snake_case to camelCase automatically
       const userResult = await query(
         `
         SELECT
-          last_login_at AS "lastLoginAt",
-          current_view AS "currentView",
-          current_view_updated_at AS "currentViewUpdatedAt",
-          is_active AS "isActive"
+          last_login_at,
+          current_view,
+          current_view_updated_at,
+          active
         FROM users
         WHERE user_id = $1
       `,
@@ -324,7 +440,7 @@ export class MetricsService {
         foundPicker: activePickers.rows.find(p => p.user_id === data.pickerId),
       });
 
-      let status: 'ACTIVE' | 'IDLE' | 'PICKING' = 'IDLE';
+      let status: 'ACTIVE' | 'IDLE' | 'PICKING' | 'INACTIVE' = 'IDLE';
       let currentOrderId: string | null = null;
       let orderProgress: number = 0;
       let currentTask: string | null = null;
@@ -334,10 +450,10 @@ export class MetricsService {
       const pickerInfo = activePickers.rows.find(p => p.userId === data.pickerId);
 
       // Use currentView and isActive to determine accurate status and page
-      // Database returns camelCase column names (currentView, currentViewUpdatedAt, isActive)
+      // Database client maps snake_case to camelCase automatically
       const currentView = data.userData?.currentView || null;
       const currentViewUpdated = data.userData?.currentViewUpdatedAt;
-      const isActive = data.userData?.isActive !== false; // Default to true if undefined
+      const isActive = data.userData?.active !== false; // Default to true if undefined
 
       // Set lastViewedAt to current view update time if available
       if (currentViewUpdated) {
@@ -352,12 +468,18 @@ export class MetricsService {
           (currentView.includes('/orders/') && currentView.includes('ORD-')));
 
       // Status determination logic
+      // A picker is INACTIVE if their account active flag is false
       // A picker is ACTIVE/PICKING only if:
       // 1. is_active is true (tab is open/focused)
       // 2. AND they have a current_view (not NULL)
       const hasCurrentView = currentView !== null && currentView !== undefined;
 
-      if (isActive && hasCurrentView) {
+      if (!isActive) {
+        // User account is inactive (logged out/disabled)
+        status = 'INACTIVE';
+        currentOrderId = null;
+        orderProgress = 0;
+      } else if (hasCurrentView) {
         // Picker is active and viewing a page
         if (isOnPickingPage) {
           status = 'PICKING'; // Actively picking an order
@@ -375,10 +497,14 @@ export class MetricsService {
       // Only extract order info if picker is ACTIVE or PICKING
       if (status !== 'IDLE') {
         // Extract order ID from current_view if it contains an order
-        if (currentView && currentView.includes('ORD-')) {
-          const orderMatch = currentView.match(/ORD-\d{8}-\d{4}/);
-          if (orderMatch) {
-            currentOrderId = orderMatch[0];
+        // Support both SO#### format and ORD-YYYYMMDD-#### format
+        if (currentView && (currentView.includes('ORD-') || currentView.includes('SO'))) {
+          const soMatch = currentView.match(/SO\d{4}/);
+          const ordMatch = currentView.match(/ORD-\d{8}-\d{4}/);
+          if (soMatch) {
+            currentOrderId = soMatch[0];
+          } else if (ordMatch) {
+            currentOrderId = ordMatch[0];
           }
         }
 
@@ -464,6 +590,60 @@ export class MetricsService {
   }
 
   // --------------------------------------------------------------------------
+  // GET THROUGHPUT BY TIME RANGE
+  // --------------------------------------------------------------------------
+
+  async getThroughputByRange(
+    range: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  ): Promise<Array<{ period: string; picked: number; shipped: number }>> {
+    let interval: string;
+    let dateFormat: string;
+
+    switch (range) {
+      case 'daily':
+        interval = '30 days';
+        dateFormat = 'YYYY-MM-DD';
+        break;
+      case 'weekly':
+        interval = '90 days';
+        dateFormat = 'IYYY-"W"IW'; // ISO week
+        break;
+      case 'monthly':
+        interval = '12 months';
+        dateFormat = 'YYYY-MM';
+        break;
+      case 'quarterly':
+        interval = '24 months';
+        dateFormat = 'YYYY-"Q"Q'; // Quarter
+        break;
+      case 'yearly':
+        interval = '60 months';
+        dateFormat = 'YYYY';
+        break;
+      default:
+        interval = '30 days';
+        dateFormat = 'YYYY-MM-DD';
+    }
+
+    const result = await query(`
+      SELECT
+        TO_CHAR(updated_at, '${dateFormat}') as period,
+        COUNT(*) FILTER (WHERE status = 'PICKED') as picked,
+        COUNT(*) FILTER (WHERE status = 'SHIPPED') as shipped
+      FROM orders
+      WHERE updated_at >= NOW() - INTERVAL '${interval}'
+      GROUP BY TO_CHAR(updated_at, '${dateFormat}')
+      ORDER BY period DESC
+    `);
+
+    return result.rows.map(row => ({
+      period: row.period,
+      picked: parseInt(row.picked || 0, 10),
+      shipped: parseInt(row.shipped || 0, 10),
+    }));
+  }
+
+  // --------------------------------------------------------------------------
   // GET TOP SKUS BY PICK FREQUENCY
   // --------------------------------------------------------------------------
 
@@ -490,6 +670,166 @@ export class MetricsService {
       sku: row.sku,
       name: row.name,
       picks: parseInt(row.picks, 10),
+    }));
+  }
+
+  // --------------------------------------------------------------------------
+  // GET TOP SKUS BY SCAN TYPE
+  // --------------------------------------------------------------------------
+
+  /**
+   * Get the interval string for the given time period
+   */
+  private getTimePeriodInterval(timePeriod: 'daily' | 'weekly' | 'monthly' | 'yearly'): string {
+    const intervals: Record<string, string> = {
+      daily: '1 day',
+      weekly: '7 days',
+      monthly: '30 days',
+      yearly: '365 days',
+    };
+    return intervals[timePeriod] || '30 days';
+  }
+
+  async getTopSKUsByScanType(
+    scanType: 'pick' | 'pack' | 'verify' | 'all',
+    limit: number = 10,
+    timePeriod: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly'
+  ): Promise<Array<{ sku: string; name: string; picks: number; scans?: number; packVerifies?: number }>> {
+    const interval = this.getTimePeriodInterval(timePeriod);
+    console.log('[MetricsService] getTopSKUsByScanType - scanType:', scanType, 'timePeriod:', timePeriod, 'interval:', interval);
+
+    if (scanType === 'pick') {
+      // Pick frequency - count pick_tasks
+      const result = await query(
+        `
+        SELECT
+          pt.sku,
+          s.name,
+          COUNT(*) as picks
+        FROM pick_tasks pt
+        INNER JOIN skus s ON pt.sku = s.sku
+        WHERE pt.started_at >= NOW() - INTERVAL '${interval}'
+        GROUP BY pt.sku, s.name
+        ORDER BY picks DESC
+        LIMIT $1
+        `,
+        [limit]
+      );
+
+      return result.rows.map(row => ({
+        sku: row.sku,
+        name: row.name,
+        picks: parseInt(row.picks, 10),
+        scans: 0,
+        packVerifies: 0,
+      }));
+    }
+
+    if (scanType === 'pack') {
+      // Pack verifies - count orders where status is PACKING or PACKED
+      const result = await query(
+        `
+        SELECT
+          oi.sku,
+          s.name,
+          COUNT(DISTINCT oi.order_id) as pack_verifies
+        FROM order_items oi
+        INNER JOIN orders o ON oi.order_id = o.order_id
+        INNER JOIN skus s ON oi.sku = s.sku
+        WHERE o.status IN ('PACKING', 'PACKED', 'SHIPPED')
+          AND o.updated_at >= NOW() - INTERVAL '${interval}'
+        GROUP BY oi.sku, s.name
+        ORDER BY pack_verifies DESC
+        LIMIT $1
+        `,
+        [limit]
+      );
+
+      return result.rows.map(row => ({
+        sku: row.sku,
+        name: row.name,
+        picks: 0,
+        scans: 0,
+        packVerifies: parseInt(row.packVerifies, 10),
+      }));
+    }
+
+    if (scanType === 'verify') {
+      // Verify scans - sum of verified_quantity from order_items
+      const result = await query(
+        `
+        SELECT
+          oi.sku,
+          s.name,
+          COALESCE(SUM(oi.verified_quantity), 0) as scans
+        FROM order_items oi
+        INNER JOIN orders o ON oi.order_id = o.order_id
+        INNER JOIN skus s ON oi.sku = s.sku
+        WHERE oi.verified_quantity > 0
+          AND o.updated_at >= NOW() - INTERVAL '${interval}'
+        GROUP BY oi.sku, s.name
+        ORDER BY scans DESC
+        LIMIT $1
+        `,
+        [limit]
+      );
+
+      return result.rows.map(row => ({
+        sku: row.sku,
+        name: row.name,
+        picks: 0,
+        scans: parseInt(row.scans, 10),
+        packVerifies: 0,
+      }));
+    }
+
+    // 'all' - combine picks, verifies, and pack operations
+    const result = await query(
+      `
+      SELECT
+        COALESCE(pick_data.sku, verify_data.sku, pack_data.sku) as sku,
+        COALESCE(pick_data.name, verify_data.name, pack_data.name) as name,
+        COALESCE(pick_data.picks, 0) as picks,
+        COALESCE(verify_data.scans, 0) as scans,
+        COALESCE(pack_data.pack_verifies, 0) as pack_verifies,
+        COALESCE(pick_data.picks, 0) + COALESCE(verify_data.scans, 0) + COALESCE(pack_data.pack_verifies, 0) as total
+      FROM (
+        SELECT pt.sku, s.name, COUNT(*) as picks
+        FROM pick_tasks pt
+        INNER JOIN skus s ON pt.sku = s.sku
+        WHERE pt.started_at >= NOW() - INTERVAL '${interval}'
+        GROUP BY pt.sku, s.name
+      ) pick_data
+      FULL OUTER JOIN (
+        SELECT oi.sku, s.name, SUM(oi.verified_quantity) as scans
+        FROM order_items oi
+        INNER JOIN orders o ON oi.order_id = o.order_id
+        INNER JOIN skus s ON oi.sku = s.sku
+        WHERE oi.verified_quantity > 0
+          AND o.updated_at >= NOW() - INTERVAL '${interval}'
+        GROUP BY oi.sku, s.name
+      ) verify_data ON pick_data.sku = verify_data.sku
+      FULL OUTER JOIN (
+        SELECT oi.sku, s.name, COUNT(DISTINCT oi.order_id) as pack_verifies
+        FROM order_items oi
+        INNER JOIN orders o ON oi.order_id = o.order_id
+        INNER JOIN skus s ON oi.sku = s.sku
+        WHERE o.status IN ('PACKING', 'PACKED', 'SHIPPED')
+          AND o.updated_at >= NOW() - INTERVAL '${interval}'
+        GROUP BY oi.sku, s.name
+      ) pack_data ON pick_data.sku = pack_data.sku
+      ORDER BY total DESC
+      LIMIT $1
+      `,
+      [limit]
+    );
+
+    return result.rows.map(row => ({
+      sku: row.sku,
+      name: row.name,
+      picks: parseInt(row.picks, 10),
+      scans: parseInt(row.scans, 10),
+      packVerifies: parseInt(row.packVerifies, 10),
     }));
   }
 
@@ -622,15 +962,16 @@ export class MetricsService {
       orderProgress: number;
       currentTask: string | null;
       lastViewedAt: Date | null;
-      status: 'ACTIVE' | 'IDLE' | 'PACKING';
+      status: 'ACTIVE' | 'IDLE' | 'PACKING' | 'INACTIVE';
       currentView: string | null;
     }>
   > {
-    // Step 1: Get all active packers (filter by role)
+    // Step 1: Get ALL packers (filter by role), not just active ones
+    // The database client will map snake_case to camelCase automatically
     const activePackers = await query(`
-      SELECT user_id AS "userId", name
+      SELECT user_id, name, active
       FROM users
-      WHERE active = true AND role = 'PACKER'
+      WHERE role = 'PACKER'
       ORDER BY user_id
     `);
 
@@ -683,13 +1024,14 @@ export class MetricsService {
       );
 
       // Get user data including current_view and last login
+      // The database client will map snake_case to camelCase automatically
       const userResult = await query(
         `
         SELECT
-          last_login_at AS "lastLoginAt",
-          current_view AS "currentView",
-          current_view_updated_at AS "currentViewUpdatedAt",
-          is_active AS "isActive"
+          last_login_at,
+          current_view,
+          current_view_updated_at,
+          active
         FROM users
         WHERE user_id = $1
       `,
@@ -709,7 +1051,7 @@ export class MetricsService {
 
     // Step 3: Map to response format
     const result = activityData.map(data => {
-      let status: 'ACTIVE' | 'IDLE' | 'PACKING' = 'IDLE';
+      let status: 'ACTIVE' | 'IDLE' | 'PACKING' | 'INACTIVE' = 'IDLE';
       let currentOrderId: string | null = null;
       let orderProgress: number = 0;
       let currentTask: string | null = null;
@@ -719,9 +1061,10 @@ export class MetricsService {
       const packerInfo = activePackers.rows.find(p => p.userId === data.packerId);
 
       // Use currentView and isActive to determine accurate status and page
+      // Database client maps snake_case to camelCase automatically
       const currentView = data.userData?.currentView || null;
       const currentViewUpdated = data.userData?.currentViewUpdatedAt;
-      const isActive = data.userData?.isActive !== false; // Default to true if undefined
+      const isActive = data.userData?.active !== false; // Default to true if undefined
 
       // Set lastViewedAt to current view update time if available
       if (currentViewUpdated) {
@@ -736,12 +1079,18 @@ export class MetricsService {
           (currentView.includes('/orders/') && currentView.includes('ORD-')));
 
       // Status determination logic
+      // A packer is INACTIVE if their account active flag is false
       // A packer is ACTIVE/PACKING only if:
       // 1. is_active is true (tab is open/focused)
       // 2. AND they have a current_view (not NULL)
       const hasCurrentView = currentView !== null && currentView !== undefined;
 
-      if (isActive && hasCurrentView) {
+      if (!isActive) {
+        // User account is inactive (logged out/disabled)
+        status = 'INACTIVE';
+        currentOrderId = null;
+        orderProgress = 0;
+      } else if (hasCurrentView) {
         if (isOnPackingPage) {
           status = 'PACKING';
         } else {
@@ -756,10 +1105,14 @@ export class MetricsService {
       // Only extract order info if packer is ACTIVE or PACKING
       if (status !== 'IDLE') {
         // Extract order ID from current_view if it contains an order
-        if (currentView && currentView.includes('ORD-')) {
-          const orderMatch = currentView.match(/ORD-\d{8}-\d{4}/);
-          if (orderMatch) {
-            currentOrderId = orderMatch[0];
+        // Support both SO#### format and ORD-YYYYMMDD-#### format
+        if (currentView && (currentView.includes('ORD-') || currentView.includes('SO'))) {
+          const soMatch = currentView.match(/SO\d{4}/);
+          const ordMatch = currentView.match(/ORD-\d{8}-\d{4}/);
+          if (soMatch) {
+            currentOrderId = soMatch[0];
+          } else if (ordMatch) {
+            currentOrderId = ordMatch[0];
           }
         }
 
@@ -862,15 +1215,16 @@ export class MetricsService {
       controllerId: string;
       controllerName: string;
       lastViewedAt: Date | null;
-      status: 'ACTIVE' | 'IDLE';
+      status: 'ACTIVE' | 'IDLE' | 'INACTIVE';
       currentView: string | null;
     }>
   > {
-    // Step 1: Get all active stock controllers (filter by role)
+    // Step 1: Get ALL stock controllers (filter by role), not just active ones
+    // The database client will map snake_case to camelCase automatically
     const activeControllers = await query(`
-      SELECT user_id AS "userId", name
+      SELECT user_id, name, active
       FROM users
-      WHERE active = true AND role = 'STOCK_CONTROLLER'
+      WHERE role = 'STOCK_CONTROLLER'
       ORDER BY user_id
     `);
 
@@ -887,13 +1241,14 @@ export class MetricsService {
     const controllerIds = activeControllers.rows.map(r => r.userId);
     const activityPromises = controllerIds.map(async controllerId => {
       // Get user data including current_view and last login
+      // The database client will map snake_case to camelCase automatically
       const userResult = await query(
         `
         SELECT
-          last_login_at AS "lastLoginAt",
-          current_view AS "currentView",
-          current_view_updated_at AS "currentViewUpdatedAt",
-          is_active AS "isActive"
+          last_login_at,
+          current_view,
+          current_view_updated_at,
+          active
         FROM users
         WHERE user_id = $1
       `,
@@ -910,16 +1265,17 @@ export class MetricsService {
 
     // Step 3: Map to response format
     const result = activityData.map(data => {
-      let status: 'ACTIVE' | 'IDLE' = 'IDLE';
+      let status: 'ACTIVE' | 'IDLE' | 'INACTIVE' = 'IDLE';
       let lastViewedAt: Date | null = null;
 
       // Find controller name from activeControllers
       const controllerInfo = activeControllers.rows.find(p => p.userId === data.controllerId);
 
       // Use currentView and isActive to determine accurate status and page
+      // Database client maps snake_case to camelCase automatically
       const currentView = data.userData?.currentView || null;
       const currentViewUpdated = data.userData?.currentViewUpdatedAt;
-      const isActive = data.userData?.isActive !== false; // Default to true if undefined
+      const isActive = data.userData?.active !== false; // Default to true if undefined
 
       // Set lastViewedAt to current view update time if available
       if (currentViewUpdated) {
@@ -927,12 +1283,15 @@ export class MetricsService {
       }
 
       // Status determination logic
+      // A stock controller is INACTIVE if their account active flag is false
       // A stock controller is ACTIVE only if:
       // 1. is_active is true (tab is open/focused)
       // 2. AND they have a current_view (not NULL)
       const hasCurrentView = currentView !== null && currentView !== undefined;
 
-      if (isActive && hasCurrentView) {
+      if (!isActive) {
+        status = 'INACTIVE';
+      } else if (hasCurrentView) {
         status = 'ACTIVE';
       } else {
         status = 'IDLE';

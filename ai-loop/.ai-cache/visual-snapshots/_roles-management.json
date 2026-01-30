@@ -1,0 +1,407 @@
+{
+  "route": "/roles-management",
+  "timestamp": "2026-01-23T05:51:26.762Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "1",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "ExceptionsOrders requiring attention",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 115
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Order Queue33 orders pending",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 181
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Active Staff0 staff members active",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 247
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "View all in Dashboard",
+      "visible": true,
+      "position": {
+        "x": 751.875,
+        "y": 340
+      },
+      "size": {
+        "width": 280,
+        "height": 16
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Back to Dashboard",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 97
+      },
+      "size": {
+        "width": 184.625,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-3xl",
+      "text": "Custom Roles Management",
+      "visible": true,
+      "position": {
+        "x": 104,
+        "y": 149
+      },
+      "size": {
+        "width": 449.203125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Create Role",
+      "visible": true,
+      "position": {
+        "x": 1114.59375,
+        "y": 166
+      },
+      "size": {
+        "width": 133.40625,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "warehouse manager",
+      "visible": true,
+      "position": {
+        "x": 121,
+        "y": 502
+      },
+      "size": {
+        "width": 189.078125,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Edit",
+      "visible": true,
+      "position": {
+        "x": 461.609375,
+        "y": 502
+      },
+      "size": {
+        "width": 83.390625,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 553,
+        "y": 502
+      },
+      "size": {
+        "width": 50,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Picker",
+      "visible": true,
+      "position": {
+        "x": 741,
+        "y": 502
+      },
+      "size": {
+        "width": 57.5,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Packer",
+      "visible": true,
+      "position": {
+        "x": 121,
+        "y": 834
+      },
+      "size": {
+        "width": 63.578125,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Stock Controller",
+      "visible": true,
+      "position": {
+        "x": 741,
+        "y": 834
+      },
+      "size": {
+        "width": 148.265625,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Inwards",
+      "visible": true,
+      "position": {
+        "x": 121,
+        "y": 1166
+      },
+      "size": {
+        "width": 73.484375,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Supervisor",
+      "visible": true,
+      "position": {
+        "x": 741,
+        "y": 1166
+      },
+      "size": {
+        "width": 100.890625,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 121,
+        "y": 1778
+      },
+      "size": {
+        "width": 59.71875,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Production",
+      "visible": true,
+      "position": {
+        "x": 741,
+        "y": 1778
+      },
+      "size": {
+        "width": 100.671875,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Sales",
+      "visible": true,
+      "position": {
+        "x": 121,
+        "y": 2950
+      },
+      "size": {
+        "width": 50.046875,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Maintenance",
+      "visible": true,
+      "position": {
+        "x": 741,
+        "y": 2950
+      },
+      "size": {
+        "width": 120.03125,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-xl",
+      "text": "Rma",
+      "visible": true,
+      "position": {
+        "x": 121,
+        "y": 3282
+      },
+      "size": {
+        "width": 41.046875,
+        "height": 28
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 19 buttons, 0 inputs, 0 links, 0 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Custom Roles Management\"."
+}

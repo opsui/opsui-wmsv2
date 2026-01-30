@@ -12,13 +12,10 @@ import {
   IntegrationProvider,
   IntegrationStatus,
   SyncJob,
-  SyncJobType,
-  SyncJobStatus,
+  SyncStatus,
   WebhookEvent,
   WebhookEventType,
-  WebhookEventStatus,
   CarrierAccount,
-  CarrierProvider,
 } from '@opsui/shared';
 
 // ============================================================================
@@ -46,7 +43,7 @@ export class IntegrationsService {
     const created = await this.repository.create(integration);
 
     // Create initial sync job to test connection
-    await this.createSyncJob(created.integrationId, SyncJobType.FULL_SYNC, 'system');
+    await this.createSyncJob(created.integrationId, 'FULL', 'system');
 
     return created;
   }
@@ -109,7 +106,7 @@ export class IntegrationsService {
 
   async createSyncJob(
     integrationId: string,
-    jobType: SyncJobType,
+    syncType: 'FULL' | 'INCREMENTAL',
     triggeredBy: string
   ): Promise<SyncJob> {
     const integration = await this.repository.findById(integrationId);
@@ -117,15 +114,20 @@ export class IntegrationsService {
       throw new Error('Integration not found');
     }
 
-    if (integration.status !== IntegrationStatus.ACTIVE) {
-      throw new Error('Integration must be active to run sync jobs');
+    if (integration.status !== IntegrationStatus.CONNECTED) {
+      throw new Error('Integration must be connected to run sync jobs');
     }
 
     const job = await this.repository.createSyncJob({
       integrationId,
-      jobType,
-      status: SyncJobStatus.PENDING,
-      triggeredBy,
+      syncType,
+      direction: integration.syncSettings.direction,
+      status: SyncStatus.PENDING,
+      startedAt: new Date(),
+      startedBy: triggeredBy,
+      recordsProcessed: 0,
+      recordsSucceeded: 0,
+      recordsFailed: 0,
     });
 
     // Start the sync job asynchronously
@@ -140,14 +142,13 @@ export class IntegrationsService {
     try {
       // Update status to running
       await this.repository.updateSyncJob(jobId, {
-        status: SyncJobStatus.RUNNING,
+        status: SyncStatus.RUNNING,
       });
 
-      await this.repository.createSyncJobLog({
-        jobId,
-        level: 'info',
+      await this.repository.createSyncLogEntry(jobId, {
+        level: 'INFO',
         message: `Starting ${integration.type} sync job`,
-        details: { provider: integration.provider },
+        errorDetails: { provider: integration.provider },
       });
 
       // Execute sync based on integration type
@@ -155,7 +156,7 @@ export class IntegrationsService {
 
       // Update job with results
       await this.repository.updateSyncJob(jobId, {
-        status: SyncJobStatus.COMPLETED,
+        status: SyncStatus.COMPLETED,
         recordsProcessed: result.totalProcessed,
         recordsSucceeded: result.succeeded,
         recordsFailed: result.failed,
@@ -165,34 +166,31 @@ export class IntegrationsService {
       // Update integration last sync
       await this.repository.update(integration.integrationId, {
         lastSyncAt: new Date(),
-        lastSyncStatus: result.failed > 0 ? 'PARTIAL_FAILURE' : 'SUCCESS',
       });
 
-      await this.repository.createSyncJobLog({
-        jobId,
-        level: result.failed > 0 ? 'warn' : 'info',
+      await this.repository.createSyncLogEntry(jobId, {
+        level: result.failed > 0 ? 'WARN' : 'INFO',
         message: `Sync completed: ${result.succeeded} succeeded, ${result.failed} failed`,
-        details: result,
+        errorDetails: result,
       });
     } catch (error: any) {
       // Update job with error
       await this.repository.updateSyncJob(jobId, {
-        status: SyncJobStatus.FAILED,
+        status: SyncStatus.FAILED,
         completedAt: new Date(),
         errorMessage: error.message,
       });
 
-      await this.repository.createSyncJobLog({
-        jobId,
-        level: 'error',
+      await this.repository.createSyncLogEntry(jobId, {
+        level: 'ERROR',
         message: 'Sync job failed',
-        details: { error: error.message },
+        errorDetails: { error: error.message },
       });
 
-      // Update integration last sync status
+      // Update integration last sync
       await this.repository.update(integration.integrationId, {
         lastSyncAt: new Date(),
-        lastSyncStatus: 'FAILED',
+        lastError: error.message,
       });
     }
   }
@@ -277,7 +275,7 @@ export class IntegrationsService {
       integrationId,
       eventType,
       payload,
-      status: WebhookEventStatus.PENDING,
+      status: 'PENDING',
       processingAttempts: 0,
     });
 
@@ -292,30 +290,26 @@ export class IntegrationsService {
   private async processWebhookEvent(eventId: string, integration: Integration): Promise<void> {
     try {
       const event = await this.findWebhookEvent(eventId);
-      if (!event || event.status === WebhookEventStatus.PROCESSED) {
+      if (!event || event.status === 'PROCESSED') {
         return;
       }
-
-      // Update status to processing
-      await this.repository.updateWebhookEvent(eventId, {
-        status: WebhookEventStatus.PROCESSING,
-        processingAttempts: (event.processingAttempts || 0) + 1,
-      });
 
       // Process based on event type
       await this.executeWebhookAction(event, integration);
 
       // Mark as processed
       await this.repository.updateWebhookEvent(eventId, {
-        status: WebhookEventStatus.PROCESSED,
+        status: 'PROCESSED',
         processedAt: new Date(),
+        processingAttempts: (event.processingAttempts || 0) + 1,
       });
     } catch (error: any) {
       // Check if we should retry
       const event = await this.findWebhookEvent(eventId);
       if (event && event.processingAttempts! < 3) {
         await this.repository.updateWebhookEvent(eventId, {
-          status: WebhookEventStatus.PENDING,
+          status: 'PENDING',
+          processingAttempts: event.processingAttempts! + 1,
           errorMessage: error.message,
         });
 
@@ -327,7 +321,7 @@ export class IntegrationsService {
       } else {
         // Max retries reached, mark as failed
         await this.repository.updateWebhookEvent(eventId, {
-          status: WebhookEventStatus.FAILED,
+          status: 'FAILED',
           errorMessage: `Max retries exceeded: ${error.message}`,
         });
       }
@@ -351,7 +345,7 @@ export class IntegrationsService {
       case WebhookEventType.INVENTORY_UPDATED:
         await this.handleInventoryUpdated(event.payload, integration);
         break;
-      case WebhookEventType.SHIPMENT_STATUS_UPDATE:
+      case WebhookEventType.TRACKING_UPDATED:
         await this.handleShipmentStatusUpdate(event.payload, integration);
         break;
       default:
@@ -399,9 +393,10 @@ export class IntegrationsService {
   // ========================================================================
 
   async createCarrierAccount(
-    account: Omit<CarrierAccount, 'carrierAccountId' | 'createdAt'>
+    integrationId: string,
+    account: Omit<CarrierAccount, 'accountId' | 'createdAt'>
   ): Promise<CarrierAccount> {
-    const integration = await this.repository.findById(account.integrationId);
+    const integration = await this.repository.findById(integrationId);
     if (!integration) {
       throw new Error('Integration not found');
     }
@@ -429,12 +424,12 @@ export class IntegrationsService {
   // ========================================================================
 
   private validateConfiguration(provider: IntegrationProvider, configuration: any): void {
-    const requiredFields = this.getRequiredFieldsForProvider(provider);
-    const missingFields = requiredFields.filter(field => !configuration[field]);
+    const requiredAuthFields = this.getRequiredFieldsForProvider(provider);
+    const missingFields = requiredAuthFields.filter(field => !configuration.auth?.[field]);
 
     if (missingFields.length > 0) {
       throw new Error(
-        `Missing required configuration fields for ${provider}: ${missingFields.join(', ')}`
+        `Missing required auth configuration fields for ${provider}: ${missingFields.join(', ')}`
       );
     }
   }
@@ -469,7 +464,7 @@ export class IntegrationsService {
     // In production, this would make actual API calls to verify credentials
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        if (integration.configuration.apiKey === 'invalid') {
+        if (integration.configuration.auth.apiKey === 'invalid') {
           reject(new Error('Invalid API credentials'));
         } else {
           resolve();

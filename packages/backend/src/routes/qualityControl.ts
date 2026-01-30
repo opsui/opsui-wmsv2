@@ -31,10 +31,11 @@ router.post(
 
     // Validate required fields
     if (!checklistName || !inspectionType || !items || !Array.isArray(items)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const checklist = await qualityControlService.createInspectionChecklist({
@@ -115,10 +116,11 @@ router.post(
       !sku ||
       quantityInspected === undefined
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const inspection = await qualityControlService.createInspection({
@@ -209,10 +211,11 @@ router.patch(
     } = req.body;
 
     if (!status) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Status is required',
         code: 'MISSING_STATUS',
       });
+      return;
     }
 
     const inspection = await qualityControlService.updateInspectionStatus({
@@ -256,10 +259,11 @@ router.post(
 
     // Validate required fields
     if (!inspectionId || !checklistItemId || result === undefined || passed === undefined) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const inspectionResult = await qualityControlService.saveInspectionResult({
@@ -295,7 +299,6 @@ router.post(
       items,
       totalRefundAmount,
       restockingFee,
-      notes,
     } = req.body;
 
     // Validate required fields
@@ -308,10 +311,11 @@ router.post(
       !Array.isArray(items) ||
       !totalRefundAmount
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const returnAuth = await qualityControlService.createReturnAuthorization({
@@ -323,7 +327,6 @@ router.post(
       authorizedBy: req.user!.userId,
       totalRefundAmount,
       restockingFee,
-      notes,
     });
 
     res.status(201).json(returnAuth);
@@ -375,10 +378,11 @@ router.patch(
     const { status } = req.body;
 
     if (!status) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Status is required',
         code: 'MISSING_STATUS',
       });
+      return;
     }
 
     const returnAuth = await qualityControlService.updateReturnAuthorizationStatus(

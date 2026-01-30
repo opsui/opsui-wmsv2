@@ -12,6 +12,10 @@
       "Bash(npm run build)",
       "Bash(netstat:*)",
       "Bash(npm run dev:*)",
+      "Bash(npm run dev:restart:*)",
+      "Bash(npm run dev:smart:*)",
+      "Bash(npm run dev:safe:*)",
+      "Bash(npm run db:*)",
       "Bash(npm run docker:up:*)",
       "Bash(docker-compose logs:*)",
       "Bash(docker-compose restart:*)",
@@ -38,7 +42,13 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(docker start:*)",
+      "mcp__wms-dev-accelerator__*",
+      "mcp__postgres__*",
+      "mcp__filesystem__*",
+      "mcp__github__*",
+      "Bash(npm run type-check:*)"
     ]
   },
   "mcpServers": {
@@ -50,103 +60,43 @@
       "env": {
         "WMS_WORKSPACE_ROOT": "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
       }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://wms_user:wms_password@localhost:5432/wms_db"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
+      ]
+    },
+    "glm": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "tsx",
+        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\src\\index.ts"
+      ],
+      "env": {
+        "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW"
+      }
     }
-  },
-  "cline.supreme.enabled": true,
-  "cline.supreme.behaviorProfile": "claude-enhanced",
-  "cline.supreme.cognitiveFrameworks": [
-    "sixThinkingHats",
-    "firstPrinciples",
-    "systemsThinking",
-    "analogicalReasoning",
-    "counterfactualAnalysis"
-  ],
-  "cline.supreme.autoAnalysis": true,
-  "cline.supreme.proactiveSuggestions": true,
-  "cline.supreme.contextAwareness": "full",
-  "cline.supreme.qualityGates": "strict",
-  "cline.supreme.securityFirst": true,
-  "cline.supreme.testCoverage": "comprehensive",
-  "cline.supreme.documentation": "strategic",
-  "cline.supreme.refactoring": "ruleOfThree",
-  "cline.supreme.performance": "profileFirst",
-  "cline.supreme.parallelProcessing": true,
-  "cline.supreme.metacognition": true,
-  "cline.supreme.continuousLearning": true,
-  "cline.supreme.patternRecognition": true,
-  "cline.supreme.architecturalAwareness": true,
-  "cline.supreme.domainKnowledge": {
-    "warehouse": true,
-    "fulfillment": true,
-    "inventory": true,
-    "orderManagement": true
-  },
-  "cline.supreme.codeQuality": {
-    "typeSafety": "strict",
-    "errorHandling": "comprehensive",
-    "namingConventions": "enforced",
-    "maxFunctionLength": 50,
-    "maxClassLength": 300,
-    "maxParameters": 4,
-    "requireTests": true,
-    "minCoverage": 80,
-    "criticalPathCoverage": 100
-  },
-  "cline.supreme.executionProtocol": {
-    "analyzeBeforeActing": true,
-    "readRelatedFiles": true,
-    "searchPatterns": true,
-    "planCompleteChange": true,
-    "considerBackwardCompatibility": true,
-    "identifyTestUpdates": true,
-    "parallelizeIndependent": true,
-    "maintainContext": true
-  },
-  "cline.supreme.communication": {
-    "structured": true,
-    "evidenceBased": true,
-    "actionable": true,
-    "comprehensive": true,
-    "includeAnalysis": true,
-    "includeImplications": true,
-    "includeNextSteps": true,
-    "includeLearning": true,
-    "admitUncertainty": true,
-    "explainReasoning": true
-  },
-  "cline.supreme.securityProtocol": {
-    "inputValidation": true,
-    "authentication": true,
-    "sqlInjection": true,
-    "xss": true,
-    "csrf": true,
-    "rateLimiting": true,
-    "errorSanitization": true,
-    "dependencies": true,
-    "secrets": true,
-    "auditTrail": true
-  },
-  "cline.supreme.toolUsage": {
-    "preferRead": true,
-    "preferEdit": true,
-    "preferGlob": true,
-    "preferGrep": true,
-    "batchIndependent": true,
-    "useTaskForComplex": true,
-    "launchInParallel": true,
-    "thinkAsynchronously": true
-  },
-  "cline.supreme.unbreakableRules": [
-    "neverGuess",
-    "neverSkipReadingFiles",
-    "neverMakeAssumptions",
-    "neverShipWithoutThinking",
-    "neverCompromiseQuality",
-    "neverLeaveCodebaseWorse",
-    "neverStopLearning",
-    "alwaysBuildForLongTerm"
-  ],
-  "glm.apiKey": "YOUR_GLM_API_KEY_HERE",
-  "glm.model": "glm-4.7",
-  "glm.endpoint": "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+  }
 }

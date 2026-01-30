@@ -33,10 +33,11 @@ router.post(
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Refresh token is required',
         code: 'MISSING_REFRESH_TOKEN',
       });
+      return;
     }
 
     const tokens = await authService.refreshToken(refreshToken);
@@ -68,10 +69,11 @@ router.get(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     const user = await authService.getUserById(req.user.userId);
@@ -88,19 +90,21 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Current password and new password are required',
         code: 'MISSING_PASSWORDS',
       });
+      return;
     }
 
     await authService.changePassword(req.user.userId, currentPassword, newPassword);
@@ -117,20 +121,22 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     const { view } = req.body;
 
     // Allow empty string to clear the current view
     if (view === undefined) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'View is required',
         code: 'MISSING_VIEW',
       });
+      return;
     }
 
     await authService.updateCurrentView(req.user.userId, view);
@@ -168,19 +174,21 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     const { role } = req.body;
 
     if (!role) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Role is required',
         code: 'MISSING_ROLE',
       });
+      return;
     }
 
     // Validate role (including new roles)
@@ -197,14 +205,15 @@ router.post(
       'RMA',
     ];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid role',
         code: 'INVALID_ROLE',
       });
+      return;
     }
 
     const user = await authService.setActiveRole(req.user.userId, role);
-    return res.json({ user, activeRole: role });
+    res.json({ user, activeRole: role });
   })
 );
 
@@ -218,10 +227,11 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     // Accept both camelCase and snake_case (frontend converts to snake_case)
@@ -229,10 +239,11 @@ router.post(
     const role = activeRole || active_role;
 
     if (!role) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Active role is required',
         code: 'MISSING_ROLE',
       });
+      return;
     }
 
     // Validate role (including new roles)
@@ -249,10 +260,11 @@ router.post(
       'RMA',
     ];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid role',
         code: 'INVALID_ROLE',
       });
+      return;
     }
 
     const user = await authService.setActiveRole(req.user.userId, role);
@@ -266,7 +278,7 @@ router.post(
       activeRole: role,
     });
 
-    return res.json({ user, activeRole: role, accessToken: newAccessToken });
+    res.json({ user, activeRole: role, accessToken: newAccessToken });
   })
 );
 

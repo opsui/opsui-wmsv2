@@ -19,6 +19,7 @@ import {
   AddTrackingEventDTO,
   Address,
 } from '@opsui/shared';
+import { notifyUser, broadcastEvent, NotificationType, NotificationPriority } from './notificationHelper';
 
 // ============================================================================
 // SHIPPING SERVICE
@@ -36,7 +37,12 @@ export class ShippingService {
     const client = await getPool();
 
     const result = await client.query(
-      `SELECT * FROM carriers WHERE is_active = true ORDER BY name`,
+      `SELECT * FROM carriers WHERE is_active = true ORDER BY
+        CASE
+          WHEN carrier_id LIKE 'CARR-%' THEN 0
+          ELSE 1
+        END,
+        name`,
       []
     );
 
@@ -264,7 +270,34 @@ export class ShippingService {
     }
 
     logger.info('Shipment status updated', { shipmentId, status, userId });
-    return await this.getShipment(shipmentId);
+
+    const shipment = await this.getShipment(shipmentId);
+
+    // Send notification when shipment is shipped
+    if (status === ShipmentStatus.SHIPPED && userId) {
+      await notifyUser({
+        userId,
+        type: NotificationType.ORDER_SHIPPED,
+        title: 'Order Shipped',
+        message: `Order ${shipment.orderId} has been shipped via ${shipment.carrierId}`,
+        priority: NotificationPriority.NORMAL,
+        data: {
+          shipmentId,
+          orderId: shipment.orderId,
+          carrierId: shipment.carrierId,
+          trackingNumber: shipment.trackingNumber,
+        },
+      });
+
+      // Broadcast to all connected clients
+      broadcastEvent('order:shipped' as any, {
+        orderId: shipment.orderId,
+        shipmentId,
+        trackingNumber: shipment.trackingNumber,
+      });
+    }
+
+    return shipment;
   }
 
   /**

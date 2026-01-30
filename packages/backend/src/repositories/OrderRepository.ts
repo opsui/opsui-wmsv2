@@ -10,6 +10,12 @@ import { query } from '../db/client';
 import { ConflictError, NotFoundError } from '@opsui/shared';
 import { logger } from '../config/logger';
 import { generatePickTaskId, generateOrderId } from '@opsui/shared';
+import {
+  FETCH_PICK_TASKS_WITH_BARCODE_QUERY,
+  FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY,
+  getOrderItemsQuery,
+  mapOrderItem,
+} from './queries/OrderQueries';
 
 // ============================================================================
 // ORDER REPOSITORY
@@ -97,45 +103,31 @@ export class OrderRepository extends BaseRepository<Order> {
     let itemsResult: any;
     let progress = 0;
 
-    // For PICKING orders, return pick tasks; for PENDING orders, return order items
-    if (order.status === OrderStatus.PICKING) {
-      // Get pick tasks with item details including barcode
-      itemsResult = await query(
-        `SELECT pt.pick_task_id as order_item_id, pt.order_id, pt.sku, pt.name, s.barcode, pt.target_bin as bin_location, pt.quantity, pt.picked_quantity as picked_quantity, 0 as verified_quantity, pt.status, pt.completed_at FROM pick_tasks pt LEFT JOIN skus s ON pt.sku = s.sku WHERE pt.order_id = $1 ORDER BY pt.pick_task_id ASC`,
-        [orderId]
-      );
+    // Use centralized query based on order status
+    const itemsQuery = getOrderItemsQuery(order.status);
+    itemsResult = await query(itemsQuery, [orderId]);
 
-      // Calculate progress based on completed pick tasks
-      if (itemsResult.rows.length > 0) {
-        const totalTasks = itemsResult.rows.length;
-        const completedTasks = itemsResult.rows.filter(
-          (item: any) => item.status === 'COMPLETED'
-        ).length;
-        progress = Math.round((completedTasks / totalTasks) * 100);
-      }
-    } else {
-      // For PENDING, PICKED, and other statuses, get order items with barcode from SKUs
-      itemsResult = await query<OrderItem>(
-        `SELECT oi.order_item_id, oi.order_id, oi.sku, oi.name, s.barcode, oi.bin_location, oi.quantity, oi.picked_quantity, COALESCE(oi.verified_quantity, 0) as verified_quantity, oi.status, oi.skip_reason FROM order_items oi LEFT JOIN skus s ON oi.sku = s.sku WHERE oi.order_id = $1 ORDER BY oi.order_item_id`,
-        [orderId]
-      );
+    // Calculate progress based on completed pick tasks for PICKING orders
+    if (order.status === OrderStatus.PICKING && itemsResult.rows.length > 0) {
+      const totalTasks = itemsResult.rows.length;
+      const completedTasks = itemsResult.rows.filter(
+        (item: any) => item.status === 'COMPLETED'
+      ).length;
+      progress = Math.round((completedTasks / totalTasks) * 100);
+    }
 
-      // Debug logging for PACKING orders
-      if (order.status === OrderStatus.PACKING) {
-        logger.info('[getOrderWithItems] PACKING order items fetched', {
-          orderId,
-          itemCount: itemsResult.rows.length,
-          items: itemsResult.rows.map((item: any) => ({
-            orderItemId: item.order_item_id,
-            sku: item.sku,
-            verifiedQuantity: item.verified_quantity,
-            quantity: item.quantity,
-          })),
-        });
-      }
-
-      // Progress is 0 for non-PICKING orders
-      progress = 0;
+    // Debug logging for PACKING orders
+    if (order.status === OrderStatus.PACKING) {
+      logger.info('[getOrderWithItems] PACKING order items fetched', {
+        orderId,
+        itemCount: itemsResult.rows.length,
+        items: itemsResult.rows.map((item: any) => ({
+          orderItemId: item.order_item_id,
+          sku: item.sku,
+          verifiedQuantity: item.verified_quantity,
+          quantity: item.quantity,
+        })),
+      });
     }
 
     return {
@@ -226,50 +218,14 @@ export class OrderRepository extends BaseRepository<Order> {
       [...params, limit, offset]
     );
 
-    // Fetch items for each order
+    // Fetch items for each order using centralized queries
     const orders = await Promise.all(
       ordersResult.rows.map(async order => {
-        let itemsResult: any;
-
-        if (order.status === OrderStatus.PICKING) {
-          // For PICKING orders, return pick tasks
-          console.log('[OrderRepository] Fetching pick_tasks for order:', order.orderId);
-          itemsResult = await query(
-            `SELECT pt.pick_task_id as order_item_id, pt.order_id, pt.sku, pt.name, s.barcode, pt.target_bin as bin_location, pt.quantity, pt.picked_quantity as picked_quantity, 0 as verified_quantity, pt.status, pt.completed_at FROM pick_tasks pt LEFT JOIN skus s ON pt.sku = s.sku WHERE pt.order_id = $1 ORDER BY pt.pick_task_id ASC`,
-            [order.orderId]
-          );
-          console.log('[OrderRepository] Pick tasks result:', itemsResult.rows.length, 'items');
-        } else {
-          // For PENDING and other statuses, get order items with barcode
-          console.log(
-            '[OrderRepository] Fetching order_items for order:',
-            order.orderId,
-            'status:',
-            order.status
-          );
-          itemsResult = await query(
-            `SELECT oi.order_item_id, oi.order_id, oi.sku, oi.name, s.barcode, oi.bin_location, oi.quantity, oi.picked_quantity, COALESCE(oi.verified_quantity, 0) as verified_quantity, oi.status, oi.skip_reason FROM order_items oi LEFT JOIN skus s ON oi.sku = s.sku WHERE oi.order_id = $1 ORDER BY oi.order_item_id`,
-            [order.orderId]
-          );
-          console.log('[OrderRepository] Order items result:', itemsResult.rows.length, 'items');
-        }
+        const itemsQuery = getOrderItemsQuery(order.status);
+        const itemsResult = await query(itemsQuery, [order.orderId]);
 
         // Map database columns to camelCase for frontend
-        // Note: query() already converts to camelCase, so we access camelCase properties
-        const mappedItems = itemsResult.rows.map((item: any) => ({
-          orderItemId: item.orderItemId,
-          orderId: item.orderId,
-          sku: item.sku,
-          name: item.name,
-          barcode: item.barcode,
-          binLocation: item.binLocation,
-          quantity: item.quantity,
-          pickedQuantity: item.pickedQuantity,
-          verifiedQuantity: item.verifiedQuantity,
-          status: item.status,
-          skipReason: item.skipReason,
-          completedAt: item.completedAt,
-        }));
+        const mappedItems = itemsResult.rows.map(mapOrderItem);
 
         return {
           ...order,
@@ -317,7 +273,7 @@ export class OrderRepository extends BaseRepository<Order> {
           WHEN o.status = 'PACKING'
           THEN (
             SELECT COUNT(*) FILTER (
-              WHERE oi.verified_quantity >= oi.quantity
+              WHERE oi.picked_quantity >= oi.quantity
             ) FROM order_items oi WHERE oi.order_id = o.order_id
           )
           ELSE 0
@@ -327,7 +283,7 @@ export class OrderRepository extends BaseRepository<Order> {
           THEN ROUND(
             CAST(
               (SELECT COUNT(*) FILTER (
-                WHERE oi.verified_quantity >= oi.quantity
+                WHERE oi.picked_quantity >= oi.quantity
               ) FROM order_items oi WHERE oi.order_id = o.order_id) AS FLOAT
             ) / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.order_id), 0) * 100
           )
@@ -339,41 +295,14 @@ export class OrderRepository extends BaseRepository<Order> {
       params
     );
 
-    // Get items for each order
+    // Get items for each order using centralized queries
     const orders = await Promise.all(
       ordersResult.rows.map(async order => {
-        let itemsResult: any;
-
-        if (order.status === OrderStatus.PICKING) {
-          // For PICKING orders, return pick tasks
-          itemsResult = await query(
-            `SELECT pt.pick_task_id as order_item_id, pt.order_id, pt.sku, pt.name, s.barcode, pt.target_bin as bin_location, pt.quantity, pt.picked_quantity as picked_quantity, 0 as verified_quantity, pt.status, pt.completed_at FROM pick_tasks pt LEFT JOIN skus s ON pt.sku = s.sku WHERE pt.order_id = $1 ORDER BY pt.pick_task_id ASC`,
-            [order.orderId]
-          );
-        } else {
-          // For other statuses, get order items with barcode
-          itemsResult = await query(
-            `SELECT oi.order_item_id, oi.order_id, oi.sku, oi.name, s.barcode, oi.bin_location, oi.quantity, oi.picked_quantity, COALESCE(oi.verified_quantity, 0) as verified_quantity, oi.status, oi.skip_reason FROM order_items oi LEFT JOIN skus s ON oi.sku = s.sku WHERE oi.order_id = $1 ORDER BY oi.order_item_id`,
-            [order.orderId]
-          );
-        }
+        const itemsQuery = getOrderItemsQuery(order.status);
+        const itemsResult = await query(itemsQuery, [order.orderId]);
 
         // Map database columns to camelCase for frontend
-        // Note: query() already converts to camelCase, so we access camelCase properties
-        const mappedItems = itemsResult.rows.map((item: any) => ({
-          orderItemId: item.orderItemId,
-          orderId: item.orderId,
-          sku: item.sku,
-          name: item.name,
-          barcode: item.barcode,
-          binLocation: item.binLocation,
-          quantity: item.quantity,
-          pickedQuantity: item.pickedQuantity,
-          verifiedQuantity: item.verifiedQuantity,
-          status: item.status,
-          skipReason: item.skipReason,
-          completedAt: item.completedAt,
-        }));
+        const mappedItems = itemsResult.rows.map(mapOrderItem);
 
         return {
           ...order,
@@ -432,6 +361,9 @@ export class OrderRepository extends BaseRepository<Order> {
         `UPDATE orders SET status = 'PICKING', picker_id = $1, claimed_at = NOW() WHERE order_id = $2`,
         [pickerId, orderId]
       );
+
+      // Clean up any existing pick tasks for this order (from failed previous claims)
+      await client.query(`DELETE FROM pick_tasks WHERE order_id = $1`, [orderId]);
 
       // Generate pick tasks
       const itemsResult = await client.query(`SELECT * FROM order_items WHERE order_id = $1`, [

@@ -37,7 +37,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@shared': path.resolve(__dirname, '../shared/src'),
     },
   },
   server: {
@@ -86,7 +85,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', '@opsui/shared'],
     force: false, // Don't force optimization on every start
   },
 });

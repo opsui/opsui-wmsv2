@@ -5,6 +5,7 @@
  */
 
 import { Pool } from 'pg';
+import { nanoid } from 'nanoid';
 import {
   Integration,
   IntegrationType,
@@ -14,12 +15,11 @@ import {
   SyncSettings,
   WebhookSettings,
   SyncJob,
-  SyncJobStatus,
-  SyncJobLog,
+  SyncStatus,
+  SyncLogEntry,
   WebhookEvent,
   WebhookEventType,
   CarrierAccount,
-  CarrierProvider,
 } from '@opsui/shared';
 
 // ============================================================================
@@ -42,20 +42,24 @@ export class IntegrationsRepository {
       SELECT
         i.integration_id,
         i.name,
+        i.description,
         i.type,
         i.provider,
         i.status,
         i.configuration,
         i.sync_settings,
         i.webhook_settings,
+        i.enabled,
+        i.created_by,
+        i.updated_by,
         i.last_sync_at,
-        i.last_sync_status,
+        i.last_error,
         i.created_at,
         i.updated_at,
         json_agg(
           json_build_object(
             'carrierAccountId', ca.carrier_account_id,
-            'carrierName', ca.carrier_name,
+            'carrierName', ca.account_name,
             'accountNumber', ca.account_number,
             'isActive', ca.is_active
           ) ORDER BY ca.created_at
@@ -99,20 +103,24 @@ export class IntegrationsRepository {
       SELECT
         i.integration_id,
         i.name,
+        i.description,
         i.type,
         i.provider,
         i.status,
         i.configuration,
         i.sync_settings,
         i.webhook_settings,
+        i.enabled,
+        i.created_by,
+        i.updated_by,
         i.last_sync_at,
-        i.last_sync_status,
+        i.last_error,
         i.created_at,
         i.updated_at,
         json_agg(
           json_build_object(
             'carrierAccountId', ca.carrier_account_id,
-            'carrierName', ca.carrier_name,
+            'carrierName', ca.account_name,
             'accountNumber', ca.account_number,
             'isActive', ca.is_active
           ) ORDER BY ca.created_at
@@ -136,28 +144,32 @@ export class IntegrationsRepository {
     const query = `
       INSERT INTO integrations (
         name,
+        description,
         type,
         provider,
         status,
         configuration,
         sync_settings,
         webhook_settings,
-        last_sync_at,
-        last_sync_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        enabled,
+        created_by,
+        last_sync_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
 
     const values = [
       integration.name,
+      integration.description || '',
       integration.type,
       integration.provider,
       integration.status,
       JSON.stringify(integration.configuration),
       JSON.stringify(integration.syncSettings),
       integration.webhookSettings ? JSON.stringify(integration.webhookSettings) : null,
+      integration.enabled ?? true,
+      integration.createdBy,
       integration.lastSyncAt || null,
-      integration.lastSyncStatus || null,
     ];
 
     const result = await this.pool.query(query, values);
@@ -198,10 +210,6 @@ export class IntegrationsRepository {
       setClauses.push(`last_sync_at = $${paramIndex++}`);
       values.push(updates.lastSyncAt);
     }
-    if (updates.lastSyncStatus !== undefined) {
-      setClauses.push(`last_sync_status = $${paramIndex++}`);
-      values.push(updates.lastSyncStatus);
-    }
 
     if (setClauses.length === 0) {
       return this.findById(integrationId);
@@ -235,33 +243,35 @@ export class IntegrationsRepository {
   // ========================================================================
 
   async createSyncJob(
-    job: Omit<SyncJob, 'jobId' | 'createdAt' | 'completedAt' | 'duration'>
+    job: Omit<SyncJob, 'jobId' | 'logEntries'>
   ): Promise<SyncJob> {
     const query = `
       INSERT INTO sync_jobs (
         integration_id,
-        job_type,
+        sync_type,
+        direction,
         status,
         started_at,
+        started_by,
         records_processed,
         records_succeeded,
         records_failed,
-        error_message,
-        triggered_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        error_message
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
 
     const values = [
       job.integrationId,
-      job.jobType,
+      job.syncType,
+      job.direction,
       job.status,
       job.startedAt || new Date(),
+      job.startedBy,
       job.recordsProcessed || 0,
       job.recordsSucceeded || 0,
       job.recordsFailed || 0,
       job.errorMessage || null,
-      job.triggeredBy || null,
     ];
 
     const result = await this.pool.query(query, values);
@@ -311,7 +321,7 @@ export class IntegrationsRepository {
       values.push(updates.recordsProcessed);
     }
     if (updates.recordsSucceeded !== undefined) {
-      setClauses.push(`records_processed = $${paramIndex++}`);
+      setClauses.push(`records_succeeded = $${paramIndex++}`);
       values.push(updates.recordsSucceeded);
     }
     if (updates.recordsFailed !== undefined) {
@@ -350,31 +360,37 @@ export class IntegrationsRepository {
   // SYNC JOB LOGS
   // ========================================================================
 
-  async createSyncJobLog(log: Omit<SyncJobLog, 'logId' | 'timestamp'>): Promise<SyncJobLog> {
+  async createSyncLogEntry(jobId: string, log: Omit<SyncLogEntry, 'logId' | 'timestamp'>): Promise<SyncLogEntry> {
     const query = `
       INSERT INTO sync_job_logs (
         job_id,
         level,
         message,
         details,
+        entity_type,
+        entity_id,
+        external_id,
         timestamp
-      ) VALUES ($1, $2, $3, $4, $5)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
 
     const values = [
-      log.jobId,
+      jobId,
       log.level,
       log.message,
-      log.details ? JSON.stringify(log.details) : null,
+      log.errorDetails ? JSON.stringify(log.errorDetails) : null,
+      log.entityType || null,
+      log.entityId || null,
+      log.externalId || null,
       new Date(),
     ];
 
     const result = await this.pool.query(query, values);
-    return this.mapRowToSyncJobLog(result.rows[0]);
+    return this.mapRowToSyncLogEntry(result.rows[0]);
   }
 
-  async findSyncJobLogs(jobId: string, limit = 100): Promise<SyncJobLog[]> {
+  async findSyncLogEntrys(jobId: string, limit = 100): Promise<SyncLogEntry[]> {
     const query = `
       SELECT * FROM sync_job_logs
       WHERE job_id = $1
@@ -383,7 +399,7 @@ export class IntegrationsRepository {
     `;
 
     const result = await this.pool.query(query, [jobId, limit]);
-    return result.rows.map(this.mapRowToSyncJobLog);
+    return result.rows.map(this.mapRowToSyncLogEntry);
   }
 
   // ========================================================================
@@ -516,28 +532,32 @@ export class IntegrationsRepository {
   }
 
   async createCarrierAccount(
-    account: Omit<CarrierAccount, 'carrierAccountId' | 'createdAt'>
+    account: Omit<CarrierAccount, 'accountId' | 'createdAt'>
   ): Promise<CarrierAccount> {
     const query = `
       INSERT INTO carrier_accounts (
+        carrier_account_id,
         integration_id,
-        carrier_name,
-        carrier_provider,
+        carrier,
         account_number,
-        credentials,
+        account_name,
         is_active,
+        services,
+        configured_services,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
 
     const values = [
-      account.integrationId,
-      account.carrierName,
-      account.carrierProvider,
+      `CA-${nanoid(10)}`.toUpperCase(),
+      null, // integration_id - can be linked later
+      account.carrier,
       account.accountNumber,
-      JSON.stringify(account.credentials),
+      account.accountName,
       account.isActive,
+      JSON.stringify(account.services || []),
+      JSON.stringify(account.configuredServices || []),
       new Date(),
     ];
 
@@ -547,27 +567,35 @@ export class IntegrationsRepository {
 
   async updateCarrierAccount(
     carrierAccountId: string,
-    updates: Partial<Omit<CarrierAccount, 'carrierAccountId' | 'integrationId' | 'createdAt'>>
+    updates: Partial<Omit<CarrierAccount, 'accountId' | 'createdAt'>>
   ): Promise<CarrierAccount | null> {
     const setClauses: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
 
-    if (updates.carrierName !== undefined) {
-      setClauses.push(`carrier_name = $${paramIndex++}`);
-      values.push(updates.carrierName);
+    if (updates.carrier !== undefined) {
+      setClauses.push(`carrier = $${paramIndex++}`);
+      values.push(updates.carrier);
     }
     if (updates.accountNumber !== undefined) {
       setClauses.push(`account_number = $${paramIndex++}`);
       values.push(updates.accountNumber);
     }
-    if (updates.credentials !== undefined) {
-      setClauses.push(`credentials = $${paramIndex++}`);
-      values.push(JSON.stringify(updates.credentials));
+    if (updates.accountName !== undefined) {
+      setClauses.push(`account_name = $${paramIndex++}`);
+      values.push(updates.accountName);
     }
     if (updates.isActive !== undefined) {
       setClauses.push(`is_active = $${paramIndex++}`);
       values.push(updates.isActive);
+    }
+    if (updates.services !== undefined) {
+      setClauses.push(`services = $${paramIndex++}`);
+      values.push(JSON.stringify(updates.services));
+    }
+    if (updates.configuredServices !== undefined) {
+      setClauses.push(`configured_services = $${paramIndex++}`);
+      values.push(JSON.stringify(updates.configuredServices));
     }
 
     if (setClauses.length === 0) {
@@ -603,17 +631,20 @@ export class IntegrationsRepository {
     return {
       integrationId: row.integration_id,
       name: row.name,
+      description: row.description || '',
       type: row.type,
       provider: row.provider,
       status: row.status,
       configuration: row.configuration,
       syncSettings: row.sync_settings,
       webhookSettings: row.webhook_settings,
-      lastSyncAt: row.last_sync_at,
-      lastSyncStatus: row.last_sync_status,
+      enabled: row.enabled ?? true,
+      createdBy: row.created_by,
       createdAt: row.created_at,
+      updatedBy: row.updated_by,
       updatedAt: row.updated_at,
-      carrierAccounts: row.carrier_accounts || [],
+      lastSyncAt: row.last_sync_at,
+      lastError: row.last_error,
     };
   }
 
@@ -621,27 +652,30 @@ export class IntegrationsRepository {
     return {
       jobId: row.job_id,
       integrationId: row.integration_id,
-      jobType: row.job_type,
+      syncType: row.sync_type,
+      direction: row.direction,
       status: row.status,
       startedAt: row.started_at,
       completedAt: row.completed_at,
+      startedBy: row.started_by,
       recordsProcessed: row.records_processed,
       recordsSucceeded: row.records_succeeded,
       recordsFailed: row.records_failed,
       errorMessage: row.error_message,
-      triggeredBy: row.triggered_by,
-      duration: row.duration,
+      logEntries: [],
     };
   }
 
-  private mapRowToSyncJobLog(row: any): SyncJobLog {
+  private mapRowToSyncLogEntry(row: any): SyncLogEntry {
     return {
       logId: row.log_id,
-      jobId: row.job_id,
+      timestamp: row.timestamp,
       level: row.level,
       message: row.message,
-      details: row.details,
-      timestamp: row.timestamp,
+      entityType: row.entity_type,
+      entityId: row.entity_id,
+      externalId: row.external_id,
+      errorDetails: row.details ? JSON.parse(row.details) : null,
     };
   }
 
@@ -661,13 +695,13 @@ export class IntegrationsRepository {
 
   private mapRowToCarrierAccount(row: any): CarrierAccount {
     return {
-      carrierAccountId: row.carrier_account_id,
-      integrationId: row.integration_id,
-      carrierName: row.carrier_name,
-      carrierProvider: row.carrier_provider,
+      accountId: row.carrier_account_id,
+      carrier: row.carrier as IntegrationProvider,
       accountNumber: row.account_number,
-      credentials: row.credentials,
+      accountName: row.account_name,
       isActive: row.is_active,
+      services: row.services || [],
+      configuredServices: row.configured_services || [],
       createdAt: row.created_at,
     };
   }

@@ -21,6 +21,7 @@ import {
   InspectionType,
   DispositionAction,
 } from '@opsui/shared';
+import { notifyUser, NotificationType, NotificationPriority } from './notificationHelper';
 
 // ============================================================================
 // QUALITY CONTROL SERVICE
@@ -427,7 +428,33 @@ export class QualityControlService {
         inspectionId: dto.inspectionId,
         status: dto.status,
       });
-      return await this.getQualityInspection(dto.inspectionId);
+
+      // Send notification based on inspection result
+      const inspection = await this.getQualityInspection(dto.inspectionId);
+      const notificationType = dto.status === InspectionStatus.FAILED
+        ? NotificationType.QUALITY_FAILED
+        : dto.status === InspectionStatus.PASSED
+        ? NotificationType.QUALITY_APPROVED
+        : null;
+
+      if (notificationType && dto.approvedBy) {
+        await notifyUser({
+          userId: dto.approvedBy,
+          type: notificationType,
+          title: dto.status === InspectionStatus.FAILED ? 'Quality Inspection Failed' : 'Quality Inspection Approved',
+          message: `Inspection ${dto.inspectionId} for ${inspection.sku || 'N/A'} - ${dto.status}`,
+          priority: dto.status === InspectionStatus.FAILED ? NotificationPriority.HIGH : NotificationPriority.NORMAL,
+          data: {
+            inspectionId: dto.inspectionId,
+            sku: inspection.sku,
+            status: dto.status,
+            quantityPassed: dto.quantityPassed,
+            quantityFailed: dto.quantityFailed,
+          },
+        });
+      }
+
+      return inspection;
     } catch (error) {
       await client.query('ROLLBACK');
       logger.error('Error updating inspection status', error);
@@ -529,8 +556,8 @@ export class QualityControlService {
       await client.query(
         `INSERT INTO return_authorizations
           (return_id, order_id, customer_id, customer_name, return_reason, return_date,
-           authorized_by, total_refund_amount, restocking_fee, notes)
-         VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9)
+           authorized_by, total_refund_amount, restocking_fee)
+         VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, $8)
          RETURNING *`,
         [
           returnId,
@@ -541,7 +568,6 @@ export class QualityControlService {
           dto.authorizedBy,
           dto.totalRefundAmount,
           dto.restockingFee || null,
-          dto.notes || null,
         ]
       );
 

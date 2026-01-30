@@ -1,0 +1,732 @@
+{
+  "route": "/role-settings",
+  "timestamp": "2026-01-23T05:51:34.646Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "1",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "ExceptionsOrders requiring attention",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 115
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Order Queue33 orders pending",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 181
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Active Staff0 staff members active",
+      "visible": true,
+      "position": {
+        "x": 731.875,
+        "y": 247
+      },
+      "size": {
+        "width": 320,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "View all in Dashboard",
+      "visible": true,
+      "position": {
+        "x": 751.875,
+        "y": 340
+      },
+      "size": {
+        "width": 280,
+        "height": 16
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Back to Dashboard",
+      "visible": true,
+      "position": {
+        "x": 96,
+        "y": 97
+      },
+      "size": {
+        "width": 184.625,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-3xl",
+      "text": "Admin Settings",
+      "visible": true,
+      "position": {
+        "x": 168,
+        "y": 149
+      },
+      "size": {
+        "width": 257.609375,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Role Switcher",
+      "visible": true,
+      "position": {
+        "x": 133,
+        "y": 276
+      },
+      "size": {
+        "width": 174,
+        "height": 46
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Appearance",
+      "visible": true,
+      "position": {
+        "x": 133,
+        "y": 326
+      },
+      "size": {
+        "width": 174,
+        "height": 46
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Notifications & Sounds",
+      "visible": true,
+      "position": {
+        "x": 133,
+        "y": 376
+      },
+      "size": {
+        "width": 174,
+        "height": 66
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Account",
+      "visible": true,
+      "position": {
+        "x": 133,
+        "y": 446
+      },
+      "size": {
+        "width": 174,
+        "height": 46
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Role Switcher Settings",
+      "visible": true,
+      "position": {
+        "x": 401,
+        "y": 276
+      },
+      "size": {
+        "width": 758,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "My Role Badge Color",
+      "visible": true,
+      "position": {
+        "x": 401,
+        "y": 446
+      },
+      "size": {
+        "width": 172.609375,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 423.49530029296875,
+        "y": 548.4953002929688
+      },
+      "size": {
+        "width": 63.1968994140625,
+        "height": 63.1968994140625
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 497.1875,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 569.390625,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 641.59375,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 713.796875,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 786,
+        "y": 550
+      },
+      "size": {
+        "width": 60.1875,
+        "height": 60.1875
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 858.1875,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 930.390625,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1002.59375,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1074.796875,
+        "y": 550
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 425,
+        "y": 622.203125
+      },
+      "size": {
+        "width": 60.1875,
+        "height": 60.1875
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 497.1875,
+        "y": 622.203125
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 569.390625,
+        "y": 622.203125
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 641.59375,
+        "y": 622.203125
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 713.796875,
+        "y": 622.203125
+      },
+      "size": {
+        "width": 60.203125,
+        "height": 60.203125
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Admin View",
+      "visible": true,
+      "position": {
+        "x": 465,
+        "y": 780.40625
+      },
+      "size": {
+        "width": 77.25,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 699,
+        "y": 782.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Picking View",
+      "visible": true,
+      "position": {
+        "x": 877,
+        "y": 780.40625
+      },
+      "size": {
+        "width": 82.8125,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1111,
+        "y": 782.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Packing View",
+      "visible": true,
+      "position": {
+        "x": 465,
+        "y": 898.40625
+      },
+      "size": {
+        "width": 87.0625,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 699,
+        "y": 900.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Stock Control View",
+      "visible": true,
+      "position": {
+        "x": 877,
+        "y": 898.40625
+      },
+      "size": {
+        "width": 122.78125,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1111,
+        "y": 900.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Inwards View",
+      "visible": true,
+      "position": {
+        "x": 465,
+        "y": 1016.40625
+      },
+      "size": {
+        "width": 86.890625,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 699,
+        "y": 1018.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Sales View",
+      "visible": true,
+      "position": {
+        "x": 877,
+        "y": 1016.40625
+      },
+      "size": {
+        "width": 70.484375,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1111,
+        "y": 1018.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Production View",
+      "visible": true,
+      "position": {
+        "x": 465,
+        "y": 1134.40625
+      },
+      "size": {
+        "width": 105.921875,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 699,
+        "y": 1136.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "Maintenance View",
+      "visible": true,
+      "position": {
+        "x": 877,
+        "y": 1134.40625
+      },
+      "size": {
+        "width": 119.46875,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 1111,
+        "y": 1136.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "selector": "H3.text-sm",
+      "text": "RMA View",
+      "visible": true,
+      "position": {
+        "x": 465,
+        "y": 1252.40625
+      },
+      "size": {
+        "width": 66.640625,
+        "height": 20
+      }
+    },
+    {
+      "selector": "BUTTON.p-2",
+      "text": "",
+      "visible": true,
+      "position": {
+        "x": 699,
+        "y": 1254.40625
+      },
+      "size": {
+        "width": 32,
+        "height": 32
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 44 buttons, 0 inputs, 0 links, 0 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Admin Settings\"."
+}

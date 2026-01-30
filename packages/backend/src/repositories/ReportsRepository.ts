@@ -620,6 +620,101 @@ export class ReportsRepository {
 
     return null;
   }
+
+  /**
+   * Get an export job by ID
+   */
+  async getExportJob(jobId: string): Promise<ExportJob | null> {
+    const query = `
+      SELECT
+        job_id, name, entity_type, format, filters, fields,
+        status, created_by, created_at, completed_at,
+        file_url, file_size_bytes, record_count, error_message
+      FROM export_jobs
+      WHERE job_id = $1
+    `;
+
+    const result = await pool.query(query, [jobId]);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    return {
+      jobId: row.job_id,
+      name: row.name,
+      entityType: row.entity_type,
+      format: row.format,
+      filters: JSON.parse(row.filters || '[]'),
+      fields: row.fields,
+      status: row.status,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+      fileUrl: row.file_url,
+      fileSizeBytes: row.file_size_bytes,
+      recordCount: row.record_count,
+      errorMessage: row.error_message,
+    };
+  }
+
+  /**
+   * Get all export jobs with optional filtering
+   */
+  async findExportJobs(filters?: {
+    status?: ReportStatus;
+    entityType?: string;
+    createdBy?: string;
+  }): Promise<ExportJob[]> {
+    let query = `
+      SELECT
+        job_id, name, entity_type, format, filters, fields,
+        status, created_by, created_at, completed_at,
+        file_url, file_size_bytes, record_count, error_message
+      FROM export_jobs
+      WHERE 1=1
+    `;
+
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (filters?.status) {
+      query += ` AND status = $${paramIndex++}`;
+      params.push(filters.status);
+    }
+
+    if (filters?.entityType) {
+      query += ` AND entity_type = $${paramIndex++}`;
+      params.push(filters.entityType);
+    }
+
+    if (filters?.createdBy) {
+      query += ` AND created_by = $${paramIndex++}`;
+      params.push(filters.createdBy);
+    }
+
+    query += ` ORDER BY created_at DESC`;
+
+    const result = await pool.query(query, params);
+
+    return result.rows.map((row: any) => ({
+      jobId: row.job_id,
+      name: row.name,
+      entityType: row.entity_type,
+      format: row.format,
+      filters: JSON.parse(row.filters || '[]'),
+      fields: row.fields,
+      status: row.status,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+      fileUrl: row.file_url,
+      fileSizeBytes: row.file_size_bytes,
+      recordCount: row.record_count,
+      errorMessage: row.error_message,
+    }));
+  }
 }
 
 export const reportsRepository = new ReportsRepository();

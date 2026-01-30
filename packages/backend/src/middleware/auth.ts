@@ -17,8 +17,10 @@ import { UserRole, UnauthorizedError, ForbiddenError } from '@opsui/shared';
 export interface JWTPayload {
   userId: string;
   email: string;
-  role: UserRole;
+  role: UserRole; // Base role from database
+  baseRole: UserRole; // Alias for base role (same as role field)
   activeRole?: UserRole | null; // Active role for multi-role users
+  effectiveRole: UserRole; // The role being used (active role or base role)
   iat?: number;
   exp?: number;
 }
@@ -34,9 +36,31 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Verify JWT token and attach user to request
  * Supports active role switching for multi-role users
+ * TEST MODE: When config.testMode is true AND NOT in production, authentication is bypassed
  */
 export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   try {
+    // TEST MODE: Bypass authentication for automated testing ONLY in non-production environments
+    // SECURITY: Never bypass authentication in production, even if testMode is enabled
+    if (config.testMode && config.nodeEnv !== 'production') {
+      // Attach a mock admin user for testing
+      req.user = {
+        userId: 'test-admin-user',
+        email: 'test@wms.local',
+        role: UserRole.ADMIN,
+        baseRole: UserRole.ADMIN,
+        activeRole: null,
+        effectiveRole: UserRole.ADMIN,
+      };
+      logger.debug('TEST MODE: Authentication bypassed, using mock admin user');
+      return next();
+    }
+
+    // SECURITY: If testMode is enabled in production, log a warning and proceed with normal auth
+    if (config.testMode && config.nodeEnv === 'production') {
+      logger.warn('SECURITY WARNING: TEST_MODE is enabled in production. Ignoring and requiring authentication.');
+    }
+
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
@@ -47,15 +71,19 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
     const token = authHeader.substring(7);
 
     // Verify token
-    const decoded = jwt.verify(token, config.jwt.secret) as JWTPayload;
+    const decoded = jwt.verify(token, config.jwt.secret) as any;
 
-    // Use active role if set, otherwise use base role
+    // Determine effective role (active role or base role)
     const effectiveRole = decoded.activeRole || decoded.role;
 
-    // Attach user to request with effective role
+    // Attach user to request with all role information
     req.user = {
-      ...decoded,
+      userId: decoded.userId,
+      email: decoded.email,
       role: effectiveRole as UserRole,
+      baseRole: decoded.role as UserRole,
+      activeRole: decoded.activeRole || null,
+      effectiveRole: effectiveRole as UserRole,
     };
 
     logger.debug('User authenticated', {
@@ -84,11 +112,18 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
 
 /**
  * Check if user has required role
+ * ADMIN base role always has access regardless of effective role
  */
 export function authorize(...allowedRoles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       return next(new UnauthorizedError('User not authenticated'));
+    }
+
+    // ADMIN base role always has access to everything
+    if (req.user.baseRole === UserRole.ADMIN) {
+      next();
+      return;
     }
 
     if (!allowedRoles.includes(req.user.role)) {
@@ -103,13 +138,15 @@ export function authorize(...allowedRoles: UserRole[]) {
 
 /**
  * Check if user is admin
+ * ADMIN base role always has access regardless of effective role
  */
 export function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     return next(new UnauthorizedError('User not authenticated'));
   }
 
-  if (req.user.role !== UserRole.ADMIN) {
+  // Check base role - admins with any active role should still have admin access
+  if (req.user.baseRole !== UserRole.ADMIN) {
     return next(new ForbiddenError('Admin access required'));
   }
 
@@ -163,11 +200,14 @@ export function generateToken(user: {
   role: UserRole;
   activeRole?: UserRole | null;
 }): string {
+  const effectiveRole = user.activeRole || user.role;
   const payload: JWTPayload = {
     userId: user.userId,
     email: user.email,
     role: user.role,
+    baseRole: user.role,
     activeRole: user.activeRole,
+    effectiveRole: effectiveRole,
   };
 
   return jwt.sign(payload, config.jwt.secret, {
@@ -184,11 +224,14 @@ export function generateRefreshToken(user: {
   role: UserRole;
   activeRole?: UserRole | null;
 }): string {
+  const effectiveRole = user.activeRole || user.role;
   const payload: JWTPayload = {
     userId: user.userId,
     email: user.email,
     role: user.role,
+    baseRole: user.role,
     activeRole: user.activeRole,
+    effectiveRole: effectiveRole,
   };
 
   return jwt.sign(payload, config.jwt.secret, {

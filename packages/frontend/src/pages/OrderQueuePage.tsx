@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { orderApi, useOrderQueue, useClaimOrder } from '@/services/api';
+import { orderApi, useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
 import {
   Card,
   CardHeader,
@@ -16,12 +16,14 @@ import {
   Button,
   Badge,
   Header,
+  Pagination,
+  useToast,
 } from '@/components/shared';
 import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
 import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
-import { showSuccess, showError } from '@/stores/uiStore';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
+import { useOrderUpdates } from '@/hooks/useWebSocket';
 import { ShoppingBagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import type { OrderPriority, OrderStatus } from '@opsui/shared';
 
@@ -34,6 +36,7 @@ export function OrderQueuePage() {
   const queryClient = useQueryClient();
   const canPick = useAuthStore(state => state.canPick);
   const userId = useAuthStore(state => state.user?.userId);
+  const { showToast } = useToast();
 
   // Track current page for admin dashboard
   usePageTracking({ view: PageViews.ORDER_QUEUE });
@@ -46,12 +49,20 @@ export function OrderQueuePage() {
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
   const [initialTabSet, setInitialTabSet] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const { data: queueData, isLoading } = useOrderQueue({
     status: statusFilter,
     priority: priorityFilter,
-    // For PICKING (Tote) tab, only show orders claimed by current picker (unless admin with no active role)
     pickerId: statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
+    page,
+    limit: pageSize,
   });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, priorityFilter]);
 
   // Debug: Log orders to see if items are included (must be before any conditional returns)
   const orders = queueData?.orders || [];
@@ -146,16 +157,65 @@ export function OrderQueuePage() {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
   }, [queryClient, statusFilter, priorityFilter]);
 
+  // ==========================================================================
+  // Real-time WebSocket Subscriptions
+  // ==========================================================================
+
+  // Subscribe to order updates for real-time queue updates
+  useOrderUpdates({
+    onOrderClaimed: (data) => {
+      // Refresh order queue when an order is claimed
+      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+      // Show toast if the claimed order is relevant to current view
+      if (data.pickerId === userId) {
+        showToast({
+          title: 'Order Claimed',
+          message: `Order ${data.orderId} has been claimed`,
+          type: 'success',
+          duration: 3000,
+        });
+      }
+    },
+    onOrderCompleted: (data) => {
+      // Refresh order queue when an order is completed
+      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+    },
+    onOrderCancelled: (data) => {
+      // Refresh order queue when an order is cancelled
+      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+      showToast({
+        title: 'Order Cancelled',
+        message: `Order ${data.orderId} has been cancelled`,
+        type: 'warning',
+        duration: 3000,
+      });
+    },
+    onPriorityChanged: (data) => {
+      // Refresh order queue when priority changes
+      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+    },
+    onProgressUpdated: (data) => {
+      // Refresh order queue when progress updates (for PICKING orders)
+      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+    },
+  });
+
   const claimMutation = useClaimOrder();
+  const continueMutation = useContinueOrder();
 
   const handleClaimOrder = async (orderId: string, orderStatus: OrderStatus) => {
     if (!userId) {
-      showError('You must be logged in to claim orders');
+      showToast('You must be logged in to claim orders', 'error');
       return;
     }
 
-    // For PICKING orders, just navigate without claiming
+    // For PICKING orders, call continue endpoint to log the action
     if (orderStatus === 'PICKING') {
+      try {
+        await continueMutation.mutateAsync({ orderId });
+      } catch {
+        // Silently ignore errors - continue is just for audit logging
+      }
       // Invalidate picker activity cache so admin dashboard shows this as current order
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
       navigate(`/orders/${orderId}/pick`);
@@ -175,7 +235,7 @@ export function OrderQueuePage() {
         orderId,
         dto: { pickerId: userId },
       });
-      showSuccess('Order claimed successfully');
+      showToast('Order claimed successfully', 'success');
 
       // Navigate to picking page for the claimed order
       navigate(`/orders/${orderId}/pick`);
@@ -185,18 +245,19 @@ export function OrderQueuePage() {
         const backendError = error.response.data.error;
 
         if (backendError.includes('already claimed')) {
-          showError('Order is already claimed by another picker');
+          showToast('Order is already claimed by another picker', 'error');
         } else if (backendError.includes('status')) {
-          showError(`Order cannot be claimed: ${backendError}`);
+          showToast(`Order cannot be claimed: ${backendError}`, 'error');
         } else if (backendError.includes('too many active orders')) {
-          showError(
-            'You have reached the maximum of 5 active orders. Please complete some orders before claiming more.'
+          showToast(
+            'You have reached the maximum of 5 active orders. Please complete some orders before claiming more.',
+            'error'
           );
         } else {
-          showError(backendError);
+          showToast(backendError, 'error');
         }
       } else {
-        showError(error instanceof Error ? error.message : 'Failed to claim order');
+        showToast(error instanceof Error ? error.message : 'Failed to claim order', 'error');
       }
     } finally {
       setClaimingOrderId(null);
@@ -224,61 +285,42 @@ export function OrderQueuePage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Order Queue
-            </h1>
-            <p className="mt-2 text-gray-400 text-responsive-sm">
-              {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''} available
-            </p>
-          </div>
+    <div className="min-h-screen overflow-x-hidden">
+      <Header
+        orderQueueFilters={{
+          statusFilter,
+          onStatusFilterChange: setStatusFilter,
+          priorityFilter,
+          onPriorityFilterChange: setPriorityFilter,
+        }}
+      />
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden">
+        {/* Page Header - Centered */}
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Order Queue
+          </h1>
+          <p className="mt-2 text-gray-400 text-responsive-sm">
+            {queueData?.total || 0} order{(queueData?.total || 0) !== 1 ? 's' : ''} available
+          </p>
+        </div>
 
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search Bar */}
-            <div className="relative flex-1 sm:flex-none">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search order"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="mobile-input pl-10 pr-4 py-2.5 w-full sm:w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value as OrderStatus)}
-              className="mobile-input px-4 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300 [&_option]:bg-gray-900 [&_option]:text-gray-100 [&_option]:cursor-pointer"
-            >
-              <option value="PENDING">Pending</option>
-              <option value="PICKING">Tote</option>
-            </select>
-
-            <select
-              value={priorityFilter || 'all'}
-              onChange={e =>
-                setPriorityFilter(
-                  e.target.value === 'all' ? undefined : (e.target.value as OrderPriority)
-                )
-              }
-              className="mobile-input px-4 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300 [&_option]:bg-gray-900 [&_option]:text-gray-100 [&_option]:cursor-pointer"
-            >
-              <option value="all">All Priorities</option>
-              <option value="URGENT">Urgent</option>
-              <option value="HIGH">High</option>
-              <option value="NORMAL">Normal</option>
-              <option value="LOW">Low</option>
-            </select>
+        {/* Search Bar - Below Header */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-2xl relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search order"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ fontSize: '16px' }}
+              className="w-full pl-11 pr-4 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+            />
           </div>
         </div>
 
-        {/* Order List */}
+        {/* Order List - Centered */}
         {filteredOrders.length === 0 ? (
           <Card variant="glass" className="card-hover">
             <CardContent className="p-8 sm:p-16 text-center">
@@ -289,10 +331,10 @@ export function OrderQueuePage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 justify-center">
             {filteredOrders.map(order => (
-              <Card key={order.orderId} variant="glass" className="card-hover group">
-                <CardContent className="p-4 sm:p-5">
+              <Card key={order.orderId} variant="glass" className="card-hover group flex flex-col">
+                <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-white text-base sm:text-lg tracking-tight truncate">
@@ -306,14 +348,24 @@ export function OrderQueuePage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3 text-sm text-gray-400 mb-5">
+                  {/* Scrollable content area */}
+                  <div className="flex-1 overflow-y-auto space-y-3 text-sm text-gray-400 overflow-x-hidden">
                     <div className="flex items-center justify-between">
                       <span>Items:</span>
                       <span className="text-white font-medium">{order.items?.length || 0}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span>Progress:</span>
-                      <span className="text-white font-medium">{order.progress}%</span>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span>Progress:</span>
+                        <span className="text-white font-medium">{order.progress}%</span>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="w-full bg-white/[0.05] rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-primary-500 to-primary-400 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${order.progress}%` }}
+                        />
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Created:</span>
@@ -322,21 +374,13 @@ export function OrderQueuePage() {
                       </span>
                     </div>
 
-                    {/* Progress bar */}
-                    <div className="w-full bg-white/[0.05] rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-primary-500 to-primary-400 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${order.progress}%` }}
-                      />
-                    </div>
-
-                    {/* Show items with details - collapsible on mobile */}
+                    {/* Show items with details - always visible */}
                     {order.items && order.items.length > 0 ? (
                       <div className="mt-4 pt-4 border-t border-white/[0.08]">
                         <p className="font-medium text-gray-300 mb-3 text-xs uppercase tracking-wider">
                           Items to Pick:
                         </p>
-                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                        <div className="space-y-2">
                           {order.items.map((item, itemIdx) => {
                             // Check if item is completed (COMPLETED for pick_tasks, FULLY_PICKED for order_items)
                             const isCompleted =
@@ -360,16 +404,20 @@ export function OrderQueuePage() {
                             return (
                               <div
                                 key={`${order.orderId}-item-${itemIdx}`}
-                                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs p-2 rounded-lg border ${itemStatusColor} gap-1`}
+                                className={`text-xs p-2.5 rounded-lg border ${itemStatusColor}`}
                               >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="font-medium truncate">{item.sku}</span>
-                                  <span className="text-gray-500 hidden sm:inline">"</span>
-                                  <span className="truncate hidden sm:inline">{item.name}</span>
+                                {/* First row: SKU and Name */}
+                                <div className="flex items-start gap-2 mb-1.5">
+                                  <span className="font-semibold text-xs break-all">{item.sku}</span>
+                                  <span className="text-gray-500 flex-shrink-0">"</span>
+                                  <span className="text-gray-300 break-all">{item.name}</span>
                                 </div>
-                                <div className="flex items-center gap-3 sm:gap-3 justify-between sm:justify-end">
-                                  <span className="text-xs">Loc: {item.binLocation}</span>
-                                  <span className="font-medium">
+                                {/* Second row: Location and Quantity */}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-400 text-xs">
+                                    Loc: <span className="text-white font-medium">{item.binLocation}</span>
+                                  </span>
+                                  <span className="font-semibold text-sm">
                                     {isSkipped
                                       ? 'Skipped'
                                       : `${item.pickedQuantity || 0}/${item.quantity}`}
@@ -387,25 +435,40 @@ export function OrderQueuePage() {
                     )}
                   </div>
 
-                  <Button
-                    fullWidth
-                    size="md"
-                    variant="primary"
-                    onClick={() => handleClaimOrder(order.orderId, order.status)}
-                    disabled={
-                      claimMutation.isPending ||
-                      (order.status !== 'PENDING' && order.status !== 'PICKING') ||
-                      (order.status === 'PENDING' && claimingOrderId === order.orderId)
-                    }
-                    isLoading={order.status === 'PENDING' && claimingOrderId === order.orderId}
-                    className="group-hover:shadow-glow transition-all duration-300 touch-target"
-                  >
-                    {order.status === 'PICKING' ? 'Continue Picking' : 'Claim Order'}
-                  </Button>
+                  {/* Claim button - always at the bottom */}
+                  <div className="mt-4 pt-4 border-t border-white/[0.08]">
+                    <Button
+                      fullWidth
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleClaimOrder(order.orderId, order.status)}
+                      disabled={
+                        claimMutation.isPending ||
+                        (order.status !== 'PENDING' && order.status !== 'PICKING') ||
+                        (order.status === 'PENDING' && claimingOrderId === order.orderId)
+                      }
+                      isLoading={order.status === 'PENDING' && claimingOrderId === order.orderId}
+                      className="group-hover:shadow-glow transition-all duration-300 touch-target"
+                    >
+                      {order.status === 'PICKING' ? 'Continue' : 'Claim'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+        )}
+
+        {/* Pagination */}
+        {queueData?.total && queueData.total > 0 && (
+          <Pagination
+            currentPage={page}
+            totalItems={queueData.total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[10, 20, 50, 100]}
+          />
         )}
       </main>
     </div>

@@ -37,12 +37,7 @@ export default {
     get secret(): string {
       const secret = process.env.JWT_SECRET;
       if (!secret) {
-        if (process.env.NODE_ENV === 'production') {
-          throw new Error('JWT_SECRET environment variable must be set in production');
-        }
-        // Only allow fallback in development
-        console.warn('⚠️  Using insecure default JWT secret. Set JWT_SECRET environment variable!');
-        return 'dev-secret-change-in-production';
+        throw new Error('JWT_SECRET environment variable must be set. This is required for security.');
       }
       // Validate minimum secret length
       if (secret.length < 32) {
@@ -50,8 +45,20 @@ export default {
       }
       return secret;
     },
-    expiresIn: process.env.JWT_EXPIRES_IN || '8h',
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    // Use 24-hour tokens for test environment to prevent mid-run expiration
+    get expiresIn(): string {
+      if (process.env.NODE_ENV === 'test') {
+        return process.env.JWT_EXPIRES_IN || '24h';
+      }
+      return process.env.JWT_EXPIRES_IN || '8h';
+    },
+    // Use 30-day refresh tokens for test environment
+    get refreshExpiresIn(): string {
+      if (process.env.NODE_ENV === 'test') {
+        return process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+      }
+      return process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+    },
   },
 
   // Bcrypt
@@ -93,6 +100,68 @@ export default {
     websocket: process.env.ENABLE_WEBSOCKET === 'true',
     redisCache: process.env.ENABLE_REDIS_CACHE !== 'false',
     auditLog: process.env.ENABLE_AUDIT_LOG !== 'false',
+    openTelemetry: process.env.ENABLE_OPENTELEMETRY !== 'false',
+    prometheus: process.env.ENABLE_PROMETHEUS === 'true',
+  },
+
+  // Test mode - disables authentication for automated testing
+  testMode: process.env.TEST_MODE === 'true',
+
+  // OpenTelemetry Configuration
+  otel: {
+    serviceName: process.env.OTEL_SERVICE_NAME || 'wms-backend',
+    collectorUrl: process.env.OTEL_COLLECTOR_URL || 'http://localhost:4317',
+    enabled: process.env.ENABLE_OPENTELEMETRY !== 'false',
+  },
+
+  // Prometheus Configuration
+  prometheus: {
+    enabled: process.env.ENABLE_PROMETHEUS === 'true',
+    port: parseInt(process.env.PROMETHEUS_PORT || '9090', 10),
+    path: process.env.PROMETHEUS_PATH || '/metrics',
+  },
+
+  // NZC API Configuration
+  nzc: {
+    baseUrl: process.env.NZC_BASE_URL || 'https://api.gosweetspot.com',
+    apiKey: process.env.NZC_API_KEY || '',
+    siteId: process.env.NZC_SITE_ID || '',
+    supportEmail: process.env.NZC_SUPPORT_EMAIL || '',
+  },
+
+  // Email Provider Configuration
+  email: {
+    sendgrid: {
+      apiKey: process.env.SENDGRID_API_KEY || '',
+      from: process.env.SENDGRID_FROM_EMAIL,
+      replyTo: process.env.SENDGRID_REPLY_TO_EMAIL,
+    },
+    postmark: {
+      apiKey: process.env.POSTMARK_API_KEY || '',
+      from: process.env.POSTMARK_FROM_EMAIL,
+      replyTo: process.env.POSTMARK_REPLY_TO_EMAIL,
+    },
+    ses: {
+      region: process.env.AWS_SES_REGION || 'us-east-1',
+      accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY || '',
+      from: process.env.AWS_SES_FROM_EMAIL,
+    },
+  },
+
+  // SMS Provider Configuration
+  sms: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+    authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    from: process.env.TWILIO_PHONE_NUMBER,
+    rateLimitPerSecond: parseInt(process.env.TWILIO_RATE_LIMIT || '5', 10),
+  },
+
+  // Push Notification Configuration
+  push: {
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+    vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || '',
+    vapidSubject: process.env.VAPID_SUBJECT || 'mailto:admin@wms.local',
   },
 
   // Check if all required env vars are set

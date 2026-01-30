@@ -8,7 +8,6 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ReactElement } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider } from 'antd';
 
 // Create a custom render function that includes providers
 export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
@@ -25,7 +24,7 @@ export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptio
     return (
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
-          <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>{children}</ConfigProvider>
+          {children}
         </QueryClientProvider>
       </BrowserRouter>
     );

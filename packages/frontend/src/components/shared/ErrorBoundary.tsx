@@ -1,46 +1,41 @@
 /**
- * React Error Boundary Component
+ * ErrorBoundary Component
  *
- * Catches JavaScript errors anywhere in the component tree,
+ * Catches JavaScript errors anywhere in the child component tree,
  * logs those errors, and displays a fallback UI
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Result, Button } from 'antd';
+import { Component, ReactNode } from 'react';
+import { ExclamationTriangleIcon, ArrowPathIcon, HomeIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
 
-interface Props {
+interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI
-    return {
-      hasError: true,
-      error,
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
       errorInfo: null,
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error to an error reporting service
-    console.error('Error Boundary caught an error:', error, errorInfo);
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { hasError: true };
+  }
 
-    // Log error details
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({
       error,
       errorInfo,
@@ -50,14 +45,9 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
-
-    // In development, log component stack
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Component stack:', errorInfo.componentStack);
-    }
   }
 
-  private handleReset = () => {
+  handleReset = () => {
     this.setState({
       hasError: false,
       error: null,
@@ -65,47 +55,104 @@ export class ErrorBoundary extends Component<Props, State> {
     });
   };
 
-  public render() {
+  handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  handleCopyError = async () => {
+    const errorText = [
+      'Error Details:',
+      this.state.error?.toString() || 'Unknown error',
+      '',
+      'Component Stack:',
+      this.state.errorInfo?.componentStack || 'No stack trace available',
+    ].join('\n');
+
+    try {
+      await navigator.clipboard.writeText(errorText);
+      alert('Error details copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy error:', err);
+    }
+  };
+
+  render() {
     if (this.state.hasError) {
-      // Custom fallback UI
+      // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Default fallback UI
+      // Default error UI
       return (
-        <div style={{ padding: '50px', textAlign: 'center' }}>
-          <Result
-            status="error"
-            title="Something went wrong"
-            subTitle="An unexpected error occurred. Please try refreshing the page."
-            extra={[
-              <Button type="primary" key="home" href="/">
-                Go Home
-              </Button>,
-              <Button key="retry" onClick={this.handleReset}>
-                Try Again
-              </Button>,
-            ]}
-          >
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div style={{ textAlign: 'left', marginTop: '20px' }}>
-                <h4>Error Details:</h4>
-                <pre
-                  style={{
-                    background: '#f5f5f5',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    overflow: 'auto',
-                    maxHeight: '300px',
-                  }}
-                >
-                  {this.state.error.toString()}
-                  {this.state.errorInfo?.componentStack}
-                </pre>
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+          <div className="max-w-md w-full glass-card rounded-2xl p-8 border border-white/[0.08]">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="p-4 rounded-full bg-error-500/20">
+                <ExclamationTriangleIcon className="h-12 w-12 text-error-400" />
               </div>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-2xl font-bold text-white text-center mb-2">
+              Something went wrong
+            </h1>
+
+            {/* Message */}
+            <p className="text-gray-400 text-center mb-6">
+              We encountered an unexpected error. You can try refreshing the page or go back to the home
+              screen.
+            </p>
+
+            {/* Error Details (Development Only) */}
+            {import.meta.env.DEV && this.state.error && (
+              <details className="mb-6 bg-gray-800/50 rounded-lg p-4 border border-white/[0.08]">
+                <summary className="text-sm font-medium text-gray-300 cursor-pointer hover:text-white transition-colors">
+                  Error Details
+                </summary>
+                <div className="mt-3 text-xs text-gray-400 space-y-2">
+                  <div className="font-mono bg-gray-900/50 p-2 rounded overflow-x-auto">
+                    {this.state.error.toString()}
+                  </div>
+                  {this.state.errorInfo && (
+                    <div className="font-mono bg-gray-900/50 p-2 rounded overflow-x-auto">
+                      <pre className="whitespace-pre-wrap">
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </details>
             )}
-          </Result>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={this.handleReset}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                  <ArrowPathIcon className="h-5 w-5" />
+                  Try Again
+                </button>
+                <button
+                  onClick={this.handleGoHome}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  <HomeIcon className="h-5 w-5" />
+                  Go Home
+                </button>
+              </div>
+              <button
+                onClick={this.handleCopyError}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 hover:text-gray-300 transition-colors border border-white/[0.08]"
+              >
+                <ClipboardDocumentIcon className="h-5 w-5" />
+                Copy Error
+              </button>
+            </div>
+          </div>
         </div>
       );
     }
@@ -114,90 +161,27 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+// ============================================================================
+// FUNCTIONAL ERROR BOUNDARY WRAPPER
+// ============================================================================
+
+interface ErrorBoundaryWrapperProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+}
+
 /**
- * HOC to wrap components with Error Boundary
+ * Functional wrapper for ErrorBoundary
+ * Use this for simpler integration with functional components
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
-) {
-  return function WrappedComponent(props: P) {
-    return (
-      <ErrorBoundary fallback={fallback} onError={onError}>
-        <Component {...props} />
-      </ErrorBoundary>
-    );
-  };
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+): React.ComponentType<P> {
+  return (props: P) => (
+    <ErrorBoundary {...errorBoundaryProps}>
+      <Component {...props} />
+    </ErrorBoundary>
+  );
 }
-
-/**
- * Async Error Boundary for handling async errors
- * Use this for components that load data asynchronously
- */
-export class AsyncErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-      errorInfo: null,
-    };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Async Error Boundary caught an error:', error, errorInfo);
-
-    this.setState({
-      error,
-      errorInfo,
-    });
-
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
-  }
-
-  private handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    });
-  };
-
-  public render() {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
-
-      return (
-        <div style={{ padding: '50px', textAlign: 'center' }}>
-          <Result
-            status="warning"
-            title="Loading Error"
-            subTitle="There was a problem loading this content. Please try again."
-            extra={[
-              <Button type="primary" key="retry" onClick={this.handleReset}>
-                Retry
-              </Button>,
-              <Button key="home" href="/">
-                Go Home
-              </Button>,
-            ]}
-          />
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;

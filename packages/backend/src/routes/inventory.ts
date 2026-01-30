@@ -74,7 +74,8 @@ router.post(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { sku, binLocation, quantity, reason } = req.body;
@@ -83,17 +84,19 @@ router.post(
     validateBinLocation(binLocation);
 
     if (typeof quantity !== 'number') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Quantity must be a number',
         code: 'INVALID_QUANTITY',
       });
+      return;
     }
 
     if (!reason || typeof reason !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     const inventory = await inventoryService.adjustInventory(

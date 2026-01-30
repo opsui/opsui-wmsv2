@@ -1,0 +1,459 @@
+{
+  "route": "/maintenance",
+  "timestamp": "2026-01-23T05:52:41.485Z",
+  "elements": [
+    {
+      "selector": "BUTTON.flex",
+      "text": "admin@wms.local",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 13
+      },
+      "size": {
+        "width": 165.03125,
+        "height": 38
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Operations",
+      "visible": true,
+      "position": {
+        "x": 312.4375,
+        "y": 12
+      },
+      "size": {
+        "width": 149.625,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Inventory",
+      "visible": true,
+      "position": {
+        "x": 466.0625,
+        "y": 12
+      },
+      "size": {
+        "width": 139.21875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Warehouse",
+      "visible": true,
+      "position": {
+        "x": 609.28125,
+        "y": 12
+      },
+      "size": {
+        "width": 151.6875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Admin",
+      "visible": true,
+      "position": {
+        "x": 764.96875,
+        "y": 12
+      },
+      "size": {
+        "width": 118.859375,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.flex",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 12
+      },
+      "size": {
+        "width": 128.046875,
+        "height": 40
+      }
+    },
+    {
+      "selector": "BUTTON.w-full",
+      "text": "Reports",
+      "visible": true,
+      "position": {
+        "x": 887.828125,
+        "y": 68
+      },
+      "size": {
+        "width": 240,
+        "height": 44
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "1",
+      "visible": true,
+      "position": {
+        "x": 1015.875,
+        "y": 14
+      },
+      "size": {
+        "width": 36,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Settings",
+      "visible": true,
+      "position": {
+        "x": 1063.875,
+        "y": 14
+      },
+      "size": {
+        "width": 112.921875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Dev Panel",
+      "visible": true,
+      "position": {
+        "x": 1188.796875,
+        "y": 14
+      },
+      "size": {
+        "width": 95.046875,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Logout",
+      "visible": true,
+      "position": {
+        "x": 1295.84375,
+        "y": 14
+      },
+      "size": {
+        "width": 104.703125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H1.text-3xl",
+      "text": "Equipment Maintenance",
+      "visible": true,
+      "position": {
+        "x": 32,
+        "y": 97
+      },
+      "size": {
+        "width": 358.953125,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "New Request",
+      "visible": true,
+      "position": {
+        "x": 1070.703125,
+        "y": 110
+      },
+      "size": {
+        "width": 177.296875,
+        "height": 44
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Equipment Overview",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 370
+      },
+      "size": {
+        "width": 172.65625,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "Conveyor Belt 3AZone A - Row 3Last Service12/15/20",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 414
+      },
+      "size": {
+        "width": 378,
+        "height": 186
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Conveyor Belt 3A",
+      "visible": true,
+      "position": {
+        "x": 90,
+        "y": 435
+      },
+      "size": {
+        "width": 288,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "Forklift #4Dock AreaLast Service1/15/2026Next Serv",
+      "visible": true,
+      "position": {
+        "x": 451,
+        "y": 414
+      },
+      "size": {
+        "width": 378,
+        "height": 186
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Forklift #4",
+      "visible": true,
+      "position": {
+        "x": 484,
+        "y": 435
+      },
+      "size": {
+        "width": 288,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "Pallet WrapperShipping AreaLast Service1/10/2026Ne",
+      "visible": true,
+      "position": {
+        "x": 845,
+        "y": 414
+      },
+      "size": {
+        "width": 378,
+        "height": 186
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Pallet Wrapper",
+      "visible": true,
+      "position": {
+        "x": 878,
+        "y": 435
+      },
+      "size": {
+        "width": 288,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "HVAC SystemBuilding CentralLast Service1/17/2026Ne",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 616
+      },
+      "size": {
+        "width": 378,
+        "height": 186
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "HVAC System",
+      "visible": true,
+      "position": {
+        "x": 90,
+        "y": 637
+      },
+      "size": {
+        "width": 288,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "Dock Door 1Loading DockLast Service11/20/2025Next ",
+      "visible": true,
+      "position": {
+        "x": 451,
+        "y": 616
+      },
+      "size": {
+        "width": 378,
+        "height": 186
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Dock Door 1",
+      "visible": true,
+      "position": {
+        "x": 484,
+        "y": 637
+      },
+      "size": {
+        "width": 288,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.relative",
+      "text": "CompactorWaste AreaLast Service12/1/2025Next Servi",
+      "visible": true,
+      "position": {
+        "x": 845,
+        "y": 616
+      },
+      "size": {
+        "width": 378,
+        "height": 186
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Compactor",
+      "visible": true,
+      "position": {
+        "x": 878,
+        "y": 637
+      },
+      "size": {
+        "width": 288,
+        "height": 28
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Recent Requests",
+      "visible": true,
+      "position": {
+        "x": 57,
+        "y": 888
+      },
+      "size": {
+        "width": 139.484375,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "View All",
+      "visible": true,
+      "position": {
+        "x": 1135.234375,
+        "y": 884
+      },
+      "size": {
+        "width": 87.765625,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Conveyor Belt Repair",
+      "visible": true,
+      "position": {
+        "x": 102,
+        "y": 961
+      },
+      "size": {
+        "width": 173.515625,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "View Details",
+      "visible": true,
+      "position": {
+        "x": 102,
+        "y": 1145.75
+      },
+      "size": {
+        "width": 237.5,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Start Work",
+      "visible": true,
+      "position": {
+        "x": 347.5,
+        "y": 1145.75
+      },
+      "size": {
+        "width": 235.5,
+        "height": 36
+      }
+    },
+    {
+      "selector": "H3.text-lg",
+      "text": "Forklift Maintenance",
+      "visible": true,
+      "position": {
+        "x": 697,
+        "y": 961
+      },
+      "size": {
+        "width": 169.25,
+        "height": 28
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "View Details",
+      "visible": true,
+      "position": {
+        "x": 697,
+        "y": 1200.5
+      },
+      "size": {
+        "width": 237.5,
+        "height": 36
+      }
+    },
+    {
+      "selector": "BUTTON.inline-flex",
+      "text": "Update Progress",
+      "visible": true,
+      "position": {
+        "x": 942.5,
+        "y": 1200.5
+      },
+      "size": {
+        "width": 235.5,
+        "height": 36
+      }
+    }
+  ],
+  "layout": {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "description": "Page has 24 buttons, 0 inputs, 0 links, 0 tables, 0 forms. Header: \"admin@wms.localADMINOperationsInventoryWarehouseAd\". Main heading: \"Equipment Maintenance\"."
+}

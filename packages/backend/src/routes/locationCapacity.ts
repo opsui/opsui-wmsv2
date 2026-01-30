@@ -51,10 +51,11 @@ router.post(
       !appliesTo ||
       maximumCapacity === undefined
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const rule = await locationCapacityService.createCapacityRule({

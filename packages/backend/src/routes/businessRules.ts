@@ -56,10 +56,11 @@ router.get(
     const rule = await businessRulesRepository.findById(ruleId);
 
     if (!rule) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Rule not found',
       });
+      return;
     }
 
     res.json({
@@ -82,10 +83,11 @@ router.post(
 
     // Validate required fields
     if (!ruleData.name || !ruleData.ruleType || !ruleData.createdBy) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: name, ruleType, createdBy',
       });
+      return;
     }
 
     const rule = await businessRulesRepository.create(ruleData);
@@ -111,10 +113,11 @@ router.put(
     const rule = await businessRulesRepository.update(ruleId, updates);
 
     if (!rule) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Rule not found',
       });
+      return;
     }
 
     res.json({
@@ -136,10 +139,11 @@ router.delete(
     const deleted = await businessRulesRepository.delete(ruleId);
 
     if (!deleted) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Rule not found',
       });
+      return;
     }
 
     res.json({
@@ -190,10 +194,11 @@ router.post(
     const { rule, entity, entityType, entityId } = req.body;
 
     if (!rule || !entity) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: rule, entity',
       });
+      return;
     }
 
     const context = {
@@ -233,10 +238,11 @@ router.post(
     });
 
     if (!rule) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Rule not found',
       });
+      return;
     }
 
     res.json({
@@ -262,10 +268,11 @@ router.post(
     });
 
     if (!rule) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Rule not found',
       });
+      return;
     }
 
     res.json({

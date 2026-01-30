@@ -1,0 +1,301 @@
+/**
+ * WebSocket Client Service
+ *
+ * Manages real-time WebSocket connection with the backend
+ * Handles authentication, reconnection, and event subscriptions
+ */
+
+import { io, Socket } from 'socket.io-client';
+import { useAuthStore } from '@/stores/authStore';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export type ServerToClientEvents = {
+  'order:claimed': (data: { orderId: string; pickerId: string; pickerName: string }) => void;
+  'order:completed': (data: { orderId: string; pickerId: string }) => void;
+  'order:cancelled': (data: { orderId: string; reason: string }) => void;
+  'pick:updated': (data: { orderId: string; orderItemId: string; pickedQuantity: number }) => void;
+  'pick:completed': (data: { orderId: string; orderItemId: string }) => void;
+  'zone:updated': (data: { zoneId: string; taskCount: number; pickerCount: number }) => void;
+  'zone:assignment': (data: { zoneId: string; pickerId: string; assigned: boolean }) => void;
+  'inventory:updated': (data: { sku: string; binLocation: string; quantity: number }) => void;
+  'inventory:low': (data: { sku: string; quantity: number; minThreshold: number }) => void;
+  'notification:new': (data: { notificationId: string; title: string; message: string }) => void;
+  'user:activity': (data: { userId: string; status: string; currentView?: string }) => void;
+  'connected': (data: { message: string }) => void;
+};
+
+export type ClientToServerEvents = {
+  'subscribe:orders': () => void;
+  'subscribe:zone': (zoneId: string) => void;
+  'unsubscribe:zone': (zoneId: string) => void;
+  'subscribe:inventory': () => void;
+  'update:activity': (data: { currentView?: string; status?: string }) => void;
+  'ping': () => void;
+};
+
+export type EventHandler<E extends keyof ServerToClientEvents> = (
+  ...args: Parameters<ServerToClientEvents[E]>
+) => void;
+
+// ============================================================================
+// WEBSOCKET SERVICE CLASS
+// ============================================================================
+
+class WebSocketService {
+  private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000;
+  private isManualDisconnect = false;
+  private eventHandlers: Map<keyof ServerToClientEvents, Set<EventHandler<any>>> = new Map();
+
+  /**
+   * Connect to WebSocket server
+   */
+  connect(): void {
+    if (this.socket?.connected) {
+      console.warn('[WebSocket] Already connected');
+      return;
+    }
+
+    const token = useAuthStore.getState().tokens?.accessToken;
+    if (!token) {
+      console.warn('[WebSocket] No auth token available');
+      return;
+    }
+
+    try {
+      const wsUrl = import.meta.env.VITE_WS_URL ||
+        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:3001`;
+
+      this.socket = io(wsUrl, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: this.reconnectDelay,
+        reconnectionAttempts: this.maxReconnectAttempts,
+        timeout: 10000,
+      });
+
+      this.setupEventHandlers();
+      console.log('[WebSocket] Connecting...', { url: wsUrl });
+    } catch (error) {
+      console.error('[WebSocket] Connection error', error);
+    }
+  }
+
+  /**
+   * Set up core socket event handlers
+   */
+  private setupEventHandlers(): void {
+    if (!this.socket) return;
+
+    // Connection established
+    this.socket.on('connect', () => {
+      console.log('[WebSocket] Connected', { socketId: this.socket?.id });
+      this.reconnectAttempts = 0;
+      this.triggerHandlers('connected' as const, [{ message: 'Connected' }]);
+    });
+
+    // Disconnection
+    this.socket.on('disconnect', (reason) => {
+      console.log('[WebSocket] Disconnected', { reason });
+
+      // Reconnect if not manual disconnect
+      if (!this.isManualDisconnect && reason !== 'io client disconnect') {
+        this.handleReconnect();
+      }
+    });
+
+    // Connection error
+    this.socket.on('connect_error', (error) => {
+      console.error('[WebSocket] Connection error', error);
+      this.handleReconnect();
+    });
+
+    // Set up all registered event handlers
+    this.eventHandlers.forEach((handlers, event) => {
+      handlers.forEach(handler => {
+        this.socket?.on(event, handler as any);
+      });
+    });
+  }
+
+  /**
+   * Handle automatic reconnection
+   */
+  private handleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('[WebSocket] Max reconnection attempts reached');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+
+    console.log(`[WebSocket] Reconnecting... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+
+    setTimeout(() => {
+      if (!this.socket?.connected && !this.isManualDisconnect) {
+        this.connect();
+      }
+    }, delay);
+  }
+
+  /**
+   * Subscribe to an event
+   */
+  on<E extends keyof ServerToClientEvents>(event: E, handler: EventHandler<E>): () => void {
+    if (!this.eventHandlers.has(event)) {
+      this.eventHandlers.set(event, new Set());
+    }
+    this.eventHandlers.get(event)!.add(handler);
+
+    // Also add to socket if connected
+    if (this.socket?.connected) {
+      this.socket.on(event, handler as any);
+    }
+
+    // Return unsubscribe function
+    return () => this.off(event, handler);
+  }
+
+  /**
+   * Unsubscribe from an event
+   */
+  off<E extends keyof ServerToClientEvents>(event: E, handler: EventHandler<E>): void {
+    const handlers = this.eventHandlers.get(event);
+    if (handlers) {
+      handlers.delete(handler);
+      if (handlers.size === 0) {
+        this.eventHandlers.delete(event);
+      }
+    }
+
+    if (this.socket?.connected) {
+      this.socket.off(event, handler as any);
+    }
+  }
+
+  /**
+   * Trigger all handlers for an event (for internal use)
+   */
+  private triggerHandlers<E extends keyof ServerToClientEvents>(
+    event: E,
+    args: Parameters<ServerToClientEvents[E]>
+  ): void {
+    const handlers = this.eventHandlers.get(event);
+    if (handlers) {
+      handlers.forEach(handler => {
+        try {
+          handler(...args);
+        } catch (error) {
+          console.error(`[WebSocket] Error in handler for ${event}`, error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Emit an event to the server
+   */
+  emit<E extends keyof ClientToServerEvents>(
+    event: E,
+    ...args: Parameters<ClientToServerEvents[E]>
+  ): void {
+    if (!this.socket?.connected) {
+      console.warn('[WebSocket] Cannot emit - not connected', { event });
+      return;
+    }
+
+    this.socket.emit(event, ...args);
+  }
+
+  /**
+   * Subscribe to order updates
+   */
+  subscribeToOrders(): void {
+    this.emit('subscribe:orders');
+  }
+
+  /**
+   * Subscribe to zone updates
+   */
+  subscribeToZone(zoneId: string): void {
+    this.emit('subscribe:zone', zoneId);
+  }
+
+  /**
+   * Unsubscribe from zone updates
+   */
+  unsubscribeFromZone(zoneId: string): void {
+    this.emit('unsubscribe:zone', zoneId);
+  }
+
+  /**
+   * Subscribe to inventory updates
+   */
+  subscribeToInventory(): void {
+    this.emit('subscribe:inventory');
+  }
+
+  /**
+   * Update current user activity
+   */
+  updateActivity(data: { currentView?: string; status?: string }): void {
+    this.emit('update:activity', data);
+  }
+
+  /**
+   * Disconnect from WebSocket server
+   */
+  disconnect(): void {
+    this.isManualDisconnect = true;
+    this.reconnectAttempts = 0;
+
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
+
+    // Clear all event handlers
+    this.eventHandlers.clear();
+
+    console.log('[WebSocket] Disconnected manually');
+  }
+
+  /**
+   * Check if connected
+   */
+  isConnected(): boolean {
+    return this.socket?.connected ?? false;
+  }
+
+  /**
+   * Get socket ID
+   */
+  getSocketId(): string | undefined {
+    return this.socket?.id;
+  }
+
+  /**
+   * Reset manual disconnect flag (for reconnection)
+   */
+  resetManualDisconnect(): void {
+    this.isManualDisconnect = false;
+  }
+}
+
+// ============================================================================
+// SINGLETON INSTANCE
+// ============================================================================
+
+const webSocketService = new WebSocketService();
+
+export default webSocketService;
+
+// Export type for use in components
+export type { ServerToClientEvents, ClientToServerEvents };

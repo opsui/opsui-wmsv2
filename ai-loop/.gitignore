@@ -1,0 +1,28 @@
+# Environment variables (contains API keys)
+.env
+.env.local
+.env.production
+
+# Generated files
+error-log.json
+normalized-errors.json
+fix-prompt.md
+
+# Playwright output
+playwright-report/
+test-results/
+*.zip
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

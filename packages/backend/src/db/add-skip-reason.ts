@@ -1,7 +1,7 @@
 /**
  * Migration: Add skip_reason column to order_items table
  *
- * This column stores the reason for skipping an item during picking or packing
+ * This column stores the reason when an item is skipped during packing
  */
 
 import { query, closePool } from './client';
@@ -33,7 +33,7 @@ async function addSkipReasonColumn() {
 
     // Verify the column was added
     const verifyResult = await query(`
-      SELECT column_name, data_type
+      SELECT column_name, data_type, is_nullable
       FROM information_schema.columns
       WHERE table_name = 'order_items'
       AND column_name = 'skip_reason';

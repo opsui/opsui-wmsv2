@@ -38,6 +38,7 @@ import {
   Order,
   OrderStatus,
   OrderPriority,
+  TaskStatus,
   CreateOrderDTO,
   ClaimOrderDTO,
   PickItemDTO,
@@ -55,6 +56,8 @@ import { validateOrderItems, validatePickSKU, validatePickQuantity } from '@opsu
 import { generateOrderId } from '@opsui/shared';
 import { logger } from '../config/logger';
 import { query } from '../db/client';
+import { notificationService } from './NotificationService';
+import wsServer from '../websocket';
 
 // ============================================================================
 // ORDER SERVICE
@@ -234,6 +237,28 @@ export class OrderService {
         isComplete,
       });
 
+      // Broadcast pick update via WebSocket
+      const broadcaster = wsServer.getBroadcaster();
+      if (broadcaster) {
+        broadcaster.broadcastPickUpdated({
+          orderId,
+          orderItemId: pickTask.order_item_id,
+          sku: dto.sku,
+          pickedQuantity: newPickedQuantity,
+          targetQuantity: pickTask.quantity,
+          pickerId,
+        });
+
+        // If pick task is complete, broadcast completion
+        if (isComplete) {
+          broadcaster.broadcastPickCompleted({
+            orderId,
+            orderItemId: pickTask.order_item_id,
+            pickerId,
+          });
+        }
+      }
+
       return {
         success: true,
         order: updatedOrder,
@@ -381,7 +406,7 @@ export class OrderService {
 
     if (wasCompletedBeforeUndo && isNowIncomplete) {
       logger.info('Task was completed, reverting to IN_PROGRESS status', { pickTaskId });
-      await pickTaskRepository.updateStatus(pickTaskId, 'IN_PROGRESS');
+      await pickTaskRepository.updateStatus(pickTaskId, TaskStatus.IN_PROGRESS);
     }
 
     // Update order item status AND picked quantity (both needed for progress trigger)
@@ -500,7 +525,54 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async claimOrder(orderId: string, dto: ClaimOrderDTO): Promise<Order> {
-    return orderRepository.claimOrder(orderId, dto.pickerId);
+    const order = await orderRepository.claimOrder(orderId, dto.pickerId);
+
+    // Send notification to all users about order being claimed
+    const broadcaster = wsServer.getBroadcaster();
+    if (broadcaster) {
+      broadcaster.broadcastOrderClaimed({
+        orderId: order.orderId,
+        pickerId: dto.pickerId,
+        pickerName: dto.pickerId, // Could fetch actual user name
+        claimedAt: new Date(),
+      });
+    }
+
+    // Send in-app notification
+    await notificationService.sendNotification({
+      userId: dto.pickerId,
+      type: 'ORDER_CLAIMED',
+      channel: 'IN_APP',
+      title: 'Order Claimed',
+      message: `You have claimed order ${order.orderId}`,
+      priority: 'NORMAL',
+      data: { orderId: order.orderId },
+    });
+
+    return order;
+  }
+
+  // --------------------------------------------------------------------------
+  // CONTINUE ORDER
+  // --------------------------------------------------------------------------
+
+  async continueOrder(orderId: string, userId: string): Promise<{ orderId: string; status: string }> {
+    logger.info('Continuing order', { orderId, userId });
+
+    // Verify the order exists and is in PICKING status
+    const order = await this.getOrder(orderId);
+    if (order.status !== OrderStatus.PICKING) {
+      throw new ValidationError('Order is not in PICKING status');
+    }
+    if (order.pickerId !== userId) {
+      throw new ValidationError('Order is not assigned to this picker');
+    }
+
+    // Return minimal response - the audit middleware will handle logging
+    return {
+      orderId: order.orderId,
+      status: order.status,
+    };
   }
 
   // --------------------------------------------------------------------------
@@ -508,7 +580,31 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async completeOrder(orderId: string, dto: CompleteOrderDTO): Promise<Order> {
-    return orderRepository.updateStatus(orderId, OrderStatus.PICKED);
+    const order = await orderRepository.updateStatus(orderId, OrderStatus.PICKED);
+
+    // Send notification to all users about order being completed
+    const broadcaster = wsServer.getBroadcaster();
+    if (broadcaster) {
+      broadcaster.broadcastOrderCompleted({
+        orderId: order.orderId,
+        pickerId: dto.pickerId,
+        completedAt: new Date(),
+        itemCount: order.items.length,
+      });
+    }
+
+    // Send in-app notification to packers that order is ready for packing
+    await notificationService.sendNotification({
+      userId: dto.pickerId, // In production, would notify all packers
+      type: 'ORDER_COMPLETED',
+      channel: 'IN_APP',
+      title: 'Order Ready for Packing',
+      message: `Order ${order.orderId} has been picked and is ready for packing`,
+      priority: 'HIGH',
+      data: { orderId: order.orderId },
+    });
+
+    return order;
   }
 
   // --------------------------------------------------------------------------
@@ -516,7 +612,29 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async cancelOrder(orderId: string, dto: CancelOrderDTO): Promise<Order> {
-    return orderRepository.cancelOrder(orderId, dto.userId, dto.reason);
+    const order = await orderRepository.cancelOrder(orderId, dto.userId, dto.reason);
+
+    // Send notification about order cancellation
+    const broadcaster = wsServer.getBroadcaster();
+    if (broadcaster) {
+      broadcaster.broadcastOrderCancelled({
+        orderId: order.orderId,
+        reason: dto.reason || 'No reason provided',
+      });
+    }
+
+    // Send in-app notification
+    await notificationService.sendNotification({
+      userId: dto.userId,
+      type: 'SYSTEM_ALERT',
+      channel: 'IN_APP',
+      title: 'Order Cancelled',
+      message: `Order ${order.orderId} has been cancelled. Reason: ${dto.reason || 'Not specified'}`,
+      priority: 'HIGH',
+      data: { orderId: order.orderId, reason: dto.reason },
+    });
+
+    return order;
   }
 
   // --------------------------------------------------------------------------
@@ -875,3 +993,5 @@ export class OrderService {
 
 // Singleton instance
 export const orderService = new OrderService();
+
+

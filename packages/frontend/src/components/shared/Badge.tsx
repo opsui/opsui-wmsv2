@@ -4,15 +4,115 @@
 
 import { type HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
-import type { OrderStatus, OrderPriority, UserRole, TaskStatus } from '@opsui/shared';
+import type { OrderStatus, OrderPriority, TaskStatus } from '@opsui/shared';
+import { UserRole } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary';
+
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary';
+  variant?: BadgeVariant;
   size?: 'sm' | 'md' | 'lg';
+  customColor?: string; // For custom role colors (hex or Tailwind classes)
+}
+
+// ============================================================================
+// ROLE COLOR STORAGE
+// ============================================================================
+
+const ROLE_COLOR_STORAGE_KEY = 'admin-role-colors';
+
+export interface RoleColorSetting {
+  role: UserRole;
+  color: string; // CSS color value (hex, rgb, etc.)
+  variant?: BadgeVariant; // Optional variant fallback
+}
+
+// Default role colors - these can be overridden in settings
+const DEFAULT_ROLE_COLORS: Record<UserRole, RoleColorSetting> = {
+  [UserRole.PICKER]: { role: UserRole.PICKER, color: '#3b82f6', variant: 'info' },      // Blue
+  [UserRole.PACKER]: { role: UserRole.PACKER, color: '#8b5cf6', variant: 'info' },      // Purple
+  [UserRole.STOCK_CONTROLLER]: { role: UserRole.STOCK_CONTROLLER, color: '#06b6d4', variant: 'info' }, // Cyan
+  [UserRole.SUPERVISOR]: { role: UserRole.SUPERVISOR, color: '#f59e0b', variant: 'warning' }, // Amber
+  [UserRole.ADMIN]: { role: UserRole.ADMIN, color: '#ef4444', variant: 'error' },       // Red
+  [UserRole.INWARDS]: { role: 'INWARDS' as UserRole, color: '#10b981', variant: 'success' }, // Emerald
+  [UserRole.SALES]: { role: 'SALES' as UserRole, color: '#ec4899', variant: 'primary' },   // Pink
+  [UserRole.PRODUCTION]: { role: 'PRODUCTION' as UserRole, color: '#f97316', variant: 'warning' }, // Orange
+  [UserRole.MAINTENANCE]: { role: 'MAINTENANCE' as UserRole, color: '#6366f1', variant: 'primary' }, // Indigo
+  [UserRole.RMA]: { role: 'RMA' as UserRole, color: '#84cc16', variant: 'success' },    // Lime
+};
+
+// Load role colors from localStorage
+export function loadRoleColors(): Record<UserRole, RoleColorSetting> {
+  try {
+    const stored = localStorage.getItem(ROLE_COLOR_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Record<string, RoleColorSetting>;
+      // Merge with defaults, allowing stored values to override
+      const result = { ...DEFAULT_ROLE_COLORS };
+      for (const [key, value] of Object.entries(parsed)) {
+        if (value && value.role) {
+          result[value.role as UserRole] = value;
+        }
+      }
+      return result;
+    }
+  } catch (error) {
+    console.error('Failed to load role color settings:', error);
+  }
+  return { ...DEFAULT_ROLE_COLORS };
+}
+
+// Save role colors to localStorage
+export function saveRoleColors(settings: Record<UserRole, RoleColorSetting>): void {
+  try {
+    localStorage.setItem(ROLE_COLOR_STORAGE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Failed to save role color settings:', error);
+  }
+}
+
+// Get color for a specific role (global)
+export function getRoleColor(role: UserRole): RoleColorSetting {
+  const colors = loadRoleColors();
+  return colors[role] || DEFAULT_ROLE_COLORS[role] || { role, color: '#6b7280', variant: 'default' };
+}
+
+// Per-user role color storage keys
+const getUserRoleColorKey = (userId: string) => `user-role-color-${userId}`;
+
+// Get color for a specific role for a specific user
+export function getUserRoleColor(userId: string, role: UserRole): RoleColorSetting {
+  try {
+    const key = getUserRoleColorKey(userId);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Record<string, string>;
+      if (parsed[role]) {
+        return { role, color: parsed[role] };
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load user role color:', error);
+  }
+  // Fall back to global color, then default
+  return getRoleColor(role);
+}
+
+// Save role color for a specific user
+export function saveUserRoleColor(userId: string, role: UserRole, color: string): void {
+  try {
+    const key = getUserRoleColorKey(userId);
+    const existing = localStorage.getItem(key);
+    const colors: Record<string, string> = existing ? JSON.parse(existing) : {};
+    colors[role] = color;
+    localStorage.setItem(key, JSON.stringify(colors));
+  } catch (error) {
+    console.error('Failed to save user role color:', error);
+  }
 }
 
 // ============================================================================
@@ -37,13 +137,6 @@ const priorityVariantMap: Record<OrderPriority, BadgeProps['variant']> = {
   URGENT: 'error',
 };
 
-const roleVariantMap: Record<UserRole, BadgeProps['variant']> = {
-  PICKER: 'info',
-  PACKER: 'info',
-  SUPERVISOR: 'warning',
-  ADMIN: 'error',
-};
-
 const taskStatusVariantMap: Record<TaskStatus, BadgeProps['variant']> = {
   PENDING: 'info',
   IN_PROGRESS: 'warning',
@@ -58,6 +151,7 @@ const taskStatusVariantMap: Record<TaskStatus, BadgeProps['variant']> = {
 export function Badge({
   variant = 'default',
   size = 'md',
+  customColor,
   className,
   children,
   ...props
@@ -79,9 +173,24 @@ export function Badge({
     lg: 'px-4 py-2 text-base',
   };
 
+  // If customColor is provided, use inline styles for dynamic color
+  const customStyle = customColor
+    ? {
+        backgroundColor: customColor,
+        color: 'white',
+        border: 'none',
+      }
+    : undefined;
+
+  // When using custom color, skip variant class and use inline style
+  const finalClassName = customColor
+    ? cn(baseStyles, sizeStyles[size], className)
+    : cn(baseStyles, variantStyles[variant], sizeStyles[size], className);
+
   return (
     <span
-      className={cn(baseStyles, variantStyles[variant], sizeStyles[size], className)}
+      className={finalClassName}
+      style={customStyle}
       {...props}
     >
       {children}
@@ -109,9 +218,15 @@ export function OrderPriorityBadge({ priority }: { priority: OrderPriority }) {
   );
 }
 
-export function UserRoleBadge({ role }: { role: UserRole }) {
+export function UserRoleBadge({ role, userId }: { role: UserRole; userId?: string }) {
+  // Use per-user color if userId is provided, otherwise use global color
+  const roleColor = userId ? getUserRoleColor(userId, role) : getRoleColor(role);
   return (
-    <Badge variant={roleVariantMap[role]} size="sm">
+    <Badge
+      variant={roleColor.variant || 'default'}
+      size="sm"
+      customColor={roleColor.color}
+    >
       {role}
     </Badge>
   );

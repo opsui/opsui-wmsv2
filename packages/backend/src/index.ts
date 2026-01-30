@@ -7,6 +7,15 @@
  */
 
 import 'dotenv/config';
+
+// OpenTelemetry must be initialized FIRST, before any other imports
+if (process.env.ENABLE_OPENTELEMETRY !== 'false') {
+  // Initialize OpenTelemetry SDK for distributed tracing, metrics, and logging
+  // This must happen before any other imports to ensure proper instrumentation
+  const { initializeTelemetry } = require('./observability/telemetry');
+  initializeTelemetry();
+}
+
 import { createApp, startServer, waitForDrain } from './app';
 import config from './config';
 import { logger } from './config/logger';
@@ -16,6 +25,8 @@ import {
   setupGracefulShutdown,
   isShuttingDown as checkIfShuttingDown,
 } from './utils/gracefulShutdown';
+import wsServer from './websocket';
+import { recurringScheduleService } from './services/RecurringScheduleService';
 
 // Export shutdown check for health endpoints
 export const isShuttingDown = checkIfShuttingDown;
@@ -93,12 +104,38 @@ async function main() {
     server.keepAliveTimeout = 65000; // 65 seconds (higher than AWS ALB defaults)
     server.headersTimeout = 66000; // Slightly higher than keep-alive timeout
 
+    // 6. Initialize WebSocket server with HTTP server
+    wsServer.initialize(server);
+    logger.info('WebSocket server initialized');
+
+    // 7. Setup cron job for recurring count schedules
+    // Run every hour to check for due schedules and generate cycle counts
+    const RECURRING_SCHEDULE_INTERVAL = 60 * 60 * 1000; // 1 hour
+    const scheduleInterval = setInterval(async () => {
+      try {
+        await recurringScheduleService.processDueSchedules();
+      } catch (error) {
+        logger.error('Error processing recurring schedules', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+      }
+    }, RECURRING_SCHEDULE_INTERVAL);
+
+    logger.info('Recurring schedule processor initialized (runs every hour)');
+
     // --------------------------------------------------------------------------
     // COMPREHENSIVE GRACEFUL SHUTDOWN
     // --------------------------------------------------------------------------
 
     // Define cleanup tasks
     const cleanupTasks = [
+      // 0. Clear recurring schedule interval
+      async () => {
+        clearInterval(scheduleInterval);
+        logger.info('✅ Recurring schedule interval cleared');
+      },
+
       // 1. Wait for active HTTP connections to drain
       async () => {
         logger.info('Waiting for active connections to drain...');
@@ -110,13 +147,23 @@ async function main() {
         }
       },
 
-      // 2. Close database connections
+      // 2. Close WebSocket connections
+      async () => {
+        const wsCount = wsServer.getConnectedCount();
+        if (wsCount > 0) {
+          logger.info(`Closing ${wsCount} WebSocket connections...`);
+        }
+        wsServer.close();
+        logger.info('✅ WebSocket server closed');
+      },
+
+      // 3. Close database connections
       async () => {
         await closePool();
         logger.info('✅ Database connections closed');
       },
 
-      // 3. Flush any pending operations
+      // 4. Flush any pending operations
       async () => {
         await new Promise<void>(resolve => setTimeout(resolve, 100));
         logger.info('✅ Pending operations flushed');

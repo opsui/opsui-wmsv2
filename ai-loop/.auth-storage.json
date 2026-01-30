@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "wms-ui-storage",
+          "value": "{\"state\":{\"soundEnabled\":true,\"theme\":\"dark\",\"sidebarOpen\":true},\"version\":0}"
+        },
+        {
+          "name": "wms-auth-storage",
+          "value": "{\"state\":{\"isAuthenticated\":true,\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJVU1ItQURNSU4wMSIsImVtYWlsIjoiYWRtaW5Ad21zLmxvY2FsIiwicm9sZSI6IkFETUlOIiwiYmFzZVJvbGUiOiJBRE1JTiIsImVmZmVjdGl2ZVJvbGUiOiJBRE1JTiIsImlhdCI6MTc2OTMzMjMxMCwiZXhwIjoxNzY5MzYxMTEwfQ.aD2OxrZn2L1uz8jjP_nKXD1G8aH4MJnXcdYaFwkpEcc\",\"refreshToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJVU1ItQURNSU4wMSIsImVtYWlsIjoiYWRtaW5Ad21zLmxvY2FsIiwicm9sZSI6IkFETUlOIiwiYmFzZVJvbGUiOiJBRE1JTiIsImVmZmVjdGl2ZVJvbGUiOiJBRE1JTiIsImlhdCI6MTc2OTMzMjMxMCwiZXhwIjoxNzY5OTM3MTEwfQ.iWK2rM8nIw_NZVRGRYmv9SyugOhQF4svsn1Eddgt99o\",\"user\":{\"userId\":\"USR-ADMIN01\",\"name\":\"System Administrator\",\"email\":\"admin@wms.local\",\"role\":\"ADMIN\",\"active\":false,\"currentTaskId\":null,\"createdAt\":\"2026-01-19T20:04:06.380Z\",\"lastLoginAt\":\"2026-01-25T09:11:12.235Z\",\"currentView\":null,\"currentViewUpdatedAt\":\"2026-01-25T09:11:23.983Z\",\"activeRole\":\"ADMIN\",\"deletedAt\":null,\"isActive\":true,\"additionalRoles\":[\"PACKER\",\"STOCK_CONTROLLER\",\"SUPERVISOR\",\"INWARDS\",\"MAINTENANCE\",\"PRODUCTION\",\"RMA\",\"SALES\",\"PICKER\"]},\"activeRole\":null},\"version\":0}"
+        }
+      ]
+    }
+  ]
+}

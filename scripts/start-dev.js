@@ -117,17 +117,25 @@ async function checkPrerequisites() {
 
 async function checkPostgreSQL() {
   return new Promise(resolve => {
-    const isWindows = process.platform === 'win32';
+    // Use TCP connection check instead of pg_isready (works with Docker)
+    const net = require('net');
+    const socket = new net.Socket();
 
-    if (isWindows) {
-      exec('pg_isready -h localhost -p 5432', { windowsHide: true }, error => {
-        resolve(!error);
-      });
-    } else {
-      exec('pg_isready', error => {
-        resolve(!error);
-      });
-    }
+    const timeout = setTimeout(() => {
+      socket.destroy();
+      resolve(false);
+    }, 2000);
+
+    socket.connect(5432, 'localhost', () => {
+      clearTimeout(timeout);
+      socket.destroy();
+      resolve(true);
+    });
+
+    socket.on('error', () => {
+      clearTimeout(timeout);
+      resolve(false);
+    });
   });
 }
 

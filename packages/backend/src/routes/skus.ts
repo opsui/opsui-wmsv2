@@ -15,18 +15,19 @@ router.use(authenticate);
 
 /**
  * GET /api/skus
- * Search SKUs
+ * Get all or search SKUs
  */
 router.get(
   '/',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const searchTerm = req.query.q as string;
 
+    // If no search term, return all SKUs
     if (!searchTerm) {
-      return res.status(400).json({
-        error: 'Search query parameter "q" is required',
-        code: 'MISSING_SEARCH_QUERY',
-      });
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const results = await inventoryService.getAllSKUs(Math.min(limit, 500));
+      res.json(results);
+      return;
     }
 
     const results = await inventoryService.searchSKUs(searchTerm);
@@ -68,7 +69,8 @@ router.post(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     validateSKU(req.params.sku);
@@ -76,10 +78,11 @@ router.post(
     const { binLocation, quantity, orderId } = req.body;
 
     if (!binLocation || !quantity || !orderId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'binLocation, quantity, and orderId are required',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const inventory = await inventoryService.reserveInventory(
@@ -101,7 +104,8 @@ router.post(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     validateSKU(req.params.sku);
@@ -109,10 +113,11 @@ router.post(
     const { binLocation, quantity, orderId } = req.body;
 
     if (!binLocation || !quantity || !orderId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'binLocation, quantity, and orderId are required',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     const inventory = await inventoryService.releaseReservation(

@@ -11,6 +11,16 @@ import { useAuthStore } from '@/stores';
 import { authApi } from '@/services/api';
 import { Button } from '@/components/shared';
 import { showSuccess, showError } from '@/stores/uiStore';
+import { useFormValidation, commonValidations } from '@/hooks/useFormValidation';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
 // ============================================================================
 // COMPONENT
@@ -20,8 +30,35 @@ export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore(state => state.login);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Form validation
+  const {
+    values: formData,
+    errors,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+  } = useFormValidation<LoginFormData>({
+    initialValues: {
+      email: '',
+      password: '',
+    },
+    validationRules: {
+      email: {
+        ...commonValidations.email,
+        maxLength: 255,
+      },
+      password: {
+        required: true,
+        minLength: 8,
+      },
+    },
+    onSubmit: async (values) => {
+      // Trigger the login mutation
+      loginMutation.mutate({ email: values.email, password: values.password });
+    },
+    validateOnChange: true,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
 
   const loginMutation = useMutation({
@@ -53,17 +90,6 @@ export function LoginPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      showError('Please enter email and password');
-      return;
-    }
-
-    loginMutation.mutate({ email, password });
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
       <div className="max-w-md w-full space-y-8">
@@ -82,14 +108,20 @@ export function LoginPage() {
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
                 autoComplete="email"
                 required
-                className="mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] border-white/[0.08] text-white placeholder:text-gray-500 focus:border-primary-500/50 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300"
+                className={`mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] text-white placeholder:text-gray-500 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300 ${
+                  errors.email ? 'border-red-500 focus:border-red-500' : 'border-white/[0.08] focus:border-primary-500/50'
+                }`}
                 placeholder="Enter your email"
               />
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-400">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -98,14 +130,20 @@ export function LoginPage() {
               </label>
               <input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
                 autoComplete="current-password"
                 required
-                className="mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] border-white/[0.08] text-white placeholder:text-gray-500 focus:border-primary-500/50 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300"
+                className={`mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] text-white placeholder:text-gray-500 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300 ${
+                  errors.password ? 'border-red-500 focus:border-red-500' : 'border-white/[0.08] focus:border-primary-500/50'
+                }`}
                 placeholder="Enter your password"
               />
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-400">{errors.password}</p>
+              )}
             </div>
 
             <Button
@@ -113,8 +151,8 @@ export function LoginPage() {
               variant="primary"
               size="lg"
               fullWidth
-              isLoading={isLoading}
-              disabled={loginMutation.isPending}
+              isLoading={isLoading || isSubmitting}
+              disabled={loginMutation.isPending || isSubmitting}
               className="shadow-glow touch-target"
             >
               Sign In

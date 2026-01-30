@@ -24,7 +24,8 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     console.log('[POST /api/exceptions/log] Request body:', JSON.stringify(req.body, null, 2));
@@ -49,7 +50,7 @@ router.post(
       typeof quantityActual !== 'number' ||
       !reason
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         code: 'MISSING_FIELDS',
         details: {
@@ -62,16 +63,18 @@ router.post(
           reason: !!reason,
         },
       });
+      return;
     }
 
     // Validate exception type
     const validTypes = Object.values(ExceptionType);
     if (!validTypes.includes(type)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid exception type',
         code: 'INVALID_TYPE',
         validTypes,
       });
+      return;
     }
 
     const exception = await orderExceptionService.logException({
@@ -167,7 +170,8 @@ router.post(
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { exceptionId } = req.params;
@@ -175,10 +179,11 @@ router.post(
 
     // Validate resolution
     if (!resolution) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Resolution is required',
         code: 'MISSING_RESOLUTION',
       });
+      return;
     }
 
     const resolved = await orderExceptionService.resolveException({
@@ -192,6 +197,106 @@ router.post(
     });
 
     res.json(resolved);
+  })
+);
+
+/**
+ * POST /api/exceptions/report-problem
+ * Report a general problem (not tied to a specific order)
+ */
+router.post(
+  '/report-problem',
+  authenticate,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { problemType, location, description } = req.body;
+
+    // Validate required fields
+    if (!problemType || !description) {
+      res.status(400).json({
+        error: 'Missing required fields',
+        code: 'MISSING_FIELDS',
+      });
+      return;
+    }
+
+    // Store problem report in database via service
+    const problemReport = await orderExceptionService.reportProblem({
+      problemType,
+      location,
+      description,
+      reportedBy: req.user.userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Problem reported successfully',
+      data: problemReport,
+    });
+  })
+);
+
+/**
+ * GET /api/exceptions/problems
+ * Get all problem reports
+ */
+router.get(
+  '/problems',
+  authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      status: req.query.status as string | undefined,
+      problemType: req.query.problemType as string | undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
+    };
+
+    const result = await orderExceptionService.getProblemReports(filters);
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/exceptions/problems/:problemId/resolve
+ * Resolve a problem report
+ */
+router.post(
+  '/problems/:problemId/resolve',
+  authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { problemId } = req.params;
+    const { resolution, notes } = req.body;
+
+    // Validate resolution
+    if (!resolution) {
+      res.status(400).json({
+        error: 'Resolution is required',
+        code: 'MISSING_RESOLUTION',
+      });
+      return;
+    }
+
+    const resolved = await orderExceptionService.resolveProblemReport({
+      problemId,
+      resolution,
+      notes,
+      resolvedBy: req.user.userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Problem report resolved successfully',
+      data: resolved,
+    });
   })
 );
 

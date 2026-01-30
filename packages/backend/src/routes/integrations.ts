@@ -9,9 +9,10 @@ import { IntegrationsRepository } from '../repositories/IntegrationsRepository';
 import { IntegrationsService } from '../services/IntegrationsService';
 import { authenticate, authorize } from '../middleware/auth';
 import { UserRole } from '@opsui/shared';
+import { getPool } from '../db/client';
 
 const router = Router();
-const repository = new IntegrationsRepository((global as any).dbPool);
+const repository = new IntegrationsRepository(getPool());
 const service = new IntegrationsService(repository);
 
 // ============================================================================
@@ -54,7 +55,8 @@ router.get('/:integrationId', async (req: Request, res: Response, next: NextFunc
   try {
     const integration = await repository.findById(req.params.integrationId);
     if (!integration) {
-      return res.status(404).json({ error: 'Integration not found' });
+      res.status(404).json({ error: 'Integration not found' });
+      return;
     }
     res.json(integration);
   } catch (error) {
@@ -76,7 +78,8 @@ router.post(
       res.status(201).json(integration);
     } catch (error: any) {
       if (error.message.includes('Missing required configuration fields')) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+      return;
       }
       next(error);
     }
@@ -95,7 +98,8 @@ router.put(
     try {
       const integration = await service.updateIntegration(req.params.integrationId, req.body);
       if (!integration) {
-        return res.status(404).json({ error: 'Integration not found' });
+        res.status(404).json({ error: 'Integration not found' });
+      return;
       }
       res.json(integration);
     } catch (error) {
@@ -116,7 +120,8 @@ router.delete(
     try {
       const deleted = await service.deleteIntegration(req.params.integrationId);
       if (!deleted) {
-        return res.status(404).json({ error: 'Integration not found' });
+        res.status(404).json({ error: 'Integration not found' });
+      return;
       }
       res.status(204).send();
     } catch (error) {
@@ -190,7 +195,8 @@ router.post(
       res.status(201).json(job);
     } catch (error: any) {
       if (error.message.includes('must be active')) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+      return;
       }
       next(error);
     }
@@ -209,7 +215,8 @@ router.get(
     try {
       const job = await repository.findSyncJobById(req.params.jobId);
       if (!job) {
-        return res.status(404).json({ error: 'Sync job not found' });
+        res.status(404).json({ error: 'Sync job not found' });
+      return;
       }
       res.json(job);
     } catch (error) {
@@ -229,7 +236,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const limit = parseInt(req.query.limit as string) || 100;
-      const logs = await repository.findSyncJobLogs(req.params.jobId, limit);
+      const logs = await repository.findSyncLogEntrys(req.params.jobId, limit);
       res.json(logs);
     } catch (error) {
       next(error);
@@ -250,19 +257,22 @@ router.post('/:integrationId/webhooks', async (req: Request, res: Response, next
   try {
     const integration = await repository.findById(req.params.integrationId);
     if (!integration) {
-      return res.status(404).json({ error: 'Integration not found' });
+      res.status(404).json({ error: 'Integration not found' });
+      return;
     }
 
     // Verify webhook signature if configured
     // This is a simplified check - production should use HMAC signatures
     const signature = req.headers['x-webhook-signature'] as string;
-    if (integration.webhookSettings?.secret && !signature) {
-      return res.status(401).json({ error: 'Missing webhook signature' });
+    if (integration.webhookSettings?.secretKey && !signature) {
+      res.status(401).json({ error: 'Missing webhook signature' });
+      return;
     }
 
     const eventType = req.headers['x-webhook-event'] as string;
     if (!eventType) {
-      return res.status(400).json({ error: 'Missing event type header' });
+      res.status(400).json({ error: 'Missing event type header' });
+      return;
     }
 
     const event = await service.handleWebhook(req.params.integrationId, eventType as any, req.body);
@@ -331,14 +341,15 @@ router.post(
   authorize(UserRole.ADMIN),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const account = await service.createCarrierAccount({
-        ...req.body,
-        integrationId: req.params.integrationId,
-      });
+      const account = await service.createCarrierAccount(
+        req.params.integrationId,
+        req.body
+      );
       res.status(201).json(account);
     } catch (error: any) {
       if (error.message.includes('can only be added to')) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+      return;
       }
       next(error);
     }
@@ -357,7 +368,8 @@ router.put(
     try {
       const account = await service.updateCarrierAccount(req.params.carrierAccountId, req.body);
       if (!account) {
-        return res.status(404).json({ error: 'Carrier account not found' });
+        res.status(404).json({ error: 'Carrier account not found' });
+      return;
       }
       res.json(account);
     } catch (error) {
@@ -378,7 +390,8 @@ router.delete(
     try {
       const deleted = await service.deleteCarrierAccount(req.params.carrierAccountId);
       if (!deleted) {
-        return res.status(404).json({ error: 'Carrier account not found' });
+        res.status(404).json({ error: 'Carrier account not found' });
+      return;
       }
       res.status(204).send();
     } catch (error) {

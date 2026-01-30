@@ -15,6 +15,7 @@ import {
   ResolveExceptionDTO,
 } from '@opsui/shared';
 import { nanoid } from 'nanoid';
+import { notifyExceptionReported } from './notificationHelper';
 
 // ============================================================================
 // ORDER EXCEPTION SERVICE
@@ -70,6 +71,15 @@ export class OrderExceptionService {
         orderId: dto.orderId,
         sku: dto.sku,
         type: dto.type,
+      });
+
+      // Send notification about the exception
+      await notifyExceptionReported({
+        exceptionId,
+        orderId: dto.orderId,
+        type: dto.type,
+        description: dto.reason || 'No reason provided',
+        userId: dto.reportedBy,
       });
 
       return this.mapRowToException(exception);
@@ -389,6 +399,211 @@ export class OrderExceptionService {
   }
 
   // --------------------------------------------------------------------------
+  // REPORT PROBLEM (General problem, not tied to specific order)
+  // --------------------------------------------------------------------------
+
+  async reportProblem(dto: {
+    problemType: string;
+    location?: string;
+    description: string;
+    reportedBy: string;
+  }): Promise<{
+    problemId: string;
+    problemType: string;
+    location: string | null;
+    description: string;
+    reportedBy: string;
+    reportedAt: Date;
+    status: string;
+  }> {
+    const client = await getPool();
+
+    try {
+      // Generate problem ID
+      const problemId = `PROB-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+      // Insert problem report into order_exceptions with a special type
+      // This allows us to reuse existing exception tracking infrastructure
+      const result = await client.query(
+        `INSERT INTO order_exceptions
+          (exception_id, order_id, order_item_id, sku, type, status,
+           quantity_expected, quantity_actual, reason, reported_by,
+           reported_at)
+         VALUES ($1, NULL, NULL, NULL, $2, 'OPEN', 0, 0, $3, $4, NOW())
+         RETURNING *`,
+        [
+          problemId,
+          `PROBLEM_${dto.problemType.toUpperCase()}`,
+          dto.description,
+          dto.reportedBy,
+        ]
+      );
+
+      logger.info('Problem reported', {
+        problemId,
+        problemType: dto.problemType,
+        location: dto.location,
+        reportedBy: dto.reportedBy,
+      });
+
+      // Send notification about the problem
+      await notifyExceptionReported({
+        exceptionId: problemId,
+        orderId: 'N/A',
+        type: dto.problemType as ExceptionType,
+        description: `${dto.problemType}${dto.location ? ` at ${dto.location}` : ''}: ${dto.description}`,
+        userId: dto.reportedBy,
+      });
+
+      return {
+        problemId,
+        problemType: dto.problemType,
+        location: dto.location || null,
+        description: dto.description,
+        reportedBy: dto.reportedBy,
+        reportedAt: new Date(),
+        status: 'OPEN',
+      };
+    } catch (error) {
+      logger.error('Error reporting problem', error);
+      throw error;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // GET PROBLEM REPORTS
+  // --------------------------------------------------------------------------
+
+  async getProblemReports(filters?: {
+    status?: string;
+    problemType?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    problems: Array<{
+      problemId: string;
+      problemType: string;
+      location: string | null;
+      description: string;
+      reportedBy: string;
+      reportedAt: Date;
+      status: string;
+      resolution?: string;
+      resolvedBy?: string;
+      resolvedAt?: Date;
+    }>;
+    total: number;
+  }> {
+    const client = await getPool();
+
+    const conditions: string[] = ["order_id IS NULL"]; // Problem reports have no order
+    const params: any[] = [];
+    let paramCount = 1;
+
+    if (filters?.status) {
+      conditions.push(`status = $${paramCount}`);
+      params.push(filters.status);
+      paramCount++;
+    }
+
+    if (filters?.problemType) {
+      conditions.push(`type LIKE $${paramCount}`);
+      params.push(`PROBLEM_${filters.problemType.toUpperCase()}%`);
+      paramCount++;
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Get total count
+    const countResult = await client.query(
+      `SELECT COUNT(*) as count FROM order_exceptions WHERE ${whereClause}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    // Get paginated results
+    const limit = filters?.limit || 50;
+    const offset = filters?.offset || 0;
+
+    const result = await client.query(
+      `SELECT * FROM order_exceptions
+       WHERE ${whereClause}
+       ORDER BY reported_at DESC
+       LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
+      [...params, limit, offset]
+    );
+
+    const problems = result.rows.map(row => ({
+      problemId: row.exception_id,
+      problemType: row.type.replace('PROBLEM_', '').replace(/_/g, ' '),
+      location: null, // Location is stored in reason
+      description: row.reason,
+      reportedBy: row.reported_by,
+      reportedAt: new Date(row.reported_at),
+      status: row.status,
+      resolution: row.resolution,
+      resolvedBy: row.resolved_by,
+      resolvedAt: row.resolved_at ? new Date(row.resolved_at) : undefined,
+    }));
+
+    return { problems, total };
+  }
+
+  // --------------------------------------------------------------------------
+  // RESOLVE PROBLEM REPORT
+  // --------------------------------------------------------------------------
+
+  async resolveProblemReport(dto: {
+    problemId: string;
+    resolution: string;
+    notes?: string;
+    resolvedBy: string;
+  }): Promise<{
+    problemId: string;
+    status: string;
+    resolution: string;
+    resolvedBy: string;
+    resolvedAt: Date;
+  }> {
+    const client = await getPool();
+
+    try {
+      const result = await client.query(
+        `UPDATE order_exceptions
+         SET status = 'RESOLVED',
+             resolution = $1,
+             resolution_notes = $2,
+             resolved_by = $3,
+             resolved_at = NOW()
+         WHERE exception_id = $4 AND order_id IS NULL
+         RETURNING *`,
+        [dto.resolution, dto.notes || null, dto.resolvedBy, dto.problemId]
+      );
+
+      if (result.rows.length === 0) {
+        throw new Error(`Problem report ${dto.problemId} not found`);
+      }
+
+      logger.info('Problem report resolved', {
+        problemId: dto.problemId,
+        resolution: dto.resolution,
+        resolvedBy: dto.resolvedBy,
+      });
+
+      return {
+        problemId: dto.problemId,
+        status: 'RESOLVED',
+        resolution: dto.resolution,
+        resolvedBy: dto.resolvedBy,
+        resolvedAt: new Date(),
+      };
+    } catch (error) {
+      logger.error('Error resolving problem report', error);
+      throw error;
+    }
+  }
+
+  // --------------------------------------------------------------------------
   // HELPER METHODS
   // --------------------------------------------------------------------------
 
@@ -413,6 +628,14 @@ export class OrderExceptionService {
       resolvedAt: row.resolved_at ? new Date(row.resolved_at) : undefined,
       resolutionNotes: row.resolution_notes,
       substituteSku: row.substitute_sku,
+      // Cycle count variance specific fields
+      cycleCountEntryId: row.cycle_count_entry_id,
+      cycleCountPlanId: row.cycle_count_plan_id,
+      binLocation: row.bin_location,
+      systemQuantity: row.system_quantity ? parseFloat(row.system_quantity) : undefined,
+      countedQuantity: row.counted_quantity ? parseFloat(row.counted_quantity) : undefined,
+      variancePercent: row.variance_percent ? parseFloat(row.variance_percent) : undefined,
+      varianceReasonCode: row.variance_reason_code,
     };
   }
 }

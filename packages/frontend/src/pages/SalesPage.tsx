@@ -5,13 +5,16 @@
  */
 
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button } from '@/components/shared';
+import { Card, CardHeader, CardTitle, CardContent, Header, Button, useToast, Pagination } from '@/components/shared';
+import { useCustomers, useLeads, useOpportunities, useQuotes, useSalesDashboard } from '@/services/api';
+import { CreateCustomerModal } from '@/components/sales/CreateCustomerModal';
+import { useEffect, useState } from 'react';
 import {
   CurrencyDollarIcon,
   UserGroupIcon,
+  UserPlusIcon,
   TrophyIcon,
   DocumentTextIcon,
-  SparklesIcon,
   PlusIcon,
   ChartBarIcon,
   ClockIcon,
@@ -377,142 +380,84 @@ function QuoteCard({ quote }: { quote: Quote }) {
 function SalesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = (searchParams.get('tab') as TabType) || 'dashboard';
+  const { showToast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+  const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
 
-  // Mock data for demonstration
-  const dashboard = {
-    totalCustomers: 48,
-    activeLeads: 12,
-    openOpportunities: 8,
-    pendingQuotes: 5,
-    totalPipeline: 245000,
+  // Fetch sales data from backend
+  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useSalesDashboard();
+  const { data: customersData, isLoading: isCustomersLoading, error: customersError } = useCustomers();
+  const { data: leadsData, isLoading: isLeadsLoading, error: leadsError } = useLeads();
+  const { data: opportunitiesData, isLoading: isOpportunitiesLoading, error: opportunitiesError } = useOpportunities();
+  const { data: quotesData, isLoading: isQuotesLoading, error: quotesError } = useQuotes();
+
+  // Show error toasts
+  useEffect(() => {
+    if (dashboardError) {
+      showToast('Failed to load sales dashboard', 'error');
+    }
+  }, [dashboardError, showToast]);
+
+  useEffect(() => {
+    if (customersError) {
+      showToast('Failed to load customers', 'error');
+    }
+  }, [customersError, showToast]);
+
+  useEffect(() => {
+    if (leadsError) {
+      showToast('Failed to load leads', 'error');
+    }
+  }, [leadsError, showToast]);
+
+  useEffect(() => {
+    if (opportunitiesError) {
+      showToast('Failed to load opportunities', 'error');
+    }
+  }, [opportunitiesError, showToast]);
+
+  useEffect(() => {
+    if (quotesError) {
+      showToast('Failed to load quotes', 'error');
+    }
+  }, [quotesError, showToast]);
+
+  // Use real data from backend or fallback to defaults
+  const dashboard = dashboardData || {
+    totalCustomers: 0,
+    activeLeads: 0,
+    openOpportunities: 0,
+    pendingQuotes: 0,
+    totalPipeline: 0,
   };
 
-  const customers: Customer[] = [
-    {
-      customerId: 'CUST-001',
-      customerNumber: 'CUST-123456',
-      companyName: 'Acme Corporation',
-      contactName: 'John Smith',
-      email: 'john@acme.com',
-      status: 'ACTIVE',
-      accountBalance: 5430.5,
-    },
-    {
-      customerId: 'CUST-002',
-      customerNumber: 'CUST-123457',
-      companyName: 'Tech Solutions Ltd',
-      contactName: 'Sarah Johnson',
-      email: 'sarah@techsolutions.com',
-      status: 'ACTIVE',
-      accountBalance: 12500.0,
-    },
-    {
-      customerId: 'CUST-003',
-      customerNumber: 'CUST-123458',
-      companyName: 'Global Industries Inc',
-      contactName: 'Mike Williams',
-      email: 'mike@globalindustries.com',
-      status: 'PROSPECT',
-      accountBalance: 0,
-    },
-  ];
+  const customers: Customer[] = customersData?.customers || [];
+  const leads: Lead[] = leadsData?.leads || [];
+  const opportunities: Opportunity[] = opportunitiesData?.opportunities || [];
+  const quotes: Quote[] = quotesData?.quotes || [];
 
-  const leads: Lead[] = [
-    {
-      leadId: 'LEAD-001',
-      customerName: 'David Brown',
-      company: 'StartUp Ventures',
-      status: 'QUALIFIED',
-      priority: 'HIGH',
-      estimatedValue: 25000,
-      source: 'Website',
-    },
-    {
-      leadId: 'LEAD-002',
-      customerName: 'Emily Chen',
-      company: 'Chen Enterprises',
-      status: 'NEW',
-      priority: 'MEDIUM',
-      estimatedValue: 15000,
-      source: 'Referral',
-    },
-    {
-      leadId: 'LEAD-003',
-      customerName: 'Robert Taylor',
-      company: 'Taylor Made Solutions',
-      status: 'PROPOSAL',
-      priority: 'URGENT',
-      estimatedValue: 50000,
-      source: 'Cold Call',
-    },
-  ];
+  // Show loading state
+  const isLoading = isDashboardLoading || isCustomersLoading || isLeadsLoading || isOpportunitiesLoading || isQuotesLoading;
 
-  const opportunities: Opportunity[] = [
-    {
-      opportunityId: 'OPP-001',
-      opportunityNumber: 'OPP-100001',
-      name: 'Q1 Software License Deal',
-      stage: 'NEGOTIATION',
-      amount: 75000,
-      probability: 75,
-      expectedCloseDate: '2026-02-15',
-    },
-    {
-      opportunityId: 'OPP-002',
-      opportunityNumber: 'OPP-100002',
-      name: 'Annual Maintenance Contract',
-      stage: 'PROPOSAL',
-      amount: 12000,
-      probability: 50,
-      expectedCloseDate: '2026-02-28',
-    },
-    {
-      opportunityId: 'OPP-003',
-      opportunityNumber: 'OPP-100003',
-      name: 'Custom Integration Project',
-      stage: 'QUALIFICATION',
-      amount: 45000,
-      probability: 25,
-      expectedCloseDate: '2026-03-15',
-    },
-  ];
-
-  const quotes: Quote[] = [
-    {
-      quoteId: 'QT-001',
-      quoteNumber: 'QT-200001',
-      customerName: 'Acme Corporation',
-      status: 'SENT',
-      totalAmount: 8750,
-      validUntil: '2026-02-01',
-    },
-    {
-      quoteId: 'QT-002',
-      quoteNumber: 'QT-200002',
-      customerName: 'Tech Solutions Ltd',
-      status: 'ACCEPTED',
-      totalAmount: 15420,
-      validUntil: '2026-01-25',
-    },
-    {
-      quoteId: 'QT-003',
-      quoteNumber: 'QT-200003',
-      customerName: 'Global Industries Inc',
-      status: 'DRAFT',
-      totalAmount: 32100,
-      validUntil: '2026-02-15',
-    },
-  ];
+  // Pagination for different tabs
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedCustomers = customers.slice(startIndex, endIndex);
+  const paginatedLeads = leads.slice(startIndex, endIndex);
+  const paginatedOpportunities = opportunities.slice(startIndex, endIndex);
+  const paginatedQuotes = quotes.slice(startIndex, endIndex);
 
   const setTab = (tab: TabType) => {
     setSearchParams({ tab });
+    setCurrentPage(1); // Reset pagination when changing tabs
   };
 
   return (
     <div className="min-h-screen">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white tracking-tight">Sales & CRM</h1>
@@ -521,12 +466,23 @@ function SalesPage() {
           </p>
         </div>
 
+        {/* Loading Spinner */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              <p className="text-gray-400 text-sm">Loading sales data...</p>
+            </div>
+          </div>
+        )}
+
         {/* Tab Navigation */}
+        {!isLoading && (
         <div className="flex gap-2 mb-8 border-b border-white/10 pb-4">
           {[
             { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
             { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
-            { key: 'leads' as TabType, label: 'Leads', icon: SparklesIcon },
+            { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
             { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
             { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
           ].map(tab => {
@@ -548,9 +504,10 @@ function SalesPage() {
             );
           })}
         </div>
+        )}
 
         {/* Dashboard Tab */}
-        {currentTab === 'dashboard' && (
+        {!isLoading && currentTab === 'dashboard' && (
           <div className="space-y-8">
             {/* Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
@@ -569,7 +526,7 @@ function SalesPage() {
                     <p className="text-sm text-gray-400">Active Leads</p>
                     <p className="mt-2 text-3xl font-bold text-white">{dashboard.activeLeads}</p>
                   </div>
-                  <SparklesIcon className="h-8 w-8 text-yellow-400" />
+                  <UserPlusIcon className="h-8 w-8 text-yellow-400" />
                 </div>
               </Card>
               <Card variant="glass" className="p-6 border-l-4 border-l-orange-500">
@@ -654,7 +611,7 @@ function SalesPage() {
         )}
 
         {/* Customers Tab */}
-        {currentTab === 'customers' && (
+        {!isLoading && currentTab === 'customers' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -663,22 +620,37 @@ function SalesPage() {
                   Manage customer accounts and relationships
                 </p>
               </div>
-              <Button variant="primary" className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateCustomerModalOpen(true)}
+              >
                 <PlusIcon className="h-5 w-5" />
                 New Customer
               </Button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {customers.map(customer => (
+              {paginatedCustomers.map(customer => (
                 <CustomerCard key={customer.customerId} customer={customer} />
               ))}
             </div>
+
+            {/* Pagination */}
+            {customers.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={customers.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
           </div>
         )}
 
         {/* Leads Tab */}
-        {currentTab === 'leads' && (
+        {!isLoading && currentTab === 'leads' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -692,15 +664,26 @@ function SalesPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {leads.map(lead => (
+              {paginatedLeads.map(lead => (
                 <LeadCard key={lead.leadId} lead={lead} />
               ))}
             </div>
+
+            {/* Pagination */}
+            {leads.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={leads.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
           </div>
         )}
 
         {/* Opportunities Tab */}
-        {currentTab === 'opportunities' && (
+        {!isLoading && currentTab === 'opportunities' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -716,15 +699,26 @@ function SalesPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {opportunities.map(opportunity => (
+              {paginatedOpportunities.map(opportunity => (
                 <OpportunityCard key={opportunity.opportunityId} opportunity={opportunity} />
               ))}
             </div>
+
+            {/* Pagination */}
+            {opportunities.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={opportunities.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
           </div>
         )}
 
         {/* Quotes Tab */}
-        {currentTab === 'quotes' && (
+        {!isLoading && currentTab === 'quotes' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -738,13 +732,34 @@ function SalesPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {quotes.map(quote => (
+              {paginatedQuotes.map(quote => (
                 <QuoteCard key={quote.quoteId} quote={quote} />
               ))}
             </div>
+
+            {/* Pagination */}
+            {quotes.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={quotes.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
           </div>
         )}
       </main>
+
+      {/* Modals */}
+      <CreateCustomerModal
+        isOpen={isCreateCustomerModalOpen}
+        onClose={() => setIsCreateCustomerModalOpen(false)}
+        onSuccess={() => {
+          // Optionally refetch customers data
+          showToast('Refreshing customer list...', 'info');
+        }}
+      />
     </div>
   );
 }

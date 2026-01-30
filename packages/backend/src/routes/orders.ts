@@ -7,7 +7,8 @@ import { orderService } from '../services';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { validate } from '../middleware/validation';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { UserRole } from '@opsui/shared';
+import { UserRole, ExceptionType } from '@opsui/shared';
+import { getPool } from '../db/client';
 
 const router = Router();
 
@@ -69,7 +70,8 @@ router.get(
   authorize(UserRole.PICKER, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const orders = await orderService.getPickerActiveOrders(req.user.userId);
@@ -117,7 +119,8 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     try {
@@ -128,33 +131,57 @@ router.post(
     } catch (error: any) {
       // Ensure proper error propagation to frontend
       if (error?.message?.includes('cannot be claimed')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'ORDER_NOT_CLAIMABLE',
         });
+        return;
       }
       if (error?.message?.includes('already claimed')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'ORDER_ALREADY_CLAIMED',
         });
+        return;
       }
       if (error?.message?.includes('maximum limit')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'MAX_ACTIVE_ORDERS',
         });
+        return;
       }
       // Generic conflict error
       if (error?.status === 409 || error?.code === 'CONFLICT') {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message || 'Order cannot be claimed',
           code: 'CONFLICT',
         });
+        return;
       }
       // Re-throw other errors
       throw error;
     }
+  })
+);
+
+/**
+ * POST /api/orders/:orderId/continue
+ * Continue picking an already claimed order
+ * This endpoint exists primarily to create an audit log when a picker continues working on their order
+ */
+router.post(
+  '/:orderId/continue',
+  authorize(UserRole.PICKER, UserRole.ADMIN),
+  validate.orderId,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const result = await orderService.continueOrder(req.params.orderId, req.user.userId);
+    res.json(result);
   })
 );
 
@@ -185,14 +212,16 @@ router.put(
     const { status } = req.body;
 
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     if (!status || !['ACTIVE', 'IDLE'].includes(status)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid status. Must be ACTIVE or IDLE',
         code: 'INVALID_STATUS',
       });
+      return;
     }
 
     // Update BOTH the order's timestamp AND the user's current_view_updated_at
@@ -227,7 +256,8 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { query } = await import('../db/client');
@@ -240,22 +270,25 @@ router.post(
 
     // Manual validation
     if (!barcode) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Validation failed',
         details: [{ field: 'barcode', message: '"barcode" is required' }],
       });
+      return;
     }
     if (!binLocation) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Validation failed',
         details: [{ field: 'binLocation', message: '"binLocation" is required' }],
       });
+      return;
     }
     if (!pickTaskId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Validation failed',
         details: [{ field: 'pickTaskId', message: '"pickTaskId" is required' }],
       });
+      return;
     }
 
     // The 'barcode' field now contains either a barcode OR an SKU code
@@ -273,11 +306,12 @@ router.post(
       sku = skuResult.rows[0].sku;
     } else {
       // Not found by SKU or barcode
-      return res.status(404).json({
+      res.status(404).json({
         error: 'SKU or barcode not found',
         code: 'SKU_NOT_FOUND',
         value: barcode,
       });
+      return;
     }
 
     const result = await orderService.pickItem(
@@ -304,7 +338,8 @@ router.post(
   validate.cancelOrder,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const order = await orderService.cancelOrder(req.params.orderId, {
@@ -326,17 +361,19 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     // Accept reason from either query string or request body
     const reason = (req.query.reason as string) || (req.body.reason as string) || '';
 
     if (!reason || !reason.trim()) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required to unclaim an order',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     try {
@@ -348,16 +385,18 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not assigned')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_ASSIGNED_TO_PICKER',
         });
+        return;
       }
       if (error?.message?.includes('not in PICKING status')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_PICKING',
         });
+        return;
       }
       throw error;
     }
@@ -374,7 +413,8 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const pickTaskId = req.body.pickTaskId || req.body.pick_task_id;
@@ -382,18 +422,20 @@ router.post(
 
     // Validate pickTaskId
     if (!pickTaskId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'pickTaskId is required',
         code: 'MISSING_PICK_TASK_ID',
       });
+      return;
     }
 
     // Validate reason
     if (!reason || !reason.trim()) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     const order = await orderService.skipPickTask(pickTaskId, reason.trim(), req.user.userId);
@@ -424,10 +466,12 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const order = await orderService.completeOrder(req.params.orderId, {
+      orderId: req.params.orderId,
       pickerId: req.user.userId,
     });
     res.json(order);
@@ -455,10 +499,11 @@ router.put(
     const { status } = req.body;
 
     if (!status || !['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED'].includes(status)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid status',
         code: 'INVALID_STATUS',
       });
+      return;
     }
 
     try {
@@ -467,10 +512,11 @@ router.put(
       res.json(result);
     } catch (error: any) {
       if (error?.message?.includes('not found')) {
-        return res.status(404).json({
+        res.status(404).json({
           error: error.message,
           code: 'PICK_TASK_NOT_FOUND',
         });
+        return;
       }
       throw error;
     }
@@ -487,7 +533,8 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const pickTaskId = req.body.pickTaskId || req.body.pick_task_id;
@@ -495,34 +542,83 @@ router.post(
     const quantity = req.body.quantity || 1;
 
     if (!pickTaskId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'pickTaskId is required',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     if (!reason || !reason.trim()) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required for undoing a pick',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     try {
       const order = await orderService.undoPick(pickTaskId, quantity, reason.trim());
+
+      // Create an UNDO_PICK exception for tracking (async, don't wait for it)
+      (async () => {
+        try {
+          const pool = getPool();
+
+          // Get pick task details for the exception
+          const pickTaskResult = await pool.query(
+            `SELECT pt.sku, pt.order_id, pt.quantity, pt.picked_quantity
+             FROM pick_tasks pt
+             WHERE pt.pick_task_id = $1`,
+            [pickTaskId]
+          );
+
+          if (pickTaskResult.rows.length > 0) {
+            const pickTask = pickTaskResult.rows[0];
+
+            // Calculate quantity difference (what was reduced)
+            const quantityReduced = quantity;
+
+            await pool.query(
+              `INSERT INTO order_exceptions (
+                order_id, order_item_id, sku, type,
+                quantity_expected, quantity_actual, reason,
+                reported_by, status, created_at
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+              [
+                pickTask.order_id,
+                pickTaskId,
+                pickTask.sku,
+                ExceptionType.UNDO_PICK,
+                pickTask.picked_quantity + quantityReduced, // original quantity before undo
+                pickTask.picked_quantity, // new quantity after undo
+                `${reason} (reduced by ${quantityReduced})`,
+                req.user.userId,
+                'OPEN',
+              ]
+            );
+          }
+        } catch (exceptionError) {
+          // Log the error but don't fail the undo operation
+          console.error('Failed to create exception for undo-pick:', exceptionError);
+        }
+      })();
+
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not found')) {
-        return res.status(404).json({
+        res.status(404).json({
           error: error.message,
           code: 'PICK_TASK_NOT_FOUND',
         });
+        return;
       }
       if (error?.message?.includes('cannot be decremented')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'CANNOT_DECREMENT',
         });
+        return;
       }
       throw error;
     }
@@ -539,16 +635,18 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { packer_id } = req.body;
 
     if (!packer_id) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'packer_id is required',
         code: 'MISSING_PACKER_ID',
       });
+      return;
     }
 
     try {
@@ -556,16 +654,18 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('cannot be claimed')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'ORDER_NOT_CLAIMABLE',
         });
+        return;
       }
       if (error?.message?.includes('already claimed')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'ORDER_ALREADY_CLAIMED',
         });
+        return;
       }
       throw error;
     }
@@ -582,16 +682,18 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { packer_id } = req.body;
 
     if (!packer_id) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'packer_id is required',
         code: 'MISSING_PACKER_ID',
       });
+      return;
     }
 
     try {
@@ -599,16 +701,18 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not assigned')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_ASSIGNED_TO_PACKER',
         });
+        return;
       }
       if (error?.message?.includes('not in PACKING status')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_PACKING',
         });
+        return;
       }
       throw error;
     }
@@ -625,23 +729,26 @@ router.post(
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
     }
 
     const { packer_id, reason } = req.body;
 
     if (!packer_id) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'packer_id is required',
         code: 'MISSING_PACKER_ID',
       });
+      return;
     }
 
     if (!reason || !reason.trim()) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Reason is required to unclaim an order',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     try {
@@ -653,16 +760,18 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not assigned')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_ASSIGNED_TO_PACKER',
         });
+        return;
       }
       if (error?.message?.includes('not in PACKING status')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_PACKING',
         });
+        return;
       }
       throw error;
     }
@@ -694,10 +803,11 @@ router.post(
     const { order_item_id, quantity } = req.body;
 
     if (!order_item_id) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'order_item_id is required',
         code: 'MISSING_ORDER_ITEM_ID',
       });
+      return;
     }
 
     try {
@@ -709,10 +819,11 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not in PACKING status')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_PACKING',
         });
+        return;
       }
       throw error;
     }
@@ -731,17 +842,19 @@ router.post(
     const { order_item_id, reason } = req.body;
 
     if (!order_item_id) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'order_item_id is required',
         code: 'MISSING_ORDER_ITEM_ID',
       });
+      return;
     }
 
     if (!reason) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'reason is required',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     try {
@@ -749,10 +862,11 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not in PACKING status')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_PACKING',
         });
+        return;
       }
       throw error;
     }
@@ -771,17 +885,19 @@ router.post(
     const { order_item_id, quantity, reason } = req.body;
 
     if (!order_item_id) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'order_item_id is required',
         code: 'MISSING_ORDER_ITEM_ID',
       });
+      return;
     }
 
     if (!reason) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'reason is required',
         code: 'MISSING_REASON',
       });
+      return;
     }
 
     try {
@@ -794,10 +910,11 @@ router.post(
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not in PACKING status')) {
-        return res.status(409).json({
+        res.status(409).json({
           error: error.message,
           code: 'NOT_PACKING',
         });
+        return;
       }
       throw error;
     }

@@ -11,7 +11,7 @@ import compression from 'compression';
 import config from './config';
 import { logger } from './config/logger';
 import routes from './routes';
-import { errorHandler, notFoundHandler, rateLimiter, requestId } from './middleware';
+import { errorHandler, notFoundHandler, rateLimiter, requestId, auditLoggingMiddleware } from './middleware';
 import {
   authRateLimiter,
   apiRateLimiter,
@@ -23,6 +23,8 @@ import {
 } from './middleware/security';
 import { testConnection, setupShutdownHandlers } from './db/client';
 import { setupSwagger } from './docs/swagger';
+import { metricsMiddleware, metricsEndpoint } from './observability/prometheus';
+import { getAuditService } from './services/AuditService';
 
 // ============================================================================
 // CONNECTION TRACKING FOR HOT RELOAD
@@ -173,6 +175,14 @@ export function createApp(): Application {
   app.use(requestId);
 
   // --------------------------------------------------------------------------
+  // PROMETHEUS METRICS
+  // --------------------------------------------------------------------------
+
+  if (config.prometheus.enabled) {
+    app.use(metricsMiddleware);
+  }
+
+  // --------------------------------------------------------------------------
   // CONNECTION TRACKING
   // --------------------------------------------------------------------------
 
@@ -195,11 +205,23 @@ export function createApp(): Application {
   });
 
   // --------------------------------------------------------------------------
+  // AUDIT LOGGING
+  // --------------------------------------------------------------------------
+
+  // Log ALL API requests to audit logs
+  app.use('/api', auditLoggingMiddleware);
+
+  // --------------------------------------------------------------------------
   // ROUTES
   // --------------------------------------------------------------------------
 
   // API routes
   app.use('/api', routes);
+
+  // Prometheus metrics endpoint (if enabled)
+  if (config.prometheus.enabled) {
+    app.get('/metrics', metricsEndpoint);
+  }
 
   // API Documentation (Swagger UI) - Only in development
   if (!config.isProduction()) {
@@ -271,6 +293,16 @@ export async function startServer(): Promise<void> {
   if (!dbConnected) {
     logger.error('Failed to connect to database');
     throw new Error('Database connection failed');
+  }
+
+  // Initialize Audit Service
+  try {
+    const auditService = getAuditService();
+    await auditService.initialize();
+    logger.info('Audit service initialized');
+  } catch (error) {
+    logger.error('Failed to initialize audit service', { error });
+    // Don't fail startup, just log the error
   }
 
   // Setup shutdown handlers

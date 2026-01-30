@@ -597,7 +597,7 @@ export class LocationCapacityService {
     if (!rule.isActive) return;
 
     // Get matching locations based on rule's applies_to
-    let locationQuery = 'SELECT DISTINCT bin_location FROM bin_locations WHERE active = true';
+    let locationQuery = 'SELECT DISTINCT bin_id FROM bin_locations WHERE active = true';
     const params: any[] = [];
     let paramCount = 1;
 
@@ -619,7 +619,7 @@ export class LocationCapacityService {
 
     // Recalculate capacity for each matching location
     for (const row of locationsResult.rows) {
-      await this.recalculateLocationCapacity(row.bin_location);
+      await this.recalculateLocationCapacity(row.bin_id);
     }
   }
 

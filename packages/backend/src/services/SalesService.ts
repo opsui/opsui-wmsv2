@@ -380,6 +380,58 @@ export class SalesService {
 
     return await salesRepository.findInteractionsByCustomer(customerId, limit);
   }
+
+  // ========================================================================
+  // DASHBOARD
+  // ========================================================================
+
+  async getDashboard(): Promise<{
+    totalCustomers: number;
+    activeLeads: number;
+    openOpportunities: number;
+    pendingQuotes: number;
+    totalPipeline: number;
+  }> {
+    const customersResult = await salesRepository.findAllCustomers({ limit: 1 });
+    const leadsResult = await salesRepository.findAllLeads({
+      status: 'NEW',
+      limit: 1,
+    });
+    const opportunitiesResult = await salesRepository.findAllOpportunities({
+      stage: 'PROPOSAL',
+      limit: 1,
+    });
+    const quotesResult = await salesRepository.findAllQuotes({
+      status: 'SENT',
+      limit: 1,
+    });
+
+    // Calculate total pipeline value from open opportunities
+    const allOpportunitiesResult = await salesRepository.findAllOpportunities({
+      limit: 1000,
+    });
+    const totalPipeline = allOpportunitiesResult.opportunities.reduce(
+      (sum, opp) => {
+        if (
+          opp.stage !== 'CLOSED_WON' &&
+          opp.stage !== 'CLOSED_LOST' &&
+          opp.amount
+        ) {
+          return sum + opp.amount;
+        }
+        return sum;
+      },
+      0
+    );
+
+    return {
+      totalCustomers: customersResult.total,
+      activeLeads: leadsResult.total,
+      openOpportunities: opportunitiesResult.total,
+      pendingQuotes: quotesResult.total,
+      totalPipeline,
+    };
+  }
 }
 
 // Singleton instance

@@ -10,17 +10,23 @@ import { asyncHandler, authenticate } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { getPool } from '../db/client';
 import { UserRole } from '@opsui/shared';
+import { getAuditService, AuditEventType } from '../services/AuditService';
+import { UserRepository } from '../repositories/UserRepository';
 
 const router = Router();
 const roleAssignmentRepo = new RoleAssignmentRepository(getPool());
+const auditService = getAuditService();
+const userRepo = new UserRepository();
 
 // Helper middleware to check if user is admin
+// ADMIN base role always has access (same as authorize middleware)
 const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  if (req.user?.role !== UserRole.ADMIN) {
-    return res.status(403).json({
+  if (req.user?.baseRole !== UserRole.ADMIN) {
+    res.status(403).json({
       error: 'Admin access required',
       code: 'FORBIDDEN',
     });
+      return;
   }
   next();
 };
@@ -51,10 +57,11 @@ router.get(
 
     // Users can view their own role assignments, admins can view any
     if (req.user?.userId !== userId && req.user?.role !== UserRole.ADMIN) {
-      return res.status(403).json({
+      res.status(403).json({
         error: 'You do not have permission to view role assignments for this user',
         code: 'FORBIDDEN',
       });
+      return;
     }
 
     const assignments = await roleAssignmentRepo.getRoleAssignmentsForUser(userId);
@@ -71,10 +78,11 @@ router.get(
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     const roles = await roleAssignmentRepo.getUserRoleAssignments(req.user.userId);
@@ -92,10 +100,11 @@ router.post(
   requireAdmin,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Not authenticated',
         code: 'NOT_AUTHENTICATED',
       });
+      return;
     }
 
     // Accept both camelCase and snake_case (frontend sends snake_case)
@@ -103,24 +112,65 @@ router.post(
     const finalUserId = userId || user_id;
 
     if (!finalUserId || !role) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'userId and role are required',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     // Validate role
     if (!Object.values(UserRole).includes(role)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid role',
         code: 'INVALID_ROLE',
       });
+      return;
     }
 
     const assignment = await roleAssignmentRepo.grantRole(
       { userId: finalUserId, role },
       req.user.userId
     );
+
+    // Fetch target user details for audit log
+    const targetUser = await userRepo.findById(finalUserId);
+
+    // Get admin user info for audit log
+    const adminUser = await userRepo.findById(req.user.userId);
+
+    // Safely get IP and user-agent
+    const ipAddress = req.ip || req.socket?.remoteAddress || null;
+    const userAgent = req.get('user-agent') || null;
+
+    // Log the role grant in audit logs
+    try {
+      await auditService.logAuthorization(
+        AuditEventType.ROLE_GRANTED,
+        req.user.userId,
+        adminUser?.email || req.user.email || null,
+        adminUser?.role || req.user?.effectiveRole || null,
+        'user_role',
+        finalUserId,
+        `Granted role "${role}" to user ${targetUser?.name || finalUserId}`,
+        null,
+        null,
+        {
+          details: {
+            role: role,
+            grantedTo: targetUser?.name || finalUserId,
+            grantedToEmail: targetUser?.email,
+            grantedBy: adminUser?.name || req.user.userId,
+            grantedByEmail: adminUser?.email || req.user.email,
+          }
+        },
+        ipAddress,
+        userAgent
+      );
+    } catch (auditError) {
+      // Log the audit error but don't fail the request
+      console.error('[roleAssignments] Failed to log role grant to audit:', auditError);
+    }
 
     res.status(201).json(assignment);
   })
@@ -135,18 +185,67 @@ router.delete(
   authenticate,
   requireAdmin,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Not authenticated',
+        code: 'NOT_AUTHENTICATED',
+      });
+      return;
+    }
+
     // Accept both camelCase and snake_case (frontend sends snake_case)
     const { userId, user_id, role } = req.body;
     const finalUserId = userId || user_id;
 
     if (!finalUserId || !role) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'userId and role are required',
         code: 'MISSING_FIELDS',
       });
+      return;
     }
 
     await roleAssignmentRepo.revokeRole({ userId: finalUserId, role });
+
+    // Fetch target user details for audit log
+    const targetUser = await userRepo.findById(finalUserId);
+
+    // Get admin user info for audit log
+    const adminUser = await userRepo.findById(req.user.userId);
+
+    // Safely get IP and user-agent
+    const ipAddress = req.ip || req.socket?.remoteAddress || null;
+    const userAgent = req.get('user-agent') || null;
+
+    // Log the role revoke in audit logs
+    try {
+      await auditService.logAuthorization(
+        AuditEventType.ROLE_REVOKED,
+        req.user.userId,
+        adminUser?.email || req.user.email || null,
+        adminUser?.role || req.user?.effectiveRole || null,
+        'user_role',
+        finalUserId,
+        `Revoked role "${role}" from user ${targetUser?.name || finalUserId}`,
+        null,
+        null,
+        {
+          details: {
+            role: role,
+            revokedFrom: targetUser?.name || finalUserId,
+            revokedFromEmail: targetUser?.email,
+            revokedBy: adminUser?.name || req.user.userId,
+            revokedByEmail: adminUser?.email || req.user.email,
+          }
+        },
+        ipAddress,
+        userAgent
+      );
+    } catch (auditError) {
+      // Log the audit error but don't fail the request
+      console.error('[roleAssignments] Failed to log role revoke to audit:', auditError);
+    }
+
     res.json({ message: 'Role revoked successfully' });
   })
 );

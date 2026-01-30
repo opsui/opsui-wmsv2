@@ -66,7 +66,12 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
         await apiClient.post('/auth/current-view', { view });
         console.log(`[PageTracking] [${trackingId}] Successfully updated current view to: ${view}`);
       } catch (error) {
-        console.error(`[PageTracking] [${trackingId}] Failed to update current view:`, error);
+        // Only log non-401 errors to reduce console noise during tests
+        const isAuthError = error && typeof error === 'object' && 'response' in error &&
+          (error as { response?: { status?: number } }).response?.status === 401;
+        if (!isAuthError) {
+          console.error(`[PageTracking] [${trackingId}] Failed to update current view:`, error);
+        }
       }
     };
 
@@ -96,7 +101,12 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
         await apiClient.post('/auth/set-idle');
         console.log(`[PageTracking] [${trackingId}] Successfully set picker to IDLE`);
       } catch (error) {
-        console.error(`[PageTracking] [${trackingId}] Failed to set picker to IDLE:`, error);
+        // Only log non-401 errors to reduce console noise during tests
+        const isAuthError = error && typeof error === 'object' && 'response' in error &&
+          (error as { response?: { status?: number } }).response?.status === 401;
+        if (!isAuthError) {
+          console.error(`[PageTracking] [${trackingId}] Failed to set picker to IDLE:`, error);
+        }
       }
     };
 
@@ -156,4 +166,8 @@ export const PageViews = {
   DASHBOARD: 'Dashboard',
   PROFILE: 'Profile',
   SETTINGS: 'Settings',
+  ITEM_SEARCH: 'Product Search',
+  WAVE_PICKING: 'Wave Picking',
+  ZONE_PICKING: 'Zone Picking',
+  SLOTTING: 'Slotting',
 } as const;

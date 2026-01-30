@@ -22,8 +22,8 @@ RUN npm ci
 COPY packages/backend ./packages/backend
 COPY packages/shared ./packages/shared
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript (shared package first, then backend)
+RUN npm run build --workspace=packages/shared
 RUN npm run build --workspace=packages/backend
 
 # Production stage
