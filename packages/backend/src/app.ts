@@ -221,8 +221,13 @@ export function createApp(): Application {
   // ROUTES
   // --------------------------------------------------------------------------
 
-  // API routes
-  app.use('/api', routes);
+  // API v1 routes
+  app.use('/api/v1', routes);
+
+  // Legacy API redirect (v1 is now current)
+  app.get('/api', (req, res) => {
+    res.redirect(301, '/api/v1');
+  });
 
   // Prometheus metrics endpoint (if enabled)
   if (config.prometheus.enabled) {
@@ -233,6 +238,7 @@ export function createApp(): Application {
   if (!config.isProduction()) {
     setupSwagger(app);
     logger.info('Swagger UI available at http://localhost:3001/api/docs');
+    logger.info('API v1 endpoint: http://localhost:3001/api/v1');
   }
 
   // Root endpoint
