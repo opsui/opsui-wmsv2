@@ -1302,6 +1302,20 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
         icon: MapIcon,
       });
 
+      // Shipped Orders - available to packers, supervisors, and admins
+      if (
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === UserRole.ADMIN ||
+        effectiveRole === UserRole.PACKER
+      ) {
+        items.push({
+          key: 'shipped-orders',
+          label: 'Shipped Orders',
+          path: '/shipped-orders',
+          icon: TruckIcon,
+        });
+      }
+
       if (items.length > 0) {
         groups.push({
           key: 'warehouse-ops',

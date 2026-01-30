@@ -200,7 +200,7 @@ function NavigationTracker() {
       ) {
         const updateIdleStatus = async () => {
           try {
-            await fetch('/api/auth/set-idle', {
+            await fetch('/api/v1/auth/set-idle', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ function NavigationTracker() {
         // When returning to tab, update current view to set user back to active
         else if (isVisible === true && wasVisible === false && lastKnownView) {
           // Update the view which will set the user back to active
-          fetch('/api/auth/current-view', {
+          fetch('/api/v1/auth/current-view', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -376,7 +376,7 @@ function NavigationTracker() {
     // Update current view in backend on navigation (silent, no console spam)
     const updateCurrentView = async () => {
       try {
-        await fetch('/api/auth/current-view', {
+        await fetch('/api/v1/auth/current-view', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
