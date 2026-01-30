@@ -2423,6 +2423,104 @@ export * from './sales-crm';
 export * from './maintenance';
 
 // ============================================================================
+// UTILITY TYPES - For type-safe replacements of 'any'
+// ============================================================================
+
+/**
+ * Deep partial type - makes all nested properties optional
+ * Useful for partial updates and patches
+ */
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+/**
+ * Database record with ID and timestamps
+ */
+export type DbRecord = {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
+/**
+ * Pagination parameters
+ */
+export type PaginationParams = {
+  page?: number;
+  limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+};
+
+/**
+ * Paginated response
+ */
+export type PaginatedResponse<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+/**
+ * Generic API response wrapper
+ */
+export type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+};
+
+/**
+ * JSON-serializable type for database values
+ */
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+/**
+ * Generic query result type
+ */
+export type QueryResult<T> = {
+  rows: T[];
+  rowCount: number;
+};
+
+/**
+ * Common error response type
+ */
+export type ErrorResponse = {
+  success: false;
+  error: string;
+  message?: string;
+  code?: string;
+  details?: Record<string, unknown>;
+};
+
+/**
+ * Type for database transaction client
+ */
+export type TransactionClient = {
+  query: (text: string, params?: unknown[]) => Promise<QueryResult<unknown>>;
+  release: () => void;
+};
+
+/**
+ * Generic filter type for queries
+ */
+export type Filter<T> = {
+  [K in keyof T]?: T[K] | { $in: T[K][] } | { $like: string } | { $gte: T[K] } | { $lte: T[K] };
+};
+
+// ============================================================================
 // NOTIFICATION SYSTEM - EXPORTS
 // ============================================================================
 

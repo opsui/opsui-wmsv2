@@ -41,3 +41,6 @@ export * from './utils';
 
 // Charts
 export * from '../charts';
+
+// Performance
+export * from './PageSuspense';

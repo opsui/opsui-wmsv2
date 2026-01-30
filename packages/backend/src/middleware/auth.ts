@@ -36,30 +36,41 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Verify JWT token and attach user to request
  * Supports active role switching for multi-role users
- * TEST MODE: When config.testMode is true AND NOT in production, authentication is bypassed
+ * TEST MODE: When config.testMode is true, requires special test API key
  */
 export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   try {
-    // TEST MODE: Bypass authentication for automated testing ONLY in non-production environments
-    // SECURITY: Never bypass authentication in production, even if testMode is enabled
+    // SECURITY: Test mode requires special X-Test-API-Key header for authenticated test requests
+    // This prevents accidental exposure while allowing automated testing
     if (config.testMode && config.nodeEnv !== 'production') {
-      // Attach a mock admin user for testing
-      req.user = {
-        userId: 'test-admin-user',
-        email: 'test@wms.local',
-        role: UserRole.ADMIN,
-        baseRole: UserRole.ADMIN,
-        activeRole: null,
-        effectiveRole: UserRole.ADMIN,
-      };
-      logger.debug('TEST MODE: Authentication bypassed, using mock admin user');
-      return next();
+      const testApiKey = req.headers['x-test-api-key'] as string;
+
+      if (testApiKey === process.env.TEST_API_KEY) {
+        // Verify test API key is set before using test mode
+        if (!process.env.TEST_API_KEY) {
+          logger.error('TEST MODE: TEST_API_KEY environment variable not set');
+          return next(new UnauthorizedError('Test mode not properly configured'));
+        }
+
+        // Attach a mock admin user for testing
+        req.user = {
+          userId: 'test-admin-user',
+          email: 'test@wms.local',
+          role: UserRole.ADMIN,
+          baseRole: UserRole.ADMIN,
+          activeRole: null,
+          effectiveRole: UserRole.ADMIN,
+        };
+        logger.debug('TEST MODE: Authentication via test API key');
+        return next();
+      }
+      // If test API key is not provided, fall through to normal JWT authentication
     }
 
-    // SECURITY: If testMode is enabled in production, log a warning and proceed with normal auth
+    // SECURITY: If testMode is enabled in production, log a critical security warning
     if (config.testMode && config.nodeEnv === 'production') {
-      logger.warn(
-        'SECURITY WARNING: TEST_MODE is enabled in production. Ignoring and requiring authentication.'
+      logger.error(
+        'SECURITY CRITICAL: TEST_MODE is enabled in production! This is a security risk.'
       );
     }
 
@@ -72,8 +83,8 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
 
     const token = authHeader.substring(7);
 
-    // Verify token
-    const decoded = jwt.verify(token, config.jwt.secret) as any;
+    // Verify token with proper type checking
+    const decoded = jwt.verify(token, config.jwt.secret) as JWTPayload;
 
     // Determine effective role (active role or base role)
     const effectiveRole = decoded.activeRole || decoded.role;
@@ -214,7 +225,7 @@ export function generateToken(user: {
 
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
-  } as jwt.SignOptions);
+  });
 }
 
 /**
