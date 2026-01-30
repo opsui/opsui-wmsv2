@@ -6,16 +6,12 @@
  */
 
 import {
-  InventoryUnit,
   InventoryTransaction,
   TransactionType,
-  SKU,
   BinLocation,
   NotFoundError,
   ConflictError,
 } from '@opsui/shared';
-import { inventoryRepository } from '../repositories/InventoryRepository';
-import { skuRepository } from '../repositories/SKURepository';
 import { logger } from '../config/logger';
 import { getPool } from '../db/client';
 

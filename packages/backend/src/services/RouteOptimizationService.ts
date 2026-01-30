@@ -615,6 +615,3 @@ class RouteOptimizationService {
 export const routeOptimizationService = new RouteOptimizationService();
 
 export default routeOptimizationService;
-
-// Export types
-export type { BinLocation, PickTask, OptimizedRoute, OptimizedPickTask, Waypoint, WarehouseConfig };

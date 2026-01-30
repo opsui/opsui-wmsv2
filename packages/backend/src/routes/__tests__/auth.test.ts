@@ -160,7 +160,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/logout', () => {
     it('should logout successfully', async () => {
       (authService.logout as jest.Mock).mockResolvedValue(undefined);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -183,8 +183,8 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = null;
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
+        req.user = undefined;
         next();
       });
 
@@ -202,7 +202,7 @@ describe('Auth Routes', () => {
   describe('GET /api/auth/me', () => {
     it('should return current user info', async () => {
       (authService.getUserById as jest.Mock).mockResolvedValue(mockUser);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -223,8 +223,8 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = null;
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
+        req.user = undefined;
         next();
       });
 
@@ -247,7 +247,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/change-password', () => {
     it('should change password successfully', async () => {
       (authService.changePassword as jest.Mock).mockResolvedValue(undefined);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -278,7 +278,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when current password is missing', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -304,7 +304,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when new password is missing', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -330,8 +330,8 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = null;
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
+        req.user = undefined;
         next();
       });
 
@@ -358,7 +358,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/current-view', () => {
     it('should update current view successfully', async () => {
       (authService.updateCurrentView as jest.Mock).mockResolvedValue(undefined);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -385,7 +385,7 @@ describe('Auth Routes', () => {
 
     it('should clear current view with empty string', async () => {
       (authService.updateCurrentView as jest.Mock).mockResolvedValue(undefined);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -408,7 +408,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when view is missing', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -432,8 +432,8 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = null;
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
+        req.user = undefined;
         next();
       });
 
@@ -459,7 +459,7 @@ describe('Auth Routes', () => {
   describe('POST /api/auth/set-idle', () => {
     it('should set user to idle successfully', async () => {
       (authService.setIdle as jest.Mock).mockResolvedValue(undefined);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -482,8 +482,8 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = null;
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
+        req.user = undefined;
         next();
       });
 
@@ -507,7 +507,7 @@ describe('Auth Routes', () => {
     it('should set active role successfully', async () => {
       const updatedUser = { ...mockUser, activeRole: UserRole.ADMIN };
       (authService.setActiveRole as jest.Mock).mockResolvedValue(updatedUser);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -534,7 +534,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when role is missing', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -558,7 +558,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when role is invalid', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -592,7 +592,7 @@ describe('Auth Routes', () => {
     it('should set active role with camelCase', async () => {
       const updatedUser = { ...mockUser, activeRole: UserRole.PACKER };
       (authService.setActiveRole as jest.Mock).mockResolvedValue(updatedUser);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -622,7 +622,7 @@ describe('Auth Routes', () => {
     it('should set active role with snake_case', async () => {
       const updatedUser = { ...mockUser, activeRole: UserRole.STOCK_CONTROLLER };
       (authService.setActiveRole as jest.Mock).mockResolvedValue(updatedUser);
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',
@@ -646,7 +646,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when role is missing', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
+      mockedAuthenticate.mockImplementation((req, _res, next) => {
         req.user = {
           userId: 'user-123',
           email: 'test@example.com',

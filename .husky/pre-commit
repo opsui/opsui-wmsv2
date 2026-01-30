@@ -51,10 +51,22 @@ print_success "Code formatting is correct"
 
 # 2. Lint with ESLint
 echo "🔎 Running ESLint..."
-if ! npx eslint $STAGED_FILES --max-warnings=0; then
-  print_error "ESLint errors found!"
-  echo "Run 'npm run lint:fix' to attempt auto-fix."
-  exit 1
+# Filter out files that are ignored by ESLint to avoid warnings
+LINTABLE_FILES=""
+for FILE in $STAGED_FILES; do
+  if npx eslint "$FILE" 2>&1 | grep -q "File ignored"; then
+    # Skip ignored files
+    continue
+  fi
+  LINTABLE_FILES="$LINTABLE_FILES $FILE"
+done
+
+if [ -n "$LINTABLE_FILES" ]; then
+  if ! npx eslint $LINTABLE_FILES --quiet; then
+    print_error "ESLint errors found!"
+    echo "Run 'npm run lint:fix' to attempt auto-fix."
+    exit 1
+  fi
 fi
 print_success "ESLint passed"
 

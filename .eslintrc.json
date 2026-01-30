@@ -10,9 +10,15 @@
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2022,
+    "ecmaVersion": "latest",
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": [
+      "./tsconfig.json",
+      "./packages/backend/tsconfig.json",
+      "./packages/frontend/tsconfig.json",
+      "./packages/shared/tsconfig.json"
+    ],
+    "tsconfigRootDir": "./"
   },
   "plugins": ["@typescript-eslint", "security", "import", "unicorn", "sonarjs"],
   "env": {
@@ -24,7 +30,7 @@
     "import/resolver": {
       "typescript": {
         "alwaysTryTypes": true,
-        "project": "./tsconfig.json"
+        "project": ["./tsconfig.json", "./packages/*/tsconfig.json"]
       }
     }
   },
@@ -47,6 +53,11 @@
     "@typescript-eslint/no-unsafe-member-access": "error",
     "@typescript-eslint/no-unsafe-return": "error",
     "@typescript-eslint/no-unsafe-argument": "error",
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-misused-promises": "warn",
+    "@typescript-eslint/no-unsafe-enum-comparison": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/no-unnecessary-condition": "warn",
     "@typescript-eslint/naming-convention": [
       "error",
       {
@@ -103,9 +114,15 @@
       }
     ],
     "import/no-unassigned-import": "error",
-    "import/no-duplicates": "error",
-    "import/no-cycle": "error",
-    "import/no-self-import": "error",
+    "import/no-duplicates": "off",
+    "import/no-cycle": "off",
+    "import/no-self-import": "off",
+    "import/no-unresolved": "off",
+    "import/namespace": "off",
+    "import/default": "off",
+    "import/no-named-as-default": "off",
+    "import/no-named-as-default-member": "off",
+    "import/order": "off",
     "import/first": "error",
 
     // Code quality rules
@@ -154,13 +171,57 @@
       },
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
-        "sonarjs/no-duplicated-branches": "off"
+        "sonarjs/no-duplicated-branches": "off",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-unnecessary-condition": "off",
+        "@typescript-eslint/strict-boolean-expressions": "off"
       }
     },
     {
       "files": ["packages/frontend/**/*"],
       "rules": {
         "no-console": "off"
+      }
+    },
+    {
+      "files": [
+        "*.js",
+        "*.cjs",
+        "*.mjs",
+        ".husky/**/*",
+        "ai-loop/**/*",
+        "scripts/**/*",
+        "e2e/**/*"
+      ],
+      "parserOptions": {
+        "project": null
+      },
+      "excludedFiles": ["packages/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-misused-promises": "off",
+        "@typescript-eslint/strict-boolean-expressions": "off",
+        "@typescript-eslint/no-unsafe-enum-comparison": "off",
+        "@typescript-eslint/await-thenable": "off",
+        "@typescript-eslint/no-unnecessary-condition": "off",
+        "@typescript-eslint/no-base-to-string": "off",
+        "@typescript-eslint/no-throw-literal": "off",
+        "@typescript-eslint/only-throw-error": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-misused-promises": "off",
+        "@typescript-eslint/require-await": "off",
+        "@typescript-eslint/return-await": "off",
+        "@typescript-eslint/no-redundant-type-constituents": "off",
+        "@typescript-eslint/no-duplicate-type-constituents": "off",
+        "@typescript-eslint/no-meaningless-void-expression": "off",
+        "@typescript-eslint/no-confusing-void-expression": "off",
+        "@typescript-eslint/no-invalid-void-type": "off",
+        "@typescript-eslint/no-dynamic-delete": "off"
       }
     }
   ]

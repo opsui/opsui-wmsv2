@@ -21,4 +21,9 @@ async function activateUsers() {
   }
 }
 
-activateUsers();
+activateUsers().catch(error => {
+  logger.error('Unhandled error in activateUsers', {
+    error: error instanceof Error ? error.message : String(error),
+  });
+  process.exit(1);
+});

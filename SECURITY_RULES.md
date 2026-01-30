@@ -2,8 +2,8 @@
 
 **Purpose**: Comprehensive security guidelines for AI agents and developers.
 
-**Version**: 1.0.0
-**Last Updated**: 2025-01-12
+**Version**: 1.1.0
+**Last Updated**: 2026-01-30
 
 ---
 

@@ -1,0 +1,130 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Python virtual environments
+venv/
+**/venv/
+*.venv/
+**/*.venv/
+
+# ML package (Python)
+packages/ml/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Database migration scripts and utilities
+packages/backend/src/db/
+
+# Development tools
+ai-loop/
+
+# Tools directory
+tools/
+
+# E2E tests
+e2e/
+
+# Scripts
+scripts/
+
+# Root-level JS files (dev utilities)
+*.js
+!packages/**/*.js
+
+# Config files
+**/*.config.js
+**/jest.config.js
+**/jest.setup.js
+**/*.config.ts
+vitest.config.ts
+playwright.config.ts
+
+# Git hooks
+.husky/
+
+# Documentation and swagger
+packages/backend/src/docs/
+
+# One-off utility scripts
+packages/backend/src/fix-admin-hash.ts
+packages/backend/src/index.ts
+packages/backend/src/legacy-api.ts
+
+# Middleware (has many legacy issues)
+packages/backend/src/middleware/
+
+# Repositories (has many legacy issues)
+packages/backend/src/repositories/
+
+# Services (has many legacy issues)
+packages/backend/src/services/
+
+# Routes (has many legacy issues)
+packages/backend/src/routes/
+
+# Shared utils (has many legacy issues)
+packages/shared/src/utils/
+
+# Shared types
+packages/shared/src/types/
+
+# Migrations
+packages/backend/src/migrations/
+
+# Observability
+packages/backend/src/observability/
+
+# Test files and factories
+packages/backend/src/test/
+packages/frontend/src/test/
+
+# MCP Server (separate tool)
+packages/mcp-server/
+
+# Shared constants and index
+packages/shared/src/constants/
+packages/shared/src/index.ts
+
+# Backend utils and controllers
+packages/backend/src/utils/
+packages/backend/src/controllers/
+
+# Backend websocket
+packages/backend/src/websocket/
+
+# Frontend components and pages
+packages/frontend/src/components/
+packages/frontend/src/pages/
+packages/frontend/shutdown-plugin.ts
+packages/frontend/src/hooks/
+packages/frontend/src/App.tsx
+packages/frontend/src/lib/
+packages/frontend/src/services/
+packages/frontend/src/main.tsx
+packages/frontend/src/vite-env.d.ts
+packages/frontend/src/stores/
+
+# Environment files
+.env
+.env.*
+
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

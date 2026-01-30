@@ -98,16 +98,13 @@ export async function waitForDrain(timeoutMs: number = 30000): Promise<boolean> 
 }
 
 // ============================================================================
-// CREATE APP
+// CREATE APP - HELPER FUNCTIONS
 // ============================================================================
 
-export function createApp(): Application {
-  const app = express();
-
-  // --------------------------------------------------------------------------
-  // SECURITY MIDDLEWARE
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure security middleware for the application
+ */
+function setupSecurityMiddleware(app: Application): void {
   // Custom security headers
   app.use(securityHeaders);
 
@@ -131,7 +128,7 @@ export function createApp(): Application {
   // CSRF protection for state-changing operations
   app.use('/api', csrfProtection);
 
-  // Rate limiting
+  // Rate limiting (production only)
   if (config.isProduction()) {
     // Auth endpoints - stricter limits
     app.use('/api/auth/login', authRateLimiter);
@@ -149,55 +146,43 @@ export function createApp(): Application {
       next();
     });
   }
+}
 
-  // --------------------------------------------------------------------------
-  // BODY PARSING
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure body parsing middleware
+ */
+function setupBodyParsing(app: Application): void {
   // Parse JSON bodies
   app.use(express.json({ limit: '10mb' }));
 
   // Parse URL-encoded bodies
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+}
 
-  // --------------------------------------------------------------------------
-  // COMPRESSION
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure compression middleware
+ */
+function setupCompression(app: Application): void {
   app.use(compression());
+}
 
-  // --------------------------------------------------------------------------
-  // RATE LIMITING
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure rate limiting middleware
+ */
+function setupRateLimiting(app: Application): void {
   if (config.isProduction()) {
     app.use('/api/', rateLimiter);
   }
+}
 
-  // --------------------------------------------------------------------------
-  // REQUEST ID TRACKING
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure request tracking middleware
+ */
+function setupRequestTracking(app: Application): void {
+  // Request ID tracking
   app.use(requestId);
 
-  // --------------------------------------------------------------------------
-  // PROMETHEUS METRICS
-  // --------------------------------------------------------------------------
-
-  if (config.prometheus.enabled) {
-    app.use(metricsMiddleware);
-  }
-
-  // --------------------------------------------------------------------------
-  // CONNECTION TRACKING
-  // --------------------------------------------------------------------------
-
-  app.use(trackConnections);
-
-  // --------------------------------------------------------------------------
-  // REQUEST LOGGING
-  // --------------------------------------------------------------------------
-
+  // Request logging
   app.use((req, res, next) => {
     logger.debug('Incoming request', {
       requestId: req.id,
@@ -209,18 +194,22 @@ export function createApp(): Application {
     });
     next();
   });
+}
 
-  // --------------------------------------------------------------------------
-  // AUDIT LOGGING
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure audit logging
+ */
+function setupAuditLogging(app: Application): void {
   // Log ALL API requests to audit logs
-  app.use('/api', auditLoggingMiddleware);
+  app.use('/api', (req, res, next) => {
+    auditLoggingMiddleware(req, res, next).catch(next);
+  });
+}
 
-  // --------------------------------------------------------------------------
-  // ROUTES
-  // --------------------------------------------------------------------------
-
+/**
+ * Configure API routes
+ */
+function setupApiRoutes(app: Application): void {
   // API v1 routes
   app.use('/api/v1', routes);
 
@@ -231,16 +220,27 @@ export function createApp(): Application {
 
   // Prometheus metrics endpoint (if enabled)
   if (config.prometheus.enabled) {
-    app.get('/metrics', metricsEndpoint);
+    app.get('/metrics', (req, res, next) => {
+      metricsEndpoint(req, res).catch(next);
+    });
   }
+}
 
-  // API Documentation (Swagger UI) - Only in development
+/**
+ * Configure documentation routes
+ */
+function setupDocumentationRoutes(app: Application): void {
   if (!config.isProduction()) {
     setupSwagger(app);
     logger.info('Swagger UI available at http://localhost:3001/api/docs');
     logger.info('API v1 endpoint: http://localhost:3001/api/v1');
   }
+}
 
+/**
+ * Configure system endpoints
+ */
+function setupSystemEndpoints(app: Application): void {
   // Root endpoint
   app.get('/', (_req, res) => {
     res.json({
@@ -268,23 +268,60 @@ export function createApp(): Application {
 
   // Readiness check for orchestrators
   app.get('/ready', (_req, res) => {
-    const isReady = activeConnections.size < 100; // Consider ready if not overloaded
+    const isReady = activeConnections.size < 100;
     res.status(isReady ? 200 : 503).json({
       ready: isReady,
       activeConnections: activeConnections.size,
       timestamp: new Date().toISOString(),
     });
   });
+}
 
-  // --------------------------------------------------------------------------
-  // ERROR HANDLING
-  // --------------------------------------------------------------------------
+/**
+ * Configure routes and endpoints
+ */
+function setupRoutes(app: Application): void {
+  setupApiRoutes(app);
+  setupDocumentationRoutes(app);
+  setupSystemEndpoints(app);
+}
 
+/**
+ * Configure error handlers
+ */
+function setupErrorHandlers(app: Application): void {
   // 404 handler
   app.use(notFoundHandler);
 
   // Global error handler
   app.use(errorHandler);
+}
+
+// ============================================================================
+// CREATE APP
+// ============================================================================
+
+export function createApp(): Application {
+  const app = express();
+
+  // Setup all middleware and routes
+  setupSecurityMiddleware(app);
+  setupBodyParsing(app);
+  setupCompression(app);
+  setupRateLimiting(app);
+
+  // Connection tracking
+  app.use(trackConnections);
+
+  // Prometheus metrics (if enabled)
+  if (config.prometheus.enabled) {
+    app.use(metricsMiddleware);
+  }
+
+  setupRequestTracking(app);
+  setupAuditLogging(app);
+  setupRoutes(app);
+  setupErrorHandlers(app);
 
   return app;
 }

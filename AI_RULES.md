@@ -2,8 +2,8 @@
 
 **Purpose**: This file defines boundaries and guardrails for AI agents working on this codebase.
 
-**Version**: 1.0.0
-**Last Updated**: 2025-01-12
+**Version**: 1.1.0
+**Last Updated**: 2026-01-30
 
 ---
 

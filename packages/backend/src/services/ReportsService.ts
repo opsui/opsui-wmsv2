@@ -215,7 +215,7 @@ export class ReportsService {
   /**
    * Process query results
    */
-  private processResults(rows: any[], report: Report, parameters: Record<string, any>): any[] {
+  private processResults(rows: any[], report: Report, _parameters: Record<string, any>): any[] {
     return rows.map((row, index) => {
       const processed: any = {};
 
@@ -286,7 +286,7 @@ export class ReportsService {
       if (!data || data.length === 0) {
         await reportsRepository.updateExportJob(jobId, {
           status: ReportStatus.COMPLETED,
-          fileUrl: null, // No file generated for empty data
+          fileUrl: undefined, // No file generated for empty data
           completedAt: new Date(),
         });
         return;
@@ -454,7 +454,7 @@ export class ReportsService {
   /**
    * Generate PDF file
    */
-  private async generatePDF(data: any[], filePath: string, entityType: string): Promise<void> {
+  private async generatePDF(data: any[], filePath: string, _entityType: string): Promise<void> {
     // For now, use CSV as a simple implementation
     // In production, you would use a library like 'pdfkit'
     await this.generateCSV(data, filePath.replace('.pdf', '.csv'));

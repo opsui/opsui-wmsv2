@@ -10,8 +10,29 @@ import winston from 'winston';
 // CONFIGURATION
 // ============================================================================
 
-const logLevel = process.env.LOG_LEVEL || 'info';
-const logFile = process.env.LOG_FILE || 'logs/wms.log';
+const logLevel = (() => {
+  const value = process.env.LOG_LEVEL;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (value !== undefined && value !== null) {
+    const trimmed = value.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+  return 'info';
+})();
+
+const logFile = (() => {
+  const value = process.env.LOG_FILE;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (value !== undefined && value !== null) {
+    const trimmed = value.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+  return 'logs/wms.log';
+})();
 
 // Define log format
 const logFormat = winston.format.combine(
@@ -26,11 +47,14 @@ const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'HH:mm:ss' }),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    let msg = `${timestamp} [${level}]: ${message}`;
+    const ts = String(timestamp);
+    const lvl = String(level);
+    const msg = String(message);
+    let result = `${ts} [${lvl}]: ${msg}`;
     if (Object.keys(meta).length > 0) {
-      msg += ` ${JSON.stringify(meta)}`;
+      result += ` ${JSON.stringify(meta)}`;
     }
-    return msg;
+    return result;
   })
 );
 
