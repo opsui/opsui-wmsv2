@@ -53,7 +53,7 @@ interface FilterOptions {
 // MAIN COMPONENT
 // ============================================================================
 
-export function ShippedOrdersPage() {
+export default function ShippedOrdersPage() {
   const { showToast } = useToast();
 
   // Pagination state
