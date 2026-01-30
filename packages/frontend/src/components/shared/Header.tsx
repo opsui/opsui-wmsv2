@@ -44,6 +44,7 @@ import {
   MagnifyingGlassIcon,
   ExclamationCircleIcon,
   MapIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
 import { useState, useRef, useEffect } from 'react';
