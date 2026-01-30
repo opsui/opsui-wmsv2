@@ -169,15 +169,15 @@ export class ShippingService {
     const total = parseInt(countResult.rows[0].count, 10);
     const totalPages = Math.ceil(total / limit);
 
-    // Get orders
+    // Get orders with calculated item_count
     const result = await client.query(
       `SELECT
         o.order_id,
         o.customer_name,
         o.status,
         o.priority,
-        o.item_count,
-        o.total_value,
+        (SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as item_count,
+        0 as total_value,
         s.shipped_at,
         s.delivered_at,
         s.tracking_number,
@@ -204,9 +204,10 @@ export class ShippingService {
       deliveredAt: row.delivered_at ? new Date(row.delivered_at).toISOString() : undefined,
       trackingNumber: row.tracking_number,
       carrier: row.carrier_id,
-      shippingAddress: typeof row.ship_to_address === 'string'
-        ? row.ship_to_address
-        : JSON.stringify(row.ship_to_address),
+      shippingAddress:
+        typeof row.ship_to_address === 'string'
+          ? row.ship_to_address
+          : JSON.stringify(row.ship_to_address),
       shippedBy: row.shipped_by || 'System',
     }));
 
@@ -214,7 +215,7 @@ export class ShippingService {
     const statsResult = await client.query(
       `SELECT
         COUNT(*) as total_shipped,
-        COALESCE(SUM(o.total_value), 0) as total_value,
+        0 as total_value,
         COUNT(*) FILTER (WHERE s.delivered_at IS NOT NULL) as delivered,
         COUNT(*) FILTER (WHERE s.delivered_at IS NULL) as pending_delivery
        FROM orders o
@@ -251,8 +252,8 @@ export class ShippingService {
         o.customer_name,
         o.status,
         o.priority,
-        o.item_count,
-        o.total_value,
+        (SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as item_count,
+        0 as total_value,
         s.shipped_at,
         s.delivered_at,
         s.tracking_number,

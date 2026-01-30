@@ -1267,9 +1267,12 @@ export const useExportShippedOrders = () => {
 
   return useMutation({
     mutationFn: async (orderIds: string[]) => {
-      const response = await apiClient.get(`/shipping/orders/export?orderIds=${orderIds.join(',')}`, {
-        responseType: 'blob',
-      });
+      const response = await apiClient.get(
+        `/shipping/orders/export?orderIds=${orderIds.join(',')}`,
+        {
+          responseType: 'blob',
+        }
+      );
       return response.data;
     },
     onSuccess: () => {

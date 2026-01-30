@@ -94,10 +94,7 @@ router.get(
     const csvData = await shippingService.exportShippedOrdersToCSV(ids);
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="shipped-orders-${Date.now()}.csv"`
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="shipped-orders-${Date.now()}.csv"`);
     res.send(csvData);
   })
 );

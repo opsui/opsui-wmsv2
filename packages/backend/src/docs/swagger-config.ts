@@ -202,7 +202,16 @@ const options: swaggerJsdoc.Options = {
             },
             status: {
               type: 'string',
-              enum: ['PENDING', 'PICKING', 'PICKED', 'PACKING', 'PACKED', 'SHIPPED', 'CANCELLED', 'BACKORDER'],
+              enum: [
+                'PENDING',
+                'PICKING',
+                'PICKED',
+                'PACKING',
+                'PACKED',
+                'SHIPPED',
+                'CANCELLED',
+                'BACKORDER',
+              ],
               description: 'Order status',
             },
             priority: {

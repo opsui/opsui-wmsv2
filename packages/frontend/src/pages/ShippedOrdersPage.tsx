@@ -159,18 +159,14 @@ export default function ShippedOrdersPage() {
   // Select all visible orders
   const toggleSelectAll = () => {
     if (shippedOrdersData?.orders) {
-      const allSelected = shippedOrdersData.orders.every(order =>
-        selectedOrders.has(order.id)
-      );
+      const allSelected = shippedOrdersData.orders.every(order => selectedOrders.has(order.id));
 
       if (allSelected) {
         // Deselect all
         setSelectedOrders(new Set());
       } else {
         // Select all
-        setSelectedOrders(
-          new Set(shippedOrdersData.orders.map(order => order.id))
-        );
+        setSelectedOrders(new Set(shippedOrdersData.orders.map(order => order.id)));
       }
     }
   };
@@ -315,10 +311,7 @@ export default function ShippedOrdersPage() {
           <Button
             variant="secondary"
             onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              'relative',
-              activeFiltersCount > 0 && 'ring-2 ring-primary-600'
-            )}
+            className={cn('relative', activeFiltersCount > 0 && 'ring-2 ring-primary-600')}
           >
             <FunnelIcon className="h-5 w-5 mr-2" />
             Filters
@@ -330,11 +323,7 @@ export default function ShippedOrdersPage() {
           </Button>
 
           {/* Export Button */}
-          <Button
-            variant="secondary"
-            onClick={handleExport}
-            disabled={selectedOrders.size === 0}
-          >
+          <Button variant="secondary" onClick={handleExport} disabled={selectedOrders.size === 0}>
             <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
             Export ({selectedOrders.size})
           </Button>
@@ -408,9 +397,7 @@ export default function ShippedOrdersPage() {
             <p className="mt-2 text-gray-500">Loading shipped orders...</p>
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-600">
-            Failed to load shipped orders
-          </div>
+          <div className="p-8 text-center text-red-600">Failed to load shipped orders</div>
         ) : shippedOrdersData?.orders && shippedOrdersData.orders.length > 0 ? (
           <>
             {/* Toolbar */}
@@ -418,9 +405,7 @@ export default function ShippedOrdersPage() {
               <div className="flex items-center gap-4">
                 <input
                   type="checkbox"
-                  checked={shippedOrdersData.orders.every(order =>
-                    selectedOrders.has(order.id)
-                  )}
+                  checked={shippedOrdersData.orders.every(order => selectedOrders.has(order.id))}
                   onChange={toggleSelectAll}
                   className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                 />
@@ -511,9 +496,7 @@ export default function ShippedOrdersPage() {
                         <div className="text-sm text-gray-900 dark:text-white">
                           {formatDate(order.shippedAt)}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          by {order.shippedBy}
-                        </div>
+                        <div className="text-xs text-gray-500">by {order.shippedBy}</div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
@@ -552,7 +535,7 @@ export default function ShippedOrdersPage() {
             {/* Pagination */}
             <div className="border-t px-6 py-4 flex items-center justify-between">
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                Showing {((currentPage - 1) * pageSize) + 1} to{' '}
+                Showing {(currentPage - 1) * pageSize + 1} to{' '}
                 {Math.min(currentPage * pageSize, shippedOrdersData.total)} of{' '}
                 {shippedOrdersData.total} orders
               </div>

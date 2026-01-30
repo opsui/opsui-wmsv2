@@ -124,7 +124,9 @@ export const LazyRouteOptimizationPage = createLazyPage(() => import('./RouteOpt
 // NOTIFICATION PAGES
 // ============================================================================
 
-export const LazyNotificationPreferencesPage = createLazyPage(() => import('./NotificationPreferencesPage'));
+export const LazyNotificationPreferencesPage = createLazyPage(
+  () => import('./NotificationPreferencesPage')
+);
 export const LazyNotificationsPage = createLazyPage(() => import('./NotificationsPage'));
 
 // ============================================================================
