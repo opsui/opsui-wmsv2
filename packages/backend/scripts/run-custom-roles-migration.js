@@ -14,10 +14,7 @@ async function runMigration() {
   });
 
   try {
-    const migrationPath = path.join(
-      __dirname,
-      '../src/db/migrations/005_create_custom_roles.sql'
-    );
+    const migrationPath = path.join(__dirname, '../src/db/migrations/005_create_custom_roles.sql');
     const sql = fs.readFileSync(migrationPath, 'utf8');
 
     console.log('Running migration: 005_create_custom_roles.sql');

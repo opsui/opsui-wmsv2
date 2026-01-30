@@ -9,7 +9,17 @@
  */
 
 import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, Badge, ToggleSwitch, useToast } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  Badge,
+  ToggleSwitch,
+  useToast,
+} from '@/components/shared';
 import {
   ArrowLeftIcon,
   BellIcon,
@@ -22,18 +32,30 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import { useNotificationPreferences, useUpdateNotificationPreferences, useNotificationStats } from '@/services/api';
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  useNotificationStats,
+} from '@/services/api';
 
 // ============================================================================
 // NOTIFICATION TYPES
 // ============================================================================
 
 const NOTIFICATION_TYPES = [
-  { key: 'ORDER_CLAIMED', label: 'Order Claimed', description: 'When an order is claimed by a picker' },
+  {
+    key: 'ORDER_CLAIMED',
+    label: 'Order Claimed',
+    description: 'When an order is claimed by a picker',
+  },
   { key: 'ORDER_COMPLETED', label: 'Order Completed', description: 'When an order is completed' },
   { key: 'PICK_UPDATED', label: 'Pick Updated', description: 'When an item is picked' },
   { key: 'INVENTORY_LOW', label: 'Low Inventory', description: 'When stock falls below threshold' },
-  { key: 'EXCEPTION_REPORTED', label: 'Exception Reported', description: 'When an exception is logged' },
+  {
+    key: 'EXCEPTION_REPORTED',
+    label: 'Exception Reported',
+    description: 'When an exception is logged',
+  },
   { key: 'ZONE_ASSIGNED', label: 'Zone Assigned', description: 'When assigned to a picking zone' },
   { key: 'WAVE_CREATED', label: 'Wave Created', description: 'When a picking wave is created' },
   { key: 'SYSTEM_ALERT', label: 'System Alerts', description: 'Critical system notifications' },
@@ -50,7 +72,15 @@ const CHANNELS = [
 // SUBCOMPONENTS
 // ============================================================================
 
-function ChannelToggle({ channel, enabled, onToggle }: { channel: typeof CHANNELS[0]; enabled: boolean; onToggle: () => void }) {
+function ChannelToggle({
+  channel,
+  enabled,
+  onToggle,
+}: {
+  channel: (typeof CHANNELS)[0];
+  enabled: boolean;
+  onToggle: () => void;
+}) {
   const Icon = channel.icon;
   return (
     <button
@@ -63,12 +93,17 @@ function ChannelToggle({ channel, enabled, onToggle }: { channel: typeof CHANNEL
     >
       <Icon className={`h-5 w-5 ${enabled ? channel.color : 'text-gray-400'}`} />
       <span className="flex-1 text-left text-sm font-medium text-white">{channel.label}</span>
-      <div className={`w-10 h-5 rounded-full transition-colors ${
-        enabled ? 'bg-primary-500' : 'bg-gray-600'
-      }`}>
-        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-          enabled ? 'translate-x-5' : 'translate-x-0.5'
-        }`} style={{ marginTop: 2 }} />
+      <div
+        className={`w-10 h-5 rounded-full transition-colors ${
+          enabled ? 'bg-primary-500' : 'bg-gray-600'
+        }`}
+      >
+        <div
+          className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+            enabled ? 'translate-x-5' : 'translate-x-0.5'
+          }`}
+          style={{ marginTop: 2 }}
+        />
       </div>
     </button>
   );
@@ -81,8 +116,8 @@ function TypeChannelPreference({
   globalEnabled,
   onToggle,
 }: {
-  type: typeof NOTIFICATION_TYPES[0];
-  channel: typeof CHANNELS[0];
+  type: (typeof NOTIFICATION_TYPES)[0];
+  channel: (typeof CHANNELS)[0];
   enabled: boolean | undefined;
   globalEnabled: boolean;
   onToggle: () => void;
@@ -95,8 +130,8 @@ function TypeChannelPreference({
         !globalEnabled
           ? 'opacity-30 cursor-not-allowed'
           : enabled
-          ? 'bg-primary-500/20 text-primary-400'
-          : 'bg-white/5 text-gray-400 hover:bg-white/10'
+            ? 'bg-primary-500/20 text-primary-400'
+            : 'bg-white/5 text-gray-400 hover:bg-white/10'
       }`}
       title={globalEnabled ? `${channel.label} for ${type.label}` : `Enable ${channel.label} first`}
     >
@@ -181,11 +216,16 @@ export function NotificationPreferencesPage() {
 
   const getTypeChannelGlobalEnabled = (channelKey: string): boolean => {
     switch (channelKey) {
-      case 'email': return emailEnabled;
-      case 'sms': return smsEnabled;
-      case 'push': return pushEnabled;
-      case 'inApp': return inAppEnabled;
-      default: return false;
+      case 'email':
+        return emailEnabled;
+      case 'sms':
+        return smsEnabled;
+      case 'push':
+        return pushEnabled;
+      case 'inApp':
+        return inAppEnabled;
+      default:
+        return false;
     }
   };
 
@@ -237,10 +277,18 @@ export function NotificationPreferencesPage() {
                 enabled={getTypeChannelGlobalEnabled(channel.key)}
                 onToggle={() => {
                   switch (channel.key) {
-                    case 'email': setEmailEnabled(!emailEnabled); break;
-                    case 'sms': setSmsEnabled(!smsEnabled); break;
-                    case 'push': setPushEnabled(!pushEnabled); break;
-                    case 'inApp': setInAppEnabled(!inAppEnabled); break;
+                    case 'email':
+                      setEmailEnabled(!emailEnabled);
+                      break;
+                    case 'sms':
+                      setSmsEnabled(!smsEnabled);
+                      break;
+                    case 'push':
+                      setPushEnabled(!pushEnabled);
+                      break;
+                    case 'inApp':
+                      setInAppEnabled(!inAppEnabled);
+                      break;
                   }
                 }}
               />
@@ -256,13 +304,11 @@ export function NotificationPreferencesPage() {
             </CardHeader>
             <CardContent>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Phone Number
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
                 <input
                   type="tel"
                   value={smsPhone}
-                  onChange={(e) => setSmsPhone(e.target.value)}
+                  onChange={e => setSmsPhone(e.target.value)}
                   placeholder="+64212345678"
                   className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
@@ -282,7 +328,10 @@ export function NotificationPreferencesPage() {
           <CardContent>
             <div className="space-y-4">
               {NOTIFICATION_TYPES.map(type => (
-                <div key={type.key} className="p-4 rounded-lg bg-white/5 border border-white/[0.08]">
+                <div
+                  key={type.key}
+                  className="p-4 rounded-lg bg-white/5 border border-white/[0.08]"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-white font-medium">{type.label}</h3>
@@ -316,7 +365,9 @@ export function NotificationPreferencesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-white font-medium">Enable Quiet Hours</h3>
-                <p className="text-gray-400 text-sm">Suppress notifications during specific times</p>
+                <p className="text-gray-400 text-sm">
+                  Suppress notifications during specific times
+                </p>
               </div>
               <ToggleSwitch checked={quietHoursEnabled} onChange={setQuietHoursEnabled} />
             </div>
@@ -328,7 +379,7 @@ export function NotificationPreferencesPage() {
                   <input
                     type="time"
                     value={quietHoursStart}
-                    onChange={(e) => setQuietHoursStart(e.target.value)}
+                    onChange={e => setQuietHoursStart(e.target.value)}
                     className="px-3 py-2 rounded-lg bg-white/5 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
@@ -337,7 +388,7 @@ export function NotificationPreferencesPage() {
                   <input
                     type="time"
                     value={quietHoursEnd}
-                    onChange={(e) => setQuietHoursEnd(e.target.value)}
+                    onChange={e => setQuietHoursEnd(e.target.value)}
                     className="px-3 py-2 rounded-lg bg-white/5 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                   <SunIcon className="h-5 w-5 text-gray-400" />

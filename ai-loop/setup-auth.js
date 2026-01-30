@@ -179,9 +179,15 @@ async function setupAuth() {
 
   await pickerPage.goto('/login');
 
-  const pickerEmailField = pickerPage.locator('input[type="email"], input[placeholder*="email" i]').first();
-  const pickerPasswordField = pickerPage.locator('input[type="password"], input[placeholder*="password" i]').first();
-  const pickerSubmitButton = pickerPage.locator('button[type="submit"], button:has-text("Sign In")').first();
+  const pickerEmailField = pickerPage
+    .locator('input[type="email"], input[placeholder*="email" i]')
+    .first();
+  const pickerPasswordField = pickerPage
+    .locator('input[type="password"], input[placeholder*="password" i]')
+    .first();
+  const pickerSubmitButton = pickerPage
+    .locator('button[type="submit"], button:has-text("Sign In")')
+    .first();
 
   await pickerEmailField.fill('picker@wms.local');
   await pickerPasswordField.fill('picker123');

@@ -109,9 +109,7 @@ export class EmailProvider {
     }
 
     // Filter preferred order to only include initialized providers
-    this.preferredOrder = this.preferredOrder.filter(provider =>
-      this.providers.has(provider)
-    );
+    this.preferredOrder = this.preferredOrder.filter(provider => this.providers.has(provider));
 
     if (this.preferredOrder.length === 0) {
       logger.warn('No email providers initialized');
@@ -236,10 +234,7 @@ export class EmailProvider {
   // SENDGRID
   // --------------------------------------------------------------------------
 
-  private async sendWithSendGrid(
-    sgMail: any,
-    params: EmailParams
-  ): Promise<EmailResult> {
+  private async sendWithSendGrid(sgMail: any, params: EmailParams): Promise<EmailResult> {
     const to = Array.isArray(params.to) ? params.to : [params.to];
 
     const msg: any = {
@@ -282,10 +277,7 @@ export class EmailProvider {
   // POSTMARK
   // --------------------------------------------------------------------------
 
-  private async sendWithPostmark(
-    client: any,
-    params: EmailParams
-  ): Promise<EmailResult> {
+  private async sendWithPostmark(client: any, params: EmailParams): Promise<EmailResult> {
     const to = Array.isArray(params.to) ? params.to : [params.to];
 
     const email: any = {
@@ -328,10 +320,7 @@ export class EmailProvider {
   // SES (AWS Simple Email Service)
   // --------------------------------------------------------------------------
 
-  private async sendWithSES(
-    { client, command }: any,
-    params: EmailParams
-  ): Promise<EmailResult> {
+  private async sendWithSES({ client, command }: any, params: EmailParams): Promise<EmailResult> {
     const to = Array.isArray(params.to) ? params.to : [params.to];
 
     const emailParams: any = {
@@ -389,10 +378,7 @@ export class EmailProvider {
   // BULK SEND
   // --------------------------------------------------------------------------
 
-  async bulkSend(
-    emails: EmailParams[],
-    rateLimitMs: number = 100
-  ): Promise<EmailResult[]> {
+  async bulkSend(emails: EmailParams[], rateLimitMs: number = 100): Promise<EmailResult[]> {
     const results: EmailResult[] = [];
 
     for (let i = 0; i < emails.length; i++) {

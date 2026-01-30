@@ -24,22 +24,22 @@ This guide explains how to administer the Warehouse Management System (WMS). Adm
 
 ### Role Hierarchy
 
-| Role | Permissions | Responsibilities |
-|------|-------------|-------------------|
-| **Admin** | Full system access | System configuration, user management, all operations |
-| **Supervisor** | Warehouse operations oversight | Order assignment, exception handling, performance monitoring |
-| **Stock Controller** | Inventory management | Stock adjustments, cycle counts, replenishment |
-| **Inwards** | Receiving operations | ASN management, receipt processing, putaway |
+| Role                 | Permissions                    | Responsibilities                                             |
+| -------------------- | ------------------------------ | ------------------------------------------------------------ |
+| **Admin**            | Full system access             | System configuration, user management, all operations        |
+| **Supervisor**       | Warehouse operations oversight | Order assignment, exception handling, performance monitoring |
+| **Stock Controller** | Inventory management           | Stock adjustments, cycle counts, replenishment               |
+| **Inwards**          | Receiving operations           | ASN management, receipt processing, putaway                  |
 
 ### Admin vs Supervisor
 
-| Feature | Admin | Supervisor |
-|---------|-------|------------|
-| User management | Full (create, edit, deactivate) | View only |
-| System settings | Full access | Limited access |
-| Audit logs | Full access | Full access |
-| Order operations | All | Claim, assign, override |
-| Inventory | All adjustments | Adjustments with approval |
+| Feature          | Admin                           | Supervisor                |
+| ---------------- | ------------------------------- | ------------------------- |
+| User management  | Full (create, edit, deactivate) | View only                 |
+| System settings  | Full access                     | Limited access            |
+| Audit logs       | Full access                     | Full access               |
+| Order operations | All                             | Claim, assign, override   |
+| Inventory        | All adjustments                 | Adjustments with approval |
 
 ---
 
@@ -51,12 +51,12 @@ The admin dashboard provides real-time visibility into warehouse operations:
 
 #### Key Metrics
 
-| Metric | Description | Action Threshold |
-|--------|-------------|------------------|
+| Metric           | Description             | Action Threshold            |
+| ---------------- | ----------------------- | --------------------------- |
 | **Active Staff** | Current logged-in users | Monitor for staffing levels |
-| **Orders/Hour** | Processing rate | Alert if below target |
-| **Queue Depth** | Pending orders | Investigate if > 50 |
-| **Exceptions** | Active exceptions | Investigate if > 5 |
+| **Orders/Hour**  | Processing rate         | Alert if below target       |
+| **Queue Depth**  | Pending orders          | Investigate if > 50         |
+| **Exceptions**   | Active exceptions       | Investigate if > 5          |
 
 #### Real-Time Features
 
@@ -82,6 +82,7 @@ Navigate to **Dashboard** and select **Performance Chart**:
 #### Throughput Monitoring
 
 Use the **Throughput Chart** to track:
+
 - Orders picked/packed over time
 - Identify peak hours and slow periods
 - Plan staffing accordingly
@@ -90,12 +91,12 @@ Use the **Throughput Chart** to track:
 
 The system generates alerts for:
 
-| Alert Type | Trigger | Action |
-|------------|---------|--------|
-| **Low Stock** | Item below threshold | Review replenishment needs |
-| **High Exception Rate** | Exception spike | Investigate process issues |
-| **Staff Shortage** | Too few active users | Adjust staffing |
-| **Stalled Orders** | Orders not progressing | Reassign or investigate |
+| Alert Type              | Trigger                | Action                     |
+| ----------------------- | ---------------------- | -------------------------- |
+| **Low Stock**           | Item below threshold   | Review replenishment needs |
+| **High Exception Rate** | Exception spike        | Investigate process issues |
+| **Staff Shortage**      | Too few active users   | Adjust staffing            |
+| **Stalled Orders**      | Orders not progressing | Reassign or investigate    |
 
 ---
 
@@ -108,12 +109,12 @@ The system generates alerts for:
 
 ### User List Information
 
-| Field | Description |
-|-------|-------------|
-| **Name** | User's full name |
-| **Email** | Login email address |
-| **Role** | Assigned role |
-| **Status** | Active/Inactive |
+| Field          | Description            |
+| -------------- | ---------------------- |
+| **Name**       | User's full name       |
+| **Email**      | Login email address    |
+| **Role**       | Assigned role          |
+| **Status**     | Active/Inactive        |
 | **Last Login** | Most recent login time |
 
 ### Creating a New User
@@ -159,14 +160,14 @@ The system generates alerts for:
 
 Navigate to **Order Queue** to see all orders:
 
-| Status | Description | Admin Actions |
-|--------|-------------|---------------|
-| **PENDING** | Waiting to be picked | Claim, assign, cancel |
-| **PICKING** | Currently being picked | View progress, reassign |
-| **PICKED** | Picking complete, awaiting packing | Expedite packing |
-| **PACKING** | Being packed | View progress |
-| **SHIPPED** | Shipped | View tracking info |
-| **CANCELLED** | Cancelled | View reason |
+| Status        | Description                        | Admin Actions           |
+| ------------- | ---------------------------------- | ----------------------- |
+| **PENDING**   | Waiting to be picked               | Claim, assign, cancel   |
+| **PICKING**   | Currently being picked             | View progress, reassign |
+| **PICKED**    | Picking complete, awaiting packing | Expedite packing        |
+| **PACKING**   | Being packed                       | View progress           |
+| **SHIPPED**   | Shipped                            | View tracking info      |
+| **CANCELLED** | Cancelled                          | View reason             |
 
 ### Admin View of All Orders
 
@@ -215,10 +216,12 @@ Change order priority:
 Orders that haven't progressed may be stalled:
 
 **Detection:**
+
 - Order in PICKING status for > 2 hours
 - Order in PACKING status for > 1 hour
 
 **Actions:**
+
 1. Contact the assigned user
 2. Reassign if necessary
 3. Report any system issues
@@ -233,12 +236,12 @@ Navigate to **Stock Control** for inventory overview:
 
 #### Dashboard Metrics
 
-| Metric | Description |
-|--------|-------------|
-| **Total SKUs** | Number of unique products |
-| **Total Items** | Total quantity across all SKUs |
-| **Low Stock Items** | Items below reorder threshold |
-| **Cycle Counts** | Active and completed counts |
+| Metric              | Description                    |
+| ------------------- | ------------------------------ |
+| **Total SKUs**      | Number of unique products      |
+| **Total Items**     | Total quantity across all SKUs |
+| **Low Stock Items** | Items below reorder threshold  |
+| **Cycle Counts**    | Active and completed counts    |
 
 ### Stock Adjustments
 
@@ -256,11 +259,11 @@ Navigate to **Stock Control** for inventory overview:
 
 #### Adjustment Types
 
-| Type | Use Case | Approval Required |
-|------|----------|-------------------|
-| **Add** | Found missing items | No |
-| **Remove** | Damaged/lost items | Yes (for > 10 items) |
-| **Transfer** | Move between bins | No |
+| Type         | Use Case            | Approval Required    |
+| ------------ | ------------------- | -------------------- |
+| **Add**      | Found missing items | No                   |
+| **Remove**   | Damaged/lost items  | Yes (for > 10 items) |
+| **Transfer** | Move between bins   | No                   |
 
 ### Cycle Counts
 
@@ -289,11 +292,11 @@ Navigate to **Stock Control** for inventory overview:
 
 #### Variance Thresholds
 
-| Variance % | Action |
-|------------|--------|
-| 0-2% | Auto-approve |
-| 2-5% | Supervisor review |
-| >5% | Investigation required |
+| Variance % | Action                 |
+| ---------- | ---------------------- |
+| 0-2%       | Auto-approve           |
+| 2-5%       | Supervisor review      |
+| >5%        | Investigation required |
 
 ### Low Stock Management
 
@@ -325,29 +328,29 @@ Navigate to **Reports** to access:
 
 #### Inventory Reports
 
-| Report | Description | Export Options |
-|--------|-------------|----------------|
-| **Stock Status** | Current inventory levels | PDF, CSV, Excel |
-| **Low Stock Report** | Items below threshold | PDF, CSV, Excel |
+| Report                  | Description                 | Export Options  |
+| ----------------------- | --------------------------- | --------------- |
+| **Stock Status**        | Current inventory levels    | PDF, CSV, Excel |
+| **Low Stock Report**    | Items below threshold       | PDF, CSV, Excel |
 | **Cycle Count Summary** | Count results and variances | PDF, CSV, Excel |
-| **Transaction History** | All inventory movements | CSV, Excel |
+| **Transaction History** | All inventory movements     | CSV, Excel      |
 
 #### Performance Reports
 
-| Report | Description | Export Options |
-|--------|-------------|----------------|
-| **Staff Performance** | Individual and team metrics | PDF, Excel |
-| **Throughput Analysis** | Orders/hour over time | PDF, Excel |
-| **Exception Report** | Exception types and frequency | PDF, CSV |
-| **Order Fulfillment** | Order cycle time analysis | PDF, Excel |
+| Report                  | Description                   | Export Options |
+| ----------------------- | ----------------------------- | -------------- |
+| **Staff Performance**   | Individual and team metrics   | PDF, Excel     |
+| **Throughput Analysis** | Orders/hour over time         | PDF, Excel     |
+| **Exception Report**    | Exception types and frequency | PDF, CSV       |
+| **Order Fulfillment**   | Order cycle time analysis     | PDF, Excel     |
 
 #### Shipping Reports
 
-| Report | Description | Export Options |
-|--------|-------------|----------------|
-| **Shipment Summary** | Daily/weekly shipments | PDF, CSV |
-| **Carrier Performance** | Transit times by carrier | PDF, Excel |
-| **Shipping Costs** | Cost analysis by carrier/service | Excel |
+| Report                  | Description                      | Export Options |
+| ----------------------- | -------------------------------- | -------------- |
+| **Shipment Summary**    | Daily/weekly shipments           | PDF, CSV       |
+| **Carrier Performance** | Transit times by carrier         | PDF, Excel     |
+| **Shipping Costs**      | Cost analysis by carrier/service | Excel          |
 
 ### Generating Reports
 
@@ -380,39 +383,39 @@ Navigate to **Business Rules** to configure:
 
 #### Order Assignment Rules
 
-| Rule | Description | Options |
-|------|-------------|---------|
-| **Auto-Assign** | Automatically assign orders | On/Off |
-| **Assignment Method** | How orders are assigned | Round-robin, Least busy, Zone-based |
-| **Priority Handling** | How priority orders are handled | Queue first, Assign immediately |
+| Rule                  | Description                     | Options                             |
+| --------------------- | ------------------------------- | ----------------------------------- |
+| **Auto-Assign**       | Automatically assign orders     | On/Off                              |
+| **Assignment Method** | How orders are assigned         | Round-robin, Least busy, Zone-based |
+| **Priority Handling** | How priority orders are handled | Queue first, Assign immediately     |
 
 #### Inventory Rules
 
-| Rule | Description | Options |
-|------|-------------|---------|
-| **Low Stock Threshold** | When to alert | Percentage or absolute quantity |
-| **Auto-Reorder** | Automatically create POs | On/Off |
-| **Cycle Count Frequency** | How often to count | Days, Weeks, Months |
+| Rule                      | Description              | Options                         |
+| ------------------------- | ------------------------ | ------------------------------- |
+| **Low Stock Threshold**   | When to alert            | Percentage or absolute quantity |
+| **Auto-Reorder**          | Automatically create POs | On/Off                          |
+| **Cycle Count Frequency** | How often to count       | Days, Weeks, Months             |
 
 #### Picking Rules
 
-| Rule | Description | Options |
-|------|-------------|---------|
-| **Pick Path Optimization** | Route calculation method | Zone-based, Aisle-based, Custom |
-| **Batch Picking** | Allow multiple orders | On/Off |
-| **Max Orders Per Picker** | Limit concurrent assignments | 1-5 |
+| Rule                       | Description                  | Options                         |
+| -------------------------- | ---------------------------- | ------------------------------- |
+| **Pick Path Optimization** | Route calculation method     | Zone-based, Aisle-based, Custom |
+| **Batch Picking**          | Allow multiple orders        | On/Off                          |
+| **Max Orders Per Picker**  | Limit concurrent assignments | 1-5                             |
 
 ### Feature Flags
 
 Enable/disable system features:
 
-| Feature | Description | Default |
-|---------|-------------|---------|
-| **Real-time Updates** | WebSocket live updates | On |
-| **Barcode Scanning** | Scanner integration | On |
-| **Email Notifications** | Email alerts | On |
-| **Audit Logging** | Track all changes | On |
-| **API Access** | External API connections | Off |
+| Feature                 | Description              | Default |
+| ----------------------- | ------------------------ | ------- |
+| **Real-time Updates**   | WebSocket live updates   | On      |
+| **Barcode Scanning**    | Scanner integration      | On      |
+| **Email Notifications** | Email alerts             | On      |
+| **Audit Logging**       | Track all changes        | On      |
+| **API Access**          | External API connections | Off     |
 
 ### Integrations
 
@@ -439,25 +442,25 @@ Configure third-party integrations:
 
 ### Audit Log Filters
 
-| Filter | Description |
-|--------|-------------|
-| **Date Range** | Activity within time period |
-| **Category** | Type of activity (Orders, Inventory, Users, etc.) |
-| **Action** | Specific action (Create, Update, Delete, etc.) |
-| **User** | Activity by specific user |
-| **Resource Type** | Type of resource affected |
+| Filter            | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| **Date Range**    | Activity within time period                       |
+| **Category**      | Type of activity (Orders, Inventory, Users, etc.) |
+| **Action**        | Specific action (Create, Update, Delete, etc.)    |
+| **User**          | Activity by specific user                         |
+| **Resource Type** | Type of resource affected                         |
 
 ### Audit Log Entry
 
 Each entry displays:
 
-| Field | Description |
-|-------|-------------|
-| **Timestamp** | When the action occurred |
-| **User** | Who performed the action |
-| **Action** | What was done |
-| **Resource** | What was affected |
-| **Details** | Additional information |
+| Field          | Description                 |
+| -------------- | --------------------------- |
+| **Timestamp**  | When the action occurred    |
+| **User**       | Who performed the action    |
+| **Action**     | What was done               |
+| **Resource**   | What was affected           |
+| **Details**    | Additional information      |
 | **IP Address** | Where the action originated |
 
 ### Exporting Audit Logs
@@ -568,16 +571,16 @@ Each entry displays:
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
+| Shortcut | Action                |
+| -------- | --------------------- |
 | `Ctrl+D` | Navigate to Dashboard |
-| `Ctrl+O` | Open Order Queue |
-| `Ctrl+I` | Open Inventory |
-| `Ctrl+R` | Open Reports |
-| `Ctrl+U` | Open User Management |
-| `Ctrl+A` | Open Audit Logs |
-| `Esc` | Close modal/dialog |
-| `F5` | Refresh current view |
+| `Ctrl+O` | Open Order Queue      |
+| `Ctrl+I` | Open Inventory        |
+| `Ctrl+R` | Open Reports          |
+| `Ctrl+U` | Open User Management  |
+| `Ctrl+A` | Open Audit Logs       |
+| `Esc`    | Close modal/dialog    |
+| `F5`     | Refresh current view  |
 
 ---
 
@@ -585,11 +588,11 @@ Each entry displays:
 
 ### Contact Information
 
-| Issue | Contact |
-|-------|---------|
-| **System Issues** | admin@warehouse.com |
-| **IT Support** | helpdesk@warehouse.com |
-| **Training** | training@warehouse.com |
+| Issue             | Contact                |
+| ----------------- | ---------------------- |
+| **System Issues** | admin@warehouse.com    |
+| **IT Support**    | helpdesk@warehouse.com |
+| **Training**      | training@warehouse.com |
 
 ### Additional Documentation
 
@@ -627,6 +630,6 @@ Each entry displays:
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2026*
-*For technical support, contact admin@warehouse.com*
+_Document Version: 1.0_
+_Last Updated: January 2026_
+_For technical support, contact admin@warehouse.com_

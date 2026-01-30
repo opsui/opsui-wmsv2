@@ -1,10 +1,5 @@
 import { test, expect } from '@playwright/test';
-import {
-  TEST_CONFIG,
-  injectAuth,
-  navigateAndWait,
-  assertHasContent,
-} from './test-helpers';
+import { TEST_CONFIG, injectAuth, navigateAndWait, assertHasContent } from './test-helpers';
 
 /**
  * WMS Role-Based Access Testing
@@ -58,7 +53,14 @@ const ADMIN_CONFIG = {
   role: 'ADMIN',
   userId: 'admin',
   email: 'admin@wms.local',
-  expectedRoutes: ['/dashboard', '/orders', '/packing', '/stock-control', '/user-roles', '/exceptions'],
+  expectedRoutes: [
+    '/dashboard',
+    '/orders',
+    '/packing',
+    '/stock-control',
+    '/user-roles',
+    '/exceptions',
+  ],
 };
 
 // ============================================================================
@@ -69,13 +71,18 @@ test.describe('Picker Role', () => {
   let authToken: string;
 
   test.beforeAll(async () => {
-    authToken = process.env.CRAWLER_AUTH_TOKEN_PICKER ||
-                 process.env.CRAWLER_AUTH_TOKEN ||
-                 'test-token';
+    authToken =
+      process.env.CRAWLER_AUTH_TOKEN_PICKER || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
   });
 
   test.beforeEach(async ({ context }) => {
-    await injectAuth(context, authToken, PICKER_CONFIG.userId, PICKER_CONFIG.email, PICKER_CONFIG.role);
+    await injectAuth(
+      context,
+      authToken,
+      PICKER_CONFIG.userId,
+      PICKER_CONFIG.email,
+      PICKER_CONFIG.role
+    );
   });
 
   test('picker can access order queue', async ({ page }) => {
@@ -83,7 +90,7 @@ test.describe('Picker Role', () => {
 
     // Should see order queue
     const orderQueue = page.locator('text=/order queue|orders|pending/i');
-    const hasQueue = await orderQueue.count() > 0;
+    const hasQueue = (await orderQueue.count()) > 0;
     expect(hasQueue).toBe(true);
   });
 
@@ -119,13 +126,18 @@ test.describe('Packer Role', () => {
   let authToken: string;
 
   test.beforeAll(async () => {
-    authToken = process.env.CRAWLER_AUTH_TOKEN_PACKER ||
-                 process.env.CRAWLER_AUTH_TOKEN ||
-                 'test-token';
+    authToken =
+      process.env.CRAWLER_AUTH_TOKEN_PACKER || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
   });
 
   test.beforeEach(async ({ context }) => {
-    await injectAuth(context, authToken, PACKER_CONFIG.userId, PACKER_CONFIG.email, PACKER_CONFIG.role);
+    await injectAuth(
+      context,
+      authToken,
+      PACKER_CONFIG.userId,
+      PACKER_CONFIG.email,
+      PACKER_CONFIG.role
+    );
   });
 
   test('packer can view packing queue', async ({ page }) => {
@@ -133,7 +145,7 @@ test.describe('Packer Role', () => {
 
     // Should see packing queue
     const packingQueue = page.locator('text=/packing|pack|orders to pack/i');
-    const hasQueue = await packingQueue.count() > 0;
+    const hasQueue = (await packingQueue.count()) > 0;
     expect(hasQueue).toBe(true);
   });
 
@@ -153,13 +165,18 @@ test.describe('Stock Controller Role', () => {
   let authToken: string;
 
   test.beforeAll(async () => {
-    authToken = process.env.CRAWLER_AUTH_TOKEN_STOCK ||
-                 process.env.CRAWLER_AUTH_TOKEN ||
-                 'test-token';
+    authToken =
+      process.env.CRAWLER_AUTH_TOKEN_STOCK || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
   });
 
   test.beforeEach(async ({ context }) => {
-    await injectAuth(context, authToken, STOCK_CONTROLLER_CONFIG.userId, STOCK_CONTROLLER_CONFIG.email, STOCK_CONTROLLER_CONFIG.role);
+    await injectAuth(
+      context,
+      authToken,
+      STOCK_CONTROLLER_CONFIG.userId,
+      STOCK_CONTROLLER_CONFIG.email,
+      STOCK_CONTROLLER_CONFIG.role
+    );
   });
 
   test('stock controller can view inventory', async ({ page }) => {
@@ -167,7 +184,7 @@ test.describe('Stock Controller Role', () => {
 
     // Should see stock control interface
     const stockInterface = page.locator('text=/stock|inventory|quantity|sku/i');
-    const hasStockInterface = await stockInterface.count() > 0;
+    const hasStockInterface = (await stockInterface.count()) > 0;
     expect(hasStockInterface).toBe(true);
   });
 
@@ -195,7 +212,13 @@ test.describe('Admin Role', () => {
   });
 
   test.beforeEach(async ({ context }) => {
-    await injectAuth(context, authToken, ADMIN_CONFIG.userId, ADMIN_CONFIG.email, ADMIN_CONFIG.role);
+    await injectAuth(
+      context,
+      authToken,
+      ADMIN_CONFIG.userId,
+      ADMIN_CONFIG.email,
+      ADMIN_CONFIG.role
+    );
   });
 
   test('admin can access user management', async ({ page }) => {
@@ -203,7 +226,7 @@ test.describe('Admin Role', () => {
 
     // Should see user management interface
     const userMgmt = page.locator('text=/user|role|permission|assign/i');
-    const hasUserMgmt = await userMgmt.count() > 0;
+    const hasUserMgmt = (await userMgmt.count()) > 0;
     expect(hasUserMgmt).toBe(true);
 
     // Should not be redirected to login
@@ -216,7 +239,7 @@ test.describe('Admin Role', () => {
 
     // Should see dashboard metrics
     const dashboard = page.locator('text=/dashboard|metrics|statistics|overview/i');
-    const hasDashboard = await dashboard.count() > 0;
+    const hasDashboard = (await dashboard.count()) > 0;
     expect(hasDashboard).toBe(true);
   });
 
@@ -294,8 +317,12 @@ test.describe('Cross-Role Comparison', () => {
 
     // In this system, dashboard is accessible to all authenticated users
     expect(results['Admin'].canAccess, 'Admin can access /dashboard').toBe(true);
-    expect(results['Picker'].canAccess, 'Picker can access /dashboard (permissive model)').toBe(true);
-    expect(results['Packer'].canAccess, 'Packer can access /dashboard (permissive model)').toBe(true);
+    expect(results['Picker'].canAccess, 'Picker can access /dashboard (permissive model)').toBe(
+      true
+    );
+    expect(results['Packer'].canAccess, 'Packer can access /dashboard (permissive model)').toBe(
+      true
+    );
   });
 });
 
@@ -318,9 +345,11 @@ test.describe('Role Switcher', () => {
     await navigateAndWait(page, '/dashboard');
 
     // Look for role switcher element
-    const roleSwitcher = page.locator('[data-testid="role-switcher"], .role-switcher, select:has-text("Role")').first();
+    const roleSwitcher = page
+      .locator('[data-testid="role-switcher"], .role-switcher, select:has-text("Role")')
+      .first();
 
-    const hasRoleSwitcher = await roleSwitcher.count() > 0;
+    const hasRoleSwitcher = (await roleSwitcher.count()) > 0;
 
     if (hasRoleSwitcher) {
       const isVisible = await roleSwitcher.isVisible().catch(() => false);
@@ -333,7 +362,9 @@ test.describe('Role Switcher', () => {
         console.log('  ℹ️  Role switcher exists but not visible (may be in menu or collapsed)');
       }
     } else {
-      console.log('  ℹ️  Role switcher not found (may not be implemented or admin has single role)');
+      console.log(
+        '  ℹ️  Role switcher not found (may not be implemented or admin has single role)'
+      );
     }
 
     // Test should pass regardless - role switcher is optional

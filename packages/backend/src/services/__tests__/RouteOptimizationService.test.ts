@@ -82,19 +82,25 @@ describe('RouteOptimizationService', () => {
     });
 
     it('should use nearest neighbor when specified', () => {
-      const result = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'nearest' });
+      const result = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'nearest',
+      });
 
       expect(result.algorithm).toBe('nearest');
     });
 
     it('should use aisle-by-aisle when specified', () => {
-      const result = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'aisle' });
+      const result = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'aisle',
+      });
 
       expect(result.algorithm).toBe('aisle');
     });
 
     it('should use zone-based when specified', () => {
-      const result = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'zone' });
+      const result = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'zone',
+      });
 
       expect(result.algorithm).toBe('zone');
     });
@@ -179,7 +185,7 @@ describe('RouteOptimizationService', () => {
         orderId: 'ORD-001',
         sku: `SKU-${i}`,
         quantity: 10,
-        binLocation: `A-${i + 1}-0${i % 9 + 1}`,
+        binLocation: `A-${i + 1}-0${(i % 9) + 1}`,
         priority: 'NORMAL' as const,
       }));
 
@@ -193,7 +199,7 @@ describe('RouteOptimizationService', () => {
         orderId: 'ORD-001',
         sku: `SKU-${i}`,
         quantity: 10,
-        binLocation: `${String.fromCharCode(65 + (i % 5))}-${i + 1}-0${i % 9 + 1}`,
+        binLocation: `${String.fromCharCode(65 + (i % 5))}-${i + 1}-0${(i % 9) + 1}`,
         priority: 'NORMAL' as const,
       }));
 
@@ -207,7 +213,7 @@ describe('RouteOptimizationService', () => {
         orderId: 'ORD-001',
         sku: `SKU-${i}`,
         quantity: 10,
-        binLocation: `A-${i + 1}-0${i % 9 + 1}`,
+        binLocation: `A-${i + 1}-0${(i % 9) + 1}`,
         priority: 'NORMAL' as const,
       }));
 
@@ -286,7 +292,10 @@ describe('RouteOptimizationService', () => {
       ];
 
       const sameZoneResult = routeOptimizationService.optimizeRoute(sameZoneTasks, 'A-01-01');
-      const differentZoneResult = routeOptimizationService.optimizeRoute(differentZoneTasks, 'A-01-01');
+      const differentZoneResult = routeOptimizationService.optimizeRoute(
+        differentZoneTasks,
+        'A-01-01'
+      );
 
       expect(differentZoneResult.totalDistance).toBeGreaterThan(sameZoneResult.totalDistance);
     });
@@ -450,10 +459,18 @@ describe('RouteOptimizationService', () => {
 
   describe('Algorithm comparison', () => {
     it('should produce different routes with different algorithms', () => {
-      const tspRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'tsp' });
-      const nearestRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'nearest' });
-      const aisleRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'aisle' });
-      const zoneRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', { algorithm: 'zone' });
+      const tspRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'tsp',
+      });
+      const nearestRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'nearest',
+      });
+      const aisleRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'aisle',
+      });
+      const zoneRoute = routeOptimizationService.optimizeRoute(mockTasks, 'DEPOT', {
+        algorithm: 'zone',
+      });
 
       // Routes should have different distances (though not guaranteed)
       const distances = [tspRoute, nearestRoute, aisleRoute, zoneRoute].map(r => r.totalDistance);

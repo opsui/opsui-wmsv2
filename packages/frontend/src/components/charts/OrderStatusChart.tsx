@@ -6,13 +6,7 @@
 
 import { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@/components/shared';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface OrderStatusData {
   status: string;
@@ -26,14 +20,14 @@ interface OrderStatusChartProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#06b6d4',      // cyan-500 (info)
-  PICKING: '#f59e0b',     // amber-500 (warning)
-  PICKED: '#10b981',      // emerald-500 (success)
-  PACKING: '#3b82f6',     // blue-500 (info)
-  PACKED: '#06b6d4',      // cyan-500 (info)
-  SHIPPED: '#10b981',     // emerald-500 (success)
-  CANCELLED: '#ef4444',   // red-500 (error)
-  ON_HOLD: '#8b5cf6',     // violet-500 (warning/info)
+  PENDING: '#06b6d4', // cyan-500 (info)
+  PICKING: '#f59e0b', // amber-500 (warning)
+  PICKED: '#10b981', // emerald-500 (success)
+  PACKING: '#3b82f6', // blue-500 (info)
+  PACKED: '#06b6d4', // cyan-500 (info)
+  SHIPPED: '#10b981', // emerald-500 (success)
+  CANCELLED: '#ef4444', // red-500 (error)
+  ON_HOLD: '#8b5cf6', // violet-500 (warning/info)
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -55,7 +49,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
     }
 
     const total = data.reduce((sum, item) => sum + item.count, 0);
-    const chartData = data.map((item) => ({
+    const chartData = data.map(item => ({
       ...item,
       name: STATUS_LABELS[item.status] || item.status,
       color: STATUS_COLORS[item.status] || '#6b7280',
@@ -153,7 +147,12 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
               dataKey="count"
             >
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.2)" strokeWidth={2} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={entry.color}
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth={2}
+                />
               ))}
             </Pie>
             <Tooltip
@@ -176,7 +175,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
 
         {/* Summary stats */}
         <div className="mt-4 grid grid-cols-2 gap-2">
-          {chartData.slice(0, 6).map((item) => (
+          {chartData.slice(0, 6).map(item => (
             <div
               key={item.status}
               className="flex items-center justify-between p-2.5 rounded-lg dark:bg-white/[0.03] bg-gray-50 dark:border dark:border-white/[0.05] border-gray-100"
@@ -186,7 +185,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
                   className="w-3 h-3 rounded-full shadow-sm"
                   style={{
                     backgroundColor: item.color,
-                    boxShadow: `0 0 8px ${item.color}40`
+                    boxShadow: `0 0 8px ${item.color}40`,
                   }}
                 />
                 <span className="dark:text-gray-400 text-gray-600 text-sm font-medium">

@@ -6,14 +6,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Badge,
-  Input,
-} from '@/components/shared';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Input } from '@/components/shared';
 import {
   DocumentTextIcon,
   ShieldCheckIcon,
@@ -39,7 +32,13 @@ import {
   AdjustmentsHorizontalIcon,
   InboxIcon,
 } from '@heroicons/react/24/outline';
-import { AuditLog, useAuditCategories, useAuditActions, useAuditUsers, useAuditResourceTypes } from '@/services/api';
+import {
+  AuditLog,
+  useAuditCategories,
+  useAuditActions,
+  useAuditUsers,
+  useAuditResourceTypes,
+} from '@/services/api';
 
 // ============================================================================
 // TYPES
@@ -160,7 +159,10 @@ const ALL_ACTIONS = [
 
 // Color mapping for action icons - consistent dark shades
 const ACTION_COLOR_MAP: Record<string, { icon: string; bg: string }> = {
-  purple: { icon: 'text-purple-700 dark:text-purple-500', bg: 'bg-purple-100 dark:bg-purple-500/20' },
+  purple: {
+    icon: 'text-purple-700 dark:text-purple-500',
+    bg: 'bg-purple-100 dark:bg-purple-500/20',
+  },
   amber: { icon: 'text-amber-700 dark:text-amber-500', bg: 'bg-amber-100 dark:bg-amber-500/20' },
   red: { icon: 'text-red-700 dark:text-red-500', bg: 'bg-red-100 dark:bg-red-500/20' },
   blue: { icon: 'text-blue-700 dark:text-blue-500', bg: 'bg-blue-100 dark:bg-blue-500/20' },
@@ -172,7 +174,14 @@ const ACTION_COLOR_MAP: Record<string, { icon: string; bg: string }> = {
 // MAIN COMPONENT
 // ============================================================================
 
-export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, hasPreviousPage, totalPages }: AuditLogsCardProps) {
+export function AuditLogsCard({
+  logs,
+  isLoading,
+  onFiltersChange,
+  hasNextPage,
+  hasPreviousPage,
+  totalPages,
+}: AuditLogsCardProps) {
   const [filters, setFilters] = useState<AuditLogFilters>({
     category: null,
     action: null,
@@ -201,10 +210,16 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
     const actions = (apiActions || ALL_ACTIONS).sort();
 
     // User emails: use API results or derive from logs
-    const userEmails = (apiUsers as string[] | undefined || Array.from(new Set(logs.map(log => log.userEmail).filter(Boolean)))).sort();
+    const userEmails = (
+      (apiUsers as string[] | undefined) ||
+      Array.from(new Set(logs.map(log => log.userEmail).filter(Boolean)))
+    ).sort();
 
     // Resource types: use API results or derive from logs
-    const resourceTypes = (apiResourceTypes as string[] | undefined || Array.from(new Set(logs.map(log => log.resourceType).filter(Boolean)))).sort();
+    const resourceTypes = (
+      (apiResourceTypes as string[] | undefined) ||
+      Array.from(new Set(logs.map(log => log.resourceType).filter(Boolean)))
+    ).sort();
 
     return { categories, actions, userEmails, resourceTypes };
   }, [logs, apiCategories, apiActions, apiUsers, apiResourceTypes]);
@@ -236,8 +251,8 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
   };
 
   // Check if there are active filters (excluding page from the check)
-  const hasActiveFilters = Object.entries(filters).some(([key, value]) =>
-    key !== 'page' && value !== null
+  const hasActiveFilters = Object.entries(filters).some(
+    ([key, value]) => key !== 'page' && value !== null
   );
 
   // Format timestamp
@@ -249,11 +264,13 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
 
   // Get category config
   const getCategoryConfig = (category: string) => {
-    return CATEGORY_CONFIG[category] || {
-      icon: DocumentTextIcon,
-      color: 'gray',
-      label: category,
-    };
+    return (
+      CATEGORY_CONFIG[category] || {
+        icon: DocumentTextIcon,
+        color: 'gray',
+        label: category,
+      }
+    );
   };
 
   return (
@@ -310,7 +327,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
               type="text"
               placeholder="Search logs..."
               value={filters.search || ''}
-              onChange={(e) => updateFilters({ search: e.target.value || null })}
+              onChange={e => updateFilters({ search: e.target.value || null })}
               className="pl-10"
             />
           </div>
@@ -322,7 +339,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
               <div className="relative">
                 <select
                   value={filters.category ?? ''}
-                  onChange={(e) => updateFilters({ category: e.target.value || null })}
+                  onChange={e => updateFilters({ category: e.target.value || null })}
                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm font-medium dark:text-white text-gray-900 dark:hover:bg-gray-700 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Categories</option>
@@ -342,7 +359,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
               <div className="relative">
                 <select
                   value={filters.action || ''}
-                  onChange={(e) => updateFilters({ action: e.target.value || null })}
+                  onChange={e => updateFilters({ action: e.target.value || null })}
                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm font-medium dark:text-white text-gray-900 dark:hover:bg-gray-700 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Actions</option>
@@ -359,15 +376,17 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
               <div className="relative">
                 <select
                   value={filters.userEmail ?? ''}
-                  onChange={(e) => updateFilters({ userEmail: e.target.value || null })}
+                  onChange={e => updateFilters({ userEmail: e.target.value || null })}
                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm font-medium dark:text-white text-gray-900 dark:hover:bg-gray-700 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Users</option>
-                  {filterOptions.userEmails.filter((e): e is string => Boolean(e)).map(email => (
-                    <option key={email} value={email}>
-                      {email}
-                    </option>
-                  ))}
+                  {filterOptions.userEmails
+                    .filter((e): e is string => Boolean(e))
+                    .map(email => (
+                      <option key={email} value={email}>
+                        {email}
+                      </option>
+                    ))}
                 </select>
                 <UserIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 dark:text-gray-500 text-gray-400 pointer-events-none" />
               </div>
@@ -376,15 +395,17 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
               <div className="relative">
                 <select
                   value={filters.resourceType ?? ''}
-                  onChange={(e) => updateFilters({ resourceType: e.target.value || null })}
+                  onChange={e => updateFilters({ resourceType: e.target.value || null })}
                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm font-medium dark:text-white text-gray-900 dark:hover:bg-gray-700 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All Resources</option>
-                  {filterOptions.resourceTypes.filter((t): t is string => Boolean(t)).map(type => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
+                  {filterOptions.resourceTypes
+                    .filter((t): t is string => Boolean(t))
+                    .map(type => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
                 </select>
                 <CogIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 dark:text-gray-500 text-gray-400 pointer-events-none" />
               </div>
@@ -394,7 +415,9 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                 <input
                   type="date"
                   value={filters.startDate ? filters.startDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => updateFilters({ startDate: e.target.value ? new Date(e.target.value) : null })}
+                  onChange={e =>
+                    updateFilters({ startDate: e.target.value ? new Date(e.target.value) : null })
+                  }
                   className="w-full appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-10 text-sm font-medium dark:text-white text-gray-900 dark:hover:bg-gray-700 hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Start Date"
                 />
@@ -405,7 +428,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                 <input
                   type="date"
                   value={filters.endDate ? filters.endDate.toISOString().split('T')[0] : ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     // Set to end of the selected day
                     const date = e.target.value ? new Date(e.target.value) : null;
                     if (date) {
@@ -437,7 +460,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
           </div>
         ) : (
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {filteredLogs.map((log) => {
+            {filteredLogs.map(log => {
               const isExpanded = expandedLog === log.id;
               const desc = log.actionDescription?.toLowerCase() || '';
               const actionType = log.actionType;
@@ -451,8 +474,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                 // Individual item scan during picking
                 ActionIcon = CheckIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'PICK_CONFIRMED') {
+              } else if (actionType === 'PICK_CONFIRMED') {
                 if (desc.includes('unverified')) {
                   // Undo-pick
                   ActionIcon = ArrowUturnLeftIcon;
@@ -462,8 +484,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                   ActionIcon = CubeIcon;
                   iconColor = 'purple';
                 }
-              }
-              else if (actionType === 'PACK_COMPLETED') {
+              } else if (actionType === 'PACK_COMPLETED') {
                 // Check if it's packing/verifying vs shipping
                 if (desc.includes('Packed') || desc.includes('packed')) {
                   ActionIcon = CheckIcon;
@@ -473,104 +494,79 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                   ActionIcon = TruckIcon;
                   iconColor = 'green';
                 }
-              }
-              else if (actionType === 'ORDER_UPDATED') {
+              } else if (actionType === 'ORDER_UPDATED') {
                 ActionIcon = CogIcon;
                 iconColor = 'gray';
-              }
-              else if (actionType === 'ORDER_CLAIMED') {
+              } else if (actionType === 'ORDER_CLAIMED') {
                 ActionIcon = ShoppingCartIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'ORDER_UNCLAIMED') {
+              } else if (actionType === 'ORDER_UNCLAIMED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
-              }
-              else if (actionType === 'ORDER_CONTINUED') {
+              } else if (actionType === 'ORDER_CONTINUED') {
                 ActionIcon = PlayIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'WAVE_CREATED') {
+              } else if (actionType === 'WAVE_CREATED') {
                 ActionIcon = DocumentPlusIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'WAVE_RELEASED') {
+              } else if (actionType === 'WAVE_RELEASED') {
                 ActionIcon = RocketLaunchIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'WAVE_COMPLETED') {
+              } else if (actionType === 'WAVE_COMPLETED') {
                 ActionIcon = CheckCircleIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'SLOTTING_IMPLEMENTED') {
+              } else if (actionType === 'SLOTTING_IMPLEMENTED') {
                 ActionIcon = AdjustmentsHorizontalIcon;
                 iconColor = 'purple';
-              }
-              else if (actionType === 'ZONE_ASSIGNED') {
+              } else if (actionType === 'ZONE_ASSIGNED') {
                 ActionIcon = MapPinIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'ZONE_RELEASED') {
+              } else if (actionType === 'ZONE_RELEASED') {
                 ActionIcon = ArrowRightIcon;
                 iconColor = 'amber';
-              }
-              else if (actionType === 'ZONE_REBALANCED') {
+              } else if (actionType === 'ZONE_REBALANCED') {
                 ActionIcon = AdjustmentsHorizontalIcon;
                 iconColor = 'purple';
-              }
-              else if (actionType === 'PUTAWAY_COMPLETED') {
+              } else if (actionType === 'PUTAWAY_COMPLETED') {
                 ActionIcon = InboxIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'CYCLE_COUNT_PLAN_CREATED') {
+              } else if (actionType === 'CYCLE_COUNT_PLAN_CREATED') {
                 ActionIcon = DocumentPlusIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'CYCLE_COUNT_STARTED') {
+              } else if (actionType === 'CYCLE_COUNT_STARTED') {
                 ActionIcon = PlayIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'CYCLE_COUNT_COMPLETED') {
+              } else if (actionType === 'CYCLE_COUNT_COMPLETED') {
                 ActionIcon = CheckCircleIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'CYCLE_COUNT_RECONCILED') {
+              } else if (actionType === 'CYCLE_COUNT_RECONCILED') {
                 ActionIcon = ShieldCheckIcon;
                 iconColor = 'purple';
-              }
-              else if (actionType === 'BIN_LOCATION_CREATED') {
+              } else if (actionType === 'BIN_LOCATION_CREATED') {
                 ActionIcon = MapPinIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'BIN_LOCATION_UPDATED') {
+              } else if (actionType === 'BIN_LOCATION_UPDATED') {
                 ActionIcon = CogIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'BIN_LOCATION_DELETED') {
+              } else if (actionType === 'BIN_LOCATION_DELETED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
-              }
-              else if (actionType === 'CUSTOM_ROLE_CREATED') {
+              } else if (actionType === 'CUSTOM_ROLE_CREATED') {
                 ActionIcon = DocumentPlusIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'CUSTOM_ROLE_UPDATED') {
+              } else if (actionType === 'CUSTOM_ROLE_UPDATED') {
                 ActionIcon = CogIcon;
                 iconColor = 'blue';
-              }
-              else if (actionType === 'CUSTOM_ROLE_DELETED') {
+              } else if (actionType === 'CUSTOM_ROLE_DELETED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
-              }
-              else if (actionType === 'ORDER_CANCELLED') {
+              } else if (actionType === 'ORDER_CANCELLED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
-              }
-              else if (actionType === 'ROLE_GRANTED') {
+              } else if (actionType === 'ROLE_GRANTED') {
                 ActionIcon = ShieldCheckIcon;
                 iconColor = 'green';
-              }
-              else if (actionType === 'ROLE_REVOKED') {
+              } else if (actionType === 'ROLE_REVOKED') {
                 ActionIcon = ShieldCheckIcon;
                 iconColor = 'amber';
               }
@@ -578,16 +574,13 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
               else if (desc.includes('shipped order')) {
                 ActionIcon = TruckIcon;
                 iconColor = 'green';
-              }
-              else if (desc.includes('cancelled order')) {
+              } else if (desc.includes('cancelled order')) {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
-              }
-              else if (desc.includes('unclaimed order')) {
+              } else if (desc.includes('unclaimed order')) {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
-              }
-              else if (desc.includes('claimed order')) {
+              } else if (desc.includes('claimed order')) {
                 ActionIcon = ShoppingCartIcon;
                 iconColor = 'blue';
               }
@@ -611,11 +604,13 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                   {/* Main row - always visible */}
                   <div
                     className="p-4 cursor-pointer"
-                    onClick={() => setExpandedLog(isExpanded ? null : (log.id || 0))}
+                    onClick={() => setExpandedLog(isExpanded ? null : log.id || 0)}
                   >
                     <div className="flex items-start gap-3">
                       {/* Action Icon - different icons for different actions */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}>
+                      <div
+                        className={`flex-shrink-0 w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}
+                      >
                         <ActionIcon className={`h-5 w-5 ${colors.icon}`} />
                       </div>
 
@@ -638,28 +633,50 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                         </div>
 
                         {/* Key details extracted from metadata - filter out technical fields and role assignment details */}
-                        {log.metadata && (log.metadata as any).details && Object.keys((log.metadata as any).details).length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {Object.entries((log.metadata as any).details)
-                              .filter(([key]) => ![
-                                'requestData', 'requestBody', 'sku', 'quantity', 'binLocation', 'pickTaskId', 'barcode',
-                                // Role assignment details - shown in Role Details section instead
-                                'role', 'grantedTo', 'grantedToEmail', 'grantedBy', 'grantedByEmail',
-                                'revokedFrom', 'revokedFromEmail', 'revokedBy', 'revokedByEmail'
-                              ].includes(key))
-                              .map(([key, value]) => (
-                                <span
-                                  key={key}
-                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs dark:bg-white/[0.06] bg-gray-200 dark:text-gray-400 text-gray-600"
-                                >
-                                  <span className="dark:text-gray-500 text-gray-500 mr-1">{key}:</span>
-                                  <span className="dark:text-gray-300 text-gray-700 font-medium">
-                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                        {log.metadata &&
+                          (log.metadata as any).details &&
+                          Object.keys((log.metadata as any).details).length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {Object.entries((log.metadata as any).details)
+                                .filter(
+                                  ([key]) =>
+                                    ![
+                                      'requestData',
+                                      'requestBody',
+                                      'sku',
+                                      'quantity',
+                                      'binLocation',
+                                      'pickTaskId',
+                                      'barcode',
+                                      // Role assignment details - shown in Role Details section instead
+                                      'role',
+                                      'grantedTo',
+                                      'grantedToEmail',
+                                      'grantedBy',
+                                      'grantedByEmail',
+                                      'revokedFrom',
+                                      'revokedFromEmail',
+                                      'revokedBy',
+                                      'revokedByEmail',
+                                    ].includes(key)
+                                )
+                                .map(([key, value]) => (
+                                  <span
+                                    key={key}
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs dark:bg-white/[0.06] bg-gray-200 dark:text-gray-400 text-gray-600"
+                                  >
+                                    <span className="dark:text-gray-500 text-gray-500 mr-1">
+                                      {key}:
+                                    </span>
+                                    <span className="dark:text-gray-300 text-gray-700 font-medium">
+                                      {typeof value === 'object'
+                                        ? JSON.stringify(value)
+                                        : String(value)}
+                                    </span>
                                   </span>
-                                </span>
-                              ))}
-                          </div>
-                        )}
+                                ))}
+                            </div>
+                          )}
                       </div>
 
                       {/* Expand/Collapse Indicator */}
@@ -702,79 +719,112 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                           <div>
                             <span className="font-medium dark:text-gray-400 text-gray-600 text-xs uppercase tracking-wide">
                               {/* Show appropriate label based on resource type */}
-                              {log.resourceType === 'order' || log.actionType?.includes('ORDER') || log.actionType === 'PICK_CONFIRMED' || log.actionType === 'ITEM_SCANNED' || log.actionType === 'PACK_COMPLETED'
+                              {log.resourceType === 'order' ||
+                              log.actionType?.includes('ORDER') ||
+                              log.actionType === 'PICK_CONFIRMED' ||
+                              log.actionType === 'ITEM_SCANNED' ||
+                              log.actionType === 'PACK_COMPLETED'
                                 ? 'Order Affected'
                                 : 'User Affected'}
                             </span>
                             <div className="dark:text-gray-200 text-gray-800 text-sm mt-1">
                               {/* For role assignments, use the name from metadata instead of user ID */}
-                              {log.actionType === 'ROLE_GRANTED' || log.actionType === 'ROLE_REVOKED'
-                                ? ((log.metadata as any)?.details?.grantedTo ||
-                                   (log.metadata as any)?.details?.revokedFrom ||
-                                   log.resourceId)
+                              {log.actionType === 'ROLE_GRANTED' ||
+                              log.actionType === 'ROLE_REVOKED'
+                                ? (log.metadata as any)?.details?.grantedTo ||
+                                  (log.metadata as any)?.details?.revokedFrom ||
+                                  log.resourceId
                                 : log.resourceId}
                             </div>
                           </div>
                         )}
 
                         {/* Role Information (if applicable) */}
-                        {log.metadata && (
-                          (log.metadata as any).details?.role ||
-                          (log.metadata as any).role ||
-                          (log.metadata as any).grantedBy ||
-                          (log.metadata as any).details?.grantedTo
-                        ) && (
-                          <div>
-                            <span className="font-medium dark:text-gray-400 text-gray-600 text-xs uppercase tracking-wide">
-                              Role Details
-                            </span>
-                            <div className="dark:text-gray-200 text-gray-800 text-sm mt-1 space-y-1">
-                              {/* Check for new format (in details) or old format (at metadata root) */}
-                              {((log.metadata as any).details?.role || (log.metadata as any).role) && (
-                                <div>
-                                  <span className="dark:text-gray-500 text-gray-600">Role: </span>
-                                  <span className="font-medium">
-                                    {(() => {
-                                      const rawRole = (log.metadata as any).details?.role || (log.metadata as any).role;
-                                      // Remove prefix pattern like "testacc1123System Administrator" -> "System Administrator"
-                                      // Match patterns like: <letters><numbers><RoleName>
-                                      return rawRole.replace(/^[a-z]+[0-9]+/, '');
-                                    })()}
-                                  </span>
-                                </div>
-                              )}
-                              {(log.metadata as any).details?.grantedTo || (log.metadata as any).grantedTo && (
-                                <div>
-                                  <span className="dark:text-gray-500 text-gray-600">Granted To: </span>
-                                  <span className="font-medium">{(log.metadata as any).details?.grantedTo || (log.metadata as any).grantedTo}</span>
-                                </div>
-                              )}
-                              {(log.metadata as any).details?.grantedBy || (log.metadata as any).grantedBy && (
-                                <div>
-                                  <span className="dark:text-gray-500 text-gray-600">Granted By: </span>
-                                  <span className="font-medium">{(log.metadata as any).details?.grantedBy || (log.metadata as any).grantedBy}</span>
-                                </div>
-                              )}
-                              {((log.metadata as any).details?.grantedByEmail || (log.metadata as any).grantedByEmail) && (
-                                <div>
-                                  <span className="dark:text-gray-500 text-gray-600">({(log.metadata as any).details?.grantedByEmail || (log.metadata as any).grantedByEmail})</span>
-                                </div>
-                              )}
-                              {(log.metadata as any).details?.revokedFrom && (
-                                <div>
-                                  <span className="dark:text-gray-500 text-gray-600">Revoked From: </span>
-                                  <span className="font-medium">{(log.metadata as any).details?.revokedFrom}</span>
-                                </div>
-                              )}
-                              {(log.metadata as any).details?.revokedBy && (
-                                <div>
-                                  <span className="dark:text-gray-500 text-gray-600">Revoked By: </span>
-                                  <span className="font-medium">{(log.metadata as any).details?.revokedBy}</span>
-                                </div>
-                              )}
+                        {log.metadata &&
+                          ((log.metadata as any).details?.role ||
+                            (log.metadata as any).role ||
+                            (log.metadata as any).grantedBy ||
+                            (log.metadata as any).details?.grantedTo) && (
+                            <div>
+                              <span className="font-medium dark:text-gray-400 text-gray-600 text-xs uppercase tracking-wide">
+                                Role Details
+                              </span>
+                              <div className="dark:text-gray-200 text-gray-800 text-sm mt-1 space-y-1">
+                                {/* Check for new format (in details) or old format (at metadata root) */}
+                                {((log.metadata as any).details?.role ||
+                                  (log.metadata as any).role) && (
+                                  <div>
+                                    <span className="dark:text-gray-500 text-gray-600">Role: </span>
+                                    <span className="font-medium">
+                                      {(() => {
+                                        const rawRole =
+                                          (log.metadata as any).details?.role ||
+                                          (log.metadata as any).role;
+                                        // Remove prefix pattern like "testacc1123System Administrator" -> "System Administrator"
+                                        // Match patterns like: <letters><numbers><RoleName>
+                                        return rawRole.replace(/^[a-z]+[0-9]+/, '');
+                                      })()}
+                                    </span>
+                                  </div>
+                                )}
+                                {(log.metadata as any).details?.grantedTo ||
+                                  ((log.metadata as any).grantedTo && (
+                                    <div>
+                                      <span className="dark:text-gray-500 text-gray-600">
+                                        Granted To:{' '}
+                                      </span>
+                                      <span className="font-medium">
+                                        {(log.metadata as any).details?.grantedTo ||
+                                          (log.metadata as any).grantedTo}
+                                      </span>
+                                    </div>
+                                  ))}
+                                {(log.metadata as any).details?.grantedBy ||
+                                  ((log.metadata as any).grantedBy && (
+                                    <div>
+                                      <span className="dark:text-gray-500 text-gray-600">
+                                        Granted By:{' '}
+                                      </span>
+                                      <span className="font-medium">
+                                        {(log.metadata as any).details?.grantedBy ||
+                                          (log.metadata as any).grantedBy}
+                                      </span>
+                                    </div>
+                                  ))}
+                                {((log.metadata as any).details?.grantedByEmail ||
+                                  (log.metadata as any).grantedByEmail) && (
+                                  <div>
+                                    <span className="dark:text-gray-500 text-gray-600">
+                                      (
+                                      {(log.metadata as any).details?.grantedByEmail ||
+                                        (log.metadata as any).grantedByEmail}
+                                      )
+                                    </span>
+                                  </div>
+                                )}
+                                {(log.metadata as any).details?.revokedFrom && (
+                                  <div>
+                                    <span className="dark:text-gray-500 text-gray-600">
+                                      Revoked From:{' '}
+                                    </span>
+                                    <span className="font-medium">
+                                      {(log.metadata as any).details?.revokedFrom}
+                                    </span>
+                                  </div>
+                                )}
+                                {(log.metadata as any).details?.revokedBy && (
+                                  <div>
+                                    <span className="dark:text-gray-500 text-gray-600">
+                                      Revoked By:{' '}
+                                    </span>
+                                    <span className="font-medium">
+                                      {(log.metadata as any).details?.revokedBy}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
                         {/* Technical Details (collapsed by default) */}
                         {(log.ipAddress || log.userAgent || log.correlationId) && (
@@ -786,20 +836,32 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                             <div className="mt-3 space-y-2 text-xs">
                               {log.ipAddress && (
                                 <div>
-                                  <span className="font-medium dark:text-gray-500 text-gray-500">IP: </span>
-                                  <span className="dark:text-gray-400 text-gray-600 font-mono">{log.ipAddress}</span>
+                                  <span className="font-medium dark:text-gray-500 text-gray-500">
+                                    IP:{' '}
+                                  </span>
+                                  <span className="dark:text-gray-400 text-gray-600 font-mono">
+                                    {log.ipAddress}
+                                  </span>
                                 </div>
                               )}
                               {log.userAgent && (
                                 <div>
-                                  <span className="font-medium dark:text-gray-500 text-gray-500">User Agent: </span>
-                                  <span className="dark:text-gray-400 text-gray-600">{log.userAgent}</span>
+                                  <span className="font-medium dark:text-gray-500 text-gray-500">
+                                    User Agent:{' '}
+                                  </span>
+                                  <span className="dark:text-gray-400 text-gray-600">
+                                    {log.userAgent}
+                                  </span>
                                 </div>
                               )}
                               {log.correlationId && (
                                 <div>
-                                  <span className="font-medium dark:text-gray-500 text-gray-500">Trace ID: </span>
-                                  <span className="dark:text-gray-400 text-gray-600 font-mono">{log.correlationId}</span>
+                                  <span className="font-medium dark:text-gray-500 text-gray-500">
+                                    Trace ID:{' '}
+                                  </span>
+                                  <span className="dark:text-gray-400 text-gray-600 font-mono">
+                                    {log.correlationId}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -837,7 +899,7 @@ export function AuditLogsCard({ logs, isLoading, onFiltersChange, hasNextPage, h
                   for (let i = 1; i <= maxPage; i++) {
                     pagesToShow.push(i);
                   }
-                  return pagesToShow.map((pageNum) => (
+                  return pagesToShow.map(pageNum => (
                     <button
                       key={pageNum}
                       onClick={() => updateFilters({ page: pageNum })}

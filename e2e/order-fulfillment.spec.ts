@@ -59,7 +59,7 @@ test.describe('Order Fulfillment Workflow', () => {
     await page.click('button[type="submit"]:has-text("Create Order")');
 
     // Get order ID from URL or success message
-    const orderId = await page.locator('.order-id').textContent() || 'ORD-E2E-001';
+    const orderId = (await page.locator('.order-id').textContent()) || 'ORD-E2E-001';
     console.log(`Created order: ${orderId}`);
 
     // ========================================================================

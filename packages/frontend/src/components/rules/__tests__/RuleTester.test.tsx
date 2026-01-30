@@ -48,12 +48,7 @@ describe('RuleTester Component', () => {
 
   describe('Rendering', () => {
     it('renders rule tester interface', () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       expect(screen.getByText('Test Rule')).toBeInTheDocument();
       expect(screen.getByText(/test data/i)).toBeInTheDocument();
@@ -61,24 +56,14 @@ describe('RuleTester Component', () => {
     });
 
     it('renders JSON editor for test data', () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const jsonEditor = screen.getByRole('textbox');
       expect(jsonEditor).toBeInTheDocument();
     });
 
     it('pre-fills sample data', () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       expect(screen.getByDisplayValue(/"order"/i)).toBeInTheDocument();
       expect(screen.getByDisplayValue(/"status"/i)).toBeInTheDocument();
@@ -87,12 +72,7 @@ describe('RuleTester Component', () => {
 
   describe('Rule Evaluation', () => {
     it('evaluates rule against test data', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -103,12 +83,7 @@ describe('RuleTester Component', () => {
     });
 
     it('shows matched conditions', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -127,12 +102,7 @@ describe('RuleTester Component', () => {
         },
       ];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={differentConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={differentConditions} actions={mockActions} />);
 
       // Modify test data to not match
       const jsonEditor = screen.getByRole('textbox');
@@ -155,12 +125,7 @@ describe('RuleTester Component', () => {
 
   describe('Test Data Input', () => {
     it('allows editing test data', () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const jsonEditor = screen.getByRole('textbox');
       const newData = JSON.stringify({
@@ -173,12 +138,7 @@ describe('RuleTester Component', () => {
     });
 
     it('validates JSON format', () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const jsonEditor = screen.getByRole('textbox');
       fireEvent.change(jsonEditor, { target: { value: '{ invalid json }' } });
@@ -191,12 +151,7 @@ describe('RuleTester Component', () => {
     });
 
     it('provides sample data templates', () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       expect(screen.getByText(/load sample/i)).toBeInTheDocument();
     });
@@ -204,12 +159,7 @@ describe('RuleTester Component', () => {
 
   describe('Results Display', () => {
     it('shows success result with green styling', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -221,16 +171,9 @@ describe('RuleTester Component', () => {
     });
 
     it('shows failure result with red styling', async () => {
-      const failConditions = [
-        { field: 'order.status', operator: 'equals', value: 'picked' },
-      ];
+      const failConditions = [{ field: 'order.status', operator: 'equals', value: 'picked' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={failConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={failConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -242,12 +185,7 @@ describe('RuleTester Component', () => {
     });
 
     it('displays matched conditions list', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -258,12 +196,7 @@ describe('RuleTester Component', () => {
     });
 
     it('displays actions to execute', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -287,12 +220,7 @@ describe('RuleTester Component', () => {
         },
       ];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={nestedConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={nestedConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -313,12 +241,7 @@ describe('RuleTester Component', () => {
         },
       ];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={nestedConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={nestedConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -331,16 +254,9 @@ describe('RuleTester Component', () => {
 
   describe('Operators', () => {
     it('evaluates equals operator correctly', async () => {
-      const conditions = [
-        { field: 'order.status', operator: 'equals', value: 'pending' },
-      ];
+      const conditions = [{ field: 'order.status', operator: 'equals', value: 'pending' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -351,16 +267,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates not_equals operator correctly', async () => {
-      const conditions = [
-        { field: 'order.status', operator: 'not_equals', value: 'picked' },
-      ];
+      const conditions = [{ field: 'order.status', operator: 'not_equals', value: 'picked' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -371,16 +280,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates greater_than operator correctly', async () => {
-      const conditions = [
-        { field: 'sku.quantity', operator: 'greater_than', value: '50' },
-      ];
+      const conditions = [{ field: 'sku.quantity', operator: 'greater_than', value: '50' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -391,16 +293,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates contains operator correctly', async () => {
-      const conditions = [
-        { field: 'order.notes', operator: 'contains', value: 'urgent' },
-      ];
+      const conditions = [{ field: 'order.notes', operator: 'contains', value: 'urgent' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       // Add notes to test data
       const jsonEditor = screen.getByRole('textbox');
@@ -422,16 +317,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates is_empty operator correctly', async () => {
-      const conditions = [
-        { field: 'order.notes', operator: 'is_empty', value: '' },
-      ];
+      const conditions = [{ field: 'order.notes', operator: 'is_empty', value: '' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -444,12 +332,7 @@ describe('RuleTester Component', () => {
 
   describe('Edge Cases', () => {
     it('handles empty conditions', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={[]}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={[]} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -460,16 +343,9 @@ describe('RuleTester Component', () => {
     });
 
     it('handles null values in test data', async () => {
-      const conditions = [
-        { field: 'order.notes', operator: 'is_empty', value: '' },
-      ];
+      const conditions = [{ field: 'order.notes', operator: 'is_empty', value: '' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       const jsonEditor = screen.getByRole('textbox');
       fireEvent.change(jsonEditor, {
@@ -490,16 +366,9 @@ describe('RuleTester Component', () => {
     });
 
     it('handles missing fields in test data', async () => {
-      const conditions = [
-        { field: 'order.notes', operator: 'contains', value: 'test' },
-      ];
+      const conditions = [{ field: 'order.notes', operator: 'contains', value: 'test' }];
 
-      renderWithProviders(
-        <RuleTester
-          conditions={conditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -512,12 +381,7 @@ describe('RuleTester Component', () => {
 
   describe('UI Feedback', () => {
     it('shows loading state during evaluation', async () => {
-      renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
-      );
+      renderWithProviders(<RuleTester conditions={mockConditions} actions={mockActions} />);
 
       const evaluateButton = screen.getByText('Evaluate Rule');
       fireEvent.click(evaluateButton);
@@ -528,10 +392,7 @@ describe('RuleTester Component', () => {
 
     it('resets results when conditions change', async () => {
       const { rerender } = renderWithProviders(
-        <RuleTester
-          conditions={mockConditions}
-          actions={mockActions}
-        />
+        <RuleTester conditions={mockConditions} actions={mockActions} />
       );
 
       const evaluateButton = screen.getByText('Evaluate Rule');

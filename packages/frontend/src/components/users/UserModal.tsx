@@ -78,7 +78,7 @@ function UserModal({
         maxLength: 255,
       },
       password: {
-        custom: (value) => {
+        custom: value => {
           // Password is required for new users
           if (!isEditing && !value) {
             return 'Password is required';
@@ -94,7 +94,7 @@ function UserModal({
         required: true,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       // For editing, don't send password if it's empty
       const submitData: UserFormData = {
         name: values.name.trim(),
@@ -129,10 +129,7 @@ function UserModal({
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -163,9 +160,7 @@ function UserModal({
             <CardContent className="p-6 space-y-5 overflow-y-auto max-h-[60vh]">
               {/* Name Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Full Name
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
                 <div className="relative">
                   <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
@@ -179,9 +174,7 @@ function UserModal({
                     }`}
                   />
                 </div>
-                {errors.name && (
-                  <p className="mt-2 text-sm text-red-400">{errors.name}</p>
-                )}
+                {errors.name && <p className="mt-2 text-sm text-red-400">{errors.name}</p>}
               </div>
 
               {/* Email Field */}
@@ -202,9 +195,7 @@ function UserModal({
                     }`}
                   />
                 </div>
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-400">{errors.email}</p>
-                )}
+                {errors.email && <p className="mt-2 text-sm text-red-400">{errors.email}</p>}
               </div>
 
               {/* Password Field (only for new users or when changing password) */}
@@ -245,9 +236,7 @@ function UserModal({
 
               {/* Role Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Base Role
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Base Role</label>
                 <div className="relative">
                   <ShieldCheckIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                   <select
@@ -265,9 +254,7 @@ function UserModal({
                     ))}
                   </select>
                 </div>
-                {errors.role && (
-                  <p className="mt-2 text-sm text-red-400">{errors.role}</p>
-                )}
+                {errors.role && <p className="mt-2 text-sm text-red-400">{errors.role}</p>}
                 <p className="mt-2 text-xs text-gray-500">
                   This is the user's primary role. Additional roles can be granted later.
                 </p>

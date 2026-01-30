@@ -42,10 +42,7 @@ export class CodeBasedTestGenerator {
   /**
    * Generate tests from a source file
    */
-  async generateTestsFromFile(
-    sourceFilePath: string,
-    language?: string
-  ): Promise<GeneratedTest[]> {
+  async generateTestsFromFile(sourceFilePath: string, language?: string): Promise<GeneratedTest[]> {
     const fullPath = path.resolve(sourceFilePath);
 
     if (!fs.existsSync(fullPath)) {
@@ -126,7 +123,8 @@ export class CodeBasedTestGenerator {
 
     if (language === 'typescript' || language === 'javascript') {
       // Extract function declarations
-      const functionRegex = /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)\s*=>|function))/g;
+      const functionRegex =
+        /(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)\s*=>|function))/g;
       let match;
 
       while ((match = functionRegex.exec(code)) !== null) {
@@ -160,7 +158,10 @@ export class CodeBasedTestGenerator {
       while ((match = functionRegex.exec(code)) !== null) {
         analysis.functions.push({
           name: match[1],
-          parameters: match[2].split(',').map(p => p.trim()).filter(Boolean),
+          parameters: match[2]
+            .split(',')
+            .map(p => p.trim())
+            .filter(Boolean),
           complexity: this.estimateFunctionComplexity(code, match[1]),
           sideEffects: this.hasSideEffects(code, match[1]),
         });
@@ -188,7 +189,10 @@ export class CodeBasedTestGenerator {
     let complexity = 1;
 
     // Find function body (simplified)
-    const functionRegex = new RegExp(`(?:function|def)\\s+${functionName}\\s*\\([^)]*\\)\\s*[{\\n]([\\s\\S]*?)(?:\\n\\s*[}\\n]|$)`, 'gm');
+    const functionRegex = new RegExp(
+      `(?:function|def)\\s+${functionName}\\s*\\([^)]*\\)\\s*[{\\n]([\\s\\S]*?)(?:\\n\\s*[}\\n]|$)`,
+      'gm'
+    );
     const match = functionRegex.exec(code);
 
     if (match && match[1]) {
@@ -221,7 +225,10 @@ export class CodeBasedTestGenerator {
       /\.remove\(/,
     ];
 
-    const functionRegex = new RegExp(`(?:function|def)\\s+${functionName}\\s*\\([^)]*\\)\\s*[{\\n]([\\s\\S]*?)(?:\\n\\s*[}\\n]|$)`, 'gm');
+    const functionRegex = new RegExp(
+      `(?:function|def)\\s+${functionName}\\s*\\([^)]*\\)\\s*[{\\n]([\\s\\S]*?)(?:\\n\\s*[}\\n]|$)`,
+      'gm'
+    );
     const match = functionRegex.exec(code);
 
     if (match && match[1]) {
@@ -236,11 +243,12 @@ export class CodeBasedTestGenerator {
    * Calculate overall complexity
    */
   private calculateOverallComplexity(analysis: CodeAnalysis): number {
-    const avgFunctionComplexity = analysis.functions.length > 0
-      ? analysis.functions.reduce((sum, f) => sum + f.complexity, 0) / analysis.functions.length
-      : 0;
+    const avgFunctionComplexity =
+      analysis.functions.length > 0
+        ? analysis.functions.reduce((sum, f) => sum + f.complexity, 0) / analysis.functions.length
+        : 0;
 
-    return Math.round(avgFunctionComplexity + (analysis.imports.length * 0.1));
+    return Math.round(avgFunctionComplexity + analysis.imports.length * 0.1);
   }
 
   /**
@@ -308,12 +316,14 @@ export class CodeBasedTestGenerator {
 
     const describeBlock = `test.describe('AI-Generated: ${testName}', () => {\n`;
 
-    const testBlocks = tests.map(t => {
-      return `  test('${t.description.replace(/'/g, "\\'")}', async ({ page }) => {
+    const testBlocks = tests
+      .map(t => {
+        return `  test('${t.description.replace(/'/g, "\\'")}', async ({ page }) => {
     // AI-generated test code
 ${this.indentCode(t.testCode, 4)}
   });`;
-    }).join('\n\n');
+      })
+      .join('\n\n');
 
     return `${imports}${describeBlock}\n${testBlocks}\n});`;
   }
@@ -323,7 +333,10 @@ ${this.indentCode(t.testCode, 4)}
    */
   private indentCode(code: string, spaces: number): string {
     const indent = ' '.repeat(spaces);
-    return code.split('\n').map(line => indent + line).join('\n');
+    return code
+      .split('\n')
+      .map(line => indent + line)
+      .join('\n');
   }
 
   /**

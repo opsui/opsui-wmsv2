@@ -24,7 +24,9 @@ import { Dashboard, DashboardWidget, Report } from '@opsui/shared';
 interface DashboardBuilderProps {
   dashboard?: Dashboard;
   reports: Report[];
-  onSave: (dashboard: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>) => void;
+  onSave: (
+    dashboard: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ) => void;
   onCancel: () => void;
   className?: string;
 }
@@ -126,9 +128,7 @@ function WidgetCard({
             {widget.title || report?.name || 'Untitled Widget'}
           </span>
           {report?.chartConfig.enabled && (
-            <span className="text-xs text-gray-400">
-              {report.chartConfig.chartType}
-            </span>
+            <span className="text-xs text-gray-400">{report.chartConfig.chartType}</span>
           )}
         </div>
 
@@ -157,19 +157,19 @@ function WidgetCard({
         <>
           <div
             className="absolute top-0 right-0 w-3 h-3 cursor-se-resize bg-primary-500/50"
-            onMouseDown={(e) => handleResize('se', e)}
+            onMouseDown={e => handleResize('se', e)}
           />
           <div
             className="absolute top-0 left-0 w-3 h-3 cursor-sw-resize bg-primary-500/50"
-            onMouseDown={(e) => handleResize('sw', e)}
+            onMouseDown={e => handleResize('sw', e)}
           />
           <div
             className="absolute bottom-0 right-0 w-3 h-3 cursor-ne-resize bg-primary-500/50"
-            onMouseDown={(e) => handleResize('ne', e)}
+            onMouseDown={e => handleResize('ne', e)}
           />
           <div
             className="absolute bottom-0 left-0 w-3 h-3 cursor-nw-resize bg-primary-500/50"
-            onMouseDown={(e) => handleResize('nw', e)}
+            onMouseDown={e => handleResize('nw', e)}
           />
         </>
       )}
@@ -214,7 +214,7 @@ function AddWidgetPanel({ reports, onAddWidget, onClose }: AddWidgetPanelProps) 
 
         <div className="flex-1 overflow-y-auto p-4">
           <div className="grid grid-cols-2 gap-3">
-            {reports.map((report) => (
+            {reports.map(report => (
               <button
                 key={report.reportId}
                 onClick={() => onAddWidget(report.reportId)}
@@ -283,9 +283,7 @@ export function DashboardBuilder({
   };
 
   const handleUpdateWidget = (widgetId: string, updates: Partial<DashboardWidget>) => {
-    setWidgets(widgets.map(w =>
-      w.widgetId === widgetId ? { ...w, ...updates } : w
-    ));
+    setWidgets(widgets.map(w => (w.widgetId === widgetId ? { ...w, ...updates } : w)));
   };
 
   const handleDeleteWidget = (widgetId: string) => {
@@ -317,7 +315,7 @@ export function DashboardBuilder({
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={e => setName(e.target.value)}
             placeholder="Dashboard Name"
             className="w-full text-lg font-bold text-white bg-transparent border-none focus:outline-none placeholder-gray-500"
             disabled={!isEditing}
@@ -325,7 +323,7 @@ export function DashboardBuilder({
           <input
             type="text"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             placeholder="Add a description..."
             className="w-full text-sm text-gray-400 bg-transparent border-none focus:outline-none placeholder-gray-600"
             disabled={!isEditing}
@@ -355,7 +353,7 @@ export function DashboardBuilder({
                 <input
                   type="checkbox"
                   checked={isPublic}
-                  onChange={(e) => setIsPublic(e.target.checked)}
+                  onChange={e => setIsPublic(e.target.checked)}
                   className="rounded bg-white/5 border-white/[0.08]"
                 />
                 Public
@@ -404,7 +402,7 @@ export function DashboardBuilder({
             <label className="text-xs text-gray-400">Grid:</label>
             <select
               value={`${layout.columns}x${layout.rows}`}
-              onChange={(e) => {
+              onChange={e => {
                 const [cols, rows] = e.target.value.split('x').map(Number);
                 setLayout({ columns: cols, rows });
               }}
@@ -435,14 +433,14 @@ export function DashboardBuilder({
           }}
         >
           {/* Grid Lines */}
-          {gridColumns.map((col) => (
+          {gridColumns.map(col => (
             <div
               key={`col-${col}`}
               className="absolute top-0 bottom-0 border-l border-white/[0.02]"
               style={{ left: `${((col + 1) / layout.columns) * 100}%` }}
             />
           ))}
-          {gridRows.map((row) => (
+          {gridRows.map(row => (
             <div
               key={`row-${row}`}
               className="absolute left-0 right-0 border-t border-white/[0.02]"
@@ -451,7 +449,7 @@ export function DashboardBuilder({
           ))}
 
           {/* Widgets */}
-          {widgets.map((widget) => (
+          {widgets.map(widget => (
             <WidgetCard
               key={widget.widgetId}
               widget={widget}
@@ -460,14 +458,12 @@ export function DashboardBuilder({
               isSelected={selectedWidgetId === widget.widgetId}
               onEdit={() => setSelectedWidgetId(widget.widgetId)}
               onDelete={() => handleDeleteWidget(widget.widgetId)}
-              onResize={(size) =>
+              onResize={size =>
                 handleUpdateWidget(widget.widgetId, {
                   position: { ...widget.position, ...size },
                 })
               }
-              onPositionChange={(position) =>
-                handleUpdateWidget(widget.widgetId, { position })
-              }
+              onPositionChange={position => handleUpdateWidget(widget.widgetId, { position })}
             />
           ))}
 

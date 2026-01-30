@@ -27,7 +27,16 @@ import {
   ArrowPathIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
-import { Header, useToast, Pagination, Modal, FormInput, FormSelect, FormTextarea, ConfirmDialog } from '@/components/shared';
+import {
+  Header,
+  useToast,
+  Pagination,
+  Modal,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  ConfirmDialog,
+} from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 
 // ============================================================================
@@ -81,76 +90,84 @@ function CapacityRuleModal({
   const isEdit = !!rule;
   const { showToast } = useToast();
 
-  const { values, errors, handleChange, handleBlur, handleSubmit, isSubmitting, reset, setFieldValue } =
-    useFormValidation({
-      initialValues: {
-        ruleName: rule?.ruleName || '',
-        description: rule?.description || '',
-        capacityType: rule?.capacityType || CapacityType.QUANTITY,
-        capacityUnit: rule?.capacityUnit || CapacityUnit.UNITS,
-        appliesTo: rule?.appliesTo || 'ALL',
-        zone: rule?.zone || '',
-        locationType: rule?.locationType || '',
-        specificLocation: rule?.specificLocation || '',
-        maximumCapacity: String(rule?.maximumCapacity || 100),
-        warningThreshold: String(rule?.warningThreshold || 80),
-        allowOverfill: rule?.allowOverfill || false,
-        overfillThreshold: String(rule?.overfillThreshold || 10),
-        priority: String(rule?.priority || 0),
-      },
-      validationRules: {
-        ruleName: { required: true, minLength: 3, maxLength: 100 },
-        description: { maxLength: 500 },
-        capacityType: { required: true },
-        capacityUnit: { required: true },
-        appliesTo: { required: true },
-        maximumCapacity: {
-          required: true,
-          custom: (value) => {
-            const num = Number(value);
-            if (isNaN(num) || num <= 0) return 'Must be a positive number';
-            return null;
-          },
+  const {
+    values,
+    errors,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    isSubmitting,
+    reset,
+    setFieldValue,
+  } = useFormValidation({
+    initialValues: {
+      ruleName: rule?.ruleName || '',
+      description: rule?.description || '',
+      capacityType: rule?.capacityType || CapacityType.QUANTITY,
+      capacityUnit: rule?.capacityUnit || CapacityUnit.UNITS,
+      appliesTo: rule?.appliesTo || 'ALL',
+      zone: rule?.zone || '',
+      locationType: rule?.locationType || '',
+      specificLocation: rule?.specificLocation || '',
+      maximumCapacity: String(rule?.maximumCapacity || 100),
+      warningThreshold: String(rule?.warningThreshold || 80),
+      allowOverfill: rule?.allowOverfill || false,
+      overfillThreshold: String(rule?.overfillThreshold || 10),
+      priority: String(rule?.priority || 0),
+    },
+    validationRules: {
+      ruleName: { required: true, minLength: 3, maxLength: 100 },
+      description: { maxLength: 500 },
+      capacityType: { required: true },
+      capacityUnit: { required: true },
+      appliesTo: { required: true },
+      maximumCapacity: {
+        required: true,
+        custom: value => {
+          const num = Number(value);
+          if (isNaN(num) || num <= 0) return 'Must be a positive number';
+          return null;
         },
-        warningThreshold: {
-          required: true,
-          custom: (value) => {
-            const num = Number(value);
-            if (isNaN(num) || num < 1 || num > 100) return 'Must be between 1 and 100';
-            return null;
-          },
+      },
+      warningThreshold: {
+        required: true,
+        custom: value => {
+          const num = Number(value);
+          if (isNaN(num) || num < 1 || num > 100) return 'Must be between 1 and 100';
+          return null;
         },
       },
-      onSubmit: async (formValues) => {
-        try {
-          const payload = {
-            ...formValues,
-            maximumCapacity: parseFloat(formValues.maximumCapacity),
-            warningThreshold: parseFloat(formValues.warningThreshold),
-            overfillThreshold: parseFloat(formValues.overfillThreshold),
-            priority: parseInt(formValues.priority),
-          };
+    },
+    onSubmit: async formValues => {
+      try {
+        const payload = {
+          ...formValues,
+          maximumCapacity: parseFloat(formValues.maximumCapacity),
+          warningThreshold: parseFloat(formValues.warningThreshold),
+          overfillThreshold: parseFloat(formValues.overfillThreshold),
+          priority: parseInt(formValues.priority),
+        };
 
-          if (isEdit) {
-            await updateMutation.mutateAsync({
-              ruleId: rule.ruleId,
-              updates: payload,
-            });
-            showToast('Capacity rule updated successfully', 'success');
-          } else {
-            await createMutation.mutateAsync({
-              ...payload,
-              createdBy: useAuthStore.getState().user!.userId,
-            });
-            showToast('Capacity rule created successfully', 'success');
-          }
-          onSuccess();
-          onClose();
-        } catch (error: any) {
-          showToast(error?.message || 'Failed to save capacity rule', 'error');
+        if (isEdit) {
+          await updateMutation.mutateAsync({
+            ruleId: rule.ruleId,
+            updates: payload,
+          });
+          showToast('Capacity rule updated successfully', 'success');
+        } else {
+          await createMutation.mutateAsync({
+            ...payload,
+            createdBy: useAuthStore.getState().user!.userId,
+          });
+          showToast('Capacity rule created successfully', 'success');
         }
-      },
-    });
+        onSuccess();
+        onClose();
+      } catch (error: any) {
+        showToast(error?.message || 'Failed to save capacity rule', 'error');
+      }
+    },
+  });
 
   const handleModalClose = () => {
     reset();
@@ -391,11 +408,19 @@ export function LocationCapacityPage() {
   });
 
   const { data: rulesData, isLoading: rulesLoading, refetch: refetchRules } = useCapacityRules();
-  const { data: capacitiesData, isLoading: capacitiesLoading, refetch: refetchCapacities } = useLocationCapacities({
+  const {
+    data: capacitiesData,
+    isLoading: capacitiesLoading,
+    refetch: refetchCapacities,
+  } = useLocationCapacities({
     capacityType: filterType || undefined,
     showAlertsOnly,
   });
-  const { data: alertsData, isLoading: alertsLoading, refetch: refetchAlerts } = useCapacityAlerts({
+  const {
+    data: alertsData,
+    isLoading: alertsLoading,
+    refetch: refetchAlerts,
+  } = useCapacityAlerts({
     acknowledged: false,
   });
 
@@ -417,9 +442,10 @@ export function LocationCapacityPage() {
     cap.binLocation.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredRules = rules.filter((rule: any) =>
-    rule.ruleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rule.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRules = rules.filter(
+    (rule: any) =>
+      rule.ruleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rule.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredAlerts = alerts.filter((alert: any) =>
@@ -569,168 +595,174 @@ export function LocationCapacityPage() {
                   <>
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                  <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-4">
-                    <div className="text-sm text-blue-300 font-medium">Total Locations</div>
-                    <div className="text-2xl font-bold text-blue-100 mt-1">{capacities.length}</div>
-                  </div>
-                  <div className="bg-green-900/30 border border-green-800 rounded-lg p-4">
-                    <div className="text-sm text-green-300 font-medium">Total Capacity</div>
-                    <div className="text-2xl font-bold text-green-100 mt-1">
-                      {totalCapacity.toFixed(0)}
-                    </div>
-                  </div>
-                  <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
-                    <div className="text-sm text-yellow-300 font-medium">Utilization</div>
-                    <div className="text-2xl font-bold text-yellow-100 mt-1">
-                      {overallUtilization.toFixed(1)}%
-                    </div>
-                  </div>
-                  <div className="bg-red-900/30 border border-red-800 rounded-lg p-4">
-                    <div className="text-sm text-red-300 font-medium">Active Alerts</div>
-                    <div className="text-2xl font-bold text-red-100 mt-1">{alerts.length}</div>
-                  </div>
-                </div>
-
-                {/* Overall Utilization Bar */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-3">
-                    Overall Capacity Utilization
-                  </h3>
-                  <CapacityBar
-                    utilization={totalUtilization}
-                    maximum={totalCapacity}
-                    warningThreshold={80}
-                  />
-                </div>
-
-                {/* Capacities by Location */}
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-lg font-semibold text-white">Location Capacities</h3>
-                    <div className="flex gap-2">
-                      <div className="relative">
-                        <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          placeholder="Search locations..."
-                          className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                      <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-4">
+                        <div className="text-sm text-blue-300 font-medium">Total Locations</div>
+                        <div className="text-2xl font-bold text-blue-100 mt-1">
+                          {capacities.length}
+                        </div>
                       </div>
-                      <select
-                        value={filterType}
-                        onChange={e => setFilterType(e.target.value)}
-                        className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white"
-                      >
-                        <option value="">All Types</option>
-                        <option value={CapacityType.QUANTITY}>Quantity</option>
-                        <option value={CapacityType.WEIGHT}>Weight</option>
-                        <option value={CapacityType.VOLUME}>Volume</option>
-                      </select>
-                      <label className="flex items-center gap-2 text-sm text-gray-300">
-                        <input
-                          type="checkbox"
-                          checked={showAlertsOnly}
-                          onChange={e => setShowAlertsOnly(e.target.checked)}
-                          className="rounded bg-gray-800 border-gray-700"
-                        />
-                        Alerts Only
-                      </label>
+                      <div className="bg-green-900/30 border border-green-800 rounded-lg p-4">
+                        <div className="text-sm text-green-300 font-medium">Total Capacity</div>
+                        <div className="text-2xl font-bold text-green-100 mt-1">
+                          {totalCapacity.toFixed(0)}
+                        </div>
+                      </div>
+                      <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
+                        <div className="text-sm text-yellow-300 font-medium">Utilization</div>
+                        <div className="text-2xl font-bold text-yellow-100 mt-1">
+                          {overallUtilization.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="bg-red-900/30 border border-red-800 rounded-lg p-4">
+                        <div className="text-sm text-red-300 font-medium">Active Alerts</div>
+                        <div className="text-2xl font-bold text-red-100 mt-1">{alerts.length}</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-800">
-                      <thead className="bg-gray-900/50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                            Location
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                            Utilization
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                        {paginatedCapacities.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                              No location capacities found.
-                            </td>
-                          </tr>
-                        ) : (
-                          paginatedCapacities.map((capacity: any) => (
-                            <tr key={capacity.capacityId} className="hover:bg-gray-800/50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-white">
-                                  {capacity.binLocation}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-white">{capacity.capacityType}</div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="w-48">
-                                  <CapacityBar
-                                    utilization={capacity.currentUtilization}
-                                    maximum={capacity.maximumCapacity}
-                                    warningThreshold={capacity.warningThreshold}
-                                  />
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    capacity.status === CapacityRuleStatus.EXCEEDED
-                                      ? 'bg-red-900/50 text-red-300'
-                                      : capacity.status === CapacityRuleStatus.WARNING
-                                        ? 'bg-yellow-900/50 text-yellow-300'
-                                        : 'bg-green-900/50 text-green-300'
-                                  }`}
-                                >
-                                  {capacity.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                <button
-                                  onClick={() => handleRecalculate(capacity.binLocation)}
-                                  className="text-blue-400 hover:text-blue-300 mr-3"
-                                  title="Recalculate"
-                                  disabled={recalculateMutation.isPending}
-                                >
-                                  <ArrowPathIcon className={`h-4 w-4 inline ${recalculateMutation.isPending ? 'animate-spin' : ''}`} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {totalCapacityPages > 1 && (
-                    <div className="mt-4">
-                      <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalCapacityPages}
-                        onPageChange={setCurrentPage}
+                    {/* Overall Utilization Bar */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-white mb-3">
+                        Overall Capacity Utilization
+                      </h3>
+                      <CapacityBar
+                        utilization={totalUtilization}
+                        maximum={totalCapacity}
+                        warningThreshold={80}
                       />
                     </div>
-                  )}
-                </div>
+
+                    {/* Capacities by Location */}
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-lg font-semibold text-white">Location Capacities</h3>
+                        <div className="flex gap-2">
+                          <div className="relative">
+                            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <input
+                              type="text"
+                              value={searchTerm}
+                              onChange={e => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                              }}
+                              placeholder="Search locations..."
+                              className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                          <select
+                            value={filterType}
+                            onChange={e => setFilterType(e.target.value)}
+                            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white"
+                          >
+                            <option value="">All Types</option>
+                            <option value={CapacityType.QUANTITY}>Quantity</option>
+                            <option value={CapacityType.WEIGHT}>Weight</option>
+                            <option value={CapacityType.VOLUME}>Volume</option>
+                          </select>
+                          <label className="flex items-center gap-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              checked={showAlertsOnly}
+                              onChange={e => setShowAlertsOnly(e.target.checked)}
+                              className="rounded bg-gray-800 border-gray-700"
+                            />
+                            Alerts Only
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-800">
+                          <thead className="bg-gray-900/50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                                Location
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                                Type
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                                Utilization
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                                Status
+                              </th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                            {paginatedCapacities.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                  No location capacities found.
+                                </td>
+                              </tr>
+                            ) : (
+                              paginatedCapacities.map((capacity: any) => (
+                                <tr key={capacity.capacityId} className="hover:bg-gray-800/50">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm font-medium text-white">
+                                      {capacity.binLocation}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-white">
+                                      {capacity.capacityType}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <div className="w-48">
+                                      <CapacityBar
+                                        utilization={capacity.currentUtilization}
+                                        maximum={capacity.maximumCapacity}
+                                        warningThreshold={capacity.warningThreshold}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        capacity.status === CapacityRuleStatus.EXCEEDED
+                                          ? 'bg-red-900/50 text-red-300'
+                                          : capacity.status === CapacityRuleStatus.WARNING
+                                            ? 'bg-yellow-900/50 text-yellow-300'
+                                            : 'bg-green-900/50 text-green-300'
+                                      }`}
+                                    >
+                                      {capacity.status}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                    <button
+                                      onClick={() => handleRecalculate(capacity.binLocation)}
+                                      className="text-blue-400 hover:text-blue-300 mr-3"
+                                      title="Recalculate"
+                                      disabled={recalculateMutation.isPending}
+                                    >
+                                      <ArrowPathIcon
+                                        className={`h-4 w-4 inline ${recalculateMutation.isPending ? 'animate-spin' : ''}`}
+                                      />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {totalCapacityPages > 1 && (
+                        <div className="mt-4">
+                          <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalCapacityPages}
+                            onPageChange={setCurrentPage}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
@@ -751,7 +783,7 @@ export function LocationCapacityPage() {
                         <input
                           type="text"
                           value={searchTerm}
-                          onChange={(e) => {
+                          onChange={e => {
                             setSearchTerm(e.target.value);
                             setRulesPage(1);
                           }}
@@ -762,94 +794,99 @@ export function LocationCapacityPage() {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-800">
-                    <thead className="bg-gray-900/50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Rule Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                          Applies To
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                          Max Capacity
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                          Warning %
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
-                          Priority
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                      {paginatedRules.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
-                            {searchTerm ? 'No rules match your search.' : 'No capacity rules configured. Create a rule to get started.'}
-                          </td>
-                        </tr>
-                      ) : (
-                        paginatedRules.map((rule: any) => (
-                          <tr key={rule.ruleId} className="hover:bg-gray-800/50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-white">{rule.ruleName}</div>
-                              {rule.description && (
-                                <div className="text-xs text-gray-400">{rule.description}</div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">{rule.capacityType}</div>
-                              <div className="text-xs text-gray-400">{rule.capacityUnit}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">
-                                {rule.appliesTo === 'ALL' && 'All Locations'}
-                                {rule.appliesTo === 'ZONE' && `Zone: ${rule.zone}`}
-                                {rule.appliesTo === 'LOCATION_TYPE' && `Type: ${rule.locationType}`}
-                                {rule.appliesTo === 'SPECIFIC_LOCATION' &&
-                                  `Location: ${rule.specificLocation}`}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-white">
-                              {rule.maximumCapacity}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-white">
-                              {rule.warningThreshold}%
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-white">
-                              {rule.priority}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              {canManageRules && (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedRule(rule);
-                                      setShowRuleModal(true);
-                                    }}
-                                    className="text-blue-400 hover:text-blue-300 mr-3"
-                                  >
-                                    <PencilIcon className="h-4 w-4 inline" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteRule(rule.ruleId)}
-                                    className="text-red-400 hover:text-red-300"
-                                  >
-                                    <TrashIcon className="h-4 w-4 inline" />
-                                  </button>
-                                </>
-                              )}
-                            </td>
+                        <thead className="bg-gray-900/50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              Rule Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              Type
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              Applies To
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                              Max Capacity
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                              Warning %
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
+                              Priority
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                              Actions
+                            </th>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
+                        </thead>
+                        <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                          {paginatedRules.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                                {searchTerm
+                                  ? 'No rules match your search.'
+                                  : 'No capacity rules configured. Create a rule to get started.'}
+                              </td>
+                            </tr>
+                          ) : (
+                            paginatedRules.map((rule: any) => (
+                              <tr key={rule.ruleId} className="hover:bg-gray-800/50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-white">
+                                    {rule.ruleName}
+                                  </div>
+                                  {rule.description && (
+                                    <div className="text-xs text-gray-400">{rule.description}</div>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-white">{rule.capacityType}</div>
+                                  <div className="text-xs text-gray-400">{rule.capacityUnit}</div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-white">
+                                    {rule.appliesTo === 'ALL' && 'All Locations'}
+                                    {rule.appliesTo === 'ZONE' && `Zone: ${rule.zone}`}
+                                    {rule.appliesTo === 'LOCATION_TYPE' &&
+                                      `Type: ${rule.locationType}`}
+                                    {rule.appliesTo === 'SPECIFIC_LOCATION' &&
+                                      `Location: ${rule.specificLocation}`}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-white">
+                                  {rule.maximumCapacity}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-white">
+                                  {rule.warningThreshold}%
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-white">
+                                  {rule.priority}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                  {canManageRules && (
+                                    <>
+                                      <button
+                                        onClick={() => {
+                                          setSelectedRule(rule);
+                                          setShowRuleModal(true);
+                                        }}
+                                        className="text-blue-400 hover:text-blue-300 mr-3"
+                                      >
+                                        <PencilIcon className="h-4 w-4 inline" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteRule(rule.ruleId)}
+                                        className="text-red-400 hover:text-red-300"
+                                      >
+                                        <TrashIcon className="h-4 w-4 inline" />
+                                      </button>
+                                    </>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
                       </table>
                     </div>
 
@@ -889,7 +926,7 @@ export function LocationCapacityPage() {
                         <input
                           type="text"
                           value={searchTerm}
-                          onChange={(e) => {
+                          onChange={e => {
                             setSearchTerm(e.target.value);
                             setAlertsPage(1);
                           }}

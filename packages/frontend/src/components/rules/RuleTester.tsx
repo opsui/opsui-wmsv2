@@ -6,7 +6,13 @@
  */
 
 import { useState } from 'react';
-import { PlayIcon, CheckCircleIcon, XCircleIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  PlayIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  DocumentTextIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { RuleCondition } from './RuleBuilder';
 import { RuleAction } from './ActionBuilder';
@@ -63,13 +69,29 @@ function evaluateCondition(condition: RuleCondition, data: Record<string, any>):
     case 'ne':
       return fieldValue !== conditionValue;
     case 'gt':
-      return typeof fieldValue === 'number' && typeof conditionValue === 'number' && fieldValue > conditionValue;
+      return (
+        typeof fieldValue === 'number' &&
+        typeof conditionValue === 'number' &&
+        fieldValue > conditionValue
+      );
     case 'gte':
-      return typeof fieldValue === 'number' && typeof conditionValue === 'number' && fieldValue >= conditionValue;
+      return (
+        typeof fieldValue === 'number' &&
+        typeof conditionValue === 'number' &&
+        fieldValue >= conditionValue
+      );
     case 'lt':
-      return typeof fieldValue === 'number' && typeof conditionValue === 'number' && fieldValue < conditionValue;
+      return (
+        typeof fieldValue === 'number' &&
+        typeof conditionValue === 'number' &&
+        fieldValue < conditionValue
+      );
     case 'lte':
-      return typeof fieldValue === 'number' && typeof conditionValue === 'number' && fieldValue <= conditionValue;
+      return (
+        typeof fieldValue === 'number' &&
+        typeof conditionValue === 'number' &&
+        fieldValue <= conditionValue
+      );
     case 'contains':
       return typeof fieldValue === 'string' && fieldValue.includes(conditionValue);
     case 'not_contains':
@@ -148,7 +170,7 @@ const SAMPLE_TEMPLATES = [
         status: 'PENDING',
         priority: 'URGENT',
         itemCount: 15,
-        totalValue: 2500.00,
+        totalValue: 2500.0,
       },
       user: {
         userId: 'user-123',
@@ -278,7 +300,7 @@ export function RuleTester({ conditions, actions, className }: RuleTesterProps) 
         disabled={!testData || !isValidJson() || conditions.length === 0}
         className={cn(
           'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-          (!testData || !isValidJson() || conditions.length === 0)
+          !testData || !isValidJson() || conditions.length === 0
             ? 'bg-gray-500/20 text-gray-500 cursor-not-allowed'
             : 'bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 border border-primary-500/30'
         )}
@@ -291,22 +313,26 @@ export function RuleTester({ conditions, actions, className }: RuleTesterProps) 
       {result && (
         <div className="space-y-3">
           {/* Match Status */}
-          <div className={cn(
-            'flex items-center gap-3 p-4 rounded-lg border',
-            result.matched
-              ? 'bg-green-500/10 border-green-500/30'
-              : 'bg-red-500/10 border-red-500/30'
-          )}>
+          <div
+            className={cn(
+              'flex items-center gap-3 p-4 rounded-lg border',
+              result.matched
+                ? 'bg-green-500/10 border-green-500/30'
+                : 'bg-red-500/10 border-red-500/30'
+            )}
+          >
             {result.matched ? (
               <CheckCircleIcon className="h-6 w-6 text-green-400 flex-shrink-0" />
             ) : (
               <XCircleIcon className="h-6 w-6 text-red-400 flex-shrink-0" />
             )}
             <div>
-              <p className={cn(
-                'text-sm font-medium',
-                result.matched ? 'text-green-400' : 'text-red-400'
-              )}>
+              <p
+                className={cn(
+                  'text-sm font-medium',
+                  result.matched ? 'text-green-400' : 'text-red-400'
+                )}
+              >
                 {result.matched ? 'Rule Matched!' : 'Rule Not Matched'}
               </p>
               <p className="text-xs text-gray-400">
@@ -346,11 +372,7 @@ export function RuleTester({ conditions, actions, className }: RuleTesterProps) 
               <p className="text-xs text-gray-400">Actions to Execute:</p>
               <div className="space-y-1">
                 {result.actions.map((item, index) => (
-                  <ActionResultItem
-                    key={index}
-                    action={item.action}
-                    parameters={item.parameters}
-                  />
+                  <ActionResultItem key={index} action={item.action} parameters={item.parameters} />
                 ))}
               </div>
             </div>
@@ -389,10 +411,7 @@ function ConditionResultItem({ condition, result }: ConditionResultItemProps) {
       )}
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn(
-            'text-sm',
-            result ? 'text-green-400' : 'text-red-400'
-          )}>
+          <span className={cn('text-sm', result ? 'text-green-400' : 'text-red-400')}>
             {renderConditionText(condition)}
           </span>
           {condition.conditions && (

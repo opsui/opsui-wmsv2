@@ -125,7 +125,9 @@ export async function createFlag(data: CreateFlagDTO): Promise<FeatureFlag> {
   const pool = getPool();
 
   // Check if flag key already exists
-  const existing = await pool.query('SELECT flag_key FROM feature_flags WHERE flag_key = $1', [data.flag_key]);
+  const existing = await pool.query('SELECT flag_key FROM feature_flags WHERE flag_key = $1', [
+    data.flag_key,
+  ]);
   if (existing.rows.length > 0) {
     throw new Error(`Feature flag with key '${data.flag_key}' already exists`);
   }
@@ -147,7 +149,10 @@ export async function createFlag(data: CreateFlagDTO): Promise<FeatureFlag> {
 export async function deleteFlag(key: string): Promise<void> {
   const pool = getPool();
 
-  const result = await pool.query('DELETE FROM feature_flags WHERE flag_key = $1 RETURNING flag_key', [key]);
+  const result = await pool.query(
+    'DELETE FROM feature_flags WHERE flag_key = $1 RETURNING flag_key',
+    [key]
+  );
 
   if (result.rows.length === 0) {
     throw new Error(`Feature flag '${key}' not found`);
@@ -159,7 +164,9 @@ export async function deleteFlag(key: string): Promise<void> {
 /**
  * Get flag categories with counts
  */
-export async function getCategorySummary(): Promise<Array<{ category: string; count: number; enabled: number }>> {
+export async function getCategorySummary(): Promise<
+  Array<{ category: string; count: number; enabled: number }>
+> {
   const pool = getPool();
 
   const result = await pool.query(`

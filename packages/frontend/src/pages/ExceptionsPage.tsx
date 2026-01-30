@@ -13,7 +13,19 @@ import {
   useResolveException,
   useReportProblem,
 } from '@/services/api';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, Pagination, Input, ListSkeleton, Skeleton, MetricCardSkeleton } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  Pagination,
+  Input,
+  ListSkeleton,
+  Skeleton,
+  MetricCardSkeleton,
+} from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
 import {
@@ -156,7 +168,7 @@ function ExceptionTypeBadge({ type }: { type: ExceptionType }) {
 // ============================================================================
 
 export function ExceptionsPage() {
-    const { showToast } = useToast();
+  const { showToast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
@@ -177,7 +189,9 @@ export function ExceptionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Report problem states
-  const [problemType, setProblemType] = useState<'EQUIPMENT' | 'FACILITY' | 'SYSTEM' | 'OTHER'>('OTHER');
+  const [problemType, setProblemType] = useState<'EQUIPMENT' | 'FACILITY' | 'SYSTEM' | 'OTHER'>(
+    'OTHER'
+  );
   const [problemDescription, setProblemDescription] = useState('');
   const [problemLocation, setProblemLocation] = useState('');
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -495,7 +509,8 @@ export function ExceptionsPage() {
                   <CheckCircleIcon className="h-16 w-16 text-success-500 mx-auto mb-4" />
                   <h2 className="text-2xl font-bold text-white mb-2">Problem Reported</h2>
                   <p className="text-gray-300 mb-6">
-                    Thank you for reporting this issue. The admin team has been notified and will review it shortly.
+                    Thank you for reporting this issue. The admin team has been notified and will
+                    review it shortly.
                   </p>
                   <Button
                     onClick={() => {
@@ -562,10 +577,7 @@ export function ExceptionsPage() {
                   </div>
 
                   <div className="flex gap-3 justify-end">
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate('/exceptions')}
-                    >
+                    <Button variant="secondary" onClick={() => navigate('/exceptions')}>
                       Cancel
                     </Button>
                     <Button
@@ -598,308 +610,320 @@ export function ExceptionsPage() {
         {/* Exception Management Interface - only show when NOT in report mode */}
         {!isReportMode && canSupervise() && (
           <>
-        {/* Page Header */}
-        <div className="animate-in">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-white tracking-tight">Exception Management</h1>
-              <p className="mt-2 text-gray-400">View and resolve order exceptions</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search exceptions..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  refetchAll();
-                  refetchOpen();
-                  refetchSummary();
-                }}
-              >
-                <ClockIcon className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        {!summaryLoading && summary && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card variant="glass" className="card-hover">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                      Total Exceptions
-                    </p>
-                    <p className="mt-3 text-3xl font-bold text-white tracking-tight">
-                      {summary.total}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-gray-500/10 text-gray-400 border border-gray-500/20">
-                    <ExclamationTriangleIcon className="h-6 w-6" />
-                  </div>
+            {/* Page Header */}
+            <div className="animate-in">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold text-white tracking-tight">
+                    Exception Management
+                  </h1>
+                  <p className="mt-2 text-gray-400">View and resolve order exceptions</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card variant="glass" className="card-hover">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                      Open
-                    </p>
-                    <p className="mt-3 text-3xl font-bold text-error-400 tracking-tight">
-                      {summary.open}
-                    </p>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search exceptions..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
-                  <div className="p-3 rounded-xl bg-error-500/10 text-error-400 border border-error-500/20">
-                    <ExclamationCircleIcon className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card variant="glass" className="card-hover">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                      Resolved
-                    </p>
-                    <p className="mt-3 text-3xl font-bold text-success-400 tracking-tight">
-                      {summary.resolved}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-success-500/10 text-success-400 border border-success-500/20">
-                    <CheckCircleIcon className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card variant="glass" className="card-hover">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                      Resolution Rate
-                    </p>
-                    <p className="mt-3 text-3xl font-bold text-primary-400 tracking-tight">
-                      {summary.total > 0 ? Math.round((summary.resolved / summary.total) * 100) : 0}
-                      %
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-primary-500/10 text-primary-400 border border-primary-500/20">
-                    <InformationCircleIcon className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Type Breakdown */}
-        {!summaryLoading && summary && Object.keys(summary.byType).length > 0 && (
-          <Card variant="glass" className="card-hover">
-            <CardHeader>
-              <CardTitle>Exceptions by Type</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(summary.byType).map(([type, count]) => (
-                  <div
-                    key={type}
-                    className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      refetchAll();
+                      refetchOpen();
+                      refetchSummary();
+                    }}
                   >
-                    <p className="text-2xl font-bold text-white">{count}</p>
-                    <p className="text-xs text-gray-400 mt-1">{type.replace(/_/g, ' ')}</p>
-                  </div>
-                ))}
+                    <ClockIcon className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilterStatus('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              filterStatus === 'all'
-                ? 'bg-primary-500 text-white'
-                : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
-            }`}
-          >
-            All ({openExceptions?.total || 0})
-          </button>
-          <button
-            onClick={() => setFilterStatus(ExceptionStatus.OPEN)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              filterStatus === ExceptionStatus.OPEN
-                ? 'bg-primary-500 text-white'
-                : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
-            }`}
-          >
-            Open ({summary?.open || 0})
-          </button>
-          <button
-            onClick={() => setFilterStatus(ExceptionStatus.RESOLVED)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              filterStatus === ExceptionStatus.RESOLVED
-                ? 'bg-primary-500 text-white'
-                : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
-            }`}
-          >
-            Resolved ({summary?.resolved || 0})
-          </button>
-        </div>
-
-        {/* Exceptions List */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
-            <CardTitle>
-              {filterStatus === 'all'
-                ? 'All Open Exceptions'
-                : filterStatus === ExceptionStatus.OPEN
-                  ? 'Open Exceptions'
-                  : filterStatus === ExceptionStatus.RESOLVED
-                    ? 'Resolved Exceptions'
-                    : 'Exceptions'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {openLoading ? (
-              <ListSkeleton items={6} />
-            ) : filteredExceptions.length > 0 ? (
-              <div className="space-y-3">
-                {filteredExceptions.map(exception => {
-                  return (
-                    <div
-                      key={exception.exceptionId}
-                      className="border border-white/[0.08] rounded-xl p-4 hover:bg-white/[0.02] transition-all duration-300"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <ExceptionTypeBadge type={exception.type} />
-                            <ExceptionBadge status={exception.status} />
-                            <span className="text-xs text-gray-500">{exception.exceptionId}</span>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-400">Order:</span>
-                              <span className="ml-2 text-white font-medium">{exception.orderId}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400">SKU:</span>
-                              <span className="ml-2 text-white font-medium">{exception.sku}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400">Qty:</span>
-                              <span className="ml-2 text-white">
-                                {exception.quantityActual} / {exception.quantityExpected}
-                                {exception.quantityShort > 0 && (
-                                  <span className="text-error-400 ml-1">
-                                    (-{exception.quantityShort})
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400">Reported:</span>
-                              <span className="ml-2 text-white">
-                                {new Date(exception.reportedAt).toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-
-                          {exception.reason && (
-                            <div className="mt-3 p-3 bg-white/[0.02] rounded-lg">
-                              <p className="text-sm text-gray-300">{exception.reason}</p>
-                            </div>
-                          )}
-
-                          {exception.resolution && (
-                            <div className="mt-3 flex items-center gap-2">
-                              <span className="text-sm text-gray-400">Resolution:</span>
-                              <span className="text-sm font-medium text-success-400">
-                                {exception.resolution.replace(/_/g, ' ')}
-                              </span>
-                            </div>
-                          )}
-
-                          {exception.resolutionNotes && (
-                            <div className="mt-2 p-3 bg-success-500/10 border border-success-500/20 rounded-lg">
-                              <p className="text-sm text-success-300">{exception.resolutionNotes}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {exception.status === ExceptionStatus.OPEN ? (
-                          // Standard Exception: Resolve Button
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedException(exception);
-                              setShowResolveModal(true);
-                              setResolution(ExceptionResolution.BACKORDER);
-                              setResolutionNotes('');
-                              setSubstituteSku('');
-                              setNewQuantity(0);
-                              setNewBinLocation('');
-                            }}
-                            className="ml-4"
-                          >
-                            Resolve
-                            <ChevronRightIcon className="h-4 w-4 ml-1" />
-                          </Button>
-                        ) : null}
+            {/* Summary Cards */}
+            {!summaryLoading && summary && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card variant="glass" className="card-hover">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                          Total Exceptions
+                        </p>
+                        <p className="mt-3 text-3xl font-bold text-white tracking-tight">
+                          {summary.total}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-gray-500/10 text-gray-400 border border-gray-500/20">
+                        <ExclamationTriangleIcon className="h-6 w-6" />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16">
-                <CheckCircleIcon className="h-16 w-16 text-gray-600 mb-4" />
-                <p className="text-sm text-gray-400">
-                  {searchQuery ? 'No exceptions match your search' : 'No exceptions found'}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {!searchQuery && filterStatus === 'all'
-                    ? 'Great job! No open exceptions.'
-                    : 'No exceptions match this filter.'}
-                </p>
+                  </CardContent>
+                </Card>
+
+                <Card variant="glass" className="card-hover">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                          Open
+                        </p>
+                        <p className="mt-3 text-3xl font-bold text-error-400 tracking-tight">
+                          {summary.open}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-error-500/10 text-error-400 border border-error-500/20">
+                        <ExclamationCircleIcon className="h-6 w-6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card variant="glass" className="card-hover">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                          Resolved
+                        </p>
+                        <p className="mt-3 text-3xl font-bold text-success-400 tracking-tight">
+                          {summary.resolved}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-success-500/10 text-success-400 border border-success-500/20">
+                        <CheckCircleIcon className="h-6 w-6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card variant="glass" className="card-hover">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                          Resolution Rate
+                        </p>
+                        <p className="mt-3 text-3xl font-bold text-primary-400 tracking-tight">
+                          {summary.total > 0
+                            ? Math.round((summary.resolved / summary.total) * 100)
+                            : 0}
+                          %
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-primary-500/10 text-primary-400 border border-primary-500/20">
+                        <InformationCircleIcon className="h-6 w-6" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Pagination */}
-        {allExceptions?.total && allExceptions.total > 0 && (
-          <Pagination
-            currentPage={page}
-            totalItems={allExceptions.total}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[10, 20, 50, 100]}
-          />
-        )}
+            {/* Type Breakdown */}
+            {!summaryLoading && summary && Object.keys(summary.byType).length > 0 && (
+              <Card variant="glass" className="card-hover">
+                <CardHeader>
+                  <CardTitle>Exceptions by Type</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Object.entries(summary.byType).map(([type, count]) => (
+                      <div
+                        key={type}
+                        className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                      >
+                        <p className="text-2xl font-bold text-white">{count}</p>
+                        <p className="text-xs text-gray-400 mt-1">{type.replace(/_/g, ' ')}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Filter Tabs */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterStatus('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filterStatus === 'all'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
+                }`}
+              >
+                All ({openExceptions?.total || 0})
+              </button>
+              <button
+                onClick={() => setFilterStatus(ExceptionStatus.OPEN)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filterStatus === ExceptionStatus.OPEN
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
+                }`}
+              >
+                Open ({summary?.open || 0})
+              </button>
+              <button
+                onClick={() => setFilterStatus(ExceptionStatus.RESOLVED)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filterStatus === ExceptionStatus.RESOLVED
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
+                }`}
+              >
+                Resolved ({summary?.resolved || 0})
+              </button>
+            </div>
+
+            {/* Exceptions List */}
+            <Card variant="glass" className="card-hover">
+              <CardHeader>
+                <CardTitle>
+                  {filterStatus === 'all'
+                    ? 'All Open Exceptions'
+                    : filterStatus === ExceptionStatus.OPEN
+                      ? 'Open Exceptions'
+                      : filterStatus === ExceptionStatus.RESOLVED
+                        ? 'Resolved Exceptions'
+                        : 'Exceptions'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {openLoading ? (
+                  <ListSkeleton items={6} />
+                ) : filteredExceptions.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredExceptions.map(exception => {
+                      return (
+                        <div
+                          key={exception.exceptionId}
+                          className="border border-white/[0.08] rounded-xl p-4 hover:bg-white/[0.02] transition-all duration-300"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <ExceptionTypeBadge type={exception.type} />
+                                <ExceptionBadge status={exception.status} />
+                                <span className="text-xs text-gray-500">
+                                  {exception.exceptionId}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-400">Order:</span>
+                                  <span className="ml-2 text-white font-medium">
+                                    {exception.orderId}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">SKU:</span>
+                                  <span className="ml-2 text-white font-medium">
+                                    {exception.sku}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Qty:</span>
+                                  <span className="ml-2 text-white">
+                                    {exception.quantityActual} / {exception.quantityExpected}
+                                    {exception.quantityShort > 0 && (
+                                      <span className="text-error-400 ml-1">
+                                        (-{exception.quantityShort})
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Reported:</span>
+                                  <span className="ml-2 text-white">
+                                    {new Date(exception.reportedAt).toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {exception.reason && (
+                                <div className="mt-3 p-3 bg-white/[0.02] rounded-lg">
+                                  <p className="text-sm text-gray-300">{exception.reason}</p>
+                                </div>
+                              )}
+
+                              {exception.resolution && (
+                                <div className="mt-3 flex items-center gap-2">
+                                  <span className="text-sm text-gray-400">Resolution:</span>
+                                  <span className="text-sm font-medium text-success-400">
+                                    {exception.resolution.replace(/_/g, ' ')}
+                                  </span>
+                                </div>
+                              )}
+
+                              {exception.resolutionNotes && (
+                                <div className="mt-2 p-3 bg-success-500/10 border border-success-500/20 rounded-lg">
+                                  <p className="text-sm text-success-300">
+                                    {exception.resolutionNotes}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            {exception.status === ExceptionStatus.OPEN ? (
+                              // Standard Exception: Resolve Button
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedException(exception);
+                                  setShowResolveModal(true);
+                                  setResolution(ExceptionResolution.BACKORDER);
+                                  setResolutionNotes('');
+                                  setSubstituteSku('');
+                                  setNewQuantity(0);
+                                  setNewBinLocation('');
+                                }}
+                                className="ml-4"
+                              >
+                                Resolve
+                                <ChevronRightIcon className="h-4 w-4 ml-1" />
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <CheckCircleIcon className="h-16 w-16 text-gray-600 mb-4" />
+                    <p className="text-sm text-gray-400">
+                      {searchQuery ? 'No exceptions match your search' : 'No exceptions found'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {!searchQuery && filterStatus === 'all'
+                        ? 'Great job! No open exceptions.'
+                        : 'No exceptions match this filter.'}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pagination */}
+            {allExceptions?.total && allExceptions.total > 0 && (
+              <Pagination
+                currentPage={page}
+                totalItems={allExceptions.total}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                pageSizeOptions={[10, 20, 50, 100]}
+              />
+            )}
           </>
         )}
       </main>

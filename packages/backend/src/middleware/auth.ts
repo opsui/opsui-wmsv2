@@ -58,7 +58,9 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
 
     // SECURITY: If testMode is enabled in production, log a warning and proceed with normal auth
     if (config.testMode && config.nodeEnv === 'production') {
-      logger.warn('SECURITY WARNING: TEST_MODE is enabled in production. Ignoring and requiring authentication.');
+      logger.warn(
+        'SECURITY WARNING: TEST_MODE is enabled in production. Ignoring and requiring authentication.'
+      );
     }
 
     // Get token from Authorization header

@@ -153,9 +153,7 @@ export function CountSheetPrint({ plan, entries, onPrint }: CountSheetPrintProps
             </div>
             <div className="stat">
               <span className="label">Total System Qty:</span>
-              <span className="value">
-                {entries.reduce((sum, e) => sum + e.systemQuantity, 0)}
-              </span>
+              <span className="value">{entries.reduce((sum, e) => sum + e.systemQuantity, 0)}</span>
             </div>
           </div>
 

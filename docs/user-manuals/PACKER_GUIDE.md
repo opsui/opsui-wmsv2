@@ -30,6 +30,7 @@ This guide explains how to use the Warehouse Management System (WMS) as a Packer
 ### First-Time Login
 
 If this is your first time logging in:
+
 1. You will be prompted to change your password
 2. Create a strong password with:
    - At least 8 characters
@@ -45,16 +46,17 @@ After logging in, you will see the **Dashboard** which displays:
 
 ### Key Metrics
 
-| Metric | Description |
-|--------|-------------|
-| **Active Staff** | Number of packers currently working |
-| **Orders/Hour** | Current packing rate across all packers |
-| **Queue Depth** | Number of orders waiting to be packed |
-| **Exceptions** | Number of active exceptions needing attention |
+| Metric           | Description                                   |
+| ---------------- | --------------------------------------------- |
+| **Active Staff** | Number of packers currently working           |
+| **Orders/Hour**  | Current packing rate across all packers       |
+| **Queue Depth**  | Number of orders waiting to be packed         |
+| **Exceptions**   | Number of active exceptions needing attention |
 
 ### Role Activity Card
 
 Shows all active packers with their:
+
 - Current status (Packing, Idle, On Break)
 - Orders packed today
 - Items processed
@@ -73,18 +75,19 @@ Shows all active packers with their:
 
 Orders in the packing queue display:
 
-| Field | Description |
-|-------|-------------|
-| **Order ID** | Unique order identifier |
-| **Customer Name** | Who the order is for |
-| **Items** | Number of items in the order |
-| **Picker** | Who picked the order |
+| Field               | Description                      |
+| ------------------- | -------------------------------- |
+| **Order ID**        | Unique order identifier          |
+| **Customer Name**   | Who the order is for             |
+| **Items**           | Number of items in the order     |
+| **Picker**          | Who picked the order             |
 | **Time Since Pick** | How long since picking completed |
-| **Priority** | Order priority level |
+| **Priority**        | Order priority level             |
 
 ### Order Priority
 
 Orders are sorted by priority:
+
 1. **HIGH** - Ship same day
 2. **NORMAL** - Ship within 24 hours
 3. **LOW** - Standard shipping
@@ -104,18 +107,21 @@ Orders are sorted by priority:
 The Packing Page displays:
 
 #### Order Information
+
 - Order ID
 - Customer name and shipping address
 - Number of items
 - Special instructions (if any)
 
 #### Item List
+
 - SKU for each item
 - Product name
 - Quantity
 - Bin location (for reference)
 
 #### Packing Options
+
 - Package type selection
 - Carrier selection
 - Shipping method
@@ -196,15 +202,15 @@ Before packing, verify all items are present:
 
 Each shipping label includes:
 
-| Information | Description |
-|-------------|-------------|
-| **Tracking Number** | Unique tracking identifier |
-| **Barcode** | Scannable barcode for tracking |
-| **Destination Address** | Customer shipping address |
-| **Return Address** | Warehouse return address |
-| **Service Level** | Shipping speed/method |
-| **Weight** | Package weight |
-| **Postage** | Postage indicator |
+| Information             | Description                    |
+| ----------------------- | ------------------------------ |
+| **Tracking Number**     | Unique tracking identifier     |
+| **Barcode**             | Scannable barcode for tracking |
+| **Destination Address** | Customer shipping address      |
+| **Return Address**      | Warehouse return address       |
+| **Service Level**       | Shipping speed/method          |
+| **Weight**              | Package weight                 |
+| **Postage**             | Postage indicator              |
 
 ### Label Placement
 
@@ -215,12 +221,12 @@ Each shipping label includes:
 
 ### Label Issues
 
-| Issue | Solution |
-|-------|----------|
-| Label doesn't print | Check printer connection, try again |
-| Label is smudged | Reprint the label |
-| Wrong label printed | Cancel current, generate new label |
-| Tracking number invalid | Contact supervisor |
+| Issue                   | Solution                            |
+| ----------------------- | ----------------------------------- |
+| Label doesn't print     | Check printer connection, try again |
+| Label is smudged        | Reprint the label                   |
+| Wrong label printed     | Cancel current, generate new label  |
+| Tracking number invalid | Contact supervisor                  |
 
 ---
 
@@ -252,13 +258,13 @@ Before marking complete:
 
 ### Common Issue Types
 
-| Issue | Description | Action |
-|-------|-------------|--------|
-| **Missing Item** | Item from pick list is not in bin | Report to supervisor, pause packing |
-| **Damaged Item** | Item is damaged | Report exception, do not ship |
-| **Wrong Item** | Item doesn't match pick list | Return to picker, report issue |
-| **Insufficient Packaging** | Package is too small/flimsy | Select larger package type |
-| **Label Generation Failed** | Cannot create shipping label | Try again, contact IT if persists |
+| Issue                       | Description                       | Action                              |
+| --------------------------- | --------------------------------- | ----------------------------------- |
+| **Missing Item**            | Item from pick list is not in bin | Report to supervisor, pause packing |
+| **Damaged Item**            | Item is damaged                   | Report exception, do not ship       |
+| **Wrong Item**              | Item doesn't match pick list      | Return to picker, report issue      |
+| **Insufficient Packaging**  | Package is too small/flimsy       | Select larger package type          |
+| **Label Generation Failed** | Cannot create shipping label      | Try again, contact IT if persists   |
 
 ### Reporting an Issue
 
@@ -340,11 +346,13 @@ The issue is routed to a supervisor for resolution.
 ### Issue: Order Not Showing in Queue
 
 **Possible Causes:**
+
 - Order still being picked
 - Order already assigned to another packer
 - Order has exceptions
 
 **Solution:**
+
 - Refresh the packing queue
 - Check order status in Order Queue
 - Wait for picker to complete picking
@@ -352,11 +360,13 @@ The issue is routed to a supervisor for resolution.
 ### Issue: Cannot Generate Shipping Label
 
 **Possible Causes:**
+
 - Invalid shipping address
 - Carrier service unavailable
 - System connectivity issue
 
 **Solution:**
+
 - Verify shipping address format
 - Try a different carrier
 - Check internet connection
@@ -365,11 +375,13 @@ The issue is routed to a supervisor for resolution.
 ### Issue: Scale Not Reading Weight
 
 **Possible Causes:**
+
 - Scale not connected
 - Package too heavy/light for scale
 - Scale calibration issue
 
 **Solution:**
+
 - Check scale connection
 - Re-calibrate scale if needed
 - Enter weight manually as backup
@@ -377,11 +389,13 @@ The issue is routed to a supervisor for resolution.
 ### Issue: Printer Not Working
 
 **Possible Causes:**
+
 - Printer offline
 - Out of paper/ink
 - Network connectivity issue
 
 **Solution:**
+
 - Check printer status
 - Reload paper/ink if needed
 - Restart printer if necessary
@@ -393,34 +407,34 @@ The issue is routed to a supervisor for resolution.
 
 ### Standard Boxes
 
-| Type | Dimensions | Max Weight | Best For |
-|------|------------|------------|----------|
-| **Small Box** | 8x6x4 inches | 10 lbs | 1-3 small items |
-| **Medium Box** | 12x10x8 inches | 20 lbs | 3-6 items |
-| **Large Box** | 18x14x12 inches | 40 lbs | 6+ items or bulky items |
-| **Extra Large Box** | 24x18x16 inches | 60 lbs | Very large or heavy items |
+| Type                | Dimensions      | Max Weight | Best For                  |
+| ------------------- | --------------- | ---------- | ------------------------- |
+| **Small Box**       | 8x6x4 inches    | 10 lbs     | 1-3 small items           |
+| **Medium Box**      | 12x10x8 inches  | 20 lbs     | 3-6 items                 |
+| **Large Box**       | 18x14x12 inches | 40 lbs     | 6+ items or bulky items   |
+| **Extra Large Box** | 24x18x16 inches | 60 lbs     | Very large or heavy items |
 
 ### Envelopes and Mailers
 
-| Type | Dimensions | Max Weight | Best For |
-|------|------------|------------|----------|
-| **Padded Envelope** | 10x13 inches | 3 lbs | Single small items, books |
-| **Poly Mailer** | 12x15.5 inches | 5 lbs | Clothing, soft goods |
-| **Flat Rate Envelope** | 12.5x9.5 inches | 70 lbs | Documents, flat items |
+| Type                   | Dimensions      | Max Weight | Best For                  |
+| ---------------------- | --------------- | ---------- | ------------------------- |
+| **Padded Envelope**    | 10x13 inches    | 3 lbs      | Single small items, books |
+| **Poly Mailer**        | 12x15.5 inches  | 5 lbs      | Clothing, soft goods      |
+| **Flat Rate Envelope** | 12.5x9.5 inches | 70 lbs     | Documents, flat items     |
 
 ---
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Enter` | Confirm action |
-| `Esc` | Cancel current action |
-| `F1` | View packing list |
-| `F2` | Report issue |
-| `F3` | Generate label |
-| `F4` | Print label |
-| `F5` | Complete packing |
+| Shortcut | Action                |
+| -------- | --------------------- |
+| `Enter`  | Confirm action        |
+| `Esc`    | Cancel current action |
+| `F1`     | View packing list     |
+| `F2`     | Report issue          |
+| `F3`     | Generate label        |
+| `F4`     | Print label           |
+| `F5`     | Complete packing      |
 
 ---
 
@@ -428,11 +442,11 @@ The issue is routed to a supervisor for resolution.
 
 ### Contact Information
 
-| Role | Contact |
-|------|---------|
-| **Floor Supervisor** | On-site (radio extension 102) |
-| **System Administrator** | admin@warehouse.com |
-| **IT Helpdesk** | helpdesk@warehouse.com |
+| Role                     | Contact                       |
+| ------------------------ | ----------------------------- |
+| **Floor Supervisor**     | On-site (radio extension 102) |
+| **System Administrator** | admin@warehouse.com           |
+| **IT Helpdesk**          | helpdesk@warehouse.com        |
 
 ### Additional Resources
 
@@ -446,12 +460,12 @@ The issue is routed to a supervisor for resolution.
 
 ### Supported Carriers
 
-| Carrier | Services | Typical Use |
-|---------|----------|-------------|
-| **FedEx** | Ground, Express, Overnight | Time-sensitive shipments |
-| **UPS** | Ground, Express, SurePost | Standard shipping |
-| **USPS** | Priority, First Class, Parcel | Small packages, economy |
-| **DHL** | Express, International | International shipments |
+| Carrier   | Services                      | Typical Use              |
+| --------- | ----------------------------- | ------------------------ |
+| **FedEx** | Ground, Express, Overnight    | Time-sensitive shipments |
+| **UPS**   | Ground, Express, SurePost     | Standard shipping        |
+| **USPS**  | Priority, First Class, Parcel | Small packages, economy  |
+| **DHL**   | Express, International        | International shipments  |
 
 ### Carrier Selection Guidelines
 
@@ -462,6 +476,6 @@ The issue is routed to a supervisor for resolution.
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2026*
-*For questions or feedback, contact your Floor Supervisor*
+_Document Version: 1.0_
+_Last Updated: January 2026_
+_For questions or feedback, contact your Floor Supervisor_

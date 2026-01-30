@@ -188,9 +188,7 @@ describe('Button Component', () => {
           ref = buttonRef.current;
         }, []);
 
-        return (
-          <Button ref={buttonRef}>With Ref</Button>
-        );
+        return <Button ref={buttonRef}>With Ref</Button>;
       };
 
       renderWithProviders(<TestComponent />);

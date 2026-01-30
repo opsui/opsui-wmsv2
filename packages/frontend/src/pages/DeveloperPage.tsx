@@ -103,9 +103,7 @@ export default function DeveloperPage() {
           <div
             key={i}
             className={`flex items-center gap-2 p-3 rounded-lg shadow-lg ${
-              msg.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
+              msg.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}
           >
             {msg.type === 'success' ? (
@@ -126,9 +124,7 @@ export default function DeveloperPage() {
               <BeakerIcon className="h-8 w-8" />
               Developer Panel
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Development and debugging tools
-            </p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Development and debugging tools</p>
           </div>
           <Button variant="secondary" onClick={() => navigate('/')}>
             Back to App

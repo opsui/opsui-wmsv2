@@ -80,7 +80,12 @@ router.get(
       }
     }
 
-    console.log('[MetricsRoute] Fetching picker performance from', startDate.toISOString(), 'to', endDate.toISOString());
+    console.log(
+      '[MetricsRoute] Fetching picker performance from',
+      startDate.toISOString(),
+      'to',
+      endDate.toISOString()
+    );
     const performance = await metricsService.getAllPickersPerformance(startDate, endDate);
     console.log('[MetricsRoute] Picker performance result:', performance?.length || 0, 'pickers');
     res.json(performance);
@@ -208,18 +213,26 @@ router.get(
     // Validate scanType
     const validScanTypes = ['pick', 'pack', 'verify', 'all'];
     if (!validScanTypes.includes(scanType)) {
-      res.status(400).json({ error: 'Invalid scanType. Must be one of: ' + validScanTypes.join(', ') });
+      res
+        .status(400)
+        .json({ error: 'Invalid scanType. Must be one of: ' + validScanTypes.join(', ') });
       return;
     }
 
     // Validate timePeriod
     const validTimePeriods = ['daily', 'weekly', 'monthly', 'yearly'];
     if (!validTimePeriods.includes(timePeriod)) {
-      res.status(400).json({ error: 'Invalid timePeriod. Must be one of: ' + validTimePeriods.join(', ') });
+      res
+        .status(400)
+        .json({ error: 'Invalid timePeriod. Must be one of: ' + validTimePeriods.join(', ') });
       return;
     }
 
-    const topSKUs = await metricsService.getTopSKUsByScanType(scanType as any, limit, timePeriod as any);
+    const topSKUs = await metricsService.getTopSKUsByScanType(
+      scanType as any,
+      limit,
+      timePeriod as any
+    );
     res.json(topSKUs);
   })
 );

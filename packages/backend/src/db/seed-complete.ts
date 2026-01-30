@@ -12,7 +12,15 @@ import { getPool } from './client';
 import * as bcrypt from 'bcrypt';
 
 type Priority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-type OrderStatus = 'PENDING' | 'PICKING' | 'PICKED' | 'PACKING' | 'PACKED' | 'SHIPPED' | 'CANCELLED' | 'BACKORDER';
+type OrderStatus =
+  | 'PENDING'
+  | 'PICKING'
+  | 'PICKED'
+  | 'PACKING'
+  | 'PACKED'
+  | 'SHIPPED'
+  | 'CANCELLED'
+  | 'BACKORDER';
 type ItemStatus = 'PENDING' | 'PARTIAL_PICKED' | 'FULLY_PICKED';
 
 interface User {
@@ -82,98 +90,710 @@ const MOCK_USERS: User[] = [
 
 const MOCK_ORDERS: Order[] = [
   // Recent orders (today - 2 days ago)
-  { order_id: 'SO71001', customer_name: 'Acme Corporation', status: 'PENDING', priority: 'HIGH', created_at: getDateDaysAgo(0.5), updated_at: getDateDaysAgo(0.5), progress: 0 },
-  { order_id: 'SO71002', customer_name: 'Globex Industries', status: 'PENDING', priority: 'NORMAL', created_at: getDateDaysAgo(1), updated_at: getDateDaysAgo(1), progress: 0 },
-  { order_id: 'SO71003', customer_name: 'Soylent Corp', status: 'PENDING', priority: 'LOW', created_at: getDateDaysAgo(1.5), updated_at: getDateDaysAgo(1.5), progress: 0 },
-  { order_id: 'SO71004', customer_name: 'Initech', status: 'PENDING', priority: 'HIGH', created_at: getDateDaysAgo(2), updated_at: getDateDaysAgo(2), progress: 0 },
-  { order_id: 'SO71005', customer_name: 'Umbrella Corporation', status: 'PICKING', priority: 'NORMAL', created_at: getDateDaysAgo(0.3), updated_at: getDateDaysAgo(0.2), picker_id: 'USR-PICK01', claimed_at: getDateDaysAgo(0.2), progress: 60 },
+  {
+    order_id: 'SO71001',
+    customer_name: 'Acme Corporation',
+    status: 'PENDING',
+    priority: 'HIGH',
+    created_at: getDateDaysAgo(0.5),
+    updated_at: getDateDaysAgo(0.5),
+    progress: 0,
+  },
+  {
+    order_id: 'SO71002',
+    customer_name: 'Globex Industries',
+    status: 'PENDING',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(1),
+    updated_at: getDateDaysAgo(1),
+    progress: 0,
+  },
+  {
+    order_id: 'SO71003',
+    customer_name: 'Soylent Corp',
+    status: 'PENDING',
+    priority: 'LOW',
+    created_at: getDateDaysAgo(1.5),
+    updated_at: getDateDaysAgo(1.5),
+    progress: 0,
+  },
+  {
+    order_id: 'SO71004',
+    customer_name: 'Initech',
+    status: 'PENDING',
+    priority: 'HIGH',
+    created_at: getDateDaysAgo(2),
+    updated_at: getDateDaysAgo(2),
+    progress: 0,
+  },
+  {
+    order_id: 'SO71005',
+    customer_name: 'Umbrella Corporation',
+    status: 'PICKING',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(0.3),
+    updated_at: getDateDaysAgo(0.2),
+    picker_id: 'USR-PICK01',
+    claimed_at: getDateDaysAgo(0.2),
+    progress: 60,
+  },
 
   // Active picking orders
-  { order_id: 'SO71006', customer_name: 'Cyberdyne Systems', status: 'PICKING', priority: 'HIGH', created_at: getDateDaysAgo(0.25), updated_at: getDateDaysAgo(0.1), picker_id: 'USR-PICK01', claimed_at: getDateDaysAgo(0.1), progress: 33 },
-  { order_id: 'SO71007', customer_name: 'Stark Industries', status: 'PICKING', priority: 'URGENT', created_at: getDateDaysAgo(0.4), updated_at: getDateDaysAgo(0.3), picker_id: 'USR-PICK01', claimed_at: getDateDaysAgo(0.3), progress: 40 },
+  {
+    order_id: 'SO71006',
+    customer_name: 'Cyberdyne Systems',
+    status: 'PICKING',
+    priority: 'HIGH',
+    created_at: getDateDaysAgo(0.25),
+    updated_at: getDateDaysAgo(0.1),
+    picker_id: 'USR-PICK01',
+    claimed_at: getDateDaysAgo(0.1),
+    progress: 33,
+  },
+  {
+    order_id: 'SO71007',
+    customer_name: 'Stark Industries',
+    status: 'PICKING',
+    priority: 'URGENT',
+    created_at: getDateDaysAgo(0.4),
+    updated_at: getDateDaysAgo(0.3),
+    picker_id: 'USR-PICK01',
+    claimed_at: getDateDaysAgo(0.3),
+    progress: 40,
+  },
 
   // Yesterday's orders
-  { order_id: 'SO71008', customer_name: 'Wayne Enterprises', status: 'PICKED', priority: 'NORMAL', created_at: getDateDaysAgo(1.2), updated_at: getDateDaysAgo(1), picker_id: 'USR-PICK01', claimed_at: getDateDaysAgo(1.1), picked_at: getDateDaysAgo(1), progress: 100 },
-  { order_id: 'SO71009', customer_name: 'Massive Dynamic', status: 'PACKING', priority: 'HIGH', created_at: getDateDaysAgo(1.5), updated_at: getDateDaysAgo(1.3), picker_id: 'USR-PICK01', packer_id: 'USR-JMSQXXDN', claimed_at: getDateDaysAgo(1.4), picked_at: getDateDaysAgo(1.35), progress: 100 },
+  {
+    order_id: 'SO71008',
+    customer_name: 'Wayne Enterprises',
+    status: 'PICKED',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(1.2),
+    updated_at: getDateDaysAgo(1),
+    picker_id: 'USR-PICK01',
+    claimed_at: getDateDaysAgo(1.1),
+    picked_at: getDateDaysAgo(1),
+    progress: 100,
+  },
+  {
+    order_id: 'SO71009',
+    customer_name: 'Massive Dynamic',
+    status: 'PACKING',
+    priority: 'HIGH',
+    created_at: getDateDaysAgo(1.5),
+    updated_at: getDateDaysAgo(1.3),
+    picker_id: 'USR-PICK01',
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(1.4),
+    picked_at: getDateDaysAgo(1.35),
+    progress: 100,
+  },
 
   // Past week orders
-  { order_id: 'SO71010', customer_name: 'Hooli', status: 'PACKED', priority: 'LOW', created_at: getDateDaysAgo(3), updated_at: getDateDaysAgo(2.5), picker_id: 'USR-PICK01', packer_id: 'USR-JMSQXXDN', claimed_at: getDateDaysAgo(2.9), picked_at: getDateDaysAgo(2.8), packed_at: getDateDaysAgo(2.5), progress: 100 },
-  { order_id: 'SO71011', customer_name: 'Pied Piper', status: 'PACKED', priority: 'NORMAL', created_at: getDateDaysAgo(4), updated_at: getDateDaysAgo(3.5), picker_id: 'USR-PICK01', packer_id: 'USR-JMSQXXDN', claimed_at: getDateDaysAgo(3.9), picked_at: getDateDaysAgo(3.8), packed_at: getDateDaysAgo(3.5), progress: 100 },
+  {
+    order_id: 'SO71010',
+    customer_name: 'Hooli',
+    status: 'PACKED',
+    priority: 'LOW',
+    created_at: getDateDaysAgo(3),
+    updated_at: getDateDaysAgo(2.5),
+    picker_id: 'USR-PICK01',
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(2.9),
+    picked_at: getDateDaysAgo(2.8),
+    packed_at: getDateDaysAgo(2.5),
+    progress: 100,
+  },
+  {
+    order_id: 'SO71011',
+    customer_name: 'Pied Piper',
+    status: 'PACKED',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(4),
+    updated_at: getDateDaysAgo(3.5),
+    picker_id: 'USR-PICK01',
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(3.9),
+    picked_at: getDateDaysAgo(3.8),
+    packed_at: getDateDaysAgo(3.5),
+    progress: 100,
+  },
 
   // Past 2 weeks orders (SHIPPED)
-  { order_id: 'SO71012', customer_name: 'Aviato', status: 'SHIPPED', priority: 'NORMAL', created_at: getDateDaysAgo(7), updated_at: getDateDaysAgo(6), picker_id: 'USR-PICK01', packer_id: 'USR-JMSQXXDN', claimed_at: getDateDaysAgo(6.8), picked_at: getDateDaysAgo(6.5), packed_at: getDateDaysAgo(6.2), shipped_at: getDateDaysAgo(6), progress: 100 },
-  { order_id: 'SO71013', customer_name: 'Endframe', status: 'SHIPPED', priority: 'LOW', created_at: getDateDaysAgo(10), updated_at: getDateDaysAgo(9), picker_id: 'USR-PICK01', packer_id: 'USR-JMSQXXDN', claimed_at: getDateDaysAgo(9.8), picked_at: getDateDaysAgo(9.5), packed_at: getDateDaysAgo(9.2), shipped_at: getDateDaysAgo(9), progress: 100 },
+  {
+    order_id: 'SO71012',
+    customer_name: 'Aviato',
+    status: 'SHIPPED',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(7),
+    updated_at: getDateDaysAgo(6),
+    picker_id: 'USR-PICK01',
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(6.8),
+    picked_at: getDateDaysAgo(6.5),
+    packed_at: getDateDaysAgo(6.2),
+    shipped_at: getDateDaysAgo(6),
+    progress: 100,
+  },
+  {
+    order_id: 'SO71013',
+    customer_name: 'Endframe',
+    status: 'SHIPPED',
+    priority: 'LOW',
+    created_at: getDateDaysAgo(10),
+    updated_at: getDateDaysAgo(9),
+    picker_id: 'USR-PICK01',
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(9.8),
+    picked_at: getDateDaysAgo(9.5),
+    packed_at: getDateDaysAgo(9.2),
+    shipped_at: getDateDaysAgo(9),
+    progress: 100,
+  },
 
   // Past month orders (SHIPPED)
-  { order_id: 'SO71014', customer_name: 'Bachmanity', status: 'SHIPPED', priority: 'HIGH', created_at: getDateDaysAgo(20), updated_at: getDateDaysAgo(19), picker_id: 'USR-PICK01', packer_id: 'USR-JMSQXXDN', claimed_at: getDateDaysAgo(19.8), picked_at: getDateDaysAgo(19.5), packed_at: getDateDaysAgo(19.2), shipped_at: getDateDaysAgo(19), progress: 100 },
+  {
+    order_id: 'SO71014',
+    customer_name: 'Bachmanity',
+    status: 'SHIPPED',
+    priority: 'HIGH',
+    created_at: getDateDaysAgo(20),
+    updated_at: getDateDaysAgo(19),
+    picker_id: 'USR-PICK01',
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(19.8),
+    picked_at: getDateDaysAgo(19.5),
+    packed_at: getDateDaysAgo(19.2),
+    shipped_at: getDateDaysAgo(19),
+    progress: 100,
+  },
 ];
 
 const MOCK_ORDER_ITEMS: OrderItem[] = [
   // SO71001 items
-  { order_item_id: 'OI71001-1', order_id: 'SO71001', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 2, picked_quantity: 0, bin_location: 'A-01-01', status: 'PENDING' },
-  { order_item_id: 'OI71001-2', order_id: 'SO71001', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 1, picked_quantity: 0, bin_location: 'B-05-03', status: 'PENDING' },
-  { order_item_id: 'OI71001-3', order_id: 'SO71001', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 3, picked_quantity: 0, bin_location: 'C-10-05', status: 'PENDING' },
+  {
+    order_item_id: 'OI71001-1',
+    order_id: 'SO71001',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'A-01-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71001-2',
+    order_id: 'SO71001',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'B-05-03',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71001-3',
+    order_id: 'SO71001',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 3,
+    picked_quantity: 0,
+    bin_location: 'C-10-05',
+    status: 'PENDING',
+  },
   // SO71002 items
-  { order_item_id: 'OI71002-1', order_id: 'SO71002', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 1, picked_quantity: 0, bin_location: 'D-02-01', status: 'PENDING' },
-  { order_item_id: 'OI71002-2', order_id: 'SO71002', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 2, picked_quantity: 0, bin_location: 'E-08-02', status: 'PENDING' },
-  { order_item_id: 'OI71002-3', order_id: 'SO71002', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 1, picked_quantity: 0, bin_location: 'F-12-03', status: 'PENDING' },
+  {
+    order_item_id: 'OI71002-1',
+    order_id: 'SO71002',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'D-02-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71002-2',
+    order_id: 'SO71002',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'E-08-02',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71002-3',
+    order_id: 'SO71002',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'F-12-03',
+    status: 'PENDING',
+  },
   // SO71003 items
-  { order_item_id: 'OI71003-1', order_id: 'SO71003', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 3, picked_quantity: 0, bin_location: 'A-01-01', status: 'PENDING' },
-  { order_item_id: 'OI71003-2', order_id: 'SO71003', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 2, picked_quantity: 0, bin_location: 'B-05-03', status: 'PENDING' },
+  {
+    order_item_id: 'OI71003-1',
+    order_id: 'SO71003',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 3,
+    picked_quantity: 0,
+    bin_location: 'A-01-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71003-2',
+    order_id: 'SO71003',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'B-05-03',
+    status: 'PENDING',
+  },
   // SO71004 items
-  { order_item_id: 'OI71004-1', order_id: 'SO71004', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 1, picked_quantity: 0, bin_location: 'C-10-05', status: 'PENDING' },
-  { order_item_id: 'OI71004-2', order_id: 'SO71004', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 2, picked_quantity: 0, bin_location: 'D-02-01', status: 'PENDING' },
-  { order_item_id: 'OI71004-3', order_id: 'SO71004', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 1, picked_quantity: 0, bin_location: 'E-08-02', status: 'PENDING' },
-  { order_item_id: 'OI71004-4', order_id: 'SO71004', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 2, picked_quantity: 0, bin_location: 'F-12-03', status: 'PENDING' },
+  {
+    order_item_id: 'OI71004-1',
+    order_id: 'SO71004',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'C-10-05',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71004-2',
+    order_id: 'SO71004',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'D-02-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71004-3',
+    order_id: 'SO71004',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'E-08-02',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71004-4',
+    order_id: 'SO71004',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'F-12-03',
+    status: 'PENDING',
+  },
   // SO71005 items (PICKING - some picked)
-  { order_item_id: 'OI71005-1', order_id: 'SO71005', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 4, picked_quantity: 4, bin_location: 'B-05-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71005-2', order_id: 'SO71005', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 2, picked_quantity: 0, bin_location: 'C-10-05', status: 'PENDING' },
-  { order_item_id: 'OI71005-3', order_id: 'SO71005', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 3, picked_quantity: 0, bin_location: 'E-08-02', status: 'PENDING' },
-  { order_item_id: 'OI71005-4', order_id: 'SO71005', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 1, picked_quantity: 0, bin_location: 'F-12-03', status: 'PENDING' },
+  {
+    order_item_id: 'OI71005-1',
+    order_id: 'SO71005',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 4,
+    picked_quantity: 4,
+    bin_location: 'B-05-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71005-2',
+    order_id: 'SO71005',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'C-10-05',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71005-3',
+    order_id: 'SO71005',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 3,
+    picked_quantity: 0,
+    bin_location: 'E-08-02',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71005-4',
+    order_id: 'SO71005',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'F-12-03',
+    status: 'PENDING',
+  },
   // SO71006 items (PICKING - in progress)
-  { order_item_id: 'OI71006-1', order_id: 'SO71006', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 2, picked_quantity: 2, bin_location: 'E-08-02', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71006-2', order_id: 'SO71006', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 1, picked_quantity: 1, bin_location: 'F-12-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71006-3', order_id: 'SO71006', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 2, picked_quantity: 0, bin_location: 'A-01-01', status: 'PENDING' },
+  {
+    order_item_id: 'OI71006-1',
+    order_id: 'SO71006',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'E-08-02',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71006-2',
+    order_id: 'SO71006',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'F-12-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71006-3',
+    order_id: 'SO71006',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'A-01-01',
+    status: 'PENDING',
+  },
   // SO71007 items (PICKING - in progress)
-  { order_item_id: 'OI71007-1', order_id: 'SO71007', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 4, picked_quantity: 4, bin_location: 'D-02-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71007-2', order_id: 'SO71007', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 2, picked_quantity: 2, bin_location: 'E-08-02', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71007-3', order_id: 'SO71007', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 3, picked_quantity: 0, bin_location: 'F-12-03', status: 'PENDING' },
-  { order_item_id: 'OI71007-4', order_id: 'SO71007', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 1, picked_quantity: 0, bin_location: 'A-01-01', status: 'PENDING' },
-  { order_item_id: 'OI71007-5', order_id: 'SO71007', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 2, picked_quantity: 0, bin_location: 'B-05-03', status: 'PENDING' },
+  {
+    order_item_id: 'OI71007-1',
+    order_id: 'SO71007',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 4,
+    picked_quantity: 4,
+    bin_location: 'D-02-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71007-2',
+    order_id: 'SO71007',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'E-08-02',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71007-3',
+    order_id: 'SO71007',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 3,
+    picked_quantity: 0,
+    bin_location: 'F-12-03',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71007-4',
+    order_id: 'SO71007',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'A-01-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71007-5',
+    order_id: 'SO71007',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'B-05-03',
+    status: 'PENDING',
+  },
   // SO71008 items (PICKED)
-  { order_item_id: 'OI71008-1', order_id: 'SO71008', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 3, picked_quantity: 3, bin_location: 'A-01-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71008-2', order_id: 'SO71008', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 1, picked_quantity: 1, bin_location: 'C-10-05', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71008-3', order_id: 'SO71008', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 2, picked_quantity: 2, bin_location: 'E-08-02', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71008-4', order_id: 'SO71008', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 1, picked_quantity: 1, bin_location: 'D-02-01', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71008-1',
+    order_id: 'SO71008',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 3,
+    picked_quantity: 3,
+    bin_location: 'A-01-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71008-2',
+    order_id: 'SO71008',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'C-10-05',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71008-3',
+    order_id: 'SO71008',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'E-08-02',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71008-4',
+    order_id: 'SO71008',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'D-02-01',
+    status: 'FULLY_PICKED',
+  },
   // SO71009 items (PACKING)
-  { order_item_id: 'OI71009-1', order_id: 'SO71009', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 2, picked_quantity: 2, bin_location: 'B-05-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71009-2', order_id: 'SO71009', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 1, picked_quantity: 1, bin_location: 'C-10-05', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71009-3', order_id: 'SO71009', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 2, picked_quantity: 2, bin_location: 'F-12-03', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71009-1',
+    order_id: 'SO71009',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'B-05-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71009-2',
+    order_id: 'SO71009',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'C-10-05',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71009-3',
+    order_id: 'SO71009',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'F-12-03',
+    status: 'FULLY_PICKED',
+  },
   // SO71010 (PACKED)
-  { order_item_id: 'OI71010-1', order_id: 'SO71010', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 1, picked_quantity: 1, bin_location: 'A-01-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71010-2', order_id: 'SO71010', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 3, picked_quantity: 3, bin_location: 'D-02-01', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71010-1',
+    order_id: 'SO71010',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'A-01-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71010-2',
+    order_id: 'SO71010',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 3,
+    picked_quantity: 3,
+    bin_location: 'D-02-01',
+    status: 'FULLY_PICKED',
+  },
   // SO71011 (PACKED)
-  { order_item_id: 'OI71011-1', order_id: 'SO71011', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 2, picked_quantity: 2, bin_location: 'E-08-02', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71011-2', order_id: 'SO71011', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 1, picked_quantity: 1, bin_location: 'F-12-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71011-3', order_id: 'SO71011', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 2, picked_quantity: 2, bin_location: 'B-05-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71011-4', order_id: 'SO71011', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 1, picked_quantity: 1, bin_location: 'C-10-05', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71011-1',
+    order_id: 'SO71011',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'E-08-02',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71011-2',
+    order_id: 'SO71011',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'F-12-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71011-3',
+    order_id: 'SO71011',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'B-05-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71011-4',
+    order_id: 'SO71011',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'C-10-05',
+    status: 'FULLY_PICKED',
+  },
   // SO71012 (SHIPPED)
-  { order_item_id: 'OI71012-1', order_id: 'SO71012', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 2, picked_quantity: 2, bin_location: 'A-01-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71012-2', order_id: 'SO71012', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 1, picked_quantity: 1, bin_location: 'B-05-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71012-3', order_id: 'SO71012', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 2, picked_quantity: 2, bin_location: 'D-02-01', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71012-1',
+    order_id: 'SO71012',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'A-01-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71012-2',
+    order_id: 'SO71012',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'B-05-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71012-3',
+    order_id: 'SO71012',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'D-02-01',
+    status: 'FULLY_PICKED',
+  },
   // SO71013 (SHIPPED)
-  { order_item_id: 'OI71013-1', order_id: 'SO71013', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 3, picked_quantity: 3, bin_location: 'C-10-05', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71013-2', order_id: 'SO71013', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 1, picked_quantity: 1, bin_location: 'E-08-02', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71013-3', order_id: 'SO71013', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 2, picked_quantity: 2, bin_location: 'F-12-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71013-4', order_id: 'SO71013', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 1, picked_quantity: 1, bin_location: 'A-01-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71013-5', order_id: 'SO71013', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 2, picked_quantity: 2, bin_location: 'B-05-03', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71013-1',
+    order_id: 'SO71013',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 3,
+    picked_quantity: 3,
+    bin_location: 'C-10-05',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71013-2',
+    order_id: 'SO71013',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'E-08-02',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71013-3',
+    order_id: 'SO71013',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'F-12-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71013-4',
+    order_id: 'SO71013',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'A-01-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71013-5',
+    order_id: 'SO71013',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'B-05-03',
+    status: 'FULLY_PICKED',
+  },
   // SO71014 (SHIPPED)
-  { order_item_id: 'OI71014-1', order_id: 'SO71014', sku: 'PART-D-004', name: 'Part D Type 4', quantity: 4, picked_quantity: 4, bin_location: 'D-02-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71014-2', order_id: 'SO71014', sku: 'COMP-E-005', name: 'Component E Type 5', quantity: 3, picked_quantity: 3, bin_location: 'E-08-02', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71014-3', order_id: 'SO71014', sku: 'MATERIAL-F-006', name: 'Material F Type 6', quantity: 2, picked_quantity: 2, bin_location: 'F-12-03', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71014-4', order_id: 'SO71014', sku: 'TOOL-C-003', name: 'Tool C Type 3', quantity: 1, picked_quantity: 1, bin_location: 'C-10-05', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71014-5', order_id: 'SO71014', sku: 'WIDGET-A-001', name: 'Widget A Type 1', quantity: 2, picked_quantity: 2, bin_location: 'A-01-01', status: 'FULLY_PICKED' },
-  { order_item_id: 'OI71014-6', order_id: 'SO71014', sku: 'GADGET-B-002', name: 'Gadget B Type 2', quantity: 2, picked_quantity: 2, bin_location: 'B-05-03', status: 'FULLY_PICKED' },
+  {
+    order_item_id: 'OI71014-1',
+    order_id: 'SO71014',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 4,
+    picked_quantity: 4,
+    bin_location: 'D-02-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71014-2',
+    order_id: 'SO71014',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 3,
+    picked_quantity: 3,
+    bin_location: 'E-08-02',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71014-3',
+    order_id: 'SO71014',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'F-12-03',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71014-4',
+    order_id: 'SO71014',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 1,
+    picked_quantity: 1,
+    bin_location: 'C-10-05',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71014-5',
+    order_id: 'SO71014',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'A-01-01',
+    status: 'FULLY_PICKED',
+  },
+  {
+    order_item_id: 'OI71014-6',
+    order_id: 'SO71014',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 2,
+    picked_quantity: 2,
+    bin_location: 'B-05-03',
+    status: 'FULLY_PICKED',
+  },
 ];
 
 async function seedCompleteDatabase() {
@@ -202,12 +822,54 @@ async function seedCompleteDatabase() {
     // Insert SKUs
     console.log('📦 Inserting SKUs...');
     const MOCK_SKUS = [
-      { sku: 'WIDGET-A-001', name: 'Widget A Type 1', category: 'Widgets', description: 'Standard widget type A', barcode: '10000001', active: true },
-      { sku: 'GADGET-B-002', name: 'Gadget B Type 2', category: 'Gadgets', description: 'Standard gadget type B', barcode: '10000002', active: true },
-      { sku: 'TOOL-C-003', name: 'Tool C Type 3', category: 'Tools', description: 'Standard tool type C', barcode: '10000003', active: true },
-      { sku: 'PART-D-004', name: 'Part D Type 4', category: 'Parts', description: 'Standard part type D', barcode: '10000004', active: true },
-      { sku: 'COMP-E-005', name: 'Component E Type 5', category: 'Components', description: 'Standard component type E', barcode: '10000005', active: true },
-      { sku: 'MATERIAL-F-006', name: 'Material F Type 6', category: 'Materials', description: 'Standard material type F', barcode: '10000006', active: true },
+      {
+        sku: 'WIDGET-A-001',
+        name: 'Widget A Type 1',
+        category: 'Widgets',
+        description: 'Standard widget type A',
+        barcode: '10000001',
+        active: true,
+      },
+      {
+        sku: 'GADGET-B-002',
+        name: 'Gadget B Type 2',
+        category: 'Gadgets',
+        description: 'Standard gadget type B',
+        barcode: '10000002',
+        active: true,
+      },
+      {
+        sku: 'TOOL-C-003',
+        name: 'Tool C Type 3',
+        category: 'Tools',
+        description: 'Standard tool type C',
+        barcode: '10000003',
+        active: true,
+      },
+      {
+        sku: 'PART-D-004',
+        name: 'Part D Type 4',
+        category: 'Parts',
+        description: 'Standard part type D',
+        barcode: '10000004',
+        active: true,
+      },
+      {
+        sku: 'COMP-E-005',
+        name: 'Component E Type 5',
+        category: 'Components',
+        description: 'Standard component type E',
+        barcode: '10000005',
+        active: true,
+      },
+      {
+        sku: 'MATERIAL-F-006',
+        name: 'Material F Type 6',
+        category: 'Materials',
+        description: 'Standard material type F',
+        barcode: '10000006',
+        active: true,
+      },
     ];
     for (const sku of MOCK_SKUS) {
       await client.query(
@@ -269,7 +931,22 @@ async function seedCompleteDatabase() {
         `INSERT INTO orders (order_id, customer_id, customer_name, status, priority, created_at, updated_at, picker_id, packer_id, claimed_at, picked_at, packed_at, shipped_at, progress)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          ON CONFLICT (order_id) DO NOTHING`,
-        [order.order_id, customer_id, order.customer_name, order.status, order.priority, order.created_at, order.updated_at, order.picker_id || null, order.packer_id || null, order.claimed_at || null, order.picked_at || null, order.packed_at || null, order.shipped_at || null, order.progress]
+        [
+          order.order_id,
+          customer_id,
+          order.customer_name,
+          order.status,
+          order.priority,
+          order.created_at,
+          order.updated_at,
+          order.picker_id || null,
+          order.packer_id || null,
+          order.claimed_at || null,
+          order.picked_at || null,
+          order.packed_at || null,
+          order.shipped_at || null,
+          order.progress,
+        ]
       );
     }
     console.log(`  ✅ Inserted ${MOCK_ORDERS.length} orders`);
@@ -285,7 +962,16 @@ async function seedCompleteDatabase() {
         `INSERT INTO order_items (order_item_id, order_id, sku, name, quantity, picked_quantity, bin_location, status)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (order_item_id) DO NOTHING`,
-        [item.order_item_id, item.order_id, item.sku, item.name, item.quantity, item.picked_quantity, item.bin_location, item.status]
+        [
+          item.order_item_id,
+          item.order_id,
+          item.sku,
+          item.name,
+          item.quantity,
+          item.picked_quantity,
+          item.bin_location,
+          item.status,
+        ]
       );
     }
     console.log(`  ✅ Inserted ${MOCK_ORDER_ITEMS.length} order items`);
@@ -305,19 +991,38 @@ async function seedCompleteDatabase() {
     for (const order of pickingOrders) {
       const orderItems = MOCK_ORDER_ITEMS.filter(i => i.order_id === order.order_id);
       for (const item of orderItems) {
-        const pickTaskId = 'PT-' + order.order_id + '-' + item.order_item_id.substring(item.order_item_id.lastIndexOf('-') + 1);
+        const pickTaskId =
+          'PT-' +
+          order.order_id +
+          '-' +
+          item.order_item_id.substring(item.order_item_id.lastIndexOf('-') + 1);
         const pickedQty = item.picked_quantity || 0;
-        const status = pickedQty >= item.quantity ? 'COMPLETED' : (pickedQty > 0 ? 'IN_PROGRESS' : 'PENDING');
+        const status =
+          pickedQty >= item.quantity ? 'COMPLETED' : pickedQty > 0 ? 'IN_PROGRESS' : 'PENDING';
 
         // Calculate timestamps based on order claimed_at time
         const startedAt = order.claimed_at || new Date();
-        const completedAt = status === 'COMPLETED' ? new Date(startedAt.getTime() + 5 * 60 * 1000) : null; // 5 min after start
+        const completedAt =
+          status === 'COMPLETED' ? new Date(startedAt.getTime() + 5 * 60 * 1000) : null; // 5 min after start
 
         await client.query(
           `INSERT INTO pick_tasks (pick_task_id, order_id, order_item_id, picker_id, sku, name, target_bin, quantity, picked_quantity, status, started_at, completed_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
            ON CONFLICT (pick_task_id) DO NOTHING`,
-          [pickTaskId, order.order_id, item.order_item_id, order.picker_id, item.sku, item.name, item.bin_location, item.quantity, pickedQty, status, startedAt, completedAt]
+          [
+            pickTaskId,
+            order.order_id,
+            item.order_item_id,
+            order.picker_id,
+            item.sku,
+            item.name,
+            item.bin_location,
+            item.quantity,
+            pickedQty,
+            status,
+            startedAt,
+            completedAt,
+          ]
         );
       }
     }
@@ -326,10 +1031,30 @@ async function seedCompleteDatabase() {
     // Insert carriers
     console.log('🚚 Inserting carriers...');
     const MOCK_CARRIERS = [
-      { carrier_id: 'CARRIER-UPS', name: 'United Parcel Service', carrier_code: 'UPS', service_types: '["Ground", "Next Day Air", "2nd Day Air"]' },
-      { carrier_id: 'CARRIER-FEDEX', name: 'FedEx Corporation', carrier_code: 'FDX', service_types: '["Ground", "Express", "2Day"]' },
-      { carrier_id: 'CARRIER-USPS', name: 'United States Postal Service', carrier_code: 'USPS', service_types: '["Priority Mail", "First Class"]' },
-      { carrier_id: 'CARRIER-DHL', name: 'DHL Express', carrier_code: 'DHL', service_types: '["Express Worldwide", "Ground"]' },
+      {
+        carrier_id: 'CARRIER-UPS',
+        name: 'United Parcel Service',
+        carrier_code: 'UPS',
+        service_types: '["Ground", "Next Day Air", "2nd Day Air"]',
+      },
+      {
+        carrier_id: 'CARRIER-FEDEX',
+        name: 'FedEx Corporation',
+        carrier_code: 'FDX',
+        service_types: '["Ground", "Express", "2Day"]',
+      },
+      {
+        carrier_id: 'CARRIER-USPS',
+        name: 'United States Postal Service',
+        carrier_code: 'USPS',
+        service_types: '["Priority Mail", "First Class"]',
+      },
+      {
+        carrier_id: 'CARRIER-DHL',
+        name: 'DHL Express',
+        carrier_code: 'DHL',
+        service_types: '["Express Worldwide", "Ground"]',
+      },
     ];
 
     for (const carrier of MOCK_CARRIERS) {
@@ -400,7 +1125,6 @@ async function seedCompleteDatabase() {
     Object.entries(statusCounts).forEach(([status, count]) => {
       console.log(`  ${status}: ${count}`);
     });
-
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('❌ Error during database seed:', error);

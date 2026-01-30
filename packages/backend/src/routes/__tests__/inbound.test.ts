@@ -214,9 +214,7 @@ describe('Inbound Routes', () => {
         asnId: 'ASN-001',
         supplierId: 'SUP-001',
         status: 'PENDING',
-        items: [
-          { asnItemId: 'ASN-ITEM-001', sku: 'SKU-001', quantity: 100 },
-        ],
+        items: [{ asnItemId: 'ASN-ITEM-001', sku: 'SKU-001', quantity: 100 }],
       };
 
       (inboundReceivingService.getASNById as jest.Mock).mockResolvedValue(mockAsn);
@@ -438,7 +436,9 @@ describe('Inbound Routes', () => {
         actualLocation: 'A-01-02',
       };
 
-      (inboundReceivingService.completePutawayTask as jest.Mock).mockResolvedValue(mockCompletedTask);
+      (inboundReceivingService.completePutawayTask as jest.Mock).mockResolvedValue(
+        mockCompletedTask
+      );
 
       const response = await request(app)
         .post('/api/inbound/putaway-tasks/TASK-001/complete')

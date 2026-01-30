@@ -125,10 +125,22 @@ class AutonomousAIAgent {
 
     // Add known WMS routes
     const wmsRoutes = [
-      '/dashboard', '/orders', '/picking', '/packing', '/stock-control',
-      '/exceptions', '/user-roles', '/admin-settings', '/bin-locations',
-      '/location-capacity', '/slotting', '/wave-picking', '/zone-picking',
-      '/barcode-scanning', '/item-search', '/developer'
+      '/dashboard',
+      '/orders',
+      '/picking',
+      '/packing',
+      '/stock-control',
+      '/exceptions',
+      '/user-roles',
+      '/admin-settings',
+      '/bin-locations',
+      '/location-capacity',
+      '/slotting',
+      '/wave-picking',
+      '/zone-picking',
+      '/barcode-scanning',
+      '/item-search',
+      '/developer',
     ];
 
     routes.push(...wmsRoutes);
@@ -172,7 +184,8 @@ class AutonomousAIAgent {
       console.log(`  📋 Generated ${scenarios.length} test scenarios`);
 
       // Execute each scenario
-      for (const scenario of scenarios.slice(0, 5)) { // Limit to 5 per iteration
+      for (const scenario of scenarios.slice(0, 5)) {
+        // Limit to 5 per iteration
         await this.executeScenario(page, scenario);
       }
     } catch (error) {
@@ -211,7 +224,7 @@ class AutonomousAIAgent {
 
           case 'assert':
             if (step.expected === 'error message') {
-              const hasError = await page.locator('text=/error|invalid|required/i').count() > 0;
+              const hasError = (await page.locator('text=/error|invalid|required/i').count()) > 0;
               if (!hasError) {
                 throw new Error(`Expected error message not shown`);
               }
@@ -227,7 +240,6 @@ class AutonomousAIAgent {
       const duration = Date.now() - startTime;
       this.results.push({ name: scenario.name, passed: true, duration });
       console.log(`    ✅ Passed (${duration}ms)`);
-
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -243,7 +255,12 @@ class AutonomousAIAgent {
   /**
    * Report a bug found during testing
    */
-  private async reportBug(page: Page, scenario: any, steps: string[], error: string): Promise<void> {
+  private async reportBug(
+    page: Page,
+    scenario: any,
+    steps: string[],
+    error: string
+  ): Promise<void> {
     try {
       const pageContent = await page.content();
       const bugReport = await this.glm.generateBugReport({
@@ -267,7 +284,6 @@ class AutonomousAIAgent {
       });
 
       console.log(`    🐛 Bug reported: ${bugReport.title} [${bugReport.severity.toUpperCase()}]`);
-
     } catch (err) {
       console.error('    ⚠️  Failed to generate bug report:', err);
     }
@@ -287,7 +303,9 @@ class AutonomousAIAgent {
       const analysis = await this.glm.analyzeResults({
         passedTests: passed,
         failedTests: failed,
-        errors: this.results.filter(r => !r.passed).map(r => ({ test: r.name, error: r.error || '' })),
+        errors: this.results
+          .filter(r => !r.passed)
+          .map(r => ({ test: r.name, error: r.error || '' })),
         coverage,
       });
 
@@ -298,7 +316,6 @@ class AutonomousAIAgent {
         console.log(`  ➡️  Next Actions:`);
         analysis.nextActions.forEach(action => console.log(`     • ${action}`));
       }
-
     } catch (error) {
       console.error('  ⚠️  Analysis failed:', error);
     }
@@ -342,7 +359,6 @@ class AutonomousAIAgent {
       } else {
         console.log('  ✅ No security vulnerabilities found');
       }
-
     } catch (error) {
       console.error('  ⚠️  Security analysis failed:', error);
     }
@@ -357,14 +373,14 @@ class AutonomousAIAgent {
     const formCount = await page.locator('form').count();
     for (let i = 0; i < formCount; i++) {
       const form = page.locator('form').nth(i);
-      const action = await form.getAttribute('action') || 'unknown';
+      const action = (await form.getAttribute('action')) || 'unknown';
 
       const fields: string[] = [];
       const inputCount = await form.locator('input, textarea, select').count();
       for (let j = 0; j < inputCount; j++) {
         const input = form.locator('input, textarea, select').nth(j);
-        const name = await input.getAttribute('name') || 'unnamed';
-        const type = await input.getAttribute('type') || 'text';
+        const name = (await input.getAttribute('name')) || 'unnamed';
+        const type = (await input.getAttribute('type')) || 'text';
         fields.push(`${name} (${type})`);
       }
 
@@ -392,8 +408,8 @@ class AutonomousAIAgent {
     console.log('  📊 TEST RESULTS');
     console.log('  ───────────────────────────────────────────────────────────');
     console.log(`  Total Tests:  ${total}`);
-    console.log(`  ✅ Passed:     ${passed} (${Math.round(passed / total * 100)}%)`);
-    console.log(`  ❌ Failed:     ${failed} (${Math.round(failed / total * 100)}%)`);
+    console.log(`  ✅ Passed:     ${passed} (${Math.round((passed / total) * 100)}%)`);
+    console.log(`  ❌ Failed:     ${failed} (${Math.round((failed / total) * 100)}%)`);
     console.log('');
 
     // Bug Findings
@@ -417,9 +433,14 @@ class AutonomousAIAgent {
       console.log('  ───────────────────────────────────────────────────────────');
 
       for (const finding of this.findings) {
-        const icon = finding.severity === 'critical' ? '🔴' :
-                     finding.severity === 'high' ? '🟠' :
-                     finding.severity === 'medium' ? '🟡' : '🟢';
+        const icon =
+          finding.severity === 'critical'
+            ? '🔴'
+            : finding.severity === 'high'
+              ? '🟠'
+              : finding.severity === 'medium'
+                ? '🟡'
+                : '🟢';
 
         console.log(`\n  ${icon} ${finding.title}`);
         console.log(`     Severity: ${finding.severity.toUpperCase()}`);
@@ -502,10 +523,9 @@ test.describe('AI Agent Capabilities', () => {
     const glm = new GLMClient(API_KEY);
 
     const analysis = await glm.analyzeSecurity({
-      pageContent: '<form action="/api/login"><input name="email" type="text"><input name="password" type="password"></form>',
-      forms: [
-        { action: '/api/login', fields: ['email (text)', 'password (password)'] },
-      ],
+      pageContent:
+        '<form action="/api/login"><input name="email" type="text"><input name="password" type="password"></form>',
+      forms: [{ action: '/api/login', fields: ['email (text)', 'password (password)'] }],
     });
 
     expect(analysis).toHaveProperty('vulnerabilities');

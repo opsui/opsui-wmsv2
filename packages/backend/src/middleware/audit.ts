@@ -159,8 +159,13 @@ function getResourceType(path: string, method: string): string {
 function getResourceId(req: Request): string | null {
   // Check for ID in path params
   if (req.params && Object.keys(req.params).length > 0) {
-    const idParam = req.params.id || req.params.orderId || req.params.userId ||
-                    req.params.sku || req.params.locationId || req.params.roleId;
+    const idParam =
+      req.params.id ||
+      req.params.orderId ||
+      req.params.userId ||
+      req.params.sku ||
+      req.params.locationId ||
+      req.params.roleId;
     if (idParam) {
       console.log('[AuditMiddleware] resourceId from params:', idParam);
       return idParam;
@@ -175,9 +180,9 @@ function getResourceId(req: Request): string | null {
   // Match patterns like /orders/SO71004/..., /SO71004/..., etc.
   // Try multiple patterns to handle different route structures
   const patterns = [
-    /\/orders\/([A-Z]+[\d-]+)/i,           // /orders/SO71004/pick
-    /\/([A-Z]+[\d-]+)\/pick$/,             // /SO71004/pick
-    /\/([A-Z]+[\d-]+)\//,                  // /SO71004/anything
+    /\/orders\/([A-Z]+[\d-]+)/i, // /orders/SO71004/pick
+    /\/([A-Z]+[\d-]+)\/pick$/, // /SO71004/pick
+    /\/([A-Z]+[\d-]+)\//, // /SO71004/anything
   ];
 
   for (const pattern of patterns) {
@@ -190,8 +195,12 @@ function getResourceId(req: Request): string | null {
 
   // Check for ID in query params
   if (req.query && typeof req.query === 'object') {
-    const idParam = req.query.id || req.query.order_id || req.query.user_id ||
-                    (req.query as any).sku || (req.query as any).location_id;
+    const idParam =
+      req.query.id ||
+      req.query.order_id ||
+      req.query.user_id ||
+      (req.query as any).sku ||
+      (req.query as any).location_id;
     if (idParam && typeof idParam === 'string') return idParam;
   }
 
@@ -327,7 +336,8 @@ function getAuditEventType(req: Request): AuditEventType {
   // Cycle count operations
   // Routes: POST /api/cycle-count/plans, POST /api/cycle-count/plans/:planId/start
   if (cleanPath.includes('/cycle-count')) {
-    if (cleanPath.includes('/plans') && method === 'POST') return AuditEventType.CYCLE_COUNT_PLAN_CREATED;
+    if (cleanPath.includes('/plans') && method === 'POST')
+      return AuditEventType.CYCLE_COUNT_PLAN_CREATED;
     if (cleanPath.includes('/start')) return AuditEventType.CYCLE_COUNT_STARTED;
     if (cleanPath.includes('/complete')) return AuditEventType.CYCLE_COUNT_COMPLETED;
     if (cleanPath.includes('/reconcile')) return AuditEventType.CYCLE_COUNT_RECONCILED;
@@ -389,7 +399,8 @@ function getAuditEventType(req: Request): AuditEventType {
   const orderIdPattern = /^\/[A-Z]+[\d-]+$/;
   if (orderIdPattern.test(cleanPath)) {
     // if (method === 'GET') return AuditEventType.ORDER_VIEWED; // Disabled - page views not logged
-    if (method === 'POST' || method === 'PUT' || method === 'PATCH') return AuditEventType.ORDER_UPDATED;
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH')
+      return AuditEventType.ORDER_UPDATED;
   }
 
   // Order ID with pick/undo-pick (e.g., /SO7136/pick, /SO7136/undo-pick)
@@ -417,12 +428,20 @@ function getAuditCategory(req: Request): AuditCategory {
   const cleanPath = fullPath.replace(/^\/api\//, '/');
 
   if (cleanPath.includes('/auth')) return AuditCategory.AUTHENTICATION;
-  if (cleanPath.includes('/users') || cleanPath.includes('/roles') || cleanPath.includes('/role-assignments')) {
+  if (
+    cleanPath.includes('/users') ||
+    cleanPath.includes('/roles') ||
+    cleanPath.includes('/role-assignments')
+  ) {
     return AuditCategory.USER_MANAGEMENT;
   }
-  if (cleanPath.includes('/orders') || cleanPath.includes('/inventory') ||
-      cleanPath.includes('/pick-tasks') || cleanPath.includes('/picks') ||
-      cleanPath.includes('/pack')) {
+  if (
+    cleanPath.includes('/orders') ||
+    cleanPath.includes('/inventory') ||
+    cleanPath.includes('/pick-tasks') ||
+    cleanPath.includes('/picks') ||
+    cleanPath.includes('/pack')
+  ) {
     return AuditCategory.DATA_MODIFICATION;
   }
   if (cleanPath.includes('/export') || cleanPath.includes('/report')) {
@@ -441,7 +460,14 @@ function getAuditCategory(req: Request): AuditCategory {
 function sanitizeBody(body: any): Record<string, unknown> | null {
   if (!body || typeof body !== 'object') return null;
 
-  const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'token', 'apiKey', 'secret'];
+  const sensitiveFields = [
+    'password',
+    'currentPassword',
+    'newPassword',
+    'token',
+    'apiKey',
+    'secret',
+  ];
   const sanitized = { ...body };
 
   for (const field of sensitiveFields) {
@@ -493,19 +519,19 @@ export async function auditLoggingMiddleware(
   const originalEnd = res.end.bind(res);
 
   // Override res.json to capture response and log
-  res.json = function(body: any) {
+  res.json = function (body: any) {
     doLog(res.statusCode || 200, body);
     return originalJson(body);
   };
 
   // Override res.send to capture response and log
-  res.send = function(body: any) {
+  res.send = function (body: any) {
     doLog(res.statusCode || 200, body);
     return originalSend(body as any);
   };
 
   // Override res.end to capture final status (if json/send weren't called)
-  res.end = function(...args: any[]) {
+  res.end = function (...args: any[]) {
     doLog(res.statusCode || 200, null);
     return originalEnd.apply(res, args as any);
   };
@@ -523,9 +549,10 @@ async function generateMetadataSummary(
   waveDetails?: Record<string, unknown> | null
 ): Promise<string> {
   // For login events, get email from request body since req.user isn't set yet
-  const userEmail = (eventType === AuditEventType.LOGIN_SUCCESS || eventType === AuditEventType.LOGIN_FAILED)
-    ? (req.body?.email || 'Unknown user')
-    : (req.user?.email || 'Unknown user');
+  const userEmail =
+    eventType === AuditEventType.LOGIN_SUCCESS || eventType === AuditEventType.LOGIN_FAILED
+      ? req.body?.email || 'Unknown user'
+      : req.user?.email || 'Unknown user';
   const userRole = req.user?.effectiveRole || 'Unknown role';
 
   switch (eventType) {
@@ -762,7 +789,11 @@ function extractResourceIdFromResponse(responseData: any, eventType: string): st
 /**
  * Extract key details from the request
  */
-function extractKeyDetails(req: Request, eventType: string, resourceId: string | null): Record<string, unknown> {
+function extractKeyDetails(
+  req: Request,
+  eventType: string,
+  resourceId: string | null
+): Record<string, unknown> {
   const details: Record<string, unknown> = {};
 
   // Extract order ID from path params
@@ -1090,12 +1121,14 @@ async function generateHumanReadableDescription(
       if (cleanPath.includes('/auth/current-view')) return 'Updated current view';
       if (cleanPath.includes('/auth/set-idle')) return 'Set idle status';
       // Metrics and reports
-      if (cleanPath.includes('/metrics/orders/throughput')) return 'Viewed order throughput metrics';
+      if (cleanPath.includes('/metrics/orders/throughput'))
+        return 'Viewed order throughput metrics';
       if (cleanPath.includes('/metrics/orders/status')) return 'Viewed order status breakdown';
       if (cleanPath.includes('/metrics/skus/top-picked')) return 'Viewed top SKUs report';
       if (cleanPath.includes('/metrics/picker-activity')) return 'Viewed picker activity';
       if (cleanPath.includes('/metrics/packer-activity')) return 'Viewed packer activity';
-      if (cleanPath.includes('/metrics/stock-controller-activity')) return 'Viewed stock controller activity';
+      if (cleanPath.includes('/metrics/stock-controller-activity'))
+        return 'Viewed stock controller activity';
       // Orders
       if (cleanPath.includes('/orders') && method === 'GET') {
         if (cleanPath.includes('/queue')) return 'Viewed order queue';
@@ -1124,11 +1157,18 @@ async function generateHumanReadableDescription(
         return 'Managed user roles';
       }
       // Fallback with more readable format
-      const readableMethod = method === 'GET' ? 'Viewed' :
-                           method === 'POST' ? 'Created/Updated' :
-                           method === 'PUT' ? 'Updated' :
-                           method === 'PATCH' ? 'Modified' :
-                           method === 'DELETE' ? 'Deleted' : method;
+      const readableMethod =
+        method === 'GET'
+          ? 'Viewed'
+          : method === 'POST'
+            ? 'Created/Updated'
+            : method === 'PUT'
+              ? 'Updated'
+              : method === 'PATCH'
+                ? 'Modified'
+                : method === 'DELETE'
+                  ? 'Deleted'
+                  : method;
       return `${readableMethod} ${cleanPath.split('?')[0]}`;
 
     default:
@@ -1139,11 +1179,7 @@ async function generateHumanReadableDescription(
 /**
  * Log the request to audit logs
  */
-async function logRequest(
-  req: Request,
-  statusCode: number,
-  responseData: any
-): Promise<void> {
+async function logRequest(req: Request, statusCode: number, responseData: any): Promise<void> {
   try {
     const startTime = (req as any)[REQUEST_START_TIME] || Date.now();
     const duration = Date.now() - startTime;
@@ -1164,28 +1200,30 @@ async function logRequest(
     // Get user info from auth middleware or request body (for login events)
     // Note: LOGIN_SUCCESS/LOGIN_FAILED don't have req.user yet, so use req.body.email
     // LOGOUT has req.user because authenticate middleware is used
-    const isAuthEvent = eventType === AuditEventType.LOGIN_SUCCESS ||
-                        eventType === AuditEventType.LOGIN_FAILED ||
-                        eventType === AuditEventType.LOGOUT;
+    const isAuthEvent =
+      eventType === AuditEventType.LOGIN_SUCCESS ||
+      eventType === AuditEventType.LOGIN_FAILED ||
+      eventType === AuditEventType.LOGOUT;
     const userId = req.user?.userId || null;
-    const userEmail = (eventType === AuditEventType.LOGIN_SUCCESS || eventType === AuditEventType.LOGIN_FAILED)
-      ? (req.body?.email || null)
-      : (req.user?.email || null);
+    const userEmail =
+      eventType === AuditEventType.LOGIN_SUCCESS || eventType === AuditEventType.LOGIN_FAILED
+        ? req.body?.email || null
+        : req.user?.email || null;
     const userRole = req.user?.effectiveRole || null;
 
     // Get IP address (consider proxy headers)
-    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-                      req.headers['x-real-ip'] as string ||
-                      req.socket.remoteAddress ||
-                      req.ip ||
-                      null;
+    const ipAddress =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      (req.headers['x-real-ip'] as string) ||
+      req.socket.remoteAddress ||
+      req.ip ||
+      null;
 
     const userAgent = req.headers['user-agent'] || null;
 
     // Extract wave details from response for wave creation
-    const waveDetails = eventType === AuditEventType.WAVE_CREATED
-      ? extractWaveDetails(responseData)
-      : null;
+    const waveDetails =
+      eventType === AuditEventType.WAVE_CREATED ? extractWaveDetails(responseData) : null;
 
     if (eventType === AuditEventType.WAVE_CREATED) {
       console.log('[AuditMiddleware] ===== WAVE_CREATED DEBUG =====');
@@ -1193,7 +1231,10 @@ async function logRequest(
       console.log('[AuditMiddleware] resourceId:', resourceId);
       console.log('[AuditMiddleware] responseData:', JSON.stringify(responseData, null, 2));
       console.log('[AuditMiddleware] waveDetails:', JSON.stringify(waveDetails, null, 2));
-      console.log('[AuditMiddleware] Summary will be:', await generateMetadataSummary(req, eventType, resourceId, waveDetails));
+      console.log(
+        '[AuditMiddleware] Summary will be:',
+        await generateMetadataSummary(req, eventType, resourceId, waveDetails)
+      );
       console.log('[AuditMiddleware] ===== END WAVE_CREATED DEBUG =====');
     }
 
@@ -1295,7 +1336,11 @@ async function logRequest(
           }
         }
         // For claim/unclaim operations, don't show requestData at all - it's just pickerId which is irrelevant
-      } else if (eventType === 'USER_CREATED' || eventType === 'USER_UPDATED' || eventType === 'USER_DELETED') {
+      } else if (
+        eventType === 'USER_CREATED' ||
+        eventType === 'USER_UPDATED' ||
+        eventType === 'USER_DELETED'
+      ) {
         // For user management events, only show key details (name, role) - not the full request body
         if (req.body?.name) (metadata.details as Record<string, unknown>).name = req.body.name;
         if (req.body?.role) (metadata.details as Record<string, unknown>).role = req.body.role;
@@ -1321,12 +1366,23 @@ async function logRequest(
       console.log('[AuditMiddleware] PICK_CONFIRMED debug:');
       console.log('[AuditMiddleware]   req.body:', JSON.stringify(req.body));
       console.log('[AuditMiddleware]   req.body?.sku:', req.body?.sku);
-      console.log('[AuditMiddleware]   summary:', await generateMetadataSummary(req, eventType, resourceId));
-      console.log('[AuditMiddleware]   description:', await generateHumanReadableDescription(req, eventType, resourceId));
+      console.log(
+        '[AuditMiddleware]   summary:',
+        await generateMetadataSummary(req, eventType, resourceId)
+      );
+      console.log(
+        '[AuditMiddleware]   description:',
+        await generateHumanReadableDescription(req, eventType, resourceId)
+      );
     }
 
     // Build human-readable action description (await since it's now async for product name lookup)
-    const actionDescription = await generateHumanReadableDescription(req, eventType, resourceId, waveDetails);
+    const actionDescription = await generateHumanReadableDescription(
+      req,
+      eventType,
+      resourceId,
+      waveDetails
+    );
 
     // For pick events, enhance newValues with product name
     let newValues = null;
@@ -1377,7 +1433,11 @@ async function logRequest(
           newValues = sanitizeBody(req.body);
         }
         // For claim/unclaim operations, don't include newValues - it's just pickerId which is irrelevant
-      } else if (eventType === 'USER_CREATED' || eventType === 'USER_UPDATED' || eventType === 'USER_DELETED') {
+      } else if (
+        eventType === 'USER_CREATED' ||
+        eventType === 'USER_UPDATED' ||
+        eventType === 'USER_DELETED'
+      ) {
         // For user management events, only include name and role - not the full sanitized body
         if (req.body?.name || req.body?.role) {
           newValues = {
@@ -1410,7 +1470,6 @@ async function logRequest(
       newValues,
       correlationId: null,
     });
-
   } catch (error) {
     // Never let audit logging break the request
     console.error('[AuditMiddleware] Error in audit logging:', error);

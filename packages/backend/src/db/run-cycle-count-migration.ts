@@ -37,10 +37,18 @@ async function runCycleCountMigration() {
     console.log('✅ cycle_count_plans table created');
 
     // Create indexes for cycle_count_plans
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_status ON cycle_count_plans(status)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_type ON cycle_count_plans(count_type)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_scheduled ON cycle_count_plans(scheduled_date DESC)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_count_by ON cycle_count_plans(count_by)`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_status ON cycle_count_plans(status)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_type ON cycle_count_plans(count_type)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_scheduled ON cycle_count_plans(scheduled_date DESC)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_plans_count_by ON cycle_count_plans(count_by)`
+    );
 
     // Cycle Count Entries table
     await client.query(`
@@ -67,11 +75,21 @@ async function runCycleCountMigration() {
     console.log('✅ cycle_count_entries table created');
 
     // Create indexes for cycle_count_entries
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_plan ON cycle_count_entries(plan_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_sku ON cycle_count_entries(sku)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_location ON cycle_count_entries(bin_location)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_variance_status ON cycle_count_entries(variance_status)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_counted_at ON cycle_count_entries(counted_at DESC)`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_plan ON cycle_count_entries(plan_id)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_sku ON cycle_count_entries(sku)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_location ON cycle_count_entries(bin_location)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_variance_status ON cycle_count_entries(variance_status)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_entries_counted_at ON cycle_count_entries(counted_at DESC)`
+    );
 
     // Cycle Count Tolerances table
     await client.query(`
@@ -94,9 +112,15 @@ async function runCycleCountMigration() {
     console.log('✅ cycle_count_tolerances table created');
 
     // Create indexes for cycle_count_tolerances
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_tolerances_active ON cycle_count_tolerances(is_active)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_tolerances_sku ON cycle_count_tolerances(sku)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_cycle_count_tolerances_abc ON cycle_count_tolerances(abc_category)`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_tolerances_active ON cycle_count_tolerances(is_active)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_tolerances_sku ON cycle_count_tolerances(sku)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_cycle_count_tolerances_abc ON cycle_count_tolerances(abc_category)`
+    );
 
     // Create triggers for updated_at
     await client.query(`

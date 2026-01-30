@@ -89,42 +89,47 @@ router.get('/stats/all', authenticate, async (req: AuthenticatedRequest, res) =>
  * POST /api/v1/zones/assign
  * Assign a picker to a zone
  */
-router.post('/assign', authenticate, authorize('ADMIN', 'SUPERVISOR'), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { pickerId, zoneId } = req.body;
+router.post(
+  '/assign',
+  authenticate,
+  authorize('ADMIN', 'SUPERVISOR'),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { pickerId, zoneId } = req.body;
 
-    if (!pickerId || !zoneId) {
-      res.status(400).json({
-        error: 'Missing required fields',
-        message: 'pickerId and zoneId are required',
+      if (!pickerId || !zoneId) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'pickerId and zoneId are required',
+        });
+        return;
+      }
+
+      const context = {
+        userId: req.user?.userId,
+        userEmail: req.user?.email,
+        userRole: req.user?.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.id,
+      };
+
+      const assignment = await zonePickingService.assignPickerToZone(pickerId, zoneId, context);
+
+      res.status(201).json({
+        success: true,
+        message: 'Picker assigned to zone',
+        data: assignment,
       });
-      return;
+    } catch (error) {
+      logger.error('Zone assignment error', { error });
+      res.status(500).json({
+        error: 'Zone assignment failed',
+        message: (error as any).message,
+      });
     }
-
-    const context = {
-      userId: req.user?.userId,
-      userEmail: req.user?.email,
-      userRole: req.user?.role,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      requestId: req.id,
-    };
-
-    const assignment = await zonePickingService.assignPickerToZone(pickerId, zoneId, context);
-
-    res.status(201).json({
-      success: true,
-      message: 'Picker assigned to zone',
-      data: assignment,
-    });
-  } catch (error) {
-    logger.error('Zone assignment error', { error });
-    res.status(500).json({
-      error: 'Zone assignment failed',
-      message: (error as any).message,
-    });
   }
-});
+);
 
 /**
  * POST /api/v1/zones/release
@@ -167,59 +172,66 @@ router.post('/release', authenticate, requirePicker, async (req: AuthenticatedRe
  * POST /api/v1/zones/rebalance
  * Rebalance pickers across zones based on workload
  */
-router.post('/rebalance', authenticate, authorize('ADMIN', 'SUPERVISOR'), async (req: AuthenticatedRequest, res) => {
-  try {
-    const context = {
-      userId: req.user?.userId,
-      userEmail: req.user?.email,
-      userRole: req.user?.role,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      requestId: req.id,
-    };
+router.post(
+  '/rebalance',
+  authenticate,
+  authorize('ADMIN', 'SUPERVISOR'),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const context = {
+        userId: req.user?.userId,
+        userEmail: req.user?.email,
+        userRole: req.user?.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.id,
+      };
 
-    await zonePickingService.rebalancePickers(context);
+      await zonePickingService.rebalancePickers(context);
 
-    res.json({
-      success: true,
-      message: 'Pickers rebalanced across zones',
-    });
-  } catch (error) {
-    logger.error('Zone rebalance error', { error });
-    res.status(500).json({
-      error: 'Zone rebalancing failed',
-      message: (error as any).message,
-    });
+      res.json({
+        success: true,
+        message: 'Pickers rebalanced across zones',
+      });
+    } catch (error) {
+      logger.error('Zone rebalance error', { error });
+      res.status(500).json({
+        error: 'Zone rebalancing failed',
+        message: (error as any).message,
+      });
+    }
   }
-});
+);
 
 /**
  * GET /api/v1/zones/:zoneId/tasks
  * Get pick tasks for a specific zone
  */
-router.get('/:zoneId/tasks', authenticate, requirePicker, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { zoneId } = req.params;
-    const { status } = req.query;
+router.get(
+  '/:zoneId/tasks',
+  authenticate,
+  requirePicker,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { zoneId } = req.params;
+      const { status } = req.query;
 
-    const statuses = status ? (status as string).split(',') : undefined;
+      const statuses = status ? (status as string).split(',') : undefined;
 
-    const tasks = await zonePickingService.getZonePickTasks(
-      zoneId,
-      statuses as any
-    );
+      const tasks = await zonePickingService.getZonePickTasks(zoneId, statuses as any);
 
-    res.json({
-      success: true,
-      data: tasks,
-    });
-  } catch (error) {
-    logger.error('Get zone tasks error', { error });
-    res.status(500).json({
-      error: 'Failed to get zone tasks',
-      message: (error as any).message,
-    });
+      res.json({
+        success: true,
+        data: tasks,
+      });
+    } catch (error) {
+      logger.error('Get zone tasks error', { error });
+      res.status(500).json({
+        error: 'Failed to get zone tasks',
+        message: (error as any).message,
+      });
+    }
   }
-});
+);
 
 export default router;

@@ -84,7 +84,7 @@ router.post(
           error: 'Each location must have binId, zone, aisle, shelf, and type',
           code: 'MISSING_FIELDS',
         });
-      return;
+        return;
       }
 
       if (!Object.values(BinType).includes(loc.type)) {

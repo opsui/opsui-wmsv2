@@ -48,12 +48,15 @@ export interface NotificationPreference {
   quietHoursEnd?: string;
   quietHoursTimezone?: string;
   smsPhone?: string;
-  typePreferences?: Record<string, {
-    email: boolean;
-    sms: boolean;
-    push: boolean;
-    inApp: boolean;
-  }>;
+  typePreferences?: Record<
+    string,
+    {
+      email: boolean;
+      sms: boolean;
+      push: boolean;
+      inApp: boolean;
+    }
+  >;
 }
 
 export interface SendNotificationInput {
@@ -88,7 +91,11 @@ export class NotificationService {
 
   constructor() {
     // Initialize Email provider if configured
-    if (config.email.sendgrid.apiKey || config.email.postmark.apiKey || config.email.ses.accessKeyId) {
+    if (
+      config.email.sendgrid.apiKey ||
+      config.email.postmark.apiKey ||
+      config.email.ses.accessKeyId
+    ) {
       try {
         this.emailProvider = new EmailProvider(config.email);
         logger.info('Email provider initialized');
@@ -696,7 +703,10 @@ export class NotificationService {
             html: `<p>${notification.message}</p>`,
           });
           if (result.success) {
-            logger.info('Email notification sent successfully', { notificationId: notification.notificationId, messageId: result.messageId });
+            logger.info('Email notification sent successfully', {
+              notificationId: notification.notificationId,
+              messageId: result.messageId,
+            });
           } else {
             throw new Error(result.error || 'Failed to send email');
           }
@@ -711,7 +721,10 @@ export class NotificationService {
             message: `${notification.title}: ${notification.message}`,
           });
           if (result.success) {
-            logger.info('SMS notification sent successfully', { notificationId: notification.notificationId, messageId: result.messageId });
+            logger.info('SMS notification sent successfully', {
+              notificationId: notification.notificationId,
+              messageId: result.messageId,
+            });
           } else {
             throw new Error(result.error || 'Failed to send SMS');
           }
@@ -728,7 +741,10 @@ export class NotificationService {
             data: notification.data,
           });
           if (result.success) {
-            logger.info('Push notification sent successfully', { notificationId: notification.notificationId, messageId: result.messageId });
+            logger.info('Push notification sent successfully', {
+              notificationId: notification.notificationId,
+              messageId: result.messageId,
+            });
           } else {
             throw new Error(result.error || 'Failed to send push notification');
           }
@@ -737,7 +753,10 @@ export class NotificationService {
         }
       }
     } catch (error) {
-      logger.error('Failed to deliver notification', { error, notificationId: notification.notificationId });
+      logger.error('Failed to deliver notification', {
+        error,
+        notificationId: notification.notificationId,
+      });
 
       // Update status to FAILED
       await query(

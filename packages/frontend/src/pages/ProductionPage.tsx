@@ -6,7 +6,16 @@
  */
 
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, useToast, Pagination } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  useToast,
+  Pagination,
+} from '@/components/shared';
 import { useProductionOrders, useProductionDashboard } from '@/services/api';
 import { useEffect, useState } from 'react';
 import {
@@ -294,8 +303,16 @@ function ProductionPage() {
   const [pageSize, setPageSize] = useState(10);
 
   // Fetch production data from backend
-  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useProductionDashboard();
-  const { data: ordersData, isLoading: isOrdersLoading, error: ordersError } = useProductionOrders();
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+  } = useProductionDashboard();
+  const {
+    data: ordersData,
+    isLoading: isOrdersLoading,
+    error: ordersError,
+  } = useProductionOrders();
 
   // Show error toasts
   useEffect(() => {
@@ -375,24 +392,24 @@ function ProductionPage() {
 
         {/* Production Line Stages */}
         {!isLoading && (
-        <div className="flex items-stretch gap-2 mb-8">
-          {stages.map((stage, index) => (
-            <div key={stage.id} className="flex-1 relative">
-              <ProductionLineStage
-                label={stage.label}
-                count={stage.count}
-                isActive={false}
-                isCompleted={index < 2}
-                onClick={() => setTab(stage.tab)}
-              />
-              {index === stages.length - 1 && (
-                <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-gray-700">
-                  <CheckCircleIcon className="h-6 w-6" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+          <div className="flex items-stretch gap-2 mb-8">
+            {stages.map((stage, index) => (
+              <div key={stage.id} className="flex-1 relative">
+                <ProductionLineStage
+                  label={stage.label}
+                  count={stage.count}
+                  isActive={false}
+                  isCompleted={index < 2}
+                  onClick={() => setTab(stage.tab)}
+                />
+                {index === stages.length - 1 && (
+                  <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-gray-700">
+                    <CheckCircleIcon className="h-6 w-6" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Dashboard Tab */}
@@ -570,7 +587,8 @@ function ProductionPage() {
                                 })}
                               </h3>
                               <p className="text-sm text-gray-400">
-                                {ordersByDate[date].length} order{ordersByDate[date].length !== 1 ? 's' : ''} scheduled
+                                {ordersByDate[date].length} order
+                                {ordersByDate[date].length !== 1 ? 's' : ''} scheduled
                               </p>
                             </div>
                           </div>
@@ -589,11 +607,15 @@ function ProductionPage() {
                                       <StatusBadge status={order.status} />
                                       <PriorityIndicator priority={order.priority} />
                                     </div>
-                                    <p className="text-gray-300 text-sm mb-1">{order.productName}</p>
+                                    <p className="text-gray-300 text-sm mb-1">
+                                      {order.productName}
+                                    </p>
                                     <p className="text-gray-400 text-xs">SKU: {order.productSku}</p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="text-2xl font-bold text-white">{order.quantity}</p>
+                                    <p className="text-2xl font-bold text-white">
+                                      {order.quantity}
+                                    </p>
                                     <p className="text-xs text-gray-400">units</p>
                                   </div>
                                 </div>
@@ -603,12 +625,24 @@ function ProductionPage() {
                                   <div className="flex items-center gap-4">
                                     <div className="flex items-center gap-2 text-xs text-gray-400">
                                       <ClockIcon className="h-3 w-3" />
-                                      <span>Start: {new Date(order.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                      <span>
+                                        Start:{' '}
+                                        {new Date(order.startDate).toLocaleTimeString([], {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </span>
                                     </div>
                                     {order.endDate && (
                                       <div className="flex items-center gap-2 text-xs text-gray-400">
                                         <CheckCircleIcon className="h-3 w-3" />
-                                        <span>End: {new Date(order.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span>
+                                          End:{' '}
+                                          {new Date(order.endDate).toLocaleTimeString([], {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                          })}
+                                        </span>
                                       </div>
                                     )}
                                     {order.assignedTo && (
@@ -636,8 +670,9 @@ function ProductionPage() {
                 <h3 className="text-sm text-gray-400 mb-2">Today</h3>
                 <p className="text-3xl font-bold text-white">
                   {
-                    orders.filter(o => new Date(o.startDate).toDateString() === new Date().toDateString())
-                      .length
+                    orders.filter(
+                      o => new Date(o.startDate).toDateString() === new Date().toDateString()
+                    ).length
                   }
                 </p>
               </Card>
@@ -675,7 +710,9 @@ function ProductionPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white">Equipment Maintenance</h2>
-                <p className="text-gray-400 text-sm mt-1">Manage production equipment maintenance</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Manage production equipment maintenance
+                </p>
               </div>
               <Button variant="primary" className="flex items-center gap-2">
                 <PlusIcon className="h-5 w-5" />
@@ -802,13 +839,16 @@ function ProductionPage() {
                       <div className="mt-4 pt-3 border-t border-gray-700 grid grid-cols-3 gap-4 text-xs">
                         <div>
                           <p className="text-gray-500">Last Maintenance</p>
-                          <p className="text-gray-300">{new Date(equipment.lastMaintenance).toLocaleDateString()}</p>
+                          <p className="text-gray-300">
+                            {new Date(equipment.lastMaintenance).toLocaleDateString()}
+                          </p>
                         </div>
                         <div>
                           <p className="text-gray-500">Next Maintenance</p>
                           <p
                             className={
-                              new Date(equipment.nextMaintenance) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                              new Date(equipment.nextMaintenance) <
+                              new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                                 ? 'text-warning-400 font-semibold'
                                 : 'text-gray-300'
                             }

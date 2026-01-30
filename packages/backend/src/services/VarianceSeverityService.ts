@@ -114,7 +114,9 @@ export class VarianceSeverityService {
 
     if (result.rows.length === 0) {
       // Default to CRITICAL if no matching config found
-      logger.warn(`No severity config found for variance ${variancePercent}%, defaulting to CRITICAL`);
+      logger.warn(
+        `No severity config found for variance ${variancePercent}%, defaulting to CRITICAL`
+      );
       return {
         severity: 'CRITICAL',
         requiresApproval: true,
@@ -155,7 +157,12 @@ export class VarianceSeverityService {
              (min_variance_percent <= $2 AND max_variance_percent >= $2) OR
              (min_variance_percent >= $1 AND max_variance_percent <= $2)
            )`,
-        [dto.minVariancePercent, dto.maxVariancePercent, dto.minVariancePercent, dto.maxVariancePercent]
+        [
+          dto.minVariancePercent,
+          dto.maxVariancePercent,
+          dto.minVariancePercent,
+          dto.maxVariancePercent,
+        ]
       );
 
       if (parseInt(overlapResult.rows[0].count) > 0) {
@@ -194,7 +201,10 @@ export class VarianceSeverityService {
   /**
    * Update an existing severity configuration
    */
-  async updateSeverityConfig(configId: string, dto: UpdateSeverityConfigDTO): Promise<VarianceSeverityConfig> {
+  async updateSeverityConfig(
+    configId: string,
+    dto: UpdateSeverityConfigDTO
+  ): Promise<VarianceSeverityConfig> {
     const client = await getPool();
 
     try {
@@ -346,9 +356,7 @@ export class VarianceSeverityService {
   async createDefaultSeverityConfigs(): Promise<void> {
     const client = await getPool();
 
-    const result = await client.query(
-      `SELECT COUNT(*) as count FROM variance_severity_config`
-    );
+    const result = await client.query(`SELECT COUNT(*) as count FROM variance_severity_config`);
 
     if (parseInt(result.rows[0].count) === 0) {
       await this.resetToDefaults();

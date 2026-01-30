@@ -18,7 +18,18 @@ import {
   useUpdateASNStatus,
   useUpdatePutawayTask,
 } from '@/services/api';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, Pagination, useToast, MetricCardSkeleton, Skeleton } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  Pagination,
+  useToast,
+  MetricCardSkeleton,
+  Skeleton,
+} from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import {
   InboxIcon,
@@ -429,7 +440,7 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await createASN.mutateAsync({
           supplierId: values.supplierId,
@@ -477,7 +488,9 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 }`}
                 placeholder="SUP-001"
               />
-              {errors.supplierId && <p className="mt-1 text-sm text-red-400">{errors.supplierId}</p>}
+              {errors.supplierId && (
+                <p className="mt-1 text-sm text-red-400">{errors.supplierId}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">PO Number</label>
@@ -508,7 +521,9 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
                   errors.expectedDate ? 'border-red-500' : 'border-white/10'
                 }`}
               />
-              {errors.expectedDate && <p className="mt-1 text-sm text-red-400">{errors.expectedDate}</p>}
+              {errors.expectedDate && (
+                <p className="mt-1 text-sm text-red-400">{errors.expectedDate}</p>
+              )}
             </div>
             <div className="flex gap-3">
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
@@ -556,7 +571,7 @@ function CreateReceiptModal({
     validationRules: {
       receiptType: { required: true },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await createReceipt.mutateAsync({
           asnId,
@@ -601,7 +616,9 @@ function CreateReceiptModal({
                 <option value="RETURN">Customer Return</option>
                 <option value="TRANSFER">Warehouse Transfer</option>
               </select>
-              {errors.receiptType && <p className="mt-1 text-sm text-red-400">{errors.receiptType}</p>}
+              {errors.receiptType && (
+                <p className="mt-1 text-sm text-red-400">{errors.receiptType}</p>
+              )}
             </div>
             <div className="flex gap-3">
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
@@ -656,19 +673,21 @@ function UpdatePutawayTaskModal({
           if (isNaN(num)) return 'Must be a number';
           if (num < 0) return 'Cannot be negative';
           if (num < task.quantityPutaway) return 'Cannot be less than current progress';
-          if (num > task.quantityToPutaway) return `Cannot exceed total (${task.quantityToPutaway})`;
+          if (num > task.quantityToPutaway)
+            return `Cannot exceed total (${task.quantityToPutaway})`;
           return null;
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await updatePutawayTask.mutateAsync({
           putawayTaskId: task.putawayTaskId,
           quantityPutaway: parseInt(values.quantityPutaway),
-          status: parseInt(values.quantityPutaway) >= task.quantityToPutaway
-            ? PutawayStatus.COMPLETED
-            : PutawayStatus.IN_PROGRESS,
+          status:
+            parseInt(values.quantityPutaway) >= task.quantityToPutaway
+              ? PutawayStatus.COMPLETED
+              : PutawayStatus.IN_PROGRESS,
         });
         showToast('Putaway task updated successfully', 'success');
         onSuccess();
@@ -705,7 +724,9 @@ function UpdatePutawayTaskModal({
               </div>
               <div>
                 <p className="text-gray-400">Current Progress</p>
-                <p className="text-white font-medium">{task.quantityPutaway} / {task.quantityToPutaway}</p>
+                <p className="text-white font-medium">
+                  {task.quantityPutaway} / {task.quantityToPutaway}
+                </p>
               </div>
               <div>
                 <p className="text-gray-400">Remaining</p>
@@ -730,7 +751,9 @@ function UpdatePutawayTaskModal({
                   errors.quantityPutaway ? 'border-red-500' : 'border-white/10'
                 }`}
               />
-              {errors.quantityPutaway && <p className="mt-1 text-sm text-red-400">{errors.quantityPutaway}</p>}
+              {errors.quantityPutaway && (
+                <p className="mt-1 text-sm text-red-400">{errors.quantityPutaway}</p>
+              )}
             </div>
 
             <div className="flex gap-3">
@@ -803,7 +826,9 @@ function InwardsGoodsPage() {
   const { data: receipts, refetch: refetchReceipts } = useReceipts({
     enabled: currentStage === 'receiving',
   });
-  const { data: putawayTasks, refetch: refetchPutawayTasks } = usePutawayTasks({ enabled: currentStage === 'putaway' });
+  const { data: putawayTasks, refetch: refetchPutawayTasks } = usePutawayTasks({
+    enabled: currentStage === 'putaway',
+  });
 
   const updateASNStatus = useUpdateASNStatus();
 
@@ -980,56 +1005,58 @@ function InwardsGoodsPage() {
               </div>
             </div>
 
-            {asns && asns.length > 0 ? (() => {
-              const filteredAsns = asns.filter((asn: AdvanceShippingNotice) => {
-                if (!asnsSearchTerm.trim()) return true;
-                const query = asnsSearchTerm.toLowerCase();
-                return (
-                  asn.asnId?.toLowerCase().includes(query) ||
-                  asn.purchaseOrderNumber?.toLowerCase().includes(query) ||
-                  asn.supplierId?.toLowerCase().includes(query) ||
-                  asn.status?.toLowerCase().includes(query)
+            {asns && asns.length > 0 ? (
+              (() => {
+                const filteredAsns = asns.filter((asn: AdvanceShippingNotice) => {
+                  if (!asnsSearchTerm.trim()) return true;
+                  const query = asnsSearchTerm.toLowerCase();
+                  return (
+                    asn.asnId?.toLowerCase().includes(query) ||
+                    asn.purchaseOrderNumber?.toLowerCase().includes(query) ||
+                    asn.supplierId?.toLowerCase().includes(query) ||
+                    asn.status?.toLowerCase().includes(query)
+                  );
+                });
+                const totalPages = Math.ceil(filteredAsns.length / asnsPerPage);
+                const paginatedAsns = filteredAsns.slice(
+                  (asnsCurrentPage - 1) * asnsPerPage,
+                  asnsCurrentPage * asnsPerPage
                 );
-              });
-              const totalPages = Math.ceil(filteredAsns.length / asnsPerPage);
-              const paginatedAsns = filteredAsns.slice(
-                (asnsCurrentPage - 1) * asnsPerPage,
-                asnsCurrentPage * asnsPerPage
-              );
-              return (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {paginatedAsns.length === 0 ? (
-                      <Card variant="glass">
-                        <CardContent className="p-12 text-center">
-                          <p className="text-gray-400">No ASNs match your search</p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      paginatedAsns.map((asn: AdvanceShippingNotice) => (
-                        <ASNCard
-                          key={asn.asnId}
-                          asn={asn}
-                          onViewDetails={id => navigate(`/inwards/asn/${id}`)}
-                          onStartReceiving={handleStartReceiving}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Pagination for ASNs */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center mt-6">
-                      <Pagination
-                        currentPage={asnsCurrentPage}
-                        totalPages={totalPages}
-                        onPageChange={setAsnsCurrentPage}
-                      />
+                return (
+                  <>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {paginatedAsns.length === 0 ? (
+                        <Card variant="glass">
+                          <CardContent className="p-12 text-center">
+                            <p className="text-gray-400">No ASNs match your search</p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        paginatedAsns.map((asn: AdvanceShippingNotice) => (
+                          <ASNCard
+                            key={asn.asnId}
+                            asn={asn}
+                            onViewDetails={id => navigate(`/inwards/asn/${id}`)}
+                            onStartReceiving={handleStartReceiving}
+                          />
+                        ))
+                      )}
                     </div>
-                  )}
-                </>
-              );
-            })() : (
+
+                    {/* Pagination for ASNs */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center mt-6">
+                        <Pagination
+                          currentPage={asnsCurrentPage}
+                          totalPages={totalPages}
+                          onPageChange={setAsnsCurrentPage}
+                        />
+                      </div>
+                    )}
+                  </>
+                );
+              })()
+            ) : (
               <Card variant="glass">
                 <CardContent className="p-12 text-center">
                   <TruckIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
@@ -1067,55 +1094,57 @@ function InwardsGoodsPage() {
               </div>
             </div>
 
-            {receipts && receipts.length > 0 ? (() => {
-              const filteredReceipts = receipts.filter((receipt: Receipt) => {
-                if (!receiptsSearchTerm.trim()) return true;
-                const query = receiptsSearchTerm.toLowerCase();
-                return (
-                  receipt.receiptId?.toLowerCase().includes(query) ||
-                  receipt.asnId?.toLowerCase().includes(query) ||
-                  receipt.receiptType?.toLowerCase().includes(query) ||
-                  receipt.status?.toLowerCase().includes(query)
+            {receipts && receipts.length > 0 ? (
+              (() => {
+                const filteredReceipts = receipts.filter((receipt: Receipt) => {
+                  if (!receiptsSearchTerm.trim()) return true;
+                  const query = receiptsSearchTerm.toLowerCase();
+                  return (
+                    receipt.receiptId?.toLowerCase().includes(query) ||
+                    receipt.asnId?.toLowerCase().includes(query) ||
+                    receipt.receiptType?.toLowerCase().includes(query) ||
+                    receipt.status?.toLowerCase().includes(query)
+                  );
+                });
+                const totalPages = Math.ceil(filteredReceipts.length / receiptsPerPage);
+                const paginatedReceipts = filteredReceipts.slice(
+                  (receiptsCurrentPage - 1) * receiptsPerPage,
+                  receiptsCurrentPage * receiptsPerPage
                 );
-              });
-              const totalPages = Math.ceil(filteredReceipts.length / receiptsPerPage);
-              const paginatedReceipts = filteredReceipts.slice(
-                (receiptsCurrentPage - 1) * receiptsPerPage,
-                receiptsCurrentPage * receiptsPerPage
-              );
-              return (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {paginatedReceipts.length === 0 ? (
-                      <Card variant="glass">
-                        <CardContent className="p-12 text-center">
-                          <p className="text-gray-400">No receipts match your search</p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      paginatedReceipts.map((receipt: Receipt) => (
-                        <ReceiptCard
-                          key={receipt.receiptId}
-                          receipt={receipt}
-                          onViewDetails={id => navigate(`/inwards/receipt/${id}`)}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Pagination for Receipts */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center mt-6">
-                      <Pagination
-                        currentPage={receiptsCurrentPage}
-                        totalPages={totalPages}
-                        onPageChange={setReceiptsCurrentPage}
-                      />
+                return (
+                  <>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {paginatedReceipts.length === 0 ? (
+                        <Card variant="glass">
+                          <CardContent className="p-12 text-center">
+                            <p className="text-gray-400">No receipts match your search</p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        paginatedReceipts.map((receipt: Receipt) => (
+                          <ReceiptCard
+                            key={receipt.receiptId}
+                            receipt={receipt}
+                            onViewDetails={id => navigate(`/inwards/receipt/${id}`)}
+                          />
+                        ))
+                      )}
                     </div>
-                  )}
-                </>
-              );
-            })() : (
+
+                    {/* Pagination for Receipts */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center mt-6">
+                        <Pagination
+                          currentPage={receiptsCurrentPage}
+                          totalPages={totalPages}
+                          onPageChange={setReceiptsCurrentPage}
+                        />
+                      </div>
+                    )}
+                  </>
+                );
+              })()
+            ) : (
               <Card variant="glass">
                 <CardContent className="p-12 text-center">
                   <InboxIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
@@ -1149,60 +1178,62 @@ function InwardsGoodsPage() {
               </div>
             </div>
 
-            {putawayTasks && putawayTasks.length > 0 ? (() => {
-              const filteredTasks = putawayTasks.filter((task: PutawayTask) => {
-                if (!putawaySearchTerm.trim()) return true;
-                const query = putawaySearchTerm.toLowerCase();
-                return (
-                  task.putawayTaskId?.toLowerCase().includes(query) ||
-                  task.receiptId?.toLowerCase().includes(query) ||
-                  task.sku?.toLowerCase().includes(query) ||
-                  task.binLocation?.toLowerCase().includes(query) ||
-                  task.status?.toLowerCase().includes(query)
+            {putawayTasks && putawayTasks.length > 0 ? (
+              (() => {
+                const filteredTasks = putawayTasks.filter((task: PutawayTask) => {
+                  if (!putawaySearchTerm.trim()) return true;
+                  const query = putawaySearchTerm.toLowerCase();
+                  return (
+                    task.putawayTaskId?.toLowerCase().includes(query) ||
+                    task.receiptId?.toLowerCase().includes(query) ||
+                    task.sku?.toLowerCase().includes(query) ||
+                    task.binLocation?.toLowerCase().includes(query) ||
+                    task.status?.toLowerCase().includes(query)
+                  );
+                });
+                const totalPages = Math.ceil(filteredTasks.length / putawayPerPage);
+                const paginatedTasks = filteredTasks.slice(
+                  (putawayCurrentPage - 1) * putawayPerPage,
+                  putawayCurrentPage * putawayPerPage
                 );
-              });
-              const totalPages = Math.ceil(filteredTasks.length / putawayPerPage);
-              const paginatedTasks = filteredTasks.slice(
-                (putawayCurrentPage - 1) * putawayPerPage,
-                putawayCurrentPage * putawayPerPage
-              );
-              return (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {paginatedTasks.length === 0 ? (
-                      <Card variant="glass">
-                        <CardContent className="p-12 text-center">
-                          <p className="text-gray-400">No putaway tasks match your search</p>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      paginatedTasks.map((task: PutawayTask) => (
-                        <PutawayTaskCard
-                          key={task.putawayTaskId}
-                          task={task}
-                          onAssign={id => navigate(`/inwards/putaway/${id}`)}
-                          onUpdate={() => {
-                            setSelectedPutawayTask(task);
-                            setPutawayUpdateModalOpen(true);
-                          }}
-                        />
-                      ))
-                    )}
-                  </div>
-
-                  {/* Pagination for Putaway Tasks */}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center mt-6">
-                      <Pagination
-                        currentPage={putawayCurrentPage}
-                        totalPages={totalPages}
-                        onPageChange={setPutawayCurrentPage}
-                      />
+                return (
+                  <>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {paginatedTasks.length === 0 ? (
+                        <Card variant="glass">
+                          <CardContent className="p-12 text-center">
+                            <p className="text-gray-400">No putaway tasks match your search</p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        paginatedTasks.map((task: PutawayTask) => (
+                          <PutawayTaskCard
+                            key={task.putawayTaskId}
+                            task={task}
+                            onAssign={id => navigate(`/inwards/putaway/${id}`)}
+                            onUpdate={() => {
+                              setSelectedPutawayTask(task);
+                              setPutawayUpdateModalOpen(true);
+                            }}
+                          />
+                        ))
+                      )}
                     </div>
-                  )}
-                </>
-              );
-            })() : (
+
+                    {/* Pagination for Putaway Tasks */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center mt-6">
+                        <Pagination
+                          currentPage={putawayCurrentPage}
+                          totalPages={totalPages}
+                          onPageChange={setPutawayCurrentPage}
+                        />
+                      </div>
+                    )}
+                  </>
+                );
+              })()
+            ) : (
               <Card variant="glass">
                 <CardContent className="p-12 text-center">
                   <CubeIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />

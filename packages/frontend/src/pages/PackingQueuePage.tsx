@@ -328,74 +328,80 @@ export function PackingQueuePage() {
               </Card>
             ) : (
               <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {searchedMyOrders.slice(
-                  (myOrdersCurrentPage - 1) * myOrdersPerPage,
-                  myOrdersCurrentPage * myOrdersPerPage
-                ).map((order: any) => (
-                  <Card
-                    key={order.orderId}
-                    variant="glass"
-                    className="border-primary-500/50 border-2 shadow-glow card-hover cursor-pointer"
-                    onClick={() => navigate(`/packing/${order.orderId}/pack`)}
-                  >
-                    <CardContent className="p-6 space-y-4">
-                      {/* Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-white text-lg tracking-tight">
-                            {order.orderId}
-                          </h3>
-                          <p className="text-sm text-gray-400 mt-1">{order.customerName}</p>
-                        </div>
-                        <span
-                          className={`text-xs font-semibold px-3 py-1 rounded-full border ${getPriorityColor(
-                            order.priority
-                          )}`}
-                        >
-                          {getPriorityLabel(order.priority)}
-                        </span>
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {searchedMyOrders
+                    .slice(
+                      (myOrdersCurrentPage - 1) * myOrdersPerPage,
+                      myOrdersCurrentPage * myOrdersPerPage
+                    )
+                    .map((order: any) => (
+                      <Card
+                        key={order.orderId}
+                        variant="glass"
+                        className="border-primary-500/50 border-2 shadow-glow card-hover cursor-pointer"
+                        onClick={() => navigate(`/packing/${order.orderId}/pack`)}
+                      >
+                        <CardContent className="p-6 space-y-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-bold text-white text-lg tracking-tight">
+                                {order.orderId}
+                              </h3>
+                              <p className="text-sm text-gray-400 mt-1">{order.customerName}</p>
+                            </div>
+                            <span
+                              className={`text-xs font-semibold px-3 py-1 rounded-full border ${getPriorityColor(
+                                order.priority
+                              )}`}
+                            >
+                              {getPriorityLabel(order.priority)}
+                            </span>
+                          </div>
 
-                      {/* Stats */}
-                      <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-white/[0.08]">
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                            Items
-                          </p>
-                          <p className="text-xl font-bold text-white">{order.items?.length || 0}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                            Progress
-                          </p>
-                          <p className="text-xl font-bold text-primary-400">{order.progress}%</p>
-                        </div>
-                      </div>
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-white/[0.08]">
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                                Items
+                              </p>
+                              <p className="text-xl font-bold text-white">
+                                {order.items?.length || 0}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                                Progress
+                              </p>
+                              <p className="text-xl font-bold text-primary-400">
+                                {order.progress}%
+                              </p>
+                            </div>
+                          </div>
 
-                      {/* Status Badge */}
-                      <div className="flex items-center justify-between">
-                        <TaskStatusBadge status={order.status as any} />
-                        <Button variant="primary" size="sm" className="shadow-glow">
-                          Continue Packing
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Pagination for My Orders */}
-              {searchedMyOrders.length > myOrdersPerPage && (
-                <div className="flex justify-center mt-6">
-                  <Pagination
-                    currentPage={myOrdersCurrentPage}
-                    totalPages={Math.ceil(searchedMyOrders.length / myOrdersPerPage)}
-                    onPageChange={setMyOrdersCurrentPage}
-                  />
+                          {/* Status Badge */}
+                          <div className="flex items-center justify-between">
+                            <TaskStatusBadge status={order.status as any} />
+                            <Button variant="primary" size="sm" className="shadow-glow">
+                              Continue Packing
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                 </div>
-              )}
-            </>
+
+                {/* Pagination for My Orders */}
+                {searchedMyOrders.length > myOrdersPerPage && (
+                  <div className="flex justify-center mt-6">
+                    <Pagination
+                      currentPage={myOrdersCurrentPage}
+                      totalPages={Math.ceil(searchedMyOrders.length / myOrdersPerPage)}
+                      onPageChange={setMyOrdersCurrentPage}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -449,67 +455,71 @@ export function PackingQueuePage() {
                   </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredOrders.slice(
-                    (waitingCurrentPage - 1) * waitingPerPage,
-                    waitingCurrentPage * waitingPerPage
-                  ).map((order: Order) => (
-                    <Card
-                      key={order.orderId}
-                      variant="glass"
-                      className="card-hover group cursor-pointer"
-                      onClick={() => handleClaimOrder(order.orderId)}
-                    >
-                      <CardContent className="p-6 space-y-4">
-                        {/* Header */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-white text-lg tracking-tight group-hover:text-primary-400 transition-colors">
-                              {order.orderId}
-                            </h3>
-                            <p className="text-sm text-gray-400 mt-1">{order.customerName}</p>
+                  {filteredOrders
+                    .slice(
+                      (waitingCurrentPage - 1) * waitingPerPage,
+                      waitingCurrentPage * waitingPerPage
+                    )
+                    .map((order: Order) => (
+                      <Card
+                        key={order.orderId}
+                        variant="glass"
+                        className="card-hover group cursor-pointer"
+                        onClick={() => handleClaimOrder(order.orderId)}
+                      >
+                        <CardContent className="p-6 space-y-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-bold text-white text-lg tracking-tight group-hover:text-primary-400 transition-colors">
+                                {order.orderId}
+                              </h3>
+                              <p className="text-sm text-gray-400 mt-1">{order.customerName}</p>
+                            </div>
+                            <span
+                              className={`text-xs font-semibold px-3 py-1 rounded-full border ${getPriorityColor(
+                                order.priority
+                              )}`}
+                            >
+                              {getPriorityLabel(order.priority)}
+                            </span>
                           </div>
-                          <span
-                            className={`text-xs font-semibold px-3 py-1 rounded-full border ${getPriorityColor(
-                              order.priority
-                            )}`}
-                          >
-                            {getPriorityLabel(order.priority)}
-                          </span>
-                        </div>
 
-                        {/* Stats */}
-                        <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-white/[0.08]">
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                              Items
-                            </p>
-                            <p className="text-xl font-bold text-white">
-                              {order.items?.length || 0}
-                            </p>
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-white/[0.08]">
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                                Items
+                              </p>
+                              <p className="text-xl font-bold text-white">
+                                {order.items?.length || 0}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                                Progress
+                              </p>
+                              <p className="text-xl font-bold text-success-400">
+                                {order.progress}%
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                              Progress
-                            </p>
-                            <p className="text-xl font-bold text-success-400">{order.progress}%</p>
-                          </div>
-                        </div>
 
-                        {/* Status Badge */}
-                        <div className="flex items-center justify-between">
-                          <TaskStatusBadge status={order.status as any} />
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            className="shadow-glow"
-                            disabled={claimMutation.isPending}
-                          >
-                            Start Packing
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          {/* Status Badge */}
+                          <div className="flex items-center justify-between">
+                            <TaskStatusBadge status={order.status as any} />
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="shadow-glow"
+                              disabled={claimMutation.isPending}
+                            >
+                              Start Packing
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                 </div>
 
                 {/* Pagination for Waiting Orders */}

@@ -43,7 +43,7 @@ export function QuickCountPanel({
 
   const currentEntry = pendingEntries[state.currentIndex];
   const remainingCount = pendingEntries.length - state.currentIndex;
-  const progressPercent = ((state.currentIndex) / pendingEntries.length) * 100;
+  const progressPercent = (state.currentIndex / pendingEntries.length) * 100;
 
   // Clear success timeout on unmount
   useEffect(() => {
@@ -203,10 +203,7 @@ export function QuickCountPanel({
           </span>
         </div>
         <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
         </div>
         <span className="remaining-text">{remainingCount} remaining</span>
       </div>
@@ -245,7 +242,7 @@ export function QuickCountPanel({
             id="barcode-input"
             type="text"
             value={state.barcodeInput}
-            onChange={(e) => handleBarcodeChange(e.target.value)}
+            onChange={e => handleBarcodeChange(e.target.value)}
             placeholder="Scan or type..."
             className="input-barcode"
             autoComplete="off"
@@ -268,7 +265,7 @@ export function QuickCountPanel({
               id="quantity-input"
               type="text"
               value={state.quantityInput}
-              onChange={(e) => handleQuantityChange(e.target.value)}
+              onChange={e => handleQuantityChange(e.target.value)}
               placeholder="0"
               className="input-quantity"
               inputMode="numeric"
@@ -285,31 +282,22 @@ export function QuickCountPanel({
 
         {/* Quick Count Buttons */}
         <div className="quick-count-buttons">
-          <button
-            type="button"
-            onClick={() => quickCount(1)}
-            className="btn-quick"
-          >
+          <button type="button" onClick={() => quickCount(1)} className="btn-quick">
             +1
           </button>
-          <button
-            type="button"
-            onClick={() => quickCount(5)}
-            className="btn-quick"
-          >
+          <button type="button" onClick={() => quickCount(5)} className="btn-quick">
             +5
           </button>
-          <button
-            type="button"
-            onClick={() => quickCount(10)}
-            className="btn-quick"
-          >
+          <button type="button" onClick={() => quickCount(10)} className="btn-quick">
             +10
           </button>
           <button
             type="button"
             onClick={() => {
-              setState(prev => ({ ...prev, quantityInput: currentEntry.systemQuantity.toString() }));
+              setState(prev => ({
+                ...prev,
+                quantityInput: currentEntry.systemQuantity.toString(),
+              }));
             }}
             className="btn-quick btn-match"
           >
@@ -327,11 +315,7 @@ export function QuickCountPanel({
           >
             Submit Entry (Ctrl+Enter)
           </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn btn-secondary"
-          >
+          <button type="button" onClick={onCancel} className="btn btn-secondary">
             Exit Quick Count
           </button>
         </div>

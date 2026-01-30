@@ -107,9 +107,10 @@ function CreateCycleCountModal({
 
   // Filter SKUs based on search
   const filteredSkus = skuSearch
-    ? skus.filter((item: any) =>
-        item.sku?.toLowerCase().includes(skuSearch.toLowerCase()) ||
-        item.name?.toLowerCase().includes(skuSearch.toLowerCase())
+    ? skus.filter(
+        (item: any) =>
+          item.sku?.toLowerCase().includes(skuSearch.toLowerCase()) ||
+          item.name?.toLowerCase().includes(skuSearch.toLowerCase())
       )
     : skus;
 
@@ -197,7 +198,7 @@ function CreateCycleCountModal({
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await createMutation.mutateAsync({
           planName: values.planName,
@@ -254,9 +255,15 @@ function CreateCycleCountModal({
               options={[
                 { value: CycleCountType.AD_HOC, label: 'Ad-Hoc Count - General purpose counting' },
                 { value: CycleCountType.ABC, label: 'ABC Analysis - High-value items' },
-                { value: CycleCountType.BLANKET, label: 'Blanket Count - Count ALL items in a location' },
+                {
+                  value: CycleCountType.BLANKET,
+                  label: 'Blanket Count - Count ALL items in a location',
+                },
                 { value: CycleCountType.SPOT_CHECK, label: 'Spot Check - Random verification' },
-                { value: CycleCountType.RECEIVING, label: 'Receiving Count - During goods receipt' },
+                {
+                  value: CycleCountType.RECEIVING,
+                  label: 'Receiving Count - During goods receipt',
+                },
                 { value: CycleCountType.SHIPPING, label: 'Shipping Count - Before dispatch' },
               ]}
             />
@@ -281,7 +288,9 @@ function CreateCycleCountModal({
           </div>
 
           <div>
-            <label className={`block text-sm font-medium text-gray-300 mb-1 ${typeConfig.locationRequired ? 'text-yellow-400' : ''}`}>
+            <label
+              className={`block text-sm font-medium text-gray-300 mb-1 ${typeConfig.locationRequired ? 'text-yellow-400' : ''}`}
+            >
               {typeConfig.locationLabel}
             </label>
             <Select
@@ -289,7 +298,10 @@ function CreateCycleCountModal({
               value={formData.location}
               required={typeConfig.locationRequired}
               options={[
-                { value: '', label: typeConfig.locationRequired ? 'Select a location...' : 'All Locations' },
+                {
+                  value: '',
+                  label: typeConfig.locationRequired ? 'Select a location...' : 'All Locations',
+                },
                 ...binLocations.map((bin: any) => ({
                   value: bin.binId,
                   label: `${bin.binId} ${bin.zone ? `(${bin.zone})` : ''}`,
@@ -297,7 +309,9 @@ function CreateCycleCountModal({
               ]}
             />
             {errors.location && <p className="mt-1 text-sm text-red-400">{errors.location}</p>}
-            {typeConfig.locationHint && <p className="text-xs text-blue-400 mt-1">{typeConfig.locationHint}</p>}
+            {typeConfig.locationHint && (
+              <p className="text-xs text-blue-400 mt-1">{typeConfig.locationHint}</p>
+            )}
             {loadingBins && <p className="text-xs text-gray-500 mt-1">Loading locations...</p>}
           </div>
 
@@ -311,18 +325,25 @@ function CreateCycleCountModal({
                   type="text"
                   name="sku"
                   value={formData.sku}
-                  onChange={(e) => {
+                  onChange={e => {
                     const value = e.target.value.toUpperCase();
-                    handleChange({ ...e, target: { ...e.target, name: 'sku', value } } as React.ChangeEvent<HTMLInputElement>);
+                    handleChange({
+                      ...e,
+                      target: { ...e.target, name: 'sku', value },
+                    } as React.ChangeEvent<HTMLInputElement>);
                     // Get the last SKU after comma for search
                     const lastCommaIndex = value.lastIndexOf(',');
-                    const searchValue = lastCommaIndex >= 0 ? value.slice(lastCommaIndex + 1).trim() : value;
+                    const searchValue =
+                      lastCommaIndex >= 0 ? value.slice(lastCommaIndex + 1).trim() : value;
                     setSkuSearch(searchValue);
                   }}
                   onFocus={() => {
                     // Get the last SKU after comma for search
                     const lastCommaIndex = formData.sku.lastIndexOf(',');
-                    const searchValue = lastCommaIndex >= 0 ? formData.sku.slice(lastCommaIndex + 1).trim() : formData.sku;
+                    const searchValue =
+                      lastCommaIndex >= 0
+                        ? formData.sku.slice(lastCommaIndex + 1).trim()
+                        : formData.sku;
                     setSkuSearch(searchValue);
                   }}
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
@@ -336,7 +357,12 @@ function CreateCycleCountModal({
                         key={`${item.sku}-${index}`}
                         onClick={() => {
                           // Append SKU to existing ones with comma
-                          const currentSkus = formData.sku ? formData.sku.split(',').map(s => s.trim()).filter(s => s) : [];
+                          const currentSkus = formData.sku
+                            ? formData.sku
+                                .split(',')
+                                .map(s => s.trim())
+                                .filter(s => s)
+                            : [];
                           if (!currentSkus.includes(item.sku)) {
                             const newSkus = [...currentSkus, item.sku].join(', ');
                             setFieldValue('sku', newSkus);
@@ -366,7 +392,10 @@ function CreateCycleCountModal({
                         <button
                           type="button"
                           onClick={() => {
-                            const currentSkus = formData.sku.split(',').map(sku => sku.trim()).filter(sku => sku);
+                            const currentSkus = formData.sku
+                              .split(',')
+                              .map(sku => sku.trim())
+                              .filter(sku => sku);
                             const newSkus = currentSkus.filter((_, idx) => idx !== i).join(', ');
                             setFieldValue('sku', newSkus);
                           }}
@@ -383,7 +412,8 @@ function CreateCycleCountModal({
           ) : (
             <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-sm text-blue-400">
-                <strong>Blanket Count:</strong> All SKUs in the selected location will be counted. Individual SKU selection is not available for this type.
+                <strong>Blanket Count:</strong> All SKUs in the selected location will be counted.
+                Individual SKU selection is not available for this type.
               </p>
             </div>
           )}
@@ -427,7 +457,7 @@ function CreateCycleCountModal({
 // ============================================================================
 
 export function CycleCountingPage() {
-    const { showToast } = useToast();
+  const { showToast } = useToast();
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -503,9 +533,7 @@ export function CycleCountingPage() {
     user?.role === UserRole.SUPERVISOR ||
     user?.role === UserRole.ADMIN;
 
-  const canViewAnalytics =
-    user?.role === UserRole.SUPERVISOR ||
-    user?.role === UserRole.ADMIN;
+  const canViewAnalytics = user?.role === UserRole.SUPERVISOR || user?.role === UserRole.ADMIN;
 
   return (
     <div className="min-h-screen">
@@ -638,14 +666,15 @@ export function CycleCountingPage() {
                         {paginatedPlans.map((plan: any) => {
                           const pendingVariances =
                             plan.countEntries?.filter(
-                              (e: any) =>
-                                e.varianceStatus === 'PENDING' && e.variance !== 0
+                              (e: any) => e.varianceStatus === 'PENDING' && e.variance !== 0
                             ).length || 0;
 
                           return (
                             <tr key={plan.planId} className="hover:bg-gray-800/50">
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-white">{plan.planName}</div>
+                                <div className="text-sm font-medium text-white">
+                                  {plan.planName}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-white">{plan.countType}</div>
@@ -697,7 +726,7 @@ export function CycleCountingPage() {
                         <Pagination
                           currentPage={currentPage}
                           totalPages={totalPages}
-                          onPageChange={(page) => {
+                          onPageChange={page => {
                             setCurrentPage(page);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
@@ -726,8 +755,12 @@ export function CycleCountingPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-400">Total Counts</p>
-                            <p className="text-3xl font-bold mt-2 text-blue-400">{overallKPIs.totalCounts}</p>
-                            <p className="text-sm text-gray-500 mt-1">{overallKPIs.completedCounts} completed</p>
+                            <p className="text-3xl font-bold mt-2 text-blue-400">
+                              {overallKPIs.totalCounts}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {overallKPIs.completedCounts} completed
+                            </p>
                           </div>
                           <div className="p-3 rounded-lg bg-blue-500/20">
                             <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-400" />
@@ -738,7 +771,9 @@ export function CycleCountingPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-400">Completion Rate</p>
-                            <p className="text-3xl font-bold mt-2 text-green-400">{overallKPIs.completionRate.toFixed(1)}%</p>
+                            <p className="text-3xl font-bold mt-2 text-green-400">
+                              {overallKPIs.completionRate.toFixed(1)}%
+                            </p>
                           </div>
                           <div className="p-3 rounded-lg bg-green-500/20">
                             <ChartBarIcon className="h-8 w-8 text-green-400" />
@@ -749,7 +784,9 @@ export function CycleCountingPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-400">Average Accuracy</p>
-                            <p className="text-3xl font-bold mt-2 text-purple-400">{overallKPIs.averageAccuracy.toFixed(1)}%</p>
+                            <p className="text-3xl font-bold mt-2 text-purple-400">
+                              {overallKPIs.averageAccuracy.toFixed(1)}%
+                            </p>
                           </div>
                           <div className="p-3 rounded-lg bg-purple-500/20">
                             <ClipboardDocumentCheckIcon className="h-8 w-8 text-purple-400" />
@@ -760,15 +797,23 @@ export function CycleCountingPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-400">Pending Variances</p>
-                            <p className={`text-3xl font-bold mt-2 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                            <p
+                              className={`text-3xl font-bold mt-2 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}
+                            >
                               {overallKPIs.pendingVariances}
                             </p>
                             {overallKPIs.highValueVarianceCount > 0 && (
-                              <p className="text-sm text-orange-400 mt-1">{overallKPIs.highValueVarianceCount} high severity</p>
+                              <p className="text-sm text-orange-400 mt-1">
+                                {overallKPIs.highValueVarianceCount} high severity
+                              </p>
                             )}
                           </div>
-                          <div className={`p-3 rounded-lg ${overallKPIs.pendingVariances > 0 ? 'bg-yellow-500/20' : 'bg-green-500/20'}`}>
-                            <ChartBarIcon className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`} />
+                          <div
+                            className={`p-3 rounded-lg ${overallKPIs.pendingVariances > 0 ? 'bg-yellow-500/20' : 'bg-green-500/20'}`}
+                          >
+                            <ChartBarIcon
+                              className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}
+                            />
                           </div>
                         </div>
                       </div>
@@ -777,15 +822,27 @@ export function CycleCountingPage() {
 
                   {/* Accuracy Trend Chart */}
                   <div className="glass-card rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Accuracy Trend (Last 30 Days)</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      Accuracy Trend (Last 30 Days)
+                    </h3>
                     <div className="relative h-48">
                       <div className="flex items-end justify-between h-full gap-1">
                         {accuracyTrend.map((point: any, index: number) => {
-                          const maxAccuracy = Math.max(...accuracyTrend.map((d: any) => d.accuracy), 100);
-                          const minAccuracy = Math.min(...accuracyTrend.map((d: any) => d.accuracy), 0);
-                          const height = ((point.accuracy - minAccuracy) / (maxAccuracy - minAccuracy)) * 100;
+                          const maxAccuracy = Math.max(
+                            ...accuracyTrend.map((d: any) => d.accuracy),
+                            100
+                          );
+                          const minAccuracy = Math.min(
+                            ...accuracyTrend.map((d: any) => d.accuracy),
+                            0
+                          );
+                          const height =
+                            ((point.accuracy - minAccuracy) / (maxAccuracy - minAccuracy)) * 100;
                           return (
-                            <div key={index} className="flex-1 flex flex-col items-center gap-2 group">
+                            <div
+                              key={index}
+                              className="flex-1 flex flex-col items-center gap-2 group"
+                            >
                               <div className="relative w-full flex items-end justify-center">
                                 <div
                                   className="w-full bg-blue-500 hover:bg-blue-400 transition-all rounded-t"
@@ -795,7 +852,10 @@ export function CycleCountingPage() {
                               </div>
                               {accuracyTrend.length <= 10 && (
                                 <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
-                                  {new Date(point.period).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                  {new Date(point.period).toLocaleDateString(undefined, {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
                                 </span>
                               )}
                             </div>
@@ -809,7 +869,9 @@ export function CycleCountingPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Top Discrepancies */}
                     <div className="glass-card rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">Top Discrepancy SKUs</h3>
+                      <h3 className="text-lg font-semibold text-white mb-4">
+                        Top Discrepancy SKUs
+                      </h3>
                       <div className="overflow-x-auto">
                         <table className="min-w-full">
                           <thead>
@@ -823,15 +885,21 @@ export function CycleCountingPage() {
                           <tbody className="divide-y divide-gray-800">
                             {topDiscrepancies.length === 0 ? (
                               <tr>
-                                <td colSpan={4} className="py-8 text-center text-gray-500">No discrepancies found</td>
+                                <td colSpan={4} className="py-8 text-center text-gray-500">
+                                  No discrepancies found
+                                </td>
                               </tr>
                             ) : (
                               topDiscrepancies.map((item: any, index: number) => (
                                 <tr key={index} className="hover:bg-gray-800/50">
                                   <td className="py-3 font-medium text-white">{item.sku}</td>
                                   <td className="py-3 text-gray-300">{item.name}</td>
-                                  <td className="py-3 text-right text-yellow-400">{item.varianceCount}</td>
-                                  <td className="py-3 text-right text-orange-400">{item.averageVariancePercent.toFixed(1)}%</td>
+                                  <td className="py-3 text-right text-yellow-400">
+                                    {item.varianceCount}
+                                  </td>
+                                  <td className="py-3 text-right text-orange-400">
+                                    {item.averageVariancePercent.toFixed(1)}%
+                                  </td>
                                 </tr>
                               ))
                             )}
@@ -851,14 +919,19 @@ export function CycleCountingPage() {
                             <div key={index} className="space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="font-medium text-white">Zone {zone.zone}</span>
-                                <span className="text-sm text-gray-400">{zone.countsCompleted} counts • {zone.averageAccuracy.toFixed(1)}% accuracy</span>
+                                <span className="text-sm text-gray-400">
+                                  {zone.countsCompleted} counts • {zone.averageAccuracy.toFixed(1)}%
+                                  accuracy
+                                </span>
                               </div>
                               <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full transition-all ${
-                                    zone.averageAccuracy >= 98 ? 'bg-green-500' :
-                                    zone.averageAccuracy >= 95 ? 'bg-yellow-500' :
-                                    'bg-red-500'
+                                    zone.averageAccuracy >= 98
+                                      ? 'bg-green-500'
+                                      : zone.averageAccuracy >= 95
+                                        ? 'bg-yellow-500'
+                                        : 'bg-red-500'
                                   }`}
                                   style={{ width: `${zone.averageAccuracy}%` }}
                                 />
@@ -872,7 +945,9 @@ export function CycleCountingPage() {
 
                   {/* User Performance */}
                   <div className="glass-card rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">User Performance (Last 30 Days)</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      User Performance (Last 30 Days)
+                    </h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full">
                         <thead>
@@ -886,20 +961,30 @@ export function CycleCountingPage() {
                         <tbody className="divide-y divide-gray-800">
                           {userPerformance.length === 0 ? (
                             <tr>
-                              <td colSpan={4} className="py-8 text-center text-gray-500">No performance data available</td>
+                              <td colSpan={4} className="py-8 text-center text-gray-500">
+                                No performance data available
+                              </td>
                             </tr>
                           ) : (
                             userPerformance.map((user: any, index: number) => (
                               <tr key={index} className="hover:bg-gray-800/50">
                                 <td className="py-3 font-medium text-white">{user.name}</td>
-                                <td className="py-3 text-right text-blue-400">{user.countsCompleted}</td>
-                                <td className="py-3 text-right text-gray-300">{user.itemsCounted}</td>
+                                <td className="py-3 text-right text-blue-400">
+                                  {user.countsCompleted}
+                                </td>
+                                <td className="py-3 text-right text-gray-300">
+                                  {user.itemsCounted}
+                                </td>
                                 <td className="py-3 text-right">
-                                  <span className={`px-2 py-1 rounded text-sm ${
-                                    user.averageAccuracy >= 98 ? 'bg-green-500/20 text-green-400' :
-                                    user.averageAccuracy >= 95 ? 'bg-yellow-500/20 text-yellow-400' :
-                                    'bg-red-500/20 text-red-400'
-                                  }`}>
+                                  <span
+                                    className={`px-2 py-1 rounded text-sm ${
+                                      user.averageAccuracy >= 98
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : user.averageAccuracy >= 95
+                                          ? 'bg-yellow-500/20 text-yellow-400'
+                                          : 'bg-red-500/20 text-red-400'
+                                    }`}
+                                  >
                                     {user.averageAccuracy.toFixed(1)}%
                                   </span>
                                 </td>
@@ -913,7 +998,9 @@ export function CycleCountingPage() {
 
                   {/* Count Type Effectiveness */}
                   <div className="glass-card rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Count Type Effectiveness (Last 90 Days)</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      Count Type Effectiveness (Last 90 Days)
+                    </h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full">
                         <thead>
@@ -934,20 +1021,33 @@ export function CycleCountingPage() {
                             return (
                               <tr key={index} className="hover:bg-gray-800/50">
                                 <td className="py-3 font-medium text-white">
-                                  {type.countType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                  {type.countType
+                                    .replace(/_/g, ' ')
+                                    .toLowerCase()
+                                    .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                                 </td>
-                                <td className="py-3 text-right text-blue-400">{type.countsCompleted}</td>
+                                <td className="py-3 text-right text-blue-400">
+                                  {type.countsCompleted}
+                                </td>
                                 <td className="py-3 text-right">
-                                  <span className={`px-2 py-1 rounded text-sm ${
-                                    type.averageAccuracy >= 98 ? 'bg-green-500/20 text-green-400' :
-                                    type.averageAccuracy >= 95 ? 'bg-yellow-500/20 text-yellow-400' :
-                                    'bg-red-500/20 text-red-400'
-                                  }`}>
+                                  <span
+                                    className={`px-2 py-1 rounded text-sm ${
+                                      type.averageAccuracy >= 98
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : type.averageAccuracy >= 95
+                                          ? 'bg-yellow-500/20 text-yellow-400'
+                                          : 'bg-red-500/20 text-red-400'
+                                    }`}
+                                  >
                                     {type.averageAccuracy.toFixed(1)}%
                                   </span>
                                 </td>
-                                <td className="py-3 text-right text-gray-300">{formatDuration(type.averageDuration)}</td>
-                                <td className="py-3 text-right text-purple-400">{type.varianceDetectionRate.toFixed(1)}%</td>
+                                <td className="py-3 text-right text-gray-300">
+                                  {formatDuration(type.averageDuration)}
+                                </td>
+                                <td className="py-3 text-right text-purple-400">
+                                  {type.varianceDetectionRate.toFixed(1)}%
+                                </td>
                               </tr>
                             );
                           })}
@@ -961,19 +1061,27 @@ export function CycleCountingPage() {
                     <div className="glass-card rounded-xl p-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                         <div>
-                          <p className="text-2xl font-bold text-white">{overallKPIs.inProgressCounts}</p>
+                          <p className="text-2xl font-bold text-white">
+                            {overallKPIs.inProgressCounts}
+                          </p>
                           <p className="text-sm text-gray-400 mt-1">In Progress</p>
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-white">{overallKPIs.scheduledCounts}</p>
+                          <p className="text-2xl font-bold text-white">
+                            {overallKPIs.scheduledCounts}
+                          </p>
                           <p className="text-sm text-gray-400 mt-1">Scheduled</p>
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-white">{overallKPIs.totalItemsCounted}</p>
+                          <p className="text-2xl font-bold text-white">
+                            {overallKPIs.totalItemsCounted}
+                          </p>
                           <p className="text-sm text-gray-400 mt-1">Items Counted</p>
                         </div>
                         <div>
-                          <p className="text-2xl font-bold text-white">{overallKPIs.totalVariances}</p>
+                          <p className="text-2xl font-bold text-white">
+                            {overallKPIs.totalVariances}
+                          </p>
                           <p className="text-sm text-gray-400 mt-1">Total Variances</p>
                         </div>
                       </div>

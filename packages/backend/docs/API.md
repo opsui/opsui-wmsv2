@@ -39,6 +39,7 @@ All API endpoints (except login) require authentication via JWT bearer token.
 Authenticate with email and password.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -47,6 +48,7 @@ Authenticate with email and password.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
@@ -62,6 +64,7 @@ Authenticate with email and password.
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized`: Invalid email or password
 
 ### Refresh Token
@@ -71,6 +74,7 @@ Authenticate with email and password.
 Refresh access token using refresh token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
@@ -78,6 +82,7 @@ Refresh access token using refresh token.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
@@ -93,11 +98,13 @@ Refresh access token using refresh token.
 Invalidate refresh token and clear user session.
 
 **Headers:**
+
 ```
 Authorization: Bearer <accessToken>
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Logged out successfully"
@@ -123,6 +130,7 @@ Get list of orders with filtering and pagination.
 | limit | number | No | Items per page (default: 50) |
 
 **Response (200 OK):**
+
 ```json
 {
   "orders": [
@@ -158,9 +166,11 @@ Get list of orders with filtering and pagination.
 Claim an order for picking.
 
 **Path Parameters:**
+
 - `orderId` (string): Order ID
 
 **Response (200 OK):**
+
 ```json
 {
   "orderId": "ORD-20250130-1234",
@@ -177,10 +187,12 @@ Claim an order for picking.
 Update picked quantity for an item.
 
 **Path Parameters:**
+
 - `orderId` (string): Order ID
 - `orderItemId` (string): Order Item ID
 
 **Request Body:**
+
 ```json
 {
   "pickedQuantity": 5
@@ -188,6 +200,7 @@ Update picked quantity for an item.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "orderItemId": "OI-123",
@@ -203,9 +216,11 @@ Update picked quantity for an item.
 Mark order as fully picked.
 
 **Path Parameters:**
+
 - `orderId` (string): Order ID
 
 **Response (200 OK):**
+
 ```json
 {
   "orderId": "ORD-20250130-1234",
@@ -221,6 +236,7 @@ Mark order as fully picked.
 Claim an order for packing.
 
 **Response (200 OK):**
+
 ```json
 {
   "orderId": "ORD-20250130-1234",
@@ -236,6 +252,7 @@ Claim an order for packing.
 Mark order as fully packed and ready for shipping.
 
 **Response (200 OK):**
+
 ```json
 {
   "orderId": "ORD-20250130-1234",
@@ -267,6 +284,7 @@ Get inventory with filtering and pagination.
 | limit | number | No | Items per page (default: 50) |
 
 **Response (200 OK):**
+
 ```json
 {
   "items": [
@@ -292,9 +310,11 @@ Get inventory with filtering and pagination.
 Get detailed inventory information for a specific SKU.
 
 **Path Parameters:**
+
 - `sku` (string): SKU identifier
 
 **Response (200 OK):**
+
 ```json
 {
   "sku": "SKU001",
@@ -345,6 +365,7 @@ Get detailed inventory information for a specific SKU.
 Get stock control dashboard metrics.
 
 **Response (200 OK):**
+
 ```json
 {
   "totalSKUs": 150,
@@ -371,6 +392,7 @@ Get stock count records.
 | offset | number | No | Offset for pagination (default: 0) |
 
 **Response (200 OK):**
+
 ```json
 {
   "counts": [
@@ -403,6 +425,7 @@ Get stock count records.
 Create a new stock count.
 
 **Request Body:**
+
 ```json
 {
   "binLocation": "A-01-01",
@@ -412,6 +435,7 @@ Create a new stock count.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "countId": "SC-124",
@@ -430,9 +454,11 @@ Create a new stock count.
 Submit stock count results.
 
 **Path Parameters:**
+
 - `countId` (string): Stock count ID
 
 **Request Body:**
+
 ```json
 {
   "items": [
@@ -446,6 +472,7 @@ Submit stock count results.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "countId": "SC-124",
@@ -469,6 +496,7 @@ Submit stock count results.
 Transfer stock between bin locations.
 
 **Request Body:**
+
 ```json
 {
   "sku": "SKU001",
@@ -481,6 +509,7 @@ Transfer stock between bin locations.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "transferId": "ST-123",
@@ -500,6 +529,7 @@ Transfer stock between bin locations.
 Adjust inventory quantity.
 
 **Request Body:**
+
 ```json
 {
   "sku": "SKU001",
@@ -511,6 +541,7 @@ Adjust inventory quantity.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "adjustmentId": "ADJ-123",
@@ -541,6 +572,7 @@ Get inventory transaction history.
 | offset | number | No | Offset for pagination |
 
 **Response (200 OK):**
+
 ```json
 {
   "transactions": [
@@ -570,6 +602,7 @@ Get inventory transaction history.
 Generate shipping labels for orders.
 
 **Request Body:**
+
 ```json
 {
   "orderIds": ["ORD-001", "ORD-002"],
@@ -578,6 +611,7 @@ Generate shipping labels for orders.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "labels": [
@@ -597,9 +631,11 @@ Generate shipping labels for orders.
 Get shipment tracking information.
 
 **Path Parameters:**
+
 - `trackingNumber` (string): Carrier tracking number
 
 **Response (200 OK):**
+
 ```json
 {
   "trackingNumber": "123456789012",
@@ -639,6 +675,7 @@ Get Advanced Shipping Notices.
 | limit | number | No | Items per page |
 
 **Response (200 OK):**
+
 ```json
 {
   "asns": [
@@ -669,6 +706,7 @@ Get Advanced Shipping Notices.
 Process inbound receiving for an ASN.
 
 **Request Body:**
+
 ```json
 {
   "asnId": "ASN-001",
@@ -685,6 +723,7 @@ Process inbound receiving for an ASN.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "asnId": "ASN-001",
@@ -710,6 +749,7 @@ Get list of users (admin only).
 | active | boolean | No | Filter by active status |
 
 **Response (200 OK):**
+
 ```json
 {
   "users": [
@@ -733,6 +773,7 @@ Get list of users (admin only).
 Update user role (admin only).
 
 **Request Body:**
+
 ```json
 {
   "role": "SUPERVISOR"
@@ -740,6 +781,7 @@ Update user role (admin only).
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "userId": "user-123",
@@ -758,6 +800,7 @@ Update user role (admin only).
 Get various reports.
 
 **Path Parameters:**
+
 - `reportType` (string): Type of report (sales, inventory, performance, etc.)
 
 **Query Parameters:**
@@ -768,6 +811,7 @@ Get various reports.
 | format | string | No | Response format (json, csv) |
 
 **Response (200 OK):**
+
 ```json
 {
   "reportType": "inventory",
@@ -803,6 +847,7 @@ Get cycle count plans.
 | limit | number | No | Items per page |
 
 **Response (200 OK):**
+
 ```json
 {
   "plans": [
@@ -826,6 +871,7 @@ Get cycle count plans.
 Create a new cycle count plan.
 
 **Request Body:**
+
 ```json
 {
   "planName": "Zone A Weekly Count",
@@ -847,6 +893,7 @@ Create a new cycle count plan.
 Get quality control inspections.
 
 **Response (200 OK):**
+
 ```json
 {
   "inspections": [
@@ -867,6 +914,7 @@ Get quality control inspections.
 Submit quality control inspection result.
 
 **Request Body:**
+
 ```json
 {
   "passed": true,
@@ -886,6 +934,7 @@ Submit quality control inspection result.
 Get configured business rules.
 
 **Response (200 OK):**
+
 ```json
 {
   "rules": [
@@ -907,6 +956,7 @@ Get configured business rules.
 Create a new business rule.
 
 **Request Body:**
+
 ```json
 {
   "name": "Express Shipping Rule",
@@ -927,6 +977,7 @@ Create a new business rule.
 Get status of external integrations.
 
 **Response (200 OK):**
+
 ```json
 {
   "integrations": [
@@ -957,31 +1008,31 @@ Connect to WebSocket server at: `ws://localhost:3001`
 
 ### Server → Client Events
 
-| Event | Data | Description |
-|-------|------|-------------|
-| `connected` | `{ message: string }` | Connection established |
-| `order:claimed` | `{ orderId, pickerId, pickerName }` | Order claimed by picker |
-| `order:completed` | `{ orderId, pickerId }` | Order picking completed |
-| `order:cancelled` | `{ orderId, reason }` | Order cancelled |
-| `pick:updated` | `{ orderId, orderItemId, pickedQuantity }` | Pick quantity updated |
-| `pick:completed` | `{ orderId, orderItemId }` | Item fully picked |
-| `zone:updated` | `{ zoneId, taskCount, pickerCount }` | Zone status updated |
-| `zone:assignment` | `{ zoneId, pickerId, assigned }` | Picker assigned to zone |
-| `inventory:updated` | `{ sku, binLocation, quantity }` | Inventory quantity changed |
-| `inventory:low` | `{ sku, quantity, minThreshold }` | Low stock alert |
-| `notification:new` | `{ notificationId, title, message }` | New notification |
-| `user:activity` | `{ userId, status, currentView }` | User activity changed |
+| Event               | Data                                       | Description                |
+| ------------------- | ------------------------------------------ | -------------------------- |
+| `connected`         | `{ message: string }`                      | Connection established     |
+| `order:claimed`     | `{ orderId, pickerId, pickerName }`        | Order claimed by picker    |
+| `order:completed`   | `{ orderId, pickerId }`                    | Order picking completed    |
+| `order:cancelled`   | `{ orderId, reason }`                      | Order cancelled            |
+| `pick:updated`      | `{ orderId, orderItemId, pickedQuantity }` | Pick quantity updated      |
+| `pick:completed`    | `{ orderId, orderItemId }`                 | Item fully picked          |
+| `zone:updated`      | `{ zoneId, taskCount, pickerCount }`       | Zone status updated        |
+| `zone:assignment`   | `{ zoneId, pickerId, assigned }`           | Picker assigned to zone    |
+| `inventory:updated` | `{ sku, binLocation, quantity }`           | Inventory quantity changed |
+| `inventory:low`     | `{ sku, quantity, minThreshold }`          | Low stock alert            |
+| `notification:new`  | `{ notificationId, title, message }`       | New notification           |
+| `user:activity`     | `{ userId, status, currentView }`          | User activity changed      |
 
 ### Client → Server Events
 
-| Event | Data | Description |
-|-------|------|-------------|
-| `subscribe:orders` | - | Subscribe to order updates |
-| `subscribe:zone` | `zoneId` | Subscribe to zone updates |
-| `unsubscribe:zone` | `zoneId` | Unsubscribe from zone updates |
-| `subscribe:inventory` | - | Subscribe to inventory updates |
-| `update:activity` | `{ currentView?, status? }` | Update user activity |
-| `ping` | - | Keep-alive ping |
+| Event                 | Data                        | Description                    |
+| --------------------- | --------------------------- | ------------------------------ |
+| `subscribe:orders`    | -                           | Subscribe to order updates     |
+| `subscribe:zone`      | `zoneId`                    | Subscribe to zone updates      |
+| `unsubscribe:zone`    | `zoneId`                    | Unsubscribe from zone updates  |
+| `subscribe:inventory` | -                           | Subscribe to inventory updates |
+| `update:activity`     | `{ currentView?, status? }` | Update user activity           |
+| `ping`                | -                           | Keep-alive ping                |
 
 ---
 
@@ -990,6 +1041,7 @@ Connect to WebSocket server at: `ws://localhost:3001`
 All endpoints may return error responses in the following format:
 
 **400 Bad Request:**
+
 ```json
 {
   "error": "Validation Error",
@@ -999,6 +1051,7 @@ All endpoints may return error responses in the following format:
 ```
 
 **401 Unauthorized:**
+
 ```json
 {
   "error": "Unauthorized",
@@ -1007,6 +1060,7 @@ All endpoints may return error responses in the following format:
 ```
 
 **403 Forbidden:**
+
 ```json
 {
   "error": "Forbidden",
@@ -1015,6 +1069,7 @@ All endpoints may return error responses in the following format:
 ```
 
 **404 Not Found:**
+
 ```json
 {
   "error": "Not Found",
@@ -1023,6 +1078,7 @@ All endpoints may return error responses in the following format:
 ```
 
 **409 Conflict:**
+
 ```json
 {
   "error": "Conflict",
@@ -1031,6 +1087,7 @@ All endpoints may return error responses in the following format:
 ```
 
 **500 Internal Server Error:**
+
 ```json
 {
   "error": "Internal Server Error",
@@ -1048,6 +1105,7 @@ API requests are rate limited to prevent abuse:
 - **Authenticated users:** 1000 requests per minute per user
 
 Rate limit headers are included in responses:
+
 ```
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 995
@@ -1055,6 +1113,7 @@ X-RateLimit-Reset: 1640899200
 ```
 
 When rate limit is exceeded:
+
 ```json
 {
   "error": "Too Many Requests",
@@ -1070,11 +1129,13 @@ When rate limit is exceeded:
 List endpoints support pagination using `page` and `limit` query parameters.
 
 **Example:**
+
 ```
 GET /orders?page=2&limit=25
 ```
 
 **Response includes pagination metadata:**
+
 ```json
 {
   "items": [...],

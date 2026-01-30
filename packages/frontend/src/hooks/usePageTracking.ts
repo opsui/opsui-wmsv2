@@ -67,7 +67,10 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
         console.log(`[PageTracking] [${trackingId}] Successfully updated current view to: ${view}`);
       } catch (error) {
         // Only log non-401 errors to reduce console noise during tests
-        const isAuthError = error && typeof error === 'object' && 'response' in error &&
+        const isAuthError =
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
           (error as { response?: { status?: number } }).response?.status === 401;
         if (!isAuthError) {
           console.error(`[PageTracking] [${trackingId}] Failed to update current view:`, error);
@@ -102,7 +105,10 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
         console.log(`[PageTracking] [${trackingId}] Successfully set picker to IDLE`);
       } catch (error) {
         // Only log non-401 errors to reduce console noise during tests
-        const isAuthError = error && typeof error === 'object' && 'response' in error &&
+        const isAuthError =
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
           (error as { response?: { status?: number } }).response?.status === 401;
         if (!isAuthError) {
           console.error(`[PageTracking] [${trackingId}] Failed to set picker to IDLE:`, error);

@@ -13,11 +13,15 @@ async function runMigration() {
     console.log('✓ Added deleted_at column');
 
     // Create index for efficient queries
-    await query(`CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NOT NULL`);
+    await query(
+      `CREATE INDEX IF NOT EXISTS idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NOT NULL`
+    );
     console.log('✓ Created index on deleted_at');
 
     // Add comment
-    await query(`COMMENT ON COLUMN users.deleted_at IS 'Timestamp when user was marked for deletion. Users are permanently deleted after 3 days. NULL means user is active.'`);
+    await query(
+      `COMMENT ON COLUMN users.deleted_at IS 'Timestamp when user was marked for deletion. Users are permanently deleted after 3 days. NULL means user is active.'`
+    );
     console.log('✓ Added column comment');
 
     // Create cleanup function
@@ -40,7 +44,9 @@ async function runMigration() {
     console.log('✓ Created cleanup_deleted_users function');
 
     // Add function comment
-    await query(`COMMENT ON FUNCTION cleanup_deleted_users() IS 'Permanently deletes users who were marked for deletion more than 3 days ago. Returns the count of deleted users.'`);
+    await query(
+      `COMMENT ON FUNCTION cleanup_deleted_users() IS 'Permanently deletes users who were marked for deletion more than 3 days ago. Returns the count of deleted users.'`
+    );
     console.log('✓ Added function comment');
 
     console.log('\n✅ Migration completed successfully!');

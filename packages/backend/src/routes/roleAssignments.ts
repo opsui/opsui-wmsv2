@@ -26,7 +26,7 @@ const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFuncti
       error: 'Admin access required',
       code: 'FORBIDDEN',
     });
-      return;
+    return;
   }
   next();
 };
@@ -162,7 +162,7 @@ router.post(
             grantedToEmail: targetUser?.email,
             grantedBy: adminUser?.name || req.user.userId,
             grantedByEmail: adminUser?.email || req.user.email,
-          }
+          },
         },
         ipAddress,
         userAgent
@@ -236,7 +236,7 @@ router.delete(
             revokedFromEmail: targetUser?.email,
             revokedBy: adminUser?.name || req.user.userId,
             revokedByEmail: adminUser?.email || req.user.email,
-          }
+          },
         },
         ipAddress,
         userAgent

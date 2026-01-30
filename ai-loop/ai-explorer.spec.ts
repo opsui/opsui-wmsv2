@@ -13,11 +13,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import {
-  TEST_CONFIG,
-  injectAuth,
-  navigateAndWait,
-} from './test-helpers';
+import { TEST_CONFIG, injectAuth, navigateAndWait } from './test-helpers';
 
 // ============================================================================
 // INTELLIGENT FUZZ DATA GENERATORS
@@ -28,12 +24,12 @@ import {
  */
 function generateQuantityEdgeCases(): number[] {
   return [
-    -1,           // Negative
-    -100,         // Large negative
-    0,            // Zero (boundary)
-    0.5,          // Decimal (if supported)
-    1.5,          // Another decimal
-    999999,       // Unrealistic large
+    -1, // Negative
+    -100, // Large negative
+    0, // Zero (boundary)
+    0.5, // Decimal (if supported)
+    1.5, // Another decimal
+    999999, // Unrealistic large
     Number.MAX_SAFE_INTEGER, // Overflow attempt
   ];
 }
@@ -43,16 +39,16 @@ function generateQuantityEdgeCases(): number[] {
  */
 function generateSKUEdgeCases(): string[] {
   return [
-    '',                                // Empty
-    'A',                               // Single char
-    'A'.repeat(1000),                  // Very long
-    'SKU with spaces',                 // Spaces
-    'SKU-WITH-SPECIAL!@#',             // Special chars
-    "SKU' WITH 'INJECTION",            // SQL injection pattern
-    '<script>alert("xss")</script>',   // XSS attempt
-    '../etc/passwd',                   // Path traversal
-    '😀🎉🚀',                          // Unicode emojis
-    '   leading-trailing   ',          // Whitespace
+    '', // Empty
+    'A', // Single char
+    'A'.repeat(1000), // Very long
+    'SKU with spaces', // Spaces
+    'SKU-WITH-SPECIAL!@#', // Special chars
+    "SKU' WITH 'INJECTION", // SQL injection pattern
+    '<script>alert("xss")</script>', // XSS attempt
+    '../etc/passwd', // Path traversal
+    '😀🎉🚀', // Unicode emojis
+    '   leading-trailing   ', // Whitespace
   ];
 }
 
@@ -61,14 +57,14 @@ function generateSKUEdgeCases(): string[] {
  */
 function generateBinLocationEdgeCases(): string[] {
   return [
-    '',                    // Empty
-    'INVALID',             // Invalid format
-    'a-01-01',             // Lowercase zone
-    'Z-99-99',             // Valid but non-existent
-    'A-1',                 // Incomplete
-    'A-01-01-EXTRA',       // Too many parts
-    'A--01',               // Double dash
-    'A-01-',               // Trailing dash
+    '', // Empty
+    'INVALID', // Invalid format
+    'a-01-01', // Lowercase zone
+    'Z-99-99', // Valid but non-existent
+    'A-1', // Incomplete
+    'A-01-01-EXTRA', // Too many parts
+    'A--01', // Double dash
+    'A-01-', // Trailing dash
   ];
 }
 
@@ -103,9 +99,8 @@ test.describe('AI Workflow: Order Fulfillment', () => {
   let authToken: string;
 
   test.beforeAll(async () => {
-    authToken = process.env.CRAWLER_AUTH_TOKEN_PICKER ||
-                 process.env.CRAWLER_AUTH_TOKEN ||
-                 'test-token';
+    authToken =
+      process.env.CRAWLER_AUTH_TOKEN_PICKER || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
   });
 
   test.beforeEach(async ({ context }) => {
@@ -116,7 +111,9 @@ test.describe('AI Workflow: Order Fulfillment', () => {
     await navigateAndWait(page, '/orders');
 
     // Find quantity input fields
-    const quantityInputs = page.locator('input[type="number"], input[name*="quantity"], input[placeholder*="quantity"]');
+    const quantityInputs = page.locator(
+      'input[type="number"], input[name*="quantity"], input[placeholder*="quantity"]'
+    );
 
     const count = await quantityInputs.count();
     if (count === 0) {
@@ -137,8 +134,11 @@ test.describe('AI Workflow: Order Fulfillment', () => {
         // Look for error messages or accept state
         await page.waitForTimeout(500);
 
-        const hasError = await page.locator('text=/error|invalid|negative|must be/i').count() > 0;
-        const submitted = await page.locator('button[type="submit"], button:has-text("Pick"), button:has-text("Confirm")').count() > 0;
+        const hasError = (await page.locator('text=/error|invalid|negative|must be/i').count()) > 0;
+        const submitted =
+          (await page
+            .locator('button[type="submit"], button:has-text("Pick"), button:has-text("Confirm")')
+            .count()) > 0;
 
         if (!hasError && edgeCase < 0) {
           bugs.push(`  🐛 BUG: Negative quantity ${edgeCase} accepted without validation`);
@@ -178,9 +178,11 @@ test.describe('AI Workflow: Order Fulfillment', () => {
     await page2.waitForLoadState('domcontentloaded');
 
     // Find first available order
-    const firstOrder = page1.locator('button:has-text("Claim"), button:has-text("Start"), [data-order-id]').first();
+    const firstOrder = page1
+      .locator('button:has-text("Claim"), button:has-text("Start"), [data-order-id]')
+      .first();
 
-    if (await firstOrder.count() === 0) {
+    if ((await firstOrder.count()) === 0) {
       console.log('  ℹ️  No orders available to test concurrent claiming');
       await context1.close();
       await context2.close();
@@ -193,7 +195,10 @@ test.describe('AI Workflow: Order Fulfillment', () => {
 
     const results = await Promise.allSettled([
       firstOrder.click(),
-      page2.locator('button:has-text("Claim"), button:has-text("Start"), [data-order-id]').first().click(),
+      page2
+        .locator('button:has-text("Claim"), button:has-text("Start"), [data-order-id]')
+        .first()
+        .click(),
     ]);
 
     // Check if both succeeded (race condition bug)
@@ -221,9 +226,8 @@ test.describe('AI Workflow: Stock Control Validation', () => {
   let authToken: string;
 
   test.beforeAll(async () => {
-    authToken = process.env.CRAWLER_AUTH_TOKEN_STOCK ||
-                 process.env.CRAWLER_AUTH_TOKEN ||
-                 'test-token';
+    authToken =
+      process.env.CRAWLER_AUTH_TOKEN_STOCK || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
   });
 
   test.beforeEach(async ({ context }) => {
@@ -234,9 +238,11 @@ test.describe('AI Workflow: Stock Control Validation', () => {
     await navigateAndWait(page, '/stock-control');
 
     // Find SKU input
-    const skuInput = page.locator('input[name*="sku"], input[placeholder*="SKU"], input[placeholder*="scan"]').first();
+    const skuInput = page
+      .locator('input[name*="sku"], input[placeholder*="SKU"], input[placeholder*="scan"]')
+      .first();
 
-    if (await skuInput.count() === 0) {
+    if ((await skuInput.count()) === 0) {
       console.log('  ℹ️  No SKU input found on stock control page');
       test.skip();
       return;
@@ -254,7 +260,7 @@ test.describe('AI Workflow: Stock Control Validation', () => {
         await skuInput.blur();
         await page.waitForTimeout(300);
 
-        const hasError = await page.locator('text=/error|invalid|required/i').count() > 0;
+        const hasError = (await page.locator('text=/error|invalid|required/i').count()) > 0;
 
         // Check for XSS vulnerabilities
         if (edgeCase.includes('<script') && !hasError) {
@@ -263,7 +269,6 @@ test.describe('AI Workflow: Stock Control Validation', () => {
             bugs.push(`  🐛 BUG: XSS vulnerability - script injected: ${edgeCase}`);
           }
         }
-
       } catch (e) {
         // Input may have been rejected - that's expected for some cases
       }
@@ -280,9 +285,11 @@ test.describe('AI Workflow: Stock Control Validation', () => {
   test('AI: Tests bin location validation', async ({ page }) => {
     await navigateAndWait(page, '/stock-control');
 
-    const binInput = page.locator('input[name*="bin"], input[name*="location"], input[placeholder*="location"]').first();
+    const binInput = page
+      .locator('input[name*="bin"], input[name*="location"], input[placeholder*="location"]')
+      .first();
 
-    if (await binInput.count() === 0) {
+    if ((await binInput.count()) === 0) {
       console.log('  ℹ️  No bin location input found');
       test.skip();
       return;
@@ -298,13 +305,12 @@ test.describe('AI Workflow: Stock Control Validation', () => {
         await binInput.blur();
         await page.waitForTimeout(300);
 
-        const hasError = await page.locator('text=/error|invalid|format/i').count() > 0;
+        const hasError = (await page.locator('text=/error|invalid|format/i').count()) > 0;
 
         // Valid format but should still validate
         if (!hasError && edgeCase === 'Z-99-99') {
           bugs.push(`  🐛 BUG: Non-existent bin location accepted: ${edgeCase}`);
         }
-
       } catch (e) {
         // Expected for invalid formats
       }
@@ -374,14 +380,35 @@ test.describe('AI Workflow: Permission Boundary Testing', () => {
     const bugs = [];
 
     const roles = [
-      { name: 'Picker', role: 'PICKER', userId: 'picker', shouldAccess: ['/orders', '/exceptions'] },
-      { name: 'Packer', role: 'PACKER', userId: 'packer', shouldAccess: ['/packing', '/exceptions'] },
-      { name: 'Stock', role: 'STOCK_CONTROLLER', userId: 'stock', shouldAccess: ['/stock-control', '/bin-locations'] },
+      {
+        name: 'Picker',
+        role: 'PICKER',
+        userId: 'picker',
+        shouldAccess: ['/orders', '/exceptions'],
+      },
+      {
+        name: 'Packer',
+        role: 'PACKER',
+        userId: 'packer',
+        shouldAccess: ['/packing', '/exceptions'],
+      },
+      {
+        name: 'Stock',
+        role: 'STOCK_CONTROLLER',
+        userId: 'stock',
+        shouldAccess: ['/stock-control', '/bin-locations'],
+      },
     ];
 
     for (const roleConfig of roles) {
       const context = await browser.newContext();
-      await injectAuth(context, adminToken, roleConfig.userId, `${roleConfig.userId}@wms.local`, roleConfig.role);
+      await injectAuth(
+        context,
+        adminToken,
+        roleConfig.userId,
+        `${roleConfig.userId}@wms.local`,
+        roleConfig.role
+      );
 
       const page = await context.newPage();
 
@@ -412,12 +439,10 @@ test.describe('AI Workflow: Permission Boundary Testing', () => {
 
 test.describe('AI Workflow: Data Integrity Tests', () => {
   test('AI: Tests stock level updates across operations', async ({ browser }) => {
-    const stockToken = process.env.CRAWLER_AUTH_TOKEN_STOCK ||
-                        process.env.CRAWLER_AUTH_TOKEN ||
-                        'test-token';
-    const pickerToken = process.env.CRAWLER_AUTH_TOKEN_PICKER ||
-                         process.env.CRAWLER_AUTH_TOKEN ||
-                         'test-token';
+    const stockToken =
+      process.env.CRAWLER_AUTH_TOKEN_STOCK || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
+    const pickerToken =
+      process.env.CRAWLER_AUTH_TOKEN_PICKER || process.env.CRAWLER_AUTH_TOKEN || 'test-token';
 
     const bugs = [];
 

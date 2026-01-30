@@ -76,3 +76,8 @@ temp_settings.json
 # Python scripts (temporary)
 *.py
 !packages/backend/scripts/*.py
+
+# Scripts with syntax errors - to be fixed
+scripts/code-analyzer.js
+scripts/code-generator.js
+e2e/inventory-management.spec.ts

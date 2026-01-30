@@ -16,7 +16,12 @@ describe('ActionBuilder Component', () => {
       description: 'Send a notification to users',
       parameters: [
         { key: 'message', label: 'Message', type: 'text' as const, required: true },
-        { key: 'users', label: 'Users', type: 'multi-select' as const, options: ['picker', 'packer', 'supervisor'] },
+        {
+          key: 'users',
+          label: 'Users',
+          type: 'multi-select' as const,
+          options: ['picker', 'packer', 'supervisor'],
+        },
       ],
     },
     {
@@ -33,7 +38,13 @@ describe('ActionBuilder Component', () => {
       label: 'Set Priority',
       description: 'Set order priority',
       parameters: [
-        { key: 'priority', label: 'Priority', type: 'select' as const, options: ['LOW', 'NORMAL', 'HIGH', 'URGENT'], required: true },
+        {
+          key: 'priority',
+          label: 'Priority',
+          type: 'select' as const,
+          options: ['LOW', 'NORMAL', 'HIGH', 'URGENT'],
+          required: true,
+        },
       ],
     },
   ];
@@ -47,11 +58,7 @@ describe('ActionBuilder Component', () => {
   describe('Rendering', () => {
     it('renders empty action builder', () => {
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={[]}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={[]} onChange={mockOnChange} />
       );
 
       expect(screen.getByText('Actions')).toBeInTheDocument();
@@ -67,11 +74,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       expect(screen.getByText('Send Notification')).toBeInTheDocument();
@@ -79,11 +82,7 @@ describe('ActionBuilder Component', () => {
 
     it('renders action type selector', () => {
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={[]}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={[]} onChange={mockOnChange} />
       );
 
       const addButton = screen.getByText('Add Action');
@@ -104,11 +103,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       expect(screen.getByText('Send a notification to users')).toBeInTheDocument();
@@ -118,11 +113,7 @@ describe('ActionBuilder Component', () => {
   describe('Adding Actions', () => {
     it('calls onChange when adding action', async () => {
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={[]}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={[]} onChange={mockOnChange} />
       );
 
       const addButton = screen.getByText('Add Action');
@@ -139,11 +130,7 @@ describe('ActionBuilder Component', () => {
 
     it('adds action with default parameters', async () => {
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={[]}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={[]} onChange={mockOnChange} />
       );
 
       const addButton = screen.getByText('Add Action');
@@ -172,11 +159,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       // Find and click the action type selector
@@ -207,11 +190,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       const messageInput = screen.getByDisplayValue('Original message');
@@ -239,11 +218,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       const prioritySelect = screen.getByDisplayValue('NORMAL');
@@ -292,11 +267,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       const removeButtons = screen.getAllByLabelText(/remove action/i);
@@ -314,11 +285,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       const removeButtons = screen.getAllByLabelText(/remove action/i);
@@ -326,9 +293,7 @@ describe('ActionBuilder Component', () => {
 
       await waitFor(() => {
         const updatedActions = mockOnChange.mock.calls[0][0];
-        expect(updatedActions).not.toContain(
-          expect.objectContaining({ id: '1' })
-        );
+        expect(updatedActions).not.toContain(expect.objectContaining({ id: '1' }));
       });
     });
   });
@@ -340,27 +305,17 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       expect(screen.getByDisplayValue('Test')).toHaveAttribute('type', 'text');
     });
 
     it('renders select parameters', () => {
-      const actions: RuleAction[] = [
-        { type: 'set_priority', parameters: { priority: 'NORMAL' } },
-      ];
+      const actions: RuleAction[] = [{ type: 'set_priority', parameters: { priority: 'NORMAL' } }];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       expect(screen.getByDisplayValue('NORMAL')).toBeInTheDocument();
@@ -372,11 +327,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       // Multi-select should have checkboxes or similar
@@ -410,11 +361,7 @@ describe('ActionBuilder Component', () => {
   describe('Accessibility', () => {
     it('has proper aria labels', () => {
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={[]}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={[]} onChange={mockOnChange} />
       );
 
       expect(screen.getByRole('button', { name: /add action/i })).toBeInTheDocument();
@@ -426,11 +373,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       const removeButton = screen.getByLabelText(/remove action/i);
@@ -492,11 +435,7 @@ describe('ActionBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <ActionBuilder
-          actionTypes={mockActionTypes}
-          actions={actions}
-          onChange={mockOnChange}
-        />
+        <ActionBuilder actionTypes={mockActionTypes} actions={actions} onChange={mockOnChange} />
       );
 
       // Drag handles should be present

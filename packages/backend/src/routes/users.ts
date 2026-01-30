@@ -21,7 +21,7 @@ const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFuncti
       error: 'Admin access required',
       code: 'FORBIDDEN',
     });
-      return;
+    return;
   }
   next();
 };

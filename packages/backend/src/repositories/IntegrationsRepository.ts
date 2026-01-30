@@ -242,9 +242,7 @@ export class IntegrationsRepository {
   // SYNC JOBS
   // ========================================================================
 
-  async createSyncJob(
-    job: Omit<SyncJob, 'jobId' | 'logEntries'>
-  ): Promise<SyncJob> {
+  async createSyncJob(job: Omit<SyncJob, 'jobId' | 'logEntries'>): Promise<SyncJob> {
     const query = `
       INSERT INTO sync_jobs (
         integration_id,
@@ -360,7 +358,10 @@ export class IntegrationsRepository {
   // SYNC JOB LOGS
   // ========================================================================
 
-  async createSyncLogEntry(jobId: string, log: Omit<SyncLogEntry, 'logId' | 'timestamp'>): Promise<SyncLogEntry> {
+  async createSyncLogEntry(
+    jobId: string,
+    log: Omit<SyncLogEntry, 'logId' | 'timestamp'>
+  ): Promise<SyncLogEntry> {
     const query = `
       INSERT INTO sync_job_logs (
         job_id,

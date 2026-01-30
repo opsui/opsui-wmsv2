@@ -6,7 +6,16 @@
  */
 
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, useToast, Pagination } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  useToast,
+  Pagination,
+} from '@/components/shared';
 import { useAssets, useMaintenanceWorkOrders, useMaintenanceDashboard } from '@/services/api';
 import { useEffect, useState } from 'react';
 import {
@@ -218,8 +227,16 @@ function MaintenancePage() {
   const [pageSize, setPageSize] = useState(10);
 
   // Fetch maintenance data from backend
-  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useMaintenanceDashboard();
-  const { data: workOrdersData, isLoading: isWorkOrdersLoading, error: workOrdersError } = useMaintenanceWorkOrders();
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+  } = useMaintenanceDashboard();
+  const {
+    data: workOrdersData,
+    isLoading: isWorkOrdersLoading,
+    error: workOrdersError,
+  } = useMaintenanceWorkOrders();
   const { data: assetsData, isLoading: isAssetsLoading, error: assetsError } = useAssets();
 
   // Show error toasts
@@ -481,7 +498,9 @@ function MaintenancePage() {
                   });
 
                   // Sort by date
-                  scheduledItems.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                  scheduledItems.sort(
+                    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+                  );
 
                   // Group by date
                   const itemsByDate: Record<string, typeof scheduledItems> = {};
@@ -513,14 +532,20 @@ function MaintenancePage() {
                           {/* Date header */}
                           <div className="flex items-center gap-4 mb-4">
                             <div className="flex flex-col items-center">
-                              <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
-                                new Date(date) < new Date()
-                                  ? 'bg-warning-500/20 border-warning-500'
-                                  : 'bg-primary-500/20 border-primary-500'
-                              }`}>
-                                <span className={`text-xs font-bold ${
-                                  new Date(date) < new Date() ? 'text-warning-400' : 'text-primary-400'
-                                }`}>
+                              <div
+                                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
+                                  new Date(date) < new Date()
+                                    ? 'bg-warning-500/20 border-warning-500'
+                                    : 'bg-primary-500/20 border-primary-500'
+                                }`}
+                              >
+                                <span
+                                  className={`text-xs font-bold ${
+                                    new Date(date) < new Date()
+                                      ? 'text-warning-400'
+                                      : 'text-primary-400'
+                                  }`}
+                                >
                                   {new Date(date).getDate()}
                                 </span>
                               </div>
@@ -537,7 +562,8 @@ function MaintenancePage() {
                                 })}
                               </h3>
                               <p className="text-sm text-gray-400">
-                                {itemsByDate[date].length} item{itemsByDate[date].length !== 1 ? 's' : ''} scheduled
+                                {itemsByDate[date].length} item
+                                {itemsByDate[date].length !== 1 ? 's' : ''} scheduled
                               </p>
                             </div>
                           </div>
@@ -608,10 +634,12 @@ function MaintenancePage() {
               <Card variant="glass" className="p-6">
                 <h3 className="text-sm text-gray-400 mb-2">Overdue</h3>
                 <p className="text-3xl font-bold text-warning-400">
-                  {
-                    equipment.filter(e => new Date(e.nextService) < new Date()).length +
-                    requests.filter(r => r.status === 'PENDING' && new Date(r.createdAt) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length
-                  }
+                  {equipment.filter(e => new Date(e.nextService) < new Date()).length +
+                    requests.filter(
+                      r =>
+                        r.status === 'PENDING' &&
+                        new Date(r.createdAt) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    ).length}
                 </p>
               </Card>
               <Card variant="glass" className="p-6">

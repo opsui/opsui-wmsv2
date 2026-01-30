@@ -81,12 +81,7 @@ export function MonitoringTab() {
   }, [autoRefresh, refreshInterval, duration]);
 
   const loadAllData = async () => {
-    await Promise.all([
-      loadMetrics(),
-      loadRequests(),
-      loadLogs(),
-      loadRequestStats(),
-    ]);
+    await Promise.all([loadMetrics(), loadRequests(), loadLogs(), loadRequestStats()]);
   };
 
   const loadMetrics = async () => {
@@ -100,7 +95,9 @@ export function MonitoringTab() {
 
   const loadRequests = async () => {
     try {
-      const response = await apiClient.get('/developer/monitoring/requests', { params: { limit: 50 } });
+      const response = await apiClient.get('/developer/monitoring/requests', {
+        params: { limit: 50 },
+      });
       setRequests(response.data.requests);
     } catch (error) {
       console.error('Failed to load requests:', error);
@@ -109,7 +106,9 @@ export function MonitoringTab() {
 
   const loadLogs = async () => {
     try {
-      const response = await apiClient.get('/developer/monitoring/logs', { params: { limit: 100 } });
+      const response = await apiClient.get('/developer/monitoring/logs', {
+        params: { limit: 100 },
+      });
       setLogs(response.data.logs);
     } catch (error) {
       console.error('Failed to load logs:', error);
@@ -118,7 +117,9 @@ export function MonitoringTab() {
 
   const loadRequestStats = async () => {
     try {
-      const response = await apiClient.get('/developer/monitoring/request-stats', { params: { duration } });
+      const response = await apiClient.get('/developer/monitoring/request-stats', {
+        params: { duration },
+      });
       setRequestStats(response.data);
     } catch (error) {
       console.error('Failed to load request stats:', error);
@@ -150,14 +151,12 @@ export function MonitoringTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold dark:text-white">Monitoring Dashboard</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Real-time application metrics and logs
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">Real-time application metrics and logs</p>
         </div>
         <div className="flex items-center gap-2">
           <select
             value={duration}
-            onChange={(e) => setDuration(e.target.value as any)}
+            onChange={e => setDuration(e.target.value as any)}
             className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white"
           >
             <option value="1h">Last Hour</option>
@@ -240,7 +239,9 @@ export function MonitoringTab() {
               </div>
               <div>
                 <span className="text-sm text-gray-500 dark:text-gray-400">Uptime</span>
-                <p className="text-lg font-semibold dark:text-white">{formatUptime(metrics.system.uptime)}</p>
+                <p className="text-lg font-semibold dark:text-white">
+                  {formatUptime(metrics.system.uptime)}
+                </p>
               </div>
               <div>
                 <span className="text-sm text-gray-500 dark:text-gray-400">Memory Used</span>
@@ -260,7 +261,7 @@ export function MonitoringTab() {
             { id: 'requests', label: 'API Requests', icon: DocumentTextIcon },
             { id: 'logs', label: 'Logs', icon: ServerIcon },
             { id: 'metrics', label: 'Performance', icon: ChartBarIcon },
-          ].map((tab) => {
+          ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -294,7 +295,9 @@ export function MonitoringTab() {
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                   <span className="text-sm text-gray-500 dark:text-gray-400">Average Duration</span>
-                  <p className="text-2xl font-bold dark:text-white">{requestStats.avgDuration.toFixed(0)}ms</p>
+                  <p className="text-2xl font-bold dark:text-white">
+                    {requestStats.avgDuration.toFixed(0)}ms
+                  </p>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                   <span className="text-sm text-green-600 dark:text-green-400">Success</span>
@@ -334,10 +337,10 @@ export function MonitoringTab() {
                               req.method === 'GET'
                                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                                 : req.method === 'POST'
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : req.method === 'PATCH'
-                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                  : req.method === 'PATCH'
+                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                             }`}
                           >
                             {req.method}
@@ -381,24 +384,26 @@ export function MonitoringTab() {
               <CardContent>
                 <div className="h-64">
                   <LineChart
-                    data={requests.reduce((acc: any[], req) => {
-                      const minute = new Date(req.timestamp);
-                      minute.setSeconds(0, 0);
-                      const timeKey = minute.toISOString();
-                      const existing = acc.find(d => d.time === timeKey);
-                      if (existing) {
-                        existing.count++;
-                        existing.avgDuration = (existing.avgDuration * (existing.count - 1) + req.duration_ms) / existing.count;
-                      } else {
-                        acc.push({ time: timeKey, count: 1, avgDuration: req.duration_ms || 0 });
-                      }
-                      return acc;
-                    }, []).slice(-20)}
+                    data={requests
+                      .reduce((acc: any[], req) => {
+                        const minute = new Date(req.timestamp);
+                        minute.setSeconds(0, 0);
+                        const timeKey = minute.toISOString();
+                        const existing = acc.find(d => d.time === timeKey);
+                        if (existing) {
+                          existing.count++;
+                          existing.avgDuration =
+                            (existing.avgDuration * (existing.count - 1) + req.duration_ms) /
+                            existing.count;
+                        } else {
+                          acc.push({ time: timeKey, count: 1, avgDuration: req.duration_ms || 0 });
+                        }
+                        return acc;
+                      }, [])
+                      .slice(-20)}
                     xAxisKey="time"
-                    lines={[
-                      { dataKey: 'count', name: 'Requests/min', color: '#3b82f6' },
-                    ]}
-                    formatXAxis={(value) => {
+                    lines={[{ dataKey: 'count', name: 'Requests/min', color: '#3b82f6' }]}
+                    formatXAxis={value => {
                       const date = new Date(value);
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
@@ -415,24 +420,28 @@ export function MonitoringTab() {
               <CardContent>
                 <div className="h-64">
                   <LineChart
-                    data={requests.reduce((acc: any[], req) => {
-                      const minute = new Date(req.timestamp);
-                      minute.setSeconds(0, 0);
-                      const timeKey = minute.toISOString();
-                      const existing = acc.find(d => d.time === timeKey);
-                      if (existing) {
-                        existing.count++;
-                        existing.avgDuration = (existing.avgDuration * (existing.count - 1) + (req.duration_ms || 0)) / existing.count;
-                      } else {
-                        acc.push({ time: timeKey, count: 1, avgDuration: req.duration_ms || 0 });
-                      }
-                      return acc;
-                    }, []).slice(-20)}
+                    data={requests
+                      .reduce((acc: any[], req) => {
+                        const minute = new Date(req.timestamp);
+                        minute.setSeconds(0, 0);
+                        const timeKey = minute.toISOString();
+                        const existing = acc.find(d => d.time === timeKey);
+                        if (existing) {
+                          existing.count++;
+                          existing.avgDuration =
+                            (existing.avgDuration * (existing.count - 1) + (req.duration_ms || 0)) /
+                            existing.count;
+                        } else {
+                          acc.push({ time: timeKey, count: 1, avgDuration: req.duration_ms || 0 });
+                        }
+                        return acc;
+                      }, [])
+                      .slice(-20)}
                     xAxisKey="time"
                     lines={[
                       { dataKey: 'avgDuration', name: 'Avg Duration (ms)', color: '#10b981' },
                     ]}
-                    formatXAxis={(value) => {
+                    formatXAxis={value => {
                       const date = new Date(value);
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
@@ -451,19 +460,24 @@ export function MonitoringTab() {
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <span className="text-sm text-green-600 dark:text-green-400">2xx Success</span>
                     <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                      {requestStats?.byStatus['2'] || requests.filter(r => r.status >= 200 && r.status < 300).length}
+                      {requestStats?.byStatus['2'] ||
+                        requests.filter(r => r.status >= 200 && r.status < 300).length}
                     </p>
                   </div>
                   <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
                     <span className="text-sm text-amber-600 dark:text-amber-400">3xx Redirect</span>
                     <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
-                      {requestStats?.byStatus['3'] || requests.filter(r => r.status >= 300 && r.status < 400).length}
+                      {requestStats?.byStatus['3'] ||
+                        requests.filter(r => r.status >= 300 && r.status < 400).length}
                     </p>
                   </div>
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                    <span className="text-sm text-blue-600 dark:text-blue-400">4xx Client Error</span>
+                    <span className="text-sm text-blue-600 dark:text-blue-400">
+                      4xx Client Error
+                    </span>
                     <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                      {requestStats?.byStatus['4'] || requests.filter(r => r.status >= 400 && r.status < 500).length}
+                      {requestStats?.byStatus['4'] ||
+                        requests.filter(r => r.status >= 400 && r.status < 500).length}
                     </p>
                   </div>
                   <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
@@ -475,27 +489,28 @@ export function MonitoringTab() {
                 </div>
                 <div className="h-64">
                   <LineChart
-                    data={requests.reduce((acc: any[], req) => {
-                      const minute = new Date(req.timestamp);
-                      minute.setSeconds(0, 0);
-                      const timeKey = minute.toISOString();
-                      const existing = acc.find(d => d.time === timeKey);
-                      if (existing) {
-                        existing.total++;
-                        if (req.status >= 400) existing.errors++;
-                      } else {
-                        acc.push({ time: timeKey, total: 1, errors: req.status >= 400 ? 1 : 0 });
-                      }
-                      return acc;
-                    }, []).slice(-20).map(d => ({
-                      ...d,
-                      errorRate: d.total > 0 ? (d.errors / d.total) * 100 : 0,
-                    }))}
+                    data={requests
+                      .reduce((acc: any[], req) => {
+                        const minute = new Date(req.timestamp);
+                        minute.setSeconds(0, 0);
+                        const timeKey = minute.toISOString();
+                        const existing = acc.find(d => d.time === timeKey);
+                        if (existing) {
+                          existing.total++;
+                          if (req.status >= 400) existing.errors++;
+                        } else {
+                          acc.push({ time: timeKey, total: 1, errors: req.status >= 400 ? 1 : 0 });
+                        }
+                        return acc;
+                      }, [])
+                      .slice(-20)
+                      .map(d => ({
+                        ...d,
+                        errorRate: d.total > 0 ? (d.errors / d.total) * 100 : 0,
+                      }))}
                     xAxisKey="time"
-                    lines={[
-                      { dataKey: 'errorRate', name: 'Error Rate (%)', color: '#ef4444' },
-                    ]}
-                    formatXAxis={(value) => {
+                    lines={[{ dataKey: 'errorRate', name: 'Error Rate (%)', color: '#ef4444' }]}
+                    formatXAxis={value => {
                       const date = new Date(value);
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
@@ -542,9 +557,7 @@ function MetricCard({ title, value, change, icon, color }: MetricCardProps) {
           <div className={iconColorClasses[color]}>{icon}</div>
           {change !== null && (
             <span
-              className={`text-sm font-medium ${
-                change >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
+              className={`text-sm font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}
             >
               {change >= 0 ? '+' : ''}
               {change}%

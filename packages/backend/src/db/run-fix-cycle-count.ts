@@ -43,7 +43,9 @@ async function runMigration() {
     // Fix cycle_count_plans columns
     for (const row of plansResult.rows) {
       if (row.character_maximum_length < 50) {
-        await client.query(`ALTER TABLE cycle_count_plans ALTER COLUMN ${row.column_name} TYPE VARCHAR(50)`);
+        await client.query(
+          `ALTER TABLE cycle_count_plans ALTER COLUMN ${row.column_name} TYPE VARCHAR(50)`
+        );
         console.log(`✓ cycle_count_plans.${row.column_name} updated to VARCHAR(50)`);
         updates++;
       }
@@ -52,7 +54,9 @@ async function runMigration() {
     // Fix cycle_count_entries columns
     for (const row of entriesResult.rows) {
       if (row.character_maximum_length < 50) {
-        await client.query(`ALTER TABLE cycle_count_entries ALTER COLUMN ${row.column_name} TYPE VARCHAR(50)`);
+        await client.query(
+          `ALTER TABLE cycle_count_entries ALTER COLUMN ${row.column_name} TYPE VARCHAR(50)`
+        );
         console.log(`✓ cycle_count_entries.${row.column_name} updated to VARCHAR(50)`);
         updates++;
       }
@@ -63,7 +67,6 @@ async function runMigration() {
     } else {
       console.log(`\n✓ Migration applied successfully! ${updates} column(s) updated.`);
     }
-
   } catch (error: any) {
     console.error('✗ Migration failed:', error.message);
     throw error;
@@ -77,7 +80,7 @@ runMigration()
     console.log('\n✓ Migration completed');
     process.exit(0);
   })
-  .catch((error) => {
+  .catch(error => {
     console.error('\n✗ Migration failed:', error);
     process.exit(1);
   });

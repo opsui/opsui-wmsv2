@@ -303,10 +303,10 @@ export async function getPerformanceMetrics(duration: string = '24h'): Promise<a
 
   try {
     const intervalMap: Record<string, string> = {
-      '1h': "10 minutes",
-      '24h': "1 hour",
-      '7d': "6 hours",
-      '30d': "1 day",
+      '1h': '10 minutes',
+      '24h': '1 hour',
+      '7d': '6 hours',
+      '30d': '1 day',
     };
 
     const bucketSize = intervalMap[duration] || intervalMap['24h'];

@@ -46,7 +46,6 @@ async function resetAllTables() {
     console.log('✅ All tables cleared successfully!');
 
     console.log(`\n📊 Summary: ${tables.length} tables truncated`);
-
   } catch (error) {
     // Rollback on error
     await client.query('ROLLBACK');

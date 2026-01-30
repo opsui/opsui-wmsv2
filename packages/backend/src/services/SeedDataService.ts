@@ -64,9 +64,7 @@ export async function saveScenario(
 export async function getScenarios(): Promise<SeedScenario[]> {
   const pool = getPool();
 
-  const result = await pool.query(
-    `SELECT * FROM seed_scenarios ORDER BY created_at DESC`
-  );
+  const result = await pool.query(`SELECT * FROM seed_scenarios ORDER BY created_at DESC`);
 
   return result.rows as SeedScenario[];
 }
@@ -77,10 +75,9 @@ export async function getScenarios(): Promise<SeedScenario[]> {
 export async function getScenario(scenarioId: string): Promise<SeedScenario | null> {
   const pool = getPool();
 
-  const result = await pool.query(
-    'SELECT * FROM seed_scenarios WHERE scenario_id = $1',
-    [scenarioId]
-  );
+  const result = await pool.query('SELECT * FROM seed_scenarios WHERE scenario_id = $1', [
+    scenarioId,
+  ]);
 
   if (result.rows.length === 0) return null;
 
@@ -98,9 +95,8 @@ export async function applyScenario(scenarioId: string): Promise<void> {
     throw new Error('Scenario not found');
   }
 
-  const scenarioData: ExportData = typeof scenario.data === 'string'
-    ? JSON.parse(scenario.data)
-    : scenario.data;
+  const scenarioData: ExportData =
+    typeof scenario.data === 'string' ? JSON.parse(scenario.data) : scenario.data;
 
   // Apply data to tables
   for (const [tableName, rows] of Object.entries(scenarioData.tables)) {
@@ -158,7 +154,7 @@ export async function exportCurrentState(): Promise<ExportData> {
     'custom_roles',
     'user_role_assignments',
     'carriers',
-    'zones'
+    'zones',
   ];
 
   const data: Record<string, any[]> = {};
@@ -190,12 +186,15 @@ export async function importData(importData: ExportData): Promise<void> {
 
     try {
       // Check if table exists
-      const tableExists = await pool.query(`
+      const tableExists = await pool.query(
+        `
         SELECT EXISTS (
           SELECT FROM information_schema.tables
           WHERE table_name = $1
         )
-      `, [tableName]);
+      `,
+        [tableName]
+      );
 
       if (!tableExists.rows[0].exists) {
         console.warn(`Table ${tableName} does not exist, skipping`);
@@ -305,11 +304,14 @@ export async function runDatabaseReset(resetType: 'fresh' | 'with-orders' | 'ful
     ];
 
     for (const [sku, description, location, quantity] of sampleSkus) {
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO skus (sku, description, bin_location, quantity)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (sku) DO NOTHING
-      `, [sku, description, location, quantity]);
+      `,
+        [sku, description, location, quantity]
+      );
     }
   }
 
@@ -320,10 +322,17 @@ export async function runDatabaseReset(resetType: 'fresh' | 'with-orders' | 'ful
 
     for (let i = 1; i <= 20; i++) {
       const orderId = `ORD-TEST-${i}`;
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO orders (order_id, status, priority)
         VALUES ($1, $2, $3)
-      `, [orderId, statuses[Math.floor(Math.random() * statuses.length)], priorities[Math.floor(Math.random() * priorities.length)]]);
+      `,
+        [
+          orderId,
+          statuses[Math.floor(Math.random() * statuses.length)],
+          priorities[Math.floor(Math.random() * priorities.length)],
+        ]
+      );
     }
   }
 }

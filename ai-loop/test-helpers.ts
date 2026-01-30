@@ -260,10 +260,7 @@ export async function clickAndWait(
   await locator.waitFor({ state: 'visible', timeout });
 
   if (waitForNav) {
-    await Promise.all([
-      page.waitForLoadState('domcontentloaded', { timeout }),
-      locator.click()
-    ]);
+    await Promise.all([page.waitForLoadState('domcontentloaded', { timeout }), locator.click()]);
   } else {
     await locator.click();
     // Small buffer for UI updates
@@ -307,12 +304,11 @@ export function assertURL(page: Page, pattern: string | RegExp): void {
 /**
  * Assert page has minimum content (not blank/error page)
  */
-export async function assertHasContent(
-  page: Page,
-  minLength: number = 100
-): Promise<void> {
-  const bodyText = await page.locator('body').textContent() || '';
-  expect(bodyText.length, `Page should have content (at least ${minLength} chars)`).toBeGreaterThan(minLength);
+export async function assertHasContent(page: Page, minLength: number = 100): Promise<void> {
+  const bodyText = (await page.locator('body').textContent()) || '';
+  expect(bodyText.length, `Page should have content (at least ${minLength} chars)`).toBeGreaterThan(
+    minLength
+  );
 }
 
 // ============================================================================
@@ -331,16 +327,19 @@ export async function cleanupTestData(
   const { orders = false, auditLogs = true } = options;
 
   const headers = {
-    'Authorization': `Bearer ${authToken}`,
+    Authorization: `Bearer ${authToken}`,
     'Content-Type': 'application/json',
   };
 
   // Clean up test orders
   if (orders) {
     try {
-      await page.request.delete(`${TEST_CONFIG.BASE_URL.replace('5173', '3001')}/api/developer/cancel-all-orders`, {
-        headers,
-      });
+      await page.request.delete(
+        `${TEST_CONFIG.BASE_URL.replace('5173', '3001')}/api/developer/cancel-all-orders`,
+        {
+          headers,
+        }
+      );
     } catch (error) {
       console.warn('Failed to cleanup test orders:', error);
     }
@@ -349,9 +348,12 @@ export async function cleanupTestData(
   // Clean up audit logs
   if (auditLogs) {
     try {
-      await page.request.delete(`${TEST_CONFIG.BASE_URL.replace('5173', '3001')}/api/developer/clear-audit-logs`, {
-        headers,
-      });
+      await page.request.delete(
+        `${TEST_CONFIG.BASE_URL.replace('5173', '3001')}/api/developer/clear-audit-logs`,
+        {
+          headers,
+        }
+      );
     } catch (error) {
       console.warn('Failed to cleanup audit logs:', error);
     }

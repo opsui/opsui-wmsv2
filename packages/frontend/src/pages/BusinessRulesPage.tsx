@@ -28,7 +28,14 @@ import {
 } from '@opsui/shared';
 import { Header, Pagination, useToast, ConfirmDialog } from '@/components/shared';
 import { RuleBuilder, ActionBuilder, RuleTester } from '@/components/rules';
-import { useBusinessRules, useCreateBusinessRule, useUpdateBusinessRule, useDeleteBusinessRule, useActivateBusinessRule, useDeactivateBusinessRule } from '@/services/api';
+import {
+  useBusinessRules,
+  useCreateBusinessRule,
+  useUpdateBusinessRule,
+  useDeleteBusinessRule,
+  useActivateBusinessRule,
+  useDeactivateBusinessRule,
+} from '@/services/api';
 import { cn } from '@/lib/utils';
 import { useFormValidation } from '@/hooks/useFormValidation';
 
@@ -68,7 +75,9 @@ export function BusinessRulesPage() {
 
   const rules = data?.rules || [];
 
-  const filteredRules = rules.filter((rule: BusinessRule) => filter === 'ALL' || rule.status === filter);
+  const filteredRules = rules.filter(
+    (rule: BusinessRule) => filter === 'ALL' || rule.status === filter
+  );
 
   // Search
   const [searchTerm, setSearchTerm] = useState('');
@@ -288,7 +297,12 @@ export function BusinessRulesPage() {
                         )}
                         title={rule.status === RuleStatus.ACTIVE ? 'Deactivate' : 'Activate'}
                       >
-                        <PowerIcon className={cn('h-5 w-5', rule.status === RuleStatus.ACTIVE && 'text-green-400')} />
+                        <PowerIcon
+                          className={cn(
+                            'h-5 w-5',
+                            rule.status === RuleStatus.ACTIVE && 'text-green-400'
+                          )}
+                        />
                       </button>
                       <button
                         onClick={() => {
@@ -348,7 +362,7 @@ export function BusinessRulesPage() {
               setModalOpen(false);
               setSelectedRule(undefined);
             }}
-            onSave={async (ruleData) => {
+            onSave={async ruleData => {
               if (selectedRule) {
                 await updateRule.mutateAsync({
                   ruleId: selectedRule.ruleId,
@@ -376,10 +390,7 @@ export function BusinessRulesPage() {
 
         {/* Test Panel */}
         {selectedRule && !modalOpen && (
-          <TestPanel
-            rule={selectedRule}
-            onClose={() => setSelectedRule(undefined)}
-          />
+          <TestPanel rule={selectedRule} onClose={() => setSelectedRule(undefined)} />
         )}
       </main>
     </div>
@@ -420,7 +431,9 @@ function StatusBadge({ status }: { status: RuleStatus }) {
 interface RuleModalProps {
   rule?: BusinessRule;
   onClose: () => void;
-  onSave: (rule: Omit<BusinessRule, 'ruleId' | 'createdAt' | 'executionCount' | 'version' | 'createdBy'>) => Promise<void> | void;
+  onSave: (
+    rule: Omit<BusinessRule, 'ruleId' | 'createdAt' | 'executionCount' | 'version' | 'createdBy'>
+  ) => Promise<void> | void;
 }
 
 function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
@@ -428,20 +441,22 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
   const { showToast } = useToast();
 
   // Convert existing rule conditions to RuleBuilder format
-  const initialConditions = rule?.conditions?.map(cond => ({
-    id: cond.conditionId,
-    field: cond.field,
-    operator: cond.operator,
-    value: cond.value,
-    logicalOperator: 'AND' as const,
-  })) || [];
+  const initialConditions =
+    rule?.conditions?.map(cond => ({
+      id: cond.conditionId,
+      field: cond.field,
+      operator: cond.operator,
+      value: cond.value,
+      logicalOperator: 'AND' as const,
+    })) || [];
 
   // Convert existing rule actions to ActionBuilder format
-  const initialActions = rule?.actions?.map(action => ({
-    id: action.actionId,
-    type: action.actionType,
-    parameters: action.parameters,
-  })) || [];
+  const initialActions =
+    rule?.actions?.map(action => ({
+      id: action.actionId,
+      type: action.actionType,
+      parameters: action.parameters,
+    })) || [];
 
   const [conditions, setConditions] = useState(initialConditions);
   const [actions, setActions] = useState(initialActions);
@@ -475,7 +490,7 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
       },
       priority: {
         required: true,
-        custom: (value) => {
+        custom: value => {
           const num = Number(value);
           if (isNaN(num) || num < 0 || num > 100) {
             return 'Priority must be between 0 and 100';
@@ -484,7 +499,7 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       // Convert RuleBuilder conditions back to BusinessRule conditions
       const ruleConditions = conditions.map((cond, index) => ({
         conditionId: cond.id,
@@ -524,7 +539,9 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
       <div className="bg-gray-900 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/[0.08]">
-          <h2 className="text-xl font-bold text-white">{isEdit ? 'Edit Rule' : 'Create New Rule'}</h2>
+          <h2 className="text-xl font-bold text-white">
+            {isEdit ? 'Edit Rule' : 'Create New Rule'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-white transition-colors"
@@ -584,7 +601,9 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
                     <option value={RuleType.VALIDATION}>Validation</option>
                     <option value={RuleType.NOTIFICATION}>Notification</option>
                   </select>
-                  {errors.ruleType && <p className="mt-1 text-sm text-red-400">{errors.ruleType}</p>}
+                  {errors.ruleType && (
+                    <p className="mt-1 text-sm text-red-400">{errors.ruleType}</p>
+                  )}
                 </div>
 
                 <div>
@@ -601,11 +620,15 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
                     max="100"
                     required
                   />
-                  {errors.priority && <p className="mt-1 text-sm text-red-400">{errors.priority}</p>}
+                  {errors.priority && (
+                    <p className="mt-1 text-sm text-red-400">{errors.priority}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-1">Initial Status</label>
+                  <label className="block text-sm font-medium text-white mb-1">
+                    Initial Status
+                  </label>
                   <select
                     name="status"
                     value={formData.status}
@@ -674,20 +697,22 @@ interface TestPanelProps {
 
 function TestPanel({ rule, onClose }: TestPanelProps) {
   // Convert rule conditions to RuleBuilder format
-  const conditions = rule.conditions?.map(cond => ({
-    id: cond.conditionId,
-    field: cond.field,
-    operator: cond.operator,
-    value: cond.value,
-    logicalOperator: 'AND' as const,
-  })) || [];
+  const conditions =
+    rule.conditions?.map(cond => ({
+      id: cond.conditionId,
+      field: cond.field,
+      operator: cond.operator,
+      value: cond.value,
+      logicalOperator: 'AND' as const,
+    })) || [];
 
   // Convert rule actions to ActionBuilder format
-  const actions = rule.actions?.map(action => ({
-    id: action.actionId,
-    type: action.actionType,
-    parameters: action.parameters,
-  })) || [];
+  const actions =
+    rule.actions?.map(action => ({
+      id: action.actionId,
+      type: action.actionType,
+      parameters: action.parameters,
+    })) || [];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">

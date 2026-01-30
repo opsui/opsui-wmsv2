@@ -155,18 +155,24 @@ export function RouteOptimizationPage() {
   const generateWarehouseLayout = () => {
     // Generate sample warehouse locations
     const sampleLocations = [
-      'A-05-03', 'A-12-08', 'B-03-05', 'B-15-12',
-      'C-08-06', 'C-18-15', 'D-04-02', 'D-10-09'
+      'A-05-03',
+      'A-12-08',
+      'B-03-05',
+      'B-15-12',
+      'C-08-06',
+      'C-18-15',
+      'D-04-02',
+      'D-10-09',
     ];
     setLocations(sampleLocations);
   };
 
   const getZoneColor = (zone: string) => {
     const colors: Record<string, string> = {
-      'A': 'bg-blue-500/20 border-blue-500/30',
-      'B': 'bg-green-500/20 border-green-500/30',
-      'C': 'bg-yellow-500/20 border-yellow-500/30',
-      'D': 'bg-purple-500/20 border-purple-500/30',
+      A: 'bg-blue-500/20 border-blue-500/30',
+      B: 'bg-green-500/20 border-green-500/30',
+      C: 'bg-yellow-500/20 border-yellow-500/30',
+      D: 'bg-purple-500/20 border-purple-500/30',
     };
     return colors[zone] || 'bg-gray-500/20 border-gray-500/30';
   };
@@ -262,7 +268,7 @@ export function RouteOptimizationPage() {
                             <input
                               type="text"
                               value={location}
-                              onChange={(e) => handleLocationChange(actualIndex, e.target.value)}
+                              onChange={e => handleLocationChange(actualIndex, e.target.value)}
                               placeholder="A-01-01"
                               className={cn(
                                 'flex-1 px-3 py-2 rounded-md bg-black/20 border text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono',
@@ -300,7 +306,7 @@ export function RouteOptimizationPage() {
                     <input
                       type="text"
                       value={startPoint}
-                      onChange={(e) => setStartPoint(e.target.value)}
+                      onChange={e => setStartPoint(e.target.value)}
                       placeholder="A-01-01"
                       className="w-full px-3 py-2 rounded-md bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
                     />
@@ -310,7 +316,7 @@ export function RouteOptimizationPage() {
                     <label className="block text-sm text-gray-400 mb-1">Algorithm</label>
                     <select
                       value={algorithm}
-                      onChange={(e) => setAlgorithm(e.target.value as typeof algorithm)}
+                      onChange={e => setAlgorithm(e.target.value as typeof algorithm)}
                       className="w-full px-3 py-2 rounded-md bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                       <option value="nearest">Nearest Neighbor (Fast)</option>
@@ -326,7 +332,7 @@ export function RouteOptimizationPage() {
                       disabled={optimizing || locations.filter(l => l.trim()).length < 2}
                       className={cn(
                         'w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
-                        (!optimizing && locations.filter(l => l.trim()).length >= 2)
+                        !optimizing && locations.filter(l => l.trim()).length >= 2
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       )}
@@ -350,7 +356,11 @@ export function RouteOptimizationPage() {
 
             {/* Results */}
             {result && (
-              <RouteResult result={result} getZoneColor={getZoneColor} parseLocation={parseLocation} />
+              <RouteResult
+                result={result}
+                getZoneColor={getZoneColor}
+                parseLocation={parseLocation}
+              />
             )}
           </div>
         )}
@@ -366,7 +376,7 @@ export function RouteOptimizationPage() {
                   disabled={comparing || locations.filter(l => l.trim()).length < 2}
                   className={cn(
                     'flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
-                    (!comparing && locations.filter(l => l.trim()).length >= 2)
+                    !comparing && locations.filter(l => l.trim()).length >= 2
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
                       : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                   )}
@@ -386,7 +396,11 @@ export function RouteOptimizationPage() {
               </div>
 
               {comparison && (
-                <ComparisonResults comparison={comparison} getZoneColor={getZoneColor} parseLocation={parseLocation} />
+                <ComparisonResults
+                  comparison={comparison}
+                  getZoneColor={getZoneColor}
+                  parseLocation={parseLocation}
+                />
               )}
             </div>
           </div>
@@ -514,16 +528,20 @@ function ComparisonResults({ comparison, getZoneColor, parseLocation }: Comparis
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
-                    result.algorithm === comparison.best
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-700 text-gray-300'
-                  )}>
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
+                      result.algorithm === comparison.best
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-700 text-gray-300'
+                    )}
+                  >
                     {index + 1}
                   </div>
                   <div>
-                    <h3 className="font-medium text-white capitalize">{result.algorithm} Algorithm</h3>
+                    <h3 className="font-medium text-white capitalize">
+                      {result.algorithm} Algorithm
+                    </h3>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {result.algorithm === 'tsp' && 'Optimal for small sets'}
                       {result.algorithm === 'nearest' && 'Fast, good approximation'}

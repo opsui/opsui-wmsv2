@@ -6,7 +6,12 @@
  */
 
 import { Component, ReactNode } from 'react';
-import { ExclamationTriangleIcon, ArrowPathIcon, HomeIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
+import {
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+  HomeIcon,
+  ClipboardDocumentIcon,
+} from '@heroicons/react/24/outline';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -95,14 +100,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl font-bold text-white text-center mb-2">
-              Something went wrong
-            </h1>
+            <h1 className="text-2xl font-bold text-white text-center mb-2">Something went wrong</h1>
 
             {/* Message */}
             <p className="text-gray-400 text-center mb-6">
-              We encountered an unexpected error. You can try refreshing the page or go back to the home
-              screen.
+              We encountered an unexpected error. You can try refreshing the page or go back to the
+              home screen.
             </p>
 
             {/* Error Details (Development Only) */}

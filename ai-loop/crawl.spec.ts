@@ -60,7 +60,11 @@ const STATIC_ROUTES: Array<{ path: string; name: string; roles: string[] }> = [
   { path: '/exceptions', name: 'Exceptions', roles: ['ADMIN', 'SUPERVISOR', 'PICKER', 'PACKER'] },
 
   // Stock Controller routes
-  { path: '/stock-control', name: 'Stock Control', roles: ['STOCK_CONTROLLER', 'ADMIN', 'SUPERVISOR'] },
+  {
+    path: '/stock-control',
+    name: 'Stock Control',
+    roles: ['STOCK_CONTROLLER', 'ADMIN', 'SUPERVISOR'],
+  },
 
   // Inwards Goods routes
   { path: '/inwards', name: 'Inwards Goods', roles: ['INWARDS', 'ADMIN', 'SUPERVISOR'] },
@@ -78,7 +82,11 @@ const STATIC_ROUTES: Array<{ path: string; name: string; roles: string[] }> = [
   // Phase 2 routes
   { path: '/cycle-counting', name: 'Cycle Counting', roles: ['ADMIN', 'SUPERVISOR'] },
   { path: '/location-capacity', name: 'Location Capacity', roles: ['ADMIN', 'SUPERVISOR'] },
-  { path: '/bin-locations', name: 'Bin Locations', roles: ['STOCK_CONTROLLER', 'ADMIN', 'SUPERVISOR'] },
+  {
+    path: '/bin-locations',
+    name: 'Bin Locations',
+    roles: ['STOCK_CONTROLLER', 'ADMIN', 'SUPERVISOR'],
+  },
   { path: '/quality-control', name: 'Quality Control', roles: ['ADMIN', 'SUPERVISOR'] },
 
   // Phase 3 routes
@@ -87,7 +95,11 @@ const STATIC_ROUTES: Array<{ path: string; name: string; roles: string[] }> = [
   { path: '/integrations', name: 'Integrations', roles: ['ADMIN', 'SUPERVISOR'] },
 
   // Warehouse Operations
-  { path: '/search', name: 'Item Search', roles: ['ADMIN', 'SUPERVISOR', 'PICKER', 'STOCK_CONTROLLER'] },
+  {
+    path: '/search',
+    name: 'Item Search',
+    roles: ['ADMIN', 'SUPERVISOR', 'PICKER', 'STOCK_CONTROLLER'],
+  },
   { path: '/waves', name: 'Wave Picking', roles: ['ADMIN', 'SUPERVISOR'] },
   { path: '/zones', name: 'Zone Picking', roles: ['ADMIN', 'SUPERVISOR'] },
   { path: '/slotting', name: 'Slotting', roles: ['ADMIN', 'SUPERVISOR'] },
@@ -95,7 +107,11 @@ const STATIC_ROUTES: Array<{ path: string; name: string; roles: string[] }> = [
   // User management
   { path: '/user-roles', name: 'User Roles', roles: ['ADMIN'] },
   { path: '/roles-management', name: 'Roles Management', roles: ['ADMIN'] },
-  { path: '/role-settings', name: 'Role Settings', roles: ['ADMIN', 'SUPERVISOR', 'PICKER', 'PACKER'] },
+  {
+    path: '/role-settings',
+    name: 'Role Settings',
+    roles: ['ADMIN', 'SUPERVISOR', 'PICKER', 'PACKER'],
+  },
 
   // Developer (dev only)
   { path: '/developer', name: 'Developer', roles: ['ADMIN'] },
@@ -228,16 +244,34 @@ class CrawlerResults {
     const coverageArray = Array.from(this.coverage.values());
     const totalElements = coverageArray.reduce((sum, c) => {
       const els = c.elements;
-      return sum + els.buttons.total + els.links.total + els.inputs.total +
-                   els.forms.total + els.selects.total + els.checkboxes.total +
-                   els.tabs.total + els.searches.total + els.filters.total;
+      return (
+        sum +
+        els.buttons.total +
+        els.links.total +
+        els.inputs.total +
+        els.forms.total +
+        els.selects.total +
+        els.checkboxes.total +
+        els.tabs.total +
+        els.searches.total +
+        els.filters.total
+      );
     }, 0);
 
     const interactedElements = coverageArray.reduce((sum, c) => {
       const els = c.elements;
-      return sum + els.buttons.clicked + els.links.clicked + els.inputs.filled +
-                   els.forms.submitted + els.selects.changed + els.checkboxes.checked +
-                   els.tabs.clicked + els.searches.tested + els.filters.tested;
+      return (
+        sum +
+        els.buttons.clicked +
+        els.links.clicked +
+        els.inputs.filled +
+        els.forms.submitted +
+        els.selects.changed +
+        els.checkboxes.checked +
+        els.tabs.clicked +
+        els.searches.tested +
+        els.filters.tested
+      );
     }, 0);
 
     return {
@@ -250,23 +284,33 @@ class CrawlerResults {
       interactedElements,
       coverage: totalElements > 0 ? Math.round((interactedElements / totalElements) * 100) : 0,
       tabsTested: coverageArray.filter(c => c.hasTabs && c.tabsTested.length > 0).length,
-      byType: this.errors.reduce((acc, err) => {
-        acc[err.type] = (acc[err.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      byType: this.errors.reduce(
+        (acc, err) => {
+          acc[err.type] = (acc[err.type] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
     };
   }
 
   save(filePath: string) {
     const stats = this.getStats();
-    fs.writeFileSync(filePath, JSON.stringify({
-      timestamp: new Date().toISOString(),
-      duration: stats.duration,
-      stats,
-      errors: this.errors,
-      apiFailures: this.apiFailures,
-      coverage: Array.from(this.coverage.values()),
-    }, null, 2));
+    fs.writeFileSync(
+      filePath,
+      JSON.stringify(
+        {
+          timestamp: new Date().toISOString(),
+          duration: stats.duration,
+          stats,
+          errors: this.errors,
+          apiFailures: this.apiFailures,
+          coverage: Array.from(this.coverage.values()),
+        },
+        null,
+        2
+      )
+    );
   }
 }
 
@@ -365,7 +409,9 @@ async function login(
     const success = currentPath !== '/login';
 
     if (!success) {
-      console.log(`    ⚠️  WARNING: Still on login page after auth was stored (current: ${currentPath})`);
+      console.log(
+        `    ⚠️  WARNING: Still on login page after auth was stored (current: ${currentPath})`
+      );
       return false;
     }
 
@@ -416,14 +462,18 @@ async function testSearchFunctionality(
       const searchInputs = await page.locator(selector).all();
       for (const input of searchInputs.slice(0, 2)) {
         try {
-          if (await input.isVisible({ timeout: 500 }).catch(() => false) &&
-              !await input.isDisabled().catch(() => false)) {
+          if (
+            (await input.isVisible({ timeout: 500 }).catch(() => false)) &&
+            !(await input.isDisabled().catch(() => false))
+          ) {
             await input.fill(TEST_DATA.text[0]);
             await page.waitForTimeout(300);
             await input.clear();
             tested++;
           }
-        } catch { failed++; }
+        } catch {
+          failed++;
+        }
       }
     } catch {}
   }
@@ -499,10 +549,11 @@ async function clickAllInteractables(
       const buttons = await page.locator(selector).all();
       coverage.buttons.total += buttons.length;
 
-      for (const btn of buttons) { // Process ALL buttons for 100% coverage
+      for (const btn of buttons) {
+        // Process ALL buttons for 100% coverage
         try {
           if (await btn.isVisible({ timeout: 500 }).catch(() => false)) {
-            const text = await btn.textContent().catch(() => '') || '';
+            const text = (await btn.textContent().catch(() => '')) || '';
             const signature = `${selector}:${text.slice(0, 50)}`;
             if (clickedSignatures.has(signature)) continue;
             clickedSignatures.add(signature);
@@ -523,7 +574,9 @@ async function clickAllInteractables(
 
             const currentUrl = page.url();
             if (currentUrl !== baseUrl && !currentUrl.includes(route)) {
-              await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+              await page
+                .goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 })
+                .catch(() => {});
               await page.waitForTimeout(300);
             }
           }
@@ -531,7 +584,9 @@ async function clickAllInteractables(
           // Try self-healing if available
           if (selfHealing) {
             try {
-              const healedSelector = await selfHealing.healSelector(selector, _routeName).catch(() => null);
+              const healedSelector = await selfHealing
+                .healSelector(selector, _routeName)
+                .catch(() => null);
               if (healedSelector) {
                 console.log(`    🔄 Self-healed selector: ${selector} -> ${healedSelector}`);
                 const healedBtn = page.locator(healedSelector).first();
@@ -552,10 +607,13 @@ async function clickAllInteractables(
 
   // Tab buttons
   try {
-    const tabButtons = await page.locator('button[role="tab"]:not([data-skip-crawler]), [role="tab"]:not([data-skip-crawler])').all();
+    const tabButtons = await page
+      .locator('button[role="tab"]:not([data-skip-crawler]), [role="tab"]:not([data-skip-crawler])')
+      .all();
     coverage.tabs.total += tabButtons.length;
 
-    for (const tab of tabButtons) { // Process ALL tabs for 100% coverage
+    for (const tab of tabButtons) {
+      // Process ALL tabs for 100% coverage
       try {
         // Additional check: skip if element has data-skip-crawler attribute
         const hasSkipAttr = await tab.getAttribute('data-skip-crawler').catch(() => null);
@@ -564,13 +622,17 @@ async function clickAllInteractables(
           continue;
         }
 
-        if (await tab.isVisible({ timeout: 500 }).catch(() => false) &&
-            !await tab.isDisabled().catch(() => false)) {
+        if (
+          (await tab.isVisible({ timeout: 500 }).catch(() => false)) &&
+          !(await tab.isDisabled().catch(() => false))
+        ) {
           await tab.click();
           coverage.tabs.clicked++;
           await page.waitForTimeout(300);
         }
-      } catch { coverage.tabs.failed++; }
+      } catch {
+        coverage.tabs.failed++;
+      }
     }
   } catch {}
 
@@ -579,7 +641,8 @@ async function clickAllInteractables(
     const links = await page.locator('a[href]:not([data-skip-crawler])').all();
     coverage.links.total += links.length;
 
-    for (const link of links) { // Process ALL links for 100% coverage
+    for (const link of links) {
+      // Process ALL links for 100% coverage
       try {
         // Additional check: skip if element has data-skip-crawler attribute
         const hasSkipAttr = await link.getAttribute('data-skip-crawler').catch(() => null);
@@ -593,7 +656,12 @@ async function clickAllInteractables(
           if (!href) continue;
 
           // Handle external links differently - just log them, don't navigate
-          if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('//')) {
+          if (
+            href.startsWith('http') ||
+            href.startsWith('mailto:') ||
+            href.startsWith('tel:') ||
+            href.startsWith('//')
+          ) {
             console.log(`    🔗 External link detected: ${href.slice(0, 50)}...`);
             coverage.links.clicked++; // Count as tested
             continue;
@@ -609,7 +677,9 @@ async function clickAllInteractables(
           const newUrl = page.url();
           if (newUrl !== originalUrl) {
             // Navigate back to original page
-            await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+            await page
+              .goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 })
+              .catch(() => {});
             await page.waitForTimeout(300);
           }
         }
@@ -657,7 +727,8 @@ async function fillAllForms(
       const inputs = await page.locator(selector).all();
       coverage.inputs.total += inputs.length;
 
-      for (const input of inputs) { // Process ALL inputs for 100% coverage
+      for (const input of inputs) {
+        // Process ALL inputs for 100% coverage
         try {
           // Enhanced visibility and interactability checks
           const isVisible = await input.isVisible({ timeout: 1000 }).catch(() => false);
@@ -682,7 +753,10 @@ async function fillAllForms(
               testValue = 'test search';
             } else if (inputName?.toLowerCase().includes('email')) {
               testValue = 'test@example.com';
-            } else if (inputName?.toLowerCase().includes('phone') || inputName?.toLowerCase().includes('tel')) {
+            } else if (
+              inputName?.toLowerCase().includes('phone') ||
+              inputName?.toLowerCase().includes('tel')
+            ) {
               testValue = '1234567890';
             }
 
@@ -707,17 +781,22 @@ async function fillAllForms(
     const selects = await page.locator('select').all();
     coverage.selects.total += selects.length;
 
-    for (const select of selects) { // Process ALL selects for 100% coverage
+    for (const select of selects) {
+      // Process ALL selects for 100% coverage
       try {
-        if (await select.isVisible({ timeout: 500 }).catch(() => false) &&
-            !await select.isDisabled().catch(() => false)) {
+        if (
+          (await select.isVisible({ timeout: 500 }).catch(() => false)) &&
+          !(await select.isDisabled().catch(() => false))
+        ) {
           const options = await select.locator('option').all();
           if (options.length > 1) {
             await select.selectOption({ index: 1 });
             coverage.selects.changed++;
           }
         }
-      } catch { coverage.selects.failed++; }
+      } catch {
+        coverage.selects.failed++;
+      }
     }
   } catch {}
 
@@ -725,15 +804,20 @@ async function fillAllForms(
     const checkboxes = await page.locator('input[type="checkbox"]').all();
     coverage.checkboxes.total += checkboxes.length;
 
-    for (const checkbox of checkboxes) { // Process ALL checkboxes for 100% coverage
+    for (const checkbox of checkboxes) {
+      // Process ALL checkboxes for 100% coverage
       try {
-        if (await checkbox.isVisible({ timeout: 500 }).catch(() => false) &&
-            !await checkbox.isDisabled().catch(() => false) &&
-            !await checkbox.isChecked().catch(() => false)) {
+        if (
+          (await checkbox.isVisible({ timeout: 500 }).catch(() => false)) &&
+          !(await checkbox.isDisabled().catch(() => false)) &&
+          !(await checkbox.isChecked().catch(() => false))
+        ) {
           await checkbox.check();
           coverage.checkboxes.checked++;
         }
-      } catch { coverage.checkboxes.failed++; }
+      } catch {
+        coverage.checkboxes.failed++;
+      }
     }
   } catch {}
 
@@ -761,15 +845,18 @@ async function submitAllForms(
     const forms = await page.locator('form').all();
     coverage.total = forms.length;
 
-    for (const form of forms) { // Test ALL forms for 100% coverage
+    for (const form of forms) {
+      // Test ALL forms for 100% coverage
       try {
         const isVisible = await form.isVisible({ timeout: 1000 }).catch(() => false);
         if (!isVisible) continue;
 
         // Find submit button within the form
-        const submitButton = await form.locator('button[type="submit"], input[type="submit"], button:not([type])').first();
+        const submitButton = await form
+          .locator('button[type="submit"], input[type="submit"], button:not([type])')
+          .first();
 
-        const hasSubmitButton = await submitButton.count() > 0;
+        const hasSubmitButton = (await submitButton.count()) > 0;
         if (!hasSubmitButton) {
           console.log('    ⚠️  Form has no submit button, skipping');
           continue;
@@ -789,12 +876,14 @@ async function submitAllForms(
           coverage.submitted++;
 
           // Return to original page for continued testing
-          await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+          await page
+            .goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 })
+            .catch(() => {});
           await page.waitForTimeout(500);
         } else {
           // Check for validation errors or success messages
-          const hasError = await page.locator('.error, .alert-error, [role="alert"]').count() > 0;
-          const hasSuccess = await page.locator('.success, .alert-success, .message').count() > 0;
+          const hasError = (await page.locator('.error, .alert-error, [role="alert"]').count()) > 0;
+          const hasSuccess = (await page.locator('.success, .alert-success, .message').count()) > 0;
 
           if (hasError) {
             console.log('    ⚠️  Form submitted with validation errors');
@@ -866,8 +955,8 @@ async function runAIEdgeCaseTests(
 
     // Test first 3 inputs with edge cases
     for (const input of inputs.slice(0, 3)) {
-      const inputType = await input.getAttribute('type').catch(() => 'text') || 'text';
-      const inputName = await input.getAttribute('name').catch(() => 'unnamed') || 'unnamed';
+      const inputType = (await input.getAttribute('type').catch(() => 'text')) || 'text';
+      const inputName = (await input.getAttribute('name').catch(() => 'unnamed')) || 'unnamed';
 
       // Test based on input type
       if (inputType === 'number' || inputType === 'tel') {
@@ -877,7 +966,7 @@ async function runAIEdgeCaseTests(
             await page.waitForTimeout(100);
 
             // Check for error message
-            const hasError = await page.locator('text=/error|invalid|negative/i').count() > 0;
+            const hasError = (await page.locator('text=/error|invalid|negative/i').count()) > 0;
 
             if (!hasError) {
               collector.addError({
@@ -1011,14 +1100,16 @@ async function runAIPrioritizedTests(
 
       try {
         // Try to find and interact with the element
-        const element = page.locator(`:has-text("${target.element.replace(/^[A-Z]+: /, '')}")`).first();
+        const element = page
+          .locator(`:has-text("${target.element.replace(/^[A-Z]+: /, '')}")`)
+          .first();
 
         if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
           await element.click();
           await page.waitForTimeout(200);
 
           // Check for errors or unexpected behavior
-          const hasError = await page.locator('text=/error|failed|warning/i').count() > 0;
+          const hasError = (await page.locator('text=/error|failed|warning/i').count()) > 0;
           if (hasError && target.riskLevel === 'critical') {
             collector.addError({
               type: 'ai-critical',
@@ -1108,14 +1199,17 @@ async function runAIBusinessRuleTests(
       for (const testCase of rule.testCases.slice(0, 2)) {
         try {
           // Find the input field
-          const input = page.locator(`input[name="${rule.field}"], [placeholder*="${rule.field}" i]`).first();
+          const input = page
+            .locator(`input[name="${rule.field}"], [placeholder*="${rule.field}" i]`)
+            .first();
 
           if (await input.isVisible({ timeout: 500 }).catch(() => false)) {
             await input.fill(String(testCase.input));
             await page.waitForTimeout(100);
 
             // Check if validation occurred
-            const hasValidation = await page.locator('text=/error|invalid|required/i').count() > 0;
+            const hasValidation =
+              (await page.locator('text=/error|invalid|required/i').count()) > 0;
 
             if (!hasValidation && testCase.expected.toLowerCase().includes('error')) {
               collector.addError({
@@ -1293,12 +1387,16 @@ function identifyErrorPatterns(errors: any[]): string[] {
     patterns.push('Authentication issues across multiple elements');
   }
 
-  const timeoutErrors = errors.filter(e => e.message?.includes('timeout') || e.message?.includes('Timeout'));
+  const timeoutErrors = errors.filter(
+    e => e.message?.includes('timeout') || e.message?.includes('Timeout')
+  );
   if (timeoutErrors.length > 2) {
     patterns.push('Performance/timeout issues - consider increasing wait times');
   }
 
-  const selectorErrors = errors.filter(e => e.message?.includes('selector') || e.message?.includes('locator'));
+  const selectorErrors = errors.filter(
+    e => e.message?.includes('selector') || e.message?.includes('locator')
+  );
   if (selectorErrors.length > 2) {
     patterns.push('Selector failures - UI structure may have changed');
   }
@@ -1335,7 +1433,9 @@ async function ensureAuthenticated(
     // Check if we've been logged out (on login page)
     if (currentPath === '/login') {
       authRetryCount++;
-      console.log(`\n  🔐 Session expired - Re-authenticating (attempt ${authRetryCount}/${MAX_AUTH_RETRIES})...`);
+      console.log(
+        `\n  🔐 Session expired - Re-authenticating (attempt ${authRetryCount}/${MAX_AUTH_RETRIES})...`
+      );
 
       const loginSuccess = await login(page, credentials);
 
@@ -1343,7 +1443,9 @@ async function ensureAuthenticated(
         // Verify we're not still on login page after successful login
         const finalPath = new URL(page.url()).pathname;
         if (finalPath === '/login') {
-          console.log('  ❌ Login appeared successful but still on login page - possible redirect loop');
+          console.log(
+            '  ❌ Login appeared successful but still on login page - possible redirect loop'
+          );
           return false;
         }
 
@@ -1371,7 +1473,9 @@ async function ensureAuthenticated(
 
     if (!authValid) {
       authRetryCount++;
-      console.log(`\n  🔐 Auth token invalid - Re-authenticating (attempt ${authRetryCount}/${MAX_AUTH_RETRIES})...`);
+      console.log(
+        `\n  🔐 Auth token invalid - Re-authenticating (attempt ${authRetryCount}/${MAX_AUTH_RETRIES})...`
+      );
 
       const loginSuccess = await login(page, credentials);
 
@@ -1379,7 +1483,9 @@ async function ensureAuthenticated(
         // Verify we're not still on login page after successful login
         const finalPath = new URL(page.url()).pathname;
         if (finalPath === '/login') {
-          console.log('  ❌ Login appeared successful but still on login page - possible redirect loop');
+          console.log(
+            '  ❌ Login appeared successful but still on login page - possible redirect loop'
+          );
           return false;
         }
 
@@ -1409,7 +1515,12 @@ async function testRoute(
   collector: CrawlerResults,
   routeDef: { path: string; name: string; roles: string[] },
   isAuthenticated: boolean,
-  options: { testTabs?: string[]; isTabRoute?: boolean; selfHealing?: any; credentials?: { username: string; password: string } } = {}
+  options: {
+    testTabs?: string[];
+    isTabRoute?: boolean;
+    selfHealing?: any;
+    credentials?: { username: string; password: string };
+  } = {}
 ): Promise<CoverageEntry> {
   const { path: route, name: routeName } = routeDef;
   const startTime = Date.now();
@@ -1419,7 +1530,10 @@ async function testRoute(
   const baseUrl = `${BASE_URL}${route}`;
 
   // Safety check: ensure authentication before testing
-  const routeCredentials = options.credentials || { username: 'admin@wms.local', password: 'admin123' };
+  const routeCredentials = options.credentials || {
+    username: 'admin@wms.local',
+    password: 'admin123',
+  };
   const isStillAuth = await ensureAuthenticated(page, routeCredentials);
   if (!isStillAuth && isAuthenticated) {
     console.log(`    ⚠️  Could not re-authenticate, testing anyway...`);
@@ -1453,10 +1567,9 @@ async function testRoute(
 
     // Wait for URL to settle - this handles both successful navigation and redirects
     // Best practice: use waitForURL with a regex that matches expected or login page
-    await page.waitForURL(
-      url => url.pathname === route || url.pathname === '/login',
-      { timeout: 10000 }
-    );
+    await page.waitForURL(url => url.pathname === route || url.pathname === '/login', {
+      timeout: 10000,
+    });
 
     // Get the final URL after all redirects
     const finalUrl = page.url();
@@ -1510,10 +1623,11 @@ async function testRoute(
       while (Date.now() - startTimeWait < maxWaitTime) {
         // Check test status by looking at page content
         const pageText = await page.textContent('body');
-        const e2eRunning = pageText?.includes('Running E2E Tests') ||
-                          pageText?.includes('Running Workflow Tests');
-        const hasResults = pageText?.includes('Results') &&
-                          (pageText?.includes('Passed') || pageText?.includes('Failed'));
+        const e2eRunning =
+          pageText?.includes('Running E2E Tests') || pageText?.includes('Running Workflow Tests');
+        const hasResults =
+          pageText?.includes('Results') &&
+          (pageText?.includes('Passed') || pageText?.includes('Failed'));
         const hasStats = pageText?.match(/\d+\s+(passed|failed)/i);
 
         // If we see results/stats, tests are complete
@@ -1601,12 +1715,18 @@ async function testRoute(
 
     // Click elements
     console.log('    🖱️  Clicking elements...');
-    const clickCoverage = await clickAllInteractables(page, collector, route, routeName, baseUrl, options.selfHealing);
+    const clickCoverage = await clickAllInteractables(
+      page,
+      collector,
+      route,
+      routeName,
+      baseUrl,
+      options.selfHealing
+    );
     coverageEntry.elements.buttons.clicked = clickCoverage.buttons.clicked;
     coverageEntry.elements.buttons.failed = clickCoverage.buttons.failed;
     coverageEntry.elements.links.clicked = clickCoverage.links.clicked;
     coverageEntry.elements.links.failed = clickCoverage.links.failed;
-
   } catch (e: any) {
     collector.addError({
       type: 'route-failure',
@@ -1723,7 +1843,9 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
     const showProgress = (stepName: string) => {
       const elapsed = ((Date.now() - globalStartTime) / 1000).toFixed(1);
       const progress = ((routesCompleted / totalRoutes) * 100).toFixed(0);
-      console.log(`\n⏱️  [${elapsed}s elapsed] ${progress}% complete (${routesCompleted}/${totalRoutes} routes)`);
+      console.log(
+        `\n⏱️  [${elapsed}s elapsed] ${progress}% complete (${routesCompleted}/${totalRoutes} routes)`
+      );
       console.log(`   Starting: ${stepName}\n`);
     };
 
@@ -1849,13 +1971,22 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
       }
 
       const routeStartTime = Date.now();
-      const coverage = await testRoute(page, collector, routeDef, isAuthenticated, { selfHealing, credentials });
+      const coverage = await testRoute(page, collector, routeDef, isAuthenticated, {
+        selfHealing,
+        credentials,
+      });
       const routeDuration = ((Date.now() - routeStartTime) / 1000).toFixed(1);
       console.log(`    ⏱️  Completed in ${routeDuration}s`);
 
       // AI: Run intelligent tests on all critical business routes (full testing mode)
       const criticalRoutes = ['/orders', '/stock-control', '/packing', '/exceptions'];
-      if (ENABLE_AI && glmClient && isAuthenticated && coverage.accessible && criticalRoutes.includes(routeDef.path)) {
+      if (
+        ENABLE_AI &&
+        glmClient &&
+        isAuthenticated &&
+        coverage.accessible &&
+        criticalRoutes.includes(routeDef.path)
+      ) {
         // Run all AI-enhanced tests with optimized delays (1 second - GLM has high API limits)
         await runAIEdgeCaseTests(page, collector, routeDef, glmClient);
         await page.waitForTimeout(1000); // Optimized from 5000ms
@@ -1887,8 +2018,8 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
           const buttons = await page.locator('button').all();
           for (const btn of buttons.slice(0, 10)) {
             try {
-              const text = await btn.textContent().catch(() => '') || '';
-              if (text && await btn.isVisible({ timeout: 100 }).catch(() => false)) {
+              const text = (await btn.textContent().catch(() => '')) || '';
+              if (text && (await btn.isVisible({ timeout: 100 }).catch(() => false))) {
                 elements.push({
                   selector: `button:has-text("${text.slice(0, 20)}")`,
                   type: 'button',
@@ -1901,12 +2032,9 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
           }
 
           if (elements.length > 0) {
-            await learningModel.observeRoute(
-              routeDef.path,
-              routeDef.name,
-              elements,
-              [`Found ${elements.length} interactive elements`]
-            );
+            await learningModel.observeRoute(routeDef.path, routeDef.name, elements, [
+              `Found ${elements.length} interactive elements`,
+            ]);
           }
         } catch (e) {
           console.log(`    ⚠️  Learning failed: ${(e as Error).message.slice(0, 50)}`);
@@ -1944,16 +2072,18 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
     if (isAuthenticated) {
       try {
         // Fetch orders to create dynamic routes using page.evaluate with fetch
-        const response = await page.evaluate(async () => {
+        const response = (await page.evaluate(async () => {
           try {
             const res = await fetch('/api/orders');
             if (!res.ok) return [];
-            const data = await res.json() as { orders?: unknown } | unknown[];
-            return Array.isArray(data) ? data : ((data as { orders?: unknown }).orders as any[]) || [];
+            const data = (await res.json()) as { orders?: unknown } | unknown[];
+            return Array.isArray(data)
+              ? data
+              : ((data as { orders?: unknown }).orders as any[]) || [];
           } catch {
             return [];
           }
-        }) as any[];
+        })) as any[];
 
         if (Array.isArray(response) && response.length > 0) {
           // Get first 2 orders for picking/packing page testing
@@ -1962,12 +2092,16 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
           for (const order of sampleOrders) {
             const orderId = order.order_id || order.id;
             if (orderId) {
-              dynamicRoutesToTest.push(
-                { path: `/orders/${orderId}/pick`, name: `Picking: ${orderId}`, roles: ['PICKER', 'ADMIN', 'SUPERVISOR'] }
-              );
-              dynamicRoutesToTest.push(
-                { path: `/packing/${orderId}/pack`, name: `Packing: ${orderId}`, roles: ['PACKER', 'ADMIN', 'SUPERVISOR'] }
-              );
+              dynamicRoutesToTest.push({
+                path: `/orders/${orderId}/pick`,
+                name: `Picking: ${orderId}`,
+                roles: ['PICKER', 'ADMIN', 'SUPERVISOR'],
+              });
+              dynamicRoutesToTest.push({
+                path: `/packing/${orderId}/pack`,
+                name: `Packing: ${orderId}`,
+                roles: ['PACKER', 'ADMIN', 'SUPERVISOR'],
+              });
             }
           }
           console.log(`  ✓ Found ${sampleOrders.length} orders for dynamic route testing`);
@@ -1990,7 +2124,10 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
       }
 
       const routeStartTime = Date.now();
-      const coverage = await testRoute(page, collector, routeDef, isAuthenticated, { selfHealing, credentials });
+      const coverage = await testRoute(page, collector, routeDef, isAuthenticated, {
+        selfHealing,
+        credentials,
+      });
       const routeDuration = ((Date.now() - routeStartTime) / 1000).toFixed(1);
       console.log(`    ⏱️  Completed in ${routeDuration}s`);
       collector.setCoverage(routeDef.path, coverage);
@@ -2013,7 +2150,12 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
     const aiCriticalIssues = stats.byType['ai-critical'] || 0;
     const aiBusinessRuleIssues = stats.byType['ai-business-rule'] || 0;
     const aiWorkflowRisks = stats.byType['ai-workflow-risk'] || 0;
-    const aiTotalIssues = aiEdgeCaseIssues + aiSecurityIssues + aiCriticalIssues + aiBusinessRuleIssues + aiWorkflowRisks;
+    const aiTotalIssues =
+      aiEdgeCaseIssues +
+      aiSecurityIssues +
+      aiCriticalIssues +
+      aiBusinessRuleIssues +
+      aiWorkflowRisks;
 
     console.log('\n╔════════════════════════════════════════════════════════════╗');
     console.log('║           AI-ENHANCED CRAWL v5.0 COMPLETE                 ║');
@@ -2052,7 +2194,9 @@ test.describe('AI-Enhanced WMS Crawler v5', () => {
       console.log(`   4. Root cause analysis:       ✓ Available`);
       console.log(`   5. Production log analysis:   ✓ Available`);
       console.log(`   6. Natural language tests:   ✓ Available`);
-      console.log(`   7. Visual regression:         ${visualRegression ? '✓ Active' : '✗ Inactive'}`);
+      console.log(
+        `   7. Visual regression:         ${visualRegression ? '✓ Active' : '✗ Inactive'}`
+      );
 
       if (insights.visual) {
         console.log(`      └─ Snapshots: ${insights.visual.totalSnapshots} routes`);

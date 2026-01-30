@@ -47,7 +47,13 @@ export function Skeleton({
 // SKELETON VARIANTS
 // ============================================================================
 
-export function TextSkeleton({ lines = 3, className = '' }: { lines?: number; className?: string }) {
+export function TextSkeleton({
+  lines = 3,
+  className = '',
+}: {
+  lines?: number;
+  className?: string;
+}) {
   return (
     <div className={className}>
       {Array.from({ length: lines }).map((_, i) => (
@@ -73,7 +79,15 @@ export function CardSkeleton({ className = '' }: { className?: string }) {
   );
 }
 
-export function TableSkeleton({ rows = 5, columns = 4, className = '' }: { rows?: number; columns?: number; className?: string }) {
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  className = '',
+}: {
+  rows?: number;
+  columns?: number;
+  className?: string;
+}) {
   return (
     <div className={className}>
       <div className="bg-gray-800/50 rounded-lg border border-gray-700/50 overflow-hidden">
@@ -83,7 +97,10 @@ export function TableSkeleton({ rows = 5, columns = 4, className = '' }: { rows?
           ))}
         </div>
         {Array.from({ length: rows }).map((_, rowIndex) => (
-          <div key={rowIndex} className="flex gap-4 p-4 border-b border-gray-700/50 last:border-b-0">
+          <div
+            key={rowIndex}
+            className="flex gap-4 p-4 border-b border-gray-700/50 last:border-b-0"
+          >
             {Array.from({ length: columns }).map((_, colIndex) => (
               <Skeleton key={colIndex} variant="text" className="flex-1" />
             ))}
@@ -94,11 +111,20 @@ export function TableSkeleton({ rows = 5, columns = 4, className = '' }: { rows?
   );
 }
 
-export function ListSkeleton({ items = 5, className = '' }: { items?: number; className?: string }) {
+export function ListSkeleton({
+  items = 5,
+  className = '',
+}: {
+  items?: number;
+  className?: string;
+}) {
   return (
     <div className={className}>
       {Array.from({ length: items }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 py-3 border-b border-gray-700/50 last:border-b-0">
+        <div
+          key={i}
+          className="flex items-center gap-4 py-3 border-b border-gray-700/50 last:border-b-0"
+        >
           <Skeleton variant="circular" width={40} height={40} />
           <div className="flex-1 space-y-2">
             <Skeleton variant="text" className="w-3/4" />
@@ -125,7 +151,13 @@ export function MetricCardSkeleton({ className = '' }: { className?: string }) {
   );
 }
 
-export function FormSkeleton({ fields = 4, className = '' }: { fields?: number; className?: string }) {
+export function FormSkeleton({
+  fields = 4,
+  className = '',
+}: {
+  fields?: number;
+  className?: string;
+}) {
   return (
     <div className={className}>
       <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700/50 space-y-4">

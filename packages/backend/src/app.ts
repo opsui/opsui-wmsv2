@@ -11,7 +11,13 @@ import compression from 'compression';
 import config from './config';
 import { logger } from './config/logger';
 import routes from './routes';
-import { errorHandler, notFoundHandler, rateLimiter, requestId, auditLoggingMiddleware } from './middleware';
+import {
+  errorHandler,
+  notFoundHandler,
+  rateLimiter,
+  requestId,
+  auditLoggingMiddleware,
+} from './middleware';
 import {
   authRateLimiter,
   apiRateLimiter,

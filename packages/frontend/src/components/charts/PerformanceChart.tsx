@@ -59,12 +59,15 @@ const ROLE_OPTIONS: { value: RoleType; label: string }[] = [
 ];
 
 // Role-specific label mappings
-const ROLE_LABELS: Record<RoleType, {
-  tasksLabel: string;
-  ordersLabel: string;
-  itemsLabel: string;
-  tableHeader: string;
-}> = {
+const ROLE_LABELS: Record<
+  RoleType,
+  {
+    tasksLabel: string;
+    ordersLabel: string;
+    itemsLabel: string;
+    tableHeader: string;
+  }
+> = {
   [UserRole.PICKER]: {
     tasksLabel: 'Tasks Completed',
     ordersLabel: 'Orders Completed',
@@ -143,13 +146,16 @@ export function PerformanceChart({
 
   // Format data for chart - shorten names if needed
   // Handle different property names from backend (pickerName, packerName, controllerName, userName)
-  const chartData = data.map((item) => {
-    const userName = (item as any).pickerName || (item as any).packerName || (item as any).controllerName || item.userName || 'Unknown';
+  const chartData = data.map(item => {
+    const userName =
+      (item as any).pickerName ||
+      (item as any).packerName ||
+      (item as any).controllerName ||
+      item.userName ||
+      'Unknown';
     return {
       ...item,
-      displayName: userName.length > 15
-        ? userName.substring(0, 12) + '...'
-        : userName,
+      displayName: userName.length > 15 ? userName.substring(0, 12) + '...' : userName,
       // Convert average time from seconds to minutes for display
       avgTimeMinutes: item.averageTimePerTask ? (item.averageTimePerTask / 60).toFixed(1) : 0,
     };
@@ -168,11 +174,11 @@ export function PerformanceChart({
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" className="dark:stroke-white/[0.08] stroke-gray-200" />
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="dark:stroke-white/[0.08] stroke-gray-200"
+            />
             <XAxis
               dataKey="displayName"
               className="dark:fill-gray-500 fill-gray-600"
@@ -206,14 +212,14 @@ export function PerformanceChart({
                 if (name === 'Avg Time (min)') return [`${value} min`, name];
                 return [value || 0, name || ''];
               }}
-              labelFormatter={(label) => {
-                const item = chartData.find((d) => d.displayName === label);
+              labelFormatter={label => {
+                const item = chartData.find(d => d.displayName === label);
                 return item?.displayName || label;
               }}
             />
             <Legend
               wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={(value) => (
+              formatter={value => (
                 <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
               )}
             />
@@ -247,14 +253,18 @@ export function PerformanceChart({
             <thead>
               <tr className="dark:text-gray-400 text-gray-600 border-b dark:border-white/[0.05] border-gray-200">
                 <th className="text-left py-2 px-2">{roleLabels.tableHeader}</th>
-                <th className="text-right py-2 px-2">{selectedRole === UserRole.STOCK_CONTROLLER ? 'Trans' : 'Tasks'}</th>
-                <th className="text-right py-2">{selectedRole === UserRole.STOCK_CONTROLLER ? 'Trans' : 'Orders'}</th>
+                <th className="text-right py-2 px-2">
+                  {selectedRole === UserRole.STOCK_CONTROLLER ? 'Trans' : 'Tasks'}
+                </th>
+                <th className="text-right py-2">
+                  {selectedRole === UserRole.STOCK_CONTROLLER ? 'Trans' : 'Orders'}
+                </th>
                 <th className="text-right py-2 px-2">Items</th>
                 <th className="text-right py-2 px-2">Avg Time</th>
               </tr>
             </thead>
             <tbody>
-              {chartData.slice(0, 5).map((item) => (
+              {chartData.slice(0, 5).map(item => (
                 <tr
                   key={item.userId}
                   className="dark:text-gray-300 text-gray-700 border-b dark:border-white/[0.02] border-gray-100 hover:dark:bg-white/[0.02] hover:bg-gray-50"

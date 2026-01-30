@@ -260,7 +260,7 @@ export class SelfHealingSelectors {
   ): Promise<Partial<SelectorHealingResult>> {
     try {
       // Get all similar elements on page
-      const elements = await this.page.evaluate((sel) => {
+      const elements = await this.page.evaluate(sel => {
         // @ts-ignore - browser context
         const all = document.querySelectorAll('button, input, a, [role="button"]');
         return Array.from(all).map((el: any) => ({
@@ -381,16 +381,20 @@ export class SelfHealingSelectors {
       // Gather page context
       const pageElements = await this.page.evaluate(() => {
         // @ts-ignore - browser context
-        const interactive = document.querySelectorAll('button, input, a, select, [role="button"], [tabindex]');
-        return Array.from(interactive).slice(0, 20).map((el: any) => ({
-          tag: el.tagName,
-          text: el.textContent?.slice(0, 30) || '',
-          id: el.id || '',
-          className: el.className?.slice(0, 50) || '',
-          role: el.getAttribute('role') || '',
-          dataTest: el.getAttribute('data-testid') || '',
-          ariaLabel: el.getAttribute('aria-label') || '',
-        }));
+        const interactive = document.querySelectorAll(
+          'button, input, a, select, [role="button"], [tabindex]'
+        );
+        return Array.from(interactive)
+          .slice(0, 20)
+          .map((el: any) => ({
+            tag: el.tagName,
+            text: el.textContent?.slice(0, 30) || '',
+            id: el.id || '',
+            className: el.className?.slice(0, 50) || '',
+            role: el.getAttribute('role') || '',
+            dataTest: el.getAttribute('data-testid') || '',
+            ariaLabel: el.getAttribute('aria-label') || '',
+          }));
       });
 
       const analysis = await this.glm.healSelectorWithAI({
@@ -442,13 +446,15 @@ export class SelfHealingSelectors {
     return {
       totalAttempts: this.healingCache.size,
       successfulHealings: healed.length,
-      healingRate: this.healingCache.size > 0
-        ? Math.round((healed.length / this.healingCache.size) * 100)
-        : 0,
-      byMethod: healed.reduce((acc, h) => {
-        acc[h.healingMethod] = (acc[h.healingMethod] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      healingRate:
+        this.healingCache.size > 0 ? Math.round((healed.length / this.healingCache.size) * 100) : 0,
+      byMethod: healed.reduce(
+        (acc, h) => {
+          acc[h.healingMethod] = (acc[h.healingMethod] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
     };
   }
 

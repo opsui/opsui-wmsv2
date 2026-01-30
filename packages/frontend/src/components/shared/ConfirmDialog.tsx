@@ -6,7 +6,12 @@
  */
 
 import { ReactNode } from 'react';
-import { ExclamationTriangleIcon, InformationCircleIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import {
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -31,7 +36,10 @@ export interface ConfirmDialogProps {
 // CONFIG
 // ============================================================================
 
-const VARIANT_CONFIG: Record<ConfirmDialogVariant, { icon: typeof ExclamationTriangleIcon; iconColor: string; buttonColor: string }> = {
+const VARIANT_CONFIG: Record<
+  ConfirmDialogVariant,
+  { icon: typeof ExclamationTriangleIcon; iconColor: string; buttonColor: string }
+> = {
   warning: {
     icon: ExclamationTriangleIcon,
     iconColor: 'text-warning-400',
@@ -105,17 +113,11 @@ export function ConfirmDialog({
             </div>
 
             {/* Title */}
-            <h3 className="text-xl font-semibold text-white text-center mb-2">
-              {title}
-            </h3>
+            <h3 className="text-xl font-semibold text-white text-center mb-2">{title}</h3>
 
             {/* Message */}
             <div className="text-gray-300 text-center mb-6">
-              {typeof message === 'string' ? (
-                <p className="text-sm">{message}</p>
-              ) : (
-                message
-              )}
+              {typeof message === 'string' ? <p className="text-sm">{message}</p> : message}
             </div>
 
             {/* Buttons */}
@@ -208,17 +210,11 @@ export function AlertDialog({
             </div>
 
             {/* Title */}
-            <h3 className="text-xl font-semibold text-white text-center mb-2">
-              {title}
-            </h3>
+            <h3 className="text-xl font-semibold text-white text-center mb-2">{title}</h3>
 
             {/* Message */}
             <div className="text-gray-300 text-center mb-6">
-              {typeof message === 'string' ? (
-                <p className="text-sm">{message}</p>
-              ) : (
-                message
-              )}
+              {typeof message === 'string' ? <p className="text-sm">{message}</p> : message}
             </div>
 
             {/* Button */}

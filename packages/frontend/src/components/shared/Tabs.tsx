@@ -77,7 +77,8 @@ export function Tabs({
       <div
         className={classNames(
           'flex',
-          variant === 'default' && 'border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg overflow-hidden',
+          variant === 'default' &&
+            'border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg overflow-hidden',
           variant === 'pills' && 'gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg',
           variant === 'underline' && 'border-b border-gray-200 dark:border-gray-700'
         )}

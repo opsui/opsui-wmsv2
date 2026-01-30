@@ -126,10 +126,7 @@ router.get(
       return;
     }
 
-    const permissions = await customRoleRepo.getUserPermissions(
-      req.user.userId,
-      req.user.role
-    );
+    const permissions = await customRoleRepo.getUserPermissions(req.user.userId, req.user.role);
 
     res.json({ permissions });
   })
@@ -327,7 +324,13 @@ router.put(
         'custom_role',
         roleId,
         `Updated custom role "${updatedRole.name}" (${roleId})`,
-        existingRole ? { name: existingRole.name, description: existingRole.description, permissions: existingRole.permissions } : null,
+        existingRole
+          ? {
+              name: existingRole.name,
+              description: existingRole.description,
+              permissions: existingRole.permissions,
+            }
+          : null,
         { name, description, permissions },
         ipAddress,
         userAgent
@@ -374,7 +377,13 @@ router.delete(
         'custom_role',
         roleId,
         `Deleted custom role "${existingRole?.name || roleId}" (${roleId})`,
-        existingRole ? { name: existingRole.name, description: existingRole.description, permissions: existingRole.permissions } : null,
+        existingRole
+          ? {
+              name: existingRole.name,
+              description: existingRole.description,
+              permissions: existingRole.permissions,
+            }
+          : null,
         null,
         ipAddress,
         userAgent

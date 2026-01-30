@@ -54,7 +54,9 @@ function RoleModal({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Track selected permissions by group
-  const [selectedPermissionsByGroup, setSelectedPermissionsByGroup] = useState<Record<string, Set<string>>>({});
+  const [selectedPermissionsByGroup, setSelectedPermissionsByGroup] = useState<
+    Record<string, Set<string>>
+  >({});
 
   // Form validation
   const {
@@ -81,7 +83,7 @@ function RoleModal({
         maxLength: 500,
       },
       permissions: {
-        custom: (value) => {
+        custom: value => {
           if (!value || value.length === 0) {
             return 'At least one permission must be selected';
           }
@@ -89,9 +91,11 @@ function RoleModal({
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       // Flatten all selected permissions
-      const allPermissions = Object.values(selectedPermissionsByGroup).flatMap(set => Array.from(set));
+      const allPermissions = Object.values(selectedPermissionsByGroup).flatMap(set =>
+        Array.from(set)
+      );
 
       const submitData: RoleFormData = {
         name: values.name.trim(),
@@ -214,9 +218,7 @@ function RoleModal({
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Name Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Role Name
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Role Name</label>
                 <input
                   name="name"
                   type="text"
@@ -228,16 +230,12 @@ function RoleModal({
                   }`}
                   disabled={isEditing} // System role names cannot be edited
                 />
-                {errors.name && (
-                  <p className="mt-2 text-sm text-red-400">{errors.name}</p>
-                )}
+                {errors.name && <p className="mt-2 text-sm text-red-400">{errors.name}</p>}
               </div>
 
               {/* Description Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -256,11 +254,13 @@ function RoleModal({
               {/* Permissions Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Permissions
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300">Permissions</label>
                   <div className="text-sm text-gray-500">
-                    {Object.values(selectedPermissionsByGroup).reduce((sum, set) => sum + set.size, 0)} selected
+                    {Object.values(selectedPermissionsByGroup).reduce(
+                      (sum, set) => sum + set.size,
+                      0
+                    )}{' '}
+                    selected
                   </div>
                 </div>
 

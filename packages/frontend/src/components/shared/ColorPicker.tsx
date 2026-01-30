@@ -87,9 +87,7 @@ export function ColorPicker({ selectedColor, onColorChange, label }: ColorPicker
               title={color.name}
               aria-label={`Select ${color.name}`}
             >
-              {isSelected && (
-                <CheckIcon className="h-5 w-5 text-white absolute inset-0 m-auto" />
-              )}
+              {isSelected && <CheckIcon className="h-5 w-5 text-white absolute inset-0 m-auto" />}
               <span className="sr-only">{color.name}</span>
             </button>
           );

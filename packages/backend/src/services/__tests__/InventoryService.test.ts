@@ -131,12 +131,7 @@ describe('InventoryService', () => {
       const reservedInventory = { ...mockInventoryUnit, reserved: 20, available: 80 };
       inventoryRepository.reserveInventory.mockResolvedValue(reservedInventory);
 
-      const result = await inventoryService.reserveInventory(
-        'SKU-001',
-        'A-01-01',
-        10,
-        'ORD-001'
-      );
+      const result = await inventoryService.reserveInventory('SKU-001', 'A-01-01', 10, 'ORD-001');
 
       expect(result).toEqual(reservedInventory);
       expect(inventoryRepository.reserveInventory).toHaveBeenCalledWith(
@@ -174,12 +169,7 @@ describe('InventoryService', () => {
       const releasedInventory = { ...mockInventoryUnit, reserved: 0, available: 100 };
       inventoryRepository.releaseReservation.mockResolvedValue(releasedInventory);
 
-      const result = await inventoryService.releaseReservation(
-        'SKU-001',
-        'A-01-01',
-        10,
-        'ORD-001'
-      );
+      const result = await inventoryService.releaseReservation('SKU-001', 'A-01-01', 10, 'ORD-001');
 
       expect(result).toEqual(releasedInventory);
       expect(inventoryRepository.releaseReservation).toHaveBeenCalledWith(
@@ -202,12 +192,7 @@ describe('InventoryService', () => {
       const deductedInventory = { ...mockInventoryUnit, quantity: 90, available: 80 };
       inventoryRepository.deductInventory.mockResolvedValue(deductedInventory);
 
-      const result = await inventoryService.deductInventory(
-        'SKU-001',
-        'A-01-01',
-        10,
-        'ORD-001'
-      );
+      const result = await inventoryService.deductInventory('SKU-001', 'A-01-01', 10, 'ORD-001');
 
       expect(result).toEqual(deductedInventory);
       expect(inventoryRepository.deductInventory).toHaveBeenCalledWith(

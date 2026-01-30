@@ -152,10 +152,7 @@ export class SMSProvider {
   // BULK SEND
   // --------------------------------------------------------------------------
 
-  async bulkSend(
-    messages: SMSParams[],
-    rateLimitMs?: number
-  ): Promise<SMSResult[]> {
+  async bulkSend(messages: SMSParams[], rateLimitMs?: number): Promise<SMSResult[]> {
     const results: SMSResult[] = [];
     const actualRateLimit = rateLimitMs || this.calculateRateLimitMs();
 

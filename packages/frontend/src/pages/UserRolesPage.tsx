@@ -6,7 +6,16 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardContent, Header, Button, UserRoleBadge, Pagination, ConfirmDialog } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Header,
+  Button,
+  UserRoleBadge,
+  Pagination,
+  ConfirmDialog,
+} from '@/components/shared';
 import { useToast } from '@/components/shared';
 import {
   UserGroupIcon,
@@ -23,7 +32,16 @@ import {
 } from '@heroicons/react/24/outline';
 import { UserRole, User } from '@opsui/shared';
 import { playSound } from '@/stores';
-import { useUsers, useGrantRole, useRevokeRole, useAllRoleAssignments, useCreateUser, useUpdateUser, useDeleteUser, useRestoreUser } from '@/services/api';
+import {
+  useUsers,
+  useGrantRole,
+  useRevokeRole,
+  useAllRoleAssignments,
+  useCreateUser,
+  useUpdateUser,
+  useDeleteUser,
+  useRestoreUser,
+} from '@/services/api';
 import UserModal, { UserFormData } from '@/components/users/UserModal';
 
 // ============================================================================
@@ -48,8 +66,14 @@ function UserRolesPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Confirm dialog states
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; user: User | null }>({ isOpen: false, user: null });
-  const [restoreConfirm, setRestoreConfirm] = useState<{ isOpen: boolean; user: User | null }>({ isOpen: false, user: null });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; user: User | null }>({
+    isOpen: false,
+    user: null,
+  });
+  const [restoreConfirm, setRestoreConfirm] = useState<{ isOpen: boolean; user: User | null }>({
+    isOpen: false,
+    user: null,
+  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -322,12 +346,18 @@ function UserRolesPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl ${isDeleted ? 'bg-warning-500/20' : 'bg-primary-500/20'}`}>
-                        <UserIcon className={`h-6 w-6 ${isDeleted ? 'text-warning-400' : 'text-primary-400'}`} />
+                      <div
+                        className={`p-3 rounded-xl ${isDeleted ? 'bg-warning-500/20' : 'bg-primary-500/20'}`}
+                      >
+                        <UserIcon
+                          className={`h-6 w-6 ${isDeleted ? 'text-warning-400' : 'text-primary-400'}`}
+                        />
                       </div>
                       <div>
                         <div className="flex items-center gap-3">
-                          <h3 className={`text-xl font-semibold ${isDeleted ? 'text-gray-400 line-through' : 'text-white'}`}>
+                          <h3
+                            className={`text-xl font-semibold ${isDeleted ? 'text-gray-400 line-through' : 'text-white'}`}
+                          >
                             {user.name}
                           </h3>
                           {!user.active && !isDeleted && (
@@ -339,7 +369,9 @@ function UserRolesPage() {
                             </span>
                           )}
                         </div>
-                        <p className={`text-sm ${isDeleted ? 'text-gray-500' : 'text-gray-400'}`}>{user.email}</p>
+                        <p className={`text-sm ${isDeleted ? 'text-gray-500' : 'text-gray-400'}`}>
+                          {user.email}
+                        </p>
                         <div className="flex items-center gap-3 mt-2">
                           <span className="text-xs text-gray-500">ID: {user.userId}</span>
                           {isDeleted ? (
@@ -420,54 +452,56 @@ function UserRolesPage() {
                                 isBaseRole
                                   ? 'bg-primary-500/10 border-primary-500/30 cursor-not-allowed opacity-50'
                                   : isAdminUser
-                                ? 'bg-gray-700/30 border-gray-600/30 cursor-not-allowed opacity-40'
-                                : hasRole
-                                  ? 'bg-success-500/20 border-success-500/30 hover:bg-success-500/30'
-                                  : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
-                          }`}
-                          title={
-                            isBaseRole
-                              ? "This is user's base role"
-                              : isAdminUser
-                                ? 'ADMIN users have full access and do not need additional roles'
-                                : hasRole
-                                  ? 'Click to revoke'
-                                  : 'Click to grant'
-                          }
-                        >
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`text-sm font-medium ${
-                                isBaseRole
-                                  ? 'text-primary-400'
-                                  : isAdminUser
-                                    ? 'text-gray-500'
+                                    ? 'bg-gray-700/30 border-gray-600/30 cursor-not-allowed opacity-40'
                                     : hasRole
-                                      ? 'text-success-400'
-                                      : 'text-gray-400'
+                                      ? 'bg-success-500/20 border-success-500/30 hover:bg-success-500/30'
+                                      : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
                               }`}
+                              title={
+                                isBaseRole
+                                  ? "This is user's base role"
+                                  : isAdminUser
+                                    ? 'ADMIN users have full access and do not need additional roles'
+                                    : hasRole
+                                      ? 'Click to revoke'
+                                      : 'Click to grant'
+                              }
                             >
-                              {role}
-                            </span>
-                            {isBaseRole && <KeyIcon className="h-5 w-5 text-primary-400" />}
-                            {isAdminUser && !isBaseRole && <LockClosedIcon className="h-5 w-5 text-gray-500" />}
-                            {hasRole && !isBaseRole && !isAdminUser && (
-                              <CheckIcon className="h-5 w-5 text-success-400" />
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                              <div className="flex items-center justify-between">
+                                <span
+                                  className={`text-sm font-medium ${
+                                    isBaseRole
+                                      ? 'text-primary-400'
+                                      : isAdminUser
+                                        ? 'text-gray-500'
+                                        : hasRole
+                                          ? 'text-success-400'
+                                          : 'text-gray-400'
+                                  }`}
+                                >
+                                  {role}
+                                </span>
+                                {isBaseRole && <KeyIcon className="h-5 w-5 text-primary-400" />}
+                                {isAdminUser && !isBaseRole && (
+                                  <LockClosedIcon className="h-5 w-5 text-gray-500" />
+                                )}
+                                {hasRole && !isBaseRole && !isAdminUser && (
+                                  <CheckIcon className="h-5 w-5 text-success-400" />
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                  <p className="text-sm text-gray-500 mt-3">
-                    Click to toggle roles. Users can switch between their base role and any granted
-                    roles via the role dropdown in the header.
-                  </p>
-                </div>
-              </CardContent>
+                      <p className="text-sm text-gray-500 mt-3">
+                        Click to toggle roles. Users can switch between their base role and any
+                        granted roles via the role dropdown in the header.
+                      </p>
+                    </div>
+                  </CardContent>
                 )}
-            </Card>
+              </Card>
             );
           })}
 
@@ -487,7 +521,9 @@ function UserRolesPage() {
               <CardContent className="p-12 text-center">
                 <UserIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-400 mb-2">No users found</h3>
-                <p className="text-sm text-gray-500">Try adjusting your search query or create a new user</p>
+                <p className="text-sm text-gray-500">
+                  Try adjusting your search query or create a new user
+                </p>
               </CardContent>
             </Card>
           )}

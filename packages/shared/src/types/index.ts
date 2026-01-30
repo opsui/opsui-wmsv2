@@ -171,11 +171,7 @@ export const PERMISSION_GROUPS = {
     Permission.COMPLETE_PICK_TASK,
     Permission.SKIP_PICK_TASK,
   ],
-  PACKING: [
-    Permission.VIEW_PACK_TASKS,
-    Permission.CLAIM_PACK_TASK,
-    Permission.COMPLETE_PACK_TASK,
-  ],
+  PACKING: [Permission.VIEW_PACK_TASKS, Permission.CLAIM_PACK_TASK, Permission.COMPLETE_PACK_TASK],
   INVENTORY: [
     Permission.VIEW_INVENTORY,
     Permission.ADJUST_INVENTORY,
@@ -187,15 +183,8 @@ export const PERMISSION_GROUPS = {
     Permission.MANAGE_LOCATIONS,
     Permission.VIEW_LOCATION_CAPACITY,
   ],
-  INWARDS: [
-    Permission.PROCESS_RECEIPTS,
-    Permission.MANAGE_PUTAWAYS,
-  ],
-  REPORTS: [
-    Permission.VIEW_REPORTS,
-    Permission.GENERATE_REPORTS,
-    Permission.EXPORT_DATA,
-  ],
+  INWARDS: [Permission.PROCESS_RECEIPTS, Permission.MANAGE_PUTAWAYS],
+  REPORTS: [Permission.VIEW_REPORTS, Permission.GENERATE_REPORTS, Permission.EXPORT_DATA],
   USERS: [
     Permission.VIEW_USERS,
     Permission.CREATE_USERS,
@@ -214,26 +203,11 @@ export const PERMISSION_GROUPS = {
     Permission.MANAGE_INTEGRATIONS,
     Permission.MANAGE_BUSINESS_RULES,
   ],
-  QUALITY_CONTROL: [
-    Permission.PERFORM_QC_CHECKS,
-    Permission.APPROVE_QC_RESULTS,
-  ],
-  PRODUCTION: [
-    Permission.VIEW_PRODUCTION_TASKS,
-    Permission.MANAGE_PRODUCTION,
-  ],
-  SALES: [
-    Permission.VIEW_SALES_ORDERS,
-    Permission.MANAGE_SALES,
-  ],
-  MAINTENANCE: [
-    Permission.VIEW_MAINTENANCE_TASKS,
-    Permission.MANAGE_MAINTENANCE,
-  ],
-  RMA: [
-    Permission.VIEW_RMA_REQUESTS,
-    Permission.PROCESS_RMA,
-  ],
+  QUALITY_CONTROL: [Permission.PERFORM_QC_CHECKS, Permission.APPROVE_QC_RESULTS],
+  PRODUCTION: [Permission.VIEW_PRODUCTION_TASKS, Permission.MANAGE_PRODUCTION],
+  SALES: [Permission.VIEW_SALES_ORDERS, Permission.MANAGE_SALES],
+  MAINTENANCE: [Permission.VIEW_MAINTENANCE_TASKS, Permission.MANAGE_MAINTENANCE],
+  RMA: [Permission.VIEW_RMA_REQUESTS, Permission.PROCESS_RMA],
 } as const;
 
 /**
@@ -361,10 +335,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_ORDERS,
     Permission.VIEW_REPORTS,
   ],
-  [UserRole.MAINTENANCE]: [
-    Permission.VIEW_MAINTENANCE_TASKS,
-    Permission.MANAGE_MAINTENANCE,
-  ],
+  [UserRole.MAINTENANCE]: [Permission.VIEW_MAINTENANCE_TASKS, Permission.MANAGE_MAINTENANCE],
   [UserRole.RMA]: [
     Permission.VIEW_RMA_REQUESTS,
     Permission.PROCESS_RMA,
@@ -672,7 +643,6 @@ export interface OrderException {
 // ============================================================================
 // DTOs (Data Transfer Objects)
 // ============================================================================
-
 
 export interface LoginCredentials {
   email: string;

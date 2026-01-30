@@ -55,15 +55,26 @@ try {
   const pwVersion = execSync('npx playwright --version', { encoding: 'utf-8' }).trim();
   check('Playwright installed', true, pwVersion);
 } catch {
-  check('Playwright installed', false, 'Playwright not found', 'Run: npm install -D @playwright/test && npx playwright install');
+  check(
+    'Playwright installed',
+    false,
+    'Playwright not found',
+    'Run: npm install -D @playwright/test && npx playwright install'
+  );
 }
 
 // 3. Check if Playwright browsers are installed
 try {
   const browsersPath = path.join(process.cwd(), 'node_modules', 'playwright-core', 'browsers.json');
-  const browsersExist = fs.existsSync(browsersPath) ||
-                        fs.existsSync(path.join(process.env.USERPROFILE || '', '.cache', 'ms-playwright'));
-  warn('Playwright browsers', browsersExist, 'Browsers may not be installed', 'Run: npx playwright install chromium');
+  const browsersExist =
+    fs.existsSync(browsersPath) ||
+    fs.existsSync(path.join(process.env.USERPROFILE || '', '.cache', 'ms-playwright'));
+  warn(
+    'Playwright browsers',
+    browsersExist,
+    'Browsers may not be installed',
+    'Run: npx playwright install chromium'
+  );
 } catch {}
 
 // 4. Check if tsx is installed

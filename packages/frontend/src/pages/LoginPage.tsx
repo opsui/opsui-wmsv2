@@ -52,7 +52,7 @@ export function LoginPage() {
         minLength: 8,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       // Trigger the login mutation
       loginMutation.mutate({ email: values.email, password: values.password });
     },
@@ -115,13 +115,13 @@ export function LoginPage() {
                 autoComplete="email"
                 required
                 className={`mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] text-white placeholder:text-gray-500 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300 ${
-                  errors.email ? 'border-red-500 focus:border-red-500' : 'border-white/[0.08] focus:border-primary-500/50'
+                  errors.email
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-white/[0.08] focus:border-primary-500/50'
                 }`}
                 placeholder="Enter your email"
               />
-              {errors.email && (
-                <p className="mt-2 text-sm text-red-400">{errors.email}</p>
-              )}
+              {errors.email && <p className="mt-2 text-sm text-red-400">{errors.email}</p>}
             </div>
 
             <div>
@@ -137,13 +137,13 @@ export function LoginPage() {
                 autoComplete="current-password"
                 required
                 className={`mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] text-white placeholder:text-gray-500 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300 ${
-                  errors.password ? 'border-red-500 focus:border-red-500' : 'border-white/[0.08] focus:border-primary-500/50'
+                  errors.password
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-white/[0.08] focus:border-primary-500/50'
                 }`}
                 placeholder="Enter your password"
               />
-              {errors.password && (
-                <p className="mt-2 text-sm text-red-400">{errors.password}</p>
-              )}
+              {errors.password && <p className="mt-2 text-sm text-red-400">{errors.password}</p>}
             </div>
 
             <Button

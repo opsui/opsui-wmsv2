@@ -88,9 +88,7 @@ export class SmartTestDataFactory {
   /**
    * Generate WMS-specific order data
    */
-  generateWMSOrder(
-    overrides: Partial<GeneratedRecord> = {}
-  ): GeneratedRecord {
+  generateWMSOrder(overrides: Partial<GeneratedRecord> = {}): GeneratedRecord {
     const statuses = ['pending', 'processing', 'picked', 'packed'];
     const carriers = ['CourierPost', 'NZ Post', 'DHL'];
 
@@ -98,7 +96,10 @@ export class SmartTestDataFactory {
       order_id: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       customer_id: `CUST-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`,
       status: statuses[Math.floor(Math.random() * statuses.length)],
-      priority: this.wmsKnowledge.priorities[Math.floor(Math.random() * this.wmsKnowledge.priorities.length)],
+      priority:
+        this.wmsKnowledge.priorities[
+          Math.floor(Math.random() * this.wmsKnowledge.priorities.length)
+        ],
       total_amount: Math.round((Math.random() * 500 + 50) * 100) / 100,
       item_count: Math.floor(Math.random() * 10) + 1,
       carrier: carriers[Math.floor(Math.random() * carriers.length)],
@@ -111,9 +112,7 @@ export class SmartTestDataFactory {
   /**
    * Generate WMS SKU data
    */
-  generateWMSSKU(
-    overrides: Partial<GeneratedRecord> = {}
-  ): GeneratedRecord {
+  generateWMSSKU(overrides: Partial<GeneratedRecord> = {}): GeneratedRecord {
     const categories = ['Electronics', 'Clothing', 'Food', 'Tools', 'Furniture'];
     const zones = this.wmsKnowledge.zones;
 
@@ -137,9 +136,7 @@ export class SmartTestDataFactory {
   /**
    * Generate WMS bin location data
    */
-  generateWMSBinLocation(
-    overrides: Partial<GeneratedRecord> = {}
-  ): GeneratedRecord {
+  generateWMSBinLocation(overrides: Partial<GeneratedRecord> = {}): GeneratedRecord {
     const zones = this.wmsKnowledge.zones;
     const zone = zones[Math.floor(Math.random() * zones.length)];
     const aisle = String(Math.floor(Math.random() * 20) + 1).padStart(2, '0');
@@ -161,12 +158,19 @@ export class SmartTestDataFactory {
   /**
    * Generate WMS user data
    */
-  generateWMSUser(
-    overrides: Partial<GeneratedRecord> = {}
-  ): GeneratedRecord {
+  generateWMSUser(overrides: Partial<GeneratedRecord> = {}): GeneratedRecord {
     const roles = ['PICKER', 'PACKER', 'ADMIN', 'SUPERVISOR', 'STOCK_CONTROLLER'];
     const firstNames = ['John', 'Jane', 'Bob', 'Alice', 'Charlie', 'Diana', 'Eve', 'Frank'];
-    const lastNames = ['Smith', 'Jones', 'Williams', 'Brown', 'Wilson', 'Taylor', 'Davies', 'Evans'];
+    const lastNames = [
+      'Smith',
+      'Jones',
+      'Williams',
+      'Brown',
+      'Wilson',
+      'Taylor',
+      'Davies',
+      'Evans',
+    ];
 
     const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];

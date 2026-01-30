@@ -51,11 +51,7 @@ export interface UseFormValidationOptions<T> {
 // VALIDATION FUNCTIONS
 // ============================================================================
 
-function validateField<T>(
-  fieldName: keyof T,
-  value: any,
-  rules: ValidationRule
-): string | null {
+function validateField<T>(fieldName: keyof T, value: any, rules: ValidationRule): string | null {
   // Required validation
   if (rules.required) {
     if (value === undefined || value === null || value === '') {
@@ -141,8 +137,7 @@ export function useFormValidation<T extends Record<string, any>>({
       const fieldName = name as keyof T;
 
       // Handle checkbox
-      const newValue =
-        type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+      const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
 
       setValues(prev => ({ ...prev, [fieldName]: newValue }));
 
@@ -162,19 +157,22 @@ export function useFormValidation<T extends Record<string, any>>({
   );
 
   // Handle field blur (mark as touched)
-  const handleBlur = useCallback((fieldName: keyof T) => {
-    setTouched(prev => new Set(prev).add(fieldName));
+  const handleBlur = useCallback(
+    (fieldName: keyof T) => {
+      setTouched(prev => new Set(prev).add(fieldName));
 
-    // Validate field on blur
-    const rule = validationRules[fieldName];
-    if (rule) {
-      const error = validateField(fieldName, values[fieldName], rule);
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: error || undefined,
-      }));
-    }
-  }, [validationRules, values]);
+      // Validate field on blur
+      const rule = validationRules[fieldName];
+      if (rule) {
+        const error = validateField(fieldName, values[fieldName], rule);
+        setErrors(prev => ({
+          ...prev,
+          [fieldName]: error || undefined,
+        }));
+      }
+    },
+    [validationRules, values]
+  );
 
   // Handle form submission
   const handleSubmit = useCallback(

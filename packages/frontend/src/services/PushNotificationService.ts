@@ -45,7 +45,8 @@ class PushNotificationServiceClass {
 
   async initialize(): Promise<void> {
     // Check if service workers and push notifications are supported
-    this.isSupported = 'serviceWorker' in navigator && 'PushManager' in navigator && 'Notification' in window;
+    this.isSupported =
+      'serviceWorker' in navigator && 'PushManager' in navigator && 'Notification' in window;
 
     if (!this.isSupported) {
       console.warn('Push notifications are not supported in this browser');
@@ -114,7 +115,8 @@ class PushNotificationServiceClass {
     if (this.permission === 'denied') {
       return {
         success: false,
-        error: 'Notification permission denied. Please enable notifications in your browser settings.',
+        error:
+          'Notification permission denied. Please enable notifications in your browser settings.',
       };
     }
 

@@ -6,7 +6,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@/components/shared';
-import { XMarkIcon, FunnelIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import {
+  XMarkIcon,
+  FunnelIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/24/outline';
 import { classNames } from '@/components/shared/utils';
 
 export interface LogEntry {
@@ -152,7 +157,7 @@ export function LogViewer({
               type="text"
               placeholder="Search logs..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full px-3 py-1.5 text-sm border rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white"
             />
           </div>
@@ -230,13 +235,7 @@ export function LogViewer({
 /**
  * Compact log entry for inline display
  */
-export function LogEntryBadge({
-  entry,
-  onClick,
-}: {
-  entry: LogEntry;
-  onClick?: () => void;
-}) {
+export function LogEntryBadge({ entry, onClick }: { entry: LogEntry; onClick?: () => void }) {
   const colors = levelColors[entry.level];
 
   return (

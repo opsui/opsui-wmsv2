@@ -56,13 +56,16 @@ export function useAdminRoleAutoSwitch() {
 
     // Detect if this is a role change event (not a navigation event)
     // A role change is indicated by the path staying the same but activeRole changing
-    const isRoleChangeEvent = prevPath === currentPath && prevActiveRole !== activeRole && activeRole !== null;
+    const isRoleChangeEvent =
+      prevPath === currentPath && prevActiveRole !== activeRole && activeRole !== null;
 
     // If on admin path and not already in admin role, check if we should switch back
     if (isAdminPath && effectiveRole !== UserRole.ADMIN && activeRole !== null) {
       // Do NOT switch if this is a role change event (let ProtectedRoute handle the redirect)
       if (isRoleChangeEvent) {
-        console.log('[useAdminRoleAutoSwitch] Role change detected on admin path, skipping auto-switch (letting ProtectedRoute redirect)');
+        console.log(
+          '[useAdminRoleAutoSwitch] Role change detected on admin path, skipping auto-switch (letting ProtectedRoute redirect)'
+        );
         prevPathRef.current = currentPath;
         prevActiveRoleRef.current = activeRole;
         return;
@@ -70,10 +73,13 @@ export function useAdminRoleAutoSwitch() {
 
       // Only switch back to ADMIN if this is a direct navigation to an admin path
       // from a non-admin path (not from another admin path)
-      const isDirectNavigationToAdmin = prevPath && !ADMIN_PATHS.some(path => prevPath.startsWith(path));
+      const isDirectNavigationToAdmin =
+        prevPath && !ADMIN_PATHS.some(path => prevPath.startsWith(path));
 
       if (isDirectNavigationToAdmin || prevPath === '/login' || prevPath === null) {
-        console.log('[useAdminRoleAutoSwitch] Direct navigation to admin path, clearing active role');
+        console.log(
+          '[useAdminRoleAutoSwitch] Direct navigation to admin path, clearing active role'
+        );
         // Clear activeRole to revert to base role (ADMIN for admin users)
         useAuthStore.getState().setActiveRole(null);
       }

@@ -515,10 +515,7 @@ describe('Users Routes', () => {
         next();
       });
 
-      await request(app)
-        .get('/api/users')
-        .set('Authorization', 'Bearer invalid-token')
-        .expect(401);
+      await request(app).get('/api/users').set('Authorization', 'Bearer invalid-token').expect(401);
     });
 
     it('should allow access with admin role', async () => {
@@ -532,10 +529,7 @@ describe('Users Routes', () => {
         next();
       });
 
-      await request(app)
-        .get('/api/users')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
+      await request(app).get('/api/users').set('Authorization', 'Bearer valid-token').expect(200);
     });
 
     it('should deny access for non-admin users', async () => {
@@ -552,10 +546,7 @@ describe('Users Routes', () => {
         next();
       });
 
-      await request(app)
-        .get('/api/users')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(403);
+      await request(app).get('/api/users').set('Authorization', 'Bearer valid-token').expect(403);
     });
   });
 

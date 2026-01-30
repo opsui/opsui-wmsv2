@@ -6,7 +6,16 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, Header, Button, Pagination, useToast, ConfirmDialog } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Header,
+  Button,
+  Pagination,
+  useToast,
+  ConfirmDialog,
+} from '@/components/shared';
 import {
   ShieldCheckIcon,
   ArrowLeftIcon,
@@ -94,14 +103,16 @@ function RolesManagementPage() {
   }, [searchTerm]);
 
   // Organize permissions into groups
-  const permissionGroups: PermissionGroup[] = Object.entries(PERMISSION_GROUPS).map(([key, perms]) => ({
-    key,
-    label: key
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' '),
-    permissions: perms as Permission[],
-  }));
+  const permissionGroups: PermissionGroup[] = Object.entries(PERMISSION_GROUPS).map(
+    ([key, perms]) => ({
+      key,
+      label: key
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' '),
+      permissions: perms as Permission[],
+    })
+  );
 
   const handleCreateRole = async (data: RoleFormData) => {
     try {
@@ -234,7 +245,9 @@ function RolesManagementPage() {
                 <h1 className="text-3xl font-bold text-white tracking-tight">
                   Custom Roles Management
                 </h1>
-                <p className="mt-2 text-gray-400">Create and manage custom roles with granular permissions</p>
+                <p className="mt-2 text-gray-400">
+                  Create and manage custom roles with granular permissions
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -245,7 +258,7 @@ function RolesManagementPage() {
                   type="text"
                   placeholder="Search roles..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                 />
               </div>
@@ -272,9 +285,18 @@ function RolesManagementPage() {
               <div>
                 <h4 className="text-white font-semibold mb-2">About Custom Roles</h4>
                 <ul className="text-sm text-gray-400 space-y-1">
-                  <li>• <strong className="text-gray-300">System roles</strong> are predefined (Picker, Packer, etc.) and cannot be modified</li>
-                  <li>• <strong className="text-gray-300">Custom roles</strong> can be created with any combination of permissions</li>
-                  <li>• Custom roles can be granted to users as additional roles via the User Roles page</li>
+                  <li>
+                    • <strong className="text-gray-300">System roles</strong> are predefined
+                    (Picker, Packer, etc.) and cannot be modified
+                  </li>
+                  <li>
+                    • <strong className="text-gray-300">Custom roles</strong> can be created with
+                    any combination of permissions
+                  </li>
+                  <li>
+                    • Custom roles can be granted to users as additional roles via the User Roles
+                    page
+                  </li>
                   <li>• Permissions are organized into logical groups for easier management</li>
                 </ul>
               </div>
@@ -294,8 +316,12 @@ function RolesManagementPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl ${isSystem ? 'bg-purple-500/20' : 'bg-primary-500/20'}`}>
-                        <ShieldCheckIcon className={`h-6 w-6 ${isSystem ? 'text-purple-400' : 'text-primary-400'}`} />
+                      <div
+                        className={`p-3 rounded-xl ${isSystem ? 'bg-purple-500/20' : 'bg-primary-500/20'}`}
+                      >
+                        <ShieldCheckIcon
+                          className={`h-6 w-6 ${isSystem ? 'text-purple-400' : 'text-primary-400'}`}
+                        />
                       </div>
                       <div>
                         <div className="flex items-center gap-3">
@@ -333,7 +359,10 @@ function RolesManagementPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {Object.entries(permissionCounts).map(([groupKey, count]) => (
-                      <div key={groupKey} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                      <div
+                        key={groupKey}
+                        className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-gray-700"
+                      >
                         <div className="flex items-center gap-3">
                           <KeyIcon className="h-5 w-5 text-primary-400" />
                           <span className="text-sm font-medium text-white capitalize">

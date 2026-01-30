@@ -8,19 +8,11 @@
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import {
-  SemanticResourceAttributes,
-} from '@opentelemetry/semantic-conventions';
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import {
-  OTLPTraceExporter,
-} from '@opentelemetry/exporter-trace-otlp-grpc';
-import {
-  OTLPMetricExporter,
-} from '@opentelemetry/exporter-metrics-otlp-grpc';
-import {
-  PeriodicExportingMetricReader,
-} from '@opentelemetry/sdk-metrics';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import * as diag from '@opentelemetry/api';
 import config from '../config';
 
@@ -93,9 +85,10 @@ export function initializeTelemetry(): NodeSDK {
 
   // Graceful shutdown
   process.on('SIGTERM', () => {
-    sdk.shutdown()
+    sdk
+      .shutdown()
       .then(() => console.log('OpenTelemetry shut down successfully'))
-      .catch((error) => console.error('Error shutting down OpenTelemetry', error));
+      .catch(error => console.error('Error shutting down OpenTelemetry', error));
   });
 
   console.log('OpenTelemetry initialized successfully');
@@ -106,10 +99,7 @@ export function initializeTelemetry(): NodeSDK {
 // TRACING UTILITIES
 // ============================================================================
 
-const tracer = diag.trace.getTracer(
-  'wms-backend',
-  '1.0.0'
-);
+const tracer = diag.trace.getTracer('wms-backend', '1.0.0');
 
 /**
  * Wrap an async function with a span
@@ -119,7 +109,7 @@ export async function withSpan<T>(
   fn: (span: diag.Span) => Promise<T>,
   attributes?: Record<string, unknown>
 ): Promise<T> {
-  return tracer.startActiveSpan(name, async (span) => {
+  return tracer.startActiveSpan(name, async span => {
     try {
       if (attributes) {
         span.setAttributes(attributes as Record<string, string | number | boolean | undefined>);
@@ -159,7 +149,10 @@ export function addSpanEvent(name: string, attributes?: Record<string, unknown>)
   try {
     const activeSpan = diag.trace.getActiveSpan();
     if (activeSpan) {
-      activeSpan.addEvent(name, attributes as Record<string, string | number | boolean | undefined> | undefined);
+      activeSpan.addEvent(
+        name,
+        attributes as Record<string, string | number | boolean | undefined> | undefined
+      );
     }
   } catch (error) {
     // Silently fail - tracing should not break the application
@@ -191,10 +184,13 @@ const meter = diag.metrics.getMeter('wms-backend', '1.0.0');
 /**
  * Create a counter metric
  */
-export function createCounter(name: string, options?: {
-  description?: string;
-  unit?: string;
-}) {
+export function createCounter(
+  name: string,
+  options?: {
+    description?: string;
+    unit?: string;
+  }
+) {
   return meter.createCounter(name, {
     description: options?.description,
     unit: options?.unit || '1',
@@ -204,10 +200,13 @@ export function createCounter(name: string, options?: {
 /**
  * Create a histogram metric
  */
-export function createHistogram(name: string, options?: {
-  description?: string;
-  unit?: string;
-}) {
+export function createHistogram(
+  name: string,
+  options?: {
+    description?: string;
+    unit?: string;
+  }
+) {
   return meter.createHistogram(name, {
     description: options?.description,
     unit: options?.unit || 'ms',
@@ -217,10 +216,13 @@ export function createHistogram(name: string, options?: {
 /**
  * Create a gauge metric
  */
-export function createGauge(name: string, options?: {
-  description?: string;
-  unit?: string;
-}) {
+export function createGauge(
+  name: string,
+  options?: {
+    description?: string;
+    unit?: string;
+  }
+) {
   return meter.createObservableGauge(name, {
     description: options?.description,
     unit: options?.unit || '1',

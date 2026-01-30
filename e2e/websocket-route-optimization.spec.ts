@@ -346,12 +346,7 @@ test.describe('Integration Tests', () => {
   });
 
   test('connection status visible across all pages', async ({ page }) => {
-    const pages = [
-      '/order-queue',
-      '/picking',
-      '/route-optimization',
-      '/dashboard',
-    ];
+    const pages = ['/order-queue', '/picking', '/route-optimization', '/dashboard'];
 
     for (const pagePath of pages) {
       await page.goto(pagePath);

@@ -46,8 +46,12 @@ async function runMigration() {
 
     await client.query(`CREATE INDEX idx_asn_supplier ON advance_shipping_notices(supplier_id)`);
     await client.query(`CREATE INDEX idx_asn_status ON advance_shipping_notices(status)`);
-    await client.query(`CREATE INDEX idx_asn_expected_arrival ON advance_shipping_notices(expected_arrival_date)`);
-    await client.query(`CREATE INDEX idx_asn_po_number ON advance_shipping_notices(purchase_order_number)`);
+    await client.query(
+      `CREATE INDEX idx_asn_expected_arrival ON advance_shipping_notices(expected_arrival_date)`
+    );
+    await client.query(
+      `CREATE INDEX idx_asn_po_number ON advance_shipping_notices(purchase_order_number)`
+    );
 
     // ============================================================================
     // ASN LINE ITEMS
@@ -121,8 +125,12 @@ async function runMigration() {
 
     await client.query(`CREATE INDEX idx_receipt_line_receipt ON receipt_line_items(receipt_id)`);
     await client.query(`CREATE INDEX idx_receipt_line_sku ON receipt_line_items(sku)`);
-    await client.query(`CREATE INDEX idx_receipt_line_quality ON receipt_line_items(quality_status)`);
-    await client.query(`CREATE INDEX idx_receipt_line_putaway ON receipt_line_items(putaway_status)`);
+    await client.query(
+      `CREATE INDEX idx_receipt_line_quality ON receipt_line_items(quality_status)`
+    );
+    await client.query(
+      `CREATE INDEX idx_receipt_line_putaway ON receipt_line_items(putaway_status)`
+    );
 
     // ============================================================================
     // PUTAWAY TASKS

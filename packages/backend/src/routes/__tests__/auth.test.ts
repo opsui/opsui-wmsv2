@@ -133,10 +133,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 400 when refresh token is missing', async () => {
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({})
-        .expect(400);
+      const response = await request(app).post('/api/auth/refresh').send({}).expect(400);
 
       expect(response.body).toEqual({
         error: 'Refresh token is required',

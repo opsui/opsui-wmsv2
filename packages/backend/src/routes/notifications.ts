@@ -171,7 +171,16 @@ router.post(
     }
 
     // Validate type
-    const validTypes = ['ORDER_CLAIMED', 'ORDER_COMPLETED', 'PICK_UPDATED', 'INVENTORY_LOW', 'EXCEPTION_REPORTED', 'ZONE_ASSIGNED', 'WAVE_CREATED', 'SYSTEM_ALERT'];
+    const validTypes = [
+      'ORDER_CLAIMED',
+      'ORDER_COMPLETED',
+      'PICK_UPDATED',
+      'INVENTORY_LOW',
+      'EXCEPTION_REPORTED',
+      'ZONE_ASSIGNED',
+      'WAVE_CREATED',
+      'SYSTEM_ALERT',
+    ];
     if (!validTypes.includes(type)) {
       res.status(400).json({
         error: 'Invalid notification type',

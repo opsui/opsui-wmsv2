@@ -18,7 +18,12 @@ import {
   Header,
 } from '@/components/shared';
 import { useQuery } from '@tanstack/react-query';
-import { MagnifyingGlassIcon, CubeIcon, MapPinIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import {
+  MagnifyingGlassIcon,
+  CubeIcon,
+  MapPinIcon,
+  ArrowLeftIcon,
+} from '@heroicons/react/24/outline';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores';
@@ -101,11 +106,12 @@ export function ProductSearchPage() {
     if (!searchQuery.trim()) return allSKUs;
 
     const query = searchQuery.toLowerCase();
-    return allSKUs.filter(sku =>
-      sku.sku.toLowerCase().includes(query) ||
-      sku.name.toLowerCase().includes(query) ||
-      sku.barcode?.toLowerCase().includes(query) ||
-      sku.category?.toLowerCase().includes(query)
+    return allSKUs.filter(
+      sku =>
+        sku.sku.toLowerCase().includes(query) ||
+        sku.name.toLowerCase().includes(query) ||
+        sku.barcode?.toLowerCase().includes(query) ||
+        sku.category?.toLowerCase().includes(query)
     );
   }, [allSKUs, searchQuery]);
 
@@ -190,7 +196,10 @@ export function ProductSearchPage() {
             <CardContent className="pt-6">
               <div className="flex gap-4 items-center">
                 <div className="flex-1">
-                  <label htmlFor="filter-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label
+                    htmlFor="filter-input"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
                     Filter Items
                   </label>
                   <Input
@@ -230,15 +239,25 @@ export function ProductSearchPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b dark:border-gray-700">
-                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">SKU</th>
-                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">Name</th>
-                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">Barcode</th>
-                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">Category</th>
-                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">Actions</th>
+                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                          SKU
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                          Name
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                          Barcode
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                          Category
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredSKUs.map((sku) => (
+                      {filteredSKUs.map(sku => (
                         <tr
                           key={sku.sku}
                           className="border-b dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
@@ -248,13 +267,17 @@ export function ProductSearchPage() {
                             {sku.sku}
                           </td>
                           <td className="py-3 px-4 text-gray-900 dark:text-white">{sku.name}</td>
-                          <td className="py-3 px-4 font-mono text-gray-600 dark:text-gray-400">{sku.barcode || '-'}</td>
-                          <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{sku.category || '-'}</td>
+                          <td className="py-3 px-4 font-mono text-gray-600 dark:text-gray-400">
+                            {sku.barcode || '-'}
+                          </td>
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
+                            {sku.category || '-'}
+                          </td>
                           <td className="py-3 px-4">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 selectSKU(sku);
                               }}
@@ -294,11 +317,15 @@ export function ProductSearchPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">SKU</p>
-                          <p className="font-medium text-gray-900 dark:text-white font-mono">{selectedSKUDetails.sku}</p>
+                          <p className="font-medium text-gray-900 dark:text-white font-mono">
+                            {selectedSKUDetails.sku}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Product</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{selectedSKUDetails.name}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedSKUDetails.name}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Barcode</p>
@@ -308,20 +335,30 @@ export function ProductSearchPage() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Category</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{selectedSKU.category || '-'}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {selectedSKU.category || '-'}
+                          </p>
                         </div>
                       </div>
                       <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Total Quantity</p>
                           <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {selectedSKUDetails.inventory?.reduce((sum, inv) => sum + inv.quantity, 0) || 0}
+                            {selectedSKUDetails.inventory?.reduce(
+                              (sum, inv) => sum + inv.quantity,
+                              0
+                            ) || 0}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Available</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Total Available
+                          </p>
                           <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                            {selectedSKUDetails.inventory?.reduce((sum, inv) => sum + inv.available, 0) || 0}
+                            {selectedSKUDetails.inventory?.reduce(
+                              (sum, inv) => sum + inv.available,
+                              0
+                            ) || 0}
                           </p>
                         </div>
                         <div>
@@ -348,16 +385,26 @@ export function ProductSearchPage() {
                   {!selectedSKUDetails ? (
                     <p className="text-gray-500 dark:text-gray-400">Loading inventory...</p>
                   ) : !selectedSKUDetails.inventory || selectedSKUDetails.inventory.length === 0 ? (
-                    <p className="text-gray-500 dark:text-gray-400">No inventory found for this SKU.</p>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No inventory found for this SKU.
+                    </p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b dark:border-gray-700">
-                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">Location</th>
-                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">Quantity</th>
-                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">Reserved</th>
-                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">Available</th>
+                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">
+                              Location
+                            </th>
+                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">
+                              Quantity
+                            </th>
+                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">
+                              Reserved
+                            </th>
+                            <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400 font-medium">
+                              Available
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -366,8 +413,12 @@ export function ProductSearchPage() {
                               <td className="py-2 px-3 font-mono text-gray-900 dark:text-white">
                                 {inv.binLocation}
                               </td>
-                              <td className="py-2 px-3 text-gray-900 dark:text-white">{inv.quantity}</td>
-                              <td className="py-2 px-3 text-gray-900 dark:text-white">{inv.reserved || 0}</td>
+                              <td className="py-2 px-3 text-gray-900 dark:text-white">
+                                {inv.quantity}
+                              </td>
+                              <td className="py-2 px-3 text-gray-900 dark:text-white">
+                                {inv.reserved || 0}
+                              </td>
                               <td className="py-2 px-3">
                                 <Badge variant={inv.available > 0 ? 'success' : 'default'}>
                                   {inv.available}

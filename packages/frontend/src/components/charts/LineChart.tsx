@@ -59,8 +59,8 @@ export function LineChart({
   height = 200,
   showGrid = true,
   showTooltip = true,
-  valueFormatter = (v) => v.toString(),
-  labelFormatter = (t) => new Date(t).toLocaleTimeString(),
+  valueFormatter = v => v.toString(),
+  labelFormatter = t => new Date(t).toLocaleTimeString(),
   className = '',
 }: LineChartProps) {
   const chartData = useMemo(() => {
@@ -112,24 +112,22 @@ export function LineChart({
           </defs>
 
           {/* Grid lines */}
-          {showGrid && gridLines.map(y => (
-            <line
-              key={y}
-              x1="0"
-              y1={y}
-              x2="100"
-              y2={y}
-              stroke="currentColor"
-              strokeOpacity="0.1"
-              className="text-gray-400"
-            />
-          ))}
+          {showGrid &&
+            gridLines.map(y => (
+              <line
+                key={y}
+                x1="0"
+                y1={y}
+                x2="100"
+                y2={y}
+                stroke="currentColor"
+                strokeOpacity="0.1"
+                className="text-gray-400"
+              />
+            ))}
 
           {/* Area fill */}
-          <polygon
-            points={`0,100 ${chartData.points} 100,100`}
-            fill={`url(#gradient-${color})`}
-          />
+          <polygon points={`0,100 ${chartData.points} 100,100`} fill={`url(#gradient-${color})`} />
 
           {/* Line */}
           <polyline
@@ -199,8 +197,8 @@ export function MultiLineChart({
   series,
   title,
   height = 200,
-  valueFormatter = (v) => v.toString(),
-  labelFormatter = (t) => new Date(t).toLocaleTimeString(),
+  valueFormatter = v => v.toString(),
+  labelFormatter = t => new Date(t).toLocaleTimeString(),
   className = '',
 }: MultiLineChartProps) {
   return (
@@ -209,7 +207,8 @@ export function MultiLineChart({
       <div className="relative bg-gray-50 dark:bg-gray-800 rounded-lg" style={{ height }}>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
           {series.map((s, seriesIndex) => {
-            const colors = colorMap[s.color || ['blue', 'green', 'amber', 'red', 'purple'][seriesIndex % 5]];
+            const colors =
+              colorMap[s.color || ['blue', 'green', 'amber', 'red', 'purple'][seriesIndex % 5]];
 
             if (s.data.length === 0) return null;
 
@@ -241,13 +240,7 @@ export function MultiLineChart({
                   const x = (i / (s.data.length - 1)) * 100;
                   const y = 100 - ((d.value - min) / range) * 100;
                   return (
-                    <circle
-                      key={i}
-                      cx={x}
-                      cy={y}
-                      r="0.8"
-                      fill={colors.stroke}
-                    >
+                    <circle key={i} cx={x} cy={y} r="0.8" fill={colors.stroke}>
                       <title>
                         {s.label} - {labelFormatter(d.timestamp)}: {valueFormatter(d.value)}
                       </title>
@@ -265,10 +258,7 @@ export function MultiLineChart({
             const colors = colorMap[s.color || ['blue', 'green', 'amber', 'red', 'purple'][i % 5]];
             return (
               <div key={i} className="flex items-center gap-1 text-xs">
-                <div
-                  className="w-3 h-0.5"
-                  style={{ backgroundColor: colors.stroke }}
-                />
+                <div className="w-3 h-0.5" style={{ backgroundColor: colors.stroke }} />
                 <span className="text-gray-600 dark:text-gray-400">{s.label}</span>
               </div>
             );

@@ -41,7 +41,12 @@ async function getUserPermissions(userId: string, baseRole: UserRole): Promise<P
   //   return cached.permissions;
   // }
 
-  console.log('[getUserPermissions] Cache BYPASSED, fetching fresh permissions for user:', userId, 'role:', baseRole);
+  console.log(
+    '[getUserPermissions] Cache BYPASSED, fetching fresh permissions for user:',
+    userId,
+    'role:',
+    baseRole
+  );
 
   // Get permissions from repository (combines base role and custom role permissions)
   const permissions = await customRoleRepository.getUserPermissions(userId, baseRole);
@@ -130,13 +135,31 @@ export function requirePermission(permission: Permission) {
         return;
       }
 
-      console.log('[requirePermission] Checking permission:', permission, 'for user:', req.user.userId, 'role:', req.user.role, 'baseRole:', req.user.baseRole);
+      console.log(
+        '[requirePermission] Checking permission:',
+        permission,
+        'for user:',
+        req.user.userId,
+        'role:',
+        req.user.role,
+        'baseRole:',
+        req.user.baseRole
+      );
       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
       console.log('[requirePermission] User permissions count:', userPermissions.length);
-      console.log('[requirePermission] Permissions:', userPermissions.map(p => String(p)));
+      console.log(
+        '[requirePermission] Permissions:',
+        userPermissions.map(p => String(p))
+      );
       console.log('[requirePermission] Required:', String(permission));
-      console.log('[requirePermission] Has ADMIN_FULL_ACCESS:', userPermissions.includes('admin_full_access' as any));
-      console.log('[requirePermission] Has required permission:', userPermissions.includes(permission));
+      console.log(
+        '[requirePermission] Has ADMIN_FULL_ACCESS:',
+        userPermissions.includes('admin_full_access' as any)
+      );
+      console.log(
+        '[requirePermission] Has required permission:',
+        userPermissions.includes(permission)
+      );
 
       if (!hasPermission(userPermissions, permission)) {
         // Include debug info in the error details

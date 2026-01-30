@@ -14,11 +14,7 @@
 
 import { test, expect } from '@playwright/test';
 import { request } from '@playwright/test';
-import {
-  TEST_CONFIG,
-  injectAuth,
-  navigateAndWait,
-} from './test-helpers';
+import { TEST_CONFIG, injectAuth, navigateAndWait } from './test-helpers';
 
 // ============================================================================
 // TEST API HELPERS
@@ -48,9 +44,12 @@ async function getStockLevel(apiContext: any, authToken: string, sku: string): P
 }
 
 async function getTransactions(apiContext: any, authToken: string, sku: string): Promise<any[]> {
-  const response = await apiContext.get(`${API_BASE}/api/developer/test/transactions?sku=${sku}&limit=50`, {
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
+  const response = await apiContext.get(
+    `${API_BASE}/api/developer/test/transactions?sku=${sku}&limit=50`,
+    {
+      headers: { Authorization: `Bearer ${authToken}` },
+    }
+  );
 
   if (!response.ok()) {
     return [];
@@ -60,7 +59,12 @@ async function getTransactions(apiContext: any, authToken: string, sku: string):
   return data.transactions || [];
 }
 
-async function getAuditLogs(apiContext: any, authToken: string, entityType: string, entityId: string): Promise<any[]> {
+async function getAuditLogs(
+  apiContext: any,
+  authToken: string,
+  entityType: string,
+  entityId: string
+): Promise<any[]> {
   const response = await apiContext.get(
     `${API_BASE}/api/developer/test/audit-logs?entityType=${entityType}&entityId=${entityId}&limit=50`,
     {
@@ -89,7 +93,12 @@ async function setupTestData(apiContext: any, authToken: string): Promise<TestSe
   return await response.json();
 }
 
-async function teardownTestData(apiContext: any, authToken: string, testSku: string, testOrderId: string): Promise<void> {
+async function teardownTestData(
+  apiContext: any,
+  authToken: string,
+  testSku: string,
+  testOrderId: string
+): Promise<void> {
   await apiContext.post(`${API_BASE}/api/developer/test/teardown`, {
     headers: { Authorization: `Bearer ${authToken}` },
     data: { testSku, testOrderId },
@@ -115,7 +124,8 @@ test.describe('Database Integrity: Stock Levels', () => {
     const checkResponse = await apiContext.get(`${API_BASE}/api/developer/test/stats`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
-    hasAdminAccess = checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
+    hasAdminAccess =
+      checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
   });
 
   test.afterAll(async () => {
@@ -174,7 +184,8 @@ test.describe('Database Integrity: Transaction Logs', () => {
     const checkResponse = await apiContext.get(`${API_BASE}/api/developer/test/stats`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
-    hasAdminAccess = checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
+    hasAdminAccess =
+      checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
   });
 
   test.afterAll(async () => {
@@ -256,7 +267,8 @@ test.describe('Database Integrity: Audit Trail', () => {
     const checkResponse = await apiContext.get(`${API_BASE}/api/developer/test/stats`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
-    hasAdminAccess = checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
+    hasAdminAccess =
+      checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
   });
 
   test.afterAll(async () => {
@@ -361,7 +373,8 @@ test.describe('Database Integrity: Test Data Management', () => {
     const checkResponse = await apiContext.get(`${API_BASE}/api/developer/test/stats`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
-    hasAdminAccess = checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
+    hasAdminAccess =
+      checkResponse.ok() && checkResponse.status() !== 403 && checkResponse.status() !== 404;
   });
 
   test.afterAll(async () => {
@@ -452,7 +465,7 @@ test.describe('Database Integrity: Summary', () => {
     console.log('  ✅ DATABASE INTEGRITY TESTS IMPLEMENTED');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('');
-    console.log('  WHAT\'S WORKING:');
+    console.log("  WHAT'S WORKING:");
     console.log('  ───────────────────────────────────────────────────────────');
     console.log('  ✅ Test API endpoints added to backend');
     console.log('  ✅ Stock level retrieval from database');

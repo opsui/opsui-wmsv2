@@ -556,7 +556,10 @@ export class OrderService {
   // CONTINUE ORDER
   // --------------------------------------------------------------------------
 
-  async continueOrder(orderId: string, userId: string): Promise<{ orderId: string; status: string }> {
+  async continueOrder(
+    orderId: string,
+    userId: string
+  ): Promise<{ orderId: string; status: string }> {
     logger.info('Continuing order', { orderId, userId });
 
     // Verify the order exists and is in PICKING status
@@ -993,5 +996,3 @@ export class OrderService {
 
 // Singleton instance
 export const orderService = new OrderService();
-
-

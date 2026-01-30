@@ -26,23 +26,23 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 
 ### Benefits
 
-| Benefit | Description |
-|---------|-------------|
-| **Accuracy** | Catches discrepancies early |
-| **Efficiency** | Less disruptive than full physical counts |
-| **Continuous Improvement** | Identifies process issues |
-| **Cost Savings** | Reduces stockouts and overstocks |
-| **Customer Service** | Ensures stock availability |
+| Benefit                    | Description                               |
+| -------------------------- | ----------------------------------------- |
+| **Accuracy**               | Catches discrepancies early               |
+| **Efficiency**             | Less disruptive than full physical counts |
+| **Continuous Improvement** | Identifies process issues                 |
+| **Cost Savings**           | Reduces stockouts and overstocks          |
+| **Customer Service**       | Ensures stock availability                |
 
 ### When to Perform Cycle Counts
 
-| Trigger | Action |
-|---------|--------|
-| **Scheduled** | Regular cycle counts per ABC classification |
-| **Discrepancy Found** | After shipping/receiving errors |
-| **High-Value Items** | Frequent counts for expensive items |
-| **Fast-Movers** | Regular counts for high-volume items |
-| **System Issues** | After system outages or data issues |
+| Trigger               | Action                                      |
+| --------------------- | ------------------------------------------- |
+| **Scheduled**         | Regular cycle counts per ABC classification |
+| **Discrepancy Found** | After shipping/receiving errors             |
+| **High-Value Items**  | Frequent counts for expensive items         |
+| **Fast-Movers**       | Regular counts for high-volume items        |
+| **System Issues**     | After system outages or data issues         |
 
 ---
 
@@ -53,11 +53,13 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 **Description:** Count all items in a specified zone or area.
 
 **When to Use:**
+
 - Quarterly or semi-annual zone counts
 - After significant inventory movements
 - When accuracy is critical in an area
 
 **Process:**
+
 1. Select zone (e.g., Zone A)
 2. System generates count list for all bins in zone
 3. Count each bin systematically
@@ -69,13 +71,14 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 
 **Description:** Count items based on ABC classification.
 
-| Class | Description | Count Frequency |
-|-------|-------------|-----------------|
-| **A** | High-value/fast-moving (top 20% items, 80% value) | Monthly |
-| **B** | Medium-value/medium-moving (next 30% items, 15% value) | Quarterly |
-| **C** | Low-value/slow-moving (remaining 50% items, 5% value) | Annually |
+| Class | Description                                            | Count Frequency |
+| ----- | ------------------------------------------------------ | --------------- |
+| **A** | High-value/fast-moving (top 20% items, 80% value)      | Monthly         |
+| **B** | Medium-value/medium-moving (next 30% items, 15% value) | Quarterly       |
+| **C** | Low-value/slow-moving (remaining 50% items, 5% value)  | Annually        |
 
 **When to Use:**
+
 - Regularly scheduled counts
 - Focus on high-impact items
 - Optimize counting resources
@@ -87,11 +90,13 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 **Description:** Random sample of bins or SKUs.
 
 **When to Use:**
+
 - Quick accuracy verification
 - Suspected theft or loss
 - Training new counters
 
 **Process:**
+
 1. System randomly selects bins/SKUs
 2. Count selected items only
 3. Results indicate overall accuracy trends
@@ -103,11 +108,13 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 **Description:** Count all items in a specific bin location.
 
 **When to Use:**
+
 - After receiving putaway
 - After picking activity
 - After reported discrepancy
 
 **Process:**
+
 1. Enter specific bin location (e.g., A-01-15)
 2. Count all items in that bin
 3. Verify each SKU quantity
@@ -119,11 +126,13 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 **Description:** Count items during inbound receiving process.
 
 **When to Use:**
+
 - Verifying supplier shipments
 - Recording receiving discrepancies
 - Initial stock placement
 
 **Process:**
+
 1. Count items from each shipment
 2. Compare to ASN/packing list
 3. Record variances immediately
@@ -135,11 +144,13 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 **Description:** Count items before shipping.
 
 **When to Use:**
+
 - High-value orders
 - Customer accuracy requirements
 - Quality control verification
 
 **Process:**
+
 1. Count items in packed order
 2. Verify against pick list
 3. Confirm before shipping
@@ -151,11 +162,13 @@ A cycle count is an inventory auditing procedure where a small subset of invento
 **Description:** Unscheduled count for specific reasons.
 
 **When to Use:**
+
 - Investigating discrepancies
 - Requested by management
 - After system issues
 
 **Process:**
+
 1. Select specific bins/SKUs to count
 2. Perform count immediately
 3. Report findings
@@ -280,39 +293,39 @@ If counted quantity differs from expected:
 
 After submitting a count, the system generates a variance report:
 
-| Column | Description |
-|--------|-------------|
-| **SKU** | Item identifier |
-| **Description** | Product name |
-| **Bin Location** | Where item is located |
-| **Expected Qty** | System quantity |
-| **Counted Qty** | Your counted quantity |
-| **Variance** | Difference (positive or negative) |
-| **Variance %** | Percentage difference |
-| **Value Impact** | Financial impact of variance |
+| Column           | Description                       |
+| ---------------- | --------------------------------- |
+| **SKU**          | Item identifier                   |
+| **Description**  | Product name                      |
+| **Bin Location** | Where item is located             |
+| **Expected Qty** | System quantity                   |
+| **Counted Qty**  | Your counted quantity             |
+| **Variance**     | Difference (positive or negative) |
+| **Variance %**   | Percentage difference             |
+| **Value Impact** | Financial impact of variance      |
 
 ### Variance Thresholds
 
-| Variance % | Action Required |
-|------------|-----------------|
-| **0%** | Perfect count - auto-approve |
-| **1-2%** | Minor variance - supervisor approval |
-| **3-5%** | Moderate variance - investigation needed |
-| **>5%** | Major variance - full investigation, possible recount |
+| Variance % | Action Required                                       |
+| ---------- | ----------------------------------------------------- |
+| **0%**     | Perfect count - auto-approve                          |
+| **1-2%**   | Minor variance - supervisor approval                  |
+| **3-5%**   | Moderate variance - investigation needed              |
+| **>5%**    | Major variance - full investigation, possible recount |
 
 ### Investigating Variances
 
 #### Common Causes
 
-| Cause | Positive Variance | Negative Variance |
-|-------|-------------------|-------------------|
-| **Receiving Error** | Extra items received | Items not received |
-| **Packing Error** | Items not shipped | Extra items shipped |
-| **Transaction Error** | Adjustment not recorded | Adjustment overstated |
-| **Theft** | - | Items stolen |
-| **Damage** | - | Items damaged/discarded |
-| **Misplaced** | Items found in wrong bin | Items not found in expected bin |
-| **Counting Error** | Double-counted | Missed items |
+| Cause                 | Positive Variance        | Negative Variance               |
+| --------------------- | ------------------------ | ------------------------------- |
+| **Receiving Error**   | Extra items received     | Items not received              |
+| **Packing Error**     | Items not shipped        | Extra items shipped             |
+| **Transaction Error** | Adjustment not recorded  | Adjustment overstated           |
+| **Theft**             | -                        | Items stolen                    |
+| **Damage**            | -                        | Items damaged/discarded         |
+| **Misplaced**         | Items found in wrong bin | Items not found in expected bin |
+| **Counting Error**    | Double-counted           | Missed items                    |
 
 #### Investigation Steps
 
@@ -459,12 +472,14 @@ For high-value or critical items:
 ### Issue: Can't Find Expected Item
 
 **Possible Causes:**
+
 - Item was never put away
 - Item is in a different bin
 - Item was picked/shipped but not recorded
 - Item is misplaced in warehouse
 
 **Solutions:**
+
 1. Check adjacent bins
 2. Review recent transactions
 3. Check if item is on order
@@ -473,12 +488,14 @@ For high-value or critical items:
 ### Issue: Found Items Not on Count List
 
 **Possible Causes:**
+
 - Items were never added to system
 - Items are from a different bin
 - Items are new stock not yet recorded
 - Items are returns not processed
 
 **Solutions:**
+
 1. Note the SKU and quantity
 2. Do not include in current count
 3. Report findings to supervisor
@@ -487,11 +504,13 @@ For high-value or critical items:
 ### Issue: Scanner Not Working
 
 **Possible Causes:**
+
 - Battery depleted
 - Not paired to device
 - Barcode damaged/unreadable
 
 **Solutions:**
+
 1. Replace/recharge battery
 2. Re-pair scanner
 3. Enter SKU manually as backup
@@ -499,12 +518,14 @@ For high-value or critical items:
 ### Issue: High Variance Across Many Items
 
 **Possible Causes:**
+
 - System data corruption
 - Recent unrecorded transactions
 - Process issues in receiving/shipping
 - Training issue with counter
 
 **Solutions:**
+
 1. Stop counting
 2. Report to supervisor immediately
 3. Investigate system and process issues
@@ -516,14 +537,14 @@ For high-value or critical items:
 
 ### Recommended Schedule
 
-| Frequency | Count Type | Items to Count |
-|-----------|------------|----------------|
-| **Daily** | Spot Check | 5-10 random SKUs |
-| **Weekly** | Fast Movers | Top 50 items by velocity |
-| **Monthly** | Class A | High-value/fast-moving items |
-| **Quarterly** | Class B | Medium-value items |
-| **Semi-Annually** | Class C | Low-value/slow-moving items |
-| **Annually** | Blanket | Full warehouse count |
+| Frequency         | Count Type  | Items to Count               |
+| ----------------- | ----------- | ---------------------------- |
+| **Daily**         | Spot Check  | 5-10 random SKUs             |
+| **Weekly**        | Fast Movers | Top 50 items by velocity     |
+| **Monthly**       | Class A     | High-value/fast-moving items |
+| **Quarterly**     | Class B     | Medium-value items           |
+| **Semi-Annually** | Class C     | Low-value/slow-moving items  |
+| **Annually**      | Blanket     | Full warehouse count         |
 
 ### Tracking Your Progress
 
@@ -542,12 +563,12 @@ Use the **Cycle Counting** page to:
 
 Navigate to **Reports** > **Cycle Count Reports**:
 
-| Report | Description | Use For |
-|--------|-------------|---------|
-| **Count Summary** | Results of completed counts | Overview of count activity |
-| **Variance Analysis** | Detailed variance information | Identifying problem areas |
-| **Accuracy Trends** | Accuracy over time | Measuring improvement |
-| **ABC Compliance** | Count frequency by class | Ensuring proper coverage |
+| Report                | Description                   | Use For                    |
+| --------------------- | ----------------------------- | -------------------------- |
+| **Count Summary**     | Results of completed counts   | Overview of count activity |
+| **Variance Analysis** | Detailed variance information | Identifying problem areas  |
+| **Accuracy Trends**   | Accuracy over time            | Measuring improvement      |
+| **ABC Compliance**    | Count frequency by class      | Ensuring proper coverage   |
 
 ### Using Reports for Improvement
 
@@ -578,11 +599,11 @@ Navigate to **Reports** > **Cycle Count Reports**:
 
 ### Contacts
 
-| Issue | Contact |
-|-------|---------|
+| Issue                       | Contact                     |
+| --------------------------- | --------------------------- |
 | **Count Assignment Issues** | Stock Controller Supervisor |
-| **System Problems** | IT Helpdesk |
-| **Process Questions** | Warehouse Manager |
+| **System Problems**         | IT Helpdesk                 |
+| **Process Questions**       | Warehouse Manager           |
 
 ---
 
@@ -611,6 +632,6 @@ Navigate to **Reports** > **Cycle Count Reports**:
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2026*
-*For questions, contact your Stock Controller Supervisor*
+_Document Version: 1.0_
+_Last Updated: January 2026_
+_For questions, contact your Stock Controller Supervisor_

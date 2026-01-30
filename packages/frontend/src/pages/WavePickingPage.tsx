@@ -97,7 +97,7 @@ export function WavePickingPage() {
       },
       maxOrders: {
         required: true,
-        custom: (value) => {
+        custom: value => {
           const num = Number(value);
           if (isNaN(num) || num < 1 || num > 100) {
             return 'Max orders must be between 1 and 100';
@@ -106,7 +106,7 @@ export function WavePickingPage() {
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await createWaveMutation.mutateAsync(values);
         showToast('Wave created successfully', 'success');
@@ -162,7 +162,7 @@ export function WavePickingPage() {
   );
 
   const progress = waveStatus
-    ? (waveStatus.data?.completedOrders || 0) / (waveStatus.data?.totalOrders || 1) * 100
+    ? ((waveStatus.data?.completedOrders || 0) / (waveStatus.data?.totalOrders || 1)) * 100
     : 0;
 
   return (
@@ -182,228 +182,242 @@ export function WavePickingPage() {
           </div>
 
           {/* Create Wave Form */}
-      {canManage && (
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle>Create New Wave</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Strategy *
-                  </label>
-                  <Select
-                    id="strategy"
-                    name="strategy"
-                    value={formData.strategy}
-                    onChange={handleChange}
-                    options={strategies.map((s: any) => ({ value: s.id, label: s.name }))}
-                    error={errors.strategy}
-                  />
-                  {errors.strategy && <p className="mt-1 text-sm text-red-400">{errors.strategy}</p>}
-                </div>
+          {canManage && (
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle>Create New Wave</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label
+                        htmlFor="strategy"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Strategy *
+                      </label>
+                      <Select
+                        id="strategy"
+                        name="strategy"
+                        value={formData.strategy}
+                        onChange={handleChange}
+                        options={strategies.map((s: any) => ({ value: s.id, label: s.name }))}
+                        error={errors.strategy}
+                      />
+                      {errors.strategy && (
+                        <p className="mt-1 text-sm text-red-400">{errors.strategy}</p>
+                      )}
+                    </div>
 
-                <div>
-                  <label htmlFor="maxOrders" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Max Orders *
-                  </label>
-                  <Input
-                    id="maxOrders"
-                    name="maxOrders"
-                    type="number"
-                    value={formData.maxOrders}
-                    onChange={handleChange}
-                    min={1}
-                    max={100}
-                    error={errors.maxOrders}
-                  />
-                  {errors.maxOrders && <p className="mt-1 text-sm text-red-400">{errors.maxOrders}</p>}
-                </div>
+                    <div>
+                      <label
+                        htmlFor="maxOrders"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Max Orders *
+                      </label>
+                      <Input
+                        id="maxOrders"
+                        name="maxOrders"
+                        type="number"
+                        value={formData.maxOrders}
+                        onChange={handleChange}
+                        min={1}
+                        max={100}
+                        error={errors.maxOrders}
+                      />
+                      {errors.maxOrders && (
+                        <p className="mt-1 text-sm text-red-400">{errors.maxOrders}</p>
+                      )}
+                    </div>
 
-                <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Priority (optional)
-                  </label>
-                  <Select
-                    id="priority"
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    options={[
-                      { value: '', label: 'All' },
-                      { value: '1', label: 'Priority 1' },
-                      { value: '2', label: 'Priority 2' },
-                      { value: '3', label: 'Priority 3' },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || createWaveMutation.isPending}
-                  className="w-full md:w-auto"
-                >
-                  {isSubmitting || createWaveMutation.isPending ? 'Creating...' : 'Create Wave'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Active Waves */}
-      {selectedWave && waveStatus && (
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Wave Status: {waveStatus.data?.waveId}</span>
-              <Badge
-                variant={
-                  waveStatus.data?.status === 'PLANNED'
-                    ? 'secondary'
-                    : waveStatus.data?.status === 'RELEASED'
-                    ? 'primary'
-                    : 'success'
-                }
-              >
-                {waveStatus.data?.status}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Progress</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {waveStatus.data?.completedOrders || 0} / {waveStatus.data?.totalOrders || 0} orders
-                  </span>
-                </div>
-                <Progress value={progress} className="h-2" />
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center gap-2">
-                  <UsersIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Pickers</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {waveStatus.data?.assignedPickers || 0}
-                    </p>
+                    <div>
+                      <label
+                        htmlFor="priority"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Priority (optional)
+                      </label>
+                      <Select
+                        id="priority"
+                        name="priority"
+                        value={formData.priority}
+                        onChange={handleChange}
+                        options={[
+                          { value: '', label: 'All' },
+                          { value: '1', label: 'Priority 1' },
+                          { value: '2', label: 'Priority 2' },
+                          { value: '3', label: 'Priority 3' },
+                        ]}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CubeIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Items</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {waveStatus.data?.totalItems || 0}
-                    </p>
+
+                  <div className="mt-4">
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || createWaveMutation.isPending}
+                      className="w-full md:w-auto"
+                    >
+                      {isSubmitting || createWaveMutation.isPending ? 'Creating...' : 'Create Wave'}
+                    </Button>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ClockIcon className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Est. Time</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {waveStatus.data?.estimatedTime || 0}m
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {canManage && waveStatus.data?.status === 'PLANNED' && (
-                <div className="flex gap-2 pt-4 border-t dark:border-gray-700">
-                  <Button
-                    onClick={() => handleReleaseWave(selectedWave)}
-                    disabled={releaseWaveMutation.isPending}
-                    className="flex items-center gap-2"
-                  >
-                    <PlayIcon className="h-4 w-4" />
-                    Release Wave
-                  </Button>
-                </div>
-              )}
-
-              {canManage && waveStatus.data?.status === 'RELEASED' && (
-                <div className="flex gap-2 pt-4 border-t dark:border-gray-700">
-                  <Button
-                    onClick={() => handleCompleteWave(selectedWave)}
-                    disabled={completeWaveMutation.isPending}
-                    variant="success"
-                    className="flex items-center gap-2"
-                  >
-                    <CheckCircleIcon className="h-4 w-4" />
-                    Complete Wave
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Wave Strategy Info */}
-      <Card className="dark:bg-gray-800 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Wave Strategies</span>
-            {/* Search Input */}
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search strategies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-1.5 w-48 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              />
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedStrategies.map((strategy: any) => (
-              <div
-                key={strategy.id}
-                className="p-4 border dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer"
-                onClick={() => setFormData({ ...formData, strategy: strategy.id })}
-              >
-                <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                  {strategy.name}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {strategy.description}
-                </p>
-                <div
-                  className="mt-2 text-xs px-2 py-1 rounded"
-                  style={{
-                    backgroundColor: strategy.color,
-                    color: 'white',
-                  }}
-                >
-                  {strategy.id}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {strategiesTotalPages > 1 && (
-            <div className="flex justify-center mt-6">
-              <Pagination
-                currentPage={strategiesPage}
-                totalPages={strategiesTotalPages}
-                onPageChange={setStrategiesPage}
-              />
-            </div>
+                </form>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+
+          {/* Active Waves */}
+          {selectedWave && waveStatus && (
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Wave Status: {waveStatus.data?.waveId}</span>
+                  <Badge
+                    variant={
+                      waveStatus.data?.status === 'PLANNED'
+                        ? 'secondary'
+                        : waveStatus.data?.status === 'RELEASED'
+                          ? 'primary'
+                          : 'success'
+                    }
+                  >
+                    {waveStatus.data?.status}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Progress</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {waveStatus.data?.completedOrders || 0} /{' '}
+                        {waveStatus.data?.totalOrders || 0} orders
+                      </span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="flex items-center gap-2">
+                      <UsersIcon className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Pickers</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {waveStatus.data?.assignedPickers || 0}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CubeIcon className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Items</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {waveStatus.data?.totalItems || 0}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ClockIcon className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Est. Time</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {waveStatus.data?.estimatedTime || 0}m
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {canManage && waveStatus.data?.status === 'PLANNED' && (
+                    <div className="flex gap-2 pt-4 border-t dark:border-gray-700">
+                      <Button
+                        onClick={() => handleReleaseWave(selectedWave)}
+                        disabled={releaseWaveMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <PlayIcon className="h-4 w-4" />
+                        Release Wave
+                      </Button>
+                    </div>
+                  )}
+
+                  {canManage && waveStatus.data?.status === 'RELEASED' && (
+                    <div className="flex gap-2 pt-4 border-t dark:border-gray-700">
+                      <Button
+                        onClick={() => handleCompleteWave(selectedWave)}
+                        disabled={completeWaveMutation.isPending}
+                        variant="success"
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircleIcon className="h-4 w-4" />
+                        Complete Wave
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Wave Strategy Info */}
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Wave Strategies</span>
+                {/* Search Input */}
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search strategies..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="pl-9 pr-3 py-1.5 w-48 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {paginatedStrategies.map((strategy: any) => (
+                  <div
+                    key={strategy.id}
+                    className="p-4 border dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer"
+                    onClick={() => setFormData({ ...formData, strategy: strategy.id })}
+                  >
+                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                      {strategy.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {strategy.description}
+                    </p>
+                    <div
+                      className="mt-2 text-xs px-2 py-1 rounded"
+                      style={{
+                        backgroundColor: strategy.color,
+                        color: 'white',
+                      }}
+                    >
+                      {strategy.id}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {strategiesTotalPages > 1 && (
+                <div className="flex justify-center mt-6">
+                  <Pagination
+                    currentPage={strategiesPage}
+                    totalPages={strategiesTotalPages}
+                    onPageChange={setStrategiesPage}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

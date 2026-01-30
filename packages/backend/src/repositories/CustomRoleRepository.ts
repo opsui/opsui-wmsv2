@@ -30,7 +30,9 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
   // GET ALL ROLES (including system roles from UserRole enum)
   // --------------------------------------------------------------------------
 
-  async getAllRolesWithPermissions(): Promise<Array<{ roleId: string; name: string; permissions: Permission[] }>> {
+  async getAllRolesWithPermissions(): Promise<
+    Array<{ roleId: string; name: string; permissions: Permission[] }>
+  > {
     // Get custom roles with their permissions
     const customRolesResult = await query(`
       SELECT cr.role_id, cr.name, cr.description, cr.is_system,
@@ -41,11 +43,12 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
       ORDER BY cr.name
     `);
 
-    const roles: Array<{ roleId: string; name: string; permissions: Permission[] }> = customRolesResult.rows.map(row => ({
-      roleId: row.role_id,
-      name: row.name,
-      permissions: row.permissions || [],
-    }));
+    const roles: Array<{ roleId: string; name: string; permissions: Permission[] }> =
+      customRolesResult.rows.map(row => ({
+        roleId: row.role_id,
+        name: row.name,
+        permissions: row.permissions || [],
+      }));
 
     return roles;
   }
@@ -98,16 +101,16 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
     grantedBy: string;
   }): Promise<CustomRole> {
     // Check if role ID already exists
-      const existing = await this.findById(data.roleId);
-      if (existing) {
-        throw new ConflictError(`Role with ID ${data.roleId} already exists`);
-      }
+    const existing = await this.findById(data.roleId);
+    if (existing) {
+      throw new ConflictError(`Role with ID ${data.roleId} already exists`);
+    }
 
-      // Check if name already exists
-      const existingName = await query(`SELECT * FROM custom_roles WHERE name = $1`, [data.name]);
-      if (existingName.rows.length > 0) {
-        throw new ConflictError(`Role with name ${data.name} already exists`);
-      }
+    // Check if name already exists
+    const existingName = await query(`SELECT * FROM custom_roles WHERE name = $1`, [data.name]);
+    if (existingName.rows.length > 0) {
+      throw new ConflictError(`Role with name ${data.name} already exists`);
+    }
 
     // Create the role
     const role = await this.insert({
@@ -129,19 +132,22 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
     }
 
     // Return the role with permissions
-    return await this.getCustomRoleById(data.roleId) as CustomRole;
+    return (await this.getCustomRoleById(data.roleId)) as CustomRole;
   }
 
   // --------------------------------------------------------------------------
   // UPDATE CUSTOM ROLE
   // --------------------------------------------------------------------------
 
-  async updateCustomRole(roleId: string, data: {
-    name?: string;
-    description?: string;
-    permissions?: Permission[];
-    grantedBy: string;
-  }): Promise<CustomRole> {
+  async updateCustomRole(
+    roleId: string,
+    data: {
+      name?: string;
+      description?: string;
+      permissions?: Permission[];
+      grantedBy: string;
+    }
+  ): Promise<CustomRole> {
     const existing = await this.getCustomRoleByIdOrThrow(roleId);
 
     // Don't allow updating system roles
@@ -156,10 +162,10 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
 
     if (data.name !== undefined && data.name !== existing.name) {
       // Check if name already exists
-      const existingName = await query(`SELECT * FROM custom_roles WHERE name = $1 AND role_id != $2`, [
-        data.name,
-        roleId,
-      ]);
+      const existingName = await query(
+        `SELECT * FROM custom_roles WHERE name = $1 AND role_id != $2`,
+        [data.name, roleId]
+      );
       if (existingName.rows.length > 0) {
         throw new ConflictError(`Role with name ${data.name} already exists`);
       }
@@ -196,7 +202,7 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
     }
 
     // Return the updated role
-    return await this.getCustomRoleById(roleId) as CustomRole;
+    return (await this.getCustomRoleById(roleId)) as CustomRole;
   }
 
   // --------------------------------------------------------------------------
@@ -241,7 +247,7 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
       [roleId, permission]
     );
 
-    return (result.rows.length > 0);
+    return result.rows.length > 0;
   }
 
   // --------------------------------------------------------------------------
@@ -254,15 +260,28 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
 
     // Debug logging - check available roles
     console.log('[getUserPermissions] Available role keys:', Object.keys(DEFAULT_ROLE_PERMISSIONS));
-    console.log('[getUserPermissions] userId:', userId, 'userRole:', userRole, 'userRole type:', typeof userRole);
+    console.log(
+      '[getUserPermissions] userId:',
+      userId,
+      'userRole:',
+      userRole,
+      'userRole type:',
+      typeof userRole
+    );
 
     const defaultPermissions = DEFAULT_ROLE_PERMISSIONS[userRole as any] || [];
     console.log('[getUserPermissions] defaultPermissions count:', defaultPermissions.length);
     if (defaultPermissions.length > 0) {
       console.log('[getUserPermissions] First few permissions:', defaultPermissions.slice(0, 5));
       console.log('[getUserPermissions] PERFORM_CYCLE_COUNTS:', Permission.PERFORM_CYCLE_COUNTS);
-      console.log('[getUserPermissions] Has PERFORM_CYCLE_COUNTS:', defaultPermissions.includes(Permission.PERFORM_CYCLE_COUNTS));
-      console.log('[getUserPermissions] Has ADMIN_FULL_ACCESS:', defaultPermissions.includes(Permission.ADMIN_FULL_ACCESS));
+      console.log(
+        '[getUserPermissions] Has PERFORM_CYCLE_COUNTS:',
+        defaultPermissions.includes(Permission.PERFORM_CYCLE_COUNTS)
+      );
+      console.log(
+        '[getUserPermissions] Has ADMIN_FULL_ACCESS:',
+        defaultPermissions.includes(Permission.ADMIN_FULL_ACCESS)
+      );
     } else {
       console.log('[getUserPermissions] WARNING: No default permissions found for role:', userRole);
     }
@@ -290,12 +309,17 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
   // GET SYSTEM ROLES (predefined UserRole enum)
   // --------------------------------------------------------------------------
 
-  async getSystemRoles(): Promise<Array<{ roleId: string; name: string; permissions: Permission[]; isSystem: boolean }>> {
+  async getSystemRoles(): Promise<
+    Array<{ roleId: string; name: string; permissions: Permission[]; isSystem: boolean }>
+  > {
     const { UserRole, DEFAULT_ROLE_PERMISSIONS } = await import('@opsui/shared');
 
     return Object.values(UserRole).map(role => ({
       roleId: role,
-      name: role.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+      name: role
+        .replace(/_/g, ' ')
+        .toLowerCase()
+        .replace(/\b\w/g, l => l.toUpperCase()),
       permissions: DEFAULT_ROLE_PERMISSIONS[role] || [],
       isSystem: true,
     }));

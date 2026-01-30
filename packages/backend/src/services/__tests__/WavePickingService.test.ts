@@ -5,11 +5,16 @@
  * release, status tracking, and completion
  */
 
-import { WavePickingService, wavePickingService, WaveStrategy, WaveStatus } from '../WavePickingService';
+import {
+  WavePickingService,
+  wavePickingService,
+  WaveStrategy,
+  WaveStatus,
+} from '../WavePickingService';
 import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import { getAuditService } from '../AuditService';
-import { notifyAll } from '../notificationHelper';
+import { notifyAll } from '../NotificationHelper';
 import wsServer from '../../websocket';
 import { routeOptimizationService } from '../RouteOptimizationService';
 
@@ -17,7 +22,7 @@ import { routeOptimizationService } from '../RouteOptimizationService';
 jest.mock('../../db/client');
 jest.mock('../../config/logger');
 jest.mock('../AuditService');
-jest.mock('../notificationHelper');
+jest.mock('../NotificationHelper');
 jest.mock('../RouteOptimizationService');
 jest.mock('../../websocket');
 
@@ -139,9 +144,7 @@ describe('WavePickingService', () => {
         maxOrdersPerWave: 40,
       };
 
-      const mockOrders = [
-        { order_id: 'ORD-001', priority: 'NORMAL', item_count: 5 },
-      ];
+      const mockOrders = [{ order_id: 'ORD-001', priority: 'NORMAL', item_count: 5 }];
 
       mockClient.query
         .mockResolvedValueOnce({ rows: mockOrders })
@@ -254,10 +257,7 @@ describe('WavePickingService', () => {
         { order_id: 'ORD-002', priority: 'NORMAL', item_count: 5 },
       ];
 
-      const mockPickers = [
-        { user_id: 'picker-1' },
-        { user_id: 'picker-2' },
-      ];
+      const mockPickers = [{ user_id: 'picker-1' }, { user_id: 'picker-2' }];
 
       mockClient.query
         .mockResolvedValueOnce({ rows: mockOrders })
@@ -580,7 +580,13 @@ describe('WavePickingService', () => {
       const mockWaves = [
         { wave_id: 'WAVE-001', name: 'Wave 1', status: 'PLANNED', order_count: 1, item_count: 5 },
         { wave_id: 'WAVE-002', name: 'Wave 2', status: 'RELEASED', order_count: 2, item_count: 10 },
-        { wave_id: 'WAVE-003', name: 'Wave 3', status: 'COMPLETED', order_count: 3, item_count: 15 },
+        {
+          wave_id: 'WAVE-003',
+          name: 'Wave 3',
+          status: 'COMPLETED',
+          order_count: 3,
+          item_count: 15,
+        },
       ];
 
       // The query should filter to only RELEASED and IN_PROGRESS

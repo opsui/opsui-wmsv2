@@ -26,7 +26,7 @@ const requireDevelopment = (req: AuthenticatedRequest, res: Response, next: Func
   const isAdmin = req.user?.baseRole === 'ADMIN' || req.user?.effectiveRole === 'ADMIN';
   if (process.env.NODE_ENV !== 'development' && !isAdmin) {
     res.status(404).json({ error: 'Not found' });
-      return;
+    return;
   }
   next();
 };
@@ -330,25 +330,26 @@ router.get(
       };
     }
 
-    const allMissing = Object.values(results).flatMap((r) => r.missing);
+    const allMissing = Object.values(results).flatMap(r => r.missing);
     const overallHealthy = allMissing.length === 0;
 
     res.json({
       healthy: overallHealthy,
       summary: {
         totalCategories: Object.keys(requiredTables).length,
-        healthyCategories: Object.values(results).filter((r) => r.healthy).length,
+        healthyCategories: Object.values(results).filter(r => r.healthy).length,
         totalTables: Object.values(requiredTables).reduce((sum, tables) => sum + tables.length, 0),
         existingTables: Object.values(results).reduce((sum, r) => sum + r.exists.length, 0),
         missingTables: allMissing.length,
       },
       categories: results,
-      recommendations: allMissing.length > 0
-        ? [
-            `Run: npx tsx packages/backend/src/db/run-migrations.ts`,
-            `Or apply migrations manually: psql -U your_user -d wms_db -f packages/backend/src/db/migrations/add_phase2_operational_excellence.sql`,
-          ]
-        : ['All tables present - database schema is healthy'],
+      recommendations:
+        allMissing.length > 0
+          ? [
+              `Run: npx tsx packages/backend/src/db/run-migrations.ts`,
+              `Or apply migrations manually: psql -U your_user -d wms_db -f packages/backend/src/db/migrations/add_phase2_operational_excellence.sql`,
+            ]
+          : ['All tables present - database schema is healthy'],
     });
   })
 );
@@ -499,7 +500,9 @@ router.delete(
     await pool.query('DELETE FROM user_role_assignments WHERE user_id = $1', [userId]);
 
     // Then delete the user
-    const result = await pool.query('DELETE FROM users WHERE user_id = $1 RETURNING name, email', [userId]);
+    const result = await pool.query('DELETE FROM users WHERE user_id = $1 RETURNING name, email', [
+      userId,
+    ]);
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'User not found' });
@@ -696,7 +699,9 @@ router.post(
 
     const validCategories = ['picking', 'packing', 'inventory', 'shipping', 'experimental'];
     if (!validCategories.includes(category)) {
-      res.status(400).json({ error: `Invalid category. Must be one of: ${validCategories.join(', ')}` });
+      res
+        .status(400)
+        .json({ error: `Invalid category. Must be one of: ${validCategories.join(', ')}` });
       return;
     }
 
@@ -1068,18 +1073,8 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     // Define permission matrix for all roles
     const permissionMatrix = {
-      PICKER: [
-        'orders:claim',
-        'orders:pick',
-        'pick_tasks:update',
-        'audit_logs:read_own',
-      ],
-      PACKER: [
-        'orders:pack',
-        'orders:ship',
-        'packing:update',
-        'audit_logs:read_own',
-      ],
+      PICKER: ['orders:claim', 'orders:pick', 'pick_tasks:update', 'audit_logs:read_own'],
+      PACKER: ['orders:pack', 'orders:ship', 'packing:update', 'audit_logs:read_own'],
       SUPERVISOR: [
         'orders:read_all',
         'orders:cancel',
@@ -1095,14 +1090,15 @@ router.get(
         'bin_locations:manage',
         'audit_logs:read_own',
       ],
-      ADMIN: [
-        '*',
-      ],
+      ADMIN: ['*'],
     };
 
     // Current user's permissions based on role
     const userRole = req.user?.baseRole || 'PICKER';
-    const userPermissions = userRole === 'ADMIN' ? ['*'] : permissionMatrix[userRole as keyof typeof permissionMatrix] || [];
+    const userPermissions =
+      userRole === 'ADMIN'
+        ? ['*']
+        : permissionMatrix[userRole as keyof typeof permissionMatrix] || [];
 
     res.json({
       matrix: permissionMatrix,
@@ -1187,11 +1183,19 @@ router.post(
 
       // Load preset-specific data
       const presets: Record<string, () => Promise<void>> = {
-        'fresh': async () => {
+        fresh: async () => {
           // Clean state already achieved by delete
         },
         'with-orders': async () => {
-          const statuses = ['pending', 'claimed', 'picking', 'picked', 'packing', 'packed', 'shipped'];
+          const statuses = [
+            'pending',
+            'claimed',
+            'picking',
+            'picked',
+            'packing',
+            'packed',
+            'shipped',
+          ];
           const priorities = ['STANDARD', 'EXPRESS'];
           const zones = ['A', 'B', 'C', 'D'];
 
@@ -1327,7 +1331,7 @@ router.post(
       const loadPreset = presets[presetId];
       if (!loadPreset) {
         res.status(400).json({ error: 'Invalid preset ID' });
-      return;
+        return;
       }
 
       await loadPreset();
@@ -1407,18 +1411,22 @@ router.post(
 
         // Use spawn for real-time output
         // Pass the admin's auth token to avoid login issues
-        const playwright = spawn('npx', ['playwright', 'test', 'crawl.spec.ts', '--reporter=list'], {
-          cwd: AI_LOOP_DIR,
-          shell: true,
-          env: {
-            ...process.env,
-            FORCE_COLOR: '0',
-            // Pass the current user's auth token to the crawler
-            // Get it from the Authorization header since req.user is just the decoded payload
-            CRAWLER_AUTH_TOKEN: (req.headers.authorization || '').replace('Bearer ', ''),
-            CRAWLER_USER_ID: req.user?.userId || '',
-          },
-        });
+        const playwright = spawn(
+          'npx',
+          ['playwright', 'test', 'crawl.spec.ts', '--reporter=list'],
+          {
+            cwd: AI_LOOP_DIR,
+            shell: true,
+            env: {
+              ...process.env,
+              FORCE_COLOR: '0',
+              // Pass the current user's auth token to the crawler
+              // Get it from the Authorization header since req.user is just the decoded payload
+              CRAWLER_AUTH_TOKEN: (req.headers.authorization || '').replace('Bearer ', ''),
+              CRAWLER_USER_ID: req.user?.userId || '',
+            },
+          }
+        );
 
         // Store the process reference so we can kill it if needed
         crawlerState.process = playwright;
@@ -1826,16 +1834,20 @@ router.post(
   requireDevelopment,
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const playwright = spawn('npx', ['playwright', 'test', 'workflows.spec.ts', '--reporter=list'], {
-      cwd: AI_LOOP_DIR,
-      shell: true,
-      env: {
-        ...process.env,
-        FORCE_COLOR: '0',
-        CRAWLER_AUTH_TOKEN: (req.headers.authorization || '').replace('Bearer ', ''),
-        CRAWLER_USER_ID: req.user?.userId || '',
-      },
-    });
+    const playwright = spawn(
+      'npx',
+      ['playwright', 'test', 'workflows.spec.ts', '--reporter=list'],
+      {
+        cwd: AI_LOOP_DIR,
+        shell: true,
+        env: {
+          ...process.env,
+          FORCE_COLOR: '0',
+          CRAWLER_AUTH_TOKEN: (req.headers.authorization || '').replace('Bearer ', ''),
+          CRAWLER_USER_ID: req.user?.userId || '',
+        },
+      }
+    );
 
     let output = '';
     playwright.stdout.on('data', (data: Buffer) => {
@@ -2109,8 +2121,8 @@ router.post(
       await pool.query('DELETE FROM skus WHERE sku = $1', [testSku]);
 
       // Delete audit logs for this test
-      await pool.query("DELETE FROM audit_logs WHERE entity_id = $1", [testSku]);
-      await pool.query("DELETE FROM audit_logs WHERE entity_id = $1", [testOrderId]);
+      await pool.query('DELETE FROM audit_logs WHERE entity_id = $1', [testSku]);
+      await pool.query('DELETE FROM audit_logs WHERE entity_id = $1', [testOrderId]);
 
       return res.json({
         message: 'Test data cleaned up successfully',

@@ -52,7 +52,15 @@ router.post(
   requirePermission(Permission.MANAGE_BUSINESS_RULES),
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const { severityLevel, minVariancePercent, maxVariancePercent, requiresApproval, requiresManagerApproval, autoAdjust, colorCode } = req.body;
+    const {
+      severityLevel,
+      minVariancePercent,
+      maxVariancePercent,
+      requiresApproval,
+      requiresManagerApproval,
+      autoAdjust,
+      colorCode,
+    } = req.body;
 
     const config = await varianceSeverityService.createSeverityConfig({
       severityLevel,

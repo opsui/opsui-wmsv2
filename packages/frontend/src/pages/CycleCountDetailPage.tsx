@@ -30,12 +30,7 @@ import { useToast } from '@/components/shared';
 import { QuickCountPanel, CountSheetPrint } from '@/components/cycle-count';
 import { useAuthStore } from '@/stores';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import {
-  CycleCountStatus,
-  CycleCountType,
-  VarianceStatus,
-  UserRole,
-} from '@opsui/shared';
+import { CycleCountStatus, CycleCountType, VarianceStatus, UserRole } from '@opsui/shared';
 import {
   ChartBarIcon,
   PlayIcon,
@@ -121,21 +116,30 @@ function CountEntryModal({
   const createEntryMutation = useCreateCycleCountEntry();
   const [errorMessage, setErrorMessage] = useState('');
   const [skuSearch, setSkuSearch] = useState('');
-  const [prefillValues, setPrefillValues] = useState({ sku: prefillSku, location: prefillLocation });
+  const [prefillValues, setPrefillValues] = useState({
+    sku: prefillSku,
+    location: prefillLocation,
+  });
 
   // Barcode scanning state
   const [barcode, setBarcode] = useState('');
-  const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  );
   const [barcodeMessage, setBarcodeMessage] = useState('');
 
   // Bin location quantities state
-  const [skuBinLocations, setSkuBinLocations] = useState<Array<{ binId: string; quantity: number }>>([]);
+  const [skuBinLocations, setSkuBinLocations] = useState<
+    Array<{ binId: string; quantity: number }>
+  >([]);
 
   // Barcode lookup hook
-  const { data: barcodeData, isLoading: barcodeLoading, isError: barcodeError, refetch: refetchBarcode } = useBarcodeLookup(
-    barcode,
-    barcodeStatus === 'loading'
-  );
+  const {
+    data: barcodeData,
+    isLoading: barcodeLoading,
+    isError: barcodeError,
+    refetch: refetchBarcode,
+  } = useBarcodeLookup(barcode, barcodeStatus === 'loading');
 
   // Fetch SKUs and bin locations
   const { data: inventoryData, isLoading: loadingInventory } = useStockControlInventory({
@@ -144,21 +148,20 @@ function CountEntryModal({
   const { data: binsData, isLoading: loadingBins } = useBinLocations();
 
   const skus = inventoryData?.items || [];
-  const binLocations = binsData || [];  // API returns array directly, not wrapped in object
+  const binLocations = binsData || []; // API returns array directly, not wrapped in object
 
   // Get pending entries from plan (items to be counted)
   const pendingEntries = plan?.countEntries?.filter((e: any) => e.countedQuantity === 0) || [];
 
   // Get unique SKUs from pending entries for the counting guide
-  const pendingSkus = Array.from(
-    new Map(pendingEntries.map((e: any) => [e.sku, e])).values()
-  );
+  const pendingSkus = Array.from(new Map(pendingEntries.map((e: any) => [e.sku, e])).values());
 
   // Filter SKUs based on search
   const filteredSkus = skuSearch
-    ? skus.filter((item: any) =>
-        item.sku?.toLowerCase().includes(skuSearch.toLowerCase()) ||
-        item.name?.toLowerCase().includes(skuSearch.toLowerCase())
+    ? skus.filter(
+        (item: any) =>
+          item.sku?.toLowerCase().includes(skuSearch.toLowerCase()) ||
+          item.name?.toLowerCase().includes(skuSearch.toLowerCase())
       )
     : skus;
 
@@ -200,7 +203,7 @@ function CountEntryModal({
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       // Validate that the SKU exists in the inventory list
       const skuExists = skus.some((item: any) => item.sku === values.sku);
       if (!skuExists) {
@@ -220,7 +223,10 @@ function CountEntryModal({
         onClose();
       } catch (error: any) {
         const errorMsg = error?.message || String(error);
-        if (errorMsg.includes('inventory_transactions_sku_fkey') || errorMsg.includes('foreign key constraint')) {
+        if (
+          errorMsg.includes('inventory_transactions_sku_fkey') ||
+          errorMsg.includes('foreign key constraint')
+        ) {
           setErrorMessage('SKU not found. Please create this SKU first in Stock Control.');
         } else {
           setErrorMessage(`Failed to create entry: ${errorMsg}`);
@@ -322,7 +328,10 @@ function CountEntryModal({
       <div className="dark:bg-gray-900 bg-white rounded-xl shadow-2xl max-w-md w-full">
         <div className="px-6 py-4 dark:bg-success-500/10 bg-success-50 border-b dark:border-success-500/20 border-success-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold dark:text-white text-gray-900">Add Count Entry</h3>
-          <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900">
+          <button
+            onClick={onClose}
+            className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900"
+          >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
@@ -339,13 +348,13 @@ function CountEntryModal({
               <input
                 type="text"
                 value={barcode}
-                onChange={(e) => handleBarcodeChange(e.target.value)}
+                onChange={e => handleBarcodeChange(e.target.value)}
                 className={`w-full pl-10 pr-10 py-2 dark:bg-gray-800 bg-gray-50 border dark:border-gray-600 border-gray-300 rounded-lg dark:text-white text-gray-900 ${
                   barcodeStatus === 'success'
                     ? 'border-green-500 focus:ring-green-500'
                     : barcodeStatus === 'error'
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'focus:ring-primary-500'
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'focus:ring-primary-500'
                 }`}
                 placeholder="Scan or enter barcode..."
                 autoFocus
@@ -367,8 +376,8 @@ function CountEntryModal({
                   barcodeStatus === 'success'
                     ? 'text-green-500'
                     : barcodeStatus === 'error'
-                    ? 'text-red-500'
-                    : 'text-gray-500'
+                      ? 'text-red-500'
+                      : 'text-gray-500'
                 }`}
               >
                 {barcodeMessage}
@@ -390,9 +399,12 @@ function CountEntryModal({
                 required
                 name="sku"
                 value={formData.sku}
-                onChange={(e) => {
+                onChange={e => {
                   const value = e.target.value.toUpperCase();
-                  handleChange({ ...e, target: { ...e.target, name: 'sku', value } } as React.ChangeEvent<HTMLInputElement>);
+                  handleChange({
+                    ...e,
+                    target: { ...e.target, name: 'sku', value },
+                  } as React.ChangeEvent<HTMLInputElement>);
                   setSkuSearch(value);
                   setErrorMessage('');
                   // Update bin location quantities when SKU is manually entered
@@ -406,7 +418,9 @@ function CountEntryModal({
                 className={`w-full px-3 py-2 dark:bg-gray-800 bg-gray-50 border rounded-lg dark:text-white text-gray-900 ${
                   plan.sku ? 'opacity-75 cursor-not-allowed' : ''
                 } ${
-                  errors.sku ? 'border-red-500 focus:ring-red-500' : 'dark:border-gray-600 border-gray-300'
+                  errors.sku
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'dark:border-gray-600 border-gray-300'
                 }`}
                 placeholder="Search SKU..."
                 autoComplete="off"
@@ -434,18 +448,21 @@ function CountEntryModal({
                 </div>
               )}
             </div>
-            {loadingInventory && <p className="text-xs dark:text-gray-500 text-gray-500 mt-1">Loading SKUs...</p>}
+            {loadingInventory && (
+              <p className="text-xs dark:text-gray-500 text-gray-500 mt-1">Loading SKUs...</p>
+            )}
           </div>
 
           {/* Bin Location Dropdown */}
           <div>
             <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">
-              Bin Location {plan.location && <span className="text-xs text-blue-400">(Locked by Plan)</span>}
+              Bin Location{' '}
+              {plan.location && <span className="text-xs text-blue-400">(Locked by Plan)</span>}
             </label>
             <Select
               name="binLocation"
               value={formData.binLocation}
-              onChange={(e) => {
+              onChange={e => {
                 if (!plan.location) {
                   handleChange(e);
                 }
@@ -460,8 +477,12 @@ function CountEntryModal({
               ]}
               className={plan.location ? 'opacity-75 cursor-not-allowed' : ''}
             />
-            {errors.binLocation && <p className="mt-1 text-sm text-red-400">{errors.binLocation}</p>}
-            {loadingBins && <p className="text-xs dark:text-gray-500 text-gray-500 mt-1">Loading locations...</p>}
+            {errors.binLocation && (
+              <p className="mt-1 text-sm text-red-400">{errors.binLocation}</p>
+            )}
+            {loadingBins && (
+              <p className="text-xs dark:text-gray-500 text-gray-500 mt-1">Loading locations...</p>
+            )}
 
             {/* Show bin location quantities when location is not locked */}
             {!plan.location && formData.sku && skuBinLocations.length > 0 && (
@@ -470,8 +491,11 @@ function CountEntryModal({
                   Bin Locations for {formData.sku}:
                 </p>
                 <div className="space-y-1">
-                  {skuBinLocations.map((bin) => (
-                    <div key={bin.binId} className="flex justify-between text-xs dark:text-gray-300 text-gray-700">
+                  {skuBinLocations.map(bin => (
+                    <div
+                      key={bin.binId}
+                      className="flex justify-between text-xs dark:text-gray-300 text-gray-700"
+                    >
                       <span>{bin.binId}</span>
                       <span className="font-medium">Qty: {bin.quantity}</span>
                     </div>
@@ -517,7 +541,9 @@ function CountEntryModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">Counted Quantity</label>
+            <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">
+              Counted Quantity
+            </label>
             <input
               type="number"
               name="countedQuantity"
@@ -531,10 +557,14 @@ function CountEntryModal({
               }`}
               placeholder="Enter counted quantity"
             />
-            {errors.countedQuantity && <p className="mt-1 text-sm text-red-400">{errors.countedQuantity}</p>}
+            {errors.countedQuantity && (
+              <p className="mt-1 text-sm text-red-400">{errors.countedQuantity}</p>
+            )}
           </div>
           <div>
-            <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">
+              Notes
+            </label>
             <textarea
               name="notes"
               value={formData.notes}
@@ -555,7 +585,12 @@ function CountEntryModal({
             <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" variant="primary" className="flex-1" disabled={isSubmitting || createEntryMutation.isPending}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="flex-1"
+              disabled={isSubmitting || createEntryMutation.isPending}
+            >
               {isSubmitting || createEntryMutation.isPending ? 'Adding...' : 'Add Entry'}
             </Button>
           </div>
@@ -627,10 +662,15 @@ function VarianceApprovalModal({
         <div className="px-6 py-4 border-b dark:border-gray-700 border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold dark:text-white text-gray-900">Review Variance</h3>
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-medium px-2 py-1 rounded ${severity.color} bg-opacity-10 dark:bg-opacity-20`}>
+            <span
+              className={`text-xs font-medium px-2 py-1 rounded ${severity.color} bg-opacity-10 dark:bg-opacity-20`}
+            >
               {severity.label} Severity
             </span>
-            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900">
+            <button
+              onClick={onClose}
+              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -645,20 +685,29 @@ function VarianceApprovalModal({
               </div>
               <div>
                 <span className="dark:text-gray-400 text-gray-500">Location:</span>
-                <span className="ml-2 dark:text-white text-gray-900 font-medium">{entry.binLocation}</span>
+                <span className="ml-2 dark:text-white text-gray-900 font-medium">
+                  {entry.binLocation}
+                </span>
               </div>
               <div>
                 <span className="dark:text-gray-400 text-gray-500">System Qty:</span>
-                <span className="ml-2 dark:text-white text-gray-900 font-medium">{entry.systemQuantity}</span>
+                <span className="ml-2 dark:text-white text-gray-900 font-medium">
+                  {entry.systemQuantity}
+                </span>
               </div>
               <div>
                 <span className="dark:text-gray-400 text-gray-500">Counted Qty:</span>
-                <span className="ml-2 dark:text-white text-gray-900 font-medium">{entry.countedQuantity}</span>
+                <span className="ml-2 dark:text-white text-gray-900 font-medium">
+                  {entry.countedQuantity}
+                </span>
               </div>
               <div className="col-span-2">
                 <span className="dark:text-gray-400 text-gray-500">Variance:</span>
-                <span className={`ml-2 font-bold ${entry.variance > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {entry.variance > 0 ? '+' : ''}{entry.variance}
+                <span
+                  className={`ml-2 font-bold ${entry.variance > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                >
+                  {entry.variance > 0 ? '+' : ''}
+                  {entry.variance}
                   {entry.variancePercent ? ` (${entry.variancePercent.toFixed(1)}%)` : ''}
                 </span>
               </div>
@@ -672,8 +721,14 @@ function VarianceApprovalModal({
               <div className="text-xs dark:text-gray-300 text-gray-700">
                 <p className="font-medium mb-1">What happens:</p>
                 <ul className="list-disc list-inside space-y-1 dark:text-gray-400 text-gray-600">
-                  <li><strong className="text-green-500">Approve:</strong> Inventory will be adjusted to counted quantity. Transaction created automatically.</li>
-                  <li><strong className="text-red-500">Reject:</strong> Counted quantity is NOT applied. System quantity stays unchanged. Please re-count this item.</li>
+                  <li>
+                    <strong className="text-green-500">Approve:</strong> Inventory will be adjusted
+                    to counted quantity. Transaction created automatically.
+                  </li>
+                  <li>
+                    <strong className="text-red-500">Reject:</strong> Counted quantity is NOT
+                    applied. System quantity stays unchanged. Please re-count this item.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -708,7 +763,7 @@ function VarianceApprovalModal({
             </label>
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={e => setNotes(e.target.value)}
               placeholder="Provide additional context about this variance..."
               className="w-full px-3 py-2 dark:bg-gray-800 bg-gray-50 border dark:border-gray-600 border-gray-300 rounded-lg dark:text-white text-gray-900 resize-none"
               rows={3}
@@ -773,7 +828,10 @@ function getCountTypeDescription(countType: string, location?: string, sku?: str
 }
 
 // Helper to get auto-generation info
-function getAutoGenerationInfo(countType: string): { willAutoGenerate: boolean; description: string } {
+function getAutoGenerationInfo(countType: string): {
+  willAutoGenerate: boolean;
+  description: string;
+} {
   switch (countType) {
     case CycleCountType.BLANKET:
       return {
@@ -867,9 +925,20 @@ export default function CycleCountDetailPage() {
   // Get severity for variance display
   const getVarianceSeverity = (variancePercent: number) => {
     const percent = Math.abs(variancePercent || 0);
-    if (percent > 10) return { level: 'critical', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-500/20' };
-    if (percent > 5) return { level: 'high', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' };
-    if (percent > 2) return { level: 'medium', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-500/20' };
+    if (percent > 10)
+      return {
+        level: 'critical',
+        color: 'text-red-600 dark:text-red-400',
+        bg: 'bg-red-100 dark:bg-red-500/20',
+      };
+    if (percent > 5)
+      return { level: 'high', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' };
+    if (percent > 2)
+      return {
+        level: 'medium',
+        color: 'text-yellow-500',
+        bg: 'bg-yellow-100 dark:bg-yellow-500/20',
+      };
     return { level: 'low', color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-500/20' };
   };
 
@@ -903,7 +972,10 @@ export default function CycleCountDetailPage() {
       const entryCount = plan?.countEntries?.length || 0;
       if (autoGenInfo.willAutoGenerate && entryCount > 0) {
         // Entries were pre-created, show info
-        showToast(`${entryCount} count entries have been auto-generated. Please verify the physical quantities and update as needed.`, 'info');
+        showToast(
+          `${entryCount} count entries have been auto-generated. Please verify the physical quantities and update as needed.`,
+          'info'
+        );
       }
     } catch (error) {
       console.error('Failed to start cycle count:', error);
@@ -915,7 +987,10 @@ export default function CycleCountDetailPage() {
     // Check if there are any count entries
     const entryCount = plan?.countEntries?.length || 0;
     if (entryCount === 0) {
-      showToast('Cannot complete a cycle count without any count entries. Please add at least one count entry before completing.', 'error');
+      showToast(
+        'Cannot complete a cycle count without any count entries. Please add at least one count entry before completing.',
+        'error'
+      );
       return;
     }
 
@@ -929,7 +1004,10 @@ export default function CycleCountDetailPage() {
 
   const handleReconcile = async () => {
     try {
-      await reconcileMutation.mutateAsync({ planId: planId!, notes: 'Bulk reconcile all variances' });
+      await reconcileMutation.mutateAsync({
+        planId: planId!,
+        notes: 'Bulk reconcile all variances',
+      });
       refetch();
     } catch (error) {
       console.error('Failed to reconcile cycle count:', error);
@@ -944,7 +1022,10 @@ export default function CycleCountDetailPage() {
         autoApproveZeroVariance,
         notes: 'Bulk approved',
       });
-      showToast(`Approved ${result.updated} variances. ${result.skipped > 0 ? `(${result.skipped} zero-variance entries skipped)` : ''}`, 'success');
+      showToast(
+        `Approved ${result.updated} variances. ${result.skipped > 0 ? `(${result.skipped} zero-variance entries skipped)` : ''}`,
+        'success'
+      );
       refetch();
       setShowBulkApproveModal(false);
     } catch (error: any) {
@@ -992,7 +1073,8 @@ export default function CycleCountDetailPage() {
   const totalEntries = plan?.countEntries?.length || 0;
   const completedEntries =
     plan?.countEntries?.filter((e: any) => e.varianceStatus !== VarianceStatus.PENDING).length || 0;
-  const progressPercent = totalEntries > 0 ? Math.round((completedEntries / totalEntries) * 100) : 0;
+  const progressPercent =
+    totalEntries > 0 ? Math.round((completedEntries / totalEntries) * 100) : 0;
 
   if (isLoading) {
     return (
@@ -1070,7 +1152,9 @@ export default function CycleCountDetailPage() {
           <div className="mb-6">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-400">Completion Progress</span>
-              <span className="text-gray-300">{completedEntries} of {totalEntries}</span>
+              <span className="text-gray-300">
+                {completedEntries} of {totalEntries}
+              </span>
             </div>
             <div className="h-3 bg-white/10 rounded-full overflow-hidden">
               <div
@@ -1123,13 +1207,17 @@ export default function CycleCountDetailPage() {
               {plan.createdAt && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Created</p>
-                  <p className="font-medium text-white">{new Date(plan.createdAt).toLocaleDateString()}</p>
+                  <p className="font-medium text-white">
+                    {new Date(plan.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               )}
               {plan.completedAt && (
                 <div>
                   <p className="text-sm text-gray-400 mb-1">Completed</p>
-                  <p className="font-medium text-white">{new Date(plan.completedAt).toLocaleDateString()}</p>
+                  <p className="font-medium text-white">
+                    {new Date(plan.completedAt).toLocaleDateString()}
+                  </p>
                 </div>
               )}
             </div>
@@ -1148,7 +1236,9 @@ export default function CycleCountDetailPage() {
                     <p className="text-xs text-gray-400">Counted</p>
                   </div>
                   <div className="text-center p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                    <p className="text-lg font-bold text-yellow-400">{plan.countEntries.length - completedEntries}</p>
+                    <p className="text-lg font-bold text-yellow-400">
+                      {plan.countEntries.length - completedEntries}
+                    </p>
                     <p className="text-xs text-gray-400">Remaining</p>
                   </div>
                 </div>
@@ -1216,9 +1306,17 @@ export default function CycleCountDetailPage() {
                   )}
                   <Button
                     onClick={handleComplete}
-                    disabled={completeMutation.isPending || !plan.countEntries || plan.countEntries.length === 0}
+                    disabled={
+                      completeMutation.isPending ||
+                      !plan.countEntries ||
+                      plan.countEntries.length === 0
+                    }
                     className="flex items-center gap-2"
-                    title={(!plan.countEntries || plan.countEntries.length === 0) ? 'Add at least one count entry before completing' : undefined}
+                    title={
+                      !plan.countEntries || plan.countEntries.length === 0
+                        ? 'Add at least one count entry before completing'
+                        : undefined
+                    }
                   >
                     <CheckIcon className="h-4 w-4" />
                     {completeMutation.isPending ? 'Completing...' : 'Complete Count'}
@@ -1273,15 +1371,16 @@ export default function CycleCountDetailPage() {
                     Export CSV
                   </Button>
                   {/* New: Quick Count Mode Button */}
-                  {plan.status === CycleCountStatus.IN_PROGRESS && getPendingEntries().length > 0 && (
-                    <Button
-                      onClick={() => setQuickCountMode(true)}
-                      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
-                    >
-                      <QrCodeIcon className="h-4 w-4" />
-                      Quick Count Mode
-                    </Button>
-                  )}
+                  {plan.status === CycleCountStatus.IN_PROGRESS &&
+                    getPendingEntries().length > 0 && (
+                      <Button
+                        onClick={() => setQuickCountMode(true)}
+                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                      >
+                        <QrCodeIcon className="h-4 w-4" />
+                        Quick Count Mode
+                      </Button>
+                    )}
                   {/* New: Print Count Sheet Button */}
                   <Button
                     onClick={() => setShowPrintSheet(true)}
@@ -1293,16 +1392,18 @@ export default function CycleCountDetailPage() {
                   </Button>
                 </>
               )}
-              {(plan.status === CycleCountStatus.COMPLETED || plan.status === CycleCountStatus.RECONCILED) && canReconcile && (
-                <Button
-                  onClick={() => setShowAuditLog(true)}
-                  className="flex items-center gap-2"
-                  variant="secondary"
-                >
-                  <ClockIcon className="h-4 w-4" />
-                  View Audit Log
-                </Button>
-              )}
+              {(plan.status === CycleCountStatus.COMPLETED ||
+                plan.status === CycleCountStatus.RECONCILED) &&
+                canReconcile && (
+                  <Button
+                    onClick={() => setShowAuditLog(true)}
+                    className="flex items-center gap-2"
+                    variant="secondary"
+                  >
+                    <ClockIcon className="h-4 w-4" />
+                    View Audit Log
+                  </Button>
+                )}
               {pendingVarianceCount > 0 && (
                 <div className="flex items-center gap-2 px-4 py-2 dark:bg-warning-500/20 dark:text-warning-400 bg-yellow-100 text-yellow-800 rounded-xl">
                   <ExclamationTriangleIcon className="h-4 w-4" />
@@ -1324,31 +1425,40 @@ export default function CycleCountDetailPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-400 mb-3">
-                These items from your plan still need to be counted. Click "Quick Count" to add an entry.
+                These items from your plan still need to be counted. Click "Quick Count" to add an
+                entry.
               </p>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {getPendingEntries().slice(0, 20).map((entry: any) => (
-                  <div
-                    key={entry.entryId}
-                    className="flex items-center justify-between p-3 bg-gray-800/50 dark:bg-gray-800 rounded-lg dark:hover:bg-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium dark:text-white text-gray-900">{entry.sku}</span>
-                        <span className="text-sm dark:text-gray-400 text-gray-600">{entry.binLocation}</span>
-                        <span className="text-sm dark:text-gray-500 text-gray-500">System: {entry.systemQuantity}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleQuickCount(entry)}
-                      className="ml-3"
+                {getPendingEntries()
+                  .slice(0, 20)
+                  .map((entry: any) => (
+                    <div
+                      key={entry.entryId}
+                      className="flex items-center justify-between p-3 bg-gray-800/50 dark:bg-gray-800 rounded-lg dark:hover:bg-gray-700 hover:bg-gray-100 transition-colors"
                     >
-                      Quick Count
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium dark:text-white text-gray-900">
+                            {entry.sku}
+                          </span>
+                          <span className="text-sm dark:text-gray-400 text-gray-600">
+                            {entry.binLocation}
+                          </span>
+                          <span className="text-sm dark:text-gray-500 text-gray-500">
+                            System: {entry.systemQuantity}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleQuickCount(entry)}
+                        className="ml-3"
+                      >
+                        Quick Count
+                      </Button>
+                    </div>
+                  ))}
                 {getPendingEntries().length > 20 && (
                   <p className="text-center text-sm text-gray-500 pt-2">
                     ... and {getPendingEntries().length - 20} more items
@@ -1379,7 +1489,9 @@ export default function CycleCountDetailPage() {
                       : 'dark:bg-gray-700 bg-gray-200 dark:text-gray-200 text-gray-700 dark:hover:bg-gray-600 hover:bg-gray-300'
                   }`}
                 >
-                  {showOnlyVariances ? 'Show All' : `Show Only Variances (${plan.countEntries.filter((e: any) => e.variance !== 0).length})`}
+                  {showOnlyVariances
+                    ? 'Show All'
+                    : `Show Only Variances (${plan.countEntries.filter((e: any) => e.variance !== 0).length})`}
                 </button>
               </CardTitle>
             </CardHeader>
@@ -1419,45 +1531,62 @@ export default function CycleCountDetailPage() {
                         const severity = getVarianceSeverity(entry.variancePercent || 0);
 
                         return (
-                      <tr key={entry.entryId} className="dark:hover:bg-white/5 hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-sm font-medium dark:text-white text-gray-900">{entry.sku}</td>
-                        <td className="px-4 py-3 text-sm dark:text-gray-300 text-gray-700">{entry.binLocation}</td>
-                        <td className="px-4 py-3 text-sm text-right dark:text-gray-300 text-gray-700">{entry.systemQuantity}</td>
-                        <td className="px-4 py-3 text-sm text-right dark:text-gray-300 text-gray-700">{entry.countedQuantity}</td>
-                        <td
-                          className={`px-4 py-3 text-sm text-right font-medium dark:text-white text-gray-900 ${
-                            entry.variance !== 0
-                              ? entry.variance > 0
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                              : ''
-                          }`}
-                        >
-                          {entry.variance > 0 ? '+' : ''}
-                          {entry.variance}
-                          {entry.variancePercent && (
-                            <span className="ml-1 text-xs opacity-70">({entry.variancePercent.toFixed(1)}%)</span>
-                          )}
-                          {entry.variance !== 0 && (
-                            <span className={`ml-2 text-xs px-2 py-0.5 rounded ${severity.bg} ${severity.color}`}>
-                              {severity.level}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-center">
-                          <VarianceStatusBadge status={entry.varianceStatus} />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right">
-                          {entry.varianceStatus === VarianceStatus.PENDING && entry.variance !== 0 && canApproveVariance && (
-                            <button
-                              onClick={() => setSelectedEntry(entry)}
-                              className="text-blue-400 hover:text-blue-300 text-xs font-medium"
+                          <tr
+                            key={entry.entryId}
+                            className="dark:hover:bg-white/5 hover:bg-gray-50 transition-colors"
+                          >
+                            <td className="px-4 py-3 text-sm font-medium dark:text-white text-gray-900">
+                              {entry.sku}
+                            </td>
+                            <td className="px-4 py-3 text-sm dark:text-gray-300 text-gray-700">
+                              {entry.binLocation}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right dark:text-gray-300 text-gray-700">
+                              {entry.systemQuantity}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right dark:text-gray-300 text-gray-700">
+                              {entry.countedQuantity}
+                            </td>
+                            <td
+                              className={`px-4 py-3 text-sm text-right font-medium dark:text-white text-gray-900 ${
+                                entry.variance !== 0
+                                  ? entry.variance > 0
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-red-600 dark:text-red-400'
+                                  : ''
+                              }`}
                             >
-                              Review
-                            </button>
-                          )}
-                        </td>
-                      </tr>
+                              {entry.variance > 0 ? '+' : ''}
+                              {entry.variance}
+                              {entry.variancePercent && (
+                                <span className="ml-1 text-xs opacity-70">
+                                  ({entry.variancePercent.toFixed(1)}%)
+                                </span>
+                              )}
+                              {entry.variance !== 0 && (
+                                <span
+                                  className={`ml-2 text-xs px-2 py-0.5 rounded ${severity.bg} ${severity.color}`}
+                                >
+                                  {severity.level}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-center">
+                              <VarianceStatusBadge status={entry.varianceStatus} />
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right">
+                              {entry.varianceStatus === VarianceStatus.PENDING &&
+                                entry.variance !== 0 &&
+                                canApproveVariance && (
+                                  <button
+                                    onClick={() => setSelectedEntry(entry)}
+                                    className="text-blue-400 hover:text-blue-300 text-xs font-medium"
+                                  >
+                                    Review
+                                  </button>
+                                )}
+                            </td>
+                          </tr>
                         );
                       })}
                   </tbody>
@@ -1474,7 +1603,9 @@ export default function CycleCountDetailPage() {
               <CardTitle>Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm dark:text-gray-400 text-gray-600 dark:bg-white/5 bg-gray-50 rounded-xl p-4">{plan.notes}</p>
+              <p className="text-sm dark:text-gray-400 text-gray-600 dark:bg-white/5 bg-gray-50 rounded-xl p-4">
+                {plan.notes}
+              </p>
             </CardContent>
           </Card>
         )}
@@ -1578,8 +1709,10 @@ export default function CycleCountDetailPage() {
             </div>
             <div className="p-6">
               <p className="text-sm dark:text-gray-300 text-gray-700 mb-4">
-                This will {canApproveVariance ? 'approve' : 'reject'} all {pendingVarianceCount} pending variances.
-                {canApproveVariance && ' Approved variances will immediately adjust inventory levels.'}
+                This will {canApproveVariance ? 'approve' : 'reject'} all {pendingVarianceCount}{' '}
+                pending variances.
+                {canApproveVariance &&
+                  ' Approved variances will immediately adjust inventory levels.'}
               </p>
 
               <div className="mb-4 p-4 dark:bg-gray-800 bg-gray-50 rounded-lg">
@@ -1587,7 +1720,9 @@ export default function CycleCountDetailPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="dark:text-gray-400 text-gray-600">Pending Variances:</span>
-                    <span className="ml-2 dark:text-white text-gray-900 font-medium">{pendingVarianceCount}</span>
+                    <span className="ml-2 dark:text-white text-gray-900 font-medium">
+                      {pendingVarianceCount}
+                    </span>
                   </div>
                   {canApproveVariance && reconcileSummaryData && (
                     <>
@@ -1611,12 +1746,11 @@ export default function CycleCountDetailPage() {
               {canApproveVariance && (
                 <div className="mb-4">
                   <label className="flex items-center gap-2 text-sm dark:text-gray-300 text-gray-700">
-                    <input
-                      type="checkbox"
-                      id="autoZeroVariance"
-                      className="rounded"
-                    />
-                    <span>Also auto-approve entries with zero variance ({reconcileSummaryData?.zeroVarianceEntries || 0} entries)</span>
+                    <input type="checkbox" id="autoZeroVariance" className="rounded" />
+                    <span>
+                      Also auto-approve entries with zero variance (
+                      {reconcileSummaryData?.zeroVarianceEntries || 0} entries)
+                    </span>
                   </label>
                 </div>
               )}
@@ -1678,38 +1812,64 @@ export default function CycleCountDetailPage() {
                           You have {reconcileSummaryData.pendingVarianceCount} pending variance(s)
                         </p>
                         <p className="text-xs dark:text-gray-400 text-gray-500 mt-1">
-                          Please review all variances before reconciling. Reconciling will approve all pending variances and adjust inventory.
+                          Please review all variances before reconciling. Reconciling will approve
+                          all pending variances and adjust inventory.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <h4 className="font-medium dark:text-white text-gray-900 mb-3">Inventory Adjustments:</h4>
+                  <h4 className="font-medium dark:text-white text-gray-900 mb-3">
+                    Inventory Adjustments:
+                  </h4>
                   <div className="overflow-x-auto mb-4">
                     <table className="min-w-full text-sm">
                       <thead className="dark:bg-gray-800 bg-gray-100">
                         <tr>
-                          <th className="px-3 py-2 text-left dark:text-gray-400 text-gray-600">SKU</th>
-                          <th className="px-3 py-2 text-left dark:text-gray-400 text-gray-600">Location</th>
-                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">System</th>
-                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">Counted</th>
-                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">Variance</th>
-                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">%</th>
+                          <th className="px-3 py-2 text-left dark:text-gray-400 text-gray-600">
+                            SKU
+                          </th>
+                          <th className="px-3 py-2 text-left dark:text-gray-400 text-gray-600">
+                            Location
+                          </th>
+                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">
+                            System
+                          </th>
+                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">
+                            Counted
+                          </th>
+                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">
+                            Variance
+                          </th>
+                          <th className="px-3 py-2 text-right dark:text-gray-400 text-gray-600">
+                            %
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y dark:divide-gray-700 divide-gray-200">
                         {reconcileSummaryData.skusToAdjust.map((item: any, index: number) => (
                           <tr key={index}>
                             <td className="px-3 py-2 dark:text-white text-gray-900">{item.sku}</td>
-                            <td className="px-3 py-2 dark:text-gray-300 text-gray-700">{item.binLocation}</td>
-                            <td className="px-3 py-2 text-right dark:text-gray-300 text-gray-700">{item.systemQuantity}</td>
-                            <td className="px-3 py-2 text-right dark:text-gray-300 text-gray-700">{item.countedQuantity}</td>
-                            <td className={`px-3 py-2 text-right font-medium ${
-                              item.variance > 0 ? 'text-green-500' : 'text-red-500'
-                            }`}>
-                              {item.variance > 0 ? '+' : ''}{item.variance}
+                            <td className="px-3 py-2 dark:text-gray-300 text-gray-700">
+                              {item.binLocation}
                             </td>
-                            <td className="px-3 py-2 text-right dark:text-gray-300 text-gray-700">{item.variancePercent.toFixed(1)}%</td>
+                            <td className="px-3 py-2 text-right dark:text-gray-300 text-gray-700">
+                              {item.systemQuantity}
+                            </td>
+                            <td className="px-3 py-2 text-right dark:text-gray-300 text-gray-700">
+                              {item.countedQuantity}
+                            </td>
+                            <td
+                              className={`px-3 py-2 text-right font-medium ${
+                                item.variance > 0 ? 'text-green-500' : 'text-red-500'
+                              }`}
+                            >
+                              {item.variance > 0 ? '+' : ''}
+                              {item.variance}
+                            </td>
+                            <td className="px-3 py-2 text-right dark:text-gray-300 text-gray-700">
+                              {item.variancePercent.toFixed(1)}%
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1772,7 +1932,9 @@ export default function CycleCountDetailPage() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="dark:bg-gray-900 bg-white rounded-xl shadow-2xl max-w-md w-full">
             <div className="px-6 py-4 border-b dark:border-gray-700 border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold dark:text-white text-gray-900">Cancel Cycle Count</h3>
+              <h3 className="text-lg font-semibold dark:text-white text-gray-900">
+                Cancel Cycle Count
+              </h3>
               <button
                 onClick={() => setShowCancelConfirm(false)}
                 className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900"
@@ -1832,7 +1994,10 @@ export default function CycleCountDetailPage() {
               {auditLogData && auditLogData.length > 0 ? (
                 <div className="space-y-4">
                   {auditLogData.map((log: any, index: number) => (
-                    <div key={index} className="p-3 dark:bg-gray-800 bg-gray-50 rounded-lg border dark:border-gray-700 border-gray-200">
+                    <div
+                      key={index}
+                      className="p-3 dark:bg-gray-800 bg-gray-50 rounded-lg border dark:border-gray-700 border-gray-200"
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <ClockIcon className="h-4 w-4 text-gray-500" />
@@ -1844,9 +2009,7 @@ export default function CycleCountDetailPage() {
                           {new Date(log.timestamp).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-xs dark:text-gray-400 text-gray-600">
-                        By: {log.userName}
-                      </p>
+                      <p className="text-xs dark:text-gray-400 text-gray-600">By: {log.userName}</p>
                       {Object.keys(log.details).length > 0 && (
                         <pre className="mt-2 text-xs dark:text-gray-500 text-gray-700 overflow-x-auto">
                           {JSON.stringify(log.details, null, 2)}
@@ -1856,7 +2019,9 @@ export default function CycleCountDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center dark:text-gray-400 text-gray-600 py-8">No audit log available</p>
+                <p className="text-center dark:text-gray-400 text-gray-600 py-8">
+                  No audit log available
+                </p>
               )}
               <div className="mt-4">
                 <button

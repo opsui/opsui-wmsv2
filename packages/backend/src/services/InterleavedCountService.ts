@@ -107,13 +107,7 @@ export class InterleavedCountService {
                counted_by = $4,
                notes = COALESCE(notes || '') || '. Micro-count recount.'
            WHERE entry_id = $5`,
-          [
-            countedQuantity,
-            variance,
-            variancePercent,
-            dto.userId,
-            cycleCountEntryId,
-          ]
+          [countedQuantity, variance, variancePercent, dto.userId, cycleCountEntryId]
         );
 
         logger.info('Updated existing interleaved count entry', { entryId: cycleCountEntryId });
@@ -208,7 +202,10 @@ export class InterleavedCountService {
           );
         }
 
-        logger.info('Created new interleaved count entry', { entryId: cycleCountEntryId, isNewEntry });
+        logger.info('Created new interleaved count entry', {
+          entryId: cycleCountEntryId,
+          isNewEntry,
+        });
       }
 
       await client.query('COMMIT');
@@ -224,7 +221,12 @@ export class InterleavedCountService {
         countedQuantity,
         variance,
         variancePercent,
-        varianceStatus: variance === 0 ? 'MATCHED' : Math.abs(variancePercent) <= 2 ? 'WITHIN_TOLERANCE' : 'REQUIRES_REVIEW',
+        varianceStatus:
+          variance === 0
+            ? 'MATCHED'
+            : Math.abs(variancePercent) <= 2
+              ? 'WITHIN_TOLERANCE'
+              : 'REQUIRES_REVIEW',
         autoAdjusted: variance !== 0 && Math.abs(variancePercent) <= 2,
         createdAt: new Date(),
       };

@@ -77,8 +77,13 @@ export function PickingPage() {
   const [undoPickItemIndex, setUndoPickItemIndex] = useState<number | null>(null);
 
   // Confirm dialog states
-  const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{ isOpen: boolean; skippedItems: any[] }>({ isOpen: false, skippedItems: [] });
-  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>({ isOpen: false, index: -1, item: null });
+  const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{
+    isOpen: boolean;
+    skippedItems: any[];
+  }>({ isOpen: false, skippedItems: [] });
+  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>(
+    { isOpen: false, index: -1, item: null }
+  );
 
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const pickMutation = usePickItem();
@@ -91,13 +96,13 @@ export function PickingPage() {
 
   // Subscribe to pick updates for this order
   usePickUpdates({
-    onPickCompleted: (data) => {
+    onPickCompleted: data => {
       // If this pick is for the current order, refresh the order data
       if (data.orderId === orderId) {
         queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       }
     },
-    onPickStarted: (data) => {
+    onPickStarted: data => {
       // If this pick is for the current order, refresh the order data
       if (data.orderId === orderId) {
         queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -107,7 +112,7 @@ export function PickingPage() {
 
   // Subscribe to zone updates (for zone reassignments during picking)
   useZoneUpdates({
-    onZoneAssignment: (data) => {
+    onZoneAssignment: data => {
       // If this zone assignment affects the current user, refresh
       if (data.pickerId === currentUser?.userId) {
         queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -1504,7 +1509,10 @@ export function PickingPage() {
             sku={order.items[undoPickItemIndex]?.sku || ''}
             currentQuantity={order.items[undoPickItemIndex]?.pickedQuantity || 0}
             totalQuantity={order.items[undoPickItemIndex]?.quantity || 0}
-            wasCompleted={(order.items[undoPickItemIndex]?.pickedQuantity || 0) >= (order.items[undoPickItemIndex]?.quantity || 0)}
+            wasCompleted={
+              (order.items[undoPickItemIndex]?.pickedQuantity || 0) >=
+              (order.items[undoPickItemIndex]?.quantity || 0)
+            }
             isLoading={isUndoingPick}
           />
         )}
@@ -1520,7 +1528,9 @@ export function PickingPage() {
               <p className="mb-3">The following items were skipped and could not be found:</p>
               <ul className="list-disc pl-5 mb-3 space-y-1">
                 {completeOrderConfirm.skippedItems.map((item: any, i: number) => (
-                  <li key={i}>{item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}</li>
+                  <li key={i}>
+                    {item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}
+                  </li>
                 ))}
               </ul>
               <p>Are you sure you want to complete this order? These items will remain unpicked.</p>

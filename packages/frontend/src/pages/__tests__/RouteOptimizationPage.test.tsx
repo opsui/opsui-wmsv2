@@ -108,9 +108,11 @@ describe('RouteOptimizationPage', () => {
       const addButton = screen.getByText('+ Add Location');
       fireEvent.click(addButton);
 
-      const removeButtons = screen.getAllByRole('button').filter(
-        btn => btn.querySelector('svg') && btn.getAttribute('aria-label')?.includes('remove')
-      );
+      const removeButtons = screen
+        .getAllByRole('button')
+        .filter(
+          btn => btn.querySelector('svg') && btn.getAttribute('aria-label')?.includes('remove')
+        );
 
       if (removeButtons.length > 0) {
         fireEvent.click(removeButtons[0]);
@@ -252,18 +254,25 @@ describe('RouteOptimizationPage', () => {
 
     it('shows loading state during optimization', async () => {
       (global.fetch as jest.Mock).mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({
-          ok: true,
-          json: async () => ({
-            success: true,
-            data: {
-              locations: ['A-05-03'],
-              optimized_path: ['A-01-01', 'A-05-03', 'A-01-01'],
-              total_distance_meters: 50,
-              estimated_time_minutes: 2,
-            },
-          }),
-        }), 100))
+        () =>
+          new Promise(resolve =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: async () => ({
+                    success: true,
+                    data: {
+                      locations: ['A-05-03'],
+                      optimized_path: ['A-01-01', 'A-05-03', 'A-01-01'],
+                      total_distance_meters: 50,
+                      estimated_time_minutes: 2,
+                    },
+                  }),
+                }),
+              100
+            )
+          )
       );
 
       renderWithProviders(<RouteOptimizationPage />);

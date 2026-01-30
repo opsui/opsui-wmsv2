@@ -560,7 +560,14 @@ function AppInner() {
         <Route
           path="/cycle-counting"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER, UserRole.PICKER]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+                UserRole.STOCK_CONTROLLER,
+                UserRole.PICKER,
+              ]}
+            >
               <CycleCountingPage />
             </ProtectedRoute>
           }
@@ -568,7 +575,14 @@ function AppInner() {
         <Route
           path="/cycle-counting/:planId"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER, UserRole.PICKER]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+                UserRole.STOCK_CONTROLLER,
+                UserRole.PICKER,
+              ]}
+            >
               <CycleCountDetailPage />
             </ProtectedRoute>
           }
@@ -576,7 +590,9 @@ function AppInner() {
         <Route
           path="/cycle-counting/kpi"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}>
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}
+            >
               <CycleCountKPIPage />
             </ProtectedRoute>
           }
@@ -584,7 +600,14 @@ function AppInner() {
         <Route
           path="/cycle-counting/mobile/:planId"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER, UserRole.PICKER]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+                UserRole.STOCK_CONTROLLER,
+                UserRole.PICKER,
+              ]}
+            >
               <MobileScanningPage />
             </ProtectedRoute>
           }
@@ -600,7 +623,9 @@ function AppInner() {
         <Route
           path="/cycle-counting/root-cause"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}>
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}
+            >
               <RootCauseAnalysisPage />
             </ProtectedRoute>
           }
@@ -662,7 +687,14 @@ function AppInner() {
         <Route
           path="/search"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PICKER, 'STOCK_CONTROLLER' as UserRole]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+                UserRole.PICKER,
+                'STOCK_CONTROLLER' as UserRole,
+              ]}
+            >
               <ProductSearchPage />
             </ProtectedRoute>
           }
@@ -830,7 +862,7 @@ function App() {
     }
 
     // Subscribe to auth state changes
-    const unsubscribe = useAuthStore.subscribe((state) => {
+    const unsubscribe = useAuthStore.subscribe(state => {
       const token = state.tokens?.accessToken;
       if (token && !webSocketService.isConnected()) {
         webSocketService.connect();

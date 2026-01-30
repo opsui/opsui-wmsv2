@@ -409,10 +409,7 @@ describe('Orders Routes', () => {
         })
         .expect(200);
 
-      expect(orderService.cancelOrder).toHaveBeenCalledWith(
-        'ORD-001',
-        'Customer request'
-      );
+      expect(orderService.cancelOrder).toHaveBeenCalledWith('ORD-001', 'Customer request');
     });
   });
 
@@ -497,9 +494,7 @@ describe('Orders Routes', () => {
 
   describe('POST /api/orders/:orderId/items', () => {
     it('should add items to order', async () => {
-      const newItems = [
-        { order_item_id: 'OI-003', sku: 'SKU-003', quantity: 1 },
-      ];
+      const newItems = [{ order_item_id: 'OI-003', sku: 'SKU-003', quantity: 1 }];
 
       (orderService.addOrderItems as jest.Mock).mockResolvedValue(newItems);
 
@@ -563,10 +558,7 @@ describe('Orders Routes', () => {
         next();
       });
 
-      await request(app)
-        .get('/api/orders')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
+      await request(app).get('/api/orders').set('Authorization', 'Bearer valid-token').expect(200);
     });
   });
 

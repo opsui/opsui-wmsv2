@@ -7,7 +7,16 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, Header, Button, Badge, useToast } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Header,
+  Button,
+  Badge,
+  useToast,
+} from '@/components/shared';
 import {
   CogIcon,
   ArrowLeftIcon,
@@ -201,15 +210,21 @@ function getInitialRoles(): RoleConfig[] {
 
   // Load custom roles from localStorage
   const visibility = loadRoleVisibility();
-  const customRoles = DEFAULT_ROLES
-    .filter(role => !isBaseRoleKey(role.key))
-    .map(role => ({
-      ...role,
-      visible: visibility[role.key] !== false,
-    }));
+  const customRoles = DEFAULT_ROLES.filter(role => !isBaseRoleKey(role.key)).map(role => ({
+    ...role,
+    visible: visibility[role.key] !== false,
+  }));
 
   const result = [...baseRoles, ...customRoles];
-  console.log('[getInitialRoles] Returning roles:', result.map(r => ({ key: r.key, role: r.role, visible: r.visible, isBase: isBaseRoleKey(r.key) })));
+  console.log(
+    '[getInitialRoles] Returning roles:',
+    result.map(r => ({
+      key: r.key,
+      role: r.role,
+      visible: r.visible,
+      isBase: isBaseRoleKey(r.key),
+    }))
+  );
   console.log('[getInitialRoles] BASE_ROLE_KEYS:', Array.from(BASE_ROLE_KEYS));
   return result;
 }
@@ -235,7 +250,7 @@ function RoleSettingCard({ config, onToggleVisibility }: RoleSettingCardProps) {
     visible: config.visible,
     isBase,
     BASE_ROLE_KEYS: Array.from(BASE_ROLE_KEYS),
-    inSet: BASE_ROLE_KEYS.has(config.key)
+    inSet: BASE_ROLE_KEYS.has(config.key),
   });
 
   return (
@@ -389,7 +404,12 @@ function RoleSettingsPage() {
         let needsSave = false;
         for (const baseKey of BASE_ROLE_KEYS) {
           if (cleaned[baseKey] !== true) {
-            console.log('[RoleSettingsPage] Force-enabling base role:', baseKey, 'was:', cleaned[baseKey]);
+            console.log(
+              '[RoleSettingsPage] Force-enabling base role:',
+              baseKey,
+              'was:',
+              cleaned[baseKey]
+            );
             cleaned[baseKey] = true;
             needsSave = true;
           }
@@ -562,7 +582,9 @@ function RoleSettingsPage() {
                   Showing {visibleCount} of {roles.length} roles in switcher
                 </p>
                 <p className="text-xs text-gray-500">
-                  Base roles (<span className="text-red-400">PICKER, PACKER, STOCK_CONTROLLER, ADMIN</span>) cannot be hidden. Custom roles can be toggled.
+                  Base roles (
+                  <span className="text-red-400">PICKER, PACKER, STOCK_CONTROLLER, ADMIN</span>)
+                  cannot be hidden. Custom roles can be toggled.
                 </p>
               </div>
               {hasChanges && (
@@ -597,7 +619,8 @@ function RoleSettingsPage() {
           </CardHeader>
           <CardContent className="p-6">
             <p className="text-sm text-gray-400 mb-6">
-              Customize the badge color for each of your roles. These colors are personal to you and only affect how your role badges appear on your device.
+              Customize the badge color for each of your roles. These colors are personal to you and
+              only affect how your role badges appear on your device.
             </p>
 
             {/* Color pickers for each user role */}
@@ -606,7 +629,9 @@ function RoleSettingsPage() {
                 <div key={role} className="border border-white/[0.08] rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <Badge size="md" customColor={roleColors[role] || '#3b82f6'}>{role}</Badge>
+                      <Badge size="md" customColor={roleColors[role] || '#3b82f6'}>
+                        {role}
+                      </Badge>
                       <span className="text-sm text-gray-400">
                         {role === currentUser?.role ? '(Primary Role)' : '(Additional Role)'}
                       </span>
@@ -614,11 +639,21 @@ function RoleSettingsPage() {
                   </div>
                   <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
                     {[
-                      '#ef4444', '#f97316', '#f59e0b',
-                      '#eab308', '#84cc16', '#10b981',
-                      '#06b6d4', '#3b82f6', '#6366f1',
-                      '#8b5cf6', '#d946ef', '#ec4899',
-                      '#f43f5e', '#64748b', '#71717a',
+                      '#ef4444',
+                      '#f97316',
+                      '#f59e0b',
+                      '#eab308',
+                      '#84cc16',
+                      '#10b981',
+                      '#06b6d4',
+                      '#3b82f6',
+                      '#6366f1',
+                      '#8b5cf6',
+                      '#d946ef',
+                      '#ec4899',
+                      '#f43f5e',
+                      '#64748b',
+                      '#71717a',
                     ].map(color => (
                       <button
                         key={color}
@@ -696,10 +731,15 @@ function RoleSettingsPage() {
                 <h4 className="text-white font-semibold mb-2">How it works</h4>
                 <ul className="text-sm text-gray-400 space-y-1">
                   <li>
-                    • <strong className="text-red-300">Base roles (PICKER, PACKER, STOCK_CONTROLLER, ADMIN)</strong> are always visible and cannot be hidden
+                    •{' '}
+                    <strong className="text-red-300">
+                      Base roles (PICKER, PACKER, STOCK_CONTROLLER, ADMIN)
+                    </strong>{' '}
+                    are always visible and cannot be hidden
                   </li>
                   <li>
-                    • <strong className="text-gray-300">Custom roles</strong> can be shown or hidden based on your preferences
+                    • <strong className="text-gray-300">Custom roles</strong> can be shown or hidden
+                    based on your preferences
                   </li>
                   <li>
                     • <strong className="text-gray-300">Visible roles</strong> appear in the role

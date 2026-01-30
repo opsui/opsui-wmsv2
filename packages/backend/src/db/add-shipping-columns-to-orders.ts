@@ -35,7 +35,7 @@ addShippingColumnsToOrders()
     console.log('Done! Exiting...');
     process.exit(0);
   })
-  .catch((error) => {
+  .catch(error => {
     console.error('Fatal error:', error);
     process.exit(1);
   });

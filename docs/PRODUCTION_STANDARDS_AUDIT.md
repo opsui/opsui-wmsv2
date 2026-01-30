@@ -1,4 +1,5 @@
 # Production Standards Audit Report
+
 **Date:** 2025-01-29
 **Auditor:** Claude Code
 **Scope:** All pages in packages/frontend/src/pages
@@ -11,14 +12,14 @@ Out of **33 pages** audited, only **1 page** (LocationCapacityPage) meets all pr
 
 ### Overall Compliance Score: **12%**
 
-| Standard | Pages Compliant | % Compliant |
-|----------|----------------|-------------|
-| Loading States | 27/33 | 82% |
-| Toast Notifications | 4/33 | 12% |
-| Pagination | 8/33 | 24% |
-| Search/Filtering | 8/33 | 24% |
-| Form Validation | 1/33 | 3% |
-| Shared Modal | 1/33 | 3% |
+| Standard            | Pages Compliant | % Compliant |
+| ------------------- | --------------- | ----------- |
+| Loading States      | 27/33           | 82%         |
+| Toast Notifications | 4/33            | 12%         |
+| Pagination          | 8/33            | 24%         |
+| Search/Filtering    | 8/33            | 24%         |
+| Form Validation     | 1/33            | 3%          |
+| Shared Modal        | 1/33            | 3%          |
 
 ---
 
@@ -62,15 +63,16 @@ Out of **33 pages** audited, only **1 page** (LocationCapacityPage) meets all pr
 
 ### ✅ FULLY COMPLIANT (1 page)
 
-| Page | Loading | Toast | Pagination | Search | Validation | Modal |
-|------|---------|-------|------------|--------|------------|-------|
-| **LocationCapacityPage** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Page                     | Loading | Toast | Pagination | Search | Validation | Modal |
+| ------------------------ | ------- | ----- | ---------- | ------ | ---------- | ----- |
+| **LocationCapacityPage** | ✅      | ✅    | ✅         | ✅     | ✅         | ✅    |
 
 ---
 
 ### 🟡 PARTIALLY COMPLIANT (7 pages)
 
 #### SalesPage, MaintenancePage, ProductionPage
+
 - ✅ Loading states
 - ✅ Toast notifications
 - ✅ Pagination
@@ -80,6 +82,7 @@ Out of **33 pages** audited, only **1 page** (LocationCapacityPage) meets all pr
 - **Status:** Good, needs form validation and modal upgrade
 
 #### ExceptionsPage, StockControlPage
+
 - ✅ Loading states
 - ✅ Pagination
 - ✅ Search
@@ -89,6 +92,7 @@ Out of **33 pages** audited, only **1 page** (LocationCapacityPage) meets all pr
 - **Status:** Medium priority
 
 #### OrderQueuePage
+
 - ✅ Loading states
 - ✅ Pagination
 - ✅ Search
@@ -98,6 +102,7 @@ Out of **33 pages** audited, only **1 page** (LocationCapacityPage) meets all pr
 - **Status:** Medium priority
 
 #### BinLocationsPage
+
 - ✅ Loading states
 - ✅ Pagination
 - ✅ Search
@@ -110,45 +115,47 @@ Out of **33 pages** audited, only **1 page** (LocationCapacityPage) meets all pr
 
 ### 🔴 MINIMAL COMPLIANCE (25 pages)
 
-| Page | Loading | Toast | Pagination | Search | Validation | Modal |
-|------|---------|-------|------------|--------|------------|-------|
-| DashboardPage | ✅ | ❌ | ❌ | ❌ | N/A | ❌ |
-| PickingPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| PackingPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| CycleCountingPage | ✅ | ❌ | ❌ | ❌ | N/A | ❌ |
-| CycleCountDetailPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| CycleCountKPIPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| BusinessRulesPage | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| IntegrationsPage | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| ReportsPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| UserRolesPage | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| RolesManagementPage | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| RootCauseAnalysisPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| ScheduleManagementPage | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| ZonePickingPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| PackingQueuePage | ✅ | ❌ | ❌ | ✅ | N/A | N/A |
-| WavePickingPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| SlottingPage | ❌ | ❌ | ❌ | ❌ | N/A | N/A |
-| RouteOptimizationPage | ❌ | ❌ | ❌ | ❌ | N/A | N/A |
-| QualityControlPage | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| InwardsGoodsPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| ProductSearchPage | ✅ | ❌ | ❌ | ✅ | N/A | N/A |
-| MobileScanningPage | ✅ | ❌ | ❌ | ❌ | N/A | N/A |
-| NotificationPreferencesPage | ✅ | ❌ | ❌ | ❌ | ❌ | N/A |
-| AdminSettingsPage | ❌ | ❌ | ❌ | ❌ | ❌ | N/A |
-| LoginPage | ✅ | ❌ | ❌ | ❌ | ❌ | N/A |
-| BarcodeScanningPage | ❌ | ❌ | ❌ | ❌ | N/A | N/A |
-| ItemSearchPage | ❌ | ❌ | ❌ | ❌ | N/A | N/A |
-| RMAPage | ❌ | ❌ | ❌ | ❌ | N/A | N/A |
+| Page                        | Loading | Toast | Pagination | Search | Validation | Modal |
+| --------------------------- | ------- | ----- | ---------- | ------ | ---------- | ----- |
+| DashboardPage               | ✅      | ❌    | ❌         | ❌     | N/A        | ❌    |
+| PickingPage                 | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| PackingPage                 | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| CycleCountingPage           | ✅      | ❌    | ❌         | ❌     | N/A        | ❌    |
+| CycleCountDetailPage        | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| CycleCountKPIPage           | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| BusinessRulesPage           | ✅      | ❌    | ❌         | ❌     | ❌         | ❌    |
+| IntegrationsPage            | ✅      | ❌    | ❌         | ❌     | ❌         | ❌    |
+| ReportsPage                 | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| UserRolesPage               | ✅      | ❌    | ❌         | ✅     | ❌         | ❌    |
+| RolesManagementPage         | ✅      | ❌    | ❌         | ❌     | ❌         | ❌    |
+| RootCauseAnalysisPage       | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| ScheduleManagementPage      | ✅      | ❌    | ❌         | ❌     | ❌         | ❌    |
+| ZonePickingPage             | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| PackingQueuePage            | ✅      | ❌    | ❌         | ✅     | N/A        | N/A   |
+| WavePickingPage             | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| SlottingPage                | ❌      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| RouteOptimizationPage       | ❌      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| QualityControlPage          | ❌      | ❌    | ❌         | ❌     | ❌         | ❌    |
+| InwardsGoodsPage            | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| ProductSearchPage           | ✅      | ❌    | ❌         | ✅     | N/A        | N/A   |
+| MobileScanningPage          | ✅      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| NotificationPreferencesPage | ✅      | ❌    | ❌         | ❌     | ❌         | N/A   |
+| AdminSettingsPage           | ❌      | ❌    | ❌         | ❌     | ❌         | N/A   |
+| LoginPage                   | ✅      | ❌    | ❌         | ❌     | ❌         | N/A   |
+| BarcodeScanningPage         | ❌      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| ItemSearchPage              | ❌      | ❌    | ❌         | ❌     | N/A        | N/A   |
+| RMAPage                     | ❌      | ❌    | ❌         | ❌     | N/A        | N/A   |
 
 ---
 
 ## Recommendations by Priority
 
 ### 1. IMMEDIATE (This Week)
+
 **Add Toast Notifications to all pages (HIGH IMPACT, LOW EFFORT)**
 
 Priority pages (user-facing operations):
+
 1. OrderQueuePage - Order operations need feedback
 2. PickingPage - Pick actions need feedback
 3. PackingPage - Pack operations need feedback
@@ -157,6 +164,7 @@ Priority pages (user-facing operations):
 6. IntegrationsPage - Integration actions need feedback
 
 **Implementation:**
+
 ```typescript
 // Add to imports
 import { useToast } from '@/components/shared';
@@ -174,9 +182,11 @@ showToast(error?.message || 'Action failed', 'error');
 ---
 
 ### 2. SHORT-TERM (Next 2 Weeks)
+
 **Upgrade Forms to useFormValidation (HIGH IMPACT, MEDIUM EFFORT)**
 
 Pages with forms that need validation:
+
 1. BusinessRulesPage - Rule creation/editing
 2. UserRolesPage / RolesManagementPage - Role management
 3. ScheduleManagementPage - Schedule creation
@@ -186,6 +196,7 @@ Pages with forms that need validation:
 7. CycleCountingPage - Count entry
 
 **Implementation Pattern:**
+
 ```typescript
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { FormInput, FormSelect, FormTextarea } from '@/components/shared';
@@ -207,9 +218,11 @@ const { values, errors, handleChange, handleSubmit, isSubmitting } = useFormVali
 ---
 
 ### 3. MEDIUM-TERM (Next Month)
+
 **Add Pagination to Data Tables (MEDIUM IMPACT, MEDIUM EFFORT)**
 
 Pages needing pagination:
+
 1. DashboardPage - Orders modal
 2. PickingPage - Order queue
 3. PackingPage - Order queue
@@ -221,6 +234,7 @@ Pages needing pagination:
 9. RolesManagementPage - Roles list
 
 **Implementation Pattern:**
+
 ```typescript
 const [currentPage, setCurrentPage] = useState(1);
 const itemsPerPage = 10;
@@ -241,11 +255,13 @@ const paginatedData = data.slice(
 ---
 
 ### 4. MEDIUM-TERM (Next Month)
+
 **Add Search/Filtering to Data Tables (MEDIUM IMPACT, LOW EFFORT)**
 
 Same pages as pagination above.
 
 **Implementation Pattern:**
+
 ```typescript
 const [searchTerm, setSearchTerm] = useState('');
 
@@ -269,6 +285,7 @@ const filteredData = data.filter(item =>
 ---
 
 ### 5. LONG-TERM (Next Quarter)
+
 **Replace Custom Modals with Shared Modal (LOW IMPACT, HIGH EFFORT)**
 
 This is a larger refactor that affects consistency but not functionality. Can be done incrementally when touching each page for other fixes.
@@ -296,16 +313,16 @@ After implementing fixes, verify:
 
 Target state after implementation:
 
-| Standard | Target | Current | Gap |
-|----------|--------|---------|-----|
-| Loading States | 100% | 82% | 18% |
-| Toast Notifications | 100% | 12% | 88% |
-| Pagination | 90%* | 24% | 66% |
-| Search/Filtering | 90%* | 24% | 66% |
-| Form Validation | 100%† | 3% | 97% |
-| Shared Modal | 100%‡ | 3% | 97% |
+| Standard            | Target | Current | Gap |
+| ------------------- | ------ | ------- | --- |
+| Loading States      | 100%   | 82%     | 18% |
+| Toast Notifications | 100%   | 12%     | 88% |
+| Pagination          | 90%\*  | 24%     | 66% |
+| Search/Filtering    | 90%\*  | 24%     | 66% |
+| Form Validation     | 100%†  | 3%      | 97% |
+| Shared Modal        | 100%‡  | 3%      | 97% |
 
-*Some pages legitimately don't need pagination (e.g., dashboards with summaries)
+\*Some pages legitimately don't need pagination (e.g., dashboards with summaries)
 †Only pages with forms
 ‡Only pages with modals
 
@@ -314,17 +331,20 @@ Target state after implementation:
 ## Conclusion
 
 The application has a **strong foundation** with 82% of pages having loading states. However, **critical user experience features** are missing:
+
 - 88% of pages lack toast notifications
 - 97% of forms lack proper validation
 - 66% of data tables lack pagination and search
 
 **Recommended Approach:**
+
 1. Start with toast notifications (quick win, high impact)
 2. Upgrade forms with validation (improves data quality)
 3. Add pagination and search (improves usability)
 4. Replace custom modals (improves consistency)
 
 **Estimated Effort:**
+
 - Toast notifications: 2-3 days
 - Form validation: 1-2 weeks
 - Pagination/search: 1-2 weeks
@@ -334,4 +354,4 @@ The application has a **strong foundation** with 82% of pages having loading sta
 
 ---
 
-*End of Report*
+_End of Report_

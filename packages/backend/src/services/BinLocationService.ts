@@ -23,9 +23,7 @@ export class BinLocationService {
     // Validate bin_id format: Z-A-S (e.g., A-12-03)
     const binIdPattern = /^[A-Z]-\d{1,3}-\d{2}$/;
     if (!binIdPattern.test(dto.binId)) {
-      throw new Error(
-        'Invalid bin ID format. Expected format: Zone-Aisle-Shelf (e.g., A-12-03)'
-      );
+      throw new Error('Invalid bin ID format. Expected format: Zone-Aisle-Shelf (e.g., A-12-03)');
     }
 
     // Check if bin location already exists

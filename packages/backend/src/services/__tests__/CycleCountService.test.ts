@@ -8,7 +8,7 @@
 import { CycleCountService, cycleCountService } from '../CycleCountService';
 import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
-import { notifyAll } from '../notificationHelper';
+import { notifyAll } from '../NotificationHelper';
 import {
   CycleCountStatus,
   CycleCountType,
@@ -20,7 +20,7 @@ import {
 // Mock dependencies
 jest.mock('../../db/client');
 jest.mock('../../config/logger');
-jest.mock('../notificationHelper');
+jest.mock('../NotificationHelper');
 
 describe('CycleCountService', () => {
   let service: CycleCountService;
@@ -129,9 +129,30 @@ describe('CycleCountService', () => {
   describe('getReconcileSummary', () => {
     it('should return reconcile summary for a plan', async () => {
       const mockEntries = [
-        { sku: 'SKU-001', bin_location: 'A-01-01', system_quantity: '10', counted_quantity: '8', variance: '-2', variance_percent: '20' },
-        { sku: 'SKU-002', bin_location: 'A-01-02', system_quantity: '5', counted_quantity: '7', variance: '2', variance_percent: '40' },
-        { sku: 'SKU-003', bin_location: 'A-01-03', system_quantity: '15', counted_quantity: '15', variance: '0', variance_percent: '0' },
+        {
+          sku: 'SKU-001',
+          bin_location: 'A-01-01',
+          system_quantity: '10',
+          counted_quantity: '8',
+          variance: '-2',
+          variance_percent: '20',
+        },
+        {
+          sku: 'SKU-002',
+          bin_location: 'A-01-02',
+          system_quantity: '5',
+          counted_quantity: '7',
+          variance: '2',
+          variance_percent: '40',
+        },
+        {
+          sku: 'SKU-003',
+          bin_location: 'A-01-03',
+          system_quantity: '15',
+          counted_quantity: '15',
+          variance: '0',
+          variance_percent: '0',
+        },
       ];
 
       mockClient.query.mockResolvedValueOnce({ rows: mockEntries });
@@ -389,9 +410,7 @@ describe('CycleCountService', () => {
 
   describe('getAllCycleCountPlans', () => {
     it('should apply role-based access control for PICKER role', async () => {
-      const mockPlans = [
-        { plan_id: 'CCP-001', count_by: 'user-123', status: 'IN_PROGRESS' },
-      ];
+      const mockPlans = [{ plan_id: 'CCP-001', count_by: 'user-123', status: 'IN_PROGRESS' }];
 
       mockClient.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // count
@@ -472,7 +491,9 @@ describe('CycleCountService', () => {
 
       // Mock getCycleCountPlan
       mockClient.query
-        .mockResolvedValueOnce({ rows: [{ ...mockPlan, status: 'COMPLETED', completed_at: expect.any(String) }] })
+        .mockResolvedValueOnce({
+          rows: [{ ...mockPlan, status: 'COMPLETED', completed_at: expect.any(String) }],
+        })
         .mockResolvedValueOnce({ rows: [] });
 
       const result = await service.completeCycleCountPlan('CCP-001');
@@ -735,9 +756,7 @@ describe('CycleCountService', () => {
         countedBy: 'user-123',
       };
 
-      mockClient.query
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [] }); // No inventory found
+      mockClient.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }); // No inventory found
 
       const mockTolerance = {
         tolerance_id: 'TOL-001',

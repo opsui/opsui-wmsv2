@@ -74,44 +74,49 @@ router.get('/recommendations', authenticate, async (req: AuthenticatedRequest, r
  * POST /api/v1/slotting/implement
  * Implement a slotting recommendation
  */
-router.post('/implement', authenticate, authorize('ADMIN', 'SUPERVISOR'), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { sku, fromLocation, toLocation } = req.body;
+router.post(
+  '/implement',
+  authenticate,
+  authorize('ADMIN', 'SUPERVISOR'),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { sku, fromLocation, toLocation } = req.body;
 
-    if (!sku || !fromLocation || !toLocation) {
-      res.status(400).json({
-        error: 'Missing required fields',
-        message: 'sku, fromLocation, and toLocation are required',
+      if (!sku || !fromLocation || !toLocation) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'sku, fromLocation, and toLocation are required',
+        });
+        return;
+      }
+
+      const context = {
+        userId: req.user?.userId,
+        userEmail: req.user?.email,
+        userRole: req.user?.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.id,
+      };
+
+      await slottingOptimizationService.implementRecommendation(
+        { sku, fromLocation, toLocation, estimatedBenefit: {}, effort: 'LOW', priority: 1 },
+        context
+      );
+
+      res.json({
+        success: true,
+        message: 'Slotting recommendation implemented',
       });
-      return;
+    } catch (error) {
+      logger.error('Implement recommendation error', { error });
+      res.status(500).json({
+        error: 'Implementation failed',
+        message: (error as any).message,
+      });
     }
-
-    const context = {
-      userId: req.user?.userId,
-      userEmail: req.user?.email,
-      userRole: req.user?.role,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      requestId: req.id,
-    };
-
-    await slottingOptimizationService.implementRecommendation(
-      { sku, fromLocation, toLocation, estimatedBenefit: {}, effort: 'LOW', priority: 1 },
-      context
-    );
-
-    res.json({
-      success: true,
-      message: 'Slotting recommendation implemented',
-    });
-  } catch (error) {
-    logger.error('Implement recommendation error', { error });
-    res.status(500).json({
-      error: 'Implementation failed',
-      message: (error as any).message,
-    });
   }
-});
+);
 
 /**
  * GET /api/v1/slotting/velocity/:sku

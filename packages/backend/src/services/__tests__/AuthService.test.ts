@@ -95,11 +95,12 @@ describe('AuthService', () => {
       userRepository.verifyPassword.mockResolvedValue(null);
 
       await expect(authService.login(validCredentials)).rejects.toThrow(UnauthorizedError);
-      await expect(authService.login(validCredentials)).rejects.toThrow('Invalid email or password');
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Login failed - invalid credentials',
-        { email: validCredentials.email }
+      await expect(authService.login(validCredentials)).rejects.toThrow(
+        'Invalid email or password'
       );
+      expect(logger.warn).toHaveBeenCalledWith('Login failed - invalid credentials', {
+        email: validCredentials.email,
+      });
     });
 
     it('should set user active on login', async () => {
@@ -189,7 +190,9 @@ describe('AuthService', () => {
       });
 
       await expect(authService.refreshToken('invalid-token')).rejects.toThrow(UnauthorizedError);
-      await expect(authService.refreshToken('invalid-token')).rejects.toThrow('Invalid refresh token');
+      await expect(authService.refreshToken('invalid-token')).rejects.toThrow(
+        'Invalid refresh token'
+      );
     });
 
     it('should throw UnauthorizedError when user not found', async () => {
@@ -201,15 +204,21 @@ describe('AuthService', () => {
       });
       userRepository.findById.mockResolvedValue(null);
 
-      await expect(authService.refreshToken('valid-refresh-token')).rejects.toThrow(UnauthorizedError);
-      await expect(authService.refreshToken('valid-refresh-token')).rejects.toThrow('User not found or inactive');
+      await expect(authService.refreshToken('valid-refresh-token')).rejects.toThrow(
+        UnauthorizedError
+      );
+      await expect(authService.refreshToken('valid-refresh-token')).rejects.toThrow(
+        'User not found or inactive'
+      );
     });
 
     it('should throw UnauthorizedError when user is inactive', async () => {
       const inactiveUser = { ...mockUser, active: false };
       userRepository.findById.mockResolvedValue(inactiveUser);
 
-      await expect(authService.refreshToken('valid-refresh-token')).rejects.toThrow(UnauthorizedError);
+      await expect(authService.refreshToken('valid-refresh-token')).rejects.toThrow(
+        UnauthorizedError
+      );
     });
   });
 
@@ -267,7 +276,9 @@ describe('AuthService', () => {
       userRepository.setActiveRole.mockResolvedValue(undefined);
       userRepository.getUserSafe.mockResolvedValue(null);
 
-      await expect(authService.setActiveRole('user-123', UserRole.ADMIN)).rejects.toThrow('User not found');
+      await expect(authService.setActiveRole('user-123', UserRole.ADMIN)).rejects.toThrow(
+        'User not found'
+      );
     });
   });
 

@@ -66,7 +66,13 @@ const BAR_COLORS = [
   '#6366f1', // indigo-500
 ];
 
-export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, onTimePeriodChange }: TopSKUsChartProps) {
+export function TopSKUsChart({
+  data,
+  isLoading,
+  limit = 10,
+  onScanTypeChange,
+  onTimePeriodChange,
+}: TopSKUsChartProps) {
   const [selectedScanType, setSelectedScanType] = useState<ScanType>('pick');
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<TimePeriod>('monthly');
 
@@ -87,7 +93,9 @@ export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, on
     return (
       <Card variant="glass">
         <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
-          <CardTitle>Top {limit} SKUs by Scan Frequency ({periodLabel})</CardTitle>
+          <CardTitle>
+            Top {limit} SKUs by Scan Frequency ({periodLabel})
+          </CardTitle>
           <div className="flex items-center gap-2">
             <Skeleton variant="rounded" width={100} height={32} />
             <Skeleton variant="rounded" width={120} height={32} />
@@ -104,7 +112,9 @@ export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, on
     return (
       <Card variant="glass">
         <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
-          <CardTitle>Top {limit} SKUs by Scan Frequency ({periodLabel})</CardTitle>
+          <CardTitle>
+            Top {limit} SKUs by Scan Frequency ({periodLabel})
+          </CardTitle>
           <div className="flex items-center gap-2">
             <TimePeriodSelector value={selectedTimePeriod} onChange={handleTimePeriodChange} />
             <ScanTypeSelector value={selectedScanType} onChange={handleScanTypeChange} />
@@ -140,11 +150,11 @@ export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, on
     ...item,
     displayName: `${item.sku} - ${item.name.length > 30 ? item.name.substring(0, 30) + '...' : item.name}`,
     color: BAR_COLORS[index % BAR_COLORS.length],
-    value: item[dataKey as keyof TopSKUData] as number || item.picks,
+    value: (item[dataKey as keyof TopSKUData] as number) || item.picks,
   }));
 
   // Find max value for X axis scaling
-  const maxValue = Math.max(...chartData.map((d) => d.value || 0));
+  const maxValue = Math.max(...chartData.map(d => d.value || 0));
 
   const getLabel = () => {
     switch (selectedScanType) {
@@ -164,7 +174,9 @@ export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, on
   return (
     <Card variant="glass" className="card-hover">
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
-        <CardTitle>Top {limit} SKUs by Scan Frequency ({periodLabel})</CardTitle>
+        <CardTitle>
+          Top {limit} SKUs by Scan Frequency ({periodLabel})
+        </CardTitle>
         <div className="flex items-center gap-2">
           <TimePeriodSelector value={selectedTimePeriod} onChange={handleTimePeriodChange} />
           <ScanTypeSelector value={selectedScanType} onChange={handleScanTypeChange} />
@@ -177,7 +189,10 @@ export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, on
             layout="vertical"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="dark:stroke-white/[0.08] stroke-gray-200" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="dark:stroke-white/[0.08] stroke-gray-200"
+            />
             <XAxis
               type="number"
               className="dark:fill-gray-500 fill-gray-600"
@@ -220,9 +235,7 @@ export function TopSKUsChart({ data, isLoading, limit = 10, onScanTypeChange, on
             </span>{' '}
             {valueLabel.toLowerCase()} for top SKU
             {chartData[0] && (
-              <span className="ml-2 dark:text-gray-500 text-gray-500">
-                ({chartData[0].sku})
-              </span>
+              <span className="ml-2 dark:text-gray-500 text-gray-500">({chartData[0].sku})</span>
             )}
           </div>
           <div className="dark:text-gray-400 text-gray-600 text-sm">

@@ -115,8 +115,12 @@ test.describe('Integrations Page', () => {
     expect(count).toBeGreaterThan(0);
 
     // First card should have name, status, configure button
-    await expect(integrationCards.first().locator('[data-testid="integration-name"]')).toBeVisible();
-    await expect(integrationCards.first().locator('[data-testid="integration-status"]')).toBeVisible();
+    await expect(
+      integrationCards.first().locator('[data-testid="integration-name"]')
+    ).toBeVisible();
+    await expect(
+      integrationCards.first().locator('[data-testid="integration-status"]')
+    ).toBeVisible();
     await expect(integrationCards.first().locator('button:has-text("Configure")')).toBeVisible();
   });
 

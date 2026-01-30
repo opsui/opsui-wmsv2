@@ -153,7 +153,10 @@ apiClient.interceptors.response.use(
             errorMessage = dataError;
           }
         } catch (camelCaseError) {
-          console.error('[api-client] Failed to convert error response to camelCase:', camelCaseError);
+          console.error(
+            '[api-client] Failed to convert error response to camelCase:',
+            camelCaseError
+          );
           // Try to get raw error message
           const rawData = error.response.data as Record<string, unknown>;
           const rawError = rawData.error;
@@ -166,18 +169,18 @@ apiClient.interceptors.response.use(
       // Log the error for debugging (skip 404s for optional endpoints and 401s during tests)
       const isOptional404 =
         error.response?.status === 404 &&
-        (typeof error.config?.url === 'string' &&
-          (error.config.url.includes('/developer/e2e/results') ||
-            error.config.url.includes('/developer/workflows/results')));
+        typeof error.config?.url === 'string' &&
+        (error.config.url.includes('/developer/e2e/results') ||
+          error.config.url.includes('/developer/workflows/results'));
 
       // Suppress 401 error logs during automated testing (Playwright/Cypress)
-      const isAutomatedTest = typeof window !== 'undefined' && (
-        (window as any).playwright !== undefined ||
-        (window as any).Cypress !== undefined ||
-        navigator.webdriver ||
-        // Check for Playwright's CDN markers
-        !!(window as any).__PLAYWRIGHT_TEST__
-      );
+      const isAutomatedTest =
+        typeof window !== 'undefined' &&
+        ((window as any).playwright !== undefined ||
+          (window as any).Cypress !== undefined ||
+          navigator.webdriver ||
+          // Check for Playwright's CDN markers
+          !!(window as any).__PLAYWRIGHT_TEST__);
 
       const isTest401 = isAutomatedTest && error.response?.status === 401;
 

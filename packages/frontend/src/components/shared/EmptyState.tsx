@@ -25,7 +25,15 @@ export function EmptyState({
   action,
   className,
 }: {
-  type?: 'no-data' | 'no-results' | 'no-items' | 'no-users' | 'no-orders' | 'error' | 'success' | 'loading';
+  type?:
+    | 'no-data'
+    | 'no-results'
+    | 'no-items'
+    | 'no-users'
+    | 'no-orders'
+    | 'error'
+    | 'success'
+    | 'loading';
   title: string;
   description?: string;
   action?: {
@@ -41,9 +49,9 @@ export function EmptyState({
     'no-items': InboxIcon,
     'no-users': UserGroupIcon,
     'no-orders': CubeIcon,
-    'error': ExclamationCircleIcon,
-    'success': CheckCircleIcon,
-    'loading': ArrowPathIcon,
+    error: ExclamationCircleIcon,
+    success: CheckCircleIcon,
+    loading: ArrowPathIcon,
   };
 
   const colors = {
@@ -52,9 +60,9 @@ export function EmptyState({
     'no-items': 'text-gray-500',
     'no-users': 'text-gray-500',
     'no-orders': 'text-gray-500',
-    'error': 'text-error-500',
-    'success': 'text-success-500',
-    'loading': 'text-primary-500 animate-spin',
+    error: 'text-error-500',
+    success: 'text-success-500',
+    loading: 'text-primary-500 animate-spin',
   };
 
   const bgColors = {
@@ -63,9 +71,9 @@ export function EmptyState({
     'no-items': 'bg-gray-500/10',
     'no-users': 'bg-gray-500/10',
     'no-orders': 'bg-gray-500/10',
-    'error': 'bg-error-500/10',
-    'success': 'bg-success-500/10',
-    'loading': 'bg-primary-500/10',
+    error: 'bg-error-500/10',
+    success: 'bg-success-500/10',
+    loading: 'bg-primary-500/10',
   };
 
   const IconComponent = icons[type];
@@ -73,7 +81,9 @@ export function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center py-12 px-4 ${className || ''}`}>
       {/* Icon */}
-      <div className={`flex items-center justify-center w-16 h-16 rounded-full mb-4 ${bgColors[type]}`}>
+      <div
+        className={`flex items-center justify-center w-16 h-16 rounded-full mb-4 ${bgColors[type]}`}
+      >
         <IconComponent className={`h-8 w-8 ${colors[type]}`} />
       </div>
 

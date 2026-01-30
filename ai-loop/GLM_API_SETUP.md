@@ -1,10 +1,13 @@
 # GLM API Setup Guide
 
 ## Problem
+
 The AI loop is getting a 404 error when trying to use the GLM API with model `glm-4.7`.
 
 ## Root Cause
+
 The API key is hardcoded in the code and may be:
+
 - Invalid or expired
 - Not authorized for the `glm-4.7` model
 - Missing proper permissions
@@ -21,21 +24,25 @@ The API key is hardcoded in the code and may be:
 2. Set the environment variable:
 
 **Windows (Command Prompt):**
+
 ```cmd
 set GLM_API_KEY=your_api_key_here
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 $env:GLM_API_KEY="your_api_key_here"
 ```
 
 **Linux/Mac:**
+
 ```bash
 export GLM_API_KEY="your_api_key_here"
 ```
 
 3. Run your AI loop commands:
+
 ```bash
 cd ai-loop
 npm run crawl:all
@@ -71,6 +78,7 @@ const glmApiKey = process.env.GLM_API_KEY || 'your_valid_api_key_here';
 ## Available GLM Models
 
 The GLM API supports these models:
+
 - `glm-4` - General purpose
 - `glm-4-plus` - Enhanced performance
 - `glm-4-air` - Faster inference
@@ -85,6 +93,7 @@ The GLM API supports these models:
 
 1. Check your Zhipu AI console for available models
 2. Update the model in `ai-loop/glm-client.ts`:
+
 ```typescript
 private model = 'glm-4'; // or glm-4-plus, etc.
 ```
@@ -98,6 +107,7 @@ private model = 'glm-4'; // or glm-4-plus, etc.
 ### Error: "Rate limit exceeded"
 
 The GLM API has strict rate limits. The code already handles this with:
+
 - 3-second delays between requests
 - Automatic retries with exponential backoff
 - Max 1 concurrent request
@@ -111,10 +121,10 @@ const { GLMClient } = require('./glm-client.ts');
 
 async function test() {
   const client = new GLMClient('your_api_key_here');
-  
+
   try {
     const result = await client.callGLM([
-      { role: 'user', content: 'Say "API works!"' }
+      { role: 'user', content: 'Say "API works!"' },
     ]);
     console.log('✅ API Test:', result);
   } catch (error) {

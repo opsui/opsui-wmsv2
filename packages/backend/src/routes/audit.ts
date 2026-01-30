@@ -114,9 +114,7 @@ router.get(
     const startDate = req.query.startDate
       ? new Date(req.query.startDate as string)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const endDate = req.query.endDate
-      ? new Date(req.query.endDate as string)
-      : new Date();
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
     const stats = await auditService.getStatistics(startDate, endDate);
     res.json(stats);
@@ -177,9 +175,7 @@ router.get(
     const startDate = req.query.startDate
       ? new Date(req.query.startDate as string)
       : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const endDate = req.query.endDate
-      ? new Date(req.query.endDate as string)
-      : new Date();
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
     const logs = await auditService.getSecurityEvents(startDate, endDate);
     res.json(logs);
@@ -230,9 +226,7 @@ router.get(
     const logs = await auditService.query({ limit: 10000 });
 
     // Extract unique user emails
-    const userEmails = Array.from(
-      new Set(logs.map(log => log.userEmail).filter(Boolean))
-    ).sort();
+    const userEmails = Array.from(new Set(logs.map(log => log.userEmail).filter(Boolean))).sort();
 
     res.json(userEmails);
   })

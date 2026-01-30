@@ -136,11 +136,13 @@ const DEFAULT_FIELDS: FieldDefinition[] = [
 ];
 
 const getOperatorsForField = (field: FieldDefinition) => {
-  return field.operators || [
-    { value: 'eq', label: 'Equals' },
-    { value: 'ne', label: 'Not Equals' },
-    { value: 'contains', label: 'Contains' },
-  ];
+  return (
+    field.operators || [
+      { value: 'eq', label: 'Equals' },
+      { value: 'ne', label: 'Not Equals' },
+      { value: 'contains', label: 'Contains' },
+    ]
+  );
 };
 
 // ============================================================================
@@ -178,31 +180,35 @@ function ConditionRow({
             onClick={onToggleGroup}
             className="p-1 text-gray-400 hover:text-white transition-colors"
           >
-            <ChevronRightIcon className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} />
+            <ChevronRightIcon
+              className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')}
+            />
           </button>
         )}
 
         {/* Condition Row */}
-        <div className={cn(
-          'flex-1 flex items-center gap-2 p-3 rounded-lg border transition-all',
-          isGroup
-            ? 'bg-primary-500/10 border-primary-500/30'
-            : 'bg-white/5 border-white/[0.08]'
-        )}>
+        <div
+          className={cn(
+            'flex-1 flex items-center gap-2 p-3 rounded-lg border transition-all',
+            isGroup ? 'bg-primary-500/10 border-primary-500/30' : 'bg-white/5 border-white/[0.08]'
+          )}
+        >
           {/* Expand/Collapse button for groups */}
           {isGroup && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="p-1 text-gray-400 hover:text-white transition-colors"
             >
-              <ChevronDownIcon className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />
+              <ChevronDownIcon
+                className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')}
+              />
             </button>
           )}
 
           {/* Field Selector */}
           <select
             value={condition.field}
-            onChange={(e) => onUpdate({ ...condition, field: e.target.value })}
+            onChange={e => onUpdate({ ...condition, field: e.target.value })}
             className="flex-1 px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           >
             {fieldDefinitions.map(field => (
@@ -215,7 +221,7 @@ function ConditionRow({
           {/* Operator Selector */}
           <select
             value={condition.operator}
-            onChange={(e) => onUpdate({ ...condition, operator: e.target.value })}
+            onChange={e => onUpdate({ ...condition, operator: e.target.value })}
             className="px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           >
             {operators.map(op => (
@@ -230,7 +236,7 @@ function ConditionRow({
             {fieldDef.type === 'select' ? (
               <select
                 value={condition.value}
-                onChange={(e) => onUpdate({ ...condition, value: e.target.value })}
+                onChange={e => onUpdate({ ...condition, value: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
               >
                 <option value="">Select value...</option>
@@ -243,7 +249,7 @@ function ConditionRow({
             ) : fieldDef.type === 'boolean' ? (
               <select
                 value={condition.value?.toString() || ''}
-                onChange={(e) => onUpdate({ ...condition, value: e.target.value === 'true' })}
+                onChange={e => onUpdate({ ...condition, value: e.target.value === 'true' })}
                 className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
               >
                 <option value="">Select...</option>
@@ -254,7 +260,7 @@ function ConditionRow({
               <input
                 type="number"
                 value={condition.value || ''}
-                onChange={(e) => onUpdate({ ...condition, value: parseFloat(e.target.value) || 0 })}
+                onChange={e => onUpdate({ ...condition, value: parseFloat(e.target.value) || 0 })}
                 placeholder="Value"
                 className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
               />
@@ -262,14 +268,14 @@ function ConditionRow({
               <input
                 type="date"
                 value={condition.value || ''}
-                onChange={(e) => onUpdate({ ...condition, value: e.target.value })}
+                onChange={e => onUpdate({ ...condition, value: e.target.value })}
                 className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
               />
             ) : (
               <input
                 type="text"
                 value={condition.value || ''}
-                onChange={(e) => onUpdate({ ...condition, value: e.target.value })}
+                onChange={e => onUpdate({ ...condition, value: e.target.value })}
                 placeholder="Value"
                 className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
               />
@@ -317,13 +323,14 @@ function ConditionRow({
               key={nestedCondition.id}
               condition={nestedCondition}
               fieldDefinitions={fieldDefinitions}
-              onUpdate={(updated) => {
+              onUpdate={updated => {
                 const newConditions = [...condition.conditions!];
                 newConditions[index] = updated;
                 onUpdate({ ...condition, conditions: newConditions });
               }}
               onDelete={() => {
-                const newConditions = condition.conditions?.filter(c => c.id !== nestedCondition.id) || [];
+                const newConditions =
+                  condition.conditions?.filter(c => c.id !== nestedCondition.id) || [];
                 onUpdate({ ...condition, conditions: newConditions });
               }}
               onToggleGroup={() => {
@@ -469,10 +476,13 @@ export function RuleBuilder({
               key={condition.id}
               condition={condition}
               fieldDefinitions={availableFields}
-              onUpdate={(updated) => updateCondition(index, updated)}
+              onUpdate={updated => updateCondition(index, updated)}
               onDelete={() => removeCondition(index)}
               onToggleGroup={() => {
-                const updated = { ...condition, logicalOperator: condition.logicalOperator === 'AND' ? 'OR' : 'AND' };
+                const updated = {
+                  ...condition,
+                  logicalOperator: condition.logicalOperator === 'AND' ? 'OR' : 'AND',
+                };
                 updateCondition(index, updated);
               }}
             />
@@ -518,7 +528,9 @@ export function RulePreview({ conditions, fieldDefinitions = DEFAULT_FIELDS }: R
     }
 
     const fieldDef = fieldDefinitions.find(f => f.field === condition.field) || DEFAULT_FIELDS[0];
-    const operatorLabel = getOperatorsForField(fieldDef).find(o => o.value === condition.operator)?.label || condition.operator;
+    const operatorLabel =
+      getOperatorsForField(fieldDef).find(o => o.value === condition.operator)?.label ||
+      condition.operator;
 
     // Format value based on type
     let valueStr = '';

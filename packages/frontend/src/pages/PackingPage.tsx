@@ -62,8 +62,13 @@ export function PackingPage() {
   const [undoLoading, setUndoLoading] = useState<Record<number, boolean>>({});
 
   // Confirm dialog states
-  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>({ isOpen: false, index: -1, item: null });
-  const [completeShipmentConfirm, setCompleteShipmentConfirm] = useState<{ isOpen: boolean; skippedItems: any[] }>({ isOpen: false, skippedItems: [] });
+  const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>(
+    { isOpen: false, index: -1, item: null }
+  );
+  const [completeShipmentConfirm, setCompleteShipmentConfirm] = useState<{
+    isOpen: boolean;
+    skippedItems: any[];
+  }>({ isOpen: false, skippedItems: [] });
 
   // Shipping details state
   const [showShippingForm, setShowShippingForm] = useState(false);
@@ -84,7 +89,7 @@ export function PackingPage() {
   const [nzcConnote, setNzcConnote] = useState<string>('');
 
   // Helper to convert lbs to kg for NZC API
-  const lbsToKg = (lbs: number): number => Math.round((lbs * 0.453592) * 100) / 100;
+  const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
 
   // Fetch carriers for shipping form
   const { data: carriers = [] } = useQuery({
@@ -276,7 +281,8 @@ export function PackingPage() {
   // Fetch NZC rates when NZC carrier is selected
   useEffect(() => {
     const fetchNZCRates = async () => {
-      const isNZCCarrier = carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
+      const isNZCCarrier =
+        carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
 
       if (!isNZCCarrier || !totalWeight || !totalPackages) {
         setNzcRates([]);
@@ -296,13 +302,15 @@ export function PackingPage() {
             postalCode: '1010',
             country: 'NZ',
           },
-          packages: [{
-            length: 10,
-            width: 10,
-            height: 10,
-            weight: lbsToKg(parseFloat(totalWeight)),
-            units: parseInt(totalPackages),
-          }],
+          packages: [
+            {
+              length: 10,
+              width: 10,
+              height: 10,
+              weight: lbsToKg(parseFloat(totalWeight)),
+              units: parseInt(totalPackages),
+            },
+          ],
         });
 
         if (response.Quotes && response.Quotes.length > 0) {
@@ -463,7 +471,7 @@ export function PackingPage() {
           itemIndex: currentItemIndex,
           oldVerified: currentVerified,
           newVerified,
-          sku: currentItem.sku
+          sku: currentItem.sku,
         });
 
         return { ...oldData, items: updatedItems };
@@ -485,7 +493,7 @@ export function PackingPage() {
         console.log('[PackingPage] Item complete, finding next:', {
           currentItemIndex,
           nextIncompleteIndex,
-          totalItems: orderData.items.length
+          totalItems: orderData.items.length,
         });
 
         if (nextIncompleteIndex !== -1) {
@@ -698,7 +706,8 @@ export function PackingPage() {
     }
 
     // For NZC carrier, we need a selected quote
-    const isNZCCarrier = carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
+    const isNZCCarrier =
+      carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
     if (isNZCCarrier && !selectedQuote) {
       showToast('Please select a shipping rate/quote', 'success');
       return;
@@ -773,13 +782,15 @@ export function PackingPage() {
             postalCode: shipToAddress.postalCode,
             country: shipToAddress.country,
           },
-          packages: [{
-            length: 10,  // Default package size - in production, get from order items
-            width: 10,
-            height: 10,
-            weight: weightKg,
-            units: parseInt(totalPackages),
-          }],
+          packages: [
+            {
+              length: 10, // Default package size - in production, get from order items
+              width: 10,
+              height: 10,
+              weight: weightKg,
+              units: parseInt(totalPackages),
+            },
+          ],
           quoteId: selectedQuote.QuoteId,
         });
 
@@ -1029,231 +1040,234 @@ export function PackingPage() {
           ) : (
             /* Step 2: Shipping Details Form */
             <div ref={shippingFormRef}>
-              <Card variant="glass" className="border-primary-500/50 border-2 shadow-glow card-hover">
+              <Card
+                variant="glass"
+                className="border-primary-500/50 border-2 shadow-glow card-hover"
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="text-white">Shipping Details</span>
                     <span className="text-sm text-gray-400">Order: {order.orderId}</span>
                   </CardTitle>
                 </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Carrier Selection */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                      Carrier *
-                    </label>
-                    <select
-                      value={selectedCarrierId}
-                      onChange={e => setSelectedCarrierId(e.target.value)}
-                      disabled={isCreatingShipment || isViewMode}
-                      className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
-                    >
-                      <option value="">Select a carrier...</option>
-                      {carriers.map((carrier: Carrier) => (
-                        <option key={carrier.carrierId} value={carrier.carrierId}>
-                          {carrier.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Service Type - Only show for non-NZC carriers */}
-                  {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode !== 'NZC' && (
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Carrier Selection */}
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                        Service Type *
+                        Carrier *
                       </label>
                       <select
-                        value={serviceType}
-                        onChange={e => setServiceType(e.target.value)}
+                        value={selectedCarrierId}
+                        onChange={e => setSelectedCarrierId(e.target.value)}
                         disabled={isCreatingShipment || isViewMode}
                         className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
                       >
-                        <option value="Ground">Ground</option>
-                        <option value="Express">Express</option>
-                        <option value="Priority">Priority</option>
-                        <option value="Overnight">Overnight</option>
+                        <option value="">Select a carrier...</option>
+                        {carriers.map((carrier: Carrier) => (
+                          <option key={carrier.carrierId} value={carrier.carrierId}>
+                            {carrier.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
-                  )}
 
-                  {/* Tracking Number - Only show for non-NZC carriers */}
-                  {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode !== 'NZC' && (
+                    {/* Service Type - Only show for non-NZC carriers */}
+                    {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)
+                      ?.carrierCode !== 'NZC' && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                          Service Type *
+                        </label>
+                        <select
+                          value={serviceType}
+                          onChange={e => setServiceType(e.target.value)}
+                          disabled={isCreatingShipment || isViewMode}
+                          className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                        >
+                          <option value="Ground">Ground</option>
+                          <option value="Express">Express</option>
+                          <option value="Priority">Priority</option>
+                          <option value="Overnight">Overnight</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Tracking Number - Only show for non-NZC carriers */}
+                    {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)
+                      ?.carrierCode !== 'NZC' && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                          Tracking Number (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={trackingNumber}
+                          onChange={e => setTrackingNumber(e.target.value)}
+                          placeholder="Enter tracking number..."
+                          disabled={isCreatingShipment || isViewMode}
+                          className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                        />
+                      </div>
+                    )}
+
+                    {/* Package Details */}
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                        Tracking Number (Optional)
+                        Number of Packages *
                       </label>
                       <input
-                        type="text"
-                        value={trackingNumber}
-                        onChange={e => setTrackingNumber(e.target.value)}
-                        placeholder="Enter tracking number..."
+                        type="number"
+                        min="1"
+                        value={totalPackages}
+                        onChange={e => setTotalPackages(e.target.value)}
+                        disabled={isCreatingShipment || isViewMode}
+                        className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                      />
+                    </div>
+
+                    {/* Weight */}
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                        Total Weight (lbs) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={totalWeight}
+                        onChange={e => setTotalWeight(e.target.value)}
+                        placeholder="Enter total weight..."
                         disabled={isCreatingShipment || isViewMode}
                         className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                       />
                     </div>
-                  )}
-
-                  {/* Package Details */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                      Number of Packages *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={totalPackages}
-                      onChange={e => setTotalPackages(e.target.value)}
-                      disabled={isCreatingShipment || isViewMode}
-                      className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                    />
                   </div>
 
-                  {/* Weight */}
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                      Total Weight (lbs) *
-                    </label>
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={totalWeight}
-                      onChange={e => setTotalWeight(e.target.value)}
-                      placeholder="Enter total weight..."
-                      disabled={isCreatingShipment || isViewMode}
-                      className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-
-                {/* Shipping Address Info */}
-                <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4 space-y-3">
-                  <h3 className="text-lg font-semibold text-white">Shipping To</h3>
-                  <div className="text-gray-300">
-                    <p className="font-semibold">{order.customerName}</p>
-                    <p className="text-sm mt-2">
-                      In production, customer address will be loaded from order details
-                    </p>
-                  </div>
-                </div>
-
-                {/* NZC Rates Display */}
-                {nzcRates.length > 0 && (
-                  <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
-                    <h3 className="text-lg font-semibold text-white">Available Shipping Rates</h3>
-                    {isFetchingRates && (
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
-                        <span className="text-sm">Fetching rates...</span>
-                      </div>
-                    )}
-                    {!isFetchingRates && (
-                      <div className="space-y-2">
-                        {nzcRates.map((quote) => (
-                          <div
-                            key={quote.QuoteId}
-                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
-                              selectedQuote?.QuoteId === quote.QuoteId
-                                ? 'bg-primary-500/20 border-primary-500'
-                                : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05]'
-                            }`}
-                            onClick={() => setSelectedQuote(quote)}
-                          >
-                            <div className="flex-1">
-                              <p className="font-semibold text-white">{quote.Service}</p>
-                              {quote.TransitDays && (
-                                <p className="text-sm text-gray-400">{quote.TransitDays} days transit</p>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-primary-400">
-                                ${quote.TotalPrice.toFixed(2)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* NZC Label Display */}
-                {nzcLabel && (
-                  <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-white">Shipping Label</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-400">Connote:</span>
-                        <span className="font-mono text-primary-400">{nzcConnote}</span>
-                      </div>
+                  {/* Shipping Address Info */}
+                  <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4 space-y-3">
+                    <h3 className="text-lg font-semibold text-white">Shipping To</h3>
+                    <div className="text-gray-300">
+                      <p className="font-semibold">{order.customerName}</p>
+                      <p className="text-sm mt-2">
+                        In production, customer address will be loaded from order details
+                      </p>
                     </div>
-                    <div className="bg-white rounded-lg p-2">
-                      <img
-                        src={`data:${nzcLabel.contentType};base64,${nzcLabel.data}`}
-                        alt="Shipping Label"
-                        className="w-full h-auto max-h-[400px] object-contain"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          // Open label in new tab for printing
-                          const window = window.open();
-                          if (window) {
-                            window.document.write(
-                              `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
-                                <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
-                              </body></html>`
-                            );
-                            window.document.close();
-                          }
-                        }}
-                      >
-                        <PrinterIcon className="h-4 w-4 mr-2" />
-                        Print Label
-                      </Button>
-                      {shipmentCreated && (
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => navigate('/packing')}
-                        >
-                          Done
-                        </Button>
+                  </div>
+
+                  {/* NZC Rates Display */}
+                  {nzcRates.length > 0 && (
+                    <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
+                      <h3 className="text-lg font-semibold text-white">Available Shipping Rates</h3>
+                      {isFetchingRates && (
+                        <div className="flex items-center gap-2 text-gray-400">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
+                          <span className="text-sm">Fetching rates...</span>
+                        </div>
+                      )}
+                      {!isFetchingRates && (
+                        <div className="space-y-2">
+                          {nzcRates.map(quote => (
+                            <div
+                              key={quote.QuoteId}
+                              className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+                                selectedQuote?.QuoteId === quote.QuoteId
+                                  ? 'bg-primary-500/20 border-primary-500'
+                                  : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05]'
+                              }`}
+                              onClick={() => setSelectedQuote(quote)}
+                            >
+                              <div className="flex-1">
+                                <p className="font-semibold text-white">{quote.Service}</p>
+                                {quote.TransitDays && (
+                                  <p className="text-sm text-gray-400">
+                                    {quote.TransitDays} days transit
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-primary-400">
+                                  ${quote.TotalPrice.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Action Buttons */}
-                {!shipmentCreated && (
-                  <Button
-                    variant="success"
-                    size="lg"
-                    fullWidth
-                    onClick={handleCreateShipment}
-                    isLoading={isCreatingShipment}
-                    disabled={isCreatingShipment || isViewMode}
-                    className="shadow-glow"
-                  >
-                    <PrinterIcon className="h-5 w-5 mr-2" />
-                    Create Shipment & Complete
-                  </Button>
-                )}
+                  {/* NZC Label Display */}
+                  {nzcLabel && (
+                    <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-white">Shipping Label</h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-400">Connote:</span>
+                          <span className="font-mono text-primary-400">{nzcConnote}</span>
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-lg p-2">
+                        <img
+                          src={`data:${nzcLabel.contentType};base64,${nzcLabel.data}`}
+                          alt="Shipping Label"
+                          className="w-full h-auto max-h-[400px] object-contain"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            // Open label in new tab for printing
+                            const window = window.open();
+                            if (window) {
+                              window.document.write(
+                                `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
+                                <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
+                              </body></html>`
+                              );
+                              window.document.close();
+                            }
+                          }}
+                        >
+                          <PrinterIcon className="h-4 w-4 mr-2" />
+                          Print Label
+                        </Button>
+                        {shipmentCreated && (
+                          <Button variant="success" size="sm" onClick={() => navigate('/packing')}>
+                            Done
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                {isViewMode && (
-                  <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                    <p className="text-sm text-primary-300">
-                      Interactions are disabled in view-only mode
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {/* Action Buttons */}
+                  {!shipmentCreated && (
+                    <Button
+                      variant="success"
+                      size="lg"
+                      fullWidth
+                      onClick={handleCreateShipment}
+                      isLoading={isCreatingShipment}
+                      disabled={isCreatingShipment || isViewMode}
+                      className="shadow-glow"
+                    >
+                      <PrinterIcon className="h-5 w-5 mr-2" />
+                      Create Shipment & Complete
+                    </Button>
+                  )}
+
+                  {isViewMode && (
+                    <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
+                      <p className="text-sm text-primary-300">
+                        Interactions are disabled in view-only mode
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           )
         ) : currentItem ? (
@@ -1561,10 +1575,14 @@ export function PackingPage() {
               <p className="mb-3">The following items were skipped and could not be verified:</p>
               <ul className="list-disc pl-5 mb-3 space-y-1">
                 {completeShipmentConfirm.skippedItems.map((item: any, i: number) => (
-                  <li key={i}>{item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}</li>
+                  <li key={i}>
+                    {item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}
+                  </li>
                 ))}
               </ul>
-              <p>Are you sure you want to complete this order? These items will remain unverified.</p>
+              <p>
+                Are you sure you want to complete this order? These items will remain unverified.
+              </p>
             </div>
           }
           confirmText="Complete Order"

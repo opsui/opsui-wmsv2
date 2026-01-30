@@ -67,10 +67,9 @@ export class AutomationService {
   async getAutomationTask(taskId: string): Promise<AutomationTask> {
     const client = await getPool();
 
-    const result = await client.query(
-      `SELECT * FROM automation_tasks WHERE task_id = $1`,
-      [taskId]
-    );
+    const result = await client.query(`SELECT * FROM automation_tasks WHERE task_id = $1`, [
+      taskId,
+    ]);
 
     if (result.rows.length === 0) {
       throw new Error(`Automation task ${taskId} not found`);
@@ -82,7 +81,10 @@ export class AutomationService {
   /**
    * Get pending tasks for a robot/system
    */
-  async getPendingTasks(assignedTo: string, taskType?: AutomationTaskType): Promise<AutomationTask[]> {
+  async getPendingTasks(
+    assignedTo: string,
+    taskType?: AutomationTaskType
+  ): Promise<AutomationTask[]> {
     const client = await getPool();
 
     let query = 'SELECT * FROM automation_tasks WHERE assigned_to = $1 AND status = $2';
@@ -121,7 +123,11 @@ export class AutomationService {
       const task = await this.getAutomationTask(taskId);
 
       // If this is a cycle count task with results, create a cycle count entry
-      if (task.taskType === AutomationTaskType.CYCLE_COUNT && result && status === AutomationTaskStatus.COMPLETED) {
+      if (
+        task.taskType === AutomationTaskType.CYCLE_COUNT &&
+        result &&
+        status === AutomationTaskStatus.COMPLETED
+      ) {
         await this.processCycleCountResult(task, result);
       }
 
@@ -150,7 +156,10 @@ export class AutomationService {
   /**
    * Process cycle count result from automation
    */
-  private async processCycleCountResult(task: AutomationTask, result: { countedQuantity?: number; variance?: number; notes?: string }): Promise<void> {
+  private async processCycleCountResult(
+    task: AutomationTask,
+    result: { countedQuantity?: number; variance?: number; notes?: string }
+  ): Promise<void> {
     const client = await getPool();
 
     // Get system quantity
@@ -159,7 +168,8 @@ export class AutomationService {
       [task.sku, task.location]
     );
 
-    const systemQuantity = inventoryResult.rows.length > 0 ? parseFloat(inventoryResult.rows[0].quantity) : 0;
+    const systemQuantity =
+      inventoryResult.rows.length > 0 ? parseFloat(inventoryResult.rows[0].quantity) : 0;
     const countedQuantity = result.countedQuantity || 0;
     const variance = countedQuantity - systemQuantity;
     const variancePercent = systemQuantity > 0 ? (Math.abs(variance) / systemQuantity) * 100 : 0;
@@ -194,7 +204,10 @@ export class AutomationService {
   /**
    * Get or create a cycle count plan for automation counts
    */
-  private async getOrCreateAutomationCycleCountPlan(location: string, automationSystem: string): Promise<string> {
+  private async getOrCreateAutomationCycleCountPlan(
+    location: string,
+    automationSystem: string
+  ): Promise<string> {
     const client = await getPool();
 
     // Check for existing automation plan for this location
@@ -237,7 +250,9 @@ export class AutomationService {
   /**
    * Process RFID scan results
    */
-  async processRFIDScan(scanResult: RFIDScanResult): Promise<{ matchedTags: number; unmatchedTags: string[] }> {
+  async processRFIDScan(
+    scanResult: RFIDScanResult
+  ): Promise<{ matchedTags: number; unmatchedTags: string[] }> {
     const client = await getPool();
 
     let matchedTags = 0;

@@ -5,15 +5,9 @@
   "category": "service-layer",
   "problem": "Need to perform multiple database operations atomically - if one fails, all should rollback",
   "solution": "Wrap all operations in db.transaction() callback, use the transaction object (trx) for all queries within the block",
-  "files": [
-    "packages/backend/src/services/OrderService.ts"
-  ],
+  "files": ["packages/backend/src/services/OrderService.ts"],
   "codeSnippet": "return await db.transaction(async (trx) => {\n  const order = await trx('orders').update({status: 'PICKING'}).returning('*');\n  await trx('pick_tasks').insert({order_id: orderId});\n  return order;\n});",
-  "tags": [
-    "transaction",
-    "atomic",
-    "database"
-  ],
+  "tags": ["transaction", "atomic", "database"],
   "metadata": {
     "taskType": "feature",
     "complexity": "medium"

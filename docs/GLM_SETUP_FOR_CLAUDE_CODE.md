@@ -5,6 +5,7 @@ This guide shows how to configure GLM 4.7 as a custom model for Claude Code in V
 ## Overview
 
 GLM 4.7 is now available as a custom model through a Model Context Protocol (MCP) server. This allows Claude Code to use GLM 4.7 for:
+
 - General AI tasks and conversations
 - Code generation, review, and debugging
 - Text analysis and pattern detection
@@ -49,6 +50,7 @@ Open `.claude/settings.json` in your project root and find the GLM server config
 Replace `YOUR_GLM_API_KEY_HERE` with your actual GLM API key.
 
 **Example:**
+
 ```json
 "glm": {
   "command": "npx",
@@ -66,6 +68,7 @@ Replace `YOUR_GLM_API_KEY_HERE` with your actual GLM API key.
 ### Step 3: Restart VS Code
 
 After updating the configuration:
+
 1. Save the `settings.json` file
 2. Restart VS Code to load the new MCP server
 3. Claude Code will automatically detect the GLM server
@@ -79,12 +82,14 @@ Once configured, Claude Code can access three GLM tools:
 Use for general AI tasks, questions, and conversations.
 
 **Parameters:**
+
 - `prompt` (required): Your question or request
 - `systemPrompt` (optional): Set the AI's behavior (default: "You are a helpful AI assistant.")
 - `temperature` (optional): 0.0-2.0, lower = more focused, higher = more creative (default: 0.7)
 - `maxTokens` (optional): Maximum response tokens, 1-4000 (default: 2000)
 
 **Example usage in conversation:**
+
 ```
 "Use glm_chat to explain what RESTful APIs are"
 ```
@@ -94,11 +99,13 @@ Use for general AI tasks, questions, and conversations.
 Use for code-related tasks including generation, review, debugging, and refactoring.
 
 **Parameters:**
+
 - `task` (required): Description of the coding task
 - `code` (optional): Existing code to work with
 - `language` (optional): Programming language (e.g., "javascript", "typescript", "python")
 
 **Example usage:**
+
 ```
 "Use glm_code to write a function that sorts an array of objects by date"
 "Use glm_code to review this code for bugs: [paste code]"
@@ -110,11 +117,13 @@ Use for code-related tasks including generation, review, debugging, and refactor
 Use for text analysis, data interpretation, and pattern detection.
 
 **Parameters:**
+
 - `content` (required): The content to analyze
 - `analysisType` (optional): Type of analysis (e.g., "sentiment", "summarize", "extract", "explain", default: "general")
 - `context` (optional): Additional context for the analysis
 
 **Example usage:**
+
 ```
 "Use glm_analyze with analysisType summarize to summarize this document"
 "Use glm_analyze to extract key insights from this log file"
@@ -154,17 +163,20 @@ To verify that GLM 4.7 is working correctly:
 ### Troubleshooting
 
 **Issue: GLM server not detected**
+
 - Verify the API key is correct
 - Ensure the MCP server path is correct
 - Restart VS Code
 - Check that `tools/mcp-server-glm/src/index.ts` exists
 
 **Issue: Authentication errors**
+
 - Verify your API key format: `id.secret`
 - Check that your API key hasn't expired
 - Ensure your Zhipu AI account is active
 
 **Issue: Rate limiting**
+
 - GLM has strict rate limits
 - The server includes automatic retry with exponential backoff
 - Consider upgrading your API plan for higher limits
@@ -218,6 +230,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 3. Restart VS Code (no rebuild needed since we use npx tsx)
 
 **Available models:**
+
 - `glm-4` - General purpose
 - `glm-4-plus` - Enhanced performance
 - `glm-4-air` - Faster inference
@@ -233,6 +246,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 ## Example Workflows
 
 ### Code Review Workflow
+
 ```
 "Use glm_code to review this file for potential bugs and improvements"
 "Ask GLM to suggest test cases for this function"
@@ -240,6 +254,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 ```
 
 ### Debugging Workflow
+
 ```
 "Use glm_analyze to explain this error stack trace"
 "Have GLM suggest possible causes for this bug"
@@ -247,6 +262,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 ```
 
 ### Learning Workflow
+
 ```
 "Use glm_chat to explain how React hooks work"
 "Ask GLM to provide examples of design patterns"
@@ -256,6 +272,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 ## Integration with Existing Tools
 
 GLM 4.7 works alongside your existing MCP servers:
+
 - **wms-dev-accelerator**: Project-specific tools
 - **github**: GitHub integration
 - **postgres**: Database queries
@@ -263,6 +280,7 @@ GLM 4.7 works alongside your existing MCP servers:
 - **glm**: AI-powered assistance (new!)
 
 You can chain tools together:
+
 ```
 "Read the database schema, then ask GLM to generate a data model diagram"
 "List recent GitHub issues, then use GLM to prioritize them"

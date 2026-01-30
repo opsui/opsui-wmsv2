@@ -56,7 +56,7 @@ function ParameterEditor({
           type="number"
           id={inputId}
           value={value || ''}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          onChange={e => onChange(parseFloat(e.target.value) || 0)}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         />
       );
@@ -67,7 +67,7 @@ function ParameterEditor({
           type="date"
           id={inputId}
           value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         />
       );
@@ -79,14 +79,14 @@ function ParameterEditor({
             type="date"
             id={`${inputId}-from`}
             value={value?.from || ''}
-            onChange={(e) => onChange({ ...value, from: e.target.value })}
+            onChange={e => onChange({ ...value, from: e.target.value })}
             className="flex-1 px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           />
           <input
             type="date"
             id={`${inputId}-to`}
             value={value?.to || ''}
-            onChange={(e) => onChange({ ...value, to: e.target.value })}
+            onChange={e => onChange({ ...value, to: e.target.value })}
             className="flex-1 px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
           />
         </div>
@@ -97,7 +97,7 @@ function ParameterEditor({
         <select
           id={inputId}
           value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         >
           <option value="">Select...</option>
@@ -115,7 +115,7 @@ function ParameterEditor({
           type="text"
           id={inputId}
           value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         />
       );
@@ -133,17 +133,25 @@ export function ReportExecutionModal({ report, onClose, onExecute }: ReportExecu
   const [selectedFormat, setSelectedFormat] = useState<ReportFormat>(ReportFormat.PDF);
 
   // Generate parameters based on report filters
-  const parameterDefinitions: Parameter[] = report.filters.map((filter) => ({
+  const parameterDefinitions: Parameter[] = report.filters.map(filter => ({
     name: filter.field,
     label: filter.displayName || filter.field,
-    type: filter.operator === 'between' ? 'dateRange' :
-           filter.operator === 'in' ? 'select' :
-           filter.field.toLowerCase().includes('date') ? 'date' :
-           filter.field.toLowerCase().includes('count') || filter.field.toLowerCase().includes('amount') ? 'number' : 'text',
+    type:
+      filter.operator === 'between'
+        ? 'dateRange'
+        : filter.operator === 'in'
+          ? 'select'
+          : filter.field.toLowerCase().includes('date')
+            ? 'date'
+            : filter.field.toLowerCase().includes('count') ||
+                filter.field.toLowerCase().includes('amount')
+              ? 'number'
+              : 'text',
     required: false,
-    options: filter.operator === 'in' && Array.isArray(filter.value)
-      ? filter.value.map((v: any) => ({ value: v, label: String(v) }))
-      : undefined,
+    options:
+      filter.operator === 'in' && Array.isArray(filter.value)
+        ? filter.value.map((v: any) => ({ value: v, label: String(v) }))
+        : undefined,
     defaultValue: filter.value,
   }));
 
@@ -217,7 +225,7 @@ export function ReportExecutionModal({ report, onClose, onExecute }: ReportExecu
               <div className="space-y-4">
                 <h3 className="text-sm font-medium text-white">Parameters</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {parameterDefinitions.map((param) => (
+                  {parameterDefinitions.map(param => (
                     <div key={param.name}>
                       <label className="block text-xs text-gray-400 mb-1">
                         {param.label}
@@ -226,7 +234,7 @@ export function ReportExecutionModal({ report, onClose, onExecute }: ReportExecu
                       <ParameterEditor
                         parameter={param}
                         value={parameters[param.name]}
-                        onChange={(value) => setParameters({ ...parameters, [param.name]: value })}
+                        onChange={value => setParameters({ ...parameters, [param.name]: value })}
                       />
                     </div>
                   ))}
@@ -246,7 +254,9 @@ export function ReportExecutionModal({ report, onClose, onExecute }: ReportExecu
                         <DocumentArrowDownIcon className="h-5 w-5 text-green-400" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-green-400">Report Completed Successfully</p>
+                        <p className="text-sm font-medium text-green-400">
+                          Report Completed Successfully
+                        </p>
                         <div className="flex gap-4 mt-1 text-xs text-gray-400">
                           <span>{execution.rowCount?.toLocaleString()} rows</span>
                           <span>{(execution.fileSizeBytes! / 1024).toFixed(2)} KB</span>
@@ -265,7 +275,9 @@ export function ReportExecutionModal({ report, onClose, onExecute }: ReportExecu
                 ) : execution.status === ReportStatus.FAILED ? (
                   <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
                     <p className="text-sm font-medium text-red-400">Execution Failed</p>
-                    <p className="text-xs text-gray-400 mt-1">{execution.errorMessage || 'Unknown error'}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {execution.errorMessage || 'Unknown error'}
+                    </p>
                   </div>
                 ) : (
                   <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
@@ -283,7 +295,7 @@ export function ReportExecutionModal({ report, onClose, onExecute }: ReportExecu
               <div className="space-y-4">
                 <h3 className="text-sm font-medium text-white">Export As</h3>
                 <div className="flex gap-2">
-                  {Object.values(ReportFormat).map((format) => (
+                  {Object.values(ReportFormat).map(format => (
                     <button
                       key={format}
                       onClick={() => setSelectedFormat(format)}

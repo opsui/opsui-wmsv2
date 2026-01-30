@@ -23,15 +23,20 @@ interface FilterState {
 
 export function RootCauseAnalysisPage() {
   const [filters, setFilters] = useState<FilterState>({ days: 30 });
-  const [activeTab, setActiveTab] = useState<'pareto' | 'breakdown' | 'trending' | 'sku' | 'zone'>('pareto');
+  const [activeTab, setActiveTab] = useState<'pareto' | 'breakdown' | 'trending' | 'sku' | 'zone'>(
+    'pareto'
+  );
   const [skuInput, setSkuInput] = useState('');
   const [zoneInput, setZoneInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Queries
   const { data: paretoData = [], isLoading: isLoadingPareto } = useRootCausePareto(filters.days);
-  const { data: categoryBreakdown = [], isLoading: isLoadingBreakdown } = useRootCauseCategoryBreakdown(filters.days);
-  const { data: trendingData = [], isLoading: isLoadingTrending } = useRootCauseTrending(filters.days);
+  const { data: categoryBreakdown = [], isLoading: isLoadingBreakdown } =
+    useRootCauseCategoryBreakdown(filters.days);
+  const { data: trendingData = [], isLoading: isLoadingTrending } = useRootCauseTrending(
+    filters.days
+  );
   const { data: categories = [] } = useRootCauseCategories();
 
   // Colors for charts
@@ -43,7 +48,7 @@ export function RootCauseAnalysisPage() {
     'Shipping Error': '#8B5CF6',
     'System Error': '#EC4899',
     'Cycle Count Slip': '#6366F1',
-    'Unknown': '#9CA3AF',
+    Unknown: '#9CA3AF',
   };
 
   // Format percentage
@@ -94,14 +99,20 @@ export function RootCauseAnalysisPage() {
               <div key={item.categoryId} className="pareto-bar-container">
                 <div className="bar-label">{item.category}</div>
                 <div className="bar-wrapper">
-                  <div className="bar-fill-count" style={{
-                    width: `${(item.count / maxCount) * 100}%`,
-                    backgroundColor: getCategoryColor(item.category),
-                  }} />
-                  <div className="bar-fill-variance" style={{
-                    width: `${(item.totalVariance / maxVariance) * 100}%`,
-                    backgroundColor: `${getCategoryColor(item.category)}40`,
-                  }} />
+                  <div
+                    className="bar-fill-count"
+                    style={{
+                      width: `${(item.count / maxCount) * 100}%`,
+                      backgroundColor: getCategoryColor(item.category),
+                    }}
+                  />
+                  <div
+                    className="bar-fill-variance"
+                    style={{
+                      width: `${(item.totalVariance / maxVariance) * 100}%`,
+                      backgroundColor: `${getCategoryColor(item.category)}40`,
+                    }}
+                  />
                 </div>
                 <div className="bar-values">
                   <span className="count">{item.count}</span>
@@ -127,7 +138,13 @@ export function RootCauseAnalysisPage() {
   };
 
   // Category Breakdown Chart
-  const CategoryBreakdownChart = ({ data, searchTerm }: { data: typeof categoryBreakdown; searchTerm?: string }) => {
+  const CategoryBreakdownChart = ({
+    data,
+    searchTerm,
+  }: {
+    data: typeof categoryBreakdown;
+    searchTerm?: string;
+  }) => {
     const totalVariance = data.reduce((sum, item) => sum + item.totalVariance, 0);
 
     // Filter data based on search term
@@ -154,49 +171,49 @@ export function RootCauseAnalysisPage() {
               {searchTerm ? 'No categories match your search' : 'No data available'}
             </div>
           ) : (
-            filteredData.map((item) => (
+            filteredData.map(item => (
               <div key={item.categoryId} className="category-card">
-              <div className="card-header">
-                <h4>{item.category}</h4>
-                <span className={`trend-badge ${item.trend.toLowerCase()}`}>
-                  {item.trend === 'INCREASING' && '↑'}
-                  {item.trend === 'DECREASING' && '↓'}
-                  {item.trend === 'STABLE' && '→'}
-                  {item.trendPercent && ` ${formatPercent(item.trendPercent)}`}
-                </span>
-              </div>
-
-              <div className="card-stats">
-                <div className="stat">
-                  <span className="label">Variance Count</span>
-                  <span className="value">{item.varianceCount}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Avg Variance</span>
-                  <span className="value">{formatPercent(item.averageVariancePercent)}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">Total Variance</span>
-                  <span className="value">{item.totalVariance}</span>
-                </div>
-                <div className="stat">
-                  <span className="label">% of Total</span>
-                  <span className="value">
-                    {formatPercent((item.totalVariance / totalVariance) * 100)}
+                <div className="card-header">
+                  <h4>{item.category}</h4>
+                  <span className={`trend-badge ${item.trend.toLowerCase()}`}>
+                    {item.trend === 'INCREASING' && '↑'}
+                    {item.trend === 'DECREASING' && '↓'}
+                    {item.trend === 'STABLE' && '→'}
+                    {item.trendPercent && ` ${formatPercent(item.trendPercent)}`}
                   </span>
                 </div>
-              </div>
 
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${(item.totalVariance / totalVariance) * 100}%`,
-                    backgroundColor: getCategoryColor(item.category),
-                  }}
-                />
+                <div className="card-stats">
+                  <div className="stat">
+                    <span className="label">Variance Count</span>
+                    <span className="value">{item.varianceCount}</span>
+                  </div>
+                  <div className="stat">
+                    <span className="label">Avg Variance</span>
+                    <span className="value">{formatPercent(item.averageVariancePercent)}</span>
+                  </div>
+                  <div className="stat">
+                    <span className="label">Total Variance</span>
+                    <span className="value">{item.totalVariance}</span>
+                  </div>
+                  <div className="stat">
+                    <span className="label">% of Total</span>
+                    <span className="value">
+                      {formatPercent((item.totalVariance / totalVariance) * 100)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${(item.totalVariance / totalVariance) * 100}%`,
+                      backgroundColor: getCategoryColor(item.category),
+                    }}
+                  />
+                </div>
               </div>
-            </div>
             ))
           )}
         </div>
@@ -205,7 +222,13 @@ export function RootCauseAnalysisPage() {
   };
 
   // Trending Chart
-  const TrendingChart = ({ data, searchTerm }: { data: typeof trendingData; searchTerm?: string }) => {
+  const TrendingChart = ({
+    data,
+    searchTerm,
+  }: {
+    data: typeof trendingData;
+    searchTerm?: string;
+  }) => {
     // Filter data based on search term
     const filteredData = searchTerm
       ? data.filter(item => {
@@ -230,7 +253,7 @@ export function RootCauseAnalysisPage() {
               {searchTerm ? 'No trending causes match your search' : 'No data available'}
             </div>
           ) : (
-            filteredData.map((item) => (
+            filteredData.map(item => (
               <div key={item.categoryId} className="trending-item">
                 <div className="item-header">
                   <span className="category">{item.category}</span>
@@ -245,7 +268,8 @@ export function RootCauseAnalysisPage() {
                     <span className="period">Current: {item.currentPeriodCount}</span>
                   </div>
                   <div className="percent-change">
-                    Change: <span className={item.percentChange >= 0 ? 'positive' : 'negative'}>
+                    Change:{' '}
+                    <span className={item.percentChange >= 0 ? 'positive' : 'negative'}>
                       {formatPercent(Math.abs(item.percentChange))}
                     </span>
                   </div>
@@ -269,7 +293,7 @@ export function RootCauseAnalysisPage() {
         <div className="header-actions">
           <select
             value={filters.days}
-            onChange={(e) => handleDaysChange(parseInt(e.target.value))}
+            onChange={e => handleDaysChange(parseInt(e.target.value))}
             className="select"
           >
             <option value={7}>Last 7 days</option>
@@ -283,7 +307,7 @@ export function RootCauseAnalysisPage() {
               type="text"
               placeholder="Search categories..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
             />
           </div>
@@ -326,29 +350,26 @@ export function RootCauseAnalysisPage() {
 
       {/* Tab Content */}
       <div className="tab-content">
-        {activeTab === 'pareto' && (
-          isLoadingPareto ? (
+        {activeTab === 'pareto' &&
+          (isLoadingPareto ? (
             <div className="loading">Loading...</div>
           ) : (
             <ParetoChart data={paretoData} searchTerm={searchQuery} />
-          )
-        )}
+          ))}
 
-        {activeTab === 'breakdown' && (
-          isLoadingBreakdown ? (
+        {activeTab === 'breakdown' &&
+          (isLoadingBreakdown ? (
             <div className="loading">Loading...</div>
           ) : (
             <CategoryBreakdownChart data={categoryBreakdown} searchTerm={searchQuery} />
-          )
-        )}
+          ))}
 
-        {activeTab === 'trending' && (
-          isLoadingTrending ? (
+        {activeTab === 'trending' &&
+          (isLoadingTrending ? (
             <div className="loading">Loading...</div>
           ) : (
             <TrendingChart data={trendingData} searchTerm={searchQuery} />
-          )
-        )}
+          ))}
 
         {activeTab === 'sku' && (
           <div className="sku-drilldown">
@@ -358,7 +379,7 @@ export function RootCauseAnalysisPage() {
                 <input
                   type="text"
                   value={skuInput}
-                  onChange={(e) => setSkuInput(e.target.value)}
+                  onChange={e => setSkuInput(e.target.value)}
                   placeholder="Enter SKU..."
                   className="input"
                 />
@@ -395,7 +416,7 @@ export function RootCauseAnalysisPage() {
                 <input
                   type="text"
                   value={zoneInput}
-                  onChange={(e) => setZoneInput(e.target.value)}
+                  onChange={e => setZoneInput(e.target.value)}
                   placeholder="Enter zone..."
                   className="input"
                 />

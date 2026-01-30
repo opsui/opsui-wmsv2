@@ -43,12 +43,15 @@ interface TestSuiteMetrics {
 
 export class IntelligentTestOrchestrator {
   private glm: GLMClient;
-  private testHistory = new Map<string, {
-    executions: number;
-    failures: number;
-    averageDuration: number;
-    lastExecuted: Date;
-  }>();
+  private testHistory = new Map<
+    string,
+    {
+      executions: number;
+      failures: number;
+      averageDuration: number;
+      lastExecuted: Date;
+    }
+  >();
 
   constructor(glm: GLMClient) {
     this.glm = glm;
@@ -81,16 +84,12 @@ export class IntelligentTestOrchestrator {
     // Filter tests by priority
     const priorityLevels = ['critical', 'high', 'medium', 'low'];
     const thresholdIndex = priorityLevels.indexOf(priorityThreshold);
-    const eligibleTests = tests.filter(t =>
-      priorityLevels.indexOf(t.priority) <= thresholdIndex
-    );
+    const eligibleTests = tests.filter(t => priorityLevels.indexOf(t.priority) <= thresholdIndex);
 
     console.log(`     Eligible tests: ${eligibleTests.length}`);
 
     // Skip flaky tests if requested
-    const stableTests = skipFlaky
-      ? eligibleTests.filter(t => t.stability > 0.7)
-      : eligibleTests;
+    const stableTests = skipFlaky ? eligibleTests.filter(t => t.stability > 0.7) : eligibleTests;
 
     if (skipFlaky && stableTests.length < eligibleTests.length) {
       console.log(`     Skipped ${eligibleTests.length - stableTests.length} unstable tests`);
@@ -121,16 +120,18 @@ export class IntelligentTestOrchestrator {
         tests: p.tests,
         order: p.order,
         estimatedDuration: Math.max(
-          ...p.tests.map(testName =>
-            tests.find(t => t.name === testName)?.duration || 0
-          )
+          ...p.tests.map(testName => tests.find(t => t.name === testName)?.duration || 0)
         ),
       })),
       skipped: optimizationResult.executionPlan.skipped,
       totalEstimatedDuration: optimizationResult.estimatedDuration,
-      parallelizationFactor: optimizationResult.executionPlan.parallel.length /
-        Math.max(optimizationResult.executionPlan.parallel.length +
-                optimizationResult.executionPlan.sequential.length, 1),
+      parallelizationFactor:
+        optimizationResult.executionPlan.parallel.length /
+        Math.max(
+          optimizationResult.executionPlan.parallel.length +
+            optimizationResult.executionPlan.sequential.length,
+          1
+        ),
       reasoning: optimizationResult.reasoning,
     };
 
@@ -139,7 +140,9 @@ export class IntelligentTestOrchestrator {
     console.log(`       Parallel shards: ${executionPlan.parallel.length}`);
     console.log(`       Skipped: ${executionPlan.skipped.length}`);
     console.log(`       Estimated duration: ${executionPlan.totalEstimatedDuration}s`);
-    console.log(`       Parallelization: ${Math.round(executionPlan.parallelizationFactor * 100)}%`);
+    console.log(
+      `       Parallelization: ${Math.round(executionPlan.parallelizationFactor * 100)}%`
+    );
 
     return executionPlan;
   }
@@ -151,9 +154,7 @@ export class IntelligentTestOrchestrator {
     const totalTests = tests.length;
     const averageDuration = tests.reduce((sum, t) => sum + t.duration, 0) / totalTests;
 
-    const flakyTests = tests
-      .filter(t => t.stability < 0.8)
-      .map(t => t.name);
+    const flakyTests = tests.filter(t => t.stability < 0.8).map(t => t.name);
 
     const slowTests = tests
       .filter(t => t.duration > averageDuration * 2)
@@ -165,7 +166,7 @@ export class IntelligentTestOrchestrator {
       (sum, t) => sum + (1 - t.stability) * (this.testHistory.get(t.name)?.executions || 10),
       0
     );
-    const passRate = totalTests > 0 ? 1 - (totalFailures / totalTests) : 1;
+    const passRate = totalTests > 0 ? 1 - totalFailures / totalTests : 1;
 
     return {
       totalTests,
@@ -179,11 +180,7 @@ export class IntelligentTestOrchestrator {
   /**
    * Update test history for better planning
    */
-  recordTestExecution(
-    testName: string,
-    duration: number,
-    passed: boolean
-  ): void {
+  recordTestExecution(testName: string, duration: number, passed: boolean): void {
     const history = this.testHistory.get(testName) || {
       executions: 0,
       failures: 0,

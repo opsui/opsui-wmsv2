@@ -29,7 +29,9 @@ setup('authenticate', async ({ page, context }) => {
 
   // Wait for login form to be visible
   await expect(page.locator('input[type="email"], input[placeholder*="email" i]')).toBeVisible();
-  await expect(page.locator('input[type="password"], input[placeholder*="password" i]')).toBeVisible();
+  await expect(
+    page.locator('input[type="password"], input[placeholder*="password" i]')
+  ).toBeVisible();
   console.log('✓ Login form is visible');
 
   // Fill in credentials
@@ -38,7 +40,9 @@ setup('authenticate', async ({ page, context }) => {
   console.log('✓ Credentials entered');
 
   // Submit login form
-  await page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Login")').click();
+  await page
+    .locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Login")')
+    .click();
   console.log('✓ Login form submitted');
 
   // Wait for successful login - check for redirect away from /login
@@ -100,7 +104,9 @@ setup('authenticate-picker', async ({ page, context }) => {
   await page.locator('input[type="email"], input[placeholder*="email" i]').fill('picker@wms.local');
   await page.locator('input[type="password"], input[placeholder*="password" i]').fill('picker123');
 
-  await page.locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Login")').click();
+  await page
+    .locator('button[type="submit"], button:has-text("Sign In"), button:has-text("Login")')
+    .click();
   await page.waitForURL(/^(?!.*\/login).*$/, { timeout: 10000 });
 
   const authStorage = await page.evaluate(() => {
@@ -121,7 +127,9 @@ setup('authenticate-picker', async ({ page, context }) => {
 
   // Verify picker role
   if (authStorage.state.activeRole !== 'PICKER' && authStorage.state.activeRole !== 'WAREHOUSE') {
-    console.warn(`⚠️  Warning: Active role is ${authStorage.state.activeRole}, expected PICKER or WAREHOUSE`);
+    console.warn(
+      `⚠️  Warning: Active role is ${authStorage.state.activeRole}, expected PICKER or WAREHOUSE`
+    );
   }
 
   await page.goto('/orders');

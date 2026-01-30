@@ -9,7 +9,13 @@ import { cycleCountService } from '../services/CycleCountService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { requirePermission } from '../middleware/permissions';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { UserRole, CycleCountStatus, CycleCountType, VarianceStatus, Permission } from '@opsui/shared';
+import {
+  UserRole,
+  CycleCountStatus,
+  CycleCountType,
+  VarianceStatus,
+  Permission,
+} from '@opsui/shared';
 
 const router = Router();
 
@@ -361,11 +367,21 @@ router.get(
       const { customRoleRepository } = await import('../repositories/CustomRoleRepository');
       const { DEFAULT_ROLE_PERMISSIONS, Permission } = await import('@opsui/shared');
 
-      console.log('[debug-permissions] Getting permissions for user:', req.user.userId, 'role:', req.user.role);
+      console.log(
+        '[debug-permissions] Getting permissions for user:',
+        req.user.userId,
+        'role:',
+        req.user.role
+      );
 
       const user = req.user;
       const defaultPerms = DEFAULT_ROLE_PERMISSIONS[user.role as any] || [];
-      console.log('[debug-permissions] Default permissions for role', user.role, ':', defaultPerms.length);
+      console.log(
+        '[debug-permissions] Default permissions for role',
+        user.role,
+        ':',
+        defaultPerms.length
+      );
 
       const userPerms = await customRoleRepository.getUserPermissions(user.userId, user.role);
       console.log('[debug-permissions] User permissions:', userPerms.length);

@@ -325,8 +325,14 @@ export async function notifyExceptionReported(options: {
 // HELPER FUNCTIONS
 // ============================================================================
 
-function getNotificationType(priority?: NotificationPriority): 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' {
-  if (!priority || priority === NotificationPriority.NORMAL || priority === NotificationPriority.LOW) {
+function getNotificationType(
+  priority?: NotificationPriority
+): 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' {
+  if (
+    !priority ||
+    priority === NotificationPriority.NORMAL ||
+    priority === NotificationPriority.LOW
+  ) {
     return 'INFO';
   }
   if (priority === NotificationPriority.HIGH) {
@@ -343,31 +349,31 @@ function getNotificationType(priority?: NotificationPriority): 'INFO' | 'WARNING
  */
 export function getNotificationMessage(type: NotificationType, data: Record<string, any>): string {
   const messages: Record<NotificationType, (data: any) => string> = {
-    [NotificationType.ORDER_CLAIMED]: (d) => `Order ${d.orderId} has been claimed`,
-    [NotificationType.ORDER_COMPLETED]: (d) => `Order ${d.orderId} picking completed`,
-    [NotificationType.ORDER_CANCELLED]: (d) => `Order ${d.orderId} was cancelled`,
-    [NotificationType.ORDER_BACKORDERED]: (d) => `Order ${d.orderId} has been backordered`,
-    [NotificationType.ORDER_SHIPPED]: (d) => `Order ${d.orderId} has been shipped`,
-    [NotificationType.ORDER_PACKED]: (d) => `Order ${d.orderId} has been packed`,
-    [NotificationType.PICK_UPDATED]: (d) => `Pick updated for ${d.sku}`,
-    [NotificationType.PICK_COMPLETED]: (d) => `Item ${d.sku} picking completed`,
-    [NotificationType.INVENTORY_LOW]: (d) => `Low stock: ${d.sku} at ${d.binLocation}`,
-    [NotificationType.INVENTORY_OUT]: (d) => `Out of stock: ${d.sku}`,
-    [NotificationType.INVENTORY_REPLENISHED]: (d) => `Stock replenished: ${d.sku}`,
-    [NotificationType.EXCEPTION_REPORTED]: (d) => `Exception ${d.exceptionId} reported`,
-    [NotificationType.EXCEPTION_RESOLVED]: (d) => `Exception ${d.exceptionId} resolved`,
-    [NotificationType.QUALITY_FAILED]: (d) => `Quality check failed for ${d.sku}`,
-    [NotificationType.QUALITY_APPROVED]: (d) => `Quality check passed for ${d.sku}`,
-    [NotificationType.ZONE_ASSIGNED]: (d) => `Zone ${d.zoneId} assignment updated`,
-    [NotificationType.ZONE_UPDATED]: (d) => `Zone ${d.zoneId} status updated`,
-    [NotificationType.WAVE_CREATED]: (d) => `Wave ${d.waveId} created`,
-    [NotificationType.WAVE_COMPLETED]: (d) => `Wave ${d.waveId} completed`,
-    [NotificationType.SYSTEM_ALERT]: (d) => d.message || 'System alert',
-    [NotificationType.SYSTEM_ERROR]: (d) => d.message || 'System error occurred',
-    [NotificationType.MAINTENANCE_REQUIRED]: (d) => `Maintenance required: ${d.equipment}`,
-    [NotificationType.USER_LOGIN]: (d) => `User ${d.userId} logged in`,
-    [NotificationType.USER_LOGOUT]: (d) => `User ${d.userId} logged out`,
-    [NotificationType.ROLE_CHANGED]: (d) => `Role changed for user ${d.userId}`,
+    [NotificationType.ORDER_CLAIMED]: d => `Order ${d.orderId} has been claimed`,
+    [NotificationType.ORDER_COMPLETED]: d => `Order ${d.orderId} picking completed`,
+    [NotificationType.ORDER_CANCELLED]: d => `Order ${d.orderId} was cancelled`,
+    [NotificationType.ORDER_BACKORDERED]: d => `Order ${d.orderId} has been backordered`,
+    [NotificationType.ORDER_SHIPPED]: d => `Order ${d.orderId} has been shipped`,
+    [NotificationType.ORDER_PACKED]: d => `Order ${d.orderId} has been packed`,
+    [NotificationType.PICK_UPDATED]: d => `Pick updated for ${d.sku}`,
+    [NotificationType.PICK_COMPLETED]: d => `Item ${d.sku} picking completed`,
+    [NotificationType.INVENTORY_LOW]: d => `Low stock: ${d.sku} at ${d.binLocation}`,
+    [NotificationType.INVENTORY_OUT]: d => `Out of stock: ${d.sku}`,
+    [NotificationType.INVENTORY_REPLENISHED]: d => `Stock replenished: ${d.sku}`,
+    [NotificationType.EXCEPTION_REPORTED]: d => `Exception ${d.exceptionId} reported`,
+    [NotificationType.EXCEPTION_RESOLVED]: d => `Exception ${d.exceptionId} resolved`,
+    [NotificationType.QUALITY_FAILED]: d => `Quality check failed for ${d.sku}`,
+    [NotificationType.QUALITY_APPROVED]: d => `Quality check passed for ${d.sku}`,
+    [NotificationType.ZONE_ASSIGNED]: d => `Zone ${d.zoneId} assignment updated`,
+    [NotificationType.ZONE_UPDATED]: d => `Zone ${d.zoneId} status updated`,
+    [NotificationType.WAVE_CREATED]: d => `Wave ${d.waveId} created`,
+    [NotificationType.WAVE_COMPLETED]: d => `Wave ${d.waveId} completed`,
+    [NotificationType.SYSTEM_ALERT]: d => d.message || 'System alert',
+    [NotificationType.SYSTEM_ERROR]: d => d.message || 'System error occurred',
+    [NotificationType.MAINTENANCE_REQUIRED]: d => `Maintenance required: ${d.equipment}`,
+    [NotificationType.USER_LOGIN]: d => `User ${d.userId} logged in`,
+    [NotificationType.USER_LOGOUT]: d => `User ${d.userId} logged out`,
+    [NotificationType.ROLE_CHANGED]: d => `Role changed for user ${d.userId}`,
   };
 
   const messageFn = messages[type];

@@ -40,16 +40,20 @@ export function MicroCountModal({
 
   const [countedQuantity, setCountedQuantity] = useState('');
   const [barcode, setBarcode] = useState('');
-  const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [barcodeStatus, setBarcodeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  );
   const [barcodeMessage, setBarcodeMessage] = useState('');
   const [notes, setNotes] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   // Barcode lookup hook
-  const { data: barcodeData, isLoading: barcodeLoading, isError: barcodeError, refetch: refetchBarcode } = useBarcodeLookup(
-    barcode,
-    barcodeStatus === 'loading'
-  );
+  const {
+    data: barcodeData,
+    isLoading: barcodeLoading,
+    isError: barcodeError,
+    refetch: refetchBarcode,
+  } = useBarcodeLookup(barcode, barcodeStatus === 'loading');
 
   // Handle barcode scanning
   const handleBarcodeChange = (value: string) => {
@@ -138,9 +142,14 @@ export function MicroCountModal({
         <div className="px-6 py-4 border-b dark:border-gray-700 border-gray-200 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <QrCodeIcon className="h-5 w-5 text-blue-500" />
-            <h3 className="text-lg font-semibold dark:text-white text-gray-900">Quick Micro-Count</h3>
+            <h3 className="text-lg font-semibold dark:text-white text-gray-900">
+              Quick Micro-Count
+            </h3>
           </div>
-          <button onClick={handleClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900">
+          <button
+            onClick={handleClose}
+            className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900"
+          >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
@@ -152,7 +161,8 @@ export function MicroCountModal({
             <div className="text-sm dark:text-gray-300 text-gray-700">
               <p className="font-medium mb-1">Quick Inventory Verification</p>
               <p className="text-xs dark:text-gray-400 text-gray-500">
-                Scan or enter the quantity to verify inventory. Small variances (&le;2%) will auto-adjust.
+                Scan or enter the quantity to verify inventory. Small variances (&le;2%) will
+                auto-adjust.
               </p>
             </div>
           </div>
@@ -162,13 +172,17 @@ export function MicroCountModal({
           {/* SKU and Location (Read-only) */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium dark:text-gray-400 text-gray-500 mb-1">SKU</label>
+              <label className="block text-sm font-medium dark:text-gray-400 text-gray-500 mb-1">
+                SKU
+              </label>
               <div className="px-3 py-2 dark:bg-gray-800 bg-gray-50 dark:border dark:border-gray-700 border border-gray-300 rounded-lg dark:text-white text-gray-900">
                 {sku}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium dark:text-gray-400 text-gray-500 mb-1">Location</label>
+              <label className="block text-sm font-medium dark:text-gray-400 text-gray-500 mb-1">
+                Location
+              </label>
               <div className="px-3 py-2 dark:bg-gray-800 bg-gray-50 dark:border dark:border-gray-700 border border-gray-300 rounded-lg dark:text-white text-gray-900">
                 {binLocation}
               </div>
@@ -197,13 +211,13 @@ export function MicroCountModal({
               <input
                 type="text"
                 value={barcode}
-                onChange={(e) => handleBarcodeChange(e.target.value)}
+                onChange={e => handleBarcodeChange(e.target.value)}
                 className={`w-full pl-10 pr-10 py-2 dark:bg-gray-800 bg-gray-50 border dark:border-gray-600 border-gray-300 rounded-lg dark:text-white text-gray-900 ${
                   barcodeStatus === 'success'
                     ? 'border-green-500 focus:ring-green-500'
                     : barcodeStatus === 'error'
-                    ? 'border-red-500 focus:ring-red-500'
-                    : 'focus:ring-blue-500'
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'focus:ring-blue-500'
                 }`}
                 placeholder="Scan or enter barcode..."
                 autoFocus
@@ -224,8 +238,8 @@ export function MicroCountModal({
                   barcodeStatus === 'success'
                     ? 'text-green-500'
                     : barcodeStatus === 'error'
-                    ? 'text-red-500'
-                    : 'text-gray-500'
+                      ? 'text-red-500'
+                      : 'text-gray-500'
                 }`}
               >
                 {barcodeMessage}
@@ -243,7 +257,7 @@ export function MicroCountModal({
               required
               min="0"
               value={countedQuantity}
-              onChange={(e) => setCountedQuantity(e.target.value)}
+              onChange={e => setCountedQuantity(e.target.value)}
               className="w-full px-3 py-2 dark:bg-gray-800 bg-gray-50 border dark:border-gray-600 border-gray-300 rounded-lg dark:text-white text-gray-900"
               placeholder="Enter actual quantity"
               autoFocus={!barcode}
@@ -259,20 +273,27 @@ export function MicroCountModal({
                   className={`font-medium ${
                     parseInt(countedQuantity) === systemQuantity
                       ? 'text-green-500'
-                      : Math.abs(parseInt(countedQuantity) - systemQuantity) / systemQuantity * 100 <= 2
-                      ? 'text-yellow-500'
-                      : 'text-orange-500'
+                      : (Math.abs(parseInt(countedQuantity) - systemQuantity) / systemQuantity) *
+                            100 <=
+                          2
+                        ? 'text-yellow-500'
+                        : 'text-orange-500'
                   }`}
                 >
                   {parseInt(countedQuantity) - systemQuantity > 0 ? '+' : ''}
                   {parseInt(countedQuantity) - systemQuantity}
                   {' ('}
-                  {Math.abs((parseInt(countedQuantity) - systemQuantity) / systemQuantity * 100).toFixed(1)}%)
+                  {Math.abs(
+                    ((parseInt(countedQuantity) - systemQuantity) / systemQuantity) * 100
+                  ).toFixed(1)}
+                  %)
                 </span>
               </div>
               {parseInt(countedQuantity) !== systemQuantity && (
                 <div className="mt-2 flex items-start gap-2 text-xs dark:text-gray-400 text-gray-500">
-                  {Math.abs((parseInt(countedQuantity) - systemQuantity) / systemQuantity * 100) <= 2 ? (
+                  {Math.abs(
+                    ((parseInt(countedQuantity) - systemQuantity) / systemQuantity) * 100
+                  ) <= 2 ? (
                     <>
                       <CheckCircleIcon className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                       <span>Within tolerance - will auto-adjust inventory</span>
@@ -295,7 +316,7 @@ export function MicroCountModal({
             </label>
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={e => setNotes(e.target.value)}
               className="w-full px-3 py-2 dark:bg-gray-800 bg-gray-50 border dark:border-gray-600 border-gray-300 rounded-lg dark:text-white text-gray-900 resize-none"
               placeholder="Any additional notes..."
               rows={2}

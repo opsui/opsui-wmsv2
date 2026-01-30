@@ -7,17 +7,13 @@
 import { QualityControlService, qualityControlService } from '../QualityControlService';
 import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
-import { notifyUser } from '../notificationHelper';
-import {
-  InspectionStatus,
-  InspectionType,
-  DispositionAction,
-} from '@opsui/shared';
+import { notifyUser } from '../NotificationHelper';
+import { InspectionStatus, InspectionType, DispositionAction } from '@opsui/shared';
 
 // Mock dependencies
 jest.mock('../../db/client');
 jest.mock('../../config/logger');
-jest.mock('../notificationHelper');
+jest.mock('../NotificationHelper');
 
 describe('QualityControlService', () => {
   let service: QualityControlService;
@@ -109,9 +105,7 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      mockClient.query
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [] });
+      mockClient.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
 
       mockClient.query.mockResolvedValue({ rows: [] });
 
@@ -556,7 +550,7 @@ describe('QualityControlService', () => {
         returnReason: 'Defective product',
         authorizedBy: 'admin-456',
         totalRefundAmount: 99.99,
-        restockingFee: 5.00,
+        restockingFee: 5.0,
         items: [
           {
             orderItemId: 'OI-001',
@@ -574,7 +568,7 @@ describe('QualityControlService', () => {
             quantity: 1,
             returnReason: 'Wrong item',
             condition: 'NEW',
-            refundAmount: 50.00,
+            refundAmount: 50.0,
           },
         ],
       };
@@ -781,9 +775,7 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      mockClient.query
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: [] });
+      mockClient.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
 
       mockClient.query.mockResolvedValue({ rows: [] });
 

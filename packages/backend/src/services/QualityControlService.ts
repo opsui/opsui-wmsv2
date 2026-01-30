@@ -21,7 +21,7 @@ import {
   InspectionType,
   DispositionAction,
 } from '@opsui/shared';
-import { notifyUser, NotificationType, NotificationPriority } from './notificationHelper';
+import { notifyUser, NotificationType, NotificationPriority } from './NotificationHelper';
 
 // ============================================================================
 // QUALITY CONTROL SERVICE
@@ -431,19 +431,26 @@ export class QualityControlService {
 
       // Send notification based on inspection result
       const inspection = await this.getQualityInspection(dto.inspectionId);
-      const notificationType = dto.status === InspectionStatus.FAILED
-        ? NotificationType.QUALITY_FAILED
-        : dto.status === InspectionStatus.PASSED
-        ? NotificationType.QUALITY_APPROVED
-        : null;
+      const notificationType =
+        dto.status === InspectionStatus.FAILED
+          ? NotificationType.QUALITY_FAILED
+          : dto.status === InspectionStatus.PASSED
+            ? NotificationType.QUALITY_APPROVED
+            : null;
 
       if (notificationType && dto.approvedBy) {
         await notifyUser({
           userId: dto.approvedBy,
           type: notificationType,
-          title: dto.status === InspectionStatus.FAILED ? 'Quality Inspection Failed' : 'Quality Inspection Approved',
+          title:
+            dto.status === InspectionStatus.FAILED
+              ? 'Quality Inspection Failed'
+              : 'Quality Inspection Approved',
           message: `Inspection ${dto.inspectionId} for ${inspection.sku || 'N/A'} - ${dto.status}`,
-          priority: dto.status === InspectionStatus.FAILED ? NotificationPriority.HIGH : NotificationPriority.NORMAL,
+          priority:
+            dto.status === InspectionStatus.FAILED
+              ? NotificationPriority.HIGH
+              : NotificationPriority.NORMAL,
           data: {
             inspectionId: dto.inspectionId,
             sku: inspection.sku,

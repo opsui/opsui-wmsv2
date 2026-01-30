@@ -327,18 +327,16 @@ export class ReportsService {
     let params: any[] = [];
 
     // Build SELECT clause from fields
-    const selectFields = fields && fields.length > 0
-      ? fields.join(', ')
-      : '*';
+    const selectFields = fields && fields.length > 0 ? fields.join(', ') : '*';
 
     // Determine table based on entity type
     const tableMap: Record<string, string> = {
-      'orders': 'orders o LEFT JOIN users u ON o.picker_id = u.user_id',
-      'inventory': 'inventory',
-      'users': 'users',
-      'exceptions': 'order_exceptions',
-      'cycle_counts': 'cycle_counts',
-      'pick_tasks': 'pick_tasks',
+      orders: 'orders o LEFT JOIN users u ON o.picker_id = u.user_id',
+      inventory: 'inventory',
+      users: 'users',
+      exceptions: 'order_exceptions',
+      cycle_counts: 'cycle_counts',
+      pick_tasks: 'pick_tasks',
     };
 
     const tableName = tableMap[entityType] || entityType;
@@ -421,17 +419,23 @@ export class ReportsService {
     const headers = Object.keys(data[0]);
     const csvRows = [
       headers.join(','),
-      ...data.map((row) =>
-        headers.map((header) => {
-          const value = row[header];
-          // Handle values that contain commas or quotes
-          if (value === null || value === undefined) return '';
-          const stringValue = String(value);
-          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-            return `"${stringValue.replace(/"/g, '""')}"`;
-          }
-          return stringValue;
-        }).join(',')
+      ...data.map(row =>
+        headers
+          .map(header => {
+            const value = row[header];
+            // Handle values that contain commas or quotes
+            if (value === null || value === undefined) return '';
+            const stringValue = String(value);
+            if (
+              stringValue.includes(',') ||
+              stringValue.includes('"') ||
+              stringValue.includes('\n')
+            ) {
+              return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+          })
+          .join(',')
       ),
     ];
 

@@ -46,14 +46,16 @@ test.describe('Order Picking Workflow', () => {
     assertURL(page, '/orders');
 
     // Step 2: Look for pending orders
-    const hasOrders = await page.locator('[data-testid="order-item"], tr.order-row').count() > 0;
+    const hasOrders = (await page.locator('[data-testid="order-item"], tr.order-row').count()) > 0;
 
     if (!hasOrders) {
       test.skip(true, 'No orders available to test picking workflow');
     }
 
     // Step 3: Find claim button
-    const claimButton = page.locator('button:has-text("Claim"), button:has-text("Start Picking")').first();
+    const claimButton = page
+      .locator('button:has-text("Claim"), button:has-text("Start Picking")')
+      .first();
 
     // Wait for button to be potentially visible
     try {
@@ -69,7 +71,7 @@ test.describe('Order Picking Workflow', () => {
 
     // ASSERT: Get order ID before clicking
     const orderElement = page.locator('[data-testid="order-item"], tr.order-row').first();
-    const orderId = await orderElement.textContent() || 'unknown';
+    const orderId = (await orderElement.textContent()) || 'unknown';
     console.log(`Testing workflow with order: ${orderId}`);
 
     // Step 4: Claim the order
@@ -88,7 +90,7 @@ test.describe('Order Picking Workflow', () => {
 
     // Step 5: Navigate to picking page for this order
     const orderLink = page.locator('a[href*="/orders/"]').first();
-    const hasLink = await orderLink.count() > 0;
+    const hasLink = (await orderLink.count()) > 0;
 
     if (hasLink) {
       await orderLink.click();
@@ -100,7 +102,7 @@ test.describe('Order Picking Workflow', () => {
       assertURL(page, /\/orders\/[^/]+(\/pick)?/);
 
       // ASSERT: Should see picking interface
-      const hasPickingInterface = await page.locator('text=/pick|item|quantity/i').count() > 0;
+      const hasPickingInterface = (await page.locator('text=/pick|item|quantity/i').count()) > 0;
       expect(hasPickingInterface).toBe(true);
 
       // Step 6: Look for input fields to enter picked quantities
@@ -108,8 +110,10 @@ test.describe('Order Picking Workflow', () => {
       console.log(`Found ${quantityInputs} quantity input fields`);
 
       // Step 7: Look for complete/done button
-      const completeButton = page.locator('button:has-text("Complete"), button:has-text("Done"), button:has-text("Finish")');
-      const hasCompleteButton = await completeButton.count() > 0;
+      const completeButton = page.locator(
+        'button:has-text("Complete"), button:has-text("Done"), button:has-text("Finish")'
+      );
+      const hasCompleteButton = (await completeButton.count()) > 0;
 
       if (hasCompleteButton) {
         console.log('Complete button found - workflow can proceed to completion');
@@ -129,19 +133,19 @@ test.describe('Order Picking Workflow', () => {
   test('picker can view order details before claiming', async ({ page }) => {
     await navigateAndWait(page, '/orders', { minContentLength: 50 });
 
-    const hasOrders = await page.locator('[data-testid="order-item"], tr.order-row').count() > 0;
+    const hasOrders = (await page.locator('[data-testid="order-item"], tr.order-row').count()) > 0;
     if (!hasOrders) {
       test.skip(true, 'No orders available');
     }
 
     // ASSERT: Should display order information
     const orderInfo = page.locator('text=/order|customer|items|priority/i');
-    const hasOrderInfo = await orderInfo.count() > 0;
+    const hasOrderInfo = (await orderInfo.count()) > 0;
     expect(hasOrderInfo).toBe(true);
 
     // ASSERT: Should show order priority
     const priorityIndicator = page.locator('[class*="priority"], text=/urgent|normal|high/i');
-    const hasPriority = await priorityIndicator.count() > 0;
+    const hasPriority = (await priorityIndicator.count()) > 0;
     expect(hasPriority).toBe(true);
   });
 });
@@ -170,18 +174,22 @@ test.describe('Packing Workflow', () => {
     assertURL(page, '/packing');
 
     // Step 2: Check for picked orders ready for packing
-    const hasPickedOrders = await page.locator('text=/picked|ready to pack|pending pack/i').count() > 0;
+    const hasPickedOrders =
+      (await page.locator('text=/picked|ready to pack|pending pack/i').count()) > 0;
 
     if (!hasPickedOrders) {
       test.skip(true, 'No picked orders available for packing');
     }
 
     // ASSERT: Should display order information
-    const hasOrders = await page.locator('[data-testid="pack-item"], tr.pack-order-row').count() > 0;
+    const hasOrders =
+      (await page.locator('[data-testid="pack-item"], tr.pack-order-row').count()) > 0;
     expect(hasOrders).toBeGreaterThan(0);
 
     // Step 3: Check for pack button
-    const packButton = page.locator('button:has-text("Pack"), button:has-text("Start Packing")').first();
+    const packButton = page
+      .locator('button:has-text("Pack"), button:has-text("Start Packing")')
+      .first();
 
     const canPack = await packButton.isVisible().catch(() => false);
 
@@ -190,7 +198,7 @@ test.describe('Packing Workflow', () => {
 
       // ASSERT: Should show items to be packed
       const itemsList = page.locator('text=/items|sku|quantity/i');
-      const hasItems = await itemsList.count() > 0;
+      const hasItems = (await itemsList.count()) > 0;
       expect(hasItems).toBe(true);
     }
 
@@ -200,14 +208,15 @@ test.describe('Packing Workflow', () => {
   test('packer can verify items before packing', async ({ page }) => {
     await navigateAndWait(page, '/packing');
 
-    const hasOrders = await page.locator('[data-testid="pack-item"], tr.pack-order-row').count() > 0;
+    const hasOrders =
+      (await page.locator('[data-testid="pack-item"], tr.pack-order-row').count()) > 0;
     if (!hasOrders) {
       test.skip(true, 'No orders available');
     }
 
     // ASSERT: Should show shipping information
     const shippingInfo = page.locator('text=/shipping|carrier|address/i');
-    const hasShippingInfo = await shippingInfo.count() > 0;
+    const hasShippingInfo = (await shippingInfo.count()) > 0;
     expect(hasShippingInfo).toBe(true);
   });
 });
@@ -240,16 +249,20 @@ test.describe('Stock Control Workflow', () => {
 
     // ASSERT: Should display stock control content
     // The page has tabs - look for the tab buttons which are always present
-    const tabButtons = page.locator('button:has-text("Dashboard"), button:has-text("Inventory"), button:has-text("Transactions")');
-    const hasTabs = await tabButtons.count() > 0;
+    const tabButtons = page.locator(
+      'button:has-text("Dashboard"), button:has-text("Inventory"), button:has-text("Transactions")'
+    );
+    const hasTabs = (await tabButtons.count()) > 0;
     expect(hasTabs).toBe(true);
 
     // ASSERT: Page should have some content
     await assertHasContent(page, 100);
 
     // Step 2: Look for search/filter functionality
-    const searchInput = page.locator('input[type="search"], input[placeholder*="search" i], input[placeholder*="filter" i]');
-    const hasSearch = await searchInput.count() > 0;
+    const searchInput = page.locator(
+      'input[type="search"], input[placeholder*="search" i], input[placeholder*="filter" i]'
+    );
+    const hasSearch = (await searchInput.count()) > 0;
 
     if (hasSearch) {
       // ASSERT: Search input should be functional
@@ -259,8 +272,10 @@ test.describe('Stock Control Workflow', () => {
     }
 
     // Step 3: Check for adjustment functionality
-    const adjustButton = page.locator('button:has-text("Adjust"), button:has-text("Edit"), button:has-text("Modify")');
-    const hasAdjustButton = await adjustButton.count() > 0;
+    const adjustButton = page.locator(
+      'button:has-text("Adjust"), button:has-text("Edit"), button:has-text("Modify")'
+    );
+    const hasAdjustButton = (await adjustButton.count()) > 0;
 
     if (hasAdjustButton) {
       console.log('Stock adjustment functionality found');
@@ -277,12 +292,12 @@ test.describe('Stock Control Workflow', () => {
     const stockLevels = page.locator('text=/stock|level|quantity/i');
     await waitForElement(stockLevels.first(), { timeout: 3000 });
 
-    const hasStockLevels = await stockLevels.count() > 0;
+    const hasStockLevels = (await stockLevels.count()) > 0;
     expect(hasStockLevels).toBe(true);
 
     // ASSERT: May have low stock warnings if any items are low
     const lowStockWarning = page.locator('text=/low stock|reorder|below minimum/i');
-    const hasLowStockWarning = await lowStockWarning.count() > 0;
+    const hasLowStockWarning = (await lowStockWarning.count()) > 0;
 
     if (hasLowStockWarning) {
       console.log('✓ Low stock warnings are displayed');
@@ -386,12 +401,12 @@ test.describe('Location Capacity Workflow', () => {
 
     // ASSERT: Should display bin locations
     const locationInfo = page.locator('text=/bin|location|zone|aisle/i');
-    const hasLocationInfo = await locationInfo.count() > 0;
+    const hasLocationInfo = (await locationInfo.count()) > 0;
     expect(hasLocationInfo).toBe(true);
 
     // ASSERT: Should show capacity information
     const capacityInfo = page.locator('text=/capacity|utilization|percent|%/i');
-    const hasCapacityInfo = await capacityInfo.count() > 0;
+    const hasCapacityInfo = (await capacityInfo.count()) > 0;
     expect(hasCapacityInfo).toBe(true);
 
     console.log('✓ Location capacity workflow test completed successfully');
@@ -421,13 +436,13 @@ test.describe('Cross-Workflow Integration', () => {
 
     // ASSERT: Dashboard should show pending orders count
     const pendingOrders = page.locator('text=/pending|orders/i');
-    const hasPendingInfo = await pendingOrders.count() > 0;
+    const hasPendingInfo = (await pendingOrders.count()) > 0;
 
     // Step 2: Navigate to orders
     await navigateAndWait(page, '/orders');
 
     // ASSERT: Should see order list
-    const hasOrders = await page.locator('[data-testid="order-item"], tr.order-row').count() > 0;
+    const hasOrders = (await page.locator('[data-testid="order-item"], tr.order-row').count()) > 0;
 
     if (hasOrders) {
       // Step 3: Navigate to packing
@@ -435,7 +450,7 @@ test.describe('Cross-Workflow Integration', () => {
 
       // ASSERT: Should see packing queue
       const packingQueue = page.locator('text=/pack|order|items/i');
-      const hasPackingQueue = await packingQueue.count() > 0;
+      const hasPackingQueue = (await packingQueue.count()) > 0;
       expect(hasPackingQueue).toBe(true);
     }
 

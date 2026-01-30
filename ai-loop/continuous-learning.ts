@@ -172,7 +172,6 @@ export class ContinuouslyLearningModel {
       }
 
       this.model.lastUpdated = new Date();
-
     } catch (error) {
       console.log(`    ⚠️  AI model update failed: ${(error as Error).message}`);
     }
@@ -200,9 +199,7 @@ export class ContinuouslyLearningModel {
     // Sort by reliability and return best
     candidates.sort((a, b) => b.reliability - a.reliability);
 
-    return candidates.length > 0 && candidates[0].reliability > 0.6
-      ? candidates[0].selector
-      : null;
+    return candidates.length > 0 && candidates[0].reliability > 0.6 ? candidates[0].selector : null;
   }
 
   /**
@@ -216,8 +213,8 @@ export class ContinuouslyLearningModel {
    * Check if selector matches known anti-pattern
    */
   isAntiPattern(selector: string): boolean {
-    return this.model.antiPatterns.some(pattern =>
-      selector.includes(pattern) || pattern.includes(selector)
+    return this.model.antiPatterns.some(
+      pattern => selector.includes(pattern) || pattern.includes(selector)
     );
   }
 
@@ -241,9 +238,7 @@ export class ContinuouslyLearningModel {
     const currentRate = this.model.testSuccessRates.get(testName) || 0.5;
 
     // Exponential moving average
-    const newRate = passed
-      ? currentRate + (1 - currentRate) * 0.2
-      : currentRate * 0.8;
+    const newRate = passed ? currentRate + (1 - currentRate) * 0.2 : currentRate * 0.8;
 
     this.model.testSuccessRates.set(testName, newRate);
     this.saveModel();
@@ -288,9 +283,10 @@ export class ContinuouslyLearningModel {
     flakyTests: string[];
   } {
     const selectorReliabilities = Array.from(this.model.selectorReliability.values());
-    const avgReliability = selectorReliabilities.length > 0
-      ? selectorReliabilities.reduce((a, b) => a + b, 0) / selectorReliabilities.length
-      : 0;
+    const avgReliability =
+      selectorReliabilities.length > 0
+        ? selectorReliabilities.reduce((a, b) => a + b, 0) / selectorReliabilities.length
+        : 0;
 
     return {
       totalObservations: this.observations.length,
@@ -319,11 +315,7 @@ export class ContinuouslyLearningModel {
       };
 
       fs.mkdirSync(path.dirname(this.modelPath), { recursive: true });
-      fs.writeFileSync(
-        this.modelPath,
-        JSON.stringify(serializableModel, null, 2),
-        'utf-8'
-      );
+      fs.writeFileSync(this.modelPath, JSON.stringify(serializableModel, null, 2), 'utf-8');
     } catch (error) {
       console.log(`  ⚠️  Failed to save model: ${(error as Error).message}`);
     }
@@ -348,7 +340,9 @@ export class ContinuouslyLearningModel {
           lastUpdated: new Date(loaded.lastUpdated || Date.now()),
         };
 
-        console.log(`  📦 Loaded learning model from ${new Date(this.model.lastUpdated).toLocaleString()}`);
+        console.log(
+          `  📦 Loaded learning model from ${new Date(this.model.lastUpdated).toLocaleString()}`
+        );
       }
     } catch (error) {
       console.log(`  ⚠️  Failed to load model: ${(error as Error).message}`);
@@ -369,13 +363,17 @@ export class ContinuouslyLearningModel {
    * Export model as JSON
    */
   exportModel(): string {
-    return JSON.stringify({
-      ...this.model,
-      routeSignatures: Object.fromEntries(this.model.routeSignatures),
-      elementBehaviors: Object.fromEntries(this.model.elementBehaviors),
-      selectorReliability: Object.fromEntries(this.model.selectorReliability),
-      testSuccessRates: Object.fromEntries(this.model.testSuccessRates),
-    }, null, 2);
+    return JSON.stringify(
+      {
+        ...this.model,
+        routeSignatures: Object.fromEntries(this.model.routeSignatures),
+        elementBehaviors: Object.fromEntries(this.model.elementBehaviors),
+        selectorReliability: Object.fromEntries(this.model.selectorReliability),
+        testSuccessRates: Object.fromEntries(this.model.testSuccessRates),
+      },
+      null,
+      2
+    );
   }
 }
 

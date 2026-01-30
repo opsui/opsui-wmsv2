@@ -23,7 +23,16 @@ router.use(authenticate);
 router.post(
   '/',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const { scheduleName, countType, frequencyType, frequencyInterval, location, sku, assignedTo, notes } = req.body;
+    const {
+      scheduleName,
+      countType,
+      frequencyType,
+      frequencyInterval,
+      location,
+      sku,
+      assignedTo,
+      notes,
+    } = req.body;
 
     // Validate required fields
     if (!scheduleName || !countType || !frequencyType || !assignedTo) {
@@ -58,7 +67,8 @@ router.get(
   '/',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const filters = {
-      isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
+      isActive:
+        req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
       assignedTo: req.query.assignedTo as string | undefined,
       frequencyType: req.query.frequencyType as string | undefined,
       countType: req.query.countType as string | undefined,

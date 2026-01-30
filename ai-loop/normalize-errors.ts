@@ -111,10 +111,13 @@ function normalizeErrors(rawLog: any): ErrorReport {
   const coverage = rawLog.coverage || [];
 
   // Group errors by signature
-  const errorGroups = new Map<string, {
-    entries: ErrorEntry[];
-    routes: Set<string>;
-  }>();
+  const errorGroups = new Map<
+    string,
+    {
+      entries: ErrorEntry[];
+      routes: Set<string>;
+    }
+  >();
 
   for (const err of errors) {
     const signature = `${err.type}:${err.message?.slice(0, 150) || 'unknown'}`;
@@ -252,10 +255,18 @@ function analyzeCoverage(coverage: CoverageEntry[]): ErrorReport['coverage'] {
     }
 
     const els = c.elements;
-    const routeTotal = els.buttons.total + els.links.total + els.inputs.total +
-                       els.selects.total + els.checkboxes.total;
-    const routeInteracted = els.buttons.clicked + els.links.clicked + els.inputs.filled +
-                            els.selects.changed + els.checkboxes.checked;
+    const routeTotal =
+      els.buttons.total +
+      els.links.total +
+      els.inputs.total +
+      els.selects.total +
+      els.checkboxes.total;
+    const routeInteracted =
+      els.buttons.clicked +
+      els.links.clicked +
+      els.inputs.filled +
+      els.selects.changed +
+      els.checkboxes.checked;
 
     totalElements += routeTotal;
     interactedElements += routeInteracted;
@@ -277,7 +288,8 @@ function analyzeCoverage(coverage: CoverageEntry[]): ErrorReport['coverage'] {
     elementStats: {
       totalElements,
       interactedElements,
-      interactionCoverage: totalElements > 0 ? Math.round((interactedElements / totalElements) * 100) : 0,
+      interactionCoverage:
+        totalElements > 0 ? Math.round((interactedElements / totalElements) * 100) : 0,
     },
     uncoveredRoutes,
     lowCoverageRoutes: lowCoverageRoutes.sort((a, b) => a.coverage - b.coverage),
@@ -339,12 +351,14 @@ function generateQuickFix(
     } else if (err.type === 'click-failure') {
       suggestions.push({
         error: msg,
-        suggestion: 'Element not clickable. Check if it\'s disabled, hidden, or needs user interaction.',
+        suggestion:
+          "Element not clickable. Check if it's disabled, hidden, or needs user interaction.",
       });
     } else if (err.type === 'input-failure') {
       suggestions.push({
         error: msg,
-        suggestion: 'Input field issue. Check if readonly, disabled, or has validation constraints.',
+        suggestion:
+          'Input field issue. Check if readonly, disabled, or has validation constraints.',
       });
     }
   }
@@ -406,7 +420,9 @@ function main() {
   console.log(`   Routes Affected:  ${Object.keys(report.summary.byRoute).length}\n`);
 
   console.log('📍 COVERAGE:');
-  console.log(`   Routes Visited:   ${report.coverage.routesVisited}/${report.coverage.totalRoutes} (${report.coverage.routeCoverage}%)`);
+  console.log(
+    `   Routes Visited:   ${report.coverage.routesVisited}/${report.coverage.totalRoutes} (${report.coverage.routeCoverage}%)`
+  );
   console.log(`   Elements Found:   ${report.coverage.elementStats.totalElements}`);
   console.log(`   Elements Tested:  ${report.coverage.elementStats.interactedElements}`);
   console.log(`   Test Coverage:    ${report.coverage.elementStats.interactionCoverage}%\n`);

@@ -15,9 +15,7 @@ export default function NotificationsPage() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white tracking-tight">Notifications</h1>
-          <p className="mt-2 text-gray-400">
-            View and manage your notifications
-          </p>
+          <p className="mt-2 text-gray-400">View and manage your notifications</p>
         </div>
 
         {/* Notification History */}

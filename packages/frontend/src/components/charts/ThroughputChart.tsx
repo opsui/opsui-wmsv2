@@ -132,7 +132,10 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="dark:stroke-white/[0.08] stroke-gray-200" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="dark:stroke-white/[0.08] stroke-gray-200"
+            />
             <XAxis
               dataKey="period"
               tickFormatter={formatPeriodLabel}
@@ -140,10 +143,7 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
               tick={{ fontSize: 11 }}
               interval="preserveStartEnd"
             />
-            <YAxis
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-            />
+            <YAxis className="dark:fill-gray-500 fill-gray-600" tick={{ fontSize: 11 }} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'rgba(17, 24, 39, 0.95)',
@@ -158,7 +158,7 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
             />
             <Legend
               wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={(value) => (
+              formatter={value => (
                 <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
               )}
             />

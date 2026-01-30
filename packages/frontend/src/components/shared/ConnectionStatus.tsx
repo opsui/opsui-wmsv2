@@ -6,11 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import {
-  SignalIcon,
-  WifiIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+import { SignalIcon, WifiIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -34,10 +30,10 @@ export function useWebSocketConnection() {
 
   // Map connection status from useWebSocket to our local types
   const statusMap: Record<string, ConnectionStatus> = {
-    'connected': 'connected',
-    'connecting': 'connecting',
-    'disconnected': 'disconnected',
-    'error': 'error',
+    connected: 'connected',
+    connecting: 'connecting',
+    disconnected: 'disconnected',
+    error: 'error',
   };
 
   const status: ConnectionStatus = statusMap[connectionStatus] || 'disconnected';
@@ -109,23 +105,10 @@ export function ConnectionStatus({ className, showLabel = true }: ConnectionStat
       )}
       title={`WebSocket: ${config.label}`}
     >
-      <Icon
-        className={cn(
-          'h-4 w-4',
-          config.color,
-          config.pulse && 'animate-pulse'
-        )}
-      />
-      {showLabel && (
-        <span className={cn('text-xs font-medium', config.color)}>
-          {config.label}
-        </span>
-      )}
+      <Icon className={cn('h-4 w-4', config.color, config.pulse && 'animate-pulse')} />
+      {showLabel && <span className={cn('text-xs font-medium', config.color)}>{config.label}</span>}
       {status !== 'connected' && status !== 'connecting' && (
-        <button
-          onClick={reconnect}
-          className="ml-1 text-xs underline hover:text-white"
-        >
+        <button onClick={reconnect} className="ml-1 text-xs underline hover:text-white">
           Reconnect
         </button>
       )}
@@ -214,14 +197,7 @@ export function ConnectionStatusPanel({ className }: ConnectionStatusPanelProps)
   const Icon = config.icon;
 
   return (
-    <div
-      className={cn(
-        'p-4 rounded-lg border',
-        config.bgColor,
-        config.borderColor,
-        className
-      )}
-    >
+    <div className={cn('p-4 rounded-lg border', config.bgColor, config.borderColor, className)}>
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
           <div className={cn('p-2 rounded-lg', config.bgColor)}>
@@ -230,9 +206,7 @@ export function ConnectionStatusPanel({ className }: ConnectionStatusPanelProps)
           <div>
             <h3 className={cn('text-sm font-medium', config.color)}>{config.label}</h3>
             <p className="text-xs text-gray-400 mt-1">{config.description}</p>
-            {socketId && (
-              <p className="text-xs text-gray-500 mt-1">Socket ID: {socketId}</p>
-            )}
+            {socketId && <p className="text-xs text-gray-500 mt-1">Socket ID: {socketId}</p>}
           </div>
         </div>
 
@@ -249,7 +223,10 @@ export function ConnectionStatusPanel({ className }: ConnectionStatusPanelProps)
       {status === 'connecting' && (
         <div className="mt-3">
           <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-yellow-400 rounded-full animate-pulse" style={{ width: '60%' }} />
+            <div
+              className="h-full bg-yellow-400 rounded-full animate-pulse"
+              style={{ width: '60%' }}
+            />
           </div>
         </div>
       )}

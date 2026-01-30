@@ -104,7 +104,9 @@ export class UserRepository extends BaseRepository<User> {
 
   async verifyPassword(email: string, password: string): Promise<User | null> {
     // Get user with password hash (also check soft-delete)
-    const result = await query(`SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL`, [email]);
+    const result = await query(`SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL`, [
+      email,
+    ]);
 
     if (result.rows.length === 0) {
       return null;
@@ -191,10 +193,7 @@ export class UserRepository extends BaseRepository<User> {
   // --------------------------------------------------------------------------
 
   async getUserSafe(userId: string): Promise<Omit<User, 'passwordHash'> | null> {
-    const result = await query(
-      `SELECT * FROM users WHERE user_id = $1`,
-      [userId]
-    );
+    const result = await query(`SELECT * FROM users WHERE user_id = $1`, [userId]);
 
     const user = result.rows[0];
     if (!user) return null;
@@ -256,7 +255,9 @@ export class UserRepository extends BaseRepository<User> {
    * Get users that can be assigned tasks
    * Returns basic user info (userId, name, role) for active users in specified roles
    */
-  async getAssignableUsers(roles: string[]): Promise<Array<{ userId: string; name: string; role: string }>> {
+  async getAssignableUsers(
+    roles: string[]
+  ): Promise<Array<{ userId: string; name: string; role: string }>> {
     const placeholders = roles.map((_, i) => `$${i + 1}`).join(', ');
 
     const result = await query(
@@ -344,9 +345,7 @@ export class UserRepository extends BaseRepository<User> {
    */
   async cleanupDeletedUsers(): Promise<number> {
     // Call the database function
-    const result = await query<{ count: number }>(
-      `SELECT cleanup_deleted_users() as count`
-    );
+    const result = await query<{ count: number }>(`SELECT cleanup_deleted_users() as count`);
 
     return result.rows[0]?.count || 0;
   }
@@ -371,12 +370,15 @@ export class UserRepository extends BaseRepository<User> {
   // UPDATE USER
   // --------------------------------------------------------------------------
 
-  async updateUser(userId: string, updates: {
-    name?: string;
-    email?: string;
-    role?: UserRole;
-    active?: boolean;
-  }): Promise<User> {
+  async updateUser(
+    userId: string,
+    updates: {
+      name?: string;
+      email?: string;
+      role?: UserRole;
+      active?: boolean;
+    }
+  ): Promise<User> {
     // Build dynamic update query
     const fields: string[] = [];
     const values: (string | boolean)[] = [];

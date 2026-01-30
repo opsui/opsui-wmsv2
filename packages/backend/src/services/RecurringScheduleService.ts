@@ -225,7 +225,10 @@ export class RecurringScheduleService {
   /**
    * Update a recurring schedule
    */
-  async updateSchedule(scheduleId: string, dto: UpdateRecurringScheduleDTO): Promise<RecurringCountSchedule> {
+  async updateSchedule(
+    scheduleId: string,
+    dto: UpdateRecurringScheduleDTO
+  ): Promise<RecurringCountSchedule> {
     const client = await getPool();
 
     try {
@@ -356,7 +359,12 @@ export class RecurringScheduleService {
       let processed = 0;
       let skipped = 0;
       let failed = 0;
-      const details: Array<{ scheduleId: string; scheduleName: string; planId?: string; error?: string }> = [];
+      const details: Array<{
+        scheduleId: string;
+        scheduleName: string;
+        planId?: string;
+        error?: string;
+      }> = [];
 
       for (const schedule of schedules) {
         try {
@@ -454,7 +462,7 @@ export class RecurringScheduleService {
         break;
 
       case 'WEEKLY':
-        nextDate.setDate(nextDate.getDate() + (7 * interval));
+        nextDate.setDate(nextDate.getDate() + 7 * interval);
         break;
 
       case 'MONTHLY':
@@ -462,7 +470,7 @@ export class RecurringScheduleService {
         break;
 
       case 'QUARTERLY':
-        nextDate.setMonth(nextDate.getMonth() + (3 * interval));
+        nextDate.setMonth(nextDate.getMonth() + 3 * interval);
         break;
     }
 

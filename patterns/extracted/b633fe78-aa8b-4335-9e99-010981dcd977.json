@@ -12,12 +12,7 @@
     "packages/frontend/src/components/shared/Header.tsx"
   ],
   "codeSnippet": "",
-  "tags": [
-    "usability",
-    "routing",
-    "navigation",
-    "missing-features"
-  ],
+  "tags": ["usability", "routing", "navigation", "missing-features"],
   "metadata": {
     "taskType": "feature",
     "complexity": "medium"

@@ -188,11 +188,7 @@ router.post(
       Units: pkg.units || 1,
     }));
 
-    const result = await nzcService.createShipment(
-      nzcDestination,
-      nzcPackages,
-      quoteId
-    );
+    const result = await nzcService.createShipment(nzcDestination, nzcPackages, quoteId);
     res.status(201).json(result);
   })
 );

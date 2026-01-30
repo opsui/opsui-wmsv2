@@ -24,7 +24,7 @@ export type ServerToClientEvents = {
   'inventory:low': (data: { sku: string; quantity: number; minThreshold: number }) => void;
   'notification:new': (data: { notificationId: string; title: string; message: string }) => void;
   'user:activity': (data: { userId: string; status: string; currentView?: string }) => void;
-  'connected': (data: { message: string }) => void;
+  connected: (data: { message: string }) => void;
 };
 
 export type ClientToServerEvents = {
@@ -33,7 +33,7 @@ export type ClientToServerEvents = {
   'unsubscribe:zone': (zoneId: string) => void;
   'subscribe:inventory': () => void;
   'update:activity': (data: { currentView?: string; status?: string }) => void;
-  'ping': () => void;
+  ping: () => void;
 };
 
 export type EventHandler<E extends keyof ServerToClientEvents> = (
@@ -68,7 +68,8 @@ class WebSocketService {
     }
 
     try {
-      const wsUrl = import.meta.env.VITE_WS_URL ||
+      const wsUrl =
+        import.meta.env.VITE_WS_URL ||
         `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:3001`;
 
       this.socket = io(wsUrl, {
@@ -101,7 +102,7 @@ class WebSocketService {
     });
 
     // Disconnection
-    this.socket.on('disconnect', (reason) => {
+    this.socket.on('disconnect', reason => {
       console.log('[WebSocket] Disconnected', { reason });
 
       // Reconnect if not manual disconnect
@@ -111,7 +112,7 @@ class WebSocketService {
     });
 
     // Connection error
-    this.socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', error => {
       console.error('[WebSocket] Connection error', error);
       this.handleReconnect();
     });
@@ -136,7 +137,9 @@ class WebSocketService {
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
-    console.log(`[WebSocket] Reconnecting... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    console.log(
+      `[WebSocket] Reconnecting... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+    );
 
     setTimeout(() => {
       if (!this.socket?.connected && !this.isManualDisconnect) {

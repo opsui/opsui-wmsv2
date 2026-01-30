@@ -217,9 +217,7 @@ describe('ConnectionStatus Component', () => {
 
   describe('Styling', () => {
     it('applies custom className', () => {
-      const { container } = renderWithProviders(
-        <ConnectionStatus className="custom-class" />
-      );
+      const { container } = renderWithProviders(<ConnectionStatus className="custom-class" />);
 
       const wrapper = container.querySelector('.custom-class');
       expect(wrapper).toBeInTheDocument();
@@ -253,9 +251,7 @@ describe('ConnectionStatus Component', () => {
     it('triggers reconnect callback', () => {
       const mockReconnect = vi.fn();
 
-      renderWithProviders(
-        <ConnectionStatusPanel connected={false} onReconnect={mockReconnect} />
-      );
+      renderWithProviders(<ConnectionStatusPanel connected={false} onReconnect={mockReconnect} />);
 
       const reconnectButton = screen.getByRole('button', { name: /reconnect/i });
       fireEvent.click(reconnectButton);

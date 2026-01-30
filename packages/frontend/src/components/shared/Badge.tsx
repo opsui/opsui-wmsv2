@@ -33,16 +33,20 @@ export interface RoleColorSetting {
 
 // Default role colors - these can be overridden in settings
 const DEFAULT_ROLE_COLORS: Record<UserRole, RoleColorSetting> = {
-  [UserRole.PICKER]: { role: UserRole.PICKER, color: '#3b82f6', variant: 'info' },      // Blue
-  [UserRole.PACKER]: { role: UserRole.PACKER, color: '#8b5cf6', variant: 'info' },      // Purple
-  [UserRole.STOCK_CONTROLLER]: { role: UserRole.STOCK_CONTROLLER, color: '#06b6d4', variant: 'info' }, // Cyan
+  [UserRole.PICKER]: { role: UserRole.PICKER, color: '#3b82f6', variant: 'info' }, // Blue
+  [UserRole.PACKER]: { role: UserRole.PACKER, color: '#8b5cf6', variant: 'info' }, // Purple
+  [UserRole.STOCK_CONTROLLER]: {
+    role: UserRole.STOCK_CONTROLLER,
+    color: '#06b6d4',
+    variant: 'info',
+  }, // Cyan
   [UserRole.SUPERVISOR]: { role: UserRole.SUPERVISOR, color: '#f59e0b', variant: 'warning' }, // Amber
-  [UserRole.ADMIN]: { role: UserRole.ADMIN, color: '#ef4444', variant: 'error' },       // Red
+  [UserRole.ADMIN]: { role: UserRole.ADMIN, color: '#ef4444', variant: 'error' }, // Red
   [UserRole.INWARDS]: { role: 'INWARDS' as UserRole, color: '#10b981', variant: 'success' }, // Emerald
-  [UserRole.SALES]: { role: 'SALES' as UserRole, color: '#ec4899', variant: 'primary' },   // Pink
+  [UserRole.SALES]: { role: 'SALES' as UserRole, color: '#ec4899', variant: 'primary' }, // Pink
   [UserRole.PRODUCTION]: { role: 'PRODUCTION' as UserRole, color: '#f97316', variant: 'warning' }, // Orange
   [UserRole.MAINTENANCE]: { role: 'MAINTENANCE' as UserRole, color: '#6366f1', variant: 'primary' }, // Indigo
-  [UserRole.RMA]: { role: 'RMA' as UserRole, color: '#84cc16', variant: 'success' },    // Lime
+  [UserRole.RMA]: { role: 'RMA' as UserRole, color: '#84cc16', variant: 'success' }, // Lime
 };
 
 // Load role colors from localStorage
@@ -78,7 +82,9 @@ export function saveRoleColors(settings: Record<UserRole, RoleColorSetting>): vo
 // Get color for a specific role (global)
 export function getRoleColor(role: UserRole): RoleColorSetting {
   const colors = loadRoleColors();
-  return colors[role] || DEFAULT_ROLE_COLORS[role] || { role, color: '#6b7280', variant: 'default' };
+  return (
+    colors[role] || DEFAULT_ROLE_COLORS[role] || { role, color: '#6b7280', variant: 'default' }
+  );
 }
 
 // Per-user role color storage keys
@@ -188,11 +194,7 @@ export function Badge({
     : cn(baseStyles, variantStyles[variant], sizeStyles[size], className);
 
   return (
-    <span
-      className={finalClassName}
-      style={customStyle}
-      {...props}
-    >
+    <span className={finalClassName} style={customStyle} {...props}>
       {children}
     </span>
   );
@@ -222,11 +224,7 @@ export function UserRoleBadge({ role, userId }: { role: UserRole; userId?: strin
   // Use per-user color if userId is provided, otherwise use global color
   const roleColor = userId ? getUserRoleColor(userId, role) : getRoleColor(role);
   return (
-    <Badge
-      variant={roleColor.variant || 'default'}
-      size="sm"
-      customColor={roleColor.color}
-    >
+    <Badge variant={roleColor.variant || 'default'} size="sm" customColor={roleColor.color}>
       {role}
     </Badge>
   );

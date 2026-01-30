@@ -37,9 +37,15 @@ async function runLocationCapacityMigration() {
     logger.info('✅ location_capacities table created');
 
     // Create indexes for location_capacities
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_location_capacity_bin ON location_capacities(bin_location)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_location_capacity_status ON location_capacities(status)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_location_capacity_type ON location_capacities(capacity_type)`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_location_capacity_bin ON location_capacities(bin_location)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_location_capacity_status ON location_capacities(status)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_location_capacity_type ON location_capacities(capacity_type)`
+    );
 
     // Capacity Rules table
     await client.query(`
@@ -69,8 +75,12 @@ async function runLocationCapacityMigration() {
     logger.info('✅ capacity_rules table created');
 
     // Create indexes for capacity_rules
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_capacity_rules_active ON capacity_rules(is_active)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_capacity_rules_priority ON capacity_rules(priority)`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_capacity_rules_active ON capacity_rules(is_active)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_capacity_rules_priority ON capacity_rules(priority)`
+    );
 
     // Capacity Alerts table
     await client.query(`
@@ -94,9 +104,15 @@ async function runLocationCapacityMigration() {
     logger.info('✅ capacity_alerts table created');
 
     // Create indexes for capacity_alerts
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_capacity_alerts_location ON capacity_alerts(bin_location)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_capacity_alerts_acknowledged ON capacity_alerts(acknowledged)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_capacity_alerts_created ON capacity_alerts(created_at)`);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_capacity_alerts_location ON capacity_alerts(bin_location)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_capacity_alerts_acknowledged ON capacity_alerts(acknowledged)`
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_capacity_alerts_created ON capacity_alerts(created_at)`
+    );
 
     // Create triggers
     await client.query(`
@@ -145,7 +161,9 @@ async function runLocationCapacityMigration() {
 
     logger.info('🎉 Location capacity migration completed successfully!');
   } catch (error) {
-    logger.error('Migration failed', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('Migration failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   } finally {
     await closePool();

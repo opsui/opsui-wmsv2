@@ -19,14 +19,44 @@ import {
   useAuditLogs,
   type AuditLog,
 } from '@/services/api';
-import { Card, CardContent, Header, RoleActivityCard, AuditLogsCard, ThroughputChart, OrderStatusChart, TopSKUsChart, PerformanceChart, Button, Pagination, type AuditLogFilters, MetricCardSkeleton, Skeleton, ListSkeleton } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  Header,
+  RoleActivityCard,
+  AuditLogsCard,
+  ThroughputChart,
+  OrderStatusChart,
+  TopSKUsChart,
+  PerformanceChart,
+  Button,
+  Pagination,
+  type AuditLogFilters,
+  MetricCardSkeleton,
+  Skeleton,
+  ListSkeleton,
+} from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
 import { UserRole, OrderStatus } from '@opsui/shared';
-import { UserGroupIcon, QueueListIcon, ArrowTrendingUpIcon, ExclamationTriangleIcon, XMarkIcon, EyeIcon, DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import {
+  UserGroupIcon,
+  QueueListIcon,
+  ArrowTrendingUpIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon,
+  EyeIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
 import { formatDate } from '@/lib/utils';
-import { useOrderUpdates, usePickUpdates, useInventoryUpdates, useNotifications } from '@/hooks/useWebSocket';
+import {
+  useOrderUpdates,
+  usePickUpdates,
+  useInventoryUpdates,
+  useNotifications,
+} from '@/hooks/useWebSocket';
 import { useQueryClient } from '@tanstack/react-query';
 
 // ============================================================================
@@ -77,13 +107,7 @@ function MetricCard({
 }
 
 // Admin Orders Modal Component
-function AdminOrdersModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const pageSize = 10;
@@ -114,10 +138,7 @@ function AdminOrdersModal({
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-6xl max-h-[80vh] dark:bg-gray-900 bg-white rounded-2xl dark:border border-gray-200 shadow-2xl animate-fade-in flex flex-col">
@@ -162,47 +183,62 @@ function AdminOrdersModal({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {filteredOrders.map((order) => (
-                  <Card
-                    key={order.orderId}
-                    variant="glass"
-                    className="p-4 dark:bg-white/[0.02] bg-gray-50/50 border-opacity-50"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold dark:text-white text-gray-900 truncate">
-                            {order.orderId}
-                          </h3>
-                          <OrderPriorityBadge priority={order.priority} />
-                          <OrderStatusBadge status={order.status} />
-                          <span className="text-xs px-2 py-0.5 rounded-full dark:bg-gray-700/50 bg-gray-200 dark:text-gray-400 text-gray-500 border dark:border-gray-600 border-gray-300">
-                            Read-only
-                          </span>
+                  {filteredOrders.map(order => (
+                    <Card
+                      key={order.orderId}
+                      variant="glass"
+                      className="p-4 dark:bg-white/[0.02] bg-gray-50/50 border-opacity-50"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold dark:text-white text-gray-900 truncate">
+                              {order.orderId}
+                            </h3>
+                            <OrderPriorityBadge priority={order.priority} />
+                            <OrderStatusBadge status={order.status} />
+                            <span className="text-xs px-2 py-0.5 rounded-full dark:bg-gray-700/50 bg-gray-200 dark:text-gray-400 text-gray-500 border dark:border-gray-600 border-gray-300">
+                              Read-only
+                            </span>
+                          </div>
+                          <p className="text-sm dark:text-gray-400 text-gray-600 truncate">
+                            {order.customerName}
+                          </p>
+                          <div className="mt-3 flex items-center gap-6 text-sm dark:text-gray-400 text-gray-600">
+                            <span>
+                              Items:{' '}
+                              <span className="dark:text-white text-gray-900 font-medium">
+                                {order.items?.length || 0}
+                              </span>
+                            </span>
+                            <span>
+                              Progress:{' '}
+                              <span className="dark:text-white text-gray-900 font-medium">
+                                {order.progress}%
+                              </span>
+                            </span>
+                            <span>
+                              Created:{' '}
+                              <span className="dark:text-white text-gray-900 font-medium">
+                                {formatDate(order.createdAt)}
+                              </span>
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-sm dark:text-gray-400 text-gray-600 truncate">
-                          {order.customerName}
-                        </p>
-                        <div className="mt-3 flex items-center gap-6 text-sm dark:text-gray-400 text-gray-600">
-                          <span>Items: <span className="dark:text-white text-gray-900 font-medium">{order.items?.length || 0}</span></span>
-                          <span>Progress: <span className="dark:text-white text-gray-900 font-medium">{order.progress}%</span></span>
-                          <span>Created: <span className="dark:text-white text-gray-900 font-medium">{formatDate(order.createdAt)}</span></span>
-                        </div>
+                        {order.status === 'PICKING' && (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => (window.location.href = `/orders/${order.orderId}/pick`)}
+                            className="flex items-center gap-2 shrink-0"
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                            Live View
+                          </Button>
+                        )}
                       </div>
-                      {order.status === 'PICKING' && (
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          onClick={() => window.location.href = `/orders/${order.orderId}/pick`}
-                          className="flex items-center gap-2 shrink-0"
-                        >
-                          <EyeIcon className="h-4 w-4" />
-                          Live View
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
                 </div>
               )}
 
@@ -229,7 +265,7 @@ function AdminOrdersModal({
 // ============================================================================
 
 export function DashboardPage() {
-    const { showToast } = useToast();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
   const canSupervise = useAuthStore(state => state.canSupervise);
   // Check if user has admin/supervisor as their BASE role (not active role)
@@ -239,13 +275,25 @@ export function DashboardPage() {
     return baseRole === UserRole.ADMIN || baseRole === UserRole.SUPERVISOR;
   });
   const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>('all');
-  const [selectedMember, setSelectedMember] = useState<{ id: string; name: string; roleType: UserRole } | null>(null);
-  const [throughputRange, setThroughputRange] = useState<'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'>('daily');
-  const [performanceRange, setPerformanceRange] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('weekly');
-  const [performanceRole, setPerformanceRole] = useState<UserRole.PICKER | UserRole.PACKER | UserRole.STOCK_CONTROLLER>(UserRole.PICKER);
+  const [selectedMember, setSelectedMember] = useState<{
+    id: string;
+    name: string;
+    roleType: UserRole;
+  } | null>(null);
+  const [throughputRange, setThroughputRange] = useState<
+    'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  >('daily');
+  const [performanceRange, setPerformanceRange] = useState<
+    'daily' | 'weekly' | 'monthly' | 'yearly'
+  >('weekly');
+  const [performanceRole, setPerformanceRole] = useState<
+    UserRole.PICKER | UserRole.PACKER | UserRole.STOCK_CONTROLLER
+  >(UserRole.PICKER);
   const [showAdminOrders, setShowAdminOrders] = useState(false);
   const [scanType, setScanType] = useState<'pick' | 'pack' | 'verify' | 'all'>('pick');
-  const [topSKUsTimePeriod, setTopSKUsTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [topSKUsTimePeriod, setTopSKUsTimePeriod] = useState<
+    'daily' | 'weekly' | 'monthly' | 'yearly'
+  >('monthly');
   const [activityView, setActivityView] = useState<'role-activity' | 'audit-logs'>('role-activity');
   const [auditLogFilters, setAuditLogFilters] = useState<AuditLogFilters>({});
 
@@ -255,13 +303,13 @@ export function DashboardPage() {
 
   // Subscribe to order updates to refresh metrics and order data
   useOrderUpdates({
-    onOrderClaimed: (data) => {
+    onOrderClaimed: data => {
       // Refresh dashboard metrics and role activity when an order is claimed
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
       queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
     },
-    onOrderCompleted: (data) => {
+    onOrderCompleted: data => {
       // Refresh all dashboard data when an order is completed
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
@@ -275,7 +323,7 @@ export function DashboardPage() {
         duration: 3000,
       });
     },
-    onOrderCancelled: (data) => {
+    onOrderCancelled: data => {
       // Refresh dashboard metrics when an order is cancelled
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
@@ -286,7 +334,7 @@ export function DashboardPage() {
         duration: 3000,
       });
     },
-    onPriorityChanged: (data) => {
+    onPriorityChanged: data => {
       // Refresh order queue when priority changes
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
@@ -294,17 +342,17 @@ export function DashboardPage() {
 
   // Subscribe to pick updates to refresh performance metrics
   usePickUpdates({
-    onPickCompleted: (data) => {
+    onPickCompleted: data => {
       // Refresh performance data and metrics
       queryClient.invalidateQueries({ queryKey: ['picker-performance'] });
       queryClient.invalidateQueries({ queryKey: ['packer-performance'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
     },
-    onPickStarted: (data) => {
+    onPickStarted: data => {
       // Refresh role activity when a pick starts
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
     },
-    onZoneAssignment: (data) => {
+    onZoneAssignment: data => {
       // Refresh role activity when zones are assigned
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
     },
@@ -312,11 +360,11 @@ export function DashboardPage() {
 
   // Subscribe to inventory updates
   useInventoryUpdates({
-    onInventoryUpdated: (data) => {
+    onInventoryUpdated: data => {
       // Refresh inventory-related metrics
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
     },
-    onLowStock: (data) => {
+    onLowStock: data => {
       // Show alert toast for low stock
       showToast({
         title: 'Low Stock Alert',
@@ -329,7 +377,7 @@ export function DashboardPage() {
 
   // Subscribe to notifications
   useNotifications({
-    onNotification: (data) => {
+    onNotification: data => {
       // Show toast for notifications
       showToast({
         title: data.title || 'Notification',
@@ -360,11 +408,18 @@ export function DashboardPage() {
   });
 
   // Graph data hooks
-  const { data: throughputData, isLoading: throughputLoading } = useThroughputByRange(throughputRange, {
-    enabled: canSupervise(),
-  });
+  const { data: throughputData, isLoading: throughputLoading } = useThroughputByRange(
+    throughputRange,
+    {
+      enabled: canSupervise(),
+    }
+  );
 
-  const { data: orderStatusBreakdown, isLoading: statusBreakdownLoading, error: statusBreakdownError } = useOrderStatusBreakdown({
+  const {
+    data: orderStatusBreakdown,
+    isLoading: statusBreakdownLoading,
+    error: statusBreakdownError,
+  } = useOrderStatusBreakdown({
     enabled: canSupervise(),
   });
 
@@ -400,37 +455,51 @@ export function DashboardPage() {
     { enabled: canSupervise() && performanceRole === UserRole.PACKER }
   );
 
-  const { data: stockControllerPerformance, isLoading: stockControllerPerformanceLoading } = useAllStockControllersPerformance(
-    startDate,
-    endDate,
-    { enabled: canSupervise() && performanceRole === UserRole.STOCK_CONTROLLER }
-  );
+  const { data: stockControllerPerformance, isLoading: stockControllerPerformanceLoading } =
+    useAllStockControllersPerformance(startDate, endDate, {
+      enabled: canSupervise() && performanceRole === UserRole.STOCK_CONTROLLER,
+    });
 
   // Transform performance data to common format based on role
   const performanceData = useMemo(() => {
-    const data = performanceRole === UserRole.PICKER
-      ? pickerPerformance
-      : performanceRole === UserRole.PACKER
-      ? packerPerformance
-      : stockControllerPerformance;
+    const data =
+      performanceRole === UserRole.PICKER
+        ? pickerPerformance
+        : performanceRole === UserRole.PACKER
+          ? packerPerformance
+          : stockControllerPerformance;
 
     if (!data || !Array.isArray(data)) return [];
 
     return data.map((item: any) => ({
-      userId: performanceRole === UserRole.STOCK_CONTROLLER ? item.controllerId : performanceRole === UserRole.PACKER ? item.packerId : item.pickerId,
-      userName: performanceRole === UserRole.STOCK_CONTROLLER ? item.controllerName : performanceRole === UserRole.PACKER ? item.packerName : item.pickerName,
+      userId:
+        performanceRole === UserRole.STOCK_CONTROLLER
+          ? item.controllerId
+          : performanceRole === UserRole.PACKER
+            ? item.packerId
+            : item.pickerId,
+      userName:
+        performanceRole === UserRole.STOCK_CONTROLLER
+          ? item.controllerName
+          : performanceRole === UserRole.PACKER
+            ? item.packerName
+            : item.pickerName,
       tasksCompleted: item.tasksCompleted,
-      ordersCompleted: performanceRole === UserRole.STOCK_CONTROLLER ? item.transactionsCompleted : item.ordersCompleted,
+      ordersCompleted:
+        performanceRole === UserRole.STOCK_CONTROLLER
+          ? item.transactionsCompleted
+          : item.ordersCompleted,
       totalItemsProcessed: item.totalItemsProcessed,
       averageTimePerTask: item.averageTimePerTask,
     }));
   }, [performanceRole, pickerPerformance, packerPerformance, stockControllerPerformance]);
 
-  const performanceLoading = performanceRole === UserRole.PICKER
-    ? pickerPerformanceLoading
-    : performanceRole === UserRole.PACKER
-    ? packerPerformanceLoading
-    : stockControllerPerformanceLoading;
+  const performanceLoading =
+    performanceRole === UserRole.PICKER
+      ? pickerPerformanceLoading
+      : performanceRole === UserRole.PACKER
+        ? packerPerformanceLoading
+        : stockControllerPerformanceLoading;
 
   // Default activities object for all roles
   const defaultActivities: Record<UserRole, any[]> = {
@@ -447,7 +516,8 @@ export function DashboardPage() {
   };
 
   // Explicitly type roleActivities to ensure it satisfies Record<UserRole, any[]>
-  const roleActivities: Record<UserRole, any[]> = (roleActivitiesData ?? defaultActivities) as Record<UserRole, any[]>;
+  const roleActivities: Record<UserRole, any[]> = (roleActivitiesData ??
+    defaultActivities) as Record<UserRole, any[]>;
 
   // Fetch audit logs (only for admin/supervisor)
   // Pass filters from the component state for server-side filtering
@@ -560,18 +630,32 @@ export function DashboardPage() {
             value={metrics.exceptions}
             icon={ExclamationTriangleIcon}
             color={metrics.exceptions > 0 ? 'error' : 'success'}
-            onClick={() => window.location.href = '/exceptions'}
+            onClick={() => (window.location.href = '/exceptions')}
           />
         </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ThroughputChart data={(throughputData as any) ?? []} isLoading={throughputLoading} onRangeChange={setThroughputRange} />
-          <OrderStatusChart data={orderStatusBreakdown ?? []} isLoading={statusBreakdownLoading} error={statusBreakdownError} />
+          <ThroughputChart
+            data={(throughputData as any) ?? []}
+            isLoading={throughputLoading}
+            onRangeChange={setThroughputRange}
+          />
+          <OrderStatusChart
+            data={orderStatusBreakdown ?? []}
+            isLoading={statusBreakdownLoading}
+            error={statusBreakdownError}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TopSKUsChart data={topSKUs ?? []} isLoading={topSKUsLoading} limit={10} onScanTypeChange={setScanType} onTimePeriodChange={setTopSKUsTimePeriod} />
+          <TopSKUsChart
+            data={topSKUs ?? []}
+            isLoading={topSKUsLoading}
+            limit={10}
+            onScanTypeChange={setScanType}
+            onTimePeriodChange={setTopSKUsTimePeriod}
+          />
           <PerformanceChart
             data={performanceData}
             isLoading={performanceLoading}
@@ -626,7 +710,9 @@ export function DashboardPage() {
               onRoleChange={setSelectedRole}
               activities={roleActivities}
               isLoading={roleActivitiesLoading}
-              onViewOrders={(roleId, roleName, roleType) => setSelectedMember({ id: roleId, name: roleName, roleType })}
+              onViewOrders={(roleId, roleName, roleType) =>
+                setSelectedMember({ id: roleId, name: roleName, roleType })
+              }
               orders={memberData || []}
               transactions={memberData || []}
               ordersLoading={memberDataLoading}

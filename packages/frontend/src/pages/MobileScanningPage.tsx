@@ -51,7 +51,7 @@ export function MobileScanningPage() {
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       if (!currentEntry) {
         showToast('No current entry to count', 'error');
         return;
@@ -98,9 +98,8 @@ export function MobileScanningPage() {
   });
 
   // Get pending entries (not yet counted)
-  const pendingEntries = plan?.countEntries?.filter(
-    e => e.countedQuantity === 0 || e.countedQuantity == null
-  ) || [];
+  const pendingEntries =
+    plan?.countEntries?.filter(e => e.countedQuantity === 0 || e.countedQuantity == null) || [];
 
   const currentEntry = pendingEntries[currentIndex];
   const completedCount = scanHistory.length;
@@ -159,7 +158,7 @@ export function MobileScanningPage() {
     setCameraActive(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
+        video: { facingMode: 'environment' },
       });
 
       if (videoRef.current) {
@@ -227,12 +226,11 @@ export function MobileScanningPage() {
         </button>
         <div className="progress-container">
           <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
           </div>
-          <span className="progress-text">{completedCount} / {totalCount}</span>
+          <span className="progress-text">
+            {completedCount} / {totalCount}
+          </span>
         </div>
         <button
           onClick={() => setVoiceEnabled(!voiceEnabled)}
@@ -282,18 +280,15 @@ export function MobileScanningPage() {
               ref={barcodeInputRef}
               type="text"
               value={barcodeInput}
-              onChange={(e) => handleBarcodeScan(e.target.value)}
+              onChange={e => handleBarcodeScan(e.target.value)}
               placeholder="Scan or enter barcode"
               className="input-barcode-large"
               autoComplete="off"
               inputMode="scan"
             />
-            <button
-              onClick={startCamera}
-              className="btn-camera"
-            >
+            <button onClick={startCamera} className="btn-camera">
               <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                <path d="M12 15.2c1.77 0 3.2-1.43 3.2-3.2s-1.43-3.2-3.2-3.2-3.2 1.43-3.2 3.2 1.43 3.2 3.2 3.2zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
               </svg>
               Open Camera
             </button>
@@ -326,22 +321,13 @@ export function MobileScanningPage() {
 
       {/* Quick count buttons */}
       <section className="quick-buttons">
-        <button
-          onClick={() => quickCount(1)}
-          className="btn-quick btn-quick-1"
-        >
+        <button onClick={() => quickCount(1)} className="btn-quick btn-quick-1">
           +1
         </button>
-        <button
-          onClick={() => quickCount(5)}
-          className="btn-quick btn-quick-5"
-        >
+        <button onClick={() => quickCount(5)} className="btn-quick btn-quick-5">
           +5
         </button>
-        <button
-          onClick={() => quickCount(10)}
-          className="btn-quick btn-quick-10"
-        >
+        <button onClick={() => quickCount(10)} className="btn-quick btn-quick-10">
           +10
         </button>
         <button
@@ -364,10 +350,7 @@ export function MobileScanningPage() {
         >
           {isSubmitting || submitMutation.isPending ? 'Submitting...' : 'Submit ✓'}
         </button>
-        <button
-          onClick={handleSkip}
-          className="btn btn-secondary btn-lg"
-        >
+        <button onClick={handleSkip} className="btn btn-secondary btn-lg">
           Skip →
         </button>
       </section>
@@ -377,12 +360,15 @@ export function MobileScanningPage() {
         <section className="scan-history">
           <h3>Recent Scans</h3>
           <div className="history-list">
-            {scanHistory.slice(-5).reverse().map((entry, idx) => (
-              <div key={entry.entryId} className="history-item">
-                <span className="sku">{entry.sku}</span>
-                <span className="qty">{entry.countedQuantity}</span>
-              </div>
-            ))}
+            {scanHistory
+              .slice(-5)
+              .reverse()
+              .map((entry, idx) => (
+                <div key={entry.entryId} className="history-item">
+                  <span className="sku">{entry.sku}</span>
+                  <span className="qty">{entry.countedQuantity}</span>
+                </div>
+              ))}
           </div>
         </section>
       )}

@@ -108,10 +108,7 @@ export class GLMClient {
   /**
    * Retry logic with exponential backoff for rate limiting
    */
-  private async retryWithBackoff<T>(
-    fn: () => Promise<T>,
-    context: string
-  ): Promise<T> {
+  private async retryWithBackoff<T>(fn: () => Promise<T>, context: string): Promise<T> {
     let lastError: Error | undefined;
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -126,7 +123,7 @@ export class GLMClient {
           errorMessage.includes('rate limit') ||
           errorMessage.includes('too many requests') ||
           errorMessage.includes('429') ||
-          errorMessage.includes('1302') ||  // GLM specific rate limit code
+          errorMessage.includes('1302') || // GLM specific rate limit code
           errorMessage.includes('concurrent') ||
           errorMessage.includes('timeout') ||
           errorMessage.includes('econnreset') ||
@@ -141,7 +138,9 @@ export class GLMClient {
         // Calculate delay with exponential backoff
         const delay = this.initialRetryDelay * Math.pow(this.retryBackoffMultiplier, attempt - 1);
 
-        console.log(`  ⏳ GLM API rate limited (${context}), retry ${attempt}/${this.maxRetries} after ${delay}ms...`);
+        console.log(
+          `  ⏳ GLM API rate limited (${context}), retry ${attempt}/${this.maxRetries} after ${delay}ms...`
+        );
 
         // Wait before retry
         await this.sleep(delay);
@@ -227,8 +226,8 @@ export class GLMClient {
       // Try to fix common JSON issues
       try {
         const fixed = jsonStr
-          .replace(/(\w+):/g, '"$1":')  // Add quotes to keys
-          .replace(/'/g, '"');           // Replace single quotes
+          .replace(/(\w+):/g, '"$1":') // Add quotes to keys
+          .replace(/'/g, '"'); // Replace single quotes
 
         return JSON.parse(fixed);
       } catch {
@@ -324,7 +323,7 @@ export class GLMClient {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestBody),
         });
@@ -337,10 +336,12 @@ export class GLMClient {
             body: errorText,
             requestModel: this.model,
           });
-          throw new Error(`GLM API error: ${response.status} ${response.statusText} - ${errorText}`);
+          throw new Error(
+            `GLM API error: ${response.status} ${response.statusText} - ${errorText}`
+          );
         }
 
-        const data = await response.json() as GLMResponse;
+        const data = (await response.json()) as GLMResponse;
 
         if (!data.choices || data.choices.length === 0) {
           throw new Error('No response from GLM');
@@ -844,7 +845,7 @@ Context: ${context.context}
 Page: ${context.currentPage}
 
 Available elements:
-${context.availableElements.map((e, i) => `${i}. ${e.tag} - text:"${e.text.slice(0,20)}" id:${e.id} class:${e.className.slice(0,20)} data-test:${e.dataTest} aria-label:${e.ariaLabel}`).join('\n')}
+${context.availableElements.map((e, i) => `${i}. ${e.tag} - text:"${e.text.slice(0, 20)}" id:${e.id} class:${e.className.slice(0, 20)} data-test:${e.dataTest} aria-label:${e.ariaLabel}`).join('\n')}
 
 Suggest the best replacement selector.`,
     };
@@ -1021,7 +1022,10 @@ Entries: ${context.logEntries.length}
 Errors: ${context.logEntries.filter(l => l.error).length}
 
 Sample logs:
-${context.logEntries.slice(0, 20).map(l => `${l.timestamp} [${l.level}] ${l.message}${l.error ? ' Error: ' + l.error : ''}`).join('\n')}
+${context.logEntries
+  .slice(0, 20)
+  .map(l => `${l.timestamp} [${l.level}] ${l.message}${l.error ? ' Error: ' + l.error : ''}`)
+  .join('\n')}
 
 Generate tests for critical issues.`,
     };
@@ -1202,7 +1206,7 @@ Learn: element patterns, route structures, common behaviors, anti-patterns to av
     const userPrompt: GLMMessage = {
       role: 'user',
       content: `Build model for ${context.routeName} (${context.route}):
-Elements: ${context.elements.map(e => `${e.type}:${e.text.slice(0,20)} -> ${e.behavior}`).join(', ')}
+Elements: ${context.elements.map(e => `${e.type}:${e.text.slice(0, 20)} -> ${e.behavior}`).join(', ')}
 Patterns: ${context.patterns.map(p => `${p.pattern} (freq:${p.frequency}, rel:${p.reliability})`).join(', ')}
 
 Extract learning for future tests.`,

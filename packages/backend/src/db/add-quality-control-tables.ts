@@ -34,10 +34,16 @@ async function runMigration() {
     `);
 
     // Create indexes for inspection_checklists
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_checklist_type ON inspection_checklists(inspection_type)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_checklist_type ON inspection_checklists(inspection_type)`
+    );
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_checklist_sku ON inspection_checklists(sku)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_checklist_category ON inspection_checklists(category)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_checklist_active ON inspection_checklists(is_active)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_checklist_category ON inspection_checklists(category)`
+    );
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_checklist_active ON inspection_checklists(is_active)`
+    );
 
     // Inspection Checklist Items
     await pool.query(`
@@ -54,7 +60,9 @@ async function runMigration() {
       )
     `);
 
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_checklist_items_checklist ON inspection_checklist_items(checklist_id)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_checklist_items_checklist ON inspection_checklist_items(checklist_id)`
+    );
 
     // Quality Inspections
     await pool.query(`
@@ -95,11 +103,19 @@ async function runMigration() {
     `);
 
     // Create indexes for quality_inspections
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_inspections_status ON quality_inspections(status)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_inspections_type ON quality_inspections(inspection_type)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_inspections_reference ON quality_inspections(reference_type, reference_id)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_inspections_status ON quality_inspections(status)`
+    );
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_inspections_type ON quality_inspections(inspection_type)`
+    );
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_inspections_reference ON quality_inspections(reference_type, reference_id)`
+    );
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_inspections_sku ON quality_inspections(sku)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_inspections_inspector ON quality_inspections(inspector_id)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_inspections_inspector ON quality_inspections(inspector_id)`
+    );
 
     // Inspection Results
     await pool.query(`
@@ -116,7 +132,9 @@ async function runMigration() {
       )
     `);
 
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_inspection_results_inspection ON inspection_results(inspection_id)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_inspection_results_inspection ON inspection_results(inspection_id)`
+    );
 
     // Return Authorizations
     await pool.query(`
@@ -145,10 +163,18 @@ async function runMigration() {
     `);
 
     // Create indexes for return_authorizations
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_returns_status ON return_authorizations(status)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_returns_order ON return_authorizations(order_id)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_returns_customer ON return_authorizations(customer_id)`);
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_returns_date ON return_authorizations(return_date)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_returns_status ON return_authorizations(status)`
+    );
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_returns_order ON return_authorizations(order_id)`
+    );
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_returns_customer ON return_authorizations(customer_id)`
+    );
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_returns_date ON return_authorizations(return_date)`
+    );
 
     // Return Items
     await pool.query(`
@@ -171,7 +197,9 @@ async function runMigration() {
       )
     `);
 
-    await pool.query(`CREATE INDEX IF NOT EXISTS idx_return_items_return ON return_items(return_id)`);
+    await pool.query(
+      `CREATE INDEX IF NOT EXISTS idx_return_items_return ON return_items(return_id)`
+    );
     await pool.query(`CREATE INDEX IF NOT EXISTS idx_return_items_sku ON return_items(sku)`);
 
     // Create triggers for updated_at
@@ -240,7 +268,9 @@ async function runMigration() {
 
     // Insert default inspection checklists
     // Get first admin user or use NULL (will violate FK, so we need a valid user)
-    const userResult = await pool.query('SELECT user_id FROM users WHERE role = $1 LIMIT 1', ['ADMIN']);
+    const userResult = await pool.query('SELECT user_id FROM users WHERE role = $1 LIMIT 1', [
+      'ADMIN',
+    ]);
 
     let createdById = 'SYSTEM';
     if (userResult.rows.length > 0) {
@@ -248,15 +278,20 @@ async function runMigration() {
     }
 
     // Temporarily disable FK constraint for created_by since we might not have a valid user
-    await pool.query(`ALTER TABLE inspection_checklists DROP CONSTRAINT IF EXISTS fk_checklist_created_by`);
+    await pool.query(
+      `ALTER TABLE inspection_checklists DROP CONSTRAINT IF EXISTS fk_checklist_created_by`
+    );
 
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO inspection_checklists (checklist_id, checklist_name, description, inspection_type, created_by) VALUES
         ('CHK-INCOMING-DEFAULT', 'Incoming Goods Inspection', 'Standard inspection for incoming shipments', 'INCOMING', $1),
         ('CHK-RETURN-DEFAULT', 'Return Inspection', 'Inspection checklist for returned items', 'RETURN', $1),
         ('CHK-DAMAGE-DEFAULT', 'Damage Inspection', 'Inspection for damaged goods', 'DAMAGE', $1)
       ON CONFLICT DO NOTHING
-    `, [createdById]);
+    `,
+      [createdById]
+    );
 
     // Re-add FK constraint if possible
     if (userResult.rows.length > 0) {
@@ -301,7 +336,6 @@ async function runMigration() {
 
     console.log('\nCreated tables:');
     result.rows.forEach((row: any) => console.log(`  - ${row.table_name}`));
-
   } catch (error: any) {
     await pool.query('ROLLBACK');
     console.error('✗ Migration failed:', error.message);

@@ -10,7 +10,16 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, Badge, useToast } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  Badge,
+  useToast,
+} from '@/components/shared';
 import { useMyRoles } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import { UserRole } from '@opsui/shared';
@@ -162,7 +171,12 @@ interface RoleSettingCardProps {
   canHide: boolean;
 }
 
-function RoleSettingCard({ config, onToggleVisibility, isBaseRole, canHide }: RoleSettingCardProps) {
+function RoleSettingCard({
+  config,
+  onToggleVisibility,
+  isBaseRole,
+  canHide,
+}: RoleSettingCardProps) {
   const Icon = config.icon;
 
   // Base roles cannot be hidden at all
@@ -200,11 +214,7 @@ function RoleSettingCard({ config, onToggleVisibility, isBaseRole, canHide }: Ro
               <div className="flex items-center gap-2">
                 <h3
                   className={`text-sm font-semibold transition-colors ${
-                    isBaseRole
-                      ? 'text-error-400'
-                      : config.visible
-                        ? 'text-white'
-                        : 'text-gray-400'
+                    isBaseRole ? 'text-error-400' : config.visible ? 'text-white' : 'text-gray-400'
                   }`}
                 >
                   {config.label}
@@ -316,10 +326,7 @@ function AdminSettingsPage() {
   const grantedRoles = useMemo(() => {
     if (!user) return [];
     // additionalRoles is an array of role strings directly
-    const grantedRoleList = [
-      user.role,
-      ...(additionalRoles || []),
-    ].filter(Boolean);
+    const grantedRoleList = [user.role, ...(additionalRoles || [])].filter(Boolean);
     return DEFAULT_ROLES.filter(role => grantedRoleList.includes(role.role));
   }, [user, additionalRoles]);
 
@@ -345,8 +352,14 @@ function AdminSettingsPage() {
     }));
 
     // Only update if the roles array actually changed (prevent infinite loop)
-    const currentKeys = roles.map(r => r.key).sort().join(',');
-    const newKeys = newRoles.map(r => r.key).sort().join(',');
+    const currentKeys = roles
+      .map(r => r.key)
+      .sort()
+      .join(',');
+    const newKeys = newRoles
+      .map(r => r.key)
+      .sort()
+      .join(',');
     if (currentKeys !== newKeys) {
       setRoles(newRoles);
     }
@@ -382,9 +395,7 @@ function AdminSettingsPage() {
         return prev; // Don't allow hiding the last visible role
       }
 
-      return prev.map(role =>
-        role.key === key ? { ...role, visible: !role.visible } : role
-      );
+      return prev.map(role => (role.key === key ? { ...role, visible: !role.visible } : role));
     });
     setHasChanges(true);
   };
@@ -442,7 +453,9 @@ function AdminSettingsPage() {
 
       // Dispatch custom event to notify other components (like Header) of the color change
       window.dispatchEvent(
-        new CustomEvent('role-color-changed', { detail: { userId: user.userId, role: user.role, color: userRoleColor } })
+        new CustomEvent('role-color-changed', {
+          detail: { userId: user.userId, role: user.role, color: userRoleColor },
+        })
       );
     }
   };
@@ -557,16 +570,29 @@ function AdminSettingsPage() {
                     <CardContent className="p-6">
                       <p className="text-sm text-gray-400 mb-4">
                         Customize the badge color for your current role{' '}
-                        <Badge size="sm" customColor={userRoleColor}>{user.role}</Badge>
-                        . This color is personal to you and only affects how your role badge appears on your device.
+                        <Badge size="sm" customColor={userRoleColor}>
+                          {user.role}
+                        </Badge>
+                        . This color is personal to you and only affects how your role badge appears
+                        on your device.
                       </p>
                       <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
                         {[
-                          '#ef4444', '#f97316', '#f59e0b',
-                          '#eab308', '#84cc16', '#10b981',
-                          '#06b6d4', '#3b82f6', '#6366f1',
-                          '#8b5cf6', '#d946ef', '#ec4899',
-                          '#f43f5e', '#64748b', '#71717a',
+                          '#ef4444',
+                          '#f97316',
+                          '#f59e0b',
+                          '#eab308',
+                          '#84cc16',
+                          '#10b981',
+                          '#06b6d4',
+                          '#3b82f6',
+                          '#6366f1',
+                          '#8b5cf6',
+                          '#d946ef',
+                          '#ec4899',
+                          '#f43f5e',
+                          '#64748b',
+                          '#71717a',
                         ].map(color => (
                           <button
                             key={color}

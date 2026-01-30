@@ -42,7 +42,14 @@ describe('OrderQueuePage', () => {
       status: 'PENDING' as const,
       priority: 'HIGH' as const,
       items: [
-        { sku: 'SKU-001', name: 'Item 1', quantity: 2, binLocation: 'A-01-01', status: 'PENDING', pickedQuantity: 0 },
+        {
+          sku: 'SKU-001',
+          name: 'Item 1',
+          quantity: 2,
+          binLocation: 'A-01-01',
+          status: 'PENDING',
+          pickedQuantity: 0,
+        },
       ],
       progress: 0,
       createdAt: '2024-01-01T10:00:00Z',
@@ -53,7 +60,14 @@ describe('OrderQueuePage', () => {
       status: 'PENDING' as const,
       priority: 'NORMAL' as const,
       items: [
-        { sku: 'SKU-002', name: 'Item 2', quantity: 1, binLocation: 'B-01-01', status: 'PENDING', pickedQuantity: 0 },
+        {
+          sku: 'SKU-002',
+          name: 'Item 2',
+          quantity: 1,
+          binLocation: 'B-01-01',
+          status: 'PENDING',
+          pickedQuantity: 0,
+        },
       ],
       progress: 0,
       createdAt: '2024-01-01T11:00:00Z',
@@ -227,9 +241,7 @@ describe('OrderQueuePage', () => {
           ...mockOrders[0],
           status: 'PICKING' as const,
           progress: 50,
-          items: [
-            { ...mockOrders[0].items[0], status: 'COMPLETED', pickedQuantity: 2 },
-          ],
+          items: [{ ...mockOrders[0].items[0], status: 'COMPLETED', pickedQuantity: 2 }],
         },
       ];
 

@@ -23,7 +23,11 @@ const router = Router();
 
 const optimizeRouteSchema = z.object({
   locations: z.array(z.string().regex(/^[A-Z]-\d{1,3}-\d{2}$/)).min(2),
-  startPoint: z.string().regex(/^[A-Z]-\d{1,3}-\d{2}$/).optional().default('A-01-01'),
+  startPoint: z
+    .string()
+    .regex(/^[A-Z]-\d{1,3}-\d{2}$/)
+    .optional()
+    .default('A-01-01'),
   algorithm: z.enum(['tsp', 'nearest', 'aisle', 'zone']).optional(),
 });
 
@@ -46,15 +50,20 @@ const forecastDemandSchema = z.object({
 });
 
 const batchPredictDurationSchema = z.object({
-  orders: z.array(z.object({
-    order_id: z.string().optional(),
-    order_item_count: z.number().min(1),
-    hour_of_day: z.number().min(0).max(23),
-    day_of_week: z.number().min(0).max(6),
-    sku_count: z.number().min(1),
-    zone_diversity: z.number().min(1),
-    priority_level: z.number().min(1).max(4),
-  })).min(1).max(100),
+  orders: z
+    .array(
+      z.object({
+        order_id: z.string().optional(),
+        order_item_count: z.number().min(1),
+        hour_of_day: z.number().min(0).max(23),
+        day_of_week: z.number().min(0).max(6),
+        sku_count: z.number().min(1),
+        zone_diversity: z.number().min(1),
+        priority_level: z.number().min(1).max(4),
+      })
+    )
+    .min(1)
+    .max(100),
 });
 
 // ============================================================================
@@ -76,10 +85,7 @@ router.post('/optimize', async (req: Request, res: Response): Promise<void> => {
     });
 
     // Use ML service for route optimization
-    const result = await mlPredictionService.optimizeRoute(
-      body.locations,
-      body.startPoint
-    );
+    const result = await mlPredictionService.optimizeRoute(body.locations, body.startPoint);
 
     res.json({
       success: true,
@@ -206,7 +212,12 @@ router.post('/compare', async (req: Request, res: Response): Promise<void> => {
     });
 
     // Run all algorithms
-    const algorithms: Array<'tsp' | 'nearest' | 'aisle' | 'zone'> = ['tsp', 'nearest', 'aisle', 'zone'];
+    const algorithms: Array<'tsp' | 'nearest' | 'aisle' | 'zone'> = [
+      'tsp',
+      'nearest',
+      'aisle',
+      'zone',
+    ];
     const results = [];
 
     for (const algorithm of algorithms) {

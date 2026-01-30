@@ -6,7 +6,13 @@
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores';
-import { useLogout, useSetActiveRole, useMyRoles, useNotifications, useMarkAsRead } from '@/services/api';
+import {
+  useLogout,
+  useSetActiveRole,
+  useMyRoles,
+  useNotifications,
+  useMarkAsRead,
+} from '@/services/api';
 import { Button, UserRoleBadge } from './index';
 import type { OrderStatus, OrderPriority } from '@opsui/shared';
 import {
@@ -587,7 +593,11 @@ const getNotificationRoute = (type: string, data?: Record<string, any>): string 
   }
 };
 
-function NotificationPreview({ limit = 5, onNotificationClick, navigate }: NotificationPreviewProps) {
+function NotificationPreview({
+  limit = 5,
+  onNotificationClick,
+  navigate,
+}: NotificationPreviewProps) {
   const { data, isLoading } = useNotifications({ limit });
   const notifications = data?.notifications || [];
   const markAsRead = useMarkAsRead();
@@ -645,7 +655,7 @@ function NotificationPreview({ limit = 5, onNotificationClick, navigate }: Notif
 
   return (
     <div className="space-y-1">
-      {notifications.map((notification) => (
+      {notifications.map(notification => (
         <div
           key={notification.notificationId}
           className={`px-5 py-3 dark:hover:bg-gray-800 hover:bg-gray-50 transition-all duration-200 cursor-pointer ${
@@ -654,7 +664,9 @@ function NotificationPreview({ limit = 5, onNotificationClick, navigate }: Notif
           onClick={() => handleNotificationClick(notification)}
         >
           <div className="flex items-start gap-3">
-            <BellIcon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${typeColors[notification.type] || 'text-gray-400'}`} />
+            <BellIcon
+              className={`h-4 w-4 mt-0.5 flex-shrink-0 ${typeColors[notification.type] || 'text-gray-400'}`}
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium dark:text-white text-gray-900 truncate">
                 {notification.title}
@@ -713,7 +725,7 @@ function NotificationPanel() {
 
   // Listen for real-time notifications via WebSocket
   useEffect(() => {
-    const unsubscribe = webSocketService.on('notification:new', (data) => {
+    const unsubscribe = webSocketService.on('notification:new', data => {
       console.log('[Header] New notification received:', data);
       // Invalidate queries to refresh notifications
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -1440,7 +1452,10 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
                       userEmail={user.email}
                       availableViews={allRoleViews}
                     />
-                    <UserRoleBadge role={(getEffectiveRole() || user.role) as UserRole} userId={user.userId} />
+                    <UserRoleBadge
+                      role={(getEffectiveRole() || user.role) as UserRole}
+                      userId={user.userId}
+                    />
                   </>
                 ) : (
                   <>
@@ -1475,21 +1490,23 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
             {/* Right side - Actions */}
             <div className="flex items-center gap-3">
               {/* Order Queue Filters - only show on orders page when in PICKER role view */}
-              {orderQueueFilters && location.pathname === '/orders' && getEffectiveRole() === UserRole.PICKER && (
-                <>
-                  <StatusFilterDropdown
-                    value={orderQueueFilters.statusFilter}
-                    onChange={orderQueueFilters.onStatusFilterChange}
-                  />
+              {orderQueueFilters &&
+                location.pathname === '/orders' &&
+                getEffectiveRole() === UserRole.PICKER && (
+                  <>
+                    <StatusFilterDropdown
+                      value={orderQueueFilters.statusFilter}
+                      onChange={orderQueueFilters.onStatusFilterChange}
+                    />
 
-                  <PriorityFilterDropdown
-                    value={orderQueueFilters.priorityFilter}
-                    onChange={orderQueueFilters.onPriorityFilterChange}
-                  />
+                    <PriorityFilterDropdown
+                      value={orderQueueFilters.priorityFilter}
+                      onChange={orderQueueFilters.onPriorityFilterChange}
+                    />
 
-                  <div className="w-px h-6 dark:bg-white/[0.1] bg-gray-300 mx-1"></div>
-                </>
-              )}
+                    <div className="w-px h-6 dark:bg-white/[0.1] bg-gray-300 mx-1"></div>
+                  </>
+                )}
 
               {/* Notification Panel - for supervisors and admins */}
               <NotificationPanel />

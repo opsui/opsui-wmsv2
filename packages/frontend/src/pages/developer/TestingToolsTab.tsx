@@ -5,7 +5,14 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, ConfirmDialog } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  ConfirmDialog,
+} from '@/components/shared';
 import { JwtDecoder, JwtPermissionMatrix, type JwtPayload } from '@/components/shared/JwtDecoder';
 import { apiClient } from '@/lib/api-client';
 import {
@@ -56,14 +63,20 @@ export function TestingToolsTab() {
   const [permissionMatrix, setPermissionMatrix] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{ type: 'success' | 'error'; text: string }>>([]);
-  const [activeTab, setActiveTab] = useState<'auth' | 'presets' | 'session' | 'e2e' | 'workflows'>('auth');
+  const [activeTab, setActiveTab] = useState<'auth' | 'presets' | 'session' | 'e2e' | 'workflows'>(
+    'auth'
+  );
   const [e2eResults, setE2eResults] = useState<E2ETestResults | null>(null);
   const [e2eRunning, setE2eRunning] = useState(false);
   const [workflowResults, setWorkflowResults] = useState<E2ETestResults | null>(null);
   const [workflowRunning, setWorkflowRunning] = useState(false);
 
   // Confirm dialog states
-  const [loadPresetConfirm, setLoadPresetConfirm] = useState<{ isOpen: boolean; presetId: string; presetName: string }>({ isOpen: false, presetId: '', presetName: '' });
+  const [loadPresetConfirm, setLoadPresetConfirm] = useState<{
+    isOpen: boolean;
+    presetId: string;
+    presetName: string;
+  }>({ isOpen: false, presetId: '', presetName: '' });
   const [clearStorageConfirm, setClearStorageConfirm] = useState(false);
 
   useEffect(() => {
@@ -71,8 +84,8 @@ export function TestingToolsTab() {
     loadPresets();
     loadPermissions();
     loadJwtFromStorage();
-    loadE2EResults(true);  // Auto-run if no results
-    loadWorkflowResults(true);  // Auto-run if no results
+    loadE2EResults(true); // Auto-run if no results
+    loadWorkflowResults(true); // Auto-run if no results
   }, []);
 
   const addMessage = (type: 'success' | 'error', text: string) => {
@@ -133,7 +146,9 @@ export function TestingToolsTab() {
   const confirmLoadPreset = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.post('/developer/testing/load-preset', { presetId: loadPresetConfirm.presetId });
+      const response = await apiClient.post('/developer/testing/load-preset', {
+        presetId: loadPresetConfirm.presetId,
+      });
       addMessage('success', response.data.message);
       setTimeout(() => window.location.reload(), 1000);
     } catch (error: any) {
@@ -181,7 +196,10 @@ export function TestingToolsTab() {
           clearInterval(pollInterval);
 
           if (resultsRes.data.success) {
-            addMessage('success', `E2E tests completed: ${resultsRes.data.passed} passed, ${resultsRes.data.failed} failed`);
+            addMessage(
+              'success',
+              `E2E tests completed: ${resultsRes.data.passed} passed, ${resultsRes.data.failed} failed`
+            );
           } else {
             addMessage('error', `E2E tests failed: ${resultsRes.data.failed} failures`);
           }
@@ -189,7 +207,6 @@ export function TestingToolsTab() {
           // Results not ready yet, keep polling
         }
       }, 3000);
-
     } catch (error: any) {
       setE2eRunning(false);
       const errorMsg = error.response?.data?.error || 'Failed to start E2E tests';
@@ -229,7 +246,10 @@ export function TestingToolsTab() {
           clearInterval(pollInterval);
 
           if (resultsRes.data.success) {
-            addMessage('success', `Workflow tests completed: ${resultsRes.data.passed} passed, ${resultsRes.data.failed} failed`);
+            addMessage(
+              'success',
+              `Workflow tests completed: ${resultsRes.data.passed} passed, ${resultsRes.data.failed} failed`
+            );
           } else {
             addMessage('error', `Workflow tests failed: ${resultsRes.data.failed} failures`);
           }
@@ -237,7 +257,6 @@ export function TestingToolsTab() {
           // Results not ready yet, keep polling
         }
       }, 3000);
-
     } catch (error: any) {
       setWorkflowRunning(false);
       const errorMsg = error.response?.data?.error || 'Failed to start workflow tests';
@@ -268,9 +287,7 @@ export function TestingToolsTab() {
           <div
             key={i}
             className={`flex items-center gap-2 p-3 rounded-lg shadow-lg ${
-              msg.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
+              msg.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}
           >
             {msg.type === 'success' ? (
@@ -305,7 +322,7 @@ export function TestingToolsTab() {
           { id: 'e2e', label: 'E2E Tests', icon: FlaskIcon },
           { id: 'workflows', label: 'Workflows', icon: CpuChipIcon },
           { id: 'session', label: 'Session Inspector', icon: UserIcon },
-        ].map((tab) => {
+        ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
@@ -336,7 +353,7 @@ export function TestingToolsTab() {
       {/* Test Data Presets */}
       {activeTab === 'presets' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {presets.map((preset) => (
+          {presets.map(preset => (
             <Card key={preset.id}>
               <CardHeader>
                 <CardTitle className="text-base">{preset.name}</CardTitle>
@@ -346,9 +363,7 @@ export function TestingToolsTab() {
                   {preset.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    {preset.orderCount} orders
-                  </span>
+                  <span className="text-xs text-gray-500">{preset.orderCount} orders</span>
                   <Button
                     size="sm"
                     onClick={() => loadPreset(preset.id, preset.name)}
@@ -378,11 +393,7 @@ export function TestingToolsTab() {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Run E2E tests with assertions to verify critical user workflows and business logic.
               </p>
-              <Button
-                onClick={runE2ETests}
-                disabled={e2eRunning}
-                className="w-full"
-              >
+              <Button onClick={runE2ETests} disabled={e2eRunning} className="w-full">
                 <PlayIcon className="h-4 w-4 inline mr-2" />
                 {e2eRunning ? 'Running E2E Tests...' : 'Run E2E Tests'}
               </Button>
@@ -448,8 +459,9 @@ export function TestingToolsTab() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Deep workflow testing that validates complete business processes (picking, packing, stock control, etc.).
-                These tests verify actual business logic, not just page rendering.
+                Deep workflow testing that validates complete business processes (picking, packing,
+                stock control, etc.). These tests verify actual business logic, not just page
+                rendering.
               </p>
               <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <h4 className="text-sm font-medium dark:text-white mb-2">Workflows Tested:</h4>
@@ -462,11 +474,7 @@ export function TestingToolsTab() {
                   <li>• Cross-Workflow Integration</li>
                 </ul>
               </div>
-              <Button
-                onClick={runWorkflowTests}
-                disabled={workflowRunning}
-                className="w-full"
-              >
+              <Button onClick={runWorkflowTests} disabled={workflowRunning} className="w-full">
                 <PlayIcon className="h-4 w-4 inline mr-2" />
                 {workflowRunning ? 'Running Workflow Tests...' : 'Run Workflow Tests'}
               </Button>
@@ -501,7 +509,9 @@ export function TestingToolsTab() {
                       <p className="text-xs text-gray-600 dark:text-gray-400">Skipped</p>
                     </div>
                     <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-2xl font-bold dark:text-white">{workflowResults.duration}</p>
+                      <p className="text-2xl font-bold dark:text-white">
+                        {workflowResults.duration}
+                      </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">Duration</p>
                     </div>
                   </div>
@@ -577,23 +587,17 @@ export function TestingToolsTab() {
                 <p className="text-2xl font-bold dark:text-white">{localStorage.length}</p>
               </div>
               <div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">sessionStorage items</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  sessionStorage items
+                </span>
                 <p className="text-2xl font-bold dark:text-white">{sessionStorage.length}</p>
               </div>
 
               <div className="pt-4 border-t dark:border-gray-700 space-y-2">
-                <Button
-                  variant="secondary"
-                  className="w-full text-sm"
-                  onClick={loadJwtFromStorage}
-                >
+                <Button variant="secondary" className="w-full text-sm" onClick={loadJwtFromStorage}>
                   Reload JWT from Storage
                 </Button>
-                <Button
-                  variant="secondary"
-                  className="w-full text-sm"
-                  onClick={refreshToken}
-                >
+                <Button variant="secondary" className="w-full text-sm" onClick={refreshToken}>
                   Clear Token
                 </Button>
                 <Button
@@ -621,28 +625,32 @@ export function TestingToolsTab() {
                       <tr className="border-b dark:border-gray-700">
                         <th className="text-left p-2 dark:text-gray-300">Role</th>
                         {permissionMatrix.allRoles.map((role: string) => (
-                          <th key={role} className="text-center p-2 dark:text-gray-300">{role}</th>
+                          <th key={role} className="text-center p-2 dark:text-gray-300">
+                            {role}
+                          </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(permissionMatrix.matrix).map(([role, perms]: [string, any]) => (
-                        <tr key={role} className="border-b dark:border-gray-800">
-                          <td className="p-2 dark:text-white">{role}</td>
-                          {permissionMatrix.allRoles.map((r: string) => {
-                            const hasAccess = r === 'ADMIN' || role === r;
-                            return (
-                              <td key={r} className="text-center p-2">
-                                {hasAccess ? (
-                                  <CheckCircleIcon className="h-4 w-4 text-green-500 inline" />
-                                ) : (
-                                  <span className="text-gray-400">-</span>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
+                      {Object.entries(permissionMatrix.matrix).map(
+                        ([role, perms]: [string, any]) => (
+                          <tr key={role} className="border-b dark:border-gray-800">
+                            <td className="p-2 dark:text-white">{role}</td>
+                            {permissionMatrix.allRoles.map((r: string) => {
+                              const hasAccess = r === 'ADMIN' || role === r;
+                              return (
+                                <td key={r} className="text-center p-2">
+                                  {hasAccess ? (
+                                    <CheckCircleIcon className="h-4 w-4 text-green-500 inline" />
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        )
+                      )}
                     </tbody>
                   </table>
                 </div>

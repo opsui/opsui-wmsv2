@@ -93,9 +93,11 @@ test.describe('Order Picking Workflow', () => {
 
   test('picker can claim an available order', async ({ page }) => {
     // Look for claim button
-    const claimButton = page.locator('button:has-text("Claim"), button:has-text("Start Picking")').first();
+    const claimButton = page
+      .locator('button:has-text("Claim"), button:has-text("Start Picking")')
+      .first();
 
-    const hasClaimableOrders = await claimButton.count() > 0;
+    const hasClaimableOrders = (await claimButton.count()) > 0;
 
     if (hasClaimableOrders) {
       // Wait for button to be ready
@@ -127,7 +129,7 @@ test.describe('Order Picking Workflow', () => {
     // Look for an order link/row
     const orderLink = page.locator('a[href*="/orders/"], [data-testid="order-item"]').first();
 
-    const hasOrders = await orderLink.count() > 0;
+    const hasOrders = (await orderLink.count()) > 0;
 
     if (hasOrders) {
       await orderLink.click();
@@ -219,7 +221,7 @@ test.describe('Role-Based Access Control', () => {
   test('protected routes redirect unauthorized users', async ({ page }) => {
     // Test only routes that are known to exist and be protected
     const protectedRoutes = [
-      '/user-roles',  // Known protected route
+      '/user-roles', // Known protected route
     ];
 
     for (const route of protectedRoutes) {

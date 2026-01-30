@@ -6,7 +6,14 @@
  */
 
 import { useState } from 'react';
-import { CheckIcon, CogIcon, EnvelopeIcon, PencilIcon, TagIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  CogIcon,
+  EnvelopeIcon,
+  PencilIcon,
+  TagIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -56,9 +63,7 @@ const ACTION_TYPES = [
     label: 'Add Tag',
     icon: TagIcon,
     description: 'Add a tag to the entity',
-    parameters: [
-      { name: 'tag', label: 'Tag', type: 'string', placeholder: 'priority, urgent' },
-    ],
+    parameters: [{ name: 'tag', label: 'Tag', type: 'string', placeholder: 'priority, urgent' }],
   },
   {
     type: 'set_field',
@@ -96,7 +101,7 @@ function ActionParameterEditor({ parameter, value, onChange }: ActionParameterEd
         <select
           id={inputId}
           value={value?.toString() || ''}
-          onChange={(e) => onChange(e.target.value === 'true')}
+          onChange={e => onChange(e.target.value === 'true')}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         >
           <option value="">Select...</option>
@@ -111,7 +116,7 @@ function ActionParameterEditor({ parameter, value, onChange }: ActionParameterEd
           type="number"
           id={inputId}
           value={value || ''}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          onChange={e => onChange(parseFloat(e.target.value) || 0)}
           placeholder={parameter.placeholder}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         />
@@ -123,7 +128,7 @@ function ActionParameterEditor({ parameter, value, onChange }: ActionParameterEd
           type="text"
           id={inputId}
           value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           placeholder={parameter.placeholder}
           className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
         />
@@ -160,19 +165,19 @@ function ActionRow({
         )}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className={cn('p-2 rounded-full', isExpanded ? 'bg-primary-500/20' : 'bg-gray-500/20')}>
+        <div
+          className={cn('p-2 rounded-full', isExpanded ? 'bg-primary-500/20' : 'bg-gray-500/20')}
+        >
           <Icon className={cn('h-4 w-4', isExpanded ? 'text-primary-400' : 'text-gray-400')} />
         </div>
 
         <div className="flex-1">
           <div className="text-sm font-medium text-white">{actionType.label}</div>
-          {!isExpanded && (
-            <div className="text-xs text-gray-400">{actionType.description}</div>
-          )}
+          {!isExpanded && <div className="text-xs text-gray-400">{actionType.description}</div>}
         </div>
 
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onDelete();
           }}
@@ -185,13 +190,15 @@ function ActionRow({
       {/* Expanded Parameters */}
       {isExpanded && (
         <div className="ml-9 space-y-2 p-3 rounded-lg bg-black/20 border border-white/[0.08]">
-          {actionType.parameters.map((param) => (
+          {actionType.parameters.map(param => (
             <div key={param.name}>
               <label className="block text-xs text-gray-400 mb-1">{param.label}</label>
               <ActionParameterEditor
                 parameter={param}
                 value={action.parameters[param.name]}
-                onChange={(value) => onUpdate({ ...action, parameters: { ...action.parameters, [param.name]: value } })}
+                onChange={value =>
+                  onUpdate({ ...action, parameters: { ...action.parameters, [param.name]: value } })
+                }
               />
             </div>
           ))}
@@ -247,7 +254,9 @@ export function ActionBuilder({ actions, onChange, className }: ActionBuilderPro
       {actions.length === 0 ? (
         <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-white/[0.08] rounded-lg">
           <p>No actions added yet</p>
-          <p className="text-xs mt-1">Click "Add Action" to specify what happens when conditions are met</p>
+          <p className="text-xs mt-1">
+            Click "Add Action" to specify what happens when conditions are met
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -255,7 +264,7 @@ export function ActionBuilder({ actions, onChange, className }: ActionBuilderPro
             <ActionRow
               key={action.id}
               action={action}
-              onUpdate={(updated) => updateAction(index, updated)}
+              onUpdate={updated => updateAction(index, updated)}
               onDelete={() => removeAction(index)}
             />
           ))}

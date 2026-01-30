@@ -182,7 +182,10 @@ export const authApi = {
    * Returns basic info (userId, name, role) for users who can be assigned tasks
    */
   getAssignableUsers: async (): Promise<Array<{ userId: string; name: string; role: string }>> => {
-    const response = await apiClient.get<Array<{ userId: string; name: string; role: string }>>('/users/assignable');
+    const response =
+      await apiClient.get<Array<{ userId: string; name: string; role: string }>>(
+        '/users/assignable'
+      );
     return response.data;
   },
 
@@ -324,7 +327,9 @@ export const orderApi = {
    * Continue an already claimed order (logs the continue action in audit)
    */
   continueOrder: async (orderId: string): Promise<{ orderId: string; status: string }> => {
-    const response = await apiClient.post<{ orderId: string; status: string }>(`/orders/${orderId}/continue`);
+    const response = await apiClient.post<{ orderId: string; status: string }>(
+      `/orders/${orderId}/continue`
+    );
     return response.data;
   },
 
@@ -545,7 +550,9 @@ export const metricsApi = {
   /**
    * Get throughput by time range
    */
-  getThroughputByRange: async (range: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' = 'daily') => {
+  getThroughputByRange: async (
+    range: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' = 'daily'
+  ) => {
     const response = await apiClient.get('/metrics/orders/throughput', {
       params: { range },
     });
@@ -659,18 +666,20 @@ export const auditApi = {
   /**
    * Get audit logs with optional filters
    */
-  getLogs: async (options: {
-    userId?: string;
-    username?: string;
-    category?: string;
-    action?: string;
-    resourceType?: string;
-    resourceId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-    offset?: number;
-  } = {}): Promise<AuditLog[]> => {
+  getLogs: async (
+    options: {
+      userId?: string;
+      username?: string;
+      category?: string;
+      action?: string;
+      resourceType?: string;
+      resourceId?: string;
+      startDate?: Date;
+      endDate?: Date;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<AuditLog[]> => {
     const response = await apiClient.get<AuditLog[]>('/audit/logs', {
       params: options,
     });
@@ -698,10 +707,17 @@ export const auditApi = {
   /**
    * Get audit history for a specific resource
    */
-  getResourceHistory: async (resourceType: string, resourceId: string, limit: number = 50): Promise<AuditLog[]> => {
-    const response = await apiClient.get<AuditLog[]>(`/audit/resource/${resourceType}/${resourceId}`, {
-      params: { limit },
-    });
+  getResourceHistory: async (
+    resourceType: string,
+    resourceId: string,
+    limit: number = 50
+  ): Promise<AuditLog[]> => {
+    const response = await apiClient.get<AuditLog[]>(
+      `/audit/resource/${resourceType}/${resourceId}`,
+      {
+        params: { limit },
+      }
+    );
     return response.data;
   },
 
@@ -899,7 +915,12 @@ export const useUsers = (options?: Omit<UseQueryOptions<User[]>, 'queryKey' | 'q
   });
 };
 
-export const useAssignableUsers = (options?: Omit<UseQueryOptions<Array<{ userId: string; name: string; role: string }>>, 'queryKey' | 'queryFn'>) => {
+export const useAssignableUsers = (
+  options?: Omit<
+    UseQueryOptions<Array<{ userId: string; name: string; role: string }>>,
+    'queryKey' | 'queryFn'
+  >
+) => {
   return useQuery({
     queryKey: ['users', 'assignable'],
     queryFn: authApi.getAssignableUsers,
@@ -968,8 +989,13 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: string; data: { name?: string; email?: string; role?: UserRole; active?: boolean } }) =>
-      authApi.updateUser(userId, data),
+    mutationFn: ({
+      userId,
+      data,
+    }: {
+      userId: string;
+      data: { name?: string; email?: string; role?: UserRole; active?: boolean };
+    }) => authApi.updateUser(userId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
@@ -1095,8 +1121,7 @@ export const useClaimOrder = () => {
 export const useContinueOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ orderId }: { orderId: string }) =>
-      orderApi.continueOrder(orderId),
+    mutationFn: ({ orderId }: { orderId: string }) => orderApi.continueOrder(orderId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
     },
@@ -1268,7 +1293,8 @@ export const useRoleActivity = (
     };
     return {
       data: combinedData,
-      isLoading: pickerActivity.isLoading || packerActivity.isLoading || stockControllerActivity.isLoading,
+      isLoading:
+        pickerActivity.isLoading || packerActivity.isLoading || stockControllerActivity.isLoading,
       error: pickerActivity.error || packerActivity.error || stockControllerActivity.error,
     };
   }
@@ -1292,14 +1318,19 @@ export const useRoleActivity = (
 };
 
 // Unified role orders/transactions hook - works with all UserRole values
-export const useRoleDetails = (
-  role: UserRole,
-  roleId: string | null,
-  enabled: boolean = true
-) => {
-  const pickerOrders = usePickerOrders(roleId || '', role === UserRole.PICKER && enabled && !!roleId);
-  const packerOrders = usePackerOrders(roleId || '', role === UserRole.PACKER && enabled && !!roleId);
-  const controllerTransactions = useStockControllerTransactions(roleId || '', role === UserRole.STOCK_CONTROLLER && enabled && !!roleId);
+export const useRoleDetails = (role: UserRole, roleId: string | null, enabled: boolean = true) => {
+  const pickerOrders = usePickerOrders(
+    roleId || '',
+    role === UserRole.PICKER && enabled && !!roleId
+  );
+  const packerOrders = usePackerOrders(
+    roleId || '',
+    role === UserRole.PACKER && enabled && !!roleId
+  );
+  const controllerTransactions = useStockControllerTransactions(
+    roleId || '',
+    role === UserRole.STOCK_CONTROLLER && enabled && !!roleId
+  );
 
   const roleHooks: Partial<Record<UserRole, any>> = {
     [UserRole.PICKER]: { ...pickerOrders, data: pickerOrders.data },
@@ -1342,7 +1373,9 @@ export const useThroughputByRange = (
   });
 };
 
-export const useOrderStatusBreakdown = (options?: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>) => {
+export const useOrderStatusBreakdown = (
+  options?: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>
+) => {
   return useQuery({
     queryKey: ['metrics', 'order-status-breakdown'],
     queryFn: metricsApi.getOrderStatusBreakdown,
@@ -1396,7 +1429,10 @@ export const useAuditLogs = (
       const isAdminOrSupervisor = baseRole === UserRole.ADMIN || baseRole === UserRole.SUPERVISOR;
 
       if (!isAdminOrSupervisor) {
-        console.warn('[useAuditLogs] Skipping audit logs fetch - user does not have admin/supervisor role', { baseRole });
+        console.warn(
+          '[useAuditLogs] Skipping audit logs fetch - user does not have admin/supervisor role',
+          { baseRole }
+        );
         return [];
       }
 
@@ -2004,11 +2040,7 @@ export const exceptionApi = {
   /**
    * Report a general problem
    */
-  reportProblem: async (dto: {
-    problemType: string;
-    location?: string;
-    description: string;
-  }) => {
+  reportProblem: async (dto: { problemType: string; location?: string; description: string }) => {
     const response = await apiClient.post('/exceptions/report-problem', dto);
     return response.data;
   },
@@ -2187,7 +2219,10 @@ export const cycleCountApi = {
     notes?: string;
     autoApproveZeroVariance?: boolean;
   }) => {
-    const response = await apiClient.post(`/cycle-count/plans/${dto.planId}/bulk-variance-update`, dto);
+    const response = await apiClient.post(
+      `/cycle-count/plans/${dto.planId}/bulk-variance-update`,
+      dto
+    );
     return response.data;
   },
 
@@ -2272,7 +2307,9 @@ export const cycleCountKPIApi = {
    * Get top discrepancies
    */
   getTopDiscrepancies: async (limit: number = 10, days: number = 30) => {
-    const response = await apiClient.get('/cycle-count/kpi/top-discrepancies', { params: { limit, days } });
+    const response = await apiClient.get('/cycle-count/kpi/top-discrepancies', {
+      params: { limit, days },
+    });
     return response.data;
   },
 
@@ -2296,7 +2333,9 @@ export const cycleCountKPIApi = {
    * Get count type effectiveness
    */
   getCountTypeEffectiveness: async (days: number = 90) => {
-    const response = await apiClient.get('/cycle-count/kpi/count-type-effectiveness', { params: { days } });
+    const response = await apiClient.get('/cycle-count/kpi/count-type-effectiveness', {
+      params: { days },
+    });
     return response.data;
   },
 
@@ -2434,10 +2473,10 @@ export const useCreateCycleCountPlan = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: cycleCountApi.createPlan,
-    onSuccess: async (data) => {
+    onSuccess: async data => {
       // Invalidate all cycle-count queries and force refetch
       await queryClient.invalidateQueries({
-        predicate: (query) => query.queryKey[0] === 'cycle-count',
+        predicate: query => query.queryKey[0] === 'cycle-count',
         refetchType: 'all', // Force immediate refetch
       });
     },
@@ -2499,8 +2538,12 @@ export const useUpdateVarianceStatus = () => {
 export const useBulkUpdateVarianceStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (dto: { planId: string; status: string; notes?: string; autoApproveZeroVariance?: boolean }) =>
-      cycleCountApi.bulkUpdateVarianceStatus(dto),
+    mutationFn: (dto: {
+      planId: string;
+      status: string;
+      notes?: string;
+      autoApproveZeroVariance?: boolean;
+    }) => cycleCountApi.bulkUpdateVarianceStatus(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cycle-count'] });
     },
@@ -2726,9 +2769,12 @@ export const varianceSeverityApi = {
    * Get all severity configurations
    */
   getAllConfigs: async (includeInactive: boolean = false) => {
-    const response = await apiClient.get<VarianceSeverityConfig[]>('/cycle-count/severity/configs', {
-      params: { includeInactive },
-    });
+    const response = await apiClient.get<VarianceSeverityConfig[]>(
+      '/cycle-count/severity/configs',
+      {
+        params: { includeInactive },
+      }
+    );
     return response.data;
   },
 
@@ -2736,7 +2782,9 @@ export const varianceSeverityApi = {
    * Get specific severity configuration
    */
   getConfig: async (configId: string) => {
-    const response = await apiClient.get<VarianceSeverityConfig>(`/cycle-count/severity/configs/${configId}`);
+    const response = await apiClient.get<VarianceSeverityConfig>(
+      `/cycle-count/severity/configs/${configId}`
+    );
     return response.data;
   },
 
@@ -2752,7 +2800,10 @@ export const varianceSeverityApi = {
     autoAdjust: boolean;
     colorCode: string;
   }) => {
-    const response = await apiClient.post<VarianceSeverityConfig>('/cycle-count/severity/configs', dto);
+    const response = await apiClient.post<VarianceSeverityConfig>(
+      '/cycle-count/severity/configs',
+      dto
+    );
     return response.data;
   },
 
@@ -2760,7 +2811,10 @@ export const varianceSeverityApi = {
    * Update severity configuration
    */
   updateConfig: async (configId: string, updates: Partial<VarianceSeverityConfig>) => {
-    const response = await apiClient.put<VarianceSeverityConfig>(`/cycle-count/severity/configs/${configId}`, updates);
+    const response = await apiClient.put<VarianceSeverityConfig>(
+      `/cycle-count/severity/configs/${configId}`,
+      updates
+    );
     return response.data;
   },
 
@@ -2824,7 +2878,9 @@ export const recurringSchedulesApi = {
     assignedTo?: string;
     frequencyType?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY';
   }) => {
-    const response = await apiClient.get<RecurringCountSchedule[]>('/cycle-count/schedules', { params });
+    const response = await apiClient.get<RecurringCountSchedule[]>('/cycle-count/schedules', {
+      params,
+    });
     return response.data;
   },
 
@@ -2832,7 +2888,9 @@ export const recurringSchedulesApi = {
    * Get specific recurring schedule
    */
   getSchedule: async (scheduleId: string) => {
-    const response = await apiClient.get<RecurringCountSchedule>(`/cycle-count/schedules/${scheduleId}`);
+    const response = await apiClient.get<RecurringCountSchedule>(
+      `/cycle-count/schedules/${scheduleId}`
+    );
     return response.data;
   },
 
@@ -2840,7 +2898,10 @@ export const recurringSchedulesApi = {
    * Update recurring schedule
    */
   updateSchedule: async (scheduleId: string, updates: Partial<RecurringCountSchedule>) => {
-    const response = await apiClient.put<RecurringCountSchedule>(`/cycle-count/schedules/${scheduleId}`, updates);
+    const response = await apiClient.put<RecurringCountSchedule>(
+      `/cycle-count/schedules/${scheduleId}`,
+      updates
+    );
     return response.data;
   },
 
@@ -2865,7 +2926,9 @@ export const rootCauseAnalysisApi = {
    * Get all root cause categories
    */
   getAllCategories: async () => {
-    const response = await apiClient.get<RootCauseCategory[]>('/cycle-count/root-causes/categories');
+    const response = await apiClient.get<RootCauseCategory[]>(
+      '/cycle-count/root-causes/categories'
+    );
     return response.data;
   },
 
@@ -2873,7 +2936,9 @@ export const rootCauseAnalysisApi = {
    * Get specific root cause category
    */
   getCategory: async (categoryId: string) => {
-    const response = await apiClient.get<RootCauseCategory>(`/cycle-count/root-causes/categories/${categoryId}`);
+    const response = await apiClient.get<RootCauseCategory>(
+      `/cycle-count/root-causes/categories/${categoryId}`
+    );
     return response.data;
   },
 
@@ -2893,7 +2958,9 @@ export const rootCauseAnalysisApi = {
    * Get root cause for a specific entry
    */
   getRootCauseForEntry: async (entryId: string) => {
-    const response = await apiClient.get<VarianceRootCause | null>(`/cycle-count/root-causes/entry/${entryId}`);
+    const response = await apiClient.get<VarianceRootCause | null>(
+      `/cycle-count/root-causes/entry/${entryId}`
+    );
     return response.data;
   },
 
@@ -2911,9 +2978,12 @@ export const rootCauseAnalysisApi = {
    * Get category breakdown with trends
    */
   getCategoryBreakdown: async (days: number = 30) => {
-    const response = await apiClient.get<CategoryBreakdown[]>('/cycle-count/root-causes/breakdown', {
-      params: { days },
-    });
+    const response = await apiClient.get<CategoryBreakdown[]>(
+      '/cycle-count/root-causes/breakdown',
+      {
+        params: { days },
+      }
+    );
     return response.data;
   },
 
@@ -2931,9 +3001,12 @@ export const rootCauseAnalysisApi = {
    * Get root cause analysis for specific SKU
    */
   getRootCauseBySKU: async (sku: string, days: number = 30) => {
-    const response = await apiClient.get<SKURootCauseAnalysis>(`/cycle-count/root-causes/sku/${sku}`, {
-      params: { days },
-    });
+    const response = await apiClient.get<SKURootCauseAnalysis>(
+      `/cycle-count/root-causes/sku/${sku}`,
+      {
+        params: { days },
+      }
+    );
     return response.data;
   },
 
@@ -2941,9 +3014,12 @@ export const rootCauseAnalysisApi = {
    * Get root cause analysis for specific zone
    */
   getRootCauseByZone: async (zone: string, days: number = 30) => {
-    const response = await apiClient.get<ZoneRootCauseAnalysis>(`/cycle-count/root-causes/zone/${zone}`, {
-      params: { days },
-    });
+    const response = await apiClient.get<ZoneRootCauseAnalysis>(
+      `/cycle-count/root-causes/zone/${zone}`,
+      {
+        params: { days },
+      }
+    );
     return response.data;
   },
 };
@@ -2959,8 +3035,13 @@ export const useVarianceSeverityConfigs = (includeInactive: boolean = false) => 
 export const useUpdateVarianceSeverityConfig = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ configId, updates }: { configId: string; updates: Partial<VarianceSeverityConfig> }) =>
-      varianceSeverityApi.updateConfig(configId, updates),
+    mutationFn: ({
+      configId,
+      updates,
+    }: {
+      configId: string;
+      updates: Partial<VarianceSeverityConfig>;
+    }) => varianceSeverityApi.updateConfig(configId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['variance-severity-configs'] });
     },
@@ -3012,8 +3093,13 @@ export const useCreateRecurringSchedule = () => {
 export const useUpdateRecurringSchedule = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ scheduleId, updates }: { scheduleId: string; updates: Partial<RecurringCountSchedule> }) =>
-      recurringSchedulesApi.updateSchedule(scheduleId, updates),
+    mutationFn: ({
+      scheduleId,
+      updates,
+    }: {
+      scheduleId: string;
+      updates: Partial<RecurringCountSchedule>;
+    }) => recurringSchedulesApi.updateSchedule(scheduleId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recurring-schedules'] });
     },
@@ -3949,13 +4035,15 @@ export const binLocationApi = {
   /**
    * Batch create bin locations
    */
-  batchCreate: async (locations: Array<{
-    binId: string;
-    zone: string;
-    aisle: string;
-    shelf: string;
-    type: string;
-  }>) => {
+  batchCreate: async (
+    locations: Array<{
+      binId: string;
+      zone: string;
+      aisle: string;
+      shelf: string;
+      type: string;
+    }>
+  ) => {
     const response = await apiClient.post('/bin-locations/batch', { locations });
     return response.data;
   },
@@ -3963,13 +4051,16 @@ export const binLocationApi = {
   /**
    * Update a bin location
    */
-  update: async (binId: string, updates: {
-    zone?: string;
-    aisle?: string;
-    shelf?: string;
-    type?: string;
-    active?: boolean;
-  }) => {
+  update: async (
+    binId: string,
+    updates: {
+      zone?: string;
+      aisle?: string;
+      shelf?: string;
+      type?: string;
+      active?: boolean;
+    }
+  ) => {
     const response = await apiClient.patch(`/bin-locations/${binId}`, updates);
     return response.data;
   },
@@ -4126,11 +4217,14 @@ export const customRoleApi = {
   /**
    * Update a custom role
    */
-  updateRole: async (roleId: string, data: {
-    name?: string;
-    description?: string;
-    permissions?: string[];
-  }): Promise<any> => {
+  updateRole: async (
+    roleId: string,
+    data: {
+      name?: string;
+      description?: string;
+      permissions?: string[];
+    }
+  ): Promise<any> => {
     const response = await apiClient.put<any>(`/custom-roles/${roleId}`, data);
     return response.data;
   },
@@ -4220,8 +4314,13 @@ export const useUpdateCustomRole = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ roleId, data }: { roleId: string; data: { name?: string; description?: string; permissions?: string[] } }) =>
-      customRoleApi.updateRole(roleId, data),
+    mutationFn: ({
+      roleId,
+      data,
+    }: {
+      roleId: string;
+      data: { name?: string; description?: string; permissions?: string[] };
+    }) => customRoleApi.updateRole(roleId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-roles'] });
     },
@@ -4270,7 +4369,9 @@ export const barcodeApi = {
    * Get bin location details by barcode
    */
   getBinLocationByBarcode: async (barcode: string) => {
-    const response = await apiClient.get<any>(`/barcode/bin-location/${encodeURIComponent(barcode)}`);
+    const response = await apiClient.get<any>(
+      `/barcode/bin-location/${encodeURIComponent(barcode)}`
+    );
     return response.data;
   },
 
@@ -4605,10 +4706,7 @@ export const slottingApi = {
   /**
    * Get slotting recommendations
    */
-  getRecommendations: async (options?: {
-    minPriority?: string;
-    maxRecommendations?: number;
-  }) => {
+  getRecommendations: async (options?: { minPriority?: string; maxRecommendations?: number }) => {
     const response = await apiClient.get<any>('/slotting/recommendations', {
       params: options,
     });
@@ -4763,7 +4861,11 @@ export const nzcApi = {
   /**
    * Reprint a shipping label (sends to printer)
    */
-  reprintLabel: async (connote: string, copies?: number, printerName?: string): Promise<{ success: boolean; message: string }> => {
+  reprintLabel: async (
+    connote: string,
+    copies?: number,
+    printerName?: string
+  ): Promise<{ success: boolean; message: string }> => {
     const response = await apiClient.post<{ success: boolean; message: string }>(
       `/nzc/labels/${connote}/reprint`,
       { copies, printerName }
@@ -4825,8 +4927,15 @@ export const useNZCGetLabel = (connote: string, format?: string, enabled = true)
 
 export const useNZCReprintLabel = () => {
   return useMutation({
-    mutationFn: ({ connote, copies, printerName }: { connote: string; copies?: number; printerName?: string }) =>
-      nzcApi.reprintLabel(connote, copies, printerName),
+    mutationFn: ({
+      connote,
+      copies,
+      printerName,
+    }: {
+      connote: string;
+      copies?: number;
+      printerName?: string;
+    }) => nzcApi.reprintLabel(connote, copies, printerName),
     onError: error => {
       handleAPIError(error);
     },
@@ -4956,14 +5065,16 @@ export const notificationsApi = {
 
 // Notifications React Query hooks
 
-export const useNotifications = (params: {
-  type?: string;
-  status?: string;
-  channel?: string;
-  unreadOnly?: boolean;
-  limit?: number;
-  offset?: number;
-} = {}) => {
+export const useNotifications = (
+  params: {
+    type?: string;
+    status?: string;
+    channel?: string;
+    unreadOnly?: boolean;
+    limit?: number;
+    offset?: number;
+  } = {}
+) => {
   return useQuery({
     queryKey: ['notifications', params],
     queryFn: () => notificationsApi.listNotifications(params),
@@ -4988,7 +5099,7 @@ export const useMarkAsRead = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'stats'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5003,7 +5114,7 @@ export const useMarkAllAsRead = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'stats'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5018,7 +5129,7 @@ export const useDeleteNotification = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       queryClient.invalidateQueries({ queryKey: ['notifications', 'stats'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5027,7 +5138,7 @@ export const useDeleteNotification = () => {
 export const useSendNotification = () => {
   return useMutation({
     mutationFn: notificationsApi.sendNotification,
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5036,7 +5147,7 @@ export const useSendNotification = () => {
 export const useBulkSendNotification = () => {
   return useMutation({
     mutationFn: notificationsApi.bulkSend,
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5058,7 +5169,7 @@ export const useUpdateNotificationPreferences = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', 'preferences'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5072,11 +5183,13 @@ export const businessRulesApi = {
   /**
    * Get all business rules
    */
-  listRules: async (params: {
-    status?: RuleStatus;
-    ruleType?: RuleType;
-    includeInactive?: boolean;
-  } = {}) => {
+  listRules: async (
+    params: {
+      status?: RuleStatus;
+      ruleType?: RuleType;
+      includeInactive?: boolean;
+    } = {}
+  ) => {
     const response = await apiClient.get('/business-rules', { params });
     return response.data.data;
   },
@@ -5115,11 +5228,14 @@ export const businessRulesApi = {
   /**
    * Test a business rule
    */
-  testRule: async (ruleId: string, testData: {
-    entity?: any;
-    entityType?: string;
-    entityId?: string;
-  }): Promise<any> => {
+  testRule: async (
+    ruleId: string,
+    testData: {
+      entity?: any;
+      entityType?: string;
+      entityId?: string;
+    }
+  ): Promise<any> => {
     const response = await apiClient.post(`/business-rules/${ruleId}/test`, testData);
     return response.data.data;
   },
@@ -5151,11 +5267,13 @@ export const businessRulesApi = {
 
 // Business Rules React Query hooks
 
-export const useBusinessRules = (params: {
-  status?: RuleStatus;
-  ruleType?: RuleType;
-  includeInactive?: boolean;
-} = {}) => {
+export const useBusinessRules = (
+  params: {
+    status?: RuleStatus;
+    ruleType?: RuleType;
+    includeInactive?: boolean;
+  } = {}
+) => {
   return useQuery({
     queryKey: ['business-rules', params],
     queryFn: () => businessRulesApi.listRules(params),
@@ -5180,7 +5298,7 @@ export const useCreateBusinessRule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-rules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5195,7 +5313,7 @@ export const useUpdateBusinessRule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-rules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5209,7 +5327,7 @@ export const useDeleteBusinessRule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-rules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5219,7 +5337,7 @@ export const useTestBusinessRule = () => {
   return useMutation({
     mutationFn: ({ ruleId, testData }: { ruleId: string; testData: any }) =>
       businessRulesApi.testRule(ruleId, testData),
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5233,7 +5351,7 @@ export const useActivateBusinessRule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-rules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5247,7 +5365,7 @@ export const useDeactivateBusinessRule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-rules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5277,7 +5395,9 @@ export const reportsApi = {
     page?: number;
     limit?: number;
   }): Promise<{ reports: Report[]; total: number }> => {
-    const response = await apiClient.get<{ reports: Report[]; total: number }>('/reports', { params });
+    const response = await apiClient.get<{ reports: Report[]; total: number }>('/reports', {
+      params,
+    });
     return response.data;
   },
 
@@ -5292,7 +5412,9 @@ export const reportsApi = {
   /**
    * Create a new report
    */
-  createReport: async (report: Omit<Report, 'reportId' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Report> => {
+  createReport: async (
+    report: Omit<Report, 'reportId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ): Promise<Report> => {
     const response = await apiClient.post<Report>('/reports', report);
     return response.data;
   },
@@ -5315,31 +5437,53 @@ export const reportsApi = {
   /**
    * Execute a report with parameters
    */
-  executeReport: async (reportId: string, parameters?: Record<string, any>): Promise<ReportExecution> => {
-    const response = await apiClient.post<ReportExecution>(`/reports/${reportId}/execute`, { parameters });
+  executeReport: async (
+    reportId: string,
+    parameters?: Record<string, any>
+  ): Promise<ReportExecution> => {
+    const response = await apiClient.post<ReportExecution>(`/reports/${reportId}/execute`, {
+      parameters,
+    });
     return response.data;
   },
 
   /**
    * Get report execution history
    */
-  getExecutionHistory: async (reportId: string, params?: { page?: number; limit?: number }): Promise<{ executions: ReportExecution[]; total: number }> => {
-    const response = await apiClient.get<{ executions: ReportExecution[]; total: number }>(`/reports/${reportId}/executions`, { params });
+  getExecutionHistory: async (
+    reportId: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<{ executions: ReportExecution[]; total: number }> => {
+    const response = await apiClient.get<{ executions: ReportExecution[]; total: number }>(
+      `/reports/${reportId}/executions`,
+      { params }
+    );
     return response.data;
   },
 
   /**
    * Export report execution
    */
-  exportReport: async (executionId: string, format: ReportFormat): Promise<{ downloadUrl: string }> => {
-    const response = await apiClient.post<{ downloadUrl: string }>(`/reports/executions/${executionId}/export`, { format });
+  exportReport: async (
+    executionId: string,
+    format: ReportFormat
+  ): Promise<{ downloadUrl: string }> => {
+    const response = await apiClient.post<{ downloadUrl: string }>(
+      `/reports/executions/${executionId}/export`,
+      { format }
+    );
     return response.data;
   },
 
   /**
    * Schedule a report
    */
-  scheduleReport: async (schedule: Omit<ReportSchedule, 'scheduleId' | 'createdAt' | 'updatedAt' | 'createdBy' | 'nextRunAt' | 'lastRunAt'>): Promise<ReportSchedule> => {
+  scheduleReport: async (
+    schedule: Omit<
+      ReportSchedule,
+      'scheduleId' | 'createdAt' | 'updatedAt' | 'createdBy' | 'nextRunAt' | 'lastRunAt'
+    >
+  ): Promise<ReportSchedule> => {
     const response = await apiClient.post<ReportSchedule>('/reports/schedules', schedule);
     return response.data;
   },
@@ -5348,15 +5492,23 @@ export const reportsApi = {
    * Get report schedules
    */
   getSchedules: async (reportId?: string): Promise<ReportSchedule[]> => {
-    const response = await apiClient.get<ReportSchedule[]>('/reports/schedules', { params: { reportId } });
+    const response = await apiClient.get<ReportSchedule[]>('/reports/schedules', {
+      params: { reportId },
+    });
     return response.data;
   },
 
   /**
    * Update schedule
    */
-  updateSchedule: async (scheduleId: string, updates: Partial<ReportSchedule>): Promise<ReportSchedule> => {
-    const response = await apiClient.put<ReportSchedule>(`/reports/schedules/${scheduleId}`, updates);
+  updateSchedule: async (
+    scheduleId: string,
+    updates: Partial<ReportSchedule>
+  ): Promise<ReportSchedule> => {
+    const response = await apiClient.put<ReportSchedule>(
+      `/reports/schedules/${scheduleId}`,
+      updates
+    );
     return response.data;
   },
 
@@ -5371,7 +5523,10 @@ export const reportsApi = {
    * Toggle schedule enabled/disabled
    */
   toggleSchedule: async (scheduleId: string, enabled: boolean): Promise<ReportSchedule> => {
-    const response = await apiClient.patch<ReportSchedule>(`/reports/schedules/${scheduleId}/toggle`, { enabled });
+    const response = await apiClient.patch<ReportSchedule>(
+      `/reports/schedules/${scheduleId}/toggle`,
+      { enabled }
+    );
     return response.data;
   },
 
@@ -5394,7 +5549,9 @@ export const reportsApi = {
   /**
    * Create a dashboard
    */
-  createDashboard: async (dashboard: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Dashboard> => {
+  createDashboard: async (
+    dashboard: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ): Promise<Dashboard> => {
     const response = await apiClient.post<Dashboard>('/reports/dashboards', dashboard);
     return response.data;
   },
@@ -5418,7 +5575,9 @@ export const reportsApi = {
    * Get report templates
    */
   getTemplates: async (category?: string): Promise<ReportTemplate[]> => {
-    const response = await apiClient.get<ReportTemplate[]>('/reports/templates', { params: { category } });
+    const response = await apiClient.get<ReportTemplate[]>('/reports/templates', {
+      params: { category },
+    });
     return response.data;
   },
 
@@ -5426,7 +5585,9 @@ export const reportsApi = {
    * Create report from template
    */
   createFromTemplate: async (templateId: string, name: string): Promise<Report> => {
-    const response = await apiClient.post<Report>(`/reports/templates/${templateId}/create`, { name });
+    const response = await apiClient.post<Report>(`/reports/templates/${templateId}/create`, {
+      name,
+    });
     return response.data;
   },
 
@@ -5447,22 +5608,44 @@ export const reportsApi = {
     groups: ReportGroup[];
     limit?: number;
   }): Promise<{ data: any[]; total: number }> => {
-    const response = await apiClient.post<{ data: any[]; total: number }>('/reports/preview', definition);
+    const response = await apiClient.post<{ data: any[]; total: number }>(
+      '/reports/preview',
+      definition
+    );
     return response.data;
   },
 
   /**
    * Get export jobs
    */
-  getExportJobs: async (params?: { status?: ReportStatus; page?: number; limit?: number }): Promise<{ jobs: ExportJob[]; total: number }> => {
-    const response = await apiClient.get<{ jobs: ExportJob[]; total: number }>('/reports/exports', { params });
+  getExportJobs: async (params?: {
+    status?: ReportStatus;
+    page?: number;
+    limit?: number;
+  }): Promise<{ jobs: ExportJob[]; total: number }> => {
+    const response = await apiClient.get<{ jobs: ExportJob[]; total: number }>('/reports/exports', {
+      params,
+    });
     return response.data;
   },
 
   /**
    * Create export job
    */
-  createExportJob: async (job: Omit<ExportJob, 'jobId' | 'createdAt' | 'completedAt' | 'status' | 'createdBy' | 'fileUrl' | 'fileSizeBytes' | 'recordCount' | 'errorMessage'>): Promise<ExportJob> => {
+  createExportJob: async (
+    job: Omit<
+      ExportJob,
+      | 'jobId'
+      | 'createdAt'
+      | 'completedAt'
+      | 'status'
+      | 'createdBy'
+      | 'fileUrl'
+      | 'fileSizeBytes'
+      | 'recordCount'
+      | 'errorMessage'
+    >
+  ): Promise<ExportJob> => {
     const response = await apiClient.post<ExportJob>('/reports/exports', job);
     return response.data;
   },
@@ -5518,7 +5701,7 @@ export const useCreateReport = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5534,7 +5717,7 @@ export const useUpdateReport = () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] });
       queryClient.invalidateQueries({ queryKey: ['reports', variables.reportId] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5548,7 +5731,7 @@ export const useDeleteReport = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5558,18 +5741,26 @@ export const useExecuteReport = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ reportId, parameters }: { reportId: string; parameters?: Record<string, any> }) =>
-      reportsApi.executeReport(reportId, parameters),
+    mutationFn: ({
+      reportId,
+      parameters,
+    }: {
+      reportId: string;
+      parameters?: Record<string, any>;
+    }) => reportsApi.executeReport(reportId, parameters),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['reports', variables.reportId, 'executions'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
 };
 
-export const useReportExecutions = (reportId: string, params?: { page?: number; limit?: number }) => {
+export const useReportExecutions = (
+  reportId: string,
+  params?: { page?: number; limit?: number }
+) => {
   return useQuery({
     queryKey: ['reports', reportId, 'executions', params],
     queryFn: () => reportsApi.getExecutionHistory(reportId, params),
@@ -5581,7 +5772,7 @@ export const useExportReport = () => {
   return useMutation({
     mutationFn: ({ executionId, format }: { executionId: string; format: ReportFormat }) =>
       reportsApi.exportReport(executionId, format),
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5602,7 +5793,7 @@ export const useCreateSchedule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5612,12 +5803,17 @@ export const useUpdateSchedule = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ scheduleId, updates }: { scheduleId: string; updates: Partial<ReportSchedule> }) =>
-      reportsApi.updateSchedule(scheduleId, updates),
+    mutationFn: ({
+      scheduleId,
+      updates,
+    }: {
+      scheduleId: string;
+      updates: Partial<ReportSchedule>;
+    }) => reportsApi.updateSchedule(scheduleId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5631,7 +5827,7 @@ export const useDeleteSchedule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5646,7 +5842,7 @@ export const useToggleSchedule = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'schedules'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5675,7 +5871,7 @@ export const useCreateDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'dashboards'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5691,7 +5887,7 @@ export const useUpdateDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'dashboards'] });
       queryClient.invalidateQueries({ queryKey: ['reports', 'dashboards', variables.dashboardId] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5705,7 +5901,7 @@ export const useDeleteDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'dashboards'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5727,7 +5923,7 @@ export const useCreateFromTemplate = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5749,13 +5945,17 @@ export const usePreviewReport = () => {
       groups: ReportGroup[];
       limit?: number;
     }) => reportsApi.previewReport(definition),
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
 };
 
-export const useExportJobs = (params?: { status?: ReportStatus; page?: number; limit?: number }) => {
+export const useExportJobs = (params?: {
+  status?: ReportStatus;
+  page?: number;
+  limit?: number;
+}) => {
   return useQuery({
     queryKey: ['reports', 'exports', params],
     queryFn: () => reportsApi.getExportJobs(params),
@@ -5770,7 +5970,7 @@ export const useCreateExportJob = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'exports'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5781,10 +5981,15 @@ export const useExportJob = (jobId: string) => {
     queryKey: ['reports', 'exports', jobId],
     queryFn: () => reportsApi.getExportJob(jobId),
     enabled: !!jobId,
-    refetchInterval: (query) => {
+    refetchInterval: query => {
       // Poll until job is completed or failed
       const job = query.state.data;
-      if (job && (job.status === ReportStatus.COMPLETED || job.status === ReportStatus.FAILED || job.status === ReportStatus.CANCELLED)) {
+      if (
+        job &&
+        (job.status === ReportStatus.COMPLETED ||
+          job.status === ReportStatus.FAILED ||
+          job.status === ReportStatus.CANCELLED)
+      ) {
         return false;
       }
       return 2000; // Poll every 2 seconds
@@ -5800,7 +6005,7 @@ export const useCancelExportJob = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['reports', 'exports', variables] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5819,7 +6024,10 @@ export const integrationsApi = {
     status?: IntegrationStatus;
     provider?: IntegrationProvider;
   }): Promise<{ integrations: Integration[]; total: number }> => {
-    const response = await apiClient.get<{ integrations: Integration[]; total: number }>('/integrations', { params });
+    const response = await apiClient.get<{ integrations: Integration[]; total: number }>(
+      '/integrations',
+      { params }
+    );
     return response.data;
   },
 
@@ -5834,7 +6042,9 @@ export const integrationsApi = {
   /**
    * Create a new integration
    */
-  createIntegration: async (integration: Omit<Integration, 'integrationId' | 'createdAt' | 'updatedAt' | 'createdBy'>): Promise<Integration> => {
+  createIntegration: async (
+    integration: Omit<Integration, 'integrationId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ): Promise<Integration> => {
     const response = await apiClient.post<Integration>('/integrations', integration);
     return response.data;
   },
@@ -5842,7 +6052,10 @@ export const integrationsApi = {
   /**
    * Update an integration
    */
-  updateIntegration: async (integrationId: string, updates: Partial<Integration>): Promise<Integration> => {
+  updateIntegration: async (
+    integrationId: string,
+    updates: Partial<Integration>
+  ): Promise<Integration> => {
     const response = await apiClient.put<Integration>(`/integrations/${integrationId}`, updates);
     return response.data;
   },
@@ -5857,8 +6070,12 @@ export const integrationsApi = {
   /**
    * Test connection to an integration
    */
-  testConnection: async (integrationId: string): Promise<{ success: boolean; message?: string; latency?: number }> => {
-    const response = await apiClient.post<{ success: boolean; message?: string; latency?: number }>(`/integrations/${integrationId}/test`);
+  testConnection: async (
+    integrationId: string
+  ): Promise<{ success: boolean; message?: string; latency?: number }> => {
+    const response = await apiClient.post<{ success: boolean; message?: string; latency?: number }>(
+      `/integrations/${integrationId}/test`
+    );
     return response.data;
   },
 
@@ -5866,7 +6083,9 @@ export const integrationsApi = {
    * Enable/disable an integration
    */
   toggleIntegration: async (integrationId: string, enabled: boolean): Promise<Integration> => {
-    const response = await apiClient.patch<Integration>(`/integrations/${integrationId}/toggle`, { enabled });
+    const response = await apiClient.patch<Integration>(`/integrations/${integrationId}/toggle`, {
+      enabled,
+    });
     return response.data;
   },
 
@@ -5874,15 +6093,23 @@ export const integrationsApi = {
    * Trigger a sync
    */
   triggerSync: async (integrationId: string): Promise<{ syncId: string; status: SyncStatus }> => {
-    const response = await apiClient.post<{ syncId: string; status: SyncStatus }>(`/integrations/${integrationId}/sync`);
+    const response = await apiClient.post<{ syncId: string; status: SyncStatus }>(
+      `/integrations/${integrationId}/sync`
+    );
     return response.data;
   },
 
   /**
    * Get sync history
    */
-  getSyncHistory: async (integrationId: string, params?: { page?: number; limit?: number }): Promise<{ syncs: any[]; total: number }> => {
-    const response = await apiClient.get<{ syncs: any[]; total: number }>(`/integrations/${integrationId}/syncs`, { params });
+  getSyncHistory: async (
+    integrationId: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<{ syncs: any[]; total: number }> => {
+    const response = await apiClient.get<{ syncs: any[]; total: number }>(
+      `/integrations/${integrationId}/syncs`,
+      { params }
+    );
     return response.data;
   },
 
@@ -5896,7 +6123,10 @@ export const integrationsApi = {
     page?: number;
     limit?: number;
   }): Promise<{ events: any[]; total: number }> => {
-    const response = await apiClient.get<{ events: any[]; total: number }>('/integrations/webhooks/events', { params });
+    const response = await apiClient.get<{ events: any[]; total: number }>(
+      '/integrations/webhooks/events',
+      { params }
+    );
     return response.data;
   },
 
@@ -5904,23 +6134,35 @@ export const integrationsApi = {
    * Retry failed webhook event
    */
   retryWebhookEvent: async (eventId: string): Promise<{ success: boolean; message?: string }> => {
-    const response = await apiClient.post<{ success: boolean; message?: string }>(`/integrations/webhooks/events/${eventId}/retry`);
+    const response = await apiClient.post<{ success: boolean; message?: string }>(
+      `/integrations/webhooks/events/${eventId}/retry`
+    );
     return response.data;
   },
 
   /**
    * Get integration providers
    */
-  getProviders: async (): Promise<{ providers: IntegrationProvider[]; templates: Record<IntegrationProvider, any> }> => {
-    const response = await apiClient.get<{ providers: IntegrationProvider[]; templates: Record<IntegrationProvider, any> }>('/integrations/providers');
+  getProviders: async (): Promise<{
+    providers: IntegrationProvider[];
+    templates: Record<IntegrationProvider, any>;
+  }> => {
+    const response = await apiClient.get<{
+      providers: IntegrationProvider[];
+      templates: Record<IntegrationProvider, any>;
+    }>('/integrations/providers');
     return response.data;
   },
 
   /**
    * Get integration schema
    */
-  getSchema: async (provider: IntegrationProvider): Promise<{ configSchema: any; authSchema: any }> => {
-    const response = await apiClient.get<{ configSchema: any; authSchema: any }>(`/integrations/providers/${provider}/schema`);
+  getSchema: async (
+    provider: IntegrationProvider
+  ): Promise<{ configSchema: any; authSchema: any }> => {
+    const response = await apiClient.get<{ configSchema: any; authSchema: any }>(
+      `/integrations/providers/${provider}/schema`
+    );
     return response.data;
   },
 };
@@ -5957,7 +6199,7 @@ export const useCreateIntegration = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5967,13 +6209,18 @@ export const useUpdateIntegration = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ integrationId, updates }: { integrationId: string; updates: Partial<Integration> }) =>
-      integrationsApi.updateIntegration(integrationId, updates),
+    mutationFn: ({
+      integrationId,
+      updates,
+    }: {
+      integrationId: string;
+      updates: Partial<Integration>;
+    }) => integrationsApi.updateIntegration(integrationId, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       queryClient.invalidateQueries({ queryKey: ['integrations', variables.integrationId] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5987,7 +6234,7 @@ export const useDeleteIntegration = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -5996,7 +6243,7 @@ export const useDeleteIntegration = () => {
 export const useTestConnection = () => {
   return useMutation({
     mutationFn: integrationsApi.testConnection,
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -6010,9 +6257,11 @@ export const useToggleIntegration = () => {
       integrationsApi.toggleIntegration(integrationId, enabled),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
-      queryClient.invalidateQueries({ queryKey: ['integrations', (variables as { integrationId: string }).integrationId] });
+      queryClient.invalidateQueries({
+        queryKey: ['integrations', (variables as { integrationId: string }).integrationId],
+      });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -6028,13 +6277,16 @@ export const useTriggerSync = () => {
       queryClient.invalidateQueries({ queryKey: ['integrations', integrationId] });
       queryClient.invalidateQueries({ queryKey: ['integrations', integrationId, 'syncs'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
 };
 
-export const useSyncHistory = (integrationId: string, params?: { page?: number; limit?: number }) => {
+export const useSyncHistory = (
+  integrationId: string,
+  params?: { page?: number; limit?: number }
+) => {
   return useQuery({
     queryKey: ['integrations', integrationId, 'syncs', params],
     queryFn: () => integrationsApi.getSyncHistory(integrationId, params),
@@ -6064,7 +6316,7 @@ export const useRetryWebhookEvent = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations', 'webhooks', 'events'] });
     },
-    onError: (error) => {
+    onError: error => {
       handleAPIError(error);
     },
   });
@@ -6091,7 +6343,11 @@ export const useIntegrationSchema = (provider: IntegrationProvider) => {
 // PRODUCTION MANAGEMENT API
 // ============================================================================
 
-export const useProductionOrders = (params?: { status?: string; limit?: number; offset?: number }) => {
+export const useProductionOrders = (params?: {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) => {
   return useQuery({
     queryKey: ['production', 'orders', params],
     queryFn: async () => {
@@ -6174,7 +6430,12 @@ export const useProductionDashboard = () => {
 // MAINTENANCE & ASSETS API
 // ============================================================================
 
-export const useAssets = (params?: { status?: string; type?: string; limit?: number; offset?: number }) => {
+export const useAssets = (params?: {
+  status?: string;
+  type?: string;
+  limit?: number;
+  offset?: number;
+}) => {
   return useQuery({
     queryKey: ['maintenance', 'assets', params],
     queryFn: async () => {
@@ -6195,7 +6456,11 @@ export const useAsset = (assetId: string, enabled: boolean = true) => {
   });
 };
 
-export const useMaintenanceWorkOrders = (params?: { status?: string; assetId?: string; limit?: number }) => {
+export const useMaintenanceWorkOrders = (params?: {
+  status?: string;
+  assetId?: string;
+  limit?: number;
+}) => {
   return useQuery({
     queryKey: ['maintenance', 'work-orders', params],
     queryFn: async () => {
@@ -6261,7 +6526,9 @@ export const useUpdateWorkOrder = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['maintenance', 'work-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['maintenance', 'work-orders', variables.workOrderId] });
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance', 'work-orders', variables.workOrderId],
+      });
     },
   });
 };
@@ -6280,7 +6547,12 @@ export const useMaintenanceDashboard = () => {
 // SALES & CRM API
 // ============================================================================
 
-export const useCustomers = (params?: { status?: string; assignedTo?: string; limit?: number; offset?: number }) => {
+export const useCustomers = (params?: {
+  status?: string;
+  assignedTo?: string;
+  limit?: number;
+  offset?: number;
+}) => {
   return useQuery({
     queryKey: ['sales', 'customers', params],
     queryFn: async () => {
@@ -6322,7 +6594,11 @@ export const useLead = (leadId: string, enabled: boolean = true) => {
   });
 };
 
-export const useOpportunities = (params?: { stage?: string; assignedTo?: string; limit?: number }) => {
+export const useOpportunities = (params?: {
+  stage?: string;
+  assignedTo?: string;
+  limit?: number;
+}) => {
   return useQuery({
     queryKey: ['sales', 'opportunities', params],
     queryFn: async () => {
@@ -6459,7 +6735,11 @@ export const usePredictOrderDuration = () => {
 
 export const useForecastDemand = () => {
   return useMutation({
-    mutationFn: async (data: { sku_id: string; historical_data: number[]; forecast_horizon_days?: number }) => {
+    mutationFn: async (data: {
+      sku_id: string;
+      historical_data: number[];
+      forecast_horizon_days?: number;
+    }) => {
       const response = await apiClient.post('/route-optimization/forecast-demand', data);
       return response.data;
     },

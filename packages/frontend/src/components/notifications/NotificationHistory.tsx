@@ -6,7 +6,12 @@
  */
 
 import { useState } from 'react';
-import { useNotifications, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '@/services/api';
+import {
+  useNotifications,
+  useMarkAsRead,
+  useMarkAllAsRead,
+  useDeleteNotification,
+} from '@/services/api';
 import {
   BellIcon,
   EnvelopeIcon,
@@ -32,7 +37,15 @@ interface NotificationHistoryProps {
   className?: string;
 }
 
-type NotificationType = 'ORDER_CLAIMED' | 'ORDER_COMPLETED' | 'PICK_UPDATED' | 'INVENTORY_LOW' | 'EXCEPTION_REPORTED' | 'ZONE_ASSIGNED' | 'WAVE_CREATED' | 'SYSTEM_ALERT';
+type NotificationType =
+  | 'ORDER_CLAIMED'
+  | 'ORDER_COMPLETED'
+  | 'PICK_UPDATED'
+  | 'INVENTORY_LOW'
+  | 'EXCEPTION_REPORTED'
+  | 'ZONE_ASSIGNED'
+  | 'WAVE_CREATED'
+  | 'SYSTEM_ALERT';
 type NotificationChannel = 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP';
 
 interface Notification {
@@ -67,7 +80,10 @@ const channelColors = {
 const statusConfig = {
   PENDING: { label: 'Pending', color: 'bg-gray-800/60 text-gray-300 border border-gray-600/50' },
   SENT: { label: 'Sent', color: 'bg-blue-900/60 text-blue-300 border border-blue-500/50' },
-  DELIVERED: { label: 'Delivered', color: 'bg-green-900/60 text-green-300 border border-green-500/50' },
+  DELIVERED: {
+    label: 'Delivered',
+    color: 'bg-green-900/60 text-green-300 border border-green-500/50',
+  },
   FAILED: { label: 'Failed', color: 'bg-red-900/60 text-red-300 border border-red-500/50' },
   READ: { label: 'Read', color: 'bg-primary-900/60 text-primary-300 border border-primary-500/50' },
 };
@@ -138,9 +154,7 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-white">Notification History</h3>
-          {unreadCount > 0 && (
-            <Badge variant="info">{unreadCount} unread</Badge>
-          )}
+          {unreadCount > 0 && <Badge variant="info">{unreadCount} unread</Badge>}
         </div>
         <div className="flex gap-2">
           {unreadCount > 0 && (
@@ -176,7 +190,9 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
         >
           <option value="">All Types</option>
           {Object.entries(typeLabels).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
+            <option key={key} value={key}>
+              {label}
+            </option>
           ))}
         </select>
 
@@ -188,7 +204,9 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
         >
           <option value="">All Status</option>
           {Object.entries(statusConfig).map(([key, { label }]) => (
-            <option key={key} value={key}>{label}</option>
+            <option key={key} value={key}>
+              {label}
+            </option>
           ))}
         </select>
 
@@ -217,7 +235,7 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredNotifications.map((notification) => {
+          {filteredNotifications.map(notification => {
             const ChannelIcon = channelIcons[notification.channel];
             const statusInfo = statusConfig[notification.status];
             const isUnread = notification.status !== 'READ';
@@ -238,7 +256,12 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
                   onClick={() => setExpandedId(isExpanded ? null : notification.notificationId)}
                 >
                   {/* Channel icon */}
-                  <div className={cn('flex-shrink-0 p-2 rounded-full', channelColors[notification.channel])}>
+                  <div
+                    className={cn(
+                      'flex-shrink-0 p-2 rounded-full',
+                      channelColors[notification.channel]
+                    )}
+                  >
                     <ChannelIcon className="h-4 w-4" />
                   </div>
 
@@ -247,7 +270,9 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-white">{notification.title}</span>
+                          <span className="text-sm font-medium text-white">
+                            {notification.title}
+                          </span>
                           <Badge variant="outline" className="text-xs">
                             {typeLabels[notification.type]}
                           </Badge>
@@ -257,17 +282,27 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={cn('text-xs px-2 py-0.5 rounded-full border', statusInfo.color)}>
+                        <span
+                          className={cn(
+                            'text-xs px-2 py-0.5 rounded-full border',
+                            statusInfo.color
+                          )}
+                        >
                           {statusInfo.label}
                         </span>
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             setExpandedId(isExpanded ? null : notification.notificationId);
                           }}
                           className="p-1 text-gray-400 hover:text-white transition-colors"
                         >
-                          <ChevronDownIcon className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />
+                          <ChevronDownIcon
+                            className={cn(
+                              'h-4 w-4 transition-transform',
+                              isExpanded && 'rotate-180'
+                            )}
+                          />
                         </button>
                       </div>
                     </div>
@@ -281,7 +316,7 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
                   {/* Mark as read button */}
                   {isUnread && (
                     <button
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         handleMarkAsRead(notification.notificationId);
                       }}
@@ -302,21 +337,33 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
                         <span className="text-gray-200">{typeLabels[notification.type]}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-500 text-xs uppercase tracking-wide">Channel</span>
+                        <span className="text-gray-500 text-xs uppercase tracking-wide">
+                          Channel
+                        </span>
                         <span className="text-gray-200">{notification.channel}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-500 text-xs uppercase tracking-wide">Status</span>
-                        <span className="text-gray-200">{statusConfig[notification.status].label}</span>
+                        <span className="text-gray-500 text-xs uppercase tracking-wide">
+                          Status
+                        </span>
+                        <span className="text-gray-200">
+                          {statusConfig[notification.status].label}
+                        </span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-500 text-xs uppercase tracking-wide">Created</span>
-                        <span className="text-gray-200">{new Date(notification.createdAt).toLocaleString()}</span>
+                        <span className="text-gray-500 text-xs uppercase tracking-wide">
+                          Created
+                        </span>
+                        <span className="text-gray-200">
+                          {new Date(notification.createdAt).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                     {notification.data && (
                       <div className="mt-4 p-3 rounded-lg bg-gray-900/50 border border-gray-700">
-                        <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-medium">Notification Data</div>
+                        <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-medium">
+                          Notification Data
+                        </div>
                         <pre className="text-xs text-gray-300 overflow-auto max-h-40 font-mono leading-relaxed">
                           {JSON.stringify(notification.data, null, 2)}
                         </pre>

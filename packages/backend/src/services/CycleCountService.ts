@@ -21,7 +21,7 @@ import {
   TransactionType,
   OrderStatus,
 } from '@opsui/shared';
-import { notifyAll, NotificationType, NotificationPriority } from './notificationHelper';
+import { notifyAll, NotificationType, NotificationPriority } from './NotificationHelper';
 
 // ============================================================================
 // CYCLE COUNT SERVICE
@@ -193,10 +193,9 @@ export class CycleCountService {
       await client.query('BEGIN');
 
       // Get plan to check status
-      const planResult = await client.query(
-        `SELECT * FROM cycle_count_plans WHERE plan_id = $1`,
-        [dto.planId]
-      );
+      const planResult = await client.query(`SELECT * FROM cycle_count_plans WHERE plan_id = $1`, [
+        dto.planId,
+      ]);
 
       if (planResult.rows.length === 0) {
         throw new Error(`Cycle count plan ${dto.planId} not found`);
@@ -204,7 +203,10 @@ export class CycleCountService {
 
       const plan = planResult.rows[0];
 
-      if (plan.status === CycleCountStatus.COMPLETED || plan.status === CycleCountStatus.RECONCILED) {
+      if (
+        plan.status === CycleCountStatus.COMPLETED ||
+        plan.status === CycleCountStatus.RECONCILED
+      ) {
         throw new Error(`Cannot cancel a ${plan.status} cycle count`);
       }
 
@@ -250,10 +252,9 @@ export class CycleCountService {
     const client = await getPool();
 
     // Get the current plan
-    const planResult = await client.query(
-      `SELECT * FROM cycle_count_plans WHERE plan_id = $1`,
-      [planId]
-    );
+    const planResult = await client.query(`SELECT * FROM cycle_count_plans WHERE plan_id = $1`, [
+      planId,
+    ]);
 
     if (planResult.rows.length === 0) {
       throw new Error(`Cycle count plan ${planId} not found`);
@@ -363,13 +364,15 @@ export class CycleCountService {
   /**
    * Get audit log for a cycle count plan
    */
-  async getCycleCountAuditLog(planId: string): Promise<Array<{
-    timestamp: Date;
-    action: string;
-    userId: string;
-    userName: string;
-    details: any;
-  }>> {
+  async getCycleCountAuditLog(planId: string): Promise<
+    Array<{
+      timestamp: Date;
+      action: string;
+      userId: string;
+      userName: string;
+      details: any;
+    }>
+  > {
     const client = await getPool();
 
     // Get audit logs for this plan
@@ -504,9 +507,10 @@ export class CycleCountService {
 
     // Apply role-based access control
     // Pickers, Packers: Can only see plans where count_by = their userId
-    if (filters?.requestingUserRole &&
-        (filters.requestingUserRole === 'PICKER' ||
-         filters.requestingUserRole === 'PACKER')) {
+    if (
+      filters?.requestingUserRole &&
+      (filters.requestingUserRole === 'PICKER' || filters.requestingUserRole === 'PACKER')
+    ) {
       // Force filter to only show their assigned counts
       conditions.push(`count_by = $${paramCount}`);
       params.push(filters.requestingUserId);
@@ -539,9 +543,10 @@ export class CycleCountService {
 
     // Note: countBy filter is only available to SUPERVISOR and ADMIN roles
     // STOCK_CONTROLLER, PICKER, and PACKER are filtered by requestingUserId above
-    if (filters?.countBy &&
-        (filters.requestingUserRole === 'SUPERVISOR' ||
-         filters.requestingUserRole === 'ADMIN')) {
+    if (
+      filters?.countBy &&
+      (filters.requestingUserRole === 'SUPERVISOR' || filters.requestingUserRole === 'ADMIN')
+    ) {
       conditions.push(`count_by = $${paramCount}`);
       params.push(filters.countBy);
       paramCount++;
@@ -601,10 +606,9 @@ export class CycleCountService {
       await client.query('BEGIN');
 
       // Get the plan first to check its type
-      const planResult = await client.query(
-        `SELECT * FROM cycle_count_plans WHERE plan_id = $1`,
-        [planId]
-      );
+      const planResult = await client.query(`SELECT * FROM cycle_count_plans WHERE plan_id = $1`, [
+        planId,
+      ]);
 
       if (planResult.rows.length === 0) {
         throw new Error(`Cycle count plan ${planId} not found`);
@@ -707,11 +711,7 @@ export class CycleCountService {
    * Generate count entries automatically based on count type
    * Called when starting a cycle count plan
    */
-  private async generateCountEntriesForType(
-    plan: any,
-    userId: string,
-    client: any
-  ): Promise<void> {
+  private async generateCountEntriesForType(plan: any, userId: string, client: any): Promise<void> {
     const countType = plan.count_type;
     const location = plan.location;
     const sku = plan.sku;
@@ -807,7 +807,10 @@ export class CycleCountService {
       );
     }
 
-    logger.info(`BLANKET count: Created ${inventoryResult.rows.length} entries`, { planId, location });
+    logger.info(`BLANKET count: Created ${inventoryResult.rows.length} entries`, {
+      planId,
+      location,
+    });
   }
 
   /**
@@ -916,12 +919,14 @@ export class CycleCountService {
     let sampleSize = Math.ceil(totalItems * (samplePercent / 100));
     sampleSize = Math.max(minSampleSize, Math.min(maxSampleSize, sampleSize));
 
-    const sampleResult = await client.query(
-      `${inventoryQuery} LIMIT $${params.length + 1}`,
-      [...params, sampleSize]
-    );
+    const sampleResult = await client.query(`${inventoryQuery} LIMIT $${params.length + 1}`, [
+      ...params,
+      sampleSize,
+    ]);
 
-    logger.info(`SPOT_CHECK count: Sampling ${sampleResult.rows.length} items from ${totalItems} total`);
+    logger.info(
+      `SPOT_CHECK count: Sampling ${sampleResult.rows.length} items from ${totalItems} total`
+    );
 
     // Create count entries
     for (const row of sampleResult.rows) {
@@ -949,7 +954,10 @@ export class CycleCountService {
       );
     }
 
-    logger.info(`SPOT_CHECK count: Created ${sampleResult.rows.length} entries`, { planId, sampleSize });
+    logger.info(`SPOT_CHECK count: Created ${sampleResult.rows.length} entries`, {
+      planId,
+      sampleSize,
+    });
   }
 
   /**
@@ -1027,7 +1035,9 @@ export class CycleCountService {
       [OrderStatus.PICKING, OrderStatus.PICKED, OrderStatus.PACKED, location]
     );
 
-    logger.info(`SHIPPING count: Found ${shippingResult.rows.length} unique SKUs in orders to ship`);
+    logger.info(
+      `SHIPPING count: Found ${shippingResult.rows.length} unique SKUs in orders to ship`
+    );
 
     // Create count entries
     for (const row of shippingResult.rows) {
@@ -1070,7 +1080,10 @@ export class CycleCountService {
     client: any
   ): Promise<void> {
     // Parse comma-separated SKUs
-    const skus = sku.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const skus = sku
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
 
     if (skus.length === 0) {
       logger.warn('AD_HOC count: No valid SKUs provided', { planId, sku });
@@ -1095,7 +1108,9 @@ export class CycleCountService {
 
     const inventoryResult = await client.query(query, params);
 
-    logger.info(`AD_HOC count: Found ${inventoryResult.rows.length} inventory records for specified SKUs`);
+    logger.info(
+      `AD_HOC count: Found ${inventoryResult.rows.length} inventory records for specified SKUs`
+    );
 
     // Create count entries
     for (const row of inventoryResult.rows) {
@@ -1248,7 +1263,10 @@ export class CycleCountService {
             type: NotificationType.EXCEPTION_REPORTED,
             title: 'Significant Cycle Count Variance',
             message: `Large variance detected for ${dto.sku} at ${dto.binLocation}: ${variance > 0 ? '+' : ''}${variance} units (${variancePercent.toFixed(1)}%)`,
-            priority: Math.abs(variancePercent) > 10 ? NotificationPriority.URGENT : NotificationPriority.HIGH,
+            priority:
+              Math.abs(variancePercent) > 10
+                ? NotificationPriority.URGENT
+                : NotificationPriority.HIGH,
             data: {
               entryId,
               sku: dto.sku,

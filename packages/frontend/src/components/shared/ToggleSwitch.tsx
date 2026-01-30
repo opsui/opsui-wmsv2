@@ -67,9 +67,7 @@ export function ToggleSwitch({
         className={classNames(
           'relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
           sizeClasses[size].switch,
-          checked
-            ? 'bg-blue-600 dark:bg-blue-500'
-            : 'bg-gray-200 dark:bg-gray-700',
+          checked ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-200 dark:bg-gray-700',
           isDisabled && 'cursor-not-allowed opacity-50'
         )}
         role="switch"
@@ -140,7 +138,7 @@ export function ToggleGroup({
   return (
     <div className={className}>
       <div className="space-y-4">
-        {items.map((item) => (
+        {items.map(item => (
           <div key={item.id} className="flex items-center justify-between">
             <div className="flex-1">
               <label
@@ -150,9 +148,7 @@ export function ToggleGroup({
                 {item.label}
               </label>
               {item.description && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {item.description}
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
               )}
             </div>
             <ToggleSwitch
@@ -203,9 +199,7 @@ export function ToggleWithIcon({
           <Icon className="h-5 w-5" />
         </div>
       )}
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-      </span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       <div className="ml-auto">
         <ToggleSwitch
           checked={checked}

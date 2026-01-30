@@ -167,7 +167,7 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
         },
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         if (isEdit && inspection) {
           await updateMutation.mutateAsync({
@@ -220,7 +220,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 <option value={InspectionType.DAMAGE}>Damage</option>
                 <option value={InspectionType.EXPIRATION}>Expiration</option>
               </select>
-              {errors.inspectionType && <p className="mt-1 text-sm text-red-500">{errors.inspectionType}</p>}
+              {errors.inspectionType && (
+                <p className="mt-1 text-sm text-red-500">{errors.inspectionType}</p>
+              )}
             </div>
 
             <div>
@@ -242,7 +244,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 <option value="ORDER">Order</option>
                 <option value="RETURN">Return</option>
               </select>
-              {errors.referenceType && <p className="mt-1 text-sm text-red-500">{errors.referenceType}</p>}
+              {errors.referenceType && (
+                <p className="mt-1 text-sm text-red-500">{errors.referenceType}</p>
+              )}
             </div>
 
             <div>
@@ -258,7 +262,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 }`}
                 placeholder="Enter reference ID"
               />
-              {errors.referenceId && <p className="mt-1 text-sm text-red-500">{errors.referenceId}</p>}
+              {errors.referenceId && (
+                <p className="mt-1 text-sm text-red-500">{errors.referenceId}</p>
+              )}
             </div>
 
             <div>
@@ -292,7 +298,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                   errors.quantityInspected ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
-              {errors.quantityInspected && <p className="mt-1 text-sm text-red-500">{errors.quantityInspected}</p>}
+              {errors.quantityInspected && (
+                <p className="mt-1 text-sm text-red-500">{errors.quantityInspected}</p>
+              )}
             </div>
 
             <div>
@@ -860,7 +868,9 @@ export function QualityControlPage() {
                     {paginatedInspections.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
-                          {searchedInspections.length === 0 ? 'No inspections found' : 'No inspections on this page'}
+                          {searchedInspections.length === 0
+                            ? 'No inspections found'
+                            : 'No inspections on this page'}
                         </td>
                       </tr>
                     ) : (
@@ -955,7 +965,9 @@ export function QualityControlPage() {
                     {paginatedChecklists.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-400">
-                          {searchedChecklists.length === 0 ? 'No checklists found' : 'No checklists on this page'}
+                          {searchedChecklists.length === 0
+                            ? 'No checklists found'
+                            : 'No checklists on this page'}
                         </td>
                       </tr>
                     ) : (
@@ -1070,7 +1082,9 @@ export function QualityControlPage() {
                     {paginatedReturns.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-400">
-                          {searchedReturns.length === 0 ? 'No returns found' : 'No returns on this page'}
+                          {searchedReturns.length === 0
+                            ? 'No returns found'
+                            : 'No returns on this page'}
                         </td>
                       </tr>
                     ) : (

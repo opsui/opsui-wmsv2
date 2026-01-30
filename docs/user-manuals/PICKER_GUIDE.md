@@ -29,6 +29,7 @@ This guide explains how to use the Warehouse Management System (WMS) as a Picker
 ### First-Time Login
 
 If this is your first time logging in:
+
 1. You will be prompted to change your password
 2. Create a strong password with:
    - At least 8 characters
@@ -44,16 +45,17 @@ After logging in, you will see the **Dashboard** which displays:
 
 ### Key Metrics
 
-| Metric | Description |
-|--------|-------------|
-| **Active Staff** | Number of pickers currently working |
-| **Orders/Hour** | Current picking rate across all pickers |
-| **Queue Depth** | Number of orders waiting to be picked |
-| **Exceptions** | Number of active exceptions needing attention |
+| Metric           | Description                                   |
+| ---------------- | --------------------------------------------- |
+| **Active Staff** | Number of pickers currently working           |
+| **Orders/Hour**  | Current picking rate across all pickers       |
+| **Queue Depth**  | Number of orders waiting to be picked         |
+| **Exceptions**   | Number of active exceptions needing attention |
 
 ### Role Activity Card
 
 Shows all active pickers with their:
+
 - Current status (Picking, Idle, On Break)
 - Orders assigned
 - Items picked so far
@@ -71,6 +73,7 @@ Shows all active pickers with their:
 ### Step 2: Review Order Details
 
 Each order displays:
+
 - **Order ID** - Unique identifier
 - **Customer Name** - Who the order is for
 - **Priority Badge** - HIGH, NORMAL, or LOW priority
@@ -98,12 +101,12 @@ After claiming an order, you are automatically redirected to the Picking Page.
 
 The picking page displays:
 
-| Section | Description |
-|---------|-------------|
-| **Order Header** | Order ID, customer name, total items |
-| **Pick List** | Items to pick with locations and quantities |
-| **Progress Bar** | Visual progress indicator |
-| **Zone Information** | Your assigned zone(s) for this order |
+| Section              | Description                                 |
+| -------------------- | ------------------------------------------- |
+| **Order Header**     | Order ID, customer name, total items        |
+| **Pick List**        | Items to pick with locations and quantities |
+| **Progress Bar**     | Visual progress indicator                   |
+| **Zone Information** | Your assigned zone(s) for this order        |
 
 ### Picking Process
 
@@ -132,6 +135,7 @@ For each item in your pick list:
 ### Optimized Pick Path
 
 The system displays items in **optimal picking order** to minimize walking distance:
+
 - Items are grouped by zone
 - Within each zone, items are ordered by proximity
 
@@ -163,13 +167,13 @@ After all items are picked:
 
 ### Common Exception Types
 
-| Exception | Action |
-|-----------|--------|
-| **Item Not Found** | Item is not at the expected bin location |
-| **Damaged Item** | Item is damaged and cannot be picked |
-| **Insufficient Quantity** | Not enough items available at location |
-| **Wrong Item** | Scanned item doesn't match expected SKU |
-| **Bin Location Empty** | Bin location is empty |
+| Exception                 | Action                                   |
+| ------------------------- | ---------------------------------------- |
+| **Item Not Found**        | Item is not at the expected bin location |
+| **Damaged Item**          | Item is damaged and cannot be picked     |
+| **Insufficient Quantity** | Not enough items available at location   |
+| **Wrong Item**            | Scanned item doesn't match expected SKU  |
+| **Bin Location Empty**    | Bin location is empty                    |
 
 ### Reporting an Exception
 
@@ -186,6 +190,7 @@ The exception is routed to a supervisor for resolution.
 ### Continuing After Exception
 
 After submitting an exception:
+
 - The item is marked as **On Hold**
 - You can continue picking remaining items
 - A supervisor will resolve the exception and update the order
@@ -248,21 +253,25 @@ After submitting an exception:
 ### Issue: Cannot Claim Order
 
 **Possible Causes:**
+
 - Order already claimed by another picker
 - You already have an active order
 
 **Solution:**
+
 - Complete your current order first
 - Refresh the order queue
 
 ### Issue: Scanner Not Working
 
 **Possible Causes:**
+
 - Scanner not paired
 - Battery depleted
 - Bluetooth disconnected
 
 **Solution:**
+
 - Check scanner battery
 - Re-pair scanner with your device
 - Use manual SKU entry as backup
@@ -270,10 +279,12 @@ After submitting an exception:
 ### Issue: Item Not Scanning
 
 **Possible Causes:**
+
 - Barcode damaged or unreadable
 - Wrong item being scanned
 
 **Solution:**
+
 - Manually enter the SKU
 - Verify you have the correct item
 - Report barcode damage if needed
@@ -281,10 +292,12 @@ After submitting an exception:
 ### Issue: Cannot Complete Order
 
 **Possible Causes:**
+
 - Not all items picked
 - Active exceptions on order
 
 **Solution:**
+
 - Pick all remaining items
 - Wait for supervisor to resolve exceptions
 
@@ -292,13 +305,13 @@ After submitting an exception:
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Enter` | Confirm pick (after scanning) |
-| `Esc` | Cancel current action |
-| `F1` | View pick list |
-| `F2` | Report exception |
-| `F3` | Toggle break status |
+| Shortcut | Action                        |
+| -------- | ----------------------------- |
+| `Enter`  | Confirm pick (after scanning) |
+| `Esc`    | Cancel current action         |
+| `F1`     | View pick list                |
+| `F2`     | Report exception              |
+| `F3`     | Toggle break status           |
 
 ---
 
@@ -306,11 +319,11 @@ After submitting an exception:
 
 ### Contact Information
 
-| Role | Contact |
-|------|---------|
-| **Floor Supervisor** | On-site (radio extension 101) |
-| **System Administrator** | admin@warehouse.com |
-| **IT Helpdesk** | helpdesk@warehouse.com |
+| Role                     | Contact                       |
+| ------------------------ | ----------------------------- |
+| **Floor Supervisor**     | On-site (radio extension 101) |
+| **System Administrator** | admin@warehouse.com           |
+| **IT Helpdesk**          | helpdesk@warehouse.com        |
 
 ### Additional Resources
 
@@ -324,13 +337,13 @@ After submitting an exception:
 
 ### Zone Layout
 
-| Zone | Description | Typical Items |
-|------|-------------|---------------|
-| **A** | Fast-moving items | High-volume SKUs |
-| **B** | Medium-moving items | Regular stock |
-| **C** | Slow-moving items | Low-volume SKUs |
-| **D** | Bulk items | Large quantity items |
-| **E** | Hazardous materials | Special handling items |
+| Zone  | Description            | Typical Items           |
+| ----- | ---------------------- | ----------------------- |
+| **A** | Fast-moving items      | High-volume SKUs        |
+| **B** | Medium-moving items    | Regular stock           |
+| **C** | Slow-moving items      | Low-volume SKUs         |
+| **D** | Bulk items             | Large quantity items    |
+| **E** | Hazardous materials    | Special handling items  |
 | **F** | Temperature-controlled | Perishables, cold items |
 
 ### Zone Assignment
@@ -341,6 +354,6 @@ After submitting an exception:
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2026*
-*For questions or feedback, contact your Floor Supervisor*
+_Document Version: 1.0_
+_Last Updated: January 2026_
+_For questions or feedback, contact your Floor Supervisor_

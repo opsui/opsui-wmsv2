@@ -94,8 +94,10 @@ interface IntegrationFormData {
 // ============================================================================
 
 export function IntegrationsPage() {
-    const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'integrations' | 'sync-jobs' | 'webhooks'>('integrations');
+  const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState<'integrations' | 'sync-jobs' | 'webhooks'>(
+    'integrations'
+  );
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | IntegrationStatus>('ALL');
@@ -110,10 +112,15 @@ export function IntegrationsPage() {
   const itemsPerPage = 10;
 
   // Fetch integrations
-  const { data: integrationsData, isLoading: integrationsLoading, error: integrationsError, refetch } = useIntegrations();
+  const {
+    data: integrationsData,
+    isLoading: integrationsLoading,
+    error: integrationsError,
+    refetch,
+  } = useIntegrations();
   const integrations = integrationsData?.integrations || [];
 
-  const filteredIntegrations = integrations.filter((integration) => {
+  const filteredIntegrations = integrations.filter(integration => {
     // Status filter
     if (filter !== 'ALL' && integration.status !== filter) return false;
 
@@ -367,7 +374,7 @@ function IntegrationsTab({
               type="text"
               placeholder="Search integrations..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 w-64 bg-gray-800 border border-gray-700 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             />
           </div>
@@ -521,9 +528,7 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
       {testResult && (
         <div
           className={`mb-4 p-2 rounded text-sm ${
-            testResult.success
-              ? 'bg-green-900/30 text-green-400'
-              : 'bg-red-900/30 text-red-400'
+            testResult.success ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
           }`}
         >
           {testResult.message}
@@ -664,7 +669,10 @@ function WebhooksTab() {
       ) : (
         <div className="space-y-4">
           {webhookEvents.map(event => (
-            <div key={event.eventId} className="p-4 bg-black/20 rounded-lg border border-white/[0.08]">
+            <div
+              key={event.eventId}
+              className="p-4 bg-black/20 rounded-lg border border-white/[0.08]"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-white">{event.eventType}</span>
                 <span
@@ -766,7 +774,12 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
           IntegrationProvider.BIGCOMMERCE,
         ];
       case IntegrationType.CARRIER:
-        return [IntegrationProvider.FEDEX, IntegrationProvider.UPS, IntegrationProvider.DHL, IntegrationProvider.USPS];
+        return [
+          IntegrationProvider.FEDEX,
+          IntegrationProvider.UPS,
+          IntegrationProvider.DHL,
+          IntegrationProvider.USPS,
+        ];
       default:
         return [IntegrationProvider.CUSTOM];
     }
@@ -798,9 +811,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
                 <input
                   type="text"
                   value={formData.description}
@@ -838,7 +849,9 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                   <label className="block text-sm font-medium text-gray-300 mb-1">Provider *</label>
                   <select
                     value={formData.provider}
-                    onChange={e => setFormData({ ...formData, provider: e.target.value as IntegrationProvider })}
+                    onChange={e =>
+                      setFormData({ ...formData, provider: e.target.value as IntegrationProvider })
+                    }
                     className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {availableProviders.map(provider => (
@@ -851,9 +864,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Base URL
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Base URL</label>
                 <input
                   type="text"
                   value={formData.configuration.baseUrl || ''}

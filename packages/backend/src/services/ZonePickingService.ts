@@ -20,7 +20,7 @@ import { Pool } from 'pg';
 import { getPool, query } from '../db/client';
 import { logger } from '../config/logger';
 import { getAuditService, AuditEventType, AuditCategory } from './AuditService';
-import { notifyUser, NotificationType, NotificationPriority } from './notificationHelper';
+import { notifyUser, NotificationType, NotificationPriority } from './NotificationHelper';
 import wsServer from '../websocket';
 
 // ============================================================================
@@ -41,7 +41,13 @@ export interface Zone {
   name: string;
   aisleStart: number;
   aisleEnd: number;
-  zoneType: 'FAST_MOVING' | 'SLOW_MOVING' | 'BULK' | 'COLD_STORAGE' | 'HAZARDOUS' | 'REVERSE_LOGISTICS';
+  zoneType:
+    | 'FAST_MOVING'
+    | 'SLOW_MOVING'
+    | 'BULK'
+    | 'COLD_STORAGE'
+    | 'HAZARDOUS'
+    | 'REVERSE_LOGISTICS';
   locationCount: number;
   activePickers: number;
   currentUtilization: number; // 0-100 percentage
@@ -180,7 +186,9 @@ class ZonePickingService {
       );
 
       const avgTimePerTask = avgTimeResult.rows[0]?.avg_time || 60; // Default 60 seconds
-      const estimatedTimeRemaining = ((parseInt(row.pending_tasks) || 0) + (parseInt(row.in_progress_tasks) || 0)) * avgTimePerTask;
+      const estimatedTimeRemaining =
+        ((parseInt(row.pending_tasks) || 0) + (parseInt(row.in_progress_tasks) || 0)) *
+        avgTimePerTask;
 
       return {
         zoneId,
@@ -256,7 +264,9 @@ class ZonePickingService {
       );
 
       if (existingResult.rows.length > 0) {
-        throw new Error(`Picker ${pickerId} is already assigned to zone ${existingResult.rows[0].zone_id}`);
+        throw new Error(
+          `Picker ${pickerId} is already assigned to zone ${existingResult.rows[0].zone_id}`
+        );
       }
 
       // Create zone assignment
@@ -276,7 +286,13 @@ class ZonePickingService {
           picker_id, zone_id, assigned_at, assigned_by, status
         ) VALUES ($1, $2, $3, $4, $5)
         `,
-        [assignment.pickerId, assignment.zoneId, assignment.assignedAt, assignment.assignedBy, assignment.status]
+        [
+          assignment.pickerId,
+          assignment.zoneId,
+          assignment.assignedAt,
+          assignment.assignedBy,
+          assignment.status,
+        ]
       );
 
       // Log the assignment
@@ -452,10 +468,7 @@ class ZonePickingService {
   /**
    * Get zone by ID
    */
-  private async getZoneById(
-    zoneId: string,
-    client: PoolClient
-  ): Promise<Zone | null> {
+  private async getZoneById(zoneId: string, client: PoolClient): Promise<Zone | null> {
     const result = await client.query(
       `
       SELECT
@@ -528,10 +541,7 @@ class ZonePickingService {
   /**
    * Release picker from zone
    */
-  async releasePickerFromZone(
-    pickerId: string,
-    context: UserContext
-  ): Promise<void> {
+  async releasePickerFromZone(pickerId: string, context: UserContext): Promise<void> {
     const client = await this.pool.connect();
 
     try {

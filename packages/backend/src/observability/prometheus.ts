@@ -284,14 +284,10 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
     const statusCode = res.statusCode.toString();
 
     // Record request duration
-    httpRequestDurationMs
-      .labels(req.method, route, statusCode)
-      .observe(duration);
+    httpRequestDurationMs.labels(req.method, route, statusCode).observe(duration);
 
     // Increment total requests
-    httpRequestsTotal
-      .labels(req.method, route, statusCode)
-      .inc();
+    httpRequestsTotal.labels(req.method, route, statusCode).inc();
 
     // Track response size
     if (res.get('content-length')) {
@@ -302,9 +298,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
 
     // Track errors
     if (statusCode.startsWith('4') || statusCode.startsWith('5')) {
-      httpErrorsTotal
-        .labels(req.method, route, statusCode, 'http_error')
-        .inc();
+      httpErrorsTotal.labels(req.method, route, statusCode, 'http_error').inc();
     }
 
     // Decrement concurrent requests
@@ -373,7 +367,11 @@ export async function getMetricsAsJSON(): Promise<any> {
 /**
  * Create a custom counter
  */
-export function createCounter(name: string, help: string, labelNames: string[] = []): Counter<string> {
+export function createCounter(
+  name: string,
+  help: string,
+  labelNames: string[] = []
+): Counter<string> {
   return new Counter({
     name: `wms_${name}`,
     help,
@@ -385,10 +383,14 @@ export function createCounter(name: string, help: string, labelNames: string[] =
 /**
  * Create a custom histogram
  */
-export function createHistogram(name: string, help: string, options?: {
-  labelNames?: string[];
-  buckets?: number[];
-}): Histogram<string> {
+export function createHistogram(
+  name: string,
+  help: string,
+  options?: {
+    labelNames?: string[];
+    buckets?: number[];
+  }
+): Histogram<string> {
   return new Histogram({
     name: `wms_${name}`,
     help,

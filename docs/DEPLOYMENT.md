@@ -27,12 +27,12 @@ This guide covers deploying the Warehouse Management System to various environme
 
 ### System Requirements
 
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| CPU | 2 cores | 4+ cores |
-| RAM | 4 GB | 8+ GB |
-| Disk | 20 GB | 50+ GB SSD |
-| Database | 100 concurrent connections | 500+ connections |
+| Component | Minimum                    | Recommended      |
+| --------- | -------------------------- | ---------------- |
+| CPU       | 2 cores                    | 4+ cores         |
+| RAM       | 4 GB                       | 8+ GB            |
+| Disk      | 20 GB                      | 50+ GB SSD       |
+| Database  | 100 concurrent connections | 500+ connections |
 
 ---
 
@@ -418,9 +418,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./packages/backend/src/db/migrations:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -432,9 +432,9 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - '6379:6379'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -456,7 +456,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "3001:3001"
+      - '3001:3001'
     restart: unless-stopped
 
   frontend:
@@ -467,7 +467,7 @@ services:
     environment:
       - VITE_API_BASE_URL=http://localhost:3001
     ports:
-      - "80:80"
+      - '80:80'
     depends_on:
       - backend
     restart: unless-stopped
@@ -510,6 +510,7 @@ curl https://wms.example.com/api/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "ok",
@@ -563,15 +564,15 @@ pm2 restart wms-backend
 
 Monitor these key metrics:
 
-| Metric | Tool | Threshold |
-|--------|------|-----------|
-| Response time | APM / Nginx logs | < 500ms (p95) |
-| Error rate | Application logs | < 1% |
-| CPU usage | top / htop | < 80% |
-| Memory usage | free / top | < 80% |
-| Disk usage | df -h | < 90% |
-| DB connections | pg_stat_activity | < 80% of max |
-| Redis memory | redis-cli INFO | < 80% of max |
+| Metric         | Tool             | Threshold     |
+| -------------- | ---------------- | ------------- |
+| Response time  | APM / Nginx logs | < 500ms (p95) |
+| Error rate     | Application logs | < 1%          |
+| CPU usage      | top / htop       | < 80%         |
+| Memory usage   | free / top       | < 80%         |
+| Disk usage     | df -h            | < 90%         |
+| DB connections | pg_stat_activity | < 80% of max  |
+| Redis memory   | redis-cli INFO   | < 80% of max  |
 
 ### Log Monitoring
 
@@ -670,6 +671,7 @@ pm2 start wms-backend
 ### Common Issues
 
 **Service won't start:**
+
 ```bash
 # Check logs
 pm2 logs wms-backend --lines 50
@@ -679,6 +681,7 @@ sudo lsof -i :3001
 ```
 
 **Database connection failed:**
+
 ```bash
 # Check PostgreSQL is running
 sudo systemctl status postgresql
@@ -688,6 +691,7 @@ psql -U wms_production -h localhost -d wms_production
 ```
 
 **WebSocket not connecting:**
+
 ```bash
 # Check WebSocket process
 pm2 status

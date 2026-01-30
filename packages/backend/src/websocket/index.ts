@@ -46,7 +46,7 @@ interface ServerToClientEvents {
   'user:activity': (data: { userId: string; status: string; currentView?: string }) => void;
 
   // Connection events
-  'connected': (data: { message: string }) => void;
+  connected: (data: { message: string }) => void;
 }
 
 interface ClientToServerEvents {
@@ -60,7 +60,7 @@ interface ClientToServerEvents {
   'update:activity': (data: { currentView?: string; status?: string }) => void;
 
   // Ping/pong for connection health
-  'ping': () => void;
+  ping: () => void;
 }
 
 // ============================================================================
@@ -112,7 +112,9 @@ class WebSocketServer {
    */
   private authenticateSocket(socket: AuthenticatedSocket, next: (err?: Error) => void): void {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+      const token =
+        socket.handshake.auth.token ||
+        socket.handshake.headers.authorization?.replace('Bearer ', '');
 
       if (!token) {
         return next(new Error('Authentication error: No token provided'));
@@ -164,7 +166,7 @@ class WebSocketServer {
     this.setupSocketHandlers(socket);
 
     // Handle disconnection
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', reason => {
       logger.info('WebSocket disconnected', {
         socketId: socket.id,
         userId,
@@ -173,7 +175,7 @@ class WebSocketServer {
     });
 
     // Handle errors
-    socket.on('error', (error) => {
+    socket.on('error', error => {
       logger.error('WebSocket error', {
         socketId: socket.id,
         userId,
@@ -211,7 +213,7 @@ class WebSocketServer {
     });
 
     // Handle user activity updates
-    socket.on('update:activity', (data) => {
+    socket.on('update:activity', data => {
       const userId = socket.userId!;
       // Broadcast activity to admin/supervisor users
       this.io?.to('user:activity').emit('user:activity', {

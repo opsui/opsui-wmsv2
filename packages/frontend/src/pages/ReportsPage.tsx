@@ -50,7 +50,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 // ============================================================================
 
 export function ReportsPage() {
-    const { showToast } = useToast();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'reports' | 'dashboards' | 'exports'>('reports');
   const [selectedReport, setSelectedReport] = useState<Report | undefined>();
   const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | undefined>();
@@ -58,7 +58,11 @@ export function ReportsPage() {
   const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
   const [executionModalOpen, setExecutionModalOpen] = useState(false);
   const [reportFilter, setReportFilter] = useState<ReportType | 'ALL'>('ALL');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; type: 'report' | 'dashboard'; id: string }>({
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    type: 'report' | 'dashboard';
+    id: string;
+  }>({
     isOpen: false,
     type: 'report',
     id: '',
@@ -75,8 +79,17 @@ export function ReportsPage() {
   const [dashboardsSearchTerm, setDashboardsSearchTerm] = useState('');
 
   // API hooks
-  const { data: reportsData, isLoading: reportsLoading, error: reportsError, refetch: refetchReports } = useReports();
-  const { data: dashboardsData, isLoading: dashboardsLoading, refetch: refetchDashboards } = useDashboards();
+  const {
+    data: reportsData,
+    isLoading: reportsLoading,
+    error: reportsError,
+    refetch: refetchReports,
+  } = useReports();
+  const {
+    data: dashboardsData,
+    isLoading: dashboardsLoading,
+    refetch: refetchDashboards,
+  } = useDashboards();
   const { data: exportsData, refetch: refetchExports } = useExportJobs();
 
   const createReport = useCreateReport();
@@ -94,13 +107,15 @@ export function ReportsPage() {
   const exportJobs = exportsData?.jobs || [];
 
   // Filter reports by type
-  const filteredReports = reportFilter === 'ALL' ? reports : reports.filter(r => r.reportType === reportFilter);
+  const filteredReports =
+    reportFilter === 'ALL' ? reports : reports.filter(r => r.reportType === reportFilter);
 
   // Search and paginate reports
-  const searchedReports = filteredReports.filter(report =>
-    !reportsSearchTerm.trim() ||
-    report.name.toLowerCase().includes(reportsSearchTerm.toLowerCase()) ||
-    report.reportId.toLowerCase().includes(reportsSearchTerm.toLowerCase())
+  const searchedReports = filteredReports.filter(
+    report =>
+      !reportsSearchTerm.trim() ||
+      report.name.toLowerCase().includes(reportsSearchTerm.toLowerCase()) ||
+      report.reportId.toLowerCase().includes(reportsSearchTerm.toLowerCase())
   );
   const reportsTotalPages = Math.ceil(searchedReports.length / reportsPageSize);
   const paginatedReports = searchedReports.slice(
@@ -109,10 +124,11 @@ export function ReportsPage() {
   );
 
   // Search and paginate dashboards
-  const searchedDashboards = dashboards.filter(dashboard =>
-    !dashboardsSearchTerm.trim() ||
-    dashboard.name.toLowerCase().includes(dashboardsSearchTerm.toLowerCase()) ||
-    dashboard.dashboardId.toLowerCase().includes(dashboardsSearchTerm.toLowerCase())
+  const searchedDashboards = dashboards.filter(
+    dashboard =>
+      !dashboardsSearchTerm.trim() ||
+      dashboard.name.toLowerCase().includes(dashboardsSearchTerm.toLowerCase()) ||
+      dashboard.dashboardId.toLowerCase().includes(dashboardsSearchTerm.toLowerCase())
   );
   const dashboardsTotalPages = Math.ceil(searchedDashboards.length / dashboardsPageSize);
   const paginatedDashboards = searchedDashboards.slice(
@@ -128,7 +144,9 @@ export function ReportsPage() {
     setDashboardsCurrentPage(1);
   }, [dashboardsSearchTerm]);
 
-  const handleSaveReport = async (reportData: Omit<Report, 'reportId' | 'createdAt' | 'updatedAt' | 'createdBy'>) => {
+  const handleSaveReport = async (
+    reportData: Omit<Report, 'reportId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ) => {
     if (selectedReport) {
       await updateReport.mutateAsync({
         reportId: selectedReport.reportId,
@@ -176,7 +194,9 @@ export function ReportsPage() {
     await exportReport.mutateAsync({ executionId, format });
   };
 
-  const handleSaveDashboard = async (dashboardData: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>) => {
+  const handleSaveDashboard = async (
+    dashboardData: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ) => {
     if (selectedDashboard) {
       await updateDashboard.mutateAsync({
         dashboardId: selectedDashboard.dashboardId,
@@ -264,11 +284,11 @@ export function ReportsPage() {
             error={reportsError}
             filter={reportFilter}
             onFilterChange={setReportFilter}
-            onSelectReport={(report) => {
+            onSelectReport={report => {
               setSelectedReport(report);
               setExecutionModalOpen(true);
             }}
-            onEditReport={(report) => {
+            onEditReport={report => {
               setSelectedReport(report);
               setReportModalOpen(true);
             }}
@@ -290,7 +310,7 @@ export function ReportsPage() {
             dashboards={paginatedDashboards}
             reports={reports}
             isLoading={dashboardsLoading}
-            onSelectDashboard={(dashboard) => {
+            onSelectDashboard={dashboard => {
               setSelectedDashboard(dashboard);
               setDashboardModalOpen(true);
             }}
@@ -308,10 +328,7 @@ export function ReportsPage() {
         )}
 
         {activeTab === 'exports' && (
-          <ExportsTab
-            exportJobs={exportJobs}
-            onCreateExport={handleCreateExport}
-          />
+          <ExportsTab exportJobs={exportJobs} onCreateExport={handleCreateExport} />
         )}
 
         {/* Report Execution Modal */}
@@ -322,7 +339,9 @@ export function ReportsPage() {
               setExecutionModalOpen(false);
               setSelectedReport(undefined);
             }}
-            onExecute={async (parameters) => await handleExecuteReportWrapper(selectedReport.reportId, parameters)}
+            onExecute={async parameters =>
+              await handleExecuteReportWrapper(selectedReport.reportId, parameters)
+            }
           />
         )}
 
@@ -471,7 +490,7 @@ function ReportsTab({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             placeholder="Search reports..."
             className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -544,9 +563,7 @@ function ReportsTab({
                   </button>
                 </div>
                 <div className="flex gap-2 text-xs text-gray-400">
-                  {report.chartConfig.enabled && (
-                    <span>{report.chartConfig.chartType}</span>
-                  )}
+                  {report.chartConfig.enabled && <span>{report.chartConfig.chartType}</span>}
                   <span>{report.defaultFormat}</span>
                 </div>
               </div>
@@ -629,7 +646,7 @@ function DashboardsTab({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             placeholder="Search dashboards..."
             className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -674,7 +691,8 @@ function DashboardsTab({
 
               <div className="bg-black/20 rounded-lg p-4 mb-4" style={{ minHeight: '200px' }}>
                 <p className="text-center text-gray-500 text-sm">
-                  Dashboard preview with {dashboard.widgets.length} widget{dashboard.widgets.length !== 1 ? 's' : ''}
+                  Dashboard preview with {dashboard.widgets.length} widget
+                  {dashboard.widgets.length !== 1 ? 's' : ''}
                 </p>
               </div>
 
@@ -705,7 +723,10 @@ function DashboardsTab({
       {!isLoading && dashboards.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-400">No dashboards found</p>
-          <button onClick={onCreateDashboard} className="mt-4 text-primary-400 hover:text-primary-300">
+          <button
+            onClick={onCreateDashboard}
+            className="mt-4 text-primary-400 hover:text-primary-300"
+          >
             Create your first dashboard
           </button>
         </div>
@@ -780,18 +801,25 @@ function ExportsTab({ exportJobs, onCreateExport }: ExportsTabProps) {
           {exportJobs.length > 0 ? (
             <div className="space-y-2">
               {exportJobs.map(job => (
-                <div key={job.jobId} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                <div
+                  key={job.jobId}
+                  className="flex items-center justify-between p-3 rounded-lg bg-white/5"
+                >
                   <div>
                     <p className="text-sm text-white">{job.name}</p>
-                    <p className="text-xs text-gray-400">{job.entityType} • {job.format}</p>
+                    <p className="text-xs text-gray-400">
+                      {job.entityType} • {job.format}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <span className={cn(
-                      'text-xs px-2 py-1 rounded-full',
-                      job.status === ReportStatus.COMPLETED && 'bg-green-500/20 text-green-400',
-                      job.status === ReportStatus.RUNNING && 'bg-blue-500/20 text-blue-400',
-                      job.status === ReportStatus.FAILED && 'bg-red-500/20 text-red-400',
-                    )}>
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-1 rounded-full',
+                        job.status === ReportStatus.COMPLETED && 'bg-green-500/20 text-green-400',
+                        job.status === ReportStatus.RUNNING && 'bg-blue-500/20 text-blue-400',
+                        job.status === ReportStatus.FAILED && 'bg-red-500/20 text-red-400'
+                      )}
+                    >
                       {job.status}
                     </span>
                   </div>
@@ -856,7 +884,7 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
         required: true,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         onSave({
           ...values,
@@ -864,11 +892,19 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
           fields: report?.fields || [],
           filters: report?.filters || [],
           groups: report?.groups || [],
-          chartConfig: report?.chartConfig || { enabled: false, chartType: 'TABLE', showLegend: false, showDataLabels: false },
+          chartConfig: report?.chartConfig || {
+            enabled: false,
+            chartType: 'TABLE',
+            showLegend: false,
+            showDataLabels: false,
+          },
           tags: report?.tags || [],
         });
         onClose();
-        showToast(isEdit ? 'Report updated successfully' : 'Report created successfully', 'success');
+        showToast(
+          isEdit ? 'Report updated successfully' : 'Report created successfully',
+          'success'
+        );
       } catch (error: any) {
         console.error('Failed to save report:', error);
         showToast(error?.message || 'Failed to save report', 'error');
@@ -881,7 +917,9 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-white/[0.08]">
-          <h2 className="text-xl font-bold text-white">{isEdit ? 'Edit Report' : 'Create New Report'}</h2>
+          <h2 className="text-xl font-bold text-white">
+            {isEdit ? 'Edit Report' : 'Create New Report'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-white transition-colors"
@@ -919,7 +957,9 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
                 }`}
                 placeholder="Describe what this report shows..."
               />
-              {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -944,7 +984,9 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
                   <option value={ReportType.USER_PERFORMANCE}>User Performance</option>
                   <option value={ReportType.CUSTOM}>Custom</option>
                 </select>
-                {errors.reportType && <p className="mt-1 text-sm text-red-500">{errors.reportType}</p>}
+                {errors.reportType && (
+                  <p className="mt-1 text-sm text-red-500">{errors.reportType}</p>
+                )}
               </div>
 
               <div>
@@ -967,7 +1009,9 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
               <label className="block text-sm font-medium text-white mb-1">Default Format</label>
               <select
                 value={formData.defaultFormat}
-                onChange={e => setFormData({ ...formData, defaultFormat: e.target.value as ReportFormat })}
+                onChange={e =>
+                  setFormData({ ...formData, defaultFormat: e.target.value as ReportFormat })
+                }
                 className="w-full px-3 py-2 bg-black/20 border border-white/[0.08] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value={ReportFormat.PDF}>PDF</option>
@@ -1044,10 +1088,17 @@ interface DashboardBuilderModalProps {
   dashboard?: Dashboard;
   reports: Report[];
   onClose: () => void;
-  onSave: (dashboard: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>) => void;
+  onSave: (
+    dashboard: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>
+  ) => void;
 }
 
-function DashboardBuilderModal({ dashboard, reports, onClose, onSave }: DashboardBuilderModalProps) {
+function DashboardBuilderModal({
+  dashboard,
+  reports,
+  onClose,
+  onSave,
+}: DashboardBuilderModalProps) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 rounded-lg shadow-xl w-full h-[90vh] flex flex-col">

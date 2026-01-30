@@ -64,10 +64,9 @@ export class ChangeDetectionSystem {
 
       // Get changed files since last commit (or last 24 hours if first run)
       const baseCommit = this.lastCommitHash || 'HEAD@{1.day.ago}';
-      const gitDiff = execSync(
-        `git diff --name-status ${baseCommit} HEAD`,
-        { encoding: 'utf8' }
-      ).trim();
+      const gitDiff = execSync(`git diff --name-status ${baseCommit} HEAD`, {
+        encoding: 'utf8',
+      }).trim();
 
       if (!gitDiff) {
         return [];
@@ -93,7 +92,6 @@ export class ChangeDetectionSystem {
       // Update cache
       this.lastCommitHash = currentHash;
       this.saveCache();
-
     } catch (error) {
       console.log('  ⚠️  Git change detection failed:', (error as Error).message);
     }
@@ -205,14 +203,22 @@ export class ChangeDetectionSystem {
   ): Array<{ test: { path: string; name: string; coverage: string[] }; priority: number }> {
     // If we have AI recommendations, use them
     if (analysis.recommendedTests.length > 0) {
-      const result: Array<{ test: { path: string; name: string; coverage: string[] }; priority: number }> = [];
+      const result: Array<{
+        test: { path: string; name: string; coverage: string[] };
+        priority: number;
+      }> = [];
 
       for (const rec of analysis.recommendedTests) {
         const test = availableTests.find(t => t.name === rec.testName);
         if (test) {
-          const priority = rec.impactLevel === 'critical' ? 100 :
-                          rec.impactLevel === 'high' ? 75 :
-                          rec.impactLevel === 'medium' ? 50 : 25;
+          const priority =
+            rec.impactLevel === 'critical'
+              ? 100
+              : rec.impactLevel === 'high'
+                ? 75
+                : rec.impactLevel === 'medium'
+                  ? 50
+                  : 25;
           result.push({ test, priority });
         }
       }
@@ -272,8 +278,20 @@ export class ChangeDetectionSystem {
     // Extract from path
     const pathParts = filePath.split(path.sep);
     for (const part of pathParts) {
-      if (['orders', 'stock', 'inventory', 'users', 'auth', 'shipping',
-           'picking', 'packing', 'dashboard', 'reports'].includes(part.toLowerCase())) {
+      if (
+        [
+          'orders',
+          'stock',
+          'inventory',
+          'users',
+          'auth',
+          'shipping',
+          'picking',
+          'packing',
+          'dashboard',
+          'reports',
+        ].includes(part.toLowerCase())
+      ) {
         features.push(part.toLowerCase());
       }
     }
@@ -294,9 +312,22 @@ export class ChangeDetectionSystem {
         if (fs.existsSync(fullPath)) {
           const content = fs.readFileSync(fullPath, 'utf-8');
           const keywords = [
-            'order', 'sku', 'user', 'auth', 'role', 'permission',
-            'stock', 'inventory', 'location', 'bin', 'warehouse',
-            'pick', 'pack', 'ship', 'receive', 'return'
+            'order',
+            'sku',
+            'user',
+            'auth',
+            'role',
+            'permission',
+            'stock',
+            'inventory',
+            'location',
+            'bin',
+            'warehouse',
+            'pick',
+            'pack',
+            'ship',
+            'receive',
+            'return',
           ];
 
           for (const keyword of keywords) {

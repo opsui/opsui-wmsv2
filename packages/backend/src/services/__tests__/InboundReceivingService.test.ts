@@ -4,7 +4,14 @@
  */
 
 import { InboundReceivingService } from '../InboundReceivingService';
-import { ASNStatus, ASNLineStatus, ReceiptType, ReceiptStatus, QualityStatus, PutawayStatus } from '@opsui/shared';
+import {
+  ASNStatus,
+  ASNLineStatus,
+  ReceiptType,
+  ReceiptStatus,
+  QualityStatus,
+  PutawayStatus,
+} from '@opsui/shared';
 
 // Mock dependencies
 jest.mock('../../config/logger');
@@ -43,7 +50,8 @@ describe('InboundReceivingService', () => {
   describe('getDashboardMetrics', () => {
     it('should return dashboard metrics', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '5' }] }) // pending ASNs
           .mockResolvedValueOnce({ rows: [{ count: '3' }] }) // in transit ASNs
           .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // active receipts
@@ -73,7 +81,9 @@ describe('InboundReceivingService', () => {
         throw new Error('Database connection failed');
       });
 
-      await expect(inboundReceivingService.getDashboardMetrics()).rejects.toThrow('Database connection failed');
+      await expect(inboundReceivingService.getDashboardMetrics()).rejects.toThrow(
+        'Database connection failed'
+      );
     });
   });
 
@@ -84,14 +94,20 @@ describe('InboundReceivingService', () => {
   describe('createASN', () => {
     it('should create a new ASN with line items', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-AAAA', supplier_id: 'SUP-001', ...{} }] }) // insert ASN
           .mockResolvedValueOnce({ rows: [] }) // insert line item 1
           .mockResolvedValueOnce({ rows: [] }) // insert line item 2
           .mockResolvedValueOnce({ rows: [] }) // COMMIT
           .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-AAAA', ...{} }] }) // get ASN
-          .mockResolvedValueOnce({ rows: [{ line_item_id: 'ASNL-1', ...{} }, { line_item_id: 'ASNL-2', ...{} }] }), // line items
+          .mockResolvedValueOnce({
+            rows: [
+              { line_item_id: 'ASNL-1', ...{} },
+              { line_item_id: 'ASNL-2', ...{} },
+            ],
+          }), // line items
       };
 
       getPool.mockResolvedValue(mockClient);
@@ -108,7 +124,7 @@ describe('InboundReceivingService', () => {
           {
             sku: 'SKU001',
             expectedQuantity: 100,
-            unitCost: 10.50,
+            unitCost: 10.5,
             lotNumber: 'LOT001',
             expirationDate: new Date('2026-01-01'),
             lineNotes: 'Item notes',
@@ -116,7 +132,7 @@ describe('InboundReceivingService', () => {
           {
             sku: 'SKU002',
             expectedQuantity: 50,
-            unitCost: 25.00,
+            unitCost: 25.0,
           },
         ],
       };
@@ -134,7 +150,8 @@ describe('InboundReceivingService', () => {
 
     it('should rollback on error', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockRejectedValueOnce(new Error('Insert failed')) // insert fails
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
@@ -190,7 +207,8 @@ describe('InboundReceivingService', () => {
       ];
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockASN] })
           .mockResolvedValueOnce({ rows: mockLineItems }),
       };
@@ -211,7 +229,9 @@ describe('InboundReceivingService', () => {
 
       getPool.mockResolvedValue(mockClient);
 
-      await expect(inboundReceivingService.getASN('NONEXISTENT')).rejects.toThrow('ASN NONEXISTENT not found');
+      await expect(inboundReceivingService.getASN('NONEXISTENT')).rejects.toThrow(
+        'ASN NONEXISTENT not found'
+      );
     });
   });
 
@@ -235,7 +255,8 @@ describe('InboundReceivingService', () => {
       ];
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
           .mockResolvedValueOnce({ rows: mockASNs }) // ASNs
           .mockResolvedValueOnce({ rows: [{ line_item_id: 'ASNL-001', ...{} }] }) // line items for ASN-001
@@ -253,9 +274,12 @@ describe('InboundReceivingService', () => {
 
     it('should filter by status', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-001', status: ASNStatus.PENDING, ...{} }] })
+          .mockResolvedValueOnce({
+            rows: [{ asn_id: 'ASN-001', status: ASNStatus.PENDING, ...{} }],
+          })
           .mockResolvedValueOnce({ rows: [] }),
       };
 
@@ -273,7 +297,8 @@ describe('InboundReceivingService', () => {
 
     it('should filter by supplier', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-001', supplier_id: 'SUP-001', ...{} }] })
           .mockResolvedValueOnce({ rows: [] }),
@@ -295,8 +320,11 @@ describe('InboundReceivingService', () => {
   describe('updateASNStatus', () => {
     it('should update ASN status', async () => {
       const mockClient = {
-        query: jest.fn()
-          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-001', status: ASNStatus.IN_TRANSIT, ...{} }] })
+        query: jest
+          .fn()
+          .mockResolvedValueOnce({
+            rows: [{ asn_id: 'ASN-001', status: ASNStatus.IN_TRANSIT, ...{} }],
+          })
           .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-001', ...{} }] })
           .mockResolvedValueOnce({ rows: [] }),
       };
@@ -316,8 +344,9 @@ describe('InboundReceivingService', () => {
 
       getPool.mockResolvedValue(mockClient);
 
-      await expect(inboundReceivingService.updateASNStatus('NONEXISTENT', ASNStatus.RECEIVED))
-        .rejects.toThrow('ASN NONEXISTENT not found');
+      await expect(
+        inboundReceivingService.updateASNStatus('NONEXISTENT', ASNStatus.RECEIVED)
+      ).rejects.toThrow('ASN NONEXISTENT not found');
     });
   });
 
@@ -328,7 +357,8 @@ describe('InboundReceivingService', () => {
   describe('createReceipt', () => {
     it('should create a new receipt with line items', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] }) // insert receipt
           .mockResolvedValueOnce({ rows: [] }) // insert receipt line item
@@ -352,7 +382,7 @@ describe('InboundReceivingService', () => {
             quantityOrdered: 100,
             quantityReceived: 95,
             quantityDamaged: 5,
-            unitCost: 10.50,
+            unitCost: 10.5,
             lotNumber: 'LOT001',
             expirationDate: new Date('2026-01-01'),
             notes: 'Item notes',
@@ -372,7 +402,8 @@ describe('InboundReceivingService', () => {
 
     it('should create receipt without ASN', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] })
           .mockResolvedValueOnce({ rows: [] }) // insert receipt line
@@ -406,7 +437,8 @@ describe('InboundReceivingService', () => {
 
     it('should rollback on error', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockRejectedValueOnce(new Error('Insert failed'))
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
@@ -459,7 +491,8 @@ describe('InboundReceivingService', () => {
       ];
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockReceipt] })
           .mockResolvedValueOnce({ rows: mockLineItems }),
       };
@@ -481,7 +514,9 @@ describe('InboundReceivingService', () => {
 
       getPool.mockResolvedValue(mockClient);
 
-      await expect(inboundReceivingService.getReceipt('NONEXISTENT')).rejects.toThrow('Receipt NONEXISTENT not found');
+      await expect(inboundReceivingService.getReceipt('NONEXISTENT')).rejects.toThrow(
+        'Receipt NONEXISTENT not found'
+      );
     });
   });
 
@@ -498,7 +533,8 @@ describe('InboundReceivingService', () => {
       ];
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: mockReceipts })
           .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-001', ...{} }] }),
@@ -514,9 +550,12 @@ describe('InboundReceivingService', () => {
 
     it('should filter by status', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-001', status: ReceiptStatus.RECEIVING, ...{} }] })
+          .mockResolvedValueOnce({
+            rows: [{ receipt_id: 'RCP-001', status: ReceiptStatus.RECEIVING, ...{} }],
+          })
           .mockResolvedValueOnce({ rows: [] }),
       };
 
@@ -533,7 +572,8 @@ describe('InboundReceivingService', () => {
 
     it('should filter by ASN', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-001', asn_id: 'ASN-001', ...{} }] })
           .mockResolvedValueOnce({ rows: [] }),
@@ -552,9 +592,12 @@ describe('InboundReceivingService', () => {
 
     it('should filter by receipt type', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-001', receipt_type: ReceiptType.ASN, ...{} }] })
+          .mockResolvedValueOnce({
+            rows: [{ receipt_id: 'RCP-001', receipt_type: ReceiptType.ASN, ...{} }],
+          })
           .mockResolvedValueOnce({ rows: [] }),
       };
 
@@ -597,7 +640,8 @@ describe('InboundReceivingService', () => {
       ];
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: mockTasks }),
       };
@@ -614,7 +658,8 @@ describe('InboundReceivingService', () => {
 
     it('should filter by status', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '5' }] })
           .mockResolvedValueOnce({
             rows: [
@@ -645,7 +690,8 @@ describe('InboundReceivingService', () => {
 
     it('should filter by assigned user', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '3' }] })
           .mockResolvedValueOnce({
             rows: [
@@ -704,8 +750,9 @@ describe('InboundReceivingService', () => {
 
       getPool.mockResolvedValue(mockClient);
 
-      await expect(inboundReceivingService.assignPutawayTask('NONEXISTENT', 'user-123'))
-        .rejects.toThrow('Putaway task NONEXISTENT not found');
+      await expect(
+        inboundReceivingService.assignPutawayTask('NONEXISTENT', 'user-123')
+      ).rejects.toThrow('Putaway task NONEXISTENT not found');
     });
   });
 
@@ -728,7 +775,8 @@ describe('InboundReceivingService', () => {
       };
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [mockCurrentTask] }) // FOR UPDATE
           .mockResolvedValueOnce({ rows: [mockUpdatedTask] }) // UPDATE
@@ -771,12 +819,13 @@ describe('InboundReceivingService', () => {
       };
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [mockCurrentTask] })
           .mockResolvedValueOnce({ rows: [mockUpdatedTask] })
           .mockResolvedValueOnce({ rows: [] }) // UPDATE receipt line
-          .mockResolvedValueOnce({ rows: [] }) // COMMIT
+          .mockResolvedValueOnce({ rows: [] }), // COMMIT
       };
 
       getPool.mockResolvedValue(mockClient);
@@ -797,7 +846,8 @@ describe('InboundReceivingService', () => {
 
     it('should throw error for non-existent task', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [] }), // FOR UPDATE - no rows
       };
@@ -810,12 +860,15 @@ describe('InboundReceivingService', () => {
         userId: 'user-123',
       };
 
-      await expect(inboundReceivingService.updatePutawayTask(dto)).rejects.toThrow('Putaway task NONEXISTENT not found');
+      await expect(inboundReceivingService.updatePutawayTask(dto)).rejects.toThrow(
+        'Putaway task NONEXISTENT not found'
+      );
     });
 
     it('should rollback on error', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockRejectedValueOnce(new Error('Database error'))
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
@@ -829,7 +882,9 @@ describe('InboundReceivingService', () => {
         userId: 'user-123',
       };
 
-      await expect(inboundReceivingService.updatePutawayTask(dto)).rejects.toThrow('Database error');
+      await expect(inboundReceivingService.updatePutawayTask(dto)).rejects.toThrow(
+        'Database error'
+      );
       expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
       expect(logger.error).toHaveBeenCalledWith('Error updating putaway task', expect.any(Error));
     });
@@ -842,7 +897,8 @@ describe('InboundReceivingService', () => {
   describe('createPutawayTasksForReceiptLine (via createReceipt)', () => {
     it('should create putaway task with default bin location from SKU', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] }) // insert receipt
           .mockResolvedValueOnce({ rows: [] }) // insert receipt line
@@ -882,7 +938,8 @@ describe('InboundReceivingService', () => {
 
     it('should throw error when SKU not found for putaway task', async () => {
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] })
           .mockResolvedValueOnce({ rows: [] }) // insert receipt line
@@ -906,7 +963,9 @@ describe('InboundReceivingService', () => {
         ],
       };
 
-      await expect(inboundReceivingService.createReceipt(dto)).rejects.toThrow('SKU SKU001 not found');
+      await expect(inboundReceivingService.createReceipt(dto)).rejects.toThrow(
+        'SKU SKU001 not found'
+      );
     });
   });
 });

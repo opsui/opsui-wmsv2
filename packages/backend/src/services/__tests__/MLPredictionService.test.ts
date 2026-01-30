@@ -119,48 +119,99 @@ describe('MLPredictionService', () => {
     it('should calculate higher duration for more items', async () => {
       (service as any).useLocalOnly = true;
 
-      const smallOrder = { order_item_count: 5, hour_of_day: 10, day_of_week: 1, sku_count: 2, zone_diversity: 1, priority_level: 2 };
-      const largeOrder = { order_item_count: 50, hour_of_day: 10, day_of_week: 1, sku_count: 10, zone_diversity: 3, priority_level: 2 };
+      const smallOrder = {
+        order_item_count: 5,
+        hour_of_day: 10,
+        day_of_week: 1,
+        sku_count: 2,
+        zone_diversity: 1,
+        priority_level: 2,
+      };
+      const largeOrder = {
+        order_item_count: 50,
+        hour_of_day: 10,
+        day_of_week: 1,
+        sku_count: 10,
+        zone_diversity: 3,
+        priority_level: 2,
+      };
 
       const smallPrediction = await service.predictOrderDuration(smallOrder);
       const largePrediction = await service.predictOrderDuration(largeOrder);
 
-      expect(largePrediction.prediction.duration_minutes).toBeGreaterThan(smallPrediction.prediction.duration_minutes);
+      expect(largePrediction.prediction.duration_minutes).toBeGreaterThan(
+        smallPrediction.prediction.duration_minutes
+      );
     });
 
     it('should adjust for priority level', async () => {
       (service as any).useLocalOnly = true;
 
-      const baseOrder = { order_item_count: 10, hour_of_day: 10, day_of_week: 1, sku_count: 5, zone_diversity: 2 };
+      const baseOrder = {
+        order_item_count: 10,
+        hour_of_day: 10,
+        day_of_week: 1,
+        sku_count: 5,
+        zone_diversity: 2,
+      };
 
-      const urgentPrediction = await service.predictOrderDuration({ ...baseOrder, priority_level: 1 });
-      const normalPrediction = await service.predictOrderDuration({ ...baseOrder, priority_level: 3 });
-      const lowPriorityPrediction = await service.predictOrderDuration({ ...baseOrder, priority_level: 4 });
+      const urgentPrediction = await service.predictOrderDuration({
+        ...baseOrder,
+        priority_level: 1,
+      });
+      const normalPrediction = await service.predictOrderDuration({
+        ...baseOrder,
+        priority_level: 3,
+      });
+      const lowPriorityPrediction = await service.predictOrderDuration({
+        ...baseOrder,
+        priority_level: 4,
+      });
 
       // Urgent (priority 1) should be faster than normal (priority 3)
-      expect(urgentPrediction.prediction.duration_minutes).toBeLessThan(normalPrediction.prediction.duration_minutes);
+      expect(urgentPrediction.prediction.duration_minutes).toBeLessThan(
+        normalPrediction.prediction.duration_minutes
+      );
       // Low priority (priority 4) should be slower than normal
-      expect(lowPriorityPrediction.prediction.duration_minutes).toBeGreaterThan(normalPrediction.prediction.duration_minutes);
+      expect(lowPriorityPrediction.prediction.duration_minutes).toBeGreaterThan(
+        normalPrediction.prediction.duration_minutes
+      );
     });
 
     it('should adjust for time of day (peak hours)', async () => {
       (service as any).useLocalOnly = true;
 
-      const baseOrder = { order_item_count: 10, day_of_week: 1, sku_count: 5, zone_diversity: 2, priority_level: 2 };
+      const baseOrder = {
+        order_item_count: 10,
+        day_of_week: 1,
+        sku_count: 5,
+        zone_diversity: 2,
+        priority_level: 2,
+      };
 
       const morningPeak = await service.predictOrderDuration({ ...baseOrder, hour_of_day: 10 });
       const afternoonPeak = await service.predictOrderDuration({ ...baseOrder, hour_of_day: 15 });
       const offPeak = await service.predictOrderDuration({ ...baseOrder, hour_of_day: 7 });
 
       // Peak hours (9-11, 14-16) should have higher duration
-      expect(morningPeak.prediction.duration_minutes).toBeGreaterThan(offPeak.prediction.duration_minutes);
-      expect(afternoonPeak.prediction.duration_minutes).toBeGreaterThan(offPeak.prediction.duration_minutes);
+      expect(morningPeak.prediction.duration_minutes).toBeGreaterThan(
+        offPeak.prediction.duration_minutes
+      );
+      expect(afternoonPeak.prediction.duration_minutes).toBeGreaterThan(
+        offPeak.prediction.duration_minutes
+      );
     });
 
     it('should adjust for day of week', async () => {
       (service as any).useLocalOnly = true;
 
-      const baseOrder = { order_item_count: 10, hour_of_day: 10, sku_count: 5, zone_diversity: 2, priority_level: 2 };
+      const baseOrder = {
+        order_item_count: 10,
+        hour_of_day: 10,
+        sku_count: 5,
+        zone_diversity: 2,
+        priority_level: 2,
+      };
 
       const monday = await service.predictOrderDuration({ ...baseOrder, day_of_week: 0 });
       const friday = await service.predictOrderDuration({ ...baseOrder, day_of_week: 4 });
@@ -175,12 +226,20 @@ describe('MLPredictionService', () => {
     it('should account for zone diversity', async () => {
       (service as any).useLocalOnly = true;
 
-      const baseOrder = { order_item_count: 10, hour_of_day: 10, day_of_week: 1, sku_count: 5, priority_level: 2 };
+      const baseOrder = {
+        order_item_count: 10,
+        hour_of_day: 10,
+        day_of_week: 1,
+        sku_count: 5,
+        priority_level: 2,
+      };
 
       const singleZone = await service.predictOrderDuration({ ...baseOrder, zone_diversity: 1 });
       const multiZone = await service.predictOrderDuration({ ...baseOrder, zone_diversity: 4 });
 
-      expect(multiZone.prediction.duration_minutes).toBeGreaterThan(singleZone.prediction.duration_minutes);
+      expect(multiZone.prediction.duration_minutes).toBeGreaterThan(
+        singleZone.prediction.duration_minutes
+      );
     });
   });
 
@@ -427,8 +486,22 @@ describe('MLPredictionService', () => {
     it('should generate different cache keys for different inputs', async () => {
       (service as any).useLocalOnly = true;
 
-      const features1 = { order_item_count: 10, hour_of_day: 10, day_of_week: 1, sku_count: 5, zone_diversity: 2, priority_level: 2 };
-      const features2 = { order_item_count: 20, hour_of_day: 10, day_of_week: 1, sku_count: 5, zone_diversity: 2, priority_level: 2 };
+      const features1 = {
+        order_item_count: 10,
+        hour_of_day: 10,
+        day_of_week: 1,
+        sku_count: 5,
+        zone_diversity: 2,
+        priority_level: 2,
+      };
+      const features2 = {
+        order_item_count: 20,
+        hour_of_day: 10,
+        day_of_week: 1,
+        sku_count: 5,
+        zone_diversity: 2,
+        priority_level: 2,
+      };
 
       await service.predictOrderDuration(features1);
       await service.predictOrderDuration(features2);

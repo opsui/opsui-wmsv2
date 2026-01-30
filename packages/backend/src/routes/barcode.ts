@@ -40,10 +40,7 @@ router.get('/lookup/:barcode', authenticate, async (req: AuthenticatedRequest, r
     logger.info('Barcode lookup', { barcode, userId: req.user?.userId });
 
     // Find SKU by barcode using raw query
-    const result = await query(
-      `SELECT * FROM skus WHERE barcode = $1 LIMIT 1`,
-      [barcode]
-    );
+    const result = await query(`SELECT * FROM skus WHERE barcode = $1 LIMIT 1`, [barcode]);
 
     if (!result.rows || result.rows.length === 0) {
       const auditService = getAuditService();
@@ -134,11 +131,8 @@ router.get('/bin/:location', authenticate, async (req: AuthenticatedRequest, res
 
     // Get SKU details for each inventory item
     const inventoryWithDetails = await Promise.all(
-      inventory.map(async (inv) => {
-        const skuResult = await query(
-          `SELECT name, barcode FROM skus WHERE sku = $1`,
-          [inv.sku]
-        );
+      inventory.map(async inv => {
+        const skuResult = await query(`SELECT name, barcode FROM skus WHERE sku = $1`, [inv.sku]);
         const skuDetails = skuResult.rows[0] || { name: inv.sku, barcode: null };
         return {
           sku: inv.sku,
@@ -184,106 +178,108 @@ router.get('/bin/:location', authenticate, async (req: AuthenticatedRequest, res
  * Confirm a pick action by scanning the item barcode
  * Updates the pick task and inventory
  */
-router.post('/pick/confirm', authenticate, requirePicker, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { orderId, sku, barcode, quantity, binLocation } = req.body;
+router.post(
+  '/pick/confirm',
+  authenticate,
+  requirePicker,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { orderId, sku, barcode, quantity, binLocation } = req.body;
 
-    if (!orderId || !sku || !barcode || !quantity || !binLocation) {
-      res.status(400).json({
-        error: 'Missing required fields',
-        message: 'orderId, sku, barcode, quantity, and binLocation are required',
-      });
-      return;
-    }
+      if (!orderId || !sku || !barcode || !quantity || !binLocation) {
+        res.status(400).json({
+          error: 'Missing required fields',
+          message: 'orderId, sku, barcode, quantity, and binLocation are required',
+        });
+        return;
+      }
 
-    // Verify barcode matches SKU
-    const skuResult = await query(
-      `SELECT * FROM skus WHERE barcode = $1 LIMIT 1`,
-      [barcode]
-    );
+      // Verify barcode matches SKU
+      const skuResult = await query(`SELECT * FROM skus WHERE barcode = $1 LIMIT 1`, [barcode]);
 
-    if (!skuResult.rows || skuResult.rows.length === 0 || skuResult.rows[0].sku !== sku) {
+      if (!skuResult.rows || skuResult.rows.length === 0 || skuResult.rows[0].sku !== sku) {
+        const auditService = getAuditService();
+        await auditService.logSecurityEvent(
+          AuditEventType.UNAUTHORIZED_ACCESS_ATTEMPT,
+          req.ip || null,
+          req.get('user-agent') || null,
+          {
+            action: 'barcode_mismatch',
+            expectedSku: sku,
+            scannedBarcode: barcode,
+          }
+        );
+
+        res.status(400).json({
+          error: 'Barcode mismatch',
+          message: `Scanned barcode ${barcode} does not match expected SKU ${sku}`,
+        });
+        return;
+      }
+
+      // Verify inventory at bin location
+      const inventory = await inventoryService.getInventoryByBinLocation(binLocation);
+      const inventoryItem = inventory.find(inv => inv.sku === sku);
+
+      if (!inventoryItem || inventoryItem.available < quantity) {
+        res.status(400).json({
+          error: 'Insufficient inventory',
+          message: `Not enough available quantity at ${binLocation}`,
+          available: inventoryItem?.available ?? 0,
+          requested: quantity,
+        });
+        return;
+      }
+
+      // Reserve inventory for this pick
+      await inventoryService.reserveInventory(sku, binLocation, quantity, orderId);
+
+      // Update order pick quantity (this would typically be handled by PickTaskService)
+      const order = await getOrderById(orderId);
+
+      if (!order) {
+        res.status(404).json({
+          error: 'Order not found',
+          message: `Order ${orderId} does not exist`,
+        });
+        return;
+      }
+
+      // Log the pick action
       const auditService = getAuditService();
-      await auditService.logSecurityEvent(
-        AuditEventType.UNAUTHORIZED_ACCESS_ATTEMPT,
+      await auditService.logDataModification(
+        AuditEventType.PICK_CONFIRMED,
+        req.user?.userId ?? null,
+        req.user?.email ?? null,
+        'Order',
+        orderId,
+        null,
+        { sku, quantity, binLocation, pickerId: req.user!.userId },
         req.ip || null,
-        req.get('user-agent') || null,
-        {
-          action: 'barcode_mismatch',
-          expectedSku: sku,
-          scannedBarcode: barcode
-        }
+        req.get('user-agent') || null
       );
 
-      res.status(400).json({
-        error: 'Barcode mismatch',
-        message: `Scanned barcode ${barcode} does not match expected SKU ${sku}`,
+      res.json({
+        success: true,
+        message: 'Pick confirmed',
+        data: {
+          orderId,
+          sku,
+          quantity,
+          binLocation,
+          pickerId: req.user!.userId,
+          timestamp: new Date().toISOString(),
+        },
       });
-      return;
-    }
-
-    // Verify inventory at bin location
-    const inventory = await inventoryService.getInventoryByBinLocation(binLocation);
-    const inventoryItem = inventory.find(inv => inv.sku === sku);
-
-    if (!inventoryItem || inventoryItem.available < quantity) {
-      res.status(400).json({
-        error: 'Insufficient inventory',
-        message: `Not enough available quantity at ${binLocation}`,
-        available: inventoryItem?.available ?? 0,
-        requested: quantity,
+    } catch (error) {
+      logger.error('Pick confirmation error', { error });
+      res.status(500).json({
+        error: 'Pick confirmation failed',
+        message: (error as any).message,
       });
-      return;
     }
-
-    // Reserve inventory for this pick
-    await inventoryService.reserveInventory(sku, binLocation, quantity, orderId);
-
-    // Update order pick quantity (this would typically be handled by PickTaskService)
-    const order = await getOrderById(orderId);
-
-    if (!order) {
-      res.status(404).json({
-        error: 'Order not found',
-        message: `Order ${orderId} does not exist`,
-      });
-      return;
-    }
-
-    // Log the pick action
-    const auditService = getAuditService();
-    await auditService.logDataModification(
-      AuditEventType.PICK_CONFIRMED,
-      req.user?.userId ?? null,
-      req.user?.email ?? null,
-      'Order',
-      orderId,
-      null,
-      { sku, quantity, binLocation, pickerId: req.user!.userId },
-      req.ip || null,
-      req.get('user-agent') || null
-    );
-
-    res.json({
-      success: true,
-      message: 'Pick confirmed',
-      data: {
-        orderId,
-        sku,
-        quantity,
-        binLocation,
-        pickerId: req.user!.userId,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    logger.error('Pick confirmation error', { error });
-    res.status(500).json({
-      error: 'Pick confirmation failed',
-      message: (error as any).message,
-    });
   }
-});
+);
 
 /**
  * POST /api/v1/barcode/inventory/verify
@@ -310,10 +306,7 @@ router.post('/inventory/verify', authenticate, async (req: AuthenticatedRequest,
       const { barcode, quantity } = scan;
 
       // Look up SKU by barcode
-      const skuResult = await query(
-        `SELECT * FROM skus WHERE barcode = $1 LIMIT 1`,
-        [barcode]
-      );
+      const skuResult = await query(`SELECT * FROM skus WHERE barcode = $1 LIMIT 1`, [barcode]);
 
       if (!skuResult.rows || skuResult.rows.length === 0) {
         discrepancies.push({
@@ -412,10 +405,7 @@ router.post('/putaway', authenticate, requirePicker, async (req: AuthenticatedRe
     }
 
     // Look up SKU
-    const skuResult = await query(
-      `SELECT * FROM skus WHERE barcode = $1 LIMIT 1`,
-      [barcode]
-    );
+    const skuResult = await query(`SELECT * FROM skus WHERE barcode = $1 LIMIT 1`, [barcode]);
 
     if (!skuResult.rows || skuResult.rows.length === 0) {
       res.status(404).json({
@@ -486,31 +476,36 @@ router.post('/putaway', authenticate, requirePicker, async (req: AuthenticatedRe
  *
  * Get optimized pick list for mobile device
  */
-router.get('/mobile/pick-list/:pickerId', authenticate, requirePicker, async (req: AuthenticatedRequest, res) => {
-  try {
-    const { pickerId } = req.params;
+router.get(
+  '/mobile/pick-list/:pickerId',
+  authenticate,
+  requirePicker,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { pickerId } = req.params;
 
-    // This would fetch the active pick tasks for this picker
-    // and optimize the route using TSP algorithm (see RouteOptimizationService)
+      // This would fetch the active pick tasks for this picker
+      // and optimize the route using TSP algorithm (see RouteOptimizationService)
 
-    res.json({
-      pickerId,
-      generatedAt: new Date().toISOString(),
-      tasks: [], // Would be populated from PickTaskService
-      optimizedRoute: {
-        totalDistance: 0,
-        estimatedTime: 0,
-        stops: [],
-      },
-    });
-  } catch (error) {
-    logger.error('Pick list error', { error });
-    res.status(500).json({
-      error: 'Failed to get pick list',
-      message: (error as any).message,
-    });
+      res.json({
+        pickerId,
+        generatedAt: new Date().toISOString(),
+        tasks: [], // Would be populated from PickTaskService
+        optimizedRoute: {
+          totalDistance: 0,
+          estimatedTime: 0,
+          stops: [],
+        },
+      });
+    } catch (error) {
+      logger.error('Pick list error', { error });
+      res.status(500).json({
+        error: 'Failed to get pick list',
+        message: (error as any).message,
+      });
+    }
   }
-});
+);
 
 /**
  * GET /api/v1/barcode/mobile/stats

@@ -246,7 +246,7 @@ export class NotificationRepository extends BaseRepository<Notification> {
     externalId?: string,
     errorMessage?: string
   ): Promise<Notification | null> {
-    const updates: string[] = ["status = $2", "updated_at = CURRENT_TIMESTAMP"];
+    const updates: string[] = ['status = $2', 'updated_at = CURRENT_TIMESTAMP'];
     const values: any[] = [notificationId, status];
     let paramIndex = 3;
 

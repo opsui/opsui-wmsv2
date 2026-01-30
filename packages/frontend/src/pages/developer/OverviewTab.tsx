@@ -84,12 +84,24 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
   const [clearAuditConfirm, setClearAuditConfirm] = useState(false);
   const [resetOrdersConfirm, setResetOrdersConfirm] = useState(false);
   const [cancelAllOrdersConfirm, setCancelAllOrdersConfirm] = useState(false);
-  const [deleteUserConfirm, setDeleteUserConfirm] = useState<{ isOpen: boolean; userId: string; userEmail: string }>({ isOpen: false, userId: '', userEmail: '' });
+  const [deleteUserConfirm, setDeleteUserConfirm] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userEmail: string;
+  }>({ isOpen: false, userId: '', userEmail: '' });
 
   const tables = [
-    'orders', 'users', 'skus', 'audit_logs', 'pick_tasks',
-    'bin_locations', 'custom_roles', 'user_role_assignments',
-    'order_items', 'carriers', 'zones'
+    'orders',
+    'users',
+    'skus',
+    'audit_logs',
+    'pick_tasks',
+    'bin_locations',
+    'custom_roles',
+    'user_role_assignments',
+    'order_items',
+    'carriers',
+    'zones',
   ];
 
   useEffect(() => {
@@ -283,8 +295,18 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
           <StatCard key="skus" label="SKUs" value={stats.skus} color="green" />
           <StatCard key="audit-logs" label="Audit Logs" value={stats.auditLogs} color="amber" />
           <StatCard key="pick-tasks" label="Pick Tasks" value={stats.pickTasks} color="red" />
-          <StatCard key="bin-locations" label="Bin Locations" value={stats.binLocations} color="pink" />
-          <StatCard key="custom-roles" label="Custom Roles" value={stats.customRoles} color="indigo" />
+          <StatCard
+            key="bin-locations"
+            label="Bin Locations"
+            value={stats.binLocations}
+            color="pink"
+          />
+          <StatCard
+            key="custom-roles"
+            label="Custom Roles"
+            value={stats.customRoles}
+            color="indigo"
+          />
         </div>
       )}
 
@@ -320,9 +342,7 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
               </div>
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Uptime</span>
-                <p className="font-medium dark:text-white">
-                  {Math.floor(health.uptime / 60)}m
-                </p>
+                <p className="font-medium dark:text-white">{Math.floor(health.uptime / 60)}m</p>
               </div>
             </div>
           </CardContent>
@@ -347,7 +367,7 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
                   min="1"
                   max="100"
                   value={orderCount}
-                  onChange={(e) => setOrderCount(parseInt(e.target.value) || 1)}
+                  onChange={e => setOrderCount(parseInt(e.target.value) || 1)}
                   className="flex-1"
                 />
                 <Button onClick={generateOrders}>Generate</Button>
@@ -393,16 +413,16 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
             <Input
               placeholder="Email (e.g., test@example.com)"
               value={testUserEmail}
-              onChange={(e) => setTestUserEmail(e.target.value)}
+              onChange={e => setTestUserEmail(e.target.value)}
             />
             <Input
               placeholder="Name (e.g., Test User)"
               value={testUserName}
-              onChange={(e) => setTestUserName(e.target.value)}
+              onChange={e => setTestUserName(e.target.value)}
             />
             <select
               value={testUserRole}
-              onChange={(e) => setTestUserRole(e.target.value)}
+              onChange={e => setTestUserRole(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
             >
               <option value="PICKER">Picker</option>
@@ -431,7 +451,7 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
               <p className="text-gray-500 dark:text-gray-400 text-sm">No test users found</p>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {testUsers.map((user) => (
+                {testUsers.map(user => (
                   <div
                     key={user.user_id}
                     className={`flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 ${
@@ -442,15 +462,19 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
                       <div className="flex items-center gap-2">
                         <span className="font-medium dark:text-white truncate">{user.name}</span>
                         {!user.is_active && (
-                          <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">Inactive</span>
+                          <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
+                            Inactive
+                          </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        {user.email}
+                      </div>
                       {editingUser === user.user_id ? (
                         <div className="flex items-center gap-2 mt-2">
                           <select
                             value={editUserRole}
-                            onChange={(e) => setEditUserRole(e.target.value)}
+                            onChange={e => setEditUserRole(e.target.value)}
                             className="px-2 py-1 border rounded text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                           >
                             <option value="PICKER">Picker</option>
@@ -571,7 +595,10 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
                     {tableData.data.slice(0, 10).map((row, i) => (
                       <tr key={`${selectedTable}-${i}`} className="border-b dark:border-gray-800">
                         {Object.values(row).map((val: any, j) => (
-                          <td key={`${selectedTable}-${i}-${j}`} className="p-2 dark:text-gray-300 max-w-xs truncate">
+                          <td
+                            key={`${selectedTable}-${i}-${j}`}
+                            className="p-2 dark:text-gray-300 max-w-xs truncate"
+                          >
                             {val === null ? (
                               <span className="text-gray-400">null</span>
                             ) : typeof val === 'object' ? (
@@ -602,9 +629,9 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
             <div className="flex gap-2">
               <Input
                 value={sqlQuery}
-                onChange={(e) => setSqlQuery(e.target.value)}
+                onChange={e => setSqlQuery(e.target.value)}
                 className="flex-1 font-mono text-sm"
-                onKeyDown={(e) => e.key === 'Enter' && executeSql()}
+                onKeyDown={e => e.key === 'Enter' && executeSql()}
               />
               <Button onClick={executeSql}>Execute</Button>
             </div>
@@ -631,10 +658,15 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
                         {sqlResult.rows.map((row: any, i: number) => (
                           <tr key={`sql-result-${i}`} className="border-b dark:border-gray-800">
                             {sqlResult.columns.map((col: string) => (
-                              <td key={`${i}-${col}`} className="p-2 dark:text-gray-300 max-w-xs truncate">
+                              <td
+                                key={`${i}-${col}`}
+                                className="p-2 dark:text-gray-300 max-w-xs truncate"
+                              >
                                 {row[col] === null ? (
                                   <span className="text-gray-400">null</span>
-                                ) : String(row[col])}
+                                ) : (
+                                  String(row[col])
+                                )}
                               </td>
                             ))}
                           </tr>

@@ -23,9 +23,7 @@ export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptio
   const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
     return (
       <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </BrowserRouter>
     );
   };

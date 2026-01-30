@@ -5,7 +5,15 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, ConfirmDialog } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  ConfirmDialog,
+} from '@/components/shared';
 import { apiClient } from '@/lib/api-client';
 import {
   CircleStackIcon,
@@ -41,10 +49,26 @@ export function DataManagementTab() {
   const [messages, setMessages] = useState<Array<{ type: 'success' | 'error'; text: string }>>([]);
 
   // Confirm dialog states
-  const [applyScenarioConfirm, setApplyScenarioConfirm] = useState<{ isOpen: boolean; scenarioId: string; scenarioName: string }>({ isOpen: false, scenarioId: '', scenarioName: '' });
-  const [deleteScenarioConfirm, setDeleteScenarioConfirm] = useState<{ isOpen: boolean; scenarioId: string; scenarioName: string }>({ isOpen: false, scenarioId: '', scenarioName: '' });
-  const [importDataConfirm, setImportDataConfirm] = useState<{ isOpen: boolean; fileName: string; data: any }>({ isOpen: false, fileName: '', data: null });
-  const [resetDatabaseConfirm, setResetDatabaseConfirm] = useState<{ isOpen: boolean; type: 'fresh' | 'with-orders' | 'full'; typeName: string }>({ isOpen: false, type: 'fresh', typeName: '' });
+  const [applyScenarioConfirm, setApplyScenarioConfirm] = useState<{
+    isOpen: boolean;
+    scenarioId: string;
+    scenarioName: string;
+  }>({ isOpen: false, scenarioId: '', scenarioName: '' });
+  const [deleteScenarioConfirm, setDeleteScenarioConfirm] = useState<{
+    isOpen: boolean;
+    scenarioId: string;
+    scenarioName: string;
+  }>({ isOpen: false, scenarioId: '', scenarioName: '' });
+  const [importDataConfirm, setImportDataConfirm] = useState<{
+    isOpen: boolean;
+    fileName: string;
+    data: any;
+  }>({ isOpen: false, fileName: '', data: null });
+  const [resetDatabaseConfirm, setResetDatabaseConfirm] = useState<{
+    isOpen: boolean;
+    type: 'fresh' | 'with-orders' | 'full';
+    typeName: string;
+  }>({ isOpen: false, type: 'fresh', typeName: '' });
 
   useEffect(() => {
     loadScenarios();
@@ -214,9 +238,7 @@ export function DataManagementTab() {
           <div
             key={i}
             className={`flex items-center gap-2 p-3 rounded-lg shadow-lg ${
-              msg.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
+              msg.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}
           >
             {msg.type === 'success' ? (
@@ -354,7 +376,7 @@ export function DataManagementTab() {
             </div>
           ) : (
             <div className="space-y-3">
-              {scenarios.map((scenario) => (
+              {scenarios.map(scenario => (
                 <div
                   key={scenario.scenario_id}
                   className="flex items-start gap-4 p-4 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
@@ -407,13 +429,11 @@ export function DataManagementTab() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                  Name
-                </label>
+                <label className="block text-sm font-medium dark:text-gray-300 mb-1">Name</label>
                 <Input
                   placeholder="e.g., Clean State with 5 Orders"
                   value={createForm.name}
-                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
                 />
               </div>
               <div>
@@ -423,13 +443,14 @@ export function DataManagementTab() {
                 <Input
                   placeholder="What's in this scenario?"
                   value={createForm.description}
-                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                  onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
                 />
               </div>
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
                   <ExclamationTriangleIcon className="h-4 w-4 inline mr-1" />
-                  This will save a snapshot of all current database data. Large datasets may take time to save.
+                  This will save a snapshot of all current database data. Large datasets may take
+                  time to save.
                 </p>
               </div>
               <div className="flex justify-end gap-2 pt-4">
@@ -467,7 +488,9 @@ export function DataManagementTab() {
 
       <ConfirmDialog
         isOpen={deleteScenarioConfirm.isOpen}
-        onClose={() => setDeleteScenarioConfirm({ isOpen: false, scenarioId: '', scenarioName: '' })}
+        onClose={() =>
+          setDeleteScenarioConfirm({ isOpen: false, scenarioId: '', scenarioName: '' })
+        }
         onConfirm={confirmDeleteScenario}
         title="Delete Scenario"
         message={`Delete scenario '${deleteScenarioConfirm.scenarioName}'?`}

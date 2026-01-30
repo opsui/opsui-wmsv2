@@ -65,7 +65,12 @@ function getTimeRemaining(exp?: number): string {
   return `${minutes}m`;
 }
 
-export function JwtDecoder({ token, payload, showTimestamps = true, className = '' }: JwtDecoderProps) {
+export function JwtDecoder({
+  token,
+  payload,
+  showTimestamps = true,
+  className = '',
+}: JwtDecoderProps) {
   let decodedPayload: JwtPayload | null = payload || null;
 
   if (token && !decodedPayload) {
@@ -99,9 +104,10 @@ export function JwtDecoder({ token, payload, showTimestamps = true, className = 
         <div className="space-y-2 font-mono text-sm">
           {entries.map(([key, value]) => {
             const isTimestamp = key === 'iat' || key === 'exp';
-            const displayValue = isTimestamp && showTimestamps
-              ? `${formatTimestamp(value as number)} (${getTimeRemaining(value as number)})`
-              : String(value ?? 'null');
+            const displayValue =
+              isTimestamp && showTimestamps
+                ? `${formatTimestamp(value as number)} (${getTimeRemaining(value as number)})`
+                : String(value ?? 'null');
 
             return (
               <div
@@ -111,9 +117,7 @@ export function JwtDecoder({ token, payload, showTimestamps = true, className = 
                 <span className="text-blue-600 dark:text-blue-400 font-semibold min-w-[100px]">
                   {key}:
                 </span>
-                <span className="text-gray-900 dark:text-gray-100 break-all">
-                  {displayValue}
-                </span>
+                <span className="text-gray-900 dark:text-gray-100 break-all">{displayValue}</span>
               </div>
             );
           })}
@@ -175,8 +179,19 @@ export function JwtPermissionMatrix({ payload }: { payload?: JwtPayload | null }
   const rolePermissions: Record<string, string[]> = {
     PICKER: ['Claim orders', 'Pick items', 'Update pick tasks', 'View own audit logs'],
     PACKER: ['Pack orders', 'Ship orders', 'Update packing status', 'View own audit logs'],
-    SUPERVISOR: ['View all orders', 'Cancel orders', 'View users', 'View metrics', 'View all audit logs'],
-    STOCK_CONTROLLER: ['Manage SKUs', 'Adjust inventory', 'Manage bin locations', 'View audit logs'],
+    SUPERVISOR: [
+      'View all orders',
+      'Cancel orders',
+      'View users',
+      'View metrics',
+      'View all audit logs',
+    ],
+    STOCK_CONTROLLER: [
+      'Manage SKUs',
+      'Adjust inventory',
+      'Manage bin locations',
+      'View audit logs',
+    ],
     ADMIN: ['Full system access', 'Manage users', 'Manage roles', 'All permissions'],
   };
 

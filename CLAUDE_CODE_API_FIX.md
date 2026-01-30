@@ -3,6 +3,7 @@
 ## Error: Invalid signature in thinking block
 
 **Error Message:**
+
 ```
 API Error: 400 {"type":"error","error":{"type":"invalid_request_error","message":"messages.1.content.0: Invalid signature in thinking block"},"request_id":"..."}
 ```
@@ -20,6 +21,7 @@ This error occurs when the thinking block format in the API request doesn't matc
    - Search for "Claude Code" or "Anthropic"
 
 2. **Verify API Configuration:**
+
    ```json
    {
      "anthropic.apiKey": "your-api-key-here",
@@ -85,11 +87,13 @@ set ANTHROPIC_API_KEY=sk-ant-...
 ### Solution 5: Check API Key Format
 
 Ensure your API key is valid:
+
 - Must start with `sk-ant-`
 - No extra spaces or quotes
 - Not expired or revoked
 
 Test your API key:
+
 ```bash
 curl https://api.anthropic.com/v1/messages \
   -H "x-api-key: YOUR_API_KEY" \
@@ -113,6 +117,7 @@ The thinking block feature may be model-specific. Try using a model that support
 ```
 
 Or disable extended thinking:
+
 ```json
 {
   "claude-code.maxTokens": 4096,
@@ -147,6 +152,7 @@ Or disable extended thinking:
 If you need to continue working immediately:
 
 1. **Use the Anthropic API directly in a terminal:**
+
    ```bash
    # Create a script: test-api.js
    node test-api.js
@@ -196,7 +202,7 @@ const API_KEY = process.env.ANTHROPIC_API_KEY || 'YOUR_API_KEY';
 const data = JSON.stringify({
   model: 'claude-3-5-sonnet-20241022',
   max_tokens: 1024,
-  messages: [{ role: 'user', content: 'Hello' }]
+  messages: [{ role: 'user', content: 'Hello' }],
 });
 
 const options = {
@@ -207,20 +213,20 @@ const options = {
     'x-api-key': API_KEY,
     'anthropic-version': '2023-06-01',
     'content-type': 'application/json',
-    'content-length': data.length
-  }
+    'content-length': data.length,
+  },
 };
 
-const req = https.request(options, (res) => {
+const req = https.request(options, res => {
   let body = '';
-  res.on('data', (chunk) => body += chunk);
+  res.on('data', chunk => (body += chunk));
   res.on('end', () => {
     console.log('Status:', res.statusCode);
     console.log('Response:', body);
   });
 });
 
-req.on('error', (e) => console.error('Error:', e));
+req.on('error', e => console.error('Error:', e));
 req.write(data);
 req.end();
 ```
@@ -234,6 +240,7 @@ Based on the error "messages.1.content.0: Invalid signature in thinking block", 
 3. **The API model you're using doesn't support thinking blocks**
 
 **Try this first:**
+
 ```json
 // In settings.json
 {

@@ -26,6 +26,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Cannot Log In
 
 **Symptoms:**
+
 - "Invalid credentials" error
 - Page reloads after login attempt
 - Login button doesn't respond
@@ -33,34 +34,40 @@ This guide helps you resolve common issues with the Warehouse Management System 
 **Solutions:**
 
 #### 1. Verify Credentials
+
 - Check email spelling
 - Verify password is correct
 - Check for extra spaces in email/password
 - Try copying and pasting credentials
 
 #### 2. Reset Password
+
 1. Click **Forgot Password** on login page
 2. Enter your email address
 3. Check email for reset link
 4. Create new password
 
 #### 3. Clear Browser Cache
+
 1. Open browser settings
 2. Clear browsing data/cache
 3. Restart browser
 4. Try logging in again
 
 #### 4. Try Different Browser
+
 - Chrome, Firefox, Edge, Safari
 - Identifies if issue is browser-specific
 
 #### 5. Check Account Status
+
 - Contact supervisor to verify account is active
 - Account may be deactivated if not used recently
 
 ### Issue: Account Locked
 
 **Symptoms:**
+
 - "Account locked" message
 - Too many failed login attempts
 
@@ -81,6 +88,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: "Session Expired" Error
 
 **Symptoms:**
+
 - Logged out unexpectedly
 - "Session expired" message
 
@@ -101,6 +109,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Slow Page Loads
 
 **Symptoms:**
+
 - Pages take more than 5 seconds to load
 - Images load slowly
 - Charts/graphs take long to render
@@ -108,30 +117,36 @@ This guide helps you resolve common issues with the Warehouse Management System 
 **Solutions:**
 
 #### 1. Check Internet Speed
+
 - Run speed test (speedtest.net)
 - Minimum recommended: 10 Mbps download
 - Contact IT if below threshold
 
 #### 2. Close Other Browser Tabs
+
 - Too many tabs can slow browser
 - Keep only WMS tabs open
 
 #### 3. Clear Browser Cache
+
 1. Open browser settings
 2. Clear cached images and files
 3. Restart browser
 
 #### 4. Disable Browser Extensions
+
 - Extensions can slow page loads
 - Try incognito/private mode (extensions disabled)
 
 #### 5. Update Browser
+
 - Ensure browser is latest version
 - Older versions may be slower
 
 ### Issue: Page Freezes or Hangs
 
 **Symptoms:**
+
 - Page becomes unresponsive
 - Clicking has no effect
 - Loading spinner never stops
@@ -158,6 +173,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Data Not Updating
 
 **Symptoms:**
+
 - Old data displayed
 - Changes not showing
 - Real-time updates not working
@@ -184,6 +200,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Cannot Claim Order
 
 **Symptoms:**
+
 - "Claim" button doesn't work
 - "Order already claimed" message
 - Order disappears from queue
@@ -205,6 +222,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Order Details Wrong
 
 **Symptoms:**
+
 - Incorrect items listed
 - Wrong customer name
 - Wrong shipping address
@@ -227,6 +245,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Item Not at Expected Location
 
 **Symptoms:**
+
 - Bin location is empty
 - Different item at location
 - Item quantity is wrong
@@ -249,6 +268,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Cannot Complete Order
 
 **Symptoms:**
+
 - "Complete Picking" button disabled
 - Error when clicking complete
 - Progress not at 100%
@@ -273,6 +293,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Stock Level Shows Wrong
 
 **Symptoms:**
+
 - Physical count differs from system
 - System shows 0 but items exist
 - System shows items but bin is empty
@@ -298,6 +319,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Cannot Make Stock Adjustment
 
 **Symptoms:**
+
 - Adjustment button disabled
 - "Not authorized" error
 - Adjustment rejected
@@ -319,6 +341,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: SKU Not Found in System
 
 **Symptoms:**
+
 - Scanned SKU not recognized
 - "SKU not found" error
 - Item has no barcode
@@ -345,6 +368,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Scanner Not Working
 
 **Symptoms:**
+
 - Scanner doesn't beep when scanning
 - Scanner light doesn't come on
 - Scanned data doesn't appear
@@ -352,11 +376,13 @@ This guide helps you resolve common issues with the Warehouse Management System 
 **Solutions:**
 
 #### 1. Check Scanner Power
+
 - Verify scanner is turned on
 - Check battery level
 - Replace/recharge batteries if low
 
 #### 2. Check Scanner Connection
+
 - **USB Scanner:** Unplug and replug
 - **Bluetooth Scanner:**
   - Verify Bluetooth is enabled
@@ -364,21 +390,25 @@ This guide helps you resolve common issues with the Warehouse Management System 
   - Check scanner is in discovery mode
 
 #### 3. Test Scanner
+
 - Scan into Notepad/text editor
 - If works there, scanner is fine
 - Issue may be with WMS
 
 #### 4. Restart Browser
+
 - Sometimes scanner loses connection to browser
 - Close and reopen browser
 
 #### 5. Use Manual Entry as Backup
+
 - Enter SKU/numbers manually
 - Continue working until scanner fixed
 
 ### Issue: Scanner Beeps But Data Not Entered
 
 **Symptoms:**
+
 - Scanner beeps successfully
 - Barcode is read
 - But data doesn't appear in field
@@ -404,6 +434,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Scanner Reads Wrong Barcode
 
 **Symptoms:**
+
 - Wrong SKU appears after scan
 - Different item scanned
 
@@ -429,37 +460,44 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Label Not Printing
 
 **Symptoms:**
+
 - Click "Print Label" but nothing prints
 - No error message
 
 **Solutions:**
 
 #### 1. Check Printer
+
 - Verify printer is turned on
 - Check for paper/ink
 - Look for error lights on printer
 
 #### 2. Check Printer Connection
+
 - **USB:** Ensure cable connected
 - **Network:** Check network connection
 - **Wireless:** Verify WiFi connected
 
 #### 3. Check Browser Print Settings
+
 1. Press Ctrl+P to open print dialog
 2. Verify correct printer selected
 3. Check "Destination" printer
 
 #### 4. Restart Print Spooler (Windows)
+
 1. Open Services (services.msc)
 2. Find "Print Spooler"
 3. Right-click > Restart
 
 #### 5. Try Different Browser
+
 - Print function may work in different browser
 
 ### Issue: Label Prints But Looks Wrong
 
 **Symptoms:**
+
 - Text is cut off
 - Barcode not visible
 - Alignment is wrong
@@ -485,6 +523,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Printer Shows "Offline"
 
 **Symptoms:**
+
 - Printer status shows offline
 - Cannot print to printer
 
@@ -515,6 +554,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Real-time Updates Not Working
 
 **Symptoms:**
+
 - Connection status shows "Disconnected"
 - Changes from others don't appear
 - Have to refresh to see updates
@@ -545,6 +585,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Connection Keeps Dropping
 
 **Symptoms:**
+
 - Connection frequently disconnects
 - Unstable connection indicator
 
@@ -573,6 +614,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Mobile Site Not Loading
 
 **Symptoms:**
+
 - Blank screen on mobile
 - Desktop version loads (badly)
 - "Page not found" error
@@ -599,6 +641,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: Scanner App Not Working
 
 **Symptoms:**
+
 - Camera won't open
 - Scanner doesn't detect barcodes
 - App crashes
@@ -628,6 +671,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: "500 Internal Server Error"
 
 **Symptoms:**
+
 - Generic error page
 - "Something went wrong" message
 
@@ -652,6 +696,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: "403 Forbidden" Error
 
 **Symptoms:**
+
 - "Access Denied" message
 - Cannot access certain pages
 
@@ -672,6 +717,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### Issue: "404 Not Found" Error
 
 **Symptoms:**
+
 - "Page not found" message
 - Blank page
 
@@ -695,6 +741,7 @@ This guide helps you resolve common issues with the Warehouse Management System 
 ### When to Contact Support
 
 Contact IT support when:
+
 - Issue persists after trying all solutions
 - Error message not covered in this guide
 - Multiple users experiencing same issue
@@ -704,26 +751,26 @@ Contact IT support when:
 
 When contacting support, have ready:
 
-| Information | Why Needed |
-|-------------|------------|
-| **Your Name** | To identify your account |
-| **Email/Username** | To look up your account |
-| **Page/Function** | To locate the issue |
-| **Error Message** | Exact text of error |
-| **Steps to Reproduce** | To recreate the issue |
-| **Screenshot** | Visual of the issue |
-| **Browser/Device** | To identify compatibility issues |
-| **Time of Issue** | To check system logs |
+| Information            | Why Needed                       |
+| ---------------------- | -------------------------------- |
+| **Your Name**          | To identify your account         |
+| **Email/Username**     | To look up your account          |
+| **Page/Function**      | To locate the issue              |
+| **Error Message**      | Exact text of error              |
+| **Steps to Reproduce** | To recreate the issue            |
+| **Screenshot**         | Visual of the issue              |
+| **Browser/Device**     | To identify compatibility issues |
+| **Time of Issue**      | To check system logs             |
 
 ### Contact Information
 
-| Issue Type | Contact | Response Time |
-|------------|---------|---------------|
-| **System Down** | IT Helpdesk: ext. 100 | Immediate |
-| **Critical Error** | IT Helpdesk: helpdesk@warehouse.com | 30 minutes |
-| **Login Issues** | Supervisor: ext. 101-199 | 1 hour |
-| **General Issues** | IT Helpdesk: helpdesk@warehouse.com | 4 hours |
-| **Feature Request** | System Admin: admin@warehouse.com | 1 week |
+| Issue Type          | Contact                             | Response Time |
+| ------------------- | ----------------------------------- | ------------- |
+| **System Down**     | IT Helpdesk: ext. 100               | Immediate     |
+| **Critical Error**  | IT Helpdesk: helpdesk@warehouse.com | 30 minutes    |
+| **Login Issues**    | Supervisor: ext. 101-199            | 1 hour        |
+| **General Issues**  | IT Helpdesk: helpdesk@warehouse.com | 4 hours       |
+| **Feature Request** | System Admin: admin@warehouse.com   | 1 week        |
 
 ### After-Hours Support
 
@@ -739,44 +786,48 @@ For urgent issues outside business hours:
 
 ### Common Quick Fixes
 
-| Issue | Quick Fix |
-|-------|-----------|
-| Page not loading | Refresh (F5) |
-| Data not updating | Hard refresh (Ctrl+Shift+R) |
-| Scanner not working | Check battery/connection |
-| Can't log in | Clear browser cache |
-| Print not working | Check printer power |
-| Slow performance | Close other tabs |
+| Issue               | Quick Fix                   |
+| ------------------- | --------------------------- |
+| Page not loading    | Refresh (F5)                |
+| Data not updating   | Hard refresh (Ctrl+Shift+R) |
+| Scanner not working | Check battery/connection    |
+| Can't log in        | Clear browser cache         |
+| Print not working   | Check printer power         |
+| Slow performance    | Close other tabs            |
 
 ### Keyboard Shortcuts for Troubleshooting
 
-| Shortcut | Action |
-|----------|--------|
-| `F5` | Refresh page |
-| `Ctrl+R` | Refresh page |
-| `Ctrl+Shift+R` | Hard refresh (clear cache) |
-| `F12` | Open developer tools |
-| `Ctrl+Shift+J` | Open browser console |
-| `Ctrl+Shift+Delete` | Clear browsing data |
+| Shortcut            | Action                     |
+| ------------------- | -------------------------- |
+| `F5`                | Refresh page               |
+| `Ctrl+R`            | Refresh page               |
+| `Ctrl+Shift+R`      | Hard refresh (clear cache) |
+| `F12`               | Open developer tools       |
+| `Ctrl+Shift+J`      | Open browser console       |
+| `Ctrl+Shift+Delete` | Clear browsing data        |
 
 ### Browser-Specific Tips
 
 #### Chrome
+
 - Clear cache: Settings > Privacy > Clear Browsing Data
 - Incognito mode: Ctrl+Shift+N (test without extensions)
 - Task Manager: Shift+Esc (identify slow tabs)
 
 #### Firefox
+
 - Clear cache: Options > Privacy > Clear Recent History
 - Private mode: Ctrl+Shift+P
 - Task Manager: Shift+Esc (identify slow tabs)
 
 #### Edge
+
 - Clear cache: Settings > Privacy > Clear Browsing Data
 - InPrivate mode: Ctrl+Shift+N
 - Performance: Check task manager (F12 > Performance)
 
 #### Safari
+
 - Clear cache: Develop > Empty Caches
 - Private mode: Cmd+Shift+N
 - Restart: Cmd+Q (fully quit and reopen)
@@ -785,19 +836,19 @@ For urgent issues outside business hours:
 
 ## Appendix: Error Message Glossary
 
-| Error Message | Meaning | Action |
-|---------------|---------|--------|
-| **401 Unauthorized** | Not logged in or session expired | Log in again |
-| **403 Forbidden** | Don't have permission | Contact supervisor |
-| **404 Not Found** | Page doesn't exist | Check URL, use navigation |
-| **500 Internal Server Error** | Server error | Try again, contact IT if persists |
-| **503 Service Unavailable** | System temporarily down | Wait a few minutes, try again |
-| **Connection Lost** | WebSocket disconnected | Refresh page |
-| **Network Error** | Internet connection issue | Check connection |
-| **Session Expired** | Logged out due to inactivity | Log in again |
+| Error Message                 | Meaning                          | Action                            |
+| ----------------------------- | -------------------------------- | --------------------------------- |
+| **401 Unauthorized**          | Not logged in or session expired | Log in again                      |
+| **403 Forbidden**             | Don't have permission            | Contact supervisor                |
+| **404 Not Found**             | Page doesn't exist               | Check URL, use navigation         |
+| **500 Internal Server Error** | Server error                     | Try again, contact IT if persists |
+| **503 Service Unavailable**   | System temporarily down          | Wait a few minutes, try again     |
+| **Connection Lost**           | WebSocket disconnected           | Refresh page                      |
+| **Network Error**             | Internet connection issue        | Check connection                  |
+| **Session Expired**           | Logged out due to inactivity     | Log in again                      |
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2026*
-*For issues not covered, contact IT Helpdesk*
+_Document Version: 1.0_
+_Last Updated: January 2026_
+_For issues not covered, contact IT Helpdesk_

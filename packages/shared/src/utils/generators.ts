@@ -70,7 +70,9 @@ export function generateTransactionId(date: Date = new Date()): string {
 export function generateStateChangeId(date: Date = new Date()): string {
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
   const millis = Math.floor(date.getTime()).toString().padStart(11, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `OSC-${dateStr}-${millis}-${random}`;
 }
 

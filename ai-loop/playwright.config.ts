@@ -30,10 +30,13 @@ export default defineConfig({
 
   // Reporter configuration
   reporter: [
-    ['html', {
-      outputFolder: 'playwright-report',
-      open: 'never',
-    }],
+    [
+      'html',
+      {
+        outputFolder: 'playwright-report',
+        open: 'never',
+      },
+    ],
     ['json', { outputFile: 'playwright-report/results.json' }],
     ['list'],
   ],
@@ -65,8 +68,8 @@ export default defineConfig({
     video: 'off',
 
     // Timeout settings (industry standard for crawling)
-    actionTimeout: 10000,     // 10s for actions
-    navigationTimeout: 30000,  // 30s for navigation
+    actionTimeout: 10000, // 10s for actions
+    navigationTimeout: 30000, // 30s for navigation
 
     // Viewport size
     viewport: { width: 1280, height: 720 },
@@ -83,7 +86,7 @@ export default defineConfig({
   },
 
   // Test timeout (per test)
-  timeout: 30 * 60 * 1000,  // 30 minutes per test (for 100% coverage crawling)
+  timeout: 30 * 60 * 1000, // 30 minutes per test (for 100% coverage crawling)
 
   // Expect timeout
   expect: {

@@ -141,9 +141,9 @@ class NZCService {
   private getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      'access_key': this.apiKey,
-      'site_id': this.siteId,
-      'supportemail': this.supportEmail,
+      access_key: this.apiKey,
+      site_id: this.siteId,
+      supportemail: this.supportEmail,
     };
   }
 
@@ -173,7 +173,7 @@ class NZCService {
    * Convert weight from lbs to kg (NZC uses kg)
    */
   private lbsToKg(lbs: number): number {
-    return Math.round((lbs * 0.453592) * 100) / 100;
+    return Math.round(lbs * 0.453592 * 100) / 100;
   }
 
   /**
@@ -186,10 +186,7 @@ class NZCService {
   /**
    * Get shipping rates from NZC
    */
-  async getRates(
-    destination: NZCDestination,
-    packages: NZCPackage[]
-  ): Promise<NZCRateResponse> {
+  async getRates(destination: NZCDestination, packages: NZCPackage[]): Promise<NZCRateResponse> {
     try {
       const requestBody: NZCRateRequest = {
         Destination: destination,
@@ -216,7 +213,7 @@ class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json() as NZCRateResponse;
+      const data = (await response.json()) as NZCRateResponse;
 
       // Log validation errors if any
       if (data.ValidationErrors && Object.keys(data.ValidationErrors).length > 0) {
@@ -276,7 +273,7 @@ class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json() as NZCShipmentResponse;
+      const data = (await response.json()) as NZCShipmentResponse;
 
       logger.info('[NZC] Shipment created successfully', {
         consignmentNo: data.ConsignmentNo,
@@ -341,17 +338,11 @@ class NZCService {
   /**
    * Requeue shipment for printing (simpler print method)
    */
-  async reprintLabel(
-    connote: string,
-    copies: number = 1,
-    printerName?: string
-  ): Promise<void> {
+  async reprintLabel(connote: string, copies: number = 1, printerName?: string): Promise<void> {
     try {
       logger.info('[NZC] Reprinting label', { connote, copies, printerName });
 
-      const requestBody = printerName
-        ? { copies, printtoprinter: printerName }
-        : { copies };
+      const requestBody = printerName ? { copies, printtoprinter: printerName } : { copies };
 
       const response = await fetch(
         `${this.baseUrl}/api/labels?connote=${encodeURIComponent(connote)}`,
@@ -399,7 +390,7 @@ class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json() as any[];
+      const data = (await response.json()) as any[];
       logger.info('[NZC] Printers fetched successfully', { count: data.length });
       return data;
     } catch (error) {
@@ -429,7 +420,7 @@ class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json() as any[];
+      const data = (await response.json()) as any[];
       logger.info('[NZC] Stock sizes fetched successfully', { count: data.length });
       return data;
     } catch (error) {

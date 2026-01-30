@@ -5,8 +5,23 @@
  */
 
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, useToast, Pagination } from '@/components/shared';
-import { useCustomers, useLeads, useOpportunities, useQuotes, useSalesDashboard } from '@/services/api';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  useToast,
+  Pagination,
+} from '@/components/shared';
+import {
+  useCustomers,
+  useLeads,
+  useOpportunities,
+  useQuotes,
+  useSalesDashboard,
+} from '@/services/api';
 import { CreateCustomerModal } from '@/components/sales/CreateCustomerModal';
 import { useEffect, useState } from 'react';
 import {
@@ -386,10 +401,22 @@ function SalesPage() {
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
 
   // Fetch sales data from backend
-  const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useSalesDashboard();
-  const { data: customersData, isLoading: isCustomersLoading, error: customersError } = useCustomers();
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+  } = useSalesDashboard();
+  const {
+    data: customersData,
+    isLoading: isCustomersLoading,
+    error: customersError,
+  } = useCustomers();
   const { data: leadsData, isLoading: isLeadsLoading, error: leadsError } = useLeads();
-  const { data: opportunitiesData, isLoading: isOpportunitiesLoading, error: opportunitiesError } = useOpportunities();
+  const {
+    data: opportunitiesData,
+    isLoading: isOpportunitiesLoading,
+    error: opportunitiesError,
+  } = useOpportunities();
   const { data: quotesData, isLoading: isQuotesLoading, error: quotesError } = useQuotes();
 
   // Show error toasts
@@ -438,7 +465,12 @@ function SalesPage() {
   const quotes: Quote[] = quotesData?.quotes || [];
 
   // Show loading state
-  const isLoading = isDashboardLoading || isCustomersLoading || isLeadsLoading || isOpportunitiesLoading || isQuotesLoading;
+  const isLoading =
+    isDashboardLoading ||
+    isCustomersLoading ||
+    isLeadsLoading ||
+    isOpportunitiesLoading ||
+    isQuotesLoading;
 
   // Pagination for different tabs
   const startIndex = (currentPage - 1) * pageSize;
@@ -478,32 +510,32 @@ function SalesPage() {
 
         {/* Tab Navigation */}
         {!isLoading && (
-        <div className="flex gap-2 mb-8 border-b border-white/10 pb-4">
-          {[
-            { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
-            { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
-            { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
-            { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
-            { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
-          ].map(tab => {
-            const Icon = tab.icon;
-            const isActive = currentTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+          <div className="flex gap-2 mb-8 border-b border-white/10 pb-4">
+            {[
+              { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
+              { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
+              { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
+              { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
+              { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = currentTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setTab(tab.key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         )}
 
         {/* Dashboard Tab */}

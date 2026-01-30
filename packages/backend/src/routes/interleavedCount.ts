@@ -58,10 +58,7 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const days = req.query.days ? parseInt(req.query.days as string) : 30;
 
-    const stats = await interleavedCountService.getMicroCountStats(
-      req.user!.userId,
-      days
-    );
+    const stats = await interleavedCountService.getMicroCountStats(req.user!.userId, days);
 
     res.json(stats);
   })

@@ -66,25 +66,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000) => {
-    const id = `toast-${Date.now()}-${Math.random()}`;
-    const toast: Toast = {
-      id,
-      message,
-      type,
-      duration,
-      timestamp: Date.now(),
-    };
+  const showToast = useCallback(
+    (message: string, type: ToastType = 'info', duration = 5000) => {
+      const id = `toast-${Date.now()}-${Math.random()}`;
+      const toast: Toast = {
+        id,
+        message,
+        type,
+        duration,
+        timestamp: Date.now(),
+      };
 
-    setToasts(prev => [toast, ...prev].slice(0, 5)); // Max 5 toasts
+      setToasts(prev => [toast, ...prev].slice(0, 5)); // Max 5 toasts
 
-    // Auto-dismiss
-    if (duration > 0) {
-      setTimeout(() => {
-        dismissToast(id);
-      }, duration);
-    }
-  }, [dismissToast]);
+      // Auto-dismiss
+      if (duration > 0) {
+        setTimeout(() => {
+          dismissToast(id);
+        }, duration);
+      }
+    },
+    [dismissToast]
+  );
 
   const clearAll = useCallback(() => {
     setToasts([]);

@@ -1,9 +1,9 @@
 /**
  * Claude API Diagnostic Script
- * 
+ *
  * This script tests your Anthropic API key and identifies common issues
  * including the "Invalid signature in thinking block" error.
- * 
+ *
  * Usage:
  *   1. Set your API key: set ANTHROPIC_API_KEY=sk-ant-...
  *   2. Run: node diagnose-claude-api.js
@@ -47,28 +47,28 @@ console.log('-'.repeat(60));
 const test1Data = JSON.stringify({
   model: 'claude-3-5-sonnet-20241022',
   max_tokens: 1024,
-  messages: [{ role: 'user', content: 'Hello' }]
+  messages: [{ role: 'user', content: 'Hello' }],
 });
 
 runAPITest(test1Data, (success, response) => {
   if (success) {
     console.log('✅ Test 1 PASSED: Basic API connection works');
     console.log();
-    
+
     // Test 2: Message with extended thinking
     console.log('Test 2: Message with extended thinking enabled');
     console.log('-'.repeat(60));
-    
+
     const test2Data = JSON.stringify({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
       messages: [{ role: 'user', content: 'Hello' }],
       thinking: {
-        type: "enabled",
-        budget_tokens: 1024
-      }
+        type: 'enabled',
+        budget_tokens: 1024,
+      },
     });
-    
+
     runAPITest(test2Data, (success, response) => {
       if (success) {
         console.log('✅ Test 2 PASSED: Extended thinking works');
@@ -113,7 +113,7 @@ runAPITest(test1Data, (success, response) => {
     console.log('Troubleshooting:');
     console.log('- Verify your API key at: https://console.anthropic.com/');
     console.log('- Check your internet connection');
-    console.log('- Try the API key in Anthropic\'s web console');
+    console.log("- Try the API key in Anthropic's web console");
   }
 });
 
@@ -126,21 +126,21 @@ function runAPITest(data, callback) {
       'x-api-key': API_KEY,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
-      'content-length': Buffer.byteLength(data)
+      'content-length': Buffer.byteLength(data),
     },
-    timeout: 30000
+    timeout: 30000,
   };
 
-  const req = https.request(options, (res) => {
+  const req = https.request(options, res => {
     let body = '';
-    
-    res.on('data', (chunk) => {
+
+    res.on('data', chunk => {
       body += chunk;
     });
-    
+
     res.on('end', () => {
       console.log(`Status: ${res.statusCode} ${res.statusMessage}`);
-      
+
       if (res.statusCode === 200) {
         console.log('Response: Success');
         try {
@@ -164,7 +164,7 @@ function runAPITest(data, callback) {
     });
   });
 
-  req.on('error', (e) => {
+  req.on('error', e => {
     console.error('Request error:', e.message);
     callback(false, { error: e.message });
   });

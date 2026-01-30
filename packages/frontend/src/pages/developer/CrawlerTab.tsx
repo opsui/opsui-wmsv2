@@ -38,7 +38,11 @@ interface CrawlerStatus {
   isRunning: boolean;
   lastRun: string | null;
   lastResults: CrawlerStats | null;
-  log: Array<{ timestamp: string; message: string; type: 'info' | 'success' | 'error' | 'warning' }>;
+  log: Array<{
+    timestamp: string;
+    message: string;
+    type: 'info' | 'success' | 'error' | 'warning';
+  }>;
 }
 
 interface ErrorEntry {
@@ -145,7 +149,6 @@ export function CrawlerTab() {
           addLog('Error checking crawler status', 'error');
         }
       }, 2000);
-
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Failed to start crawler';
       addLog(errorMsg, 'error');
@@ -185,13 +188,16 @@ export function CrawlerTab() {
   const copyErrorsForClaude = () => {
     // Format errors into an optimized prompt for Claude Code
     // Following industry best practices for AI-assisted development workflows
-    const errorGroups = errors.reduce((acc, error) => {
-      if (!acc[error.type]) {
-        acc[error.type] = [];
-      }
-      acc[error.type].push(error);
-      return acc;
-    }, {} as Record<string, typeof errors>);
+    const errorGroups = errors.reduce(
+      (acc, error) => {
+        if (!acc[error.type]) {
+          acc[error.type] = [];
+        }
+        acc[error.type].push(error);
+        return acc;
+      },
+      {} as Record<string, typeof errors>
+    );
 
     // Get critical/high priority errors for focus
     const criticalErrors = errors.filter(e => e.priority === 'critical' || e.priority === 'high');
@@ -199,7 +205,12 @@ export function CrawlerTab() {
 
     const timestamp = new Date().toISOString();
     const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short',
     });
 
     let prompt = `# 🐛 WMS Error Analysis & Fix Request
@@ -301,20 +312,32 @@ packages/
 
     // Add error breakdown by type
     Object.entries(errorGroups).forEach(([type, typeErrors]) => {
-      const icon = type.includes('auth') ? '🔐' :
-                   type.includes('api') ? '🌐' :
-                   type.includes('route') ? '🛣️' :
-                   type.includes('element') ? '🖱️' :
-                   type.includes('console') ? '💻' :
-                   type.includes('page') ? '📄' : '⚠️';
+      const icon = type.includes('auth')
+        ? '🔐'
+        : type.includes('api')
+          ? '🌐'
+          : type.includes('route')
+            ? '🛣️'
+            : type.includes('element')
+              ? '🖱️'
+              : type.includes('console')
+                ? '💻'
+                : type.includes('page')
+                  ? '📄'
+                  : '⚠️';
 
       prompt += `${icon} **${type.toUpperCase()}** (${typeErrors.length} errors)\n\n`;
 
       // Show all errors of this type (not just top 5)
       typeErrors.forEach((error, idx) => {
-        const priorityIcon = error.priority === 'critical' ? '🔴' :
-                            error.priority === 'high' ? '🟠' :
-                            error.priority === 'medium' ? '🟡' : '⚪';
+        const priorityIcon =
+          error.priority === 'critical'
+            ? '🔴'
+            : error.priority === 'high'
+              ? '🟠'
+              : error.priority === 'medium'
+                ? '🟡'
+                : '⚪';
         prompt += `#### ${priorityIcon} ${idx + 1}. ${error.message}\n\n`;
         prompt += `- **Priority**: ${error.priority}\n`;
         prompt += `- **Occurrences**: ${error.count}x\n`;
@@ -426,11 +449,14 @@ For each fix, please provide:
 `;
 
     // Copy to clipboard
-    navigator.clipboard.writeText(prompt).then(() => {
-      addLog(`Copied ${errors.length} errors to clipboard for Claude`, 'success');
-    }).catch(() => {
-      addLog('Failed to copy errors to clipboard', 'error');
-    });
+    navigator.clipboard
+      .writeText(prompt)
+      .then(() => {
+        addLog(`Copied ${errors.length} errors to clipboard for Claude`, 'success');
+      })
+      .catch(() => {
+        addLog('Failed to copy errors to clipboard', 'error');
+      });
   };
 
   const clearResults = async () => {
@@ -452,10 +478,14 @@ For each fix, please provide:
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'text-red-600 bg-red-50';
-      case 'high': return 'text-orange-600 bg-orange-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'critical':
+        return 'text-red-600 bg-red-50';
+      case 'high':
+        return 'text-orange-600 bg-orange-50';
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
     }
   };
 
@@ -479,11 +509,7 @@ For each fix, please provide:
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            onClick={loadCrawlerStatus}
-            variant="secondary"
-            disabled={status.isRunning}
-          >
+          <Button onClick={loadCrawlerStatus} variant="secondary" disabled={status.isRunning}>
             <ArrowPathIcon className="h-4 w-4 inline mr-1" />
             Refresh
           </Button>
@@ -498,10 +524,7 @@ For each fix, please provide:
               Stop
             </Button>
           ) : (
-            <Button
-              onClick={startCrawler}
-              disabled={status.isRunning}
-            >
+            <Button onClick={startCrawler} disabled={status.isRunning}>
               <PlayIcon className="h-4 w-4 inline mr-1" />
               Run Crawler
             </Button>
@@ -518,7 +541,9 @@ For each fix, please provide:
             </div>
             <div>
               <p className="font-medium text-blue-900 dark:text-blue-100">Crawler is running...</p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">This may take several minutes</p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                This may take several minutes
+              </p>
             </div>
           </div>
         </div>
@@ -533,7 +558,9 @@ For each fix, please provide:
                 <ChartBarIcon className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Coverage</p>
-                  <p className="text-2xl font-bold dark:text-white">{status.lastResults.coverage}%</p>
+                  <p className="text-2xl font-bold dark:text-white">
+                    {status.lastResults.coverage}%
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -559,7 +586,9 @@ For each fix, please provide:
                 <BugAntIcon className="h-5 w-5 text-red-500" />
                 <div>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Errors</p>
-                  <p className="text-2xl font-bold dark:text-white">{status.lastResults.totalErrors}</p>
+                  <p className="text-2xl font-bold dark:text-white">
+                    {status.lastResults.totalErrors}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -571,7 +600,9 @@ For each fix, please provide:
                 <DocumentTextIcon className="h-5 w-5 text-orange-500" />
                 <div>
                   <p className="text-xs text-gray-600 dark:text-gray-400">API Failures</p>
-                  <p className="text-2xl font-bold dark:text-white">{status.lastResults.totalAPIFailures}</p>
+                  <p className="text-2xl font-bold dark:text-white">
+                    {status.lastResults.totalAPIFailures}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -583,7 +614,9 @@ For each fix, please provide:
                 <CheckCircleIcon className="h-5 w-5 text-purple-500" />
                 <div>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Elements</p>
-                  <p className="text-2xl font-bold dark:text-white">{status.lastResults.interactedElements}</p>
+                  <p className="text-2xl font-bold dark:text-white">
+                    {status.lastResults.interactedElements}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -611,7 +644,7 @@ For each fix, please provide:
           { id: 'dashboard', label: 'Dashboard', icon: ChartBarIcon },
           { id: 'errors', label: 'Errors', icon: BugAntIcon },
           { id: 'coverage', label: 'Coverage', icon: GlobeAltIcon },
-        ].map((tab) => {
+        ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeView === tab.id;
           return (
@@ -679,11 +712,7 @@ For each fix, please provide:
                 <ArrowDownTrayIcon className="h-4 w-4 inline mr-2" />
                 Download Results
               </Button>
-              <Button
-                onClick={startCrawler}
-                disabled={status.isRunning}
-                className="w-full"
-              >
+              <Button onClick={startCrawler} disabled={status.isRunning} className="w-full">
                 <PlayIcon className="h-4 w-4 inline mr-2" />
                 Run New Crawl
               </Button>
@@ -699,7 +728,10 @@ For each fix, please provide:
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(status.lastResults.byType).map(([type, count]) => (
-                    <div key={type} className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0">
+                    <div
+                      key={type}
+                      className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0"
+                    >
                       <span className="text-sm font-medium dark:text-white capitalize">{type}</span>
                       <span className="text-sm font-bold dark:text-white">{count}</span>
                     </div>
@@ -728,9 +760,16 @@ For each fix, please provide:
                     const isError = entry.type === 'error';
                     const isSuccess = entry.type === 'success';
                     return (
-                      <div key={i} className={`flex items-start gap-2 text-sm py-1 ${
-                        isError ? 'text-red-600' : isSuccess ? 'text-green-600' : 'text-gray-600 dark:text-gray-400'
-                      }`}>
+                      <div
+                        key={i}
+                        className={`flex items-start gap-2 text-sm py-1 ${
+                          isError
+                            ? 'text-red-600'
+                            : isSuccess
+                              ? 'text-green-600'
+                              : 'text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
                         <span className="font-mono text-xs flex-shrink-0">
                           {new Date(entry.timestamp).toLocaleTimeString()}
                         </span>
@@ -772,23 +811,23 @@ For each fix, please provide:
               </div>
             ) : (
               <div className="space-y-4">
-                {errors.slice(0, 50).map((error) => (
+                {errors.slice(0, 50).map(error => (
                   <div key={error.id} className="border dark:border-gray-700 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                           {error.id}
                         </span>
-                        <span className={`text-xs font-medium px-2 py-1 rounded ${getPriorityColor(error.priority)}`}>
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded ${getPriorityColor(error.priority)}`}
+                        >
                           {error.priority.toUpperCase()}
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {error.type}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500">
-                        {error.count}x
-                      </span>
+                      <span className="text-xs text-gray-500">{error.count}x</span>
                     </div>
 
                     <div className="mb-2">
@@ -838,11 +877,18 @@ For each fix, please provide:
                   </thead>
                   <tbody>
                     {coverage.map((route, idx) => {
-                      const totalElements = route.elements.buttons.total + route.elements.links.total +
-                                           route.elements.inputs.total + route.elements.searches.total;
-                      const interacted = route.elements.buttons.clicked + route.elements.links.clicked +
-                                        route.elements.inputs.filled + route.elements.searches.tested;
-                      const coveragePct = totalElements > 0 ? Math.round((interacted / totalElements) * 100) : 0;
+                      const totalElements =
+                        route.elements.buttons.total +
+                        route.elements.links.total +
+                        route.elements.inputs.total +
+                        route.elements.searches.total;
+                      const interacted =
+                        route.elements.buttons.clicked +
+                        route.elements.links.clicked +
+                        route.elements.inputs.filled +
+                        route.elements.searches.tested;
+                      const coveragePct =
+                        totalElements > 0 ? Math.round((interacted / totalElements) * 100) : 0;
 
                       return (
                         <tr key={`${route.route}-${idx}`} className="border-b dark:border-gray-800">
@@ -859,13 +905,13 @@ For each fix, please provide:
                             {!route.accessible && route.visited && (
                               <span className="text-xs text-orange-500">Not accessible</span>
                             )}
-                            {route.accessible && (
-                              <span className="text-xs text-green-500">OK</span>
-                            )}
+                            {route.accessible && <span className="text-xs text-green-500">OK</span>}
                           </td>
                           <td className="p-2 text-center dark:text-white">{route.loadTime}ms</td>
                           <td className="p-2 text-center">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${getCoverageColor(coveragePct)}`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${getCoverageColor(coveragePct)}`}
+                            >
                               {coveragePct}%
                             </span>
                           </td>

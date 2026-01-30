@@ -7,7 +7,16 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, Header, Button, Pagination, useToast } from '@/components/shared';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Header,
+  Button,
+  Pagination,
+  useToast,
+} from '@/components/shared';
 import {
   ArrowPathIcon,
   ClockIcon,
@@ -691,7 +700,8 @@ function RMAPage() {
 
             {(() => {
               const filteredRequests = requests.filter(r => {
-                if (!['REFUNDED', 'REPLACED', 'REJECTED', 'CLOSED'].includes(r.status)) return false;
+                if (!['REFUNDED', 'REPLACED', 'REJECTED', 'CLOSED'].includes(r.status))
+                  return false;
                 if (!completedSearchTerm.trim()) return true;
                 const query = completedSearchTerm.toLowerCase();
                 return (

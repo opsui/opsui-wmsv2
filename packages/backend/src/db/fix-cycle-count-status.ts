@@ -16,14 +16,18 @@ async function fixCycleCountStatus() {
     await client.query('BEGIN');
 
     // Check current status values
-    const checkResult = await client.query('SELECT status, COUNT(*) as count FROM cycle_count_plans GROUP BY status');
+    const checkResult = await client.query(
+      'SELECT status, COUNT(*) as count FROM cycle_count_plans GROUP BY status'
+    );
     console.log('\n📊 Current statuses in database:');
     checkResult.rows.forEach(row => {
       console.log(`  ${row.status}: ${row.count}`);
     });
 
     // Update any PENDING to SCHEDULED
-    const updateResult = await client.query("UPDATE cycle_count_plans SET status = 'SCHEDULED' WHERE status = 'PENDING'");
+    const updateResult = await client.query(
+      "UPDATE cycle_count_plans SET status = 'SCHEDULED' WHERE status = 'PENDING'"
+    );
     console.log(`\n✅ Updated ${updateResult.rowCount} rows from PENDING to SCHEDULED`);
 
     // Fix the default for future inserts

@@ -5,7 +5,15 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Input, Button, ConfirmDialog } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Button,
+  ConfirmDialog,
+} from '@/components/shared';
 import { ToggleSwitch, ToggleGroup } from '@/components/shared/ToggleSwitch';
 import { apiClient } from '@/lib/api-client';
 import {
@@ -64,7 +72,10 @@ export function FeatureFlagsTab() {
   const [messages, setMessages] = useState<Array<{ type: 'success' | 'error'; text: string }>>([]);
 
   // Confirm dialog states
-  const [deleteFlagConfirm, setDeleteFlagConfirm] = useState<{ isOpen: boolean; flagKey: string }>({ isOpen: false, flagKey: '' });
+  const [deleteFlagConfirm, setDeleteFlagConfirm] = useState<{ isOpen: boolean; flagKey: string }>({
+    isOpen: false,
+    flagKey: '',
+  });
 
   useEffect(() => {
     loadFlags();
@@ -98,11 +109,7 @@ export function FeatureFlagsTab() {
         isEnabled: !currentState,
       });
 
-      setFlags(prev =>
-        prev.map(flag =>
-          flag.flag_key === flagKey ? response.data.flag : flag
-        )
-      );
+      setFlags(prev => prev.map(flag => (flag.flag_key === flagKey ? response.data.flag : flag)));
       addMessage('success', `Flag '${flagKey}' ${!currentState ? 'enabled' : 'disabled'}`);
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Failed to update flag';
@@ -155,13 +162,16 @@ export function FeatureFlagsTab() {
     return matchesSearch && matchesCategory;
   });
 
-  const groupedFlags = filteredFlags.reduce((acc, flag) => {
-    if (!acc[flag.category]) {
-      acc[flag.category] = [];
-    }
-    acc[flag.category].push(flag);
-    return acc;
-  }, {} as Record<string, FeatureFlag[]>);
+  const groupedFlags = filteredFlags.reduce(
+    (acc, flag) => {
+      if (!acc[flag.category]) {
+        acc[flag.category] = [];
+      }
+      acc[flag.category].push(flag);
+      return acc;
+    },
+    {} as Record<string, FeatureFlag[]>
+  );
 
   if (loading) {
     return (
@@ -179,9 +189,7 @@ export function FeatureFlagsTab() {
           <div
             key={i}
             className={`flex items-center gap-2 p-3 rounded-lg shadow-lg ${
-              msg.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
+              msg.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}
           >
             {msg.type === 'success' ? (
@@ -222,9 +230,10 @@ export function FeatureFlagsTab() {
               onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
               className={`
                 p-4 rounded-lg border-2 transition-all
-                ${selectedCategory === cat.id
-                  ? `border-${cat.color}-500 bg-${cat.color}-50 dark:bg-${cat.color}-900/20`
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                ${
+                  selectedCategory === cat.id
+                    ? `border-${cat.color}-500 bg-${cat.color}-50 dark:bg-${cat.color}-900/20`
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
               `}
             >
@@ -252,7 +261,7 @@ export function FeatureFlagsTab() {
         <Input
           placeholder="Search flags by name, key, or description..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="pl-10"
         />
         {searchQuery && (
@@ -354,18 +363,21 @@ export function FeatureFlagsTab() {
                 <Input
                   placeholder="e.g., my_feature_flag"
                   value={createForm.flag_key}
-                  onChange={(e) => setCreateForm({ ...createForm, flag_key: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
+                  onChange={e =>
+                    setCreateForm({
+                      ...createForm,
+                      flag_key: e.target.value.toLowerCase().replace(/\s+/g, '_'),
+                    })
+                  }
                 />
                 <p className="text-xs text-gray-500 mt-1">Use lowercase with underscores</p>
               </div>
               <div>
-                <label className="block text-sm font-medium dark:text-gray-300 mb-1">
-                  Name
-                </label>
+                <label className="block text-sm font-medium dark:text-gray-300 mb-1">Name</label>
                 <Input
                   placeholder="e.g., My Feature Flag"
                   value={createForm.name}
-                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
                 />
               </div>
               <div>
@@ -375,7 +387,7 @@ export function FeatureFlagsTab() {
                 <Input
                   placeholder="What does this flag control?"
                   value={createForm.description}
-                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                  onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
                 />
               </div>
               <div>
@@ -384,7 +396,7 @@ export function FeatureFlagsTab() {
                 </label>
                 <select
                   value={createForm.category}
-                  onChange={(e) => setCreateForm({ ...createForm, category: e.target.value as any })}
+                  onChange={e => setCreateForm({ ...createForm, category: e.target.value as any })}
                   className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                 >
                   {categories.map(cat => (

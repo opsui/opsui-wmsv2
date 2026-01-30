@@ -79,7 +79,7 @@ router.post(
     } catch (error: any) {
       if (error.message.includes('Missing required configuration fields')) {
         res.status(400).json({ error: error.message });
-      return;
+        return;
       }
       next(error);
     }
@@ -99,7 +99,7 @@ router.put(
       const integration = await service.updateIntegration(req.params.integrationId, req.body);
       if (!integration) {
         res.status(404).json({ error: 'Integration not found' });
-      return;
+        return;
       }
       res.json(integration);
     } catch (error) {
@@ -121,7 +121,7 @@ router.delete(
       const deleted = await service.deleteIntegration(req.params.integrationId);
       if (!deleted) {
         res.status(404).json({ error: 'Integration not found' });
-      return;
+        return;
       }
       res.status(204).send();
     } catch (error) {
@@ -196,7 +196,7 @@ router.post(
     } catch (error: any) {
       if (error.message.includes('must be active')) {
         res.status(400).json({ error: error.message });
-      return;
+        return;
       }
       next(error);
     }
@@ -216,7 +216,7 @@ router.get(
       const job = await repository.findSyncJobById(req.params.jobId);
       if (!job) {
         res.status(404).json({ error: 'Sync job not found' });
-      return;
+        return;
       }
       res.json(job);
     } catch (error) {
@@ -341,15 +341,12 @@ router.post(
   authorize(UserRole.ADMIN),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const account = await service.createCarrierAccount(
-        req.params.integrationId,
-        req.body
-      );
+      const account = await service.createCarrierAccount(req.params.integrationId, req.body);
       res.status(201).json(account);
     } catch (error: any) {
       if (error.message.includes('can only be added to')) {
         res.status(400).json({ error: error.message });
-      return;
+        return;
       }
       next(error);
     }
@@ -369,7 +366,7 @@ router.put(
       const account = await service.updateCarrierAccount(req.params.carrierAccountId, req.body);
       if (!account) {
         res.status(404).json({ error: 'Carrier account not found' });
-      return;
+        return;
       }
       res.json(account);
     } catch (error) {
@@ -391,7 +388,7 @@ router.delete(
       const deleted = await service.deleteCarrierAccount(req.params.carrierAccountId);
       if (!deleted) {
         res.status(404).json({ error: 'Carrier account not found' });
-      return;
+        return;
       }
       res.status(204).send();
     } catch (error) {

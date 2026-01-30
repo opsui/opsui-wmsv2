@@ -15,13 +15,7 @@
     "packages/frontend/src/pages/index.ts"
   ],
   "codeSnippet": "",
-  "tags": [
-    "production-ready",
-    "api-integration",
-    "routing",
-    "navigation",
-    "full-stack"
-  ],
+  "tags": ["production-ready", "api-integration", "routing", "navigation", "full-stack"],
   "metadata": {
     "taskType": "feature",
     "complexity": "complex"

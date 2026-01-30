@@ -208,10 +208,7 @@ export class PushProvider {
   // BULK SEND
   // --------------------------------------------------------------------------
 
-  async bulkSend(
-    params: PushParams[],
-    rateLimitMs: number = 50
-  ): Promise<PushResult[]> {
+  async bulkSend(params: PushParams[], rateLimitMs: number = 50): Promise<PushResult[]> {
     const results: PushResult[] = [];
 
     for (let i = 0; i < params.length; i++) {

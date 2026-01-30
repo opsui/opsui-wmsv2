@@ -249,9 +249,11 @@ class RouteOptimizationService {
     // Return to start
     route.push(startLocation);
 
-    const totalDistance = optimizedTasks.reduce((sum, t) => sum + t.distance, 0) +
+    const totalDistance =
+      optimizedTasks.reduce((sum, t) => sum + t.distance, 0) +
       this.calculateDistance(currentLocation, startLocation);
-    const totalTime = optimizedTasks.reduce((sum, t) => sum + t.estimatedTime, 0) +
+    const totalTime =
+      optimizedTasks.reduce((sum, t) => sum + t.estimatedTime, 0) +
       this.calculateTravelTime(this.calculateDistance(currentLocation, startLocation));
 
     return {
@@ -304,9 +306,11 @@ class RouteOptimizationService {
     // Return to start
     route.push(startLocation);
 
-    const totalDistance = optimizedTasks.reduce((sum, t) => sum + t.distance, 0) +
+    const totalDistance =
+      optimizedTasks.reduce((sum, t) => sum + t.distance, 0) +
       this.calculateDistance(currentLocation, startLocation);
-    const totalTime = optimizedTasks.reduce((sum, t) => sum + t.estimatedTime, 0) +
+    const totalTime =
+      optimizedTasks.reduce((sum, t) => sum + t.estimatedTime, 0) +
       this.calculateTravelTime(this.calculateDistance(currentLocation, startLocation));
 
     return {
@@ -356,7 +360,9 @@ class RouteOptimizationService {
    */
   private buildDistanceMatrix(locations: string[]): number[][] {
     const n = locations.length;
-    const matrix: number[][] = Array(n).fill(0).map(() => Array(n).fill(0));
+    const matrix: number[][] = Array(n)
+      .fill(0)
+      .map(() => Array(n).fill(0));
 
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
@@ -568,8 +574,10 @@ class RouteOptimizationService {
     return zones.sort((a, b) => {
       const zoneA = a.charCodeAt(0) - 65;
       const zoneB = b.charCodeAt(0) - 65;
-      return Math.abs(zoneA - (startLoc.zone.charCodeAt(0) - 65)) -
-        Math.abs(zoneB - (startLoc.zone.charCodeAt(0) - 65));
+      return (
+        Math.abs(zoneA - (startLoc.zone.charCodeAt(0) - 65)) -
+        Math.abs(zoneB - (startLoc.zone.charCodeAt(0) - 65))
+      );
     });
   }
 
@@ -578,10 +586,10 @@ class RouteOptimizationService {
    */
   private getDefaultZoneLayout(): WarehouseConfig['zoneLayout'] {
     return {
-      'A': { startAisle: 1, endAisle: 20, x: 0, y: 0 },
-      'B': { startAisle: 1, endAisle: 15, x: 100, y: 0 },
-      'C': { startAisle: 1, endAisle: 25, x: 0, y: 50 },
-      'D': { startAisle: 1, endAisle: 10, x: 100, y: 50 },
+      A: { startAisle: 1, endAisle: 20, x: 0, y: 0 },
+      B: { startAisle: 1, endAisle: 15, x: 100, y: 0 },
+      C: { startAisle: 1, endAisle: 25, x: 0, y: 50 },
+      D: { startAisle: 1, endAisle: 10, x: 100, y: 50 },
     };
   }
 
@@ -609,11 +617,4 @@ export const routeOptimizationService = new RouteOptimizationService();
 export default routeOptimizationService;
 
 // Export types
-export type {
-  BinLocation,
-  PickTask,
-  OptimizedRoute,
-  OptimizedPickTask,
-  Waypoint,
-  WarehouseConfig,
-};
+export type { BinLocation, PickTask, OptimizedRoute, OptimizedPickTask, Waypoint, WarehouseConfig };

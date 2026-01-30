@@ -37,7 +37,9 @@ export default {
     get secret(): string {
       const secret = process.env.JWT_SECRET;
       if (!secret) {
-        throw new Error('JWT_SECRET environment variable must be set. This is required for security.');
+        throw new Error(
+          'JWT_SECRET environment variable must be set. This is required for security.'
+        );
       }
       // Validate minimum secret length
       if (secret.length < 32) {

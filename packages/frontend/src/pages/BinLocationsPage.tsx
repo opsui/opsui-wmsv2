@@ -89,7 +89,7 @@ function BinLocationModal({
         required: true,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         if (isEdit) {
           await updateMutation.mutateAsync({
@@ -121,18 +121,19 @@ function BinLocationModal({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Bin ID *
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">Bin ID *</label>
             <input
               name="binId"
               type="text"
               required
               disabled={isEdit}
               value={formData.binId}
-              onChange={(e) => {
+              onChange={e => {
                 const upper = e.target.value.toUpperCase();
-                handleChange({ ...e, target: { ...e.target, value: upper } } as React.ChangeEvent<HTMLInputElement>);
+                handleChange({
+                  ...e,
+                  target: { ...e.target, value: upper },
+                } as React.ChangeEvent<HTMLInputElement>);
               }}
               className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
                 errors.binId ? 'border-red-500' : 'border-gray-700'
@@ -151,9 +152,12 @@ function BinLocationModal({
               required
               maxLength={1}
               value={formData.zone}
-              onChange={(e) => {
+              onChange={e => {
                 const upper = e.target.value.toUpperCase();
-                handleChange({ ...e, target: { ...e.target, value: upper } } as React.ChangeEvent<HTMLInputElement>);
+                handleChange({
+                  ...e,
+                  target: { ...e.target, value: upper },
+                } as React.ChangeEvent<HTMLInputElement>);
               }}
               className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 ${
                 errors.zone ? 'border-red-500' : 'border-gray-700'
@@ -220,7 +224,7 @@ function BinLocationModal({
                 type="checkbox"
                 id="active"
                 checked={formData.active}
-                onChange={(e) => setFieldValue('active', e.target.checked)}
+                onChange={e => setFieldValue('active', e.target.checked)}
                 className="h-4 w-4 text-blue-600 rounded bg-gray-800 border-gray-700 focus:ring-blue-500"
               />
               <label htmlFor="active" className="ml-2 text-sm text-gray-300">
@@ -258,13 +262,15 @@ function BinLocationModal({
 function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const batchMutation = useBatchCreateBinLocations();
   const [input, setInput] = useState('');
-  const [parsed, setParsed] = useState<Array<{
-    binId: string;
-    zone: string;
-    aisle: string;
-    shelf: string;
-    type: BinType;
-  }>>([]);
+  const [parsed, setParsed] = useState<
+    Array<{
+      binId: string;
+      zone: string;
+      aisle: string;
+      shelf: string;
+      type: BinType;
+    }>
+  >([]);
 
   const parseInput = () => {
     const lines = input.trim().split('\n');
@@ -306,7 +312,10 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
       const failed = result.failed?.length || 0;
 
       if (created > 0) {
-        showToast(`Successfully created ${created} location${created > 1 ? 's' : ''}${failed > 0 ? `. Failed: ${failed}` : ''}`, failed > 0 ? 'warning' : 'success');
+        showToast(
+          `Successfully created ${created} location${created > 1 ? 's' : ''}${failed > 0 ? `. Failed: ${failed}` : ''}`,
+          failed > 0 ? 'warning' : 'success'
+        );
         onSuccess();
         onClose();
       } else {
@@ -656,7 +665,7 @@ export function BinLocationsPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                        {zoneLocations.map((location) => (
+                        {zoneLocations.map(location => (
                           <tr key={location.binId} className="hover:bg-gray-800/50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-medium text-white">{location.binId}</div>
@@ -741,10 +750,7 @@ export function BinLocationsPage() {
       )}
 
       {showBatchModal && (
-        <BatchCreateModal
-          onClose={() => setShowBatchModal(false)}
-          onSuccess={() => refetch()}
-        />
+        <BatchCreateModal onClose={() => setShowBatchModal(false)} onSuccess={() => refetch()} />
       )}
 
       <ConfirmDialog

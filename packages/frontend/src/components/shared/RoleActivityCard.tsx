@@ -6,13 +6,7 @@
  */
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Button,
-} from '@/components/shared';
+import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/shared';
 import {
   UsersIcon,
   CubeIcon,
@@ -154,7 +148,7 @@ function RoleSelectorDropdown({ value, onChange }: RoleSelectorDropdownProps) {
   // Build options with "All Roles" + individual roles
   const options = [
     { value: 'all' as const, label: 'All Roles', icon: UsersIcon },
-    ...ALL_ROLES.map((userRole) => {
+    ...ALL_ROLES.map(userRole => {
       const config = ROLE_CONFIG[userRole];
       return {
         value: userRole,
@@ -241,7 +235,11 @@ export function RoleActivityCard({
   } | null>(null);
 
   // Format current view for better readability
-  const formatView = (currentView: string | undefined, userRole: UserRole, currentOrderId?: string | null) => {
+  const formatView = (
+    currentView: string | undefined,
+    userRole: UserRole,
+    currentOrderId?: string | null
+  ) => {
     if (!currentView) return { display: 'None', label: 'badge-info' };
 
     // Common view patterns
@@ -356,10 +354,7 @@ export function RoleActivityCard({
         ) {
           return { display: 'Receiving', label: 'badge-success' };
         }
-        if (
-          currentView.includes('Putaway') ||
-          currentView.includes('/putaway')
-        ) {
+        if (currentView.includes('Putaway') || currentView.includes('/putaway')) {
           return { display: 'Putaway', label: 'badge-warning' };
         }
         break;
@@ -395,8 +390,7 @@ export function RoleActivityCard({
   // Get status badge style
   const getStatusBadge = (status: string | undefined) => {
     if (status === 'INACTIVE') return 'badge-error';
-    if (status === 'ACTIVE' || status === 'PICKING' || status === 'PACKING')
-      return 'badge-success';
+    if (status === 'ACTIVE' || status === 'PICKING' || status === 'PACKING') return 'badge-success';
     return 'badge-info';
   };
 
@@ -423,7 +417,9 @@ export function RoleActivityCard({
       return (
         <div className="flex flex-col items-center justify-center py-16">
           <Icon className="h-16 w-16 dark:text-gray-600 text-gray-400 mb-4" />
-          <p className="text-sm dark:text-gray-400 text-gray-600">No active {config.label.toLowerCase()}</p>
+          <p className="text-sm dark:text-gray-400 text-gray-600">
+            No active {config.label.toLowerCase()}
+          </p>
           <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
             {config.label} will appear here when they are active
           </p>
@@ -461,7 +457,11 @@ export function RoleActivityCard({
             {data.map((member: any, idx: number) => {
               const memberId = member[config.idField] || `idx-${idx}`;
               const memberName = member[config.nameField];
-              const { display: displayView, label: viewLabel } = formatView(member.currentView, userRole, member.currentOrderId);
+              const { display: displayView, label: viewLabel } = formatView(
+                member.currentView,
+                userRole,
+                member.currentOrderId
+              );
               const statusBadge = getStatusBadge(member.status);
 
               return (
@@ -501,7 +501,9 @@ export function RoleActivityCard({
                   {/* Progress column - always shown, with data for picker/packer */}
                   <td className="w-24 px-2 sm:px-4 py-3 text-sm text-center dark:text-white text-gray-900">
                     {userRole === UserRole.PICKER || userRole === UserRole.PACKER
-                      ? (member.currentOrderId ? `${member.orderProgress}%` : '-')
+                      ? member.currentOrderId
+                        ? `${member.orderProgress}%`
+                        : '-'
                       : '-'}
                   </td>
                   <td className="w-28 px-2 sm:px-4 py-3 text-center">
@@ -594,24 +596,38 @@ export function RoleActivityCard({
                                           ? 'Stock Count'
                                           : item.type}
                               </span>
-                              <h4 className="text-sm font-semibold dark:text-white text-gray-900">{item.sku}</h4>
+                              <h4 className="text-sm font-semibold dark:text-white text-gray-900">
+                                {item.sku}
+                              </h4>
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-xs dark:text-gray-400 text-gray-600">
                               <div>
-                                <span className="font-medium dark:text-white text-gray-900">Bin: </span>
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Bin:{' '}
+                                </span>
                                 {item.binLocation || 'N/A'}
                               </div>
                               <div>
-                                <span className="font-medium dark:text-white text-gray-900">Quantity: </span>
-                                {item.quantityChange > 0 ? `+${item.quantityChange}` : item.quantityChange}
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Quantity:{' '}
+                                </span>
+                                {item.quantityChange > 0
+                                  ? `+${item.quantityChange}`
+                                  : item.quantityChange}
                               </div>
                               <div className="col-span-2">
-                                <span className="font-medium dark:text-white text-gray-900">Reason: </span>
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Reason:{' '}
+                                </span>
                                 {item.reason || 'N/A'}
                               </div>
                               <div className="col-span-2">
-                                <span className="font-medium dark:text-white text-gray-900">Time: </span>
-                                {item.createdAt ? new Date(item.createdAt).toLocaleString() : 'Unknown'}
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Time:{' '}
+                                </span>
+                                {item.createdAt
+                                  ? new Date(item.createdAt).toLocaleString()
+                                  : 'Unknown'}
                               </div>
                             </div>
                           </div>
@@ -621,7 +637,9 @@ export function RoleActivityCard({
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-semibold dark:text-white text-gray-900">{item.orderId}</h4>
+                              <h4 className="text-sm font-semibold dark:text-white text-gray-900">
+                                {item.orderId}
+                              </h4>
                               {item.status === 'PICKED' || item.progress === 100 ? (
                                 <span className="badge badge-primary">PICKED</span>
                               ) : item.status === 'PACKED' ? (
@@ -630,18 +648,26 @@ export function RoleActivityCard({
                                 <span className="badge badge-warning">IN QUEUE</span>
                               )}
                             </div>
-                            <p className="text-sm dark:text-gray-300 text-gray-600 mt-1">{item.customerName}</p>
+                            <p className="text-sm dark:text-gray-300 text-gray-600 mt-1">
+                              {item.customerName}
+                            </p>
                             <div className="mt-2 grid grid-cols-3 gap-4 text-xs dark:text-gray-400 text-gray-600">
                               <div>
-                                <span className="font-medium dark:text-white text-gray-900">Progress: </span>
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Progress:{' '}
+                                </span>
                                 {item.progress}%
                               </div>
                               <div>
-                                <span className="font-medium dark:text-white text-gray-900">Items: </span>
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Items:{' '}
+                                </span>
                                 {item.itemCount || 0}
                               </div>
                               <div>
-                                <span className="font-medium dark:text-white text-gray-900">Priority: </span>
+                                <span className="font-medium dark:text-white text-gray-900">
+                                  Priority:{' '}
+                                </span>
                                 {item.priority}
                               </div>
                             </div>
@@ -665,7 +691,11 @@ export function RoleActivityCard({
               )}
             </div>
             <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse dark:border-t border-t dark:border-white/[0.08] border-gray-200">
-              <Button variant="secondary" onClick={() => setSelectedMember(null)} className="w-full sm:w-auto sm:text-sm">
+              <Button
+                variant="secondary"
+                onClick={() => setSelectedMember(null)}
+                className="w-full sm:w-auto sm:text-sm"
+              >
                 Close
               </Button>
             </div>
@@ -713,7 +743,7 @@ export function RoleActivityCard({
               </div>
             ) : (
               <div className="space-y-8">
-                {rolesToDisplay.map((userRole) => {
+                {rolesToDisplay.map(userRole => {
                   const config = ROLE_CONFIG[userRole];
                   return (
                     <div key={userRole}>

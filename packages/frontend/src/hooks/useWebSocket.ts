@@ -35,9 +35,9 @@ export function useWebSocket(autoConnect = true): UseWebSocketReturn {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [socketId, setSocketId] = useState<string | undefined>();
-  const subscriptionsRef = useRef<Map<keyof ServerToClientEvents, Set<ServerToClientEvents[keyof ServerToClientEvents]>>>(
-    new Map()
-  );
+  const subscriptionsRef = useRef<
+    Map<keyof ServerToClientEvents, Set<ServerToClientEvents[keyof ServerToClientEvents]>>
+  >(new Map());
 
   // Update connection status from WebSocket service
   useEffect(() => {
@@ -164,7 +164,9 @@ export function useWebSocket(autoConnect = true): UseWebSocketReturn {
 /**
  * Hook for subscribing to order updates
  */
-export function useOrderUpdates(handler: (data: { orderId: string; pickerId?: string; pickerName?: string }) => void) {
+export function useOrderUpdates(
+  handler: (data: { orderId: string; pickerId?: string; pickerName?: string }) => void
+) {
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
@@ -183,7 +185,9 @@ export function useOrderUpdates(handler: (data: { orderId: string; pickerId?: st
 /**
  * Hook for subscribing to pick updates
  */
-export function usePickUpdates(handler: (data: { orderId: string; orderItemId: string; pickedQuantity?: number }) => void) {
+export function usePickUpdates(
+  handler: (data: { orderId: string; orderItemId: string; pickedQuantity?: number }) => void
+) {
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
@@ -200,7 +204,9 @@ export function usePickUpdates(handler: (data: { orderId: string; orderItemId: s
 /**
  * Hook for subscribing to inventory updates
  */
-export function useInventoryUpdates(handler: (data: { sku: string; binLocation?: string; quantity?: number }) => void) {
+export function useInventoryUpdates(
+  handler: (data: { sku: string; binLocation?: string; quantity?: number }) => void
+) {
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
@@ -217,7 +223,9 @@ export function useInventoryUpdates(handler: (data: { sku: string; binLocation?:
 /**
  * Hook for subscribing to zone updates
  */
-export function useZoneUpdates(handler: (data: { zoneId: string; taskCount?: number; pickerCount?: number }) => void) {
+export function useZoneUpdates(
+  handler: (data: { zoneId: string; taskCount?: number; pickerCount?: number }) => void
+) {
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
@@ -234,7 +242,9 @@ export function useZoneUpdates(handler: (data: { zoneId: string; taskCount?: num
 /**
  * Hook for subscribing to notification updates
  */
-export function useNotifications(handler: (data: { notificationId: string; title: string; message: string }) => void) {
+export function useNotifications(
+  handler: (data: { notificationId: string; title: string; message: string }) => void
+) {
   const { subscribe } = useWebSocket();
 
   useEffect(() => {

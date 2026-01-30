@@ -95,10 +95,7 @@ export class AIFeatures {
     console.log('  ✓ Production log analyzer');
 
     // 5. Natural language converter
-    this.naturalLanguageConverter = new NaturalLanguageTestConverter(
-      this.glm,
-      routes
-    );
+    this.naturalLanguageConverter = new NaturalLanguageTestConverter(this.glm, routes);
     console.log('  ✓ Natural language test converter');
 
     // 6. Visual regression
@@ -140,11 +137,13 @@ export class AIFeatures {
   /**
    * FEATURE 2: Detect changes and prioritize tests
    */
-  async detectChangesAndPrioritize(availableTests: Array<{
-    path: string;
-    name: string;
-    coverage: string[];
-  }>) {
+  async detectChangesAndPrioritize(
+    availableTests: Array<{
+      path: string;
+      name: string;
+      coverage: string[];
+    }>
+  ) {
     if (!this.changeDetection) {
       throw new Error('Change detection not enabled');
     }
@@ -222,17 +221,20 @@ export class AIFeatures {
   /**
    * FEATURE 8: Optimize test execution plan
    */
-  async optimizeExecution(tests: Array<{
-    name: string;
-    path: string;
-    duration: number;
-    priority: 'critical' | 'high' | 'medium' | 'low';
-    dependencies: string[];
-    stability: number;
-  }>, constraints?: {
-    availableTime?: number;
-    parallelCapacity?: number;
-  }) {
+  async optimizeExecution(
+    tests: Array<{
+      name: string;
+      path: string;
+      duration: number;
+      priority: 'critical' | 'high' | 'medium' | 'low';
+      dependencies: string[];
+      stability: number;
+    }>,
+    constraints?: {
+      availableTime?: number;
+      parallelCapacity?: number;
+    }
+  ) {
     if (!this.testOrchestrator) {
       throw new Error('Test orchestrator not enabled');
     }

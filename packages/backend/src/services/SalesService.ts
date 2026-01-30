@@ -410,19 +410,12 @@ export class SalesService {
     const allOpportunitiesResult = await salesRepository.findAllOpportunities({
       limit: 1000,
     });
-    const totalPipeline = allOpportunitiesResult.opportunities.reduce(
-      (sum, opp) => {
-        if (
-          opp.stage !== 'CLOSED_WON' &&
-          opp.stage !== 'CLOSED_LOST' &&
-          opp.amount
-        ) {
-          return sum + opp.amount;
-        }
-        return sum;
-      },
-      0
-    );
+    const totalPipeline = allOpportunitiesResult.opportunities.reduce((sum, opp) => {
+      if (opp.stage !== 'CLOSED_WON' && opp.stage !== 'CLOSED_LOST' && opp.amount) {
+        return sum + opp.amount;
+      }
+      return sum;
+    }, 0);
 
     return {
       totalCustomers: customersResult.total,

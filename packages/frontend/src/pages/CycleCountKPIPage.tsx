@@ -53,13 +53,17 @@ function KPICard({
           <p className={`text-3xl font-bold mt-2 ${color}`}>{value}</p>
           {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           {trend && (
-            <div className={`flex items-center gap-1 mt-2 text-sm ${trend.value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            <div
+              className={`flex items-center gap-1 mt-2 text-sm ${trend.value >= 0 ? 'text-green-400' : 'text-red-400'}`}
+            >
               <ArrowTrendingUpIcon className="h-4 w-4" />
               <span>{trend.label}</span>
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-lg ${color.replace('text-', 'bg-').replace('-400', '-500/20')}`}>
+        <div
+          className={`p-3 rounded-lg ${color.replace('text-', 'bg-').replace('-400', '-500/20')}`}
+        >
           <Icon className={`h-8 w-8 ${color}`} />
         </div>
       </div>
@@ -90,7 +94,10 @@ function AccuracyChart({ data }: { data: Array<{ period: string; accuracy: numbe
                 </div>
                 {data.length <= 10 && (
                   <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
-                    {new Date(point.period).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    {new Date(point.period).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </span>
                 )}
               </div>
@@ -102,7 +109,11 @@ function AccuracyChart({ data }: { data: Array<{ period: string; accuracy: numbe
   );
 }
 
-function TopDiscrepanciesTable({ data }: { data: Array<{ sku: string; name: string; varianceCount: number; averageVariancePercent: number }> }) {
+function TopDiscrepanciesTable({
+  data,
+}: {
+  data: Array<{ sku: string; name: string; varianceCount: number; averageVariancePercent: number }>;
+}) {
   return (
     <div className="glass-card rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-4">Top Discrepancy SKUs</h3>
@@ -119,7 +130,9 @@ function TopDiscrepanciesTable({ data }: { data: Array<{ sku: string; name: stri
           <tbody className="divide-y divide-gray-800">
             {data.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-500">No discrepancies found</td>
+                <td colSpan={4} className="py-8 text-center text-gray-500">
+                  No discrepancies found
+                </td>
               </tr>
             ) : (
               data.map((item, index) => (
@@ -127,7 +140,9 @@ function TopDiscrepanciesTable({ data }: { data: Array<{ sku: string; name: stri
                   <td className="py-3 font-medium text-white">{item.sku}</td>
                   <td className="py-3 text-gray-300">{item.name}</td>
                   <td className="py-3 text-right text-yellow-400">{item.varianceCount}</td>
-                  <td className="py-3 text-right text-orange-400">{item.averageVariancePercent.toFixed(1)}%</td>
+                  <td className="py-3 text-right text-orange-400">
+                    {item.averageVariancePercent.toFixed(1)}%
+                  </td>
                 </tr>
               ))
             )}
@@ -138,7 +153,16 @@ function TopDiscrepanciesTable({ data }: { data: Array<{ sku: string; name: stri
   );
 }
 
-function UserPerformanceTable({ data }: { data: Array<{ name: string; countsCompleted: number; itemsCounted: number; averageAccuracy: number }> }) {
+function UserPerformanceTable({
+  data,
+}: {
+  data: Array<{
+    name: string;
+    countsCompleted: number;
+    itemsCounted: number;
+    averageAccuracy: number;
+  }>;
+}) {
   return (
     <div className="glass-card rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-4">User Performance (Last 30 Days)</h3>
@@ -155,7 +179,9 @@ function UserPerformanceTable({ data }: { data: Array<{ name: string; countsComp
           <tbody className="divide-y divide-gray-800">
             {data.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-500">No performance data available</td>
+                <td colSpan={4} className="py-8 text-center text-gray-500">
+                  No performance data available
+                </td>
               </tr>
             ) : (
               data.map((user, index) => (
@@ -164,11 +190,15 @@ function UserPerformanceTable({ data }: { data: Array<{ name: string; countsComp
                   <td className="py-3 text-right text-blue-400">{user.countsCompleted}</td>
                   <td className="py-3 text-right text-gray-300">{user.itemsCounted}</td>
                   <td className="py-3 text-right">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      user.averageAccuracy >= 98 ? 'bg-green-500/20 text-green-400' :
-                      user.averageAccuracy >= 95 ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        user.averageAccuracy >= 98
+                          ? 'bg-green-500/20 text-green-400'
+                          : user.averageAccuracy >= 95
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-red-500/20 text-red-400'
+                      }`}
+                    >
                       {user.averageAccuracy.toFixed(1)}%
                     </span>
                   </td>
@@ -182,7 +212,11 @@ function UserPerformanceTable({ data }: { data: Array<{ name: string; countsComp
   );
 }
 
-function ZonePerformanceChart({ data }: { data: Array<{ zone: string; countsCompleted: number; averageAccuracy: number }> }) {
+function ZonePerformanceChart({
+  data,
+}: {
+  data: Array<{ zone: string; countsCompleted: number; averageAccuracy: number }>;
+}) {
   return (
     <div className="glass-card rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-4">Zone Performance</h3>
@@ -194,14 +228,18 @@ function ZonePerformanceChart({ data }: { data: Array<{ zone: string; countsComp
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="font-medium text-white">Zone {zone.zone}</span>
-                <span className="text-sm text-gray-400">{zone.countsCompleted} counts • {zone.averageAccuracy.toFixed(1)}% accuracy</span>
+                <span className="text-sm text-gray-400">
+                  {zone.countsCompleted} counts • {zone.averageAccuracy.toFixed(1)}% accuracy
+                </span>
               </div>
               <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className={`h-full transition-all ${
-                    zone.averageAccuracy >= 98 ? 'bg-green-500' :
-                    zone.averageAccuracy >= 95 ? 'bg-yellow-500' :
-                    'bg-red-500'
+                    zone.averageAccuracy >= 98
+                      ? 'bg-green-500'
+                      : zone.averageAccuracy >= 95
+                        ? 'bg-yellow-500'
+                        : 'bg-red-500'
                   }`}
                   style={{ width: `${zone.averageAccuracy}%` }}
                 />
@@ -214,7 +252,17 @@ function ZonePerformanceChart({ data }: { data: Array<{ zone: string; countsComp
   );
 }
 
-function CountTypeEffectivenessTable({ data }: { data: Array<{ countType: string; countsCompleted: number; averageAccuracy: number; averageDuration: number; varianceDetectionRate: number }> }) {
+function CountTypeEffectivenessTable({
+  data,
+}: {
+  data: Array<{
+    countType: string;
+    countsCompleted: number;
+    averageAccuracy: number;
+    averageDuration: number;
+    varianceDetectionRate: number;
+  }>;
+}) {
   const formatDuration = (hours: number) => {
     if (hours < 1) return `${Math.round(hours * 60)}m`;
     return `${hours.toFixed(1)}h`;
@@ -222,7 +270,9 @@ function CountTypeEffectivenessTable({ data }: { data: Array<{ countType: string
 
   return (
     <div className="glass-card rounded-xl p-6">
-      <h3 className="text-lg font-semibold text-white mb-4">Count Type Effectiveness (Last 90 Days)</h3>
+      <h3 className="text-lg font-semibold text-white mb-4">
+        Count Type Effectiveness (Last 90 Days)
+      </h3>
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
@@ -238,20 +288,31 @@ function CountTypeEffectivenessTable({ data }: { data: Array<{ countType: string
             {data.map((type, index) => (
               <tr key={index} className="hover:bg-gray-800/50">
                 <td className="py-3 font-medium text-white">
-                  {type.countType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                  {type.countType
+                    .replace(/_/g, ' ')
+                    .toLowerCase()
+                    .replace(/\b\w/g, l => l.toUpperCase())}
                 </td>
                 <td className="py-3 text-right text-blue-400">{type.countsCompleted}</td>
                 <td className="py-3 text-right">
-                  <span className={`px-2 py-1 rounded text-sm ${
-                    type.averageAccuracy >= 98 ? 'bg-green-500/20 text-green-400' :
-                    type.averageAccuracy >= 95 ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-red-500/20 text-red-400'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded text-sm ${
+                      type.averageAccuracy >= 98
+                        ? 'bg-green-500/20 text-green-400'
+                        : type.averageAccuracy >= 95
+                          ? 'bg-yellow-500/20 text-yellow-400'
+                          : 'bg-red-500/20 text-red-400'
+                    }`}
+                  >
                     {type.averageAccuracy.toFixed(1)}%
                   </span>
                 </td>
-                <td className="py-3 text-right text-gray-300">{formatDuration(type.averageDuration)}</td>
-                <td className="py-3 text-right text-purple-400">{type.varianceDetectionRate.toFixed(1)}%</td>
+                <td className="py-3 text-right text-gray-300">
+                  {formatDuration(type.averageDuration)}
+                </td>
+                <td className="py-3 text-right text-purple-400">
+                  {type.varianceDetectionRate.toFixed(1)}%
+                </td>
               </tr>
             ))}
           </tbody>
@@ -338,7 +399,11 @@ export default function CycleCountKPIPage() {
             <KPICard
               title="Pending Variances"
               value={overallKPIs.pendingVariances}
-              subtitle={overallKPIs.highValueVarianceCount > 0 ? `${overallKPIs.highValueVarianceCount} high severity` : undefined}
+              subtitle={
+                overallKPIs.highValueVarianceCount > 0
+                  ? `${overallKPIs.highValueVarianceCount} high severity`
+                  : undefined
+              }
               icon={ExclamationTriangleIcon}
               color={overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}
             />

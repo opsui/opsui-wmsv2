@@ -90,9 +90,7 @@ export class MigrationRunner {
    * Get list of applied migrations
    */
   async getAppliedMigrations(): Promise<string[]> {
-    const result = await this.pool.query(
-      'SELECT name FROM _migrations ORDER BY applied_at ASC'
-    );
+    const result = await this.pool.query('SELECT name FROM _migrations ORDER BY applied_at ASC');
     return result.rows.map((row: any) => row.name);
   }
 
@@ -115,10 +113,9 @@ export class MigrationRunner {
     filename: string;
     description: string;
   }): Promise<boolean> {
-    const applied = await this.pool.query(
-      'SELECT * FROM _migrations WHERE name = $1',
-      [migration.name]
-    );
+    const applied = await this.pool.query('SELECT * FROM _migrations WHERE name = $1', [
+      migration.name,
+    ]);
 
     if (applied.rows.length > 0) {
       console.log(`  ✓ ${migration.name} - already applied`);
@@ -137,10 +134,10 @@ export class MigrationRunner {
       await this.pool.query(sql);
 
       // Record migration
-      await this.pool.query(
-        'INSERT INTO _migrations (name, filename) VALUES ($1, $2)',
-        [migration.name, migration.filename]
-      );
+      await this.pool.query('INSERT INTO _migrations (name, filename) VALUES ($1, $2)', [
+        migration.name,
+        migration.filename,
+      ]);
 
       // Commit transaction
       await this.pool.query('COMMIT');
@@ -163,9 +160,7 @@ export class MigrationRunner {
     all: typeof REQUIRED_MIGRATIONS;
   }> {
     const applied = await this.getAppliedMigrations();
-    const pending = REQUIRED_MIGRATIONS
-      .filter((m) => !applied.includes(m.name))
-      .map((m) => m.name);
+    const pending = REQUIRED_MIGRATIONS.filter(m => !applied.includes(m.name)).map(m => m.name);
 
     return {
       applied,
@@ -297,9 +292,9 @@ async function main() {
         const status = await runner.getStatus();
         console.log('\nMigration Status:\n');
         console.log(`Applied (${status.applied.length}):`);
-        status.applied.forEach((name) => console.log(`  ✓ ${name}`));
+        status.applied.forEach(name => console.log(`  ✓ ${name}`));
         console.log(`\nPending (${status.pending.length}):`);
-        status.pending.forEach((name) => console.log(`  ○ ${name}`));
+        status.pending.forEach(name => console.log(`  ○ ${name}`));
         console.log('');
         break;
 
@@ -308,10 +303,10 @@ async function main() {
         const tables = await runner.verifyTables();
         console.log('\nTable Verification:\n');
         console.log(`Existing (${tables.exists.length}):`);
-        tables.exists.forEach((t) => console.log(`  ✓ ${t}`));
+        tables.exists.forEach(t => console.log(`  ✓ ${t}`));
         if (tables.missing.length > 0) {
           console.log(`\nMissing (${tables.missing.length}):`);
-          tables.missing.forEach((t) => console.log(`  ✗ ${t}`));
+          tables.missing.forEach(t => console.log(`  ✗ ${t}`));
           console.log('\n⚠ Run "npm run db:migrate" to apply missing migrations');
           process.exit(1);
         } else {

@@ -46,7 +46,10 @@ export class ProductionLogAnalyzer {
   /**
    * Parse log file
    */
-  parseLogFile(filePath: string, format: 'json' | 'apache' | 'nginx' | 'custom' = 'json'): LogEntry[] {
+  parseLogFile(
+    filePath: string,
+    format: 'json' | 'apache' | 'nginx' | 'custom' = 'json'
+  ): LogEntry[] {
     if (!fs.existsSync(filePath)) {
       throw new Error(`Log file not found: ${filePath}`);
     }
@@ -75,7 +78,8 @@ export class ProductionLogAnalyzer {
       }
     } else if (format === 'apache' || format === 'nginx') {
       // Common Log Format / Combined Log Format
-      const logPattern = /^(\S+) \S+ \S+ \[([\w:\/]+\s[+\-]\d{4})\] "(\S+) (\S+) (\S+)" (\d{3}) (\d+|-) "([^"]*)" "([^"]*)"/;
+      const logPattern =
+        /^(\S+) \S+ \S+ \[([\w:\/]+\s[+\-]\d{4})\] "(\S+) (\S+) (\S+)" (\d{3}) (\d+|-) "([^"]*)" "([^"]*)"/;
       const lines = content.split('\n').filter(Boolean);
 
       for (const line of lines) {
@@ -83,7 +87,8 @@ export class ProductionLogAnalyzer {
         if (match) {
           entries.push({
             timestamp: match[2],
-            level: parseInt(match[6]) >= 500 ? 'error' : parseInt(match[6]) >= 400 ? 'warn' : 'info',
+            level:
+              parseInt(match[6]) >= 500 ? 'error' : parseInt(match[6]) >= 400 ? 'warn' : 'info',
             message: `${match[3]} ${match[4]}`,
             route: match[4],
             method: match[3],
@@ -195,11 +200,14 @@ export class ProductionLogAnalyzer {
     affectedUsers: number;
     sampleLogs: string[];
   }> {
-    const errorMap = new Map<string, {
-      count: number;
-      users: Set<string>;
-      samples: string[];
-    }>();
+    const errorMap = new Map<
+      string,
+      {
+        count: number;
+        users: Set<string>;
+        samples: string[];
+      }
+    >();
 
     for (const entry of logEntries) {
       if (entry.level === 'error') {
@@ -258,8 +266,8 @@ export class ProductionLogAnalyzer {
     ];
 
     for (const pattern of patterns) {
-      const matching = logEntries.filter(e =>
-        pattern.regex.test(e.message) || pattern.regex.test(e.error || '')
+      const matching = logEntries.filter(
+        e => pattern.regex.test(e.message) || pattern.regex.test(e.error || '')
       );
 
       if (matching.length > 0) {
@@ -293,16 +301,36 @@ export class ProductionLogAnalyzer {
 
     // Security patterns
     const patterns = [
-      { name: 'SQL Injection attempts', regex: /sql injection|\' OR \'\'/i, severity: 'critical' as const },
-      { name: 'XSS attempts', regex: /<script>|javascript:|onerror=/i, severity: 'critical' as const },
-      { name: 'Authentication failures', regex: /authentication failed|invalid token|unauthorized/i, severity: 'high' as const },
-      { name: 'Authorization failures', regex: /access denied|forbidden|not authorized/i, severity: 'high' as const },
-      { name: 'Rate limiting', regex: /rate limit|too many requests/i, severity: 'medium' as const },
+      {
+        name: 'SQL Injection attempts',
+        regex: /sql injection|\' OR \'\'/i,
+        severity: 'critical' as const,
+      },
+      {
+        name: 'XSS attempts',
+        regex: /<script>|javascript:|onerror=/i,
+        severity: 'critical' as const,
+      },
+      {
+        name: 'Authentication failures',
+        regex: /authentication failed|invalid token|unauthorized/i,
+        severity: 'high' as const,
+      },
+      {
+        name: 'Authorization failures',
+        regex: /access denied|forbidden|not authorized/i,
+        severity: 'high' as const,
+      },
+      {
+        name: 'Rate limiting',
+        regex: /rate limit|too many requests/i,
+        severity: 'medium' as const,
+      },
     ];
 
     for (const pattern of patterns) {
-      const matching = logEntries.filter(e =>
-        pattern.regex.test(e.message) || pattern.regex.test(e.error || '')
+      const matching = logEntries.filter(
+        e => pattern.regex.test(e.message) || pattern.regex.test(e.error || '')
       );
 
       if (matching.length > 0) {
@@ -349,9 +377,10 @@ export class ProductionLogAnalyzer {
     }
 
     // High memory usage
-    const highMemory = logEntries.filter(e =>
-      /memory|heap|allocation/i.test(e.message) &&
-      (/high|large|exceed/i.test(e.message) || /error/i.test(e.level))
+    const highMemory = logEntries.filter(
+      e =>
+        /memory|heap|allocation/i.test(e.message) &&
+        (/high|large|exceed/i.test(e.message) || /error/i.test(e.level))
     );
 
     if (highMemory.length > 0) {
@@ -390,16 +419,22 @@ export class ProductionLogAnalyzer {
 
     if (errors.length > 0) {
       const topError = errors.sort((a, b) => b.count - a.count)[0];
-      recommendations.push(`Focus on "${topError.pattern}" - occurred ${topError.count} times affecting ${topError.affectedUsers} users`);
+      recommendations.push(
+        `Focus on "${topError.pattern}" - occurred ${topError.count} times affecting ${topError.affectedUsers} users`
+      );
     }
 
     const criticalSecurity = security.filter(s => s.severity === 'critical');
     if (criticalSecurity.length > 0) {
-      recommendations.push(`URGENT: Address ${criticalSecurity.length} critical security issues: ${criticalSecurity.map(s => s.type).join(', ')}`);
+      recommendations.push(
+        `URGENT: Address ${criticalSecurity.length} critical security issues: ${criticalSecurity.map(s => s.type).join(', ')}`
+      );
     }
 
     if (performance.length > 0) {
-      recommendations.push(`Investigate performance issues: ${performance.map(p => p.type).join(', ')}`);
+      recommendations.push(
+        `Investigate performance issues: ${performance.map(p => p.type).join(', ')}`
+      );
     }
 
     return recommendations;

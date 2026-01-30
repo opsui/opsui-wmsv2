@@ -11,7 +11,7 @@ async function testGLMAPI() {
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   const apiKey = process.env.GLM_API_KEY || '1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW';
-  
+
   console.log('🔑 API Key:', apiKey.substring(0, 20) + '...\n');
 
   const client = new GLMClient(apiKey);
@@ -21,12 +21,12 @@ async function testGLMAPI() {
 
   try {
     const startTime = Date.now();
-    
+
     const response = await client.callGLM([
       {
         role: 'user',
-        content: 'Say "API connection successful!" in exactly those words.'
-      }
+        content: 'Say "API connection successful!" in exactly those words.',
+      },
     ]);
 
     const duration = Date.now() - startTime;
@@ -35,7 +35,7 @@ async function testGLMAPI() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log(response.trim());
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-    
+
     console.log(`⏱️  Response time: ${duration}ms\n`);
 
     if (response.toLowerCase().includes('success')) {
@@ -49,7 +49,7 @@ async function testGLMAPI() {
     console.error('❌ API TEST FAILED');
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.error('Error:', error.message);
-    
+
     if (error.message.includes('404') || error.message.includes('not_found')) {
       console.error('\n🔧 TROUBLESHOOTING:');
       console.error('   The model "glm-4.7" may not be available.');
@@ -69,16 +69,18 @@ async function testGLMAPI() {
       console.error('   Rate limit exceeded. Wait a moment and try again.');
       console.error('   The client has built-in retry logic.\n');
     }
-    
+
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     return false;
   }
 }
 
 // Run test
-testGLMAPI().then(success => {
-  process.exit(success ? 0 : 1);
-}).catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+testGLMAPI()
+  .then(success => {
+    process.exit(success ? 0 : 1);
+  })
+  .catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });

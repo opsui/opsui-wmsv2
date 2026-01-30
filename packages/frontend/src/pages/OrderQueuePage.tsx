@@ -163,7 +163,7 @@ export function OrderQueuePage() {
 
   // Subscribe to order updates for real-time queue updates
   useOrderUpdates({
-    onOrderClaimed: (data) => {
+    onOrderClaimed: data => {
       // Refresh order queue when an order is claimed
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
       // Show toast if the claimed order is relevant to current view
@@ -176,11 +176,11 @@ export function OrderQueuePage() {
         });
       }
     },
-    onOrderCompleted: (data) => {
+    onOrderCompleted: data => {
       // Refresh order queue when an order is completed
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
-    onOrderCancelled: (data) => {
+    onOrderCancelled: data => {
       // Refresh order queue when an order is cancelled
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
       showToast({
@@ -190,11 +190,11 @@ export function OrderQueuePage() {
         duration: 3000,
       });
     },
-    onPriorityChanged: (data) => {
+    onPriorityChanged: data => {
       // Refresh order queue when priority changes
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
-    onProgressUpdated: (data) => {
+    onProgressUpdated: data => {
       // Refresh order queue when progress updates (for PICKING orders)
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
@@ -297,9 +297,7 @@ export function OrderQueuePage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden">
         {/* Page Header - Centered */}
         <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Order Queue
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Order Queue</h1>
           <p className="mt-2 text-gray-400 text-responsive-sm">
             {queueData?.total || 0} order{(queueData?.total || 0) !== 1 ? 's' : ''} available
           </p>
@@ -408,14 +406,19 @@ export function OrderQueuePage() {
                               >
                                 {/* First row: SKU and Name */}
                                 <div className="flex items-start gap-2 mb-1.5">
-                                  <span className="font-semibold text-xs break-all">{item.sku}</span>
+                                  <span className="font-semibold text-xs break-all">
+                                    {item.sku}
+                                  </span>
                                   <span className="text-gray-500 flex-shrink-0">"</span>
                                   <span className="text-gray-300 break-all">{item.name}</span>
                                 </div>
                                 {/* Second row: Location and Quantity */}
                                 <div className="flex items-center justify-between">
                                   <span className="text-gray-400 text-xs">
-                                    Loc: <span className="text-white font-medium">{item.binLocation}</span>
+                                    Loc:{' '}
+                                    <span className="text-white font-medium">
+                                      {item.binLocation}
+                                    </span>
                                   </span>
                                   <span className="font-semibold text-sm">
                                     {isSkipped

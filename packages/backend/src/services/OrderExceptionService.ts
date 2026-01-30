@@ -15,7 +15,7 @@ import {
   ResolveExceptionDTO,
 } from '@opsui/shared';
 import { nanoid } from 'nanoid';
-import { notifyExceptionReported } from './notificationHelper';
+import { notifyExceptionReported } from './NotificationHelper';
 
 // ============================================================================
 // ORDER EXCEPTION SERVICE
@@ -431,12 +431,7 @@ export class OrderExceptionService {
            reported_at)
          VALUES ($1, NULL, NULL, NULL, $2, 'OPEN', 0, 0, $3, $4, NOW())
          RETURNING *`,
-        [
-          problemId,
-          `PROBLEM_${dto.problemType.toUpperCase()}`,
-          dto.description,
-          dto.reportedBy,
-        ]
+        [problemId, `PROBLEM_${dto.problemType.toUpperCase()}`, dto.description, dto.reportedBy]
       );
 
       logger.info('Problem reported', {
@@ -496,7 +491,7 @@ export class OrderExceptionService {
   }> {
     const client = await getPool();
 
-    const conditions: string[] = ["order_id IS NULL"]; // Problem reports have no order
+    const conditions: string[] = ['order_id IS NULL']; // Problem reports have no order
     const params: any[] = [];
     let paramCount = 1;
 

@@ -176,10 +176,7 @@ Provide intelligent fix grouping and prioritization.`,
 /**
  * Generate AI-enhanced fix prompt
  */
-async function generateFixPrompt(
-  report: ErrorReport,
-  aiAnalysis: AIAnalysis
-): Promise<string> {
+async function generateFixPrompt(report: ErrorReport, aiAnalysis: AIAnalysis): Promise<string> {
   const { errors, apiIssues, quickFix, summary } = report;
 
   let prompt = `# WMS Error Fix Request - AI-Optimized
@@ -196,20 +193,24 @@ The errors below are sorted by AI analysis for maximum impact with minimum risk:
   // Add AI priority groups
   if (aiAnalysis.priorityGroups.critical.length > 0) {
     prompt += `### 🔴 CRITICAL (Fix First)
-${aiAnalysis.priorityGroups.critical.map(id => {
-      const err = errors.find(e => e.id === id);
-      return `- **[${err?.id}]** ${err?.message.slice(0, 80)}...`;
-    }).join('\n')}
+${aiAnalysis.priorityGroups.critical
+  .map(id => {
+    const err = errors.find(e => e.id === id);
+    return `- **[${err?.id}]** ${err?.message.slice(0, 80)}...`;
+  })
+  .join('\n')}
 
 `;
   }
 
   if (aiAnalysis.priorityGroups.high.length > 0) {
     prompt += `### 🟠 HIGH PRIORITY
-${aiAnalysis.priorityGroups.high.map(id => {
-      const err = errors.find(e => e.id === id);
-      return `- **[${err?.id}]** ${err?.message.slice(0, 80)}...`;
-    }).join('\n')}
+${aiAnalysis.priorityGroups.high
+  .map(id => {
+    const err = errors.find(e => e.id === id);
+    return `- **[${err?.id}]** ${err?.message.slice(0, 80)}...`;
+  })
+  .join('\n')}
 
 `;
   }
@@ -385,7 +386,9 @@ async function main() {
   const promptPath = path.join(__dirname, 'fix-prompt.md');
   fs.writeFileSync(promptPath, prompt, 'utf-8');
 
-  console.log(`📝 Generated AI-optimized fix prompt for ${report.summary.totalUniqueErrors} error(s)\n`);
+  console.log(
+    `📝 Generated AI-optimized fix prompt for ${report.summary.totalUniqueErrors} error(s)\n`
+  );
   console.log(`✅ Prompt saved to: ${promptPath}\n`);
 
   console.log('═══════════════════════════════════════════════════════════════\n');
@@ -413,7 +416,9 @@ async function main() {
 
   if (aiAnalysis.fixStrategy.batchFixes.length > 0) {
     console.log(`📦 Batch Fixes: ${aiAnalysis.fixStrategy.batchFixes.length}`);
-    console.log(`   Can fix ${aiAnalysis.fixStrategy.batchFixes.reduce((sum, b) => sum + b.errors.length, 0)} errors in ${aiAnalysis.fixStrategy.batchFixes.length} changes\n`);
+    console.log(
+      `   Can fix ${aiAnalysis.fixStrategy.batchFixes.reduce((sum, b) => sum + b.errors.length, 0)} errors in ${aiAnalysis.fixStrategy.batchFixes.length} changes\n`
+    );
   }
 
   if (aiAnalysis.relatedErrors.length > 0) {

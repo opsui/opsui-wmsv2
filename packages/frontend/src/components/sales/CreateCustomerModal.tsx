@@ -74,7 +74,8 @@ export function CreateCustomerModal({ isOpen, onClose, onSuccess }: CreateCustom
           onClose();
           onSuccess?.();
         } catch (error: any) {
-          const errorMessage = error?.response?.data?.error || error?.message || 'Failed to create customer';
+          const errorMessage =
+            error?.response?.data?.error || error?.message || 'Failed to create customer';
           showToast(errorMessage, 'error');
         }
       },

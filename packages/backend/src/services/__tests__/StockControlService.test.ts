@@ -42,14 +42,15 @@ describe('StockControlService', () => {
         rows: [
           { count: '150' }, // total SKUs
           { count: '200' }, // total bins
-          { count: '15' },  // low stock items
-          { count: '5' },   // out of stock items
-          { count: '3' },   // pending stock counts
+          { count: '15' }, // low stock items
+          { count: '5' }, // out of stock items
+          { count: '3' }, // pending stock counts
         ],
       };
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '150' }] }) // total SKUs
           .mockResolvedValueOnce({ rows: [{ count: '200' }] }) // total bins
           .mockResolvedValueOnce({ rows: [{ count: '15' }] }) // low stock
@@ -74,8 +75,13 @@ describe('StockControlService', () => {
         throw new Error('Database connection failed');
       });
 
-      await expect(stockControlService.getDashboard()).rejects.toThrow('Database connection failed');
-      expect(logger.error).toHaveBeenCalledWith('Error getting stock control dashboard', expect.any(Error));
+      await expect(stockControlService.getDashboard()).rejects.toThrow(
+        'Database connection failed'
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error getting stock control dashboard',
+        expect.any(Error)
+      );
     });
   });
 
@@ -86,12 +92,29 @@ describe('StockControlService', () => {
   describe('getInventoryList', () => {
     it('should return paginated inventory list', async () => {
       const mockItems = [
-        { sku: 'SKU001', name: 'Product 1', category: 'Electronics', binLocation: 'A-01-01', quantity: 100, reserved: 10, available: 90 },
-        { sku: 'SKU002', name: 'Product 2', category: 'Electronics', binLocation: 'A-01-02', quantity: 50, reserved: 5, available: 45 },
+        {
+          sku: 'SKU001',
+          name: 'Product 1',
+          category: 'Electronics',
+          binLocation: 'A-01-01',
+          quantity: 100,
+          reserved: 10,
+          available: 90,
+        },
+        {
+          sku: 'SKU002',
+          name: 'Product 2',
+          category: 'Electronics',
+          binLocation: 'A-01-02',
+          quantity: 50,
+          reserved: 5,
+          available: 45,
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
           .mockResolvedValueOnce({ rows: mockItems }), // data
       });
@@ -109,11 +132,20 @@ describe('StockControlService', () => {
 
     it('should filter by name', async () => {
       const mockItems = [
-        { sku: 'SKU001', name: 'Test Product', category: 'Test', binLocation: 'A-01-01', quantity: 100, reserved: 0, available: 100 },
+        {
+          sku: 'SKU001',
+          name: 'Test Product',
+          category: 'Test',
+          binLocation: 'A-01-01',
+          quantity: 100,
+          reserved: 0,
+          available: 100,
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: mockItems }),
       });
@@ -130,11 +162,20 @@ describe('StockControlService', () => {
 
     it('should filter low stock items', async () => {
       const mockItems = [
-        { sku: 'SKU001', name: 'Low Stock Item', category: 'Test', binLocation: 'A-01-01', quantity: 5, reserved: 0, available: 5 },
+        {
+          sku: 'SKU001',
+          name: 'Low Stock Item',
+          category: 'Test',
+          binLocation: 'A-01-01',
+          quantity: 5,
+          reserved: 0,
+          available: 5,
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: mockItems }),
       });
@@ -160,7 +201,8 @@ describe('StockControlService', () => {
       }));
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '25' }] }) // total 25 items
           .mockResolvedValueOnce({ rows: mockItems }), // page 1 with 10 items
       });
@@ -191,16 +233,39 @@ describe('StockControlService', () => {
       };
 
       const mockLocations = [
-        { bin_location: 'A-01-01', quantity: 100, reserved: 10, available: 90, last_updated: new Date() },
-        { bin_location: 'A-01-02', quantity: 50, reserved: 5, available: 45, last_updated: new Date() },
+        {
+          bin_location: 'A-01-01',
+          quantity: 100,
+          reserved: 10,
+          available: 90,
+          last_updated: new Date(),
+        },
+        {
+          bin_location: 'A-01-02',
+          quantity: 50,
+          reserved: 5,
+          available: 45,
+          last_updated: new Date(),
+        },
       ];
 
       const mockTransactions = [
-        { transaction_id: 'TXN001', type: 'RECEIPT', sku: 'SKU001', quantity: 100, order_id: null, user_id: 'user-123', timestamp: new Date(), reason: 'Initial stock', bin_location: 'A-01-01' },
+        {
+          transaction_id: 'TXN001',
+          type: 'RECEIPT',
+          sku: 'SKU001',
+          quantity: 100,
+          order_id: null,
+          user_id: 'user-123',
+          timestamp: new Date(),
+          reason: 'Initial stock',
+          bin_location: 'A-01-01',
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockSKU] }) // SKU details
           .mockResolvedValueOnce({ rows: mockLocations }) // inventory by location
           .mockResolvedValueOnce({ rows: mockTransactions }), // transactions
@@ -221,10 +286,10 @@ describe('StockControlService', () => {
         query: jest.fn().mockResolvedValueOnce({ rows: [] }),
       });
 
-      await expect(stockControlService.getSKUInventoryDetail('NONEXISTENT'))
-        .rejects.toThrow(NotFoundError);
-      await expect(stockControlService.getSKUInventoryDetail('NONEXISTENT'))
-        .rejects.toThrow('SKU');
+      await expect(stockControlService.getSKUInventoryDetail('NONEXISTENT')).rejects.toThrow(
+        NotFoundError
+      );
+      await expect(stockControlService.getSKUInventoryDetail('NONEXISTENT')).rejects.toThrow('SKU');
     });
   });
 
@@ -237,7 +302,8 @@ describe('StockControlService', () => {
       const mockBin = { bin_id: 'A-01-01', zone: 'A', active: true };
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockBin] }) // bin exists
           .mockResolvedValueOnce({ rows: [] }), // insert result
       });
@@ -257,15 +323,17 @@ describe('StockControlService', () => {
         query: jest.fn().mockResolvedValueOnce({ rows: [] }),
       });
 
-      await expect(stockControlService.createStockCount('INVALID-BIN', 'FULL', mockUser.userId))
-        .rejects.toThrow(NotFoundError);
+      await expect(
+        stockControlService.createStockCount('INVALID-BIN', 'FULL', mockUser.userId)
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should create different count types', async () => {
       const mockBin = { bin_id: 'A-01-01', zone: 'A', active: true };
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockBin] })
           .mockResolvedValueOnce({ rows: [] }),
       });
@@ -340,8 +408,9 @@ describe('StockControlService', () => {
         connect: jest.fn().mockResolvedValue(mockClient),
       });
 
-      await expect(stockControlService.submitStockCount('SC-001', [], mockUser.userId))
-        .rejects.toThrow('Database error');
+      await expect(
+        stockControlService.submitStockCount('SC-001', [], mockUser.userId)
+      ).rejects.toThrow('Database error');
 
       expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
       expect(mockClient.release).toHaveBeenCalled();
@@ -357,8 +426,9 @@ describe('StockControlService', () => {
         connect: jest.fn().mockResolvedValue(mockClient),
       });
 
-      await expect(stockControlService.submitStockCount('NONEXISTENT', [], mockUser.userId))
-        .rejects.toThrow(NotFoundError);
+      await expect(
+        stockControlService.submitStockCount('NONEXISTENT', [], mockUser.userId)
+      ).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -368,11 +438,24 @@ describe('StockControlService', () => {
 
   describe('transferStock', () => {
     it('should transfer stock between bins', async () => {
-      const mockSourceInventory = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 100, reserved: 0, available: 100 };
-      const mockDestInventory = { sku: 'SKU001', bin_location: 'A-01-02', quantity: 50, reserved: 0, available: 50 };
+      const mockSourceInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 100,
+        reserved: 0,
+        available: 100,
+      };
+      const mockDestInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-02',
+        quantity: 50,
+        reserved: 0,
+        available: 50,
+      };
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockSourceInventory] }) // source exists
           .mockResolvedValueOnce({ rows: [] }) // deduct from source
           .mockResolvedValueOnce({ rows: [mockDestInventory] }) // dest exists
@@ -415,12 +498,25 @@ describe('StockControlService', () => {
       });
 
       await expect(
-        stockControlService.transferStock('SKU001', 'A-01-01', 'A-01-02', 10, 'Test', mockUser.userId)
+        stockControlService.transferStock(
+          'SKU001',
+          'A-01-01',
+          'A-01-02',
+          10,
+          'Test',
+          mockUser.userId
+        )
       ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw ConflictError when insufficient available quantity', async () => {
-      const mockSourceInventory = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 10, reserved: 0, available: 5 };
+      const mockSourceInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 10,
+        reserved: 0,
+        available: 5,
+      };
 
       const mockClient = {
         query: jest.fn().mockResolvedValueOnce({ rows: [mockSourceInventory] }),
@@ -432,15 +528,29 @@ describe('StockControlService', () => {
       });
 
       await expect(
-        stockControlService.transferStock('SKU001', 'A-01-01', 'A-01-02', 10, 'Test', mockUser.userId)
+        stockControlService.transferStock(
+          'SKU001',
+          'A-01-01',
+          'A-01-02',
+          10,
+          'Test',
+          mockUser.userId
+        )
       ).rejects.toThrow(ConflictError);
     });
 
     it('should create new inventory record at destination if not exists', async () => {
-      const mockSourceInventory = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 100, reserved: 0, available: 100 };
+      const mockSourceInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 100,
+        reserved: 0,
+        available: 100,
+      };
 
       const mockClient = {
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockSourceInventory] }) // source exists
           .mockResolvedValueOnce({ rows: [] }) // deduct from source
           .mockResolvedValueOnce({ rows: [] }) // dest does not exist
@@ -476,10 +586,17 @@ describe('StockControlService', () => {
 
   describe('adjustInventory', () => {
     it('should adjust inventory positively', async () => {
-      const mockCurrentInventory = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 100, reserved: 0, available: 100 };
+      const mockCurrentInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 100,
+        reserved: 0,
+        available: 100,
+      };
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockCurrentInventory] }) // current inventory
           .mockResolvedValueOnce({ rows: [] }) // update inventory
           .mockResolvedValueOnce({ rows: [] }), // log transaction
@@ -502,10 +619,17 @@ describe('StockControlService', () => {
     });
 
     it('should adjust inventory negatively', async () => {
-      const mockCurrentInventory = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 100, reserved: 0, available: 100 };
+      const mockCurrentInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 100,
+        reserved: 0,
+        available: 100,
+      };
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockCurrentInventory] })
           .mockResolvedValueOnce({ rows: [] })
           .mockResolvedValueOnce({ rows: [] }),
@@ -535,7 +659,13 @@ describe('StockControlService', () => {
     });
 
     it('should throw ConflictError when adjustment results in negative quantity', async () => {
-      const mockCurrentInventory = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 5, reserved: 0, available: 5 };
+      const mockCurrentInventory = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 5,
+        reserved: 0,
+        available: 5,
+      };
 
       getPool.mockResolvedValue({
         query: jest.fn().mockResolvedValueOnce({ rows: [mockCurrentInventory] }),
@@ -557,12 +687,33 @@ describe('StockControlService', () => {
   describe('getTransactionHistory', () => {
     it('should return transaction history with pagination', async () => {
       const mockTransactions = [
-        { transaction_id: 'TXN001', type: 'RECEIPT', sku: 'SKU001', quantity: 100, order_id: null, user_id: 'user-123', timestamp: new Date(), reason: 'Initial', bin_location: 'A-01-01' },
-        { transaction_id: 'TXN002', type: 'DEDUCTION', sku: 'SKU001', quantity: -10, order_id: 'SO0001', user_id: 'user-123', timestamp: new Date(), reason: 'Order', bin_location: 'A-01-01' },
+        {
+          transaction_id: 'TXN001',
+          type: 'RECEIPT',
+          sku: 'SKU001',
+          quantity: 100,
+          order_id: null,
+          user_id: 'user-123',
+          timestamp: new Date(),
+          reason: 'Initial',
+          bin_location: 'A-01-01',
+        },
+        {
+          transaction_id: 'TXN002',
+          type: 'DEDUCTION',
+          sku: 'SKU001',
+          quantity: -10,
+          order_id: 'SO0001',
+          user_id: 'user-123',
+          timestamp: new Date(),
+          reason: 'Order',
+          bin_location: 'A-01-01',
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
           .mockResolvedValueOnce({ rows: mockTransactions }), // transactions
       });
@@ -578,7 +729,8 @@ describe('StockControlService', () => {
 
     it('should filter by SKU', async () => {
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001', sku: 'SKU001' }] }),
       });
@@ -595,7 +747,8 @@ describe('StockControlService', () => {
 
     it('should filter by transaction type', async () => {
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001', type: 'RECEIPT' }] }),
       });
@@ -611,7 +764,8 @@ describe('StockControlService', () => {
 
     it('should filter by date range', async () => {
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001' }] }),
       });
@@ -634,8 +788,22 @@ describe('StockControlService', () => {
   describe('getLowStockReport', () => {
     it('should return low stock items', async () => {
       const mockItems = [
-        { sku: 'SKU001', name: 'Low Stock Item 1', category: 'Test', bin_location: 'A-01-01', available: 5, quantity: 5 },
-        { sku: 'SKU002', name: 'Low Stock Item 2', category: 'Test', bin_location: 'A-01-02', available: 8, quantity: 8 },
+        {
+          sku: 'SKU001',
+          name: 'Low Stock Item 1',
+          category: 'Test',
+          bin_location: 'A-01-01',
+          available: 5,
+          quantity: 5,
+        },
+        {
+          sku: 'SKU002',
+          name: 'Low Stock Item 2',
+          category: 'Test',
+          bin_location: 'A-01-02',
+          available: 8,
+          quantity: 8,
+        },
       ];
 
       getPool.mockResolvedValue({
@@ -668,8 +836,22 @@ describe('StockControlService', () => {
   describe('getMovementReport', () => {
     it('should return movement report', async () => {
       const mockMovements = [
-        { sku: 'SKU001', name: 'Product 1', receipts: 500, deductions: 300, adjustments: 50, net_change: 250 },
-        { sku: 'SKU002', name: 'Product 2', receipts: 200, deductions: 150, adjustments: 0, net_change: 50 },
+        {
+          sku: 'SKU001',
+          name: 'Product 1',
+          receipts: 500,
+          deductions: 300,
+          adjustments: 50,
+          net_change: 250,
+        },
+        {
+          sku: 'SKU002',
+          name: 'Product 2',
+          receipts: 200,
+          deductions: 150,
+          adjustments: 0,
+          net_change: 50,
+        },
       ];
 
       getPool.mockResolvedValue({
@@ -690,7 +872,16 @@ describe('StockControlService', () => {
     it('should filter by SKU', async () => {
       getPool.mockResolvedValue({
         query: jest.fn().mockResolvedValueOnce({
-          rows: [{ sku: 'SKU001', name: 'Product 1', receipts: 100, deductions: 50, adjustments: 0, net_change: 50 }],
+          rows: [
+            {
+              sku: 'SKU001',
+              name: 'Product 1',
+              receipts: 100,
+              deductions: 50,
+              adjustments: 0,
+              net_change: 50,
+            },
+          ],
         }),
       });
 
@@ -709,11 +900,24 @@ describe('StockControlService', () => {
 
   describe('reconcileDiscrepancies', () => {
     it('should reconcile multiple discrepancies', async () => {
-      const mockCurrentInventory1 = { sku: 'SKU001', bin_location: 'A-01-01', quantity: 100, reserved: 0, available: 100 };
-      const mockCurrentInventory2 = { sku: 'SKU002', bin_location: 'A-01-02', quantity: 50, reserved: 0, available: 50 };
+      const mockCurrentInventory1 = {
+        sku: 'SKU001',
+        bin_location: 'A-01-01',
+        quantity: 100,
+        reserved: 0,
+        available: 100,
+      };
+      const mockCurrentInventory2 = {
+        sku: 'SKU002',
+        bin_location: 'A-01-02',
+        quantity: 50,
+        reserved: 0,
+        available: 50,
+      };
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [mockCurrentInventory1] }) // get SKU001
           .mockResolvedValueOnce({ rows: [] }) // update SKU001
           .mockResolvedValueOnce({ rows: [] }) // log SKU001
@@ -723,16 +927,32 @@ describe('StockControlService', () => {
       });
 
       const discrepancies = [
-        { sku: 'SKU001', binLocation: 'A-01-01', systemQuantity: 100, actualQuantity: 95, reason: 'Cycle count correction' },
-        { sku: 'SKU002', binLocation: 'A-01-02', systemQuantity: 50, actualQuantity: 55, reason: 'Found stock' },
+        {
+          sku: 'SKU001',
+          binLocation: 'A-01-01',
+          systemQuantity: 100,
+          actualQuantity: 95,
+          reason: 'Cycle count correction',
+        },
+        {
+          sku: 'SKU002',
+          binLocation: 'A-01-02',
+          systemQuantity: 50,
+          actualQuantity: 55,
+          reason: 'Found stock',
+        },
       ];
 
       // Mock the adjustInventory method
-      jest.spyOn(stockControlService, 'adjustInventory')
+      jest
+        .spyOn(stockControlService, 'adjustInventory')
         .mockResolvedValueOnce({ adjustmentId: 'ADJ-001', variance: -5 } as any)
         .mockResolvedValueOnce({ adjustmentId: 'ADJ-002', variance: 5 } as any);
 
-      const result = await stockControlService.reconcileDiscrepancies(discrepancies, mockUser.userId);
+      const result = await stockControlService.reconcileDiscrepancies(
+        discrepancies,
+        mockUser.userId
+      );
 
       expect(result.reconciled).toBe(2);
       expect(result.details).toHaveLength(2);
@@ -741,12 +961,21 @@ describe('StockControlService', () => {
 
     it('should skip items with no variance', async () => {
       const discrepancies = [
-        { sku: 'SKU001', binLocation: 'A-01-01', systemQuantity: 100, actualQuantity: 100, reason: 'No variance' },
+        {
+          sku: 'SKU001',
+          binLocation: 'A-01-01',
+          systemQuantity: 100,
+          actualQuantity: 100,
+          reason: 'No variance',
+        },
       ];
 
       jest.spyOn(stockControlService, 'adjustInventory').mockResolvedValue({} as any);
 
-      const result = await stockControlService.reconcileDiscrepancies(discrepancies, mockUser.userId);
+      const result = await stockControlService.reconcileDiscrepancies(
+        discrepancies,
+        mockUser.userId
+      );
 
       expect(result.reconciled).toBe(0);
       expect(result.details).toHaveLength(0);
@@ -808,12 +1037,27 @@ describe('StockControlService', () => {
   describe('getStockCounts', () => {
     it('should return paginated stock counts', async () => {
       const mockCounts = [
-        { count_id: 'SC-001', bin_location: 'A-01-01', type: 'FULL', status: 'COMPLETED', created_by: 'user-123', created_at: new Date() },
-        { count_id: 'SC-002', bin_location: 'A-01-02', type: 'CYCLIC', status: 'PENDING', created_by: 'user-456', created_at: new Date() },
+        {
+          count_id: 'SC-001',
+          bin_location: 'A-01-01',
+          type: 'FULL',
+          status: 'COMPLETED',
+          created_by: 'user-123',
+          created_at: new Date(),
+        },
+        {
+          count_id: 'SC-002',
+          bin_location: 'A-01-02',
+          type: 'CYCLIC',
+          status: 'PENDING',
+          created_by: 'user-456',
+          created_at: new Date(),
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
           .mockResolvedValueOnce({ rows: mockCounts }), // counts
       });
@@ -829,11 +1073,19 @@ describe('StockControlService', () => {
 
     it('should filter by status', async () => {
       const mockCounts = [
-        { count_id: 'SC-001', bin_location: 'A-01-01', type: 'FULL', status: 'COMPLETED', created_by: 'user-123', created_at: new Date() },
+        {
+          count_id: 'SC-001',
+          bin_location: 'A-01-01',
+          type: 'FULL',
+          status: 'COMPLETED',
+          created_by: 'user-123',
+          created_at: new Date(),
+        },
       ];
 
       getPool.mockResolvedValue({
-        query: jest.fn()
+        query: jest
+          .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({ rows: mockCounts }),
       });

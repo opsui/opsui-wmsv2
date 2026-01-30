@@ -235,7 +235,10 @@ class SlottingOptimizationService {
     const recommendations: SlottingRecommendation[] = [];
 
     for (const analysis of filtered) {
-      if (!analysis.recommendedLocation || analysis.recommendedLocation === analysis.currentLocation) {
+      if (
+        !analysis.recommendedLocation ||
+        analysis.recommendedLocation === analysis.currentLocation
+      ) {
         continue;
       }
 
@@ -293,7 +296,9 @@ class SlottingOptimizationService {
         category: AuditCategory.DATA_MODIFICATION,
         resourceType: 'SKU',
         resourceId: recommendation.sku,
-        details: { description: `SKU ${recommendation.sku} moved from ${recommendation.fromLocation} to ${recommendation.toLocation}` },
+        details: {
+          description: `SKU ${recommendation.sku} moved from ${recommendation.fromLocation} to ${recommendation.toLocation}`,
+        },
         oldValues: { location: recommendation.fromLocation },
         newValues: { location: recommendation.toLocation },
         ipAddress: context.ipAddress || null,
@@ -320,10 +325,7 @@ class SlottingOptimizationService {
   /**
    * Get velocity data for a specific SKU
    */
-  async getVelocityData(
-    sku: string,
-    days: number = 90
-  ): Promise<VelocityData | null> {
+  async getVelocityData(sku: string, days: number = 90): Promise<VelocityData | null> {
     const client = await this.pool.connect();
 
     try {
@@ -373,7 +375,9 @@ class SlottingOptimizationService {
       );
 
       const lastPickDate = lastPickResult.rows[0]?.started_at || new Date();
-      const daysSinceLastPick = Math.floor((Date.now() - new Date(lastPickDate).getTime()) / (1000 * 60 * 60 * 24));
+      const daysSinceLastPick = Math.floor(
+        (Date.now() - new Date(lastPickDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       return {
         sku,
@@ -442,9 +446,9 @@ class SlottingOptimizationService {
    * Calculate ABC class based on velocity percentile
    */
   private calculateABCClass(percentile: number): ABCClass {
-    if (percentile <= 0.20) {
+    if (percentile <= 0.2) {
       return ABCClass.A; // Top 20% by velocity
-    } else if (percentile <= 0.50) {
+    } else if (percentile <= 0.5) {
       return ABCClass.B; // Next 30%
     } else {
       return ABCClass.C; // Bottom 50%
@@ -461,19 +465,18 @@ class SlottingOptimizationService {
     currentLocation: string
   ): { location: string; reason: string } {
     // Determine appropriate zone based on ABC class
-    const appropriateZones = abcClass === ABCClass.A
-      ? this.config.zoneA
-      : abcClass === ABCClass.B
-      ? this.config.zoneB
-      : this.config.zoneC;
+    const appropriateZones =
+      abcClass === ABCClass.A
+        ? this.config.zoneA
+        : abcClass === ABCClass.B
+          ? this.config.zoneB
+          : this.config.zoneC;
 
     // Check if already in appropriate zone
     const currentZone = currentLocation.split('-')[0];
     const currentZonePrefix = currentZone + '-';
 
-    const isInAppropriateZone = appropriateZones.some(zone =>
-      currentLocation.startsWith(zone)
-    );
+    const isInAppropriateZone = appropriateZones.some(zone => currentLocation.startsWith(zone));
 
     if (isInAppropriateZone) {
       return {

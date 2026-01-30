@@ -694,9 +694,18 @@ export class MetricsService {
     scanType: 'pick' | 'pack' | 'verify' | 'all',
     limit: number = 10,
     timePeriod: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly'
-  ): Promise<Array<{ sku: string; name: string; picks: number; scans?: number; packVerifies?: number }>> {
+  ): Promise<
+    Array<{ sku: string; name: string; picks: number; scans?: number; packVerifies?: number }>
+  > {
     const interval = this.getTimePeriodInterval(timePeriod);
-    console.log('[MetricsService] getTopSKUsByScanType - scanType:', scanType, 'timePeriod:', timePeriod, 'interval:', interval);
+    console.log(
+      '[MetricsService] getTopSKUsByScanType - scanType:',
+      scanType,
+      'timePeriod:',
+      timePeriod,
+      'interval:',
+      interval
+    );
 
     if (scanType === 'pick') {
       // Pick frequency - count pick_tasks

@@ -23,7 +23,7 @@ import {
 // Mock dependencies
 jest.mock('../../db/client');
 jest.mock('../../config/logger');
-jest.mock('../notificationHelper');
+jest.mock('../NotificationHelper');
 
 describe('ShippingService', () => {
   let service: ShippingService;
@@ -258,10 +258,7 @@ describe('ShippingService', () => {
       await expect(service.createShipment(dto)).rejects.toThrow('Database error');
 
       expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('ROLLBACK'), []);
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error creating shipment',
-        expect.any(Error)
-      );
+      expect(logger.error).toHaveBeenCalledWith('Error creating shipment', expect.any(Error));
     });
   });
 
@@ -582,22 +579,23 @@ describe('ShippingService', () => {
         'https://track.com/TRK123456'
       );
 
-      expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE shipments'),
-        ['TRK123456', 'https://track.com/TRK123456', 'SHP-001']
-      );
-      expect(logger.info).toHaveBeenCalledWith(
-        'Tracking number added',
-        { shipmentId: 'SHP-001', trackingNumber: 'TRK123456' }
-      );
+      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('UPDATE shipments'), [
+        'TRK123456',
+        'https://track.com/TRK123456',
+        'SHP-001',
+      ]);
+      expect(logger.info).toHaveBeenCalledWith('Tracking number added', {
+        shipmentId: 'SHP-001',
+        trackingNumber: 'TRK123456',
+      });
     });
 
     it('should throw error when shipment not found', async () => {
       mockClient.query.mockResolvedValueOnce({ rows: [] });
 
-      await expect(
-        service.addTrackingNumber('NONEXISTENT', 'TRK123456')
-      ).rejects.toThrow('Shipment NONEXISTENT not found');
+      await expect(service.addTrackingNumber('NONEXISTENT', 'TRK123456')).rejects.toThrow(
+        'Shipment NONEXISTENT not found'
+      );
     });
   });
 
@@ -641,10 +639,10 @@ describe('ShippingService', () => {
       expect(result.labelId).toBe('LBL-001');
       expect(result.packageNumber).toBe(1);
       expect(result.packageWeight).toBe(5.25);
-      expect(logger.info).toHaveBeenCalledWith(
-        'Shipping label created',
-        { labelId: 'LBL-001', shipmentId: 'SHP-001' }
-      );
+      expect(logger.info).toHaveBeenCalledWith('Shipping label created', {
+        labelId: 'LBL-001',
+        shipmentId: 'SHP-001',
+      });
     });
 
     it('should update shipment status when all labels created', async () => {

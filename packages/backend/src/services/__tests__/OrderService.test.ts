@@ -83,7 +83,7 @@ describe('OrderService', () => {
 
     // Default mock implementations
     query.mockResolvedValue({ rows: [], rowCount: 0 });
-    orderRepository.withTransaction = jest.fn((callback) =>
+    orderRepository.withTransaction = jest.fn(callback =>
       callback({
         query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
       })
@@ -118,10 +118,10 @@ describe('OrderService', () => {
       expect(result).toEqual(mockOrder);
       expect(validateOrderItems).toHaveBeenCalledWith(validOrderDTO.items);
       expect(orderRepository.createOrderWithItems).toHaveBeenCalledWith(validOrderDTO);
-      expect(logger.info).toHaveBeenCalledWith(
-        'Creating order',
-        { customerId: validOrderDTO.customerId, itemCount: 2 }
-      );
+      expect(logger.info).toHaveBeenCalledWith('Creating order', {
+        customerId: validOrderDTO.customerId,
+        itemCount: 2,
+      });
     });
 
     it('should throw ValidationError for invalid items', async () => {
@@ -150,11 +150,23 @@ describe('OrderService', () => {
         query: jest.fn().mockImplementation((sql, params) => {
           if (sql.includes('SELECT * FROM orders')) {
             // Direct database query returns snake_case
-            return { rows: [{ ...mockOrder, status: OrderStatus.PICKING, picker_id: 'picker-123' }] };
+            return {
+              rows: [{ ...mockOrder, status: OrderStatus.PICKING, picker_id: 'picker-123' }],
+            };
           }
           if (sql.includes('SELECT * FROM pick_tasks')) {
             // Direct database query returns snake_case
-            return { rows: [{ ...mockPickTask, order_id: 'ORD-TEST-001', target_bin: 'A-01-01', quantity: 10, picked_quantity: 0 }] };
+            return {
+              rows: [
+                {
+                  ...mockPickTask,
+                  order_id: 'ORD-TEST-001',
+                  target_bin: 'A-01-01',
+                  quantity: 10,
+                  picked_quantity: 0,
+                },
+              ],
+            };
           }
           if (sql.includes('SELECT sku FROM skus WHERE barcode')) {
             return { rows: [] };
@@ -163,7 +175,7 @@ describe('OrderService', () => {
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
       orderRepository.getOrderWithItems.mockResolvedValue(mockOrder);
       validatePickSKU.mockImplementation(() => {});
       validatePickQuantity.mockImplementation(() => {});
@@ -180,7 +192,7 @@ describe('OrderService', () => {
       const mockClient = {
         query: jest.fn().mockResolvedValue({ rows: [] }),
       };
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await expect(
         orderService.pickItem('non-existent-order', pickDTO, 'picker-123')
@@ -193,11 +205,11 @@ describe('OrderService', () => {
           rows: [{ ...mockOrder, status: OrderStatus.PENDING }],
         }),
       };
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
-      await expect(
-        orderService.pickItem('ORD-TEST-001', pickDTO, 'picker-123')
-      ).rejects.toThrow(ValidationError);
+      await expect(orderService.pickItem('ORD-TEST-001', pickDTO, 'picker-123')).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('should throw ValidationError when picker does not match', async () => {
@@ -206,11 +218,11 @@ describe('OrderService', () => {
           rows: [{ ...mockOrder, status: OrderStatus.PICKING, picker_id: 'other-picker' }],
         }),
       };
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
-      await expect(
-        orderService.pickItem('ORD-TEST-001', pickDTO, 'picker-123')
-      ).rejects.toThrow(ValidationError);
+      await expect(orderService.pickItem('ORD-TEST-001', pickDTO, 'picker-123')).rejects.toThrow(
+        ValidationError
+      );
     });
 
     it('should resolve barcode to SKU', async () => {
@@ -221,17 +233,30 @@ describe('OrderService', () => {
           }
           if (sql.includes('SELECT * FROM orders')) {
             // Direct database query returns snake_case
-            return { rows: [{ ...mockOrder, status: OrderStatus.PICKING, picker_id: 'picker-123' }] };
+            return {
+              rows: [{ ...mockOrder, status: OrderStatus.PICKING, picker_id: 'picker-123' }],
+            };
           }
           if (sql.includes('SELECT * FROM pick_tasks')) {
             // Direct database query returns snake_case
-            return { rows: [{ ...mockPickTask, order_id: 'ORD-TEST-001', sku: 'ACTUAL-SKU', target_bin: 'A-01-01', quantity: 10, picked_quantity: 0 }] };
+            return {
+              rows: [
+                {
+                  ...mockPickTask,
+                  order_id: 'ORD-TEST-001',
+                  sku: 'ACTUAL-SKU',
+                  target_bin: 'A-01-01',
+                  quantity: 10,
+                  picked_quantity: 0,
+                },
+              ],
+            };
           }
           return { rows: [], rowCount: 1 };
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
       orderRepository.getOrderWithItems.mockResolvedValue(mockOrder);
       validatePickSKU.mockImplementation(() => {});
       validatePickQuantity.mockImplementation(() => {});
@@ -330,7 +355,7 @@ describe('OrderService', () => {
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
       orderRepository.getOrderWithItems.mockResolvedValue(mockOrder);
 
       const result = await orderService.unclaimOrder('ORD-TEST-001', 'picker-123', 'Test reason');
@@ -353,7 +378,7 @@ describe('OrderService', () => {
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await expect(
         orderService.unclaimOrder('ORD-TEST-001', 'picker-123', 'Test reason')
@@ -367,7 +392,7 @@ describe('OrderService', () => {
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await expect(
         orderService.unclaimOrder('ORD-TEST-001', 'picker-123', 'Test reason')
@@ -386,9 +411,9 @@ describe('OrderService', () => {
 
       orderRepository.getOrderWithItems.mockResolvedValue(pickedOrder);
       orderRepository.update.mockResolvedValue(undefined);
-      orderRepository.getOrderWithItems.mockResolvedValueOnce(pickedOrder).mockResolvedValueOnce(
-        packingOrder
-      );
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(pickedOrder)
+        .mockResolvedValueOnce(packingOrder);
 
       const result = await orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123');
 
@@ -405,9 +430,9 @@ describe('OrderService', () => {
         status: OrderStatus.PENDING,
       });
 
-      await expect(
-        orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123')
-      ).rejects.toThrow(ConflictError);
+      await expect(orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
+        ConflictError
+      );
     });
 
     it('should throw ConflictError when order already claimed by another packer', async () => {
@@ -417,9 +442,9 @@ describe('OrderService', () => {
         packerId: 'other-packer',
       });
 
-      await expect(
-        orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123')
-      ).rejects.toThrow(ConflictError);
+      await expect(orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
+        ConflictError
+      );
     });
   });
 
@@ -432,9 +457,9 @@ describe('OrderService', () => {
       };
       const packedOrder = { ...mockOrder, status: OrderStatus.PACKED, packedAt: expect.any(Date) };
 
-      orderRepository.getOrderWithItems.mockResolvedValueOnce(packingOrder).mockResolvedValueOnce(
-        packedOrder
-      );
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(packedOrder);
       orderRepository.update.mockResolvedValue(undefined);
 
       const result = await orderService.completePacking('ORD-TEST-001', 'packer-123');
@@ -453,9 +478,9 @@ describe('OrderService', () => {
         packerId: 'other-packer',
       });
 
-      await expect(
-        orderService.completePacking('ORD-TEST-001', 'packer-123')
-      ).rejects.toThrow(ConflictError);
+      await expect(orderService.completePacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
+        ConflictError
+      );
     });
 
     it('should throw ConflictError when order not in PACKING status', async () => {
@@ -465,9 +490,9 @@ describe('OrderService', () => {
         packerId: 'packer-123',
       });
 
-      await expect(
-        orderService.completePacking('ORD-TEST-001', 'packer-123')
-      ).rejects.toThrow(ConflictError);
+      await expect(orderService.completePacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
+        ConflictError
+      );
     });
   });
 
@@ -476,9 +501,9 @@ describe('OrderService', () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
 
-      orderRepository.getOrderWithItems.mockResolvedValueOnce(packingOrder).mockResolvedValueOnce(
-        updatedOrder
-      );
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(updatedOrder);
       query.mockImplementation((sql, params) => {
         if (sql.includes('SELECT order_item_id')) {
           return { rows: [{ orderItemId: 'oi-001', quantity: 10, verifiedQuantity: 5 }] };
@@ -507,9 +532,9 @@ describe('OrderService', () => {
         return { rows: [], rowCount: 1 };
       });
 
-      await expect(
-        orderService.verifyPackingItem('ORD-TEST-001', 'oi-001', 5)
-      ).rejects.toThrow(ConflictError);
+      await expect(orderService.verifyPackingItem('ORD-TEST-001', 'oi-001', 5)).rejects.toThrow(
+        ConflictError
+      );
     });
   });
 
@@ -518,9 +543,9 @@ describe('OrderService', () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
 
-      orderRepository.getOrderWithItems.mockResolvedValueOnce(packingOrder).mockResolvedValueOnce(
-        updatedOrder
-      );
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(updatedOrder);
       query.mockResolvedValue({ rows: [], rowCount: 1 });
 
       const result = await orderService.skipPackingItem('ORD-TEST-001', 'oi-001', 'Damaged item');
@@ -538,9 +563,9 @@ describe('OrderService', () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
 
-      orderRepository.getOrderWithItems.mockResolvedValueOnce(packingOrder).mockResolvedValueOnce(
-        updatedOrder
-      );
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(updatedOrder);
       query.mockImplementation((sql, params) => {
         if (sql.includes('SELECT order_item_id')) {
           return { rows: [{ orderItemId: 'oi-001', verifiedQuantity: 5, status: 'PENDING' }] };
@@ -566,9 +591,9 @@ describe('OrderService', () => {
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING };
       const updatedOrder = { ...mockOrder, status: OrderStatus.PACKING };
 
-      orderRepository.getOrderWithItems.mockResolvedValueOnce(packingOrder).mockResolvedValueOnce(
-        updatedOrder
-      );
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(updatedOrder);
       query.mockImplementation((sql, params) => {
         if (sql.includes('SELECT order_item_id')) {
           return { rows: [{ orderItemId: 'oi-001', verifiedQuantity: 5, status: 'SKIPPED' }] };
@@ -604,10 +629,14 @@ describe('OrderService', () => {
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
       orderRepository.getOrderWithItems.mockResolvedValue(mockOrder);
 
-      const result = await orderService.unclaimPackingOrder('ORD-TEST-001', 'packer-123', 'Test reason');
+      const result = await orderService.unclaimPackingOrder(
+        'ORD-TEST-001',
+        'packer-123',
+        'Test reason'
+      );
 
       expect(result).toEqual(mockOrder);
       expect(mockClient.query).toHaveBeenCalledWith(
@@ -623,7 +652,7 @@ describe('OrderService', () => {
         }),
       };
 
-      orderRepository.withTransaction.mockImplementation((callback) => callback(mockClient));
+      orderRepository.withTransaction.mockImplementation(callback => callback(mockClient));
 
       await expect(
         orderService.unclaimPackingOrder('ORD-TEST-001', 'packer-123', 'Test reason')
@@ -707,7 +736,11 @@ describe('OrderService', () => {
       query.mockImplementation((sql, params) => {
         if (sql.includes('SELECT picked_quantity')) {
           // Mock returns camelCase like the real query function does
-          return { rows: [{ pickedQuantity: 5, quantity: 10, status: 'COMPLETED', orderId: 'ORD-TEST-001' }] };
+          return {
+            rows: [
+              { pickedQuantity: 5, quantity: 10, status: 'COMPLETED', orderId: 'ORD-TEST-001' },
+            ],
+          };
         }
         return { rows: [], rowCount: 1 };
       });

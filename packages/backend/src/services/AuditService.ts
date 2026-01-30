@@ -314,7 +314,8 @@ export class AuditService {
       }
 
       // Generate audit_id if not provided
-      const auditId = auditLog.auditId || `AUD-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+      const auditId =
+        auditLog.auditId || `AUD-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
       const query = `
         INSERT INTO audit_logs (
@@ -397,7 +398,11 @@ export class AuditService {
       return result.rows[0].id;
     } catch (error) {
       try {
-        try { recordException(error as Error); } catch { /* ignore telemetry errors */ }
+        try {
+          recordException(error as Error);
+        } catch {
+          /* ignore telemetry errors */
+        }
       } catch (telemetryError) {
         // Silently ignore telemetry errors
         console.warn('[AuditService] Failed to record exception:', telemetryError);
@@ -466,9 +471,7 @@ export class AuditService {
         values.push(options.endDate);
       }
 
-      const whereClause = conditions.length > 0
-        ? `WHERE ${conditions.join(' AND ')}`
-        : '';
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const limit = options.limit || 100;
       const offset = options.offset || 0;
@@ -509,7 +512,7 @@ export class AuditService {
 
       const result = await this.pool.query(query, values);
 
-      return result.rows.map((row) => ({
+      return result.rows.map(row => ({
         id: row.id,
         auditId: row.auditId,
         occurredAt: row.occurredAt,
@@ -536,7 +539,11 @@ export class AuditService {
         retentionUntil: row.retentionUntil,
       }));
     } catch (error) {
-      try { recordException(error as Error); } catch { /* ignore telemetry errors */ }
+      try {
+        recordException(error as Error);
+      } catch {
+        /* ignore telemetry errors */
+      }
       logger.error('Failed to query audit logs', {
         error: error instanceof Error ? error.message : String(error),
         options,
@@ -621,7 +628,11 @@ export class AuditService {
         retentionUntil: row.retentionUntil,
       };
     } catch (error) {
-      try { recordException(error as Error); } catch { /* ignore telemetry errors */ }
+      try {
+        recordException(error as Error);
+      } catch {
+        /* ignore telemetry errors */
+      }
       logger.error('Failed to get audit log by ID', {
         error: error instanceof Error ? error.message : String(error),
         id,
@@ -767,7 +778,11 @@ export class AuditService {
         topUsers,
       };
     } catch (error) {
-      try { recordException(error as Error); } catch { /* ignore telemetry errors */ }
+      try {
+        recordException(error as Error);
+      } catch {
+        /* ignore telemetry errors */
+      }
       logger.error('Failed to get audit statistics', {
         error: error instanceof Error ? error.message : String(error),
       });
@@ -956,7 +971,11 @@ export class AuditService {
 
       return result.rowCount || 0;
     } catch (error) {
-      try { recordException(error as Error); } catch { /* ignore telemetry errors */ }
+      try {
+        recordException(error as Error);
+      } catch {
+        /* ignore telemetry errors */
+      }
       logger.error('Failed to cleanup old audit logs', {
         error: error instanceof Error ? error.message : String(error),
         retentionDays,

@@ -58,7 +58,10 @@ export function SeverityConfigModal({
   const [showAddForm, setShowAddForm] = useState(false);
   const [newConfig, setNewConfig] = useState<EditingConfig>({ ...DEFAULT_EDITING_STATE });
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; configId: string }>({ isOpen: false, configId: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; configId: string }>({
+    isOpen: false,
+    configId: '',
+  });
 
   // Reset state when modal closes
   useEffect(() => {
@@ -125,7 +128,7 @@ export function SeverityConfigModal({
 
   return (
     <div className="modal-overlay severity-config-modal" onClick={onClose}>
-      <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content large" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Variance Severity Configuration</h2>
           <button onClick={onClose} className="btn-close">
@@ -143,8 +146,8 @@ export function SeverityConfigModal({
           {/* Description */}
           <div className="config-description">
             <p>
-              Configure variance severity thresholds. Severity levels are determined by variance percentage
-              and control approval requirements and auto-adjust behavior.
+              Configure variance severity thresholds. Severity levels are determined by variance
+              percentage and control approval requirements and auto-adjust behavior.
             </p>
           </div>
 
@@ -153,10 +156,7 @@ export function SeverityConfigModal({
             <div className="section-header">
               <h3>Active Configurations</h3>
               {!editingConfig && !showAddForm && (
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="btn btn-primary btn-sm"
-                >
+                <button onClick={() => setShowAddForm(true)} className="btn btn-primary btn-sm">
                   Add Severity Level
                 </button>
               )}
@@ -175,7 +175,7 @@ export function SeverityConfigModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {activeConfigs.map((config) => (
+                  {activeConfigs.map(config => (
                     <tr key={config.configId}>
                       {editingConfig?.configId === config.configId ? (
                         // Edit mode
@@ -200,15 +200,11 @@ export function SeverityConfigModal({
                             {config.minVariancePercent}% - {config.maxVariancePercent}%
                           </td>
                           <td>
-                            {config.requiresApproval && (
-                              <span className="badge">Approval</span>
-                            )}
+                            {config.requiresApproval && <span className="badge">Approval</span>}
                             {config.requiresManagerApproval && (
                               <span className="badge badge-warning">Manager</span>
                             )}
-                            {!config.requiresApproval && (
-                              <span className="text-muted">None</span>
-                            )}
+                            {!config.requiresApproval && <span className="text-muted">None</span>}
                           </td>
                           <td>
                             {config.autoAdjust ? (
@@ -219,7 +215,10 @@ export function SeverityConfigModal({
                           </td>
                           <td>
                             <div className="color-preview">
-                              <span className="color-swatch" style={{ backgroundColor: config.colorCode }} />
+                              <span
+                                className="color-swatch"
+                                style={{ backgroundColor: config.colorCode }}
+                              />
                               <code>{config.colorCode}</code>
                             </div>
                           </td>
@@ -282,7 +281,7 @@ export function SeverityConfigModal({
                     </tr>
                   </thead>
                   <tbody>
-                    {inactiveConfigs.map((config) => (
+                    {inactiveConfigs.map(config => (
                       <tr key={config.configId}>
                         <td>{config.severityLevel}</td>
                         <td>
@@ -310,24 +309,15 @@ export function SeverityConfigModal({
               <h4>Reset to Defaults</h4>
               <p>Restore default severity configurations. This will delete all custom configs.</p>
               {!showResetConfirm ? (
-                <button
-                  onClick={() => setShowResetConfirm(true)}
-                  className="btn btn-secondary"
-                >
+                <button onClick={() => setShowResetConfirm(true)} className="btn btn-secondary">
                   Reset to Defaults
                 </button>
               ) : (
                 <div className="reset-confirm">
-                  <button
-                    onClick={handleResetDefaults}
-                    className="btn btn-danger"
-                  >
+                  <button onClick={handleResetDefaults} className="btn btn-danger">
                     Confirm Reset
                   </button>
-                  <button
-                    onClick={() => setShowResetConfirm(false)}
-                    className="btn btn-secondary"
-                  >
+                  <button onClick={() => setShowResetConfirm(false)} className="btn btn-secondary">
                     Cancel
                   </button>
                 </div>
@@ -367,7 +357,12 @@ interface ConfigEditRowProps {
 }
 
 function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProps) {
-  const severityLevels: Array<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'> = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+  const severityLevels: Array<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'> = [
+    'LOW',
+    'MEDIUM',
+    'HIGH',
+    'CRITICAL',
+  ];
 
   return (
     <>
@@ -376,10 +371,10 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
           <div className="edit-fields">
             <select
               value={config.severityLevel}
-              onChange={(e) => onChange({ ...config, severityLevel: e.target.value as any })}
+              onChange={e => onChange({ ...config, severityLevel: e.target.value as any })}
               className="select"
             >
-              {severityLevels.map((level) => (
+              {severityLevels.map(level => (
                 <option key={level} value={level}>
                   {level}
                 </option>
@@ -390,7 +385,9 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
               <input
                 type="number"
                 value={config.minVariancePercent}
-                onChange={(e) => onChange({ ...config, minVariancePercent: parseFloat(e.target.value) || 0 })}
+                onChange={e =>
+                  onChange({ ...config, minVariancePercent: parseFloat(e.target.value) || 0 })
+                }
                 placeholder="Min %"
                 min="0"
                 step="0.01"
@@ -400,7 +397,9 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
               <input
                 type="number"
                 value={config.maxVariancePercent}
-                onChange={(e) => onChange({ ...config, maxVariancePercent: parseFloat(e.target.value) || 0 })}
+                onChange={e =>
+                  onChange({ ...config, maxVariancePercent: parseFloat(e.target.value) || 0 })
+                }
                 placeholder="Max %"
                 min="0"
                 step="0.01"
@@ -413,7 +412,7 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
               <input
                 type="checkbox"
                 checked={config.requiresApproval}
-                onChange={(e) => onChange({ ...config, requiresApproval: e.target.checked })}
+                onChange={e => onChange({ ...config, requiresApproval: e.target.checked })}
               />
               Approval
             </label>
@@ -422,7 +421,7 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
               <input
                 type="checkbox"
                 checked={config.requiresManagerApproval}
-                onChange={(e) => onChange({ ...config, requiresManagerApproval: e.target.checked })}
+                onChange={e => onChange({ ...config, requiresManagerApproval: e.target.checked })}
               />
               Manager
             </label>
@@ -431,7 +430,7 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
               <input
                 type="checkbox"
                 checked={config.autoAdjust}
-                onChange={(e) => onChange({ ...config, autoAdjust: e.target.checked })}
+                onChange={e => onChange({ ...config, autoAdjust: e.target.checked })}
               />
               Auto-Adjust
             </label>
@@ -440,13 +439,13 @@ function ConfigEditRow({ config, onChange, onCancel, onSave }: ConfigEditRowProp
               <input
                 type="color"
                 value={config.colorCode}
-                onChange={(e) => onChange({ ...config, colorCode: e.target.value })}
+                onChange={e => onChange({ ...config, colorCode: e.target.value })}
                 className="color-picker"
               />
               <input
                 type="text"
                 value={config.colorCode}
-                onChange={(e) => onChange({ ...config, colorCode: e.target.value })}
+                onChange={e => onChange({ ...config, colorCode: e.target.value })}
                 placeholder="#000000"
                 className="input input-sm"
               />

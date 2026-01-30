@@ -66,11 +66,10 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
   }
 
   // Format data for chart - shorten names if needed
-  const chartData = data.map((item) => ({
+  const chartData = data.map(item => ({
     ...item,
-    displayName: item.pickerName.length > 15
-      ? item.pickerName.substring(0, 12) + '...'
-      : item.pickerName,
+    displayName:
+      item.pickerName.length > 15 ? item.pickerName.substring(0, 12) + '...' : item.pickerName,
     // Convert average time from seconds to minutes for display
     avgTimeMinutes: item.averageTimePerTask ? (item.averageTimePerTask / 60).toFixed(1) : 0,
   }));
@@ -82,11 +81,11 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={chartData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" className="dark:stroke-white/[0.08] stroke-gray-200" />
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="dark:stroke-white/[0.08] stroke-gray-200"
+            />
             <XAxis
               dataKey="displayName"
               className="dark:fill-gray-500 fill-gray-600"
@@ -120,14 +119,14 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
                 if (name === 'Avg Time (min)') return [`${value} min`, name];
                 return [value || 0, name || ''];
               }}
-              labelFormatter={(label) => {
-                const item = chartData.find((d) => d.displayName === label);
+              labelFormatter={label => {
+                const item = chartData.find(d => d.displayName === label);
                 return item?.pickerName || label;
               }}
             />
             <Legend
               wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={(value) => (
+              formatter={value => (
                 <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
               )}
             />
@@ -168,7 +167,7 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
               </tr>
             </thead>
             <tbody>
-              {chartData.slice(0, 5).map((item) => (
+              {chartData.slice(0, 5).map(item => (
                 <tr
                   key={item.pickerId}
                   className="dark:text-gray-300 text-gray-700 border-b dark:border-white/[0.02] border-gray-100 hover:dark:bg-white/[0.02] hover:bg-gray-50"

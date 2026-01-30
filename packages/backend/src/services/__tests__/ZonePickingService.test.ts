@@ -9,14 +9,14 @@ import { ZonePickingService, zonePickingService } from '../ZonePickingService';
 import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import { getAuditService } from '../AuditService';
-import { notifyUser } from '../notificationHelper';
+import { notifyUser } from '../NotificationHelper';
 import wsServer from '../../websocket';
 
 // Mock dependencies
 jest.mock('../../db/client');
 jest.mock('../../config/logger');
 jest.mock('../AuditService');
-jest.mock('../notificationHelper');
+jest.mock('../NotificationHelper');
 jest.mock('../../websocket');
 
 describe('ZonePickingService', () => {
@@ -128,7 +128,13 @@ describe('ZonePickingService', () => {
 
     it('should handle zones with null aisle values', async () => {
       const mockZones = [
-        { zone: 'A', aisle_start: null, aisle_end: null, location_count: '50', active_pickers: '0' },
+        {
+          zone: 'A',
+          aisle_start: null,
+          aisle_end: null,
+          location_count: '50',
+          active_pickers: '0',
+        },
       ];
 
       mockClient.query.mockResolvedValueOnce({ rows: mockZones });
@@ -238,7 +244,13 @@ describe('ZonePickingService', () => {
   describe('getAllZoneStats', () => {
     it('should return statistics for all zones', async () => {
       const mockZones = [
-        { zone: 'A', aisle_start: '1', aisle_end: '10', location_count: '100', active_pickers: '2' },
+        {
+          zone: 'A',
+          aisle_start: '1',
+          aisle_end: '10',
+          location_count: '100',
+          active_pickers: '2',
+        },
         { zone: 'B', aisle_start: '1', aisle_end: '8', location_count: '80', active_pickers: '1' },
       ];
 
@@ -352,9 +364,9 @@ describe('ZonePickingService', () => {
 
       const context = { userId: 'admin-123' };
 
-      await expect(
-        service.assignPickerToZone(pickerId, zoneId, context)
-      ).rejects.toThrow(`Picker ${pickerId} is already assigned to zone B`);
+      await expect(service.assignPickerToZone(pickerId, zoneId, context)).rejects.toThrow(
+        `Picker ${pickerId} is already assigned to zone B`
+      );
     });
 
     it('should broadcast zone assignment via WebSocket', async () => {
@@ -527,8 +539,20 @@ describe('ZonePickingService', () => {
   describe('rebalancePickers', () => {
     it('should rebalance pickers across zones based on workload', async () => {
       const mockZones = [
-        { zone: 'A', aisle_start: '1', aisle_end: '10', location_count: '100', active_pickers: '0' },
-        { zone: 'B', aisle_start: '1', aisle_end: '10', location_count: '100', active_pickers: '0' },
+        {
+          zone: 'A',
+          aisle_start: '1',
+          aisle_end: '10',
+          location_count: '100',
+          active_pickers: '0',
+        },
+        {
+          zone: 'B',
+          aisle_start: '1',
+          aisle_end: '10',
+          location_count: '100',
+          active_pickers: '0',
+        },
       ];
 
       const mockZoneStats = [
@@ -554,7 +578,9 @@ describe('ZonePickingService', () => {
           return { rows: [] }; // No existing assignments
         }
         if (query.includes('zone =')) {
-          return { rows: [{ zone: params[0], aisle_start: '1', aisle_end: '10', location_count: '100' }] };
+          return {
+            rows: [{ zone: params[0], aisle_start: '1', aisle_end: '10', location_count: '100' }],
+          };
         }
         return { rows: [] };
       });
@@ -575,10 +601,18 @@ describe('ZonePickingService', () => {
 
     it('should skip zones with no pending tasks', async () => {
       const mockZones = [
-        { zone: 'A', aisle_start: '1', aisle_end: '10', location_count: '100', active_pickers: '0' },
+        {
+          zone: 'A',
+          aisle_start: '1',
+          aisle_end: '10',
+          location_count: '100',
+          active_pickers: '0',
+        },
       ];
 
-      const mockZoneStats = [{ zoneId: 'A', pendingTasks: 0, inProgressTasks: 0, activePickers: 0 }];
+      const mockZoneStats = [
+        { zoneId: 'A', pendingTasks: 0, inProgressTasks: 0, activePickers: 0 },
+      ];
 
       const mockPickers = [{ user_id: 'picker-1' }];
 
@@ -606,10 +640,18 @@ describe('ZonePickingService', () => {
       const pickerId = 'picker-1';
 
       const mockZones = [
-        { zone: 'A', aisle_start: '1', aisle_end: '10', location_count: '100', active_pickers: '0' },
+        {
+          zone: 'A',
+          aisle_start: '1',
+          aisle_end: '10',
+          location_count: '100',
+          active_pickers: '0',
+        },
       ];
 
-      const mockZoneStats = [{ zoneId: 'A', pendingTasks: 50, inProgressTasks: 0, activePickers: 0 }];
+      const mockZoneStats = [
+        { zoneId: 'A', pendingTasks: 50, inProgressTasks: 0, activePickers: 0 },
+      ];
 
       const mockPickers = [{ user_id: pickerId }];
 
@@ -631,10 +673,7 @@ describe('ZonePickingService', () => {
       await service.rebalancePickers(context);
 
       // Should skip this picker
-      expect(logger.info).toHaveBeenCalledWith(
-        'Picker rebalancing completed',
-        expect.anything()
-      );
+      expect(logger.info).toHaveBeenCalledWith('Picker rebalancing completed', expect.anything());
     });
   });
 

@@ -25,7 +25,7 @@ import { getPool, query } from '../db/client';
 import { logger } from '../config/logger';
 import { routeOptimizationService, PickTask, OptimizedRoute } from './RouteOptimizationService';
 import { getAuditService, AuditEventType, AuditCategory } from './AuditService';
-import { notifyAll, NotificationType, NotificationPriority } from './notificationHelper';
+import { notifyAll, NotificationType, NotificationPriority } from './NotificationHelper';
 import wsServer from '../websocket';
 
 // ============================================================================
@@ -110,10 +110,7 @@ class WavePickingService {
   /**
    * Create a new wave based on criteria
    */
-  async createWave(
-    criteria: WaveCriteria,
-    context: UserContext
-  ): Promise<Wave> {
+  async createWave(criteria: WaveCriteria, context: UserContext): Promise<Wave> {
     const client = await this.pool.connect();
 
     try {
@@ -204,10 +201,7 @@ class WavePickingService {
   /**
    * Release a wave (make it active for picking)
    */
-  async releaseWave(
-    waveId: string,
-    context: UserContext
-  ): Promise<Wave> {
+  async releaseWave(waveId: string, context: UserContext): Promise<Wave> {
     const client = await this.pool.connect();
 
     try {
@@ -342,10 +336,7 @@ class WavePickingService {
   /**
    * Complete a wave
    */
-  async completeWave(
-    waveId: string,
-    context: UserContext
-  ): Promise<void> {
+  async completeWave(waveId: string, context: UserContext): Promise<void> {
     const client = await this.pool.connect();
 
     try {
@@ -375,7 +366,8 @@ class WavePickingService {
         newValues: {
           waveId,
           orderCount: wave.orderIds.length,
-          duration: wave.completedAt.getTime() - (wave.startedAt?.getTime() || wave.createdAt.getTime()),
+          duration:
+            wave.completedAt.getTime() - (wave.startedAt?.getTime() || wave.createdAt.getTime()),
         },
         ipAddress: context.ipAddress || null,
         userAgent: context.userAgent || null,
@@ -409,10 +401,7 @@ class WavePickingService {
   /**
    * Fetch orders that match wave criteria
    */
-  private async fetchOrdersForWave(
-    criteria: WaveCriteria,
-    client: PoolClient
-  ): Promise<any[]> {
+  private async fetchOrdersForWave(criteria: WaveCriteria, client: PoolClient): Promise<any[]> {
     let query = `
       SELECT
         o.order_id,
@@ -509,10 +498,7 @@ class WavePickingService {
   /**
    * Extract pick tasks from orders
    */
-  private async extractPickTasks(
-    orders: any[],
-    client: PoolClient
-  ): Promise<PickTask[]> {
+  private async extractPickTasks(orders: any[], client: PoolClient): Promise<PickTask[]> {
     if (orders.length === 0) {
       return [];
     }
@@ -554,10 +540,7 @@ class WavePickingService {
   /**
    * Assign pickers to a wave
    */
-  private async assignPickers(
-    count: number,
-    client: PoolClient
-  ): Promise<string[]> {
+  private async assignPickers(count: number, client: PoolClient): Promise<string[]> {
     // Get available pickers
     const result = await client.query(
       `
@@ -577,10 +560,7 @@ class WavePickingService {
   /**
    * Assign tasks to specific pickers
    */
-  private async assignTasksToPickers(
-    wave: Wave,
-    client: PoolClient
-  ): Promise<void> {
+  private async assignTasksToPickers(wave: Wave, client: PoolClient): Promise<void> {
     const tasksPerPicker = Math.ceil(wave.pickTasks.length / wave.assignedPickers.length);
 
     for (let i = 0; i < wave.assignedPickers.length; i++) {
@@ -606,10 +586,7 @@ class WavePickingService {
   /**
    * Get completed pick count for a wave
    */
-  private async getCompletedPickCount(
-    waveId: string,
-    client: PoolClient
-  ): Promise<number> {
+  private async getCompletedPickCount(waveId: string, client: PoolClient): Promise<number> {
     const result = await client.query(
       `
       SELECT COUNT(*) AS count
@@ -627,14 +604,8 @@ class WavePickingService {
   /**
    * Get wave from database
    */
-  private async getWave(
-    waveId: string,
-    client: PoolClient
-  ): Promise<Wave | null> {
-    const result = await client.query(
-      'SELECT * FROM waves WHERE wave_id = $1',
-      [waveId]
-    );
+  private async getWave(waveId: string, client: PoolClient): Promise<Wave | null> {
+    const result = await client.query('SELECT * FROM waves WHERE wave_id = $1', [waveId]);
 
     if (result.rows.length === 0) {
       return null;
@@ -662,10 +633,7 @@ class WavePickingService {
   /**
    * Save wave to database
    */
-  private async saveWave(
-    wave: Wave,
-    client: PoolClient
-  ): Promise<void> {
+  private async saveWave(wave: Wave, client: PoolClient): Promise<void> {
     await client.query(
       `
       INSERT INTO waves (
@@ -712,10 +680,7 @@ class WavePickingService {
   /**
    * Update wave in database
    */
-  private async updateWave(
-    wave: Wave,
-    client: PoolClient
-  ): Promise<void> {
+  private async updateWave(wave: Wave, client: PoolClient): Promise<void> {
     await client.query(
       `
       UPDATE waves

@@ -154,13 +154,7 @@ export class RootCauseAnalysisService {
           (root_cause_id, entry_id, category_id, additional_notes, created_by)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [
-          rootCauseId,
-          dto.entryId,
-          dto.categoryId,
-          dto.additionalNotes || null,
-          dto.createdBy,
-        ]
+        [rootCauseId, dto.entryId, dto.categoryId, dto.additionalNotes || null, dto.createdBy]
       );
 
       await client.query('COMMIT');
@@ -277,9 +271,8 @@ export class RootCauseAnalysisService {
     return result.rows.map(row => {
       const recentCount = parseInt(row.variance_count);
       const previousCount = parseInt(row.previous_count);
-      const percentChange = previousCount > 0
-        ? ((recentCount - previousCount) / previousCount) * 100
-        : 0;
+      const percentChange =
+        previousCount > 0 ? ((recentCount - previousCount) / previousCount) * 100 : 0;
 
       let trend: 'INCREASING' | 'DECREASING' | 'STABLE' = 'STABLE';
       if (percentChange > 20) {

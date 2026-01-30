@@ -45,13 +45,13 @@ This generates a fix prompt you can paste into Claude Code.
 
 ## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run crawl:check` | **Run health check first** (verifies setup) |
-| `npm run crawl` | Run Playwright crawler only |
-| `npm run crawl:normalize` | Normalize errors and generate report |
-| `npm run crawl:all` | Run crawler + normalize (recommended) |
-| `npm run crawl:fix` | Generate fix prompt for Claude Code |
+| Command                   | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `npm run crawl:check`     | **Run health check first** (verifies setup) |
+| `npm run crawl`           | Run Playwright crawler only                 |
+| `npm run crawl:normalize` | Normalize errors and generate report        |
+| `npm run crawl:all`       | Run crawler + normalize (recommended)       |
+| `npm run crawl:fix`       | Generate fix prompt for Claude Code         |
 
 Or use the Windows batch script:
 
@@ -61,23 +61,23 @@ ai-loop\run-crawler.bat
 
 ## Output Files
 
-| File | Description |
-|------|-------------|
-| `error-log.json` | Raw error data from Playwright |
-| `normalized-errors.json` | Cleaned, deduplicated error report |
-| `fix-prompt.md` | Ready-to-paste prompt for Claude Code |
-| `playwright-report/index.html` | Visual HTML report with screenshots |
+| File                           | Description                           |
+| ------------------------------ | ------------------------------------- |
+| `error-log.json`               | Raw error data from Playwright        |
+| `normalized-errors.json`       | Cleaned, deduplicated error report    |
+| `fix-prompt.md`                | Ready-to-paste prompt for Claude Code |
+| `playwright-report/index.html` | Visual HTML report with screenshots   |
 
 ## Test Credentials
 
 The crawler uses these test credentials (update in [crawl.spec.ts:77-82](crawl.spec.ts#L77-L82)):
 
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | admin | admin123 |
-| Picker | picker | picker123 |
-| Packer | packer | packer123 |
-| Stock Controller | stock | stock123 |
+| Role             | Username | Password  |
+| ---------------- | -------- | --------- |
+| Admin            | admin    | admin123  |
+| Picker           | picker   | picker123 |
+| Packer           | packer   | packer123 |
+| Stock Controller | stock    | stock123  |
 
 ## What the Crawler Tests
 
@@ -291,6 +291,7 @@ Edit [crawl.spec.ts:77-82](crawl.spec.ts#L77-L82) to change credentials.
 ### "Dev server not detected"
 
 Make sure your frontend is running:
+
 ```bash
 npm run dev
 ```
@@ -302,6 +303,7 @@ Check that the test users exist in your database, or update credentials in `craw
 ### Crawler is too slow
 
 Reduce timeouts in `crawl.spec.ts`:
+
 - `page.waitForTimeout(500)` → `page.waitForTimeout(100)`
 - `actionTimeout: 10000` → `actionTimeout: 3000`
 
@@ -321,6 +323,7 @@ npx playwright test crawl.spec.ts -g "full scan"
 ### Run with UI (headed mode)
 
 Edit `playwright.config.ts`:
+
 ```ts
 use: {
   headless: false,

@@ -92,19 +92,20 @@ export class VisualAIRegression {
           style.visibility !== 'hidden' &&
           style.opacity !== '0' &&
           (el.tagName === 'BUTTON' ||
-           el.tagName === 'A' ||
-           el.tagName === 'INPUT' ||
-           el.tagName === 'SELECT' ||
-           el.tagName === 'H1' ||
-           el.tagName === 'H2' ||
-           el.tagName === 'H3' ||
-           el.hasAttribute('role') ||
-           el.hasAttribute('data-testid'))
+            el.tagName === 'A' ||
+            el.tagName === 'INPUT' ||
+            el.tagName === 'SELECT' ||
+            el.tagName === 'H1' ||
+            el.tagName === 'H2' ||
+            el.tagName === 'H3' ||
+            el.hasAttribute('role') ||
+            el.hasAttribute('data-testid'))
         ) {
           visible.push({
-            selector: el.tagName +
-                      (el.id ? `#${el.id}` : '') +
-                      (el.className ? `.${el.className.split(' ')[0]}` : ''),
+            selector:
+              el.tagName +
+              (el.id ? `#${el.id}` : '') +
+              (el.className ? `.${el.className.split(' ')[0]}` : ''),
             text: el.textContent?.slice(0, 50) || '',
             visible: true,
             position: { x: rect.x, y: rect.y },
@@ -214,8 +215,10 @@ export class VisualAIRegression {
         // @ts-ignore
         const forms = document.querySelectorAll('form').length;
 
-        return `Page has ${buttons} buttons, ${inputs} inputs, ${links} links, ${tables} tables, ${forms} forms. ` +
-               `Header: "${header}". Main heading: "${mainHeading}".`;
+        return (
+          `Page has ${buttons} buttons, ${inputs} inputs, ${links} links, ${tables} tables, ${forms} forms. ` +
+          `Header: "${header}". Main heading: "${mainHeading}".`
+        );
       });
 
       return description;
@@ -298,8 +301,9 @@ export class VisualAIRegression {
     return {
       totalSnapshots: this.snapshots.size,
       routes: Array.from(this.snapshots.keys()),
-      averageElementsPerSnapshot: Array.from(this.snapshots.values())
-        .reduce((sum, s) => sum + s.elements.length, 0) / Math.max(this.snapshots.size, 1),
+      averageElementsPerSnapshot:
+        Array.from(this.snapshots.values()).reduce((sum, s) => sum + s.elements.length, 0) /
+        Math.max(this.snapshots.size, 1),
     };
   }
 }

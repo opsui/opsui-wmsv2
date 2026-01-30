@@ -163,7 +163,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
         minLength: 5,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await transferStock.mutateAsync({
           sku: values.sku,
@@ -193,7 +193,10 @@ function TransferModal({ onClose }: { onClose: () => void }) {
               </div>
               <CardTitle className="text-white">Transfer Stock</CardTitle>
             </div>
-            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
+            <button
+              onClick={onClose}
+              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -201,12 +204,16 @@ function TransferModal({ onClose }: { onClose: () => void }) {
         <CardContent className="p-6 dark:bg-gray-900 bg-white">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">SKU</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                SKU
+              </label>
               <input
                 type="text"
                 name="sku"
                 value={formData.sku}
-                onChange={e => handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })}
+                onChange={e =>
+                  handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })
+                }
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
                   errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -215,12 +222,16 @@ function TransferModal({ onClose }: { onClose: () => void }) {
               {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">From Bin</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                From Bin
+              </label>
               <input
                 type="text"
                 name="fromBin"
                 value={formData.fromBin}
-                onChange={e => handleChange({ target: { name: 'fromBin', value: e.target.value.toUpperCase() } })}
+                onChange={e =>
+                  handleChange({ target: { name: 'fromBin', value: e.target.value.toUpperCase() } })
+                }
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
                   errors.fromBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -229,12 +240,16 @@ function TransferModal({ onClose }: { onClose: () => void }) {
               {errors.fromBin && <p className="mt-1 text-sm text-red-500">{errors.fromBin}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">To Bin</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                To Bin
+              </label>
               <input
                 type="text"
                 name="toBin"
                 value={formData.toBin}
-                onChange={e => handleChange({ target: { name: 'toBin', value: e.target.value.toUpperCase() } })}
+                onChange={e =>
+                  handleChange({ target: { name: 'toBin', value: e.target.value.toUpperCase() } })
+                }
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
                   errors.toBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -243,7 +258,9 @@ function TransferModal({ onClose }: { onClose: () => void }) {
               {errors.toBin && <p className="mt-1 text-sm text-red-500">{errors.toBin}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Quantity</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                Quantity
+              </label>
               <input
                 type="number"
                 name="quantity"
@@ -257,7 +274,9 @@ function TransferModal({ onClose }: { onClose: () => void }) {
               {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Reason</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                Reason
+              </label>
               <textarea
                 name="reason"
                 value={formData.reason}
@@ -274,12 +293,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
+              <Button type="submit" variant="primary" disabled={isSubmitting} className="flex-1">
                 {isSubmitting ? 'Transferring...' : 'Transfer'}
               </Button>
             </div>
@@ -336,7 +350,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
         minLength: 5,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await adjustInventory.mutateAsync({
           sku: values.sku,
@@ -365,7 +379,10 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
               </div>
               <CardTitle className="text-white">Adjust Inventory</CardTitle>
             </div>
-            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
+            <button
+              onClick={onClose}
+              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -373,12 +390,16 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
         <CardContent className="p-6 dark:bg-gray-900 bg-white">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">SKU</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                SKU
+              </label>
               <input
                 type="text"
                 name="sku"
                 value={formData.sku}
-                onChange={e => handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })}
+                onChange={e =>
+                  handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })
+                }
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
                   errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -387,18 +408,26 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
               {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Bin Location</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                Bin Location
+              </label>
               <input
                 type="text"
                 name="binLocation"
                 value={formData.binLocation}
-                onChange={e => handleChange({ target: { name: 'binLocation', value: e.target.value.toUpperCase() } })}
+                onChange={e =>
+                  handleChange({
+                    target: { name: 'binLocation', value: e.target.value.toUpperCase() },
+                  })
+                }
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
                   errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
                 placeholder="e.g., A-01-01"
               />
-              {errors.binLocation && <p className="mt-1 text-sm text-red-500">{errors.binLocation}</p>}
+              {errors.binLocation && (
+                <p className="mt-1 text-sm text-red-500">{errors.binLocation}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
@@ -417,7 +446,9 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
               {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Reason</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                Reason
+              </label>
               <textarea
                 name="reason"
                 value={formData.reason}
@@ -434,12 +465,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
+              <Button type="submit" variant="primary" disabled={isSubmitting} className="flex-1">
                 {isSubmitting ? 'Adjusting...' : 'Adjust'}
               </Button>
             </div>
@@ -480,7 +506,7 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
         required: true,
       },
     },
-    onSubmit: async (values) => {
+    onSubmit: async values => {
       try {
         await createStockCount.mutateAsync({ binLocation: values.binLocation, type: values.type });
         showToast('Stock count created successfully', 'success');
@@ -504,7 +530,10 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
               </div>
               <CardTitle className="text-white">Create Stock Count</CardTitle>
             </div>
-            <button onClick={onClose} className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors">
+            <button
+              onClick={onClose}
+              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -512,21 +541,31 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
         <CardContent className="p-6 dark:bg-gray-900 bg-white">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Bin Location</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                Bin Location
+              </label>
               <input
                 type="text"
                 name="binLocation"
                 value={formData.binLocation}
-                onChange={e => handleChange({ target: { name: 'binLocation', value: e.target.value.toUpperCase() } })}
+                onChange={e =>
+                  handleChange({
+                    target: { name: 'binLocation', value: e.target.value.toUpperCase() },
+                  })
+                }
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all ${
                   errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
                 placeholder="e.g., A-01-01"
               />
-              {errors.binLocation && <p className="mt-1 text-sm text-red-500">{errors.binLocation}</p>}
+              {errors.binLocation && (
+                <p className="mt-1 text-sm text-red-500">{errors.binLocation}</p>
+              )}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">Count Type</label>
+              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+                Count Type
+              </label>
               <select
                 name="type"
                 value={formData.type}
@@ -545,12 +584,7 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
               <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={isSubmitting}
-                className="flex-1"
-              >
+              <Button type="submit" variant="primary" disabled={isSubmitting} className="flex-1">
                 {isSubmitting ? 'Creating...' : 'Create'}
               </Button>
             </div>
@@ -1254,7 +1288,7 @@ function QuickActionsTab() {
 // ============================================================================
 
 export function StockControlPage() {
-    const { showToast } = useToast();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
   const { user, getEffectiveRole } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1266,13 +1300,13 @@ export function StockControlPage() {
 
   // Subscribe to inventory updates for real-time stock changes
   useInventoryUpdates({
-    onInventoryUpdated: (data) => {
+    onInventoryUpdated: data => {
       // Refresh all stock control data when inventory changes
       queryClient.invalidateQueries({ queryKey: ['stock-control'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['low-stock'] });
     },
-    onLowStock: (data) => {
+    onLowStock: data => {
       // Refresh low stock report and show alert
       queryClient.invalidateQueries({ queryKey: ['low-stock'] });
       showToast({
@@ -1286,7 +1320,7 @@ export function StockControlPage() {
 
   // Subscribe to notifications for stock control alerts
   useNotifications({
-    onNotification: (data) => {
+    onNotification: data => {
       // Show toast for stock control notifications
       if (data.category === 'STOCK_CONTROL' || data.category === 'INVENTORY') {
         showToast({
@@ -1322,7 +1356,9 @@ export function StockControlPage() {
   // Use effective role (activeRole if set, otherwise base role) for authorization
   const effectiveRole = getEffectiveRole();
   const hasAccess =
-    effectiveRole === 'STOCK_CONTROLLER' || effectiveRole === 'SUPERVISOR' || effectiveRole === 'ADMIN';
+    effectiveRole === 'STOCK_CONTROLLER' ||
+    effectiveRole === 'SUPERVISOR' ||
+    effectiveRole === 'ADMIN';
 
   if (!hasAccess) {
     return (

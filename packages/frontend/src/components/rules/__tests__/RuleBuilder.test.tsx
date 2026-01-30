@@ -10,7 +10,9 @@ import type { RuleCondition, RuleAction } from '@opsui/shared';
 
 // Mock @dnd-kit library
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children }: { children: React.ReactNode }) => <div data-testid="dnd-context">{children}</div>,
+  DndContext: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="dnd-context">{children}</div>
+  ),
   closestCenter: true,
   useSensor: () => ({}),
   useSensors: () => [],
@@ -37,8 +39,18 @@ vi.mock('@dnd-kit/sortable', () => ({
 
 describe('RuleBuilder Component', () => {
   const mockFields = [
-    { key: 'order.status', label: 'Order Status', type: 'select' as const, options: ['pending', 'picking', 'picked', 'packed'] },
-    { key: 'order.priority', label: 'Order Priority', type: 'select' as const, options: ['LOW', 'NORMAL', 'HIGH', 'URGENT'] },
+    {
+      key: 'order.status',
+      label: 'Order Status',
+      type: 'select' as const,
+      options: ['pending', 'picking', 'picked', 'packed'],
+    },
+    {
+      key: 'order.priority',
+      label: 'Order Priority',
+      type: 'select' as const,
+      options: ['LOW', 'NORMAL', 'HIGH', 'URGENT'],
+    },
     { key: 'sku.quantity', label: 'SKU Quantity', type: 'number' as const },
   ];
 
@@ -290,9 +302,7 @@ describe('RuleBuilder Component', () => {
 
       await waitFor(() => {
         const updatedConditions = mockOnChange.mock.calls[0][0];
-        expect(updatedConditions).not.toContain(
-          expect.objectContaining({ id: '1' })
-        );
+        expect(updatedConditions).not.toContain(expect.objectContaining({ id: '1' }));
       });
     });
   });
@@ -376,9 +386,7 @@ describe('RuleBuilder Component', () => {
 
   describe('Validation', () => {
     it('shows error for incomplete conditions', () => {
-      const incompleteConditions: RuleCondition[] = [
-        { field: '', operator: '', value: '' },
-      ];
+      const incompleteConditions: RuleCondition[] = [{ field: '', operator: '', value: '' }];
 
       renderWithProviders(
         <RuleBuilder
@@ -394,9 +402,7 @@ describe('RuleBuilder Component', () => {
     });
 
     it('displays validation errors when showValidation is true', () => {
-      const incompleteConditions: RuleCondition[] = [
-        { field: '', operator: '', value: '' },
-      ];
+      const incompleteConditions: RuleCondition[] = [{ field: '', operator: '', value: '' }];
 
       renderWithProviders(
         <RuleBuilder

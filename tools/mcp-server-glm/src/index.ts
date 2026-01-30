@@ -2,16 +2,13 @@
 
 /**
  * MCP Server for GLM 4.7 API
- * 
+ *
  * This server provides GLM 4.7 as a tool for Claude Code
  */
 
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import * as crypto from 'crypto';
 
 // GLM API Configuration
@@ -90,7 +87,7 @@ async function callGLM(messages: Array<{ role: string; content: string }>): Prom
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(requestBody),
   });
@@ -112,8 +109,8 @@ async function callGLM(messages: Array<{ role: string; content: string }>): Prom
 // Create MCP Server
 const server = new Server(
   {
-    name: "glm-server",
-    version: "0.1.0",
+    name: 'glm-server',
+    version: '0.1.0',
   },
   {
     capabilities: {
@@ -127,77 +124,84 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "glm_chat",
-        description: "Send a message to GLM 4.7 and get a response. Use this for general AI tasks, code generation, analysis, and more.",
+        name: 'glm_chat',
+        description:
+          'Send a message to GLM 4.7 and get a response. Use this for general AI tasks, code generation, analysis, and more.',
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             prompt: {
-              type: "string",
-              description: "The prompt or question to send to GLM 4.7",
+              type: 'string',
+              description: 'The prompt or question to send to GLM 4.7',
             },
             systemPrompt: {
-              type: "string",
-              description: "Optional system prompt to set the behavior (e.g., 'You are a code expert')",
-              default: "You are a helpful AI assistant.",
+              type: 'string',
+              description:
+                "Optional system prompt to set the behavior (e.g., 'You are a code expert')",
+              default: 'You are a helpful AI assistant.',
             },
             temperature: {
-              type: "number",
-              description: "Temperature for response (0.0-2.0, lower = more focused, higher = more creative)",
+              type: 'number',
+              description:
+                'Temperature for response (0.0-2.0, lower = more focused, higher = more creative)',
               default: 0.7,
             },
             maxTokens: {
-              type: "number",
-              description: "Maximum tokens in response (1-4000)",
+              type: 'number',
+              description: 'Maximum tokens in response (1-4000)',
               default: 2000,
             },
           },
-          required: ["prompt"],
+          required: ['prompt'],
         },
       },
       {
-        name: "glm_code",
-        description: "Use GLM 4.7 for code-related tasks (generation, review, debugging, refactoring)",
+        name: 'glm_code',
+        description:
+          'Use GLM 4.7 for code-related tasks (generation, review, debugging, refactoring)',
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             task: {
-              type: "string",
-              description: "The coding task (e.g., 'Write a function to sort an array', 'Review this code for bugs')",
+              type: 'string',
+              description:
+                "The coding task (e.g., 'Write a function to sort an array', 'Review this code for bugs')",
             },
             code: {
-              type: "string",
-              description: "Existing code to work with (if applicable)",
+              type: 'string',
+              description: 'Existing code to work with (if applicable)',
             },
             language: {
-              type: "string",
+              type: 'string',
               description: "Programming language (e.g., 'javascript', 'typescript', 'python')",
             },
           },
-          required: ["task"],
+          required: ['task'],
         },
       },
       {
-        name: "glm_analyze",
-        description: "Use GLM 4.7 for analysis tasks (text analysis, data interpretation, pattern detection)",
+        name: 'glm_analyze',
+        description:
+          'Use GLM 4.7 for analysis tasks (text analysis, data interpretation, pattern detection)',
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             content: {
-              type: "string",
-              description: "The content to analyze",
+              type: 'string',
+              description: 'The content to analyze',
             },
             analysisType: {
-              type: "string",
-              description: "Type of analysis (e.g., 'sentiment', 'summarize', 'extract', 'explain')",
-              default: "general",
+              type: 'string',
+              description:
+                "Type of analysis (e.g., 'sentiment', 'summarize', 'extract', 'explain')",
+              default: 'general',
             },
             context: {
-              type: "string",
-              description: "Additional context for the analysis",
+              type: 'string',
+              description: 'Additional context for the analysis',
             },
           },
-          required: ["content"],
+          required: ['content'],
         },
       },
     ],
@@ -205,18 +209,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 // Handle tool calls
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, async request => {
   const { name, arguments: args } = request.params;
 
   try {
-    if (name === "glm_chat") {
+    if (name === 'glm_chat') {
       const messages: Array<{ role: string; content: string }> = [
         {
-          role: "system",
-          content: args.systemPrompt || "You are a helpful AI assistant.",
+          role: 'system',
+          content: args.systemPrompt || 'You are a helpful AI assistant.',
         },
         {
-          role: "user",
+          role: 'user',
           content: args.prompt,
         },
       ];
@@ -226,23 +230,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: response,
           },
         ],
       };
-    } else if (name === "glm_code") {
+    } else if (name === 'glm_code') {
       const systemPrompt = args.language
         ? `You are an expert ${args.language} developer. Provide clear, well-documented code following best practices.`
-        : "You are an expert software developer. Provide clear, well-documented code following best practices.";
+        : 'You are an expert software developer. Provide clear, well-documented code following best practices.';
 
       const userPrompt = args.code
         ? `${args.task}\n\nCode:\n\`\`\`\n${args.code}\n\`\`\``
         : args.task;
 
       const messages = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
       ];
 
       const response = await callGLM(messages);
@@ -250,12 +254,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: response,
           },
         ],
       };
-    } else if (name === "glm_analyze") {
+    } else if (name === 'glm_analyze') {
       const systemPrompt = `You are an expert analyst. Perform ${args.analysisType || 'general'} analysis on the provided content.`;
 
       const userPrompt = args.context
@@ -263,8 +267,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         : args.content;
 
       const messages = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
       ];
 
       const response = await callGLM(messages);
@@ -272,7 +276,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: response,
           },
         ],
@@ -284,7 +288,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: `Error: ${error instanceof Error ? error.message : String(error)}`,
         },
       ],
@@ -297,10 +301,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("GLM MCP Server running on stdio");
+  console.error('GLM MCP Server running on stdio');
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
+main().catch(error => {
+  console.error('Fatal error:', error);
   process.exit(1);
 });

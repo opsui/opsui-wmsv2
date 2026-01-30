@@ -58,34 +58,39 @@ router.post('/create', authenticate, async (req: AuthenticatedRequest, res) => {
  * POST /api/v1/waves/:waveId/release
  * Release a wave (make it active for picking)
  */
-router.post('/:waveId/release', authenticate, authorize('ADMIN', 'SUPERVISOR'), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { waveId } = req.params;
+router.post(
+  '/:waveId/release',
+  authenticate,
+  authorize('ADMIN', 'SUPERVISOR'),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { waveId } = req.params;
 
-    const context = {
-      userId: req.user?.userId,
-      userEmail: req.user?.email,
-      userRole: req.user?.role,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      requestId: req.id,
-    };
+      const context = {
+        userId: req.user?.userId,
+        userEmail: req.user?.email,
+        userRole: req.user?.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.id,
+      };
 
-    const wave = await wavePickingService.releaseWave(waveId, context);
+      const wave = await wavePickingService.releaseWave(waveId, context);
 
-    res.json({
-      success: true,
-      message: 'Wave released successfully',
-      data: wave,
-    });
-  } catch (error) {
-    logger.error('Wave release error', { error });
-    res.status(500).json({
-      error: 'Wave release failed',
-      message: (error as any).message,
-    });
+      res.json({
+        success: true,
+        message: 'Wave released successfully',
+        data: wave,
+      });
+    } catch (error) {
+      logger.error('Wave release error', { error });
+      res.status(500).json({
+        error: 'Wave release failed',
+        message: (error as any).message,
+      });
+    }
   }
-});
+);
 
 /**
  * GET /api/v1/waves/:waveId/status
@@ -145,33 +150,38 @@ router.get('/picker/:pickerId', authenticate, async (req: AuthenticatedRequest, 
  * POST /api/v1/waves/:waveId/complete
  * Mark a wave as completed
  */
-router.post('/:waveId/complete', authenticate, authorize('ADMIN', 'SUPERVISOR'), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { waveId } = req.params;
+router.post(
+  '/:waveId/complete',
+  authenticate,
+  authorize('ADMIN', 'SUPERVISOR'),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { waveId } = req.params;
 
-    const context = {
-      userId: req.user?.userId,
-      userEmail: req.user?.email,
-      userRole: req.user?.role,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      requestId: req.id,
-    };
+      const context = {
+        userId: req.user?.userId,
+        userEmail: req.user?.email,
+        userRole: req.user?.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestId: req.id,
+      };
 
-    await wavePickingService.completeWave(waveId, context);
+      await wavePickingService.completeWave(waveId, context);
 
-    res.json({
-      success: true,
-      message: 'Wave marked as completed',
-    });
-  } catch (error) {
-    logger.error('Wave completion error', { error });
-    res.status(500).json({
-      error: 'Wave completion failed',
-      message: (error as any).message,
-    });
+      res.json({
+        success: true,
+        message: 'Wave marked as completed',
+      });
+    } catch (error) {
+      logger.error('Wave completion error', { error });
+      res.status(500).json({
+        error: 'Wave completion failed',
+        message: (error as any).message,
+      });
+    }
   }
-});
+);
 
 /**
  * GET /api/v1/waves/strategies

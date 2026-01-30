@@ -93,10 +93,7 @@ export class NaturalLanguageTestConverter {
   /**
    * Generate executable Playwright test file
    */
-  private generateTestFile(
-    suiteName: string,
-    tests: NaturalLanguageTest[]
-  ): GeneratedTestFile {
+  private generateTestFile(suiteName: string, tests: NaturalLanguageTest[]): GeneratedTestFile {
     const sanitizedSuiteName = suiteName.replace(/[^a-zA-Z0-9]/g, '_');
     const fileName = `${sanitizedSuiteName}.spec.ts`;
 

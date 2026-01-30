@@ -344,7 +344,8 @@ export class CycleCountKPIService {
     return result.rows.map(row => ({
       countType: row.counttype,
       countsCompleted: parseInt(row.counts_completed),
-      varianceDetectionRate: Math.round((parseFloat(row.variance_detection_rate) || 0) * 10000) / 100,
+      varianceDetectionRate:
+        Math.round((parseFloat(row.variance_detection_rate) || 0) * 10000) / 100,
       averageAccuracy: Math.round((parseFloat(row.average_accuracy) || 0) * 100) / 100,
       averageDuration: Math.round((parseFloat(row.average_duration) || 0) * 100) / 100,
     }));
