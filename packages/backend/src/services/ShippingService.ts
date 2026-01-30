@@ -123,6 +123,9 @@ export class ShippingService {
     const params: any[] = [];
     let paramCount = 1;
 
+    // Use COALESCE for shipped_at to handle NULLs from LEFT JOIN
+    const shippedAtColumn = 'COALESCE(s.shipped_at, o.shipped_at)';
+
     if (filters?.carrierId) {
       conditions.push(`s.carrier_id = $${paramCount}`);
       params.push(filters.carrierId);
@@ -130,13 +133,13 @@ export class ShippingService {
     }
 
     if (filters?.startDate) {
-      conditions.push(`s.shipped_at >= $${paramCount}`);
+      conditions.push(`${shippedAtColumn} >= $${paramCount}`);
       params.push(filters.startDate);
       paramCount++;
     }
 
     if (filters?.endDate) {
-      conditions.push(`s.shipped_at <= $${paramCount}`);
+      conditions.push(`${shippedAtColumn} <= $${paramCount}`);
       params.push(filters.endDate);
       paramCount++;
     }
@@ -153,10 +156,15 @@ export class ShippingService {
 
     const whereClause = conditions.join(' AND ');
 
-    // Build ORDER BY clause
-    const sortBy = filters?.sortBy || 'shipped_at';
+    // Build ORDER BY clause - map frontend names to actual columns
+    let sortColumn = shippedAtColumn;
+    if (filters?.sortBy === 'customerName') {
+      sortColumn = 'o.customer_name';
+    } else if (filters?.sortBy === 'totalValue') {
+      sortColumn = 'total_value';
+    }
     const sortOrder = filters?.sortOrder || 'desc';
-    const orderBy = `${sortBy} ${sortOrder.toUpperCase()}`;
+    const orderBy = `${sortColumn} ${sortOrder.toUpperCase()}`;
 
     // Get total count
     const countResult = await client.query(
@@ -178,7 +186,7 @@ export class ShippingService {
         o.priority,
         (SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as item_count,
         0 as total_value,
-        s.shipped_at,
+        COALESCE(s.shipped_at, o.shipped_at) as shipped_at,
         s.delivered_at,
         s.tracking_number,
         s.carrier_id,
@@ -220,7 +228,8 @@ export class ShippingService {
         COUNT(*) FILTER (WHERE s.delivered_at IS NULL) as pending_delivery
        FROM orders o
        LEFT JOIN shipments s ON o.order_id = s.order_id
-       WHERE o.status = 'SHIPPED'`
+       WHERE o.status = 'SHIPPED'
+         AND (s.shipped_at IS NOT NULL OR o.shipped_at IS NOT NULL)`
     );
 
     const stats = {
