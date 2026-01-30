@@ -1248,16 +1248,16 @@ export const useShippedOrders = (filters: ShippedOrdersFilters = {}) => {
   const params = new URLSearchParams();
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
-  if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
-  if (filters.dateTo) params.append('dateTo', filters.dateTo);
-  if (filters.carrier) params.append('carrier', filters.carrier);
+  if (filters.dateFrom) params.append('startDate', filters.dateFrom);
+  if (filters.dateTo) params.append('endDate', filters.dateTo);
+  if (filters.carrier) params.append('carrierId', filters.carrier);
   if (filters.search) params.append('search', filters.search);
   if (filters.sortBy) params.append('sortBy', filters.sortBy);
   if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 
   return useQuery({
     queryKey: ['orders', 'shipped', filters],
-    queryFn: () => apiClient.get(`/orders/shipped?${params}`),
+    queryFn: () => apiClient.get(`/shipping/orders?${params}`),
     staleTime: 30000, // Cache for 30 seconds
   });
 };
@@ -1267,7 +1267,9 @@ export const useExportShippedOrders = () => {
 
   return useMutation({
     mutationFn: async (orderIds: string[]) => {
-      const response = await apiClient.post('/orders/shipped/export', { orderIds });
+      const response = await apiClient.get(`/shipping/orders/export?orderIds=${orderIds.join(',')}`, {
+        responseType: 'blob',
+      });
       return response.data;
     },
     onSuccess: () => {
