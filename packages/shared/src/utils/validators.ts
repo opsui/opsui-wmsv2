@@ -54,37 +54,47 @@ export function validateBinLocation(binLocation: string): void {
 // ORDER VALIDATION
 // ============================================================================
 
+function validateSingleOrderItem(
+  item: { sku: string; quantity: number },
+  seenSKUs: Set<string>
+): void {
+  if (!item.sku || typeof item.sku !== 'string') {
+    throw new ValidationError('Each item must have a valid SKU');
+  }
+
+  validateSKU(item.sku);
+
+  if (seenSKUs.has(item.sku)) {
+    throw new ValidationError(`Duplicate SKU in order: ${item.sku}`);
+  }
+
+  seenSKUs.add(item.sku);
+  validateItemQuantity(item);
+}
+
+function validateItemQuantity(item: { sku: string; quantity: number }): void {
+  if (typeof item.quantity !== 'number' || item.quantity <= 0) {
+    throw new ValidationError(`Invalid quantity for SKU ${item.sku}. Must be a positive number`);
+  }
+
+  if (!Number.isInteger(item.quantity)) {
+    throw new ValidationError(`Invalid quantity for SKU ${item.sku}. Must be a whole number`);
+  }
+
+  if (item.quantity > 1000) {
+    throw new ValidationError(`Invalid quantity for SKU ${item.sku}. Maximum quantity is 1000`);
+  }
+}
+
 export function validateOrderItems(items: Array<{ sku: string; quantity: number }>): void {
-  if (!items || !Array.isArray(items) || items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0) {
     throw new ValidationError('Order must have at least one item');
   }
 
   const seenSKUs = new Set<string>();
 
   for (const item of items) {
-    if (!item.sku || typeof item.sku !== 'string') {
-      throw new ValidationError('Each item must have a valid SKU');
-    }
-
-    validateSKU(item.sku);
-
-    if (seenSKUs.has(item.sku)) {
-      throw new ValidationError(`Duplicate SKU in order: ${item.sku}`);
-    }
-
-    seenSKUs.add(item.sku);
-
-    if (typeof item.quantity !== 'number' || item.quantity <= 0) {
-      throw new ValidationError(`Invalid quantity for SKU ${item.sku}. Must be a positive number`);
-    }
-
-    if (!Number.isInteger(item.quantity)) {
-      throw new ValidationError(`Invalid quantity for SKU ${item.sku}. Must be a whole number`);
-    }
-
-    if (item.quantity > 1000) {
-      throw new ValidationError(`Invalid quantity for SKU ${item.sku}. Maximum quantity is 1000`);
-    }
+    validateSingleOrderItem(item, seenSKUs);
   }
 }
 
@@ -213,17 +223,17 @@ export function validateBatch(
 ): ValidationResult {
   const errors: string[] = [];
 
-  for (let i = 0; i < items.length; i++) {
+  for (const [index, item] of items.entries()) {
     try {
-      validateSKU(items[i].sku);
-      validateQuantity(items[i].quantity);
+      validateSKU(item.sku);
+      validateQuantity(item.quantity);
 
-      if (items[i].binLocation !== undefined) {
-        validateBinLocation(items[i].binLocation!);
+      if ('binLocation' in item && item.binLocation !== undefined) {
+        validateBinLocation(item.binLocation);
       }
     } catch (error) {
       if (error instanceof ValidationError) {
-        errors.push(`Item ${i + 1}: ${error.message}`);
+        errors.push(`Item ${index + 1}: ${error.message}`);
       }
     }
   }

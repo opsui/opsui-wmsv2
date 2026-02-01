@@ -12,8 +12,13 @@ import 'dotenv/config';
 if (process.env.ENABLE_OPENTELEMETRY !== 'false') {
   // Initialize OpenTelemetry SDK for distributed tracing, metrics, and logging
   // This must happen before any other imports to ensure proper instrumentation
-  const { initializeTelemetry } = require('./observability/telemetry');
-  initializeTelemetry();
+  import('./observability/telemetry')
+    .then(({ initializeTelemetry }) => {
+      initializeTelemetry();
+    })
+    .catch(err => {
+      console.error('Failed to initialize OpenTelemetry:', err);
+    });
 }
 
 import { createApp, startServer, waitForDrain } from './app';
