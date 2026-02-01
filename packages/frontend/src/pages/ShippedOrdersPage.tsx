@@ -17,11 +17,31 @@ import {
   CheckIcon,
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { OrderStatus, OrderPriority } from '@opsui/shared';
+import { OrderStatus } from '@opsui/shared';
 import { Pagination, Card, Badge, Button, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useShippedOrders, useExportShippedOrders, type ShippedOrdersFilters } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface ShippedOrder {
+  id: string;
+  orderId: string;
+  customerName: string;
+  status: OrderStatus;
+  itemCount: number;
+  totalValue: number;
+  shippedAt: string;
+  deliveredAt?: string;
+  trackingNumber?: string;
+  carrier?: string;
+  shippingAddress: string;
+  shippedBy: string;
+  notes?: string;
+}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -123,8 +143,8 @@ export default function ShippedOrdersPage() {
   };
 
   // Get orders from response
-  const orders = shippedOrdersData?.data?.orders || [];
-  const total = shippedOrdersData?.data?.total || 0;
+  const orders: ShippedOrder[] = (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.orders || [];
+  const total = (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.total || 0;
 
   // Select all visible orders
   const toggleSelectAll = () => {

@@ -14,7 +14,6 @@ import {
   Badge,
   Select,
   Input,
-  Label,
   Progress,
   Header,
   Pagination,
@@ -128,7 +127,7 @@ export function WavePickingPage() {
   const handleReleaseWave = async (waveId: string) => {
     try {
       await releaseWaveMutation.mutateAsync(waveId);
-      showToast('Wave released successfully', 'success', 'error');
+      showToast('Wave released successfully', 'success');
     } catch (error) {
       // Error is handled by the mutation
     }
@@ -137,7 +136,7 @@ export function WavePickingPage() {
   const handleCompleteWave = async (waveId: string) => {
     try {
       await completeWaveMutation.mutateAsync(waveId);
-      showToast('Wave completed successfully', 'success', 'error');
+      showToast('Wave completed successfully', 'success');
       setSelectedWave(null);
     } catch (error) {
       // Error is handled by the mutation
@@ -216,7 +215,6 @@ export function WavePickingPage() {
                         value={formData.strategy}
                         onChange={handleChange}
                         options={strategies.map((s: any) => ({ value: s.id, label: s.name }))}
-                        error={errors.strategy}
                       />
                       {errors.strategy && (
                         <p className="mt-1 text-sm text-red-400">{errors.strategy}</p>
@@ -238,7 +236,6 @@ export function WavePickingPage() {
                         onChange={handleChange}
                         min={1}
                         max={100}
-                        error={errors.maxOrders}
                       />
                       {errors.maxOrders && (
                         <p className="mt-1 text-sm text-red-400">{errors.maxOrders}</p>
@@ -290,7 +287,7 @@ export function WavePickingPage() {
                   <Badge
                     variant={
                       waveStatus.data?.status === 'PLANNED'
-                        ? 'secondary'
+                        ? 'info'
                         : waveStatus.data?.status === 'RELEASED'
                           ? 'primary'
                           : 'success'
@@ -398,7 +395,7 @@ export function WavePickingPage() {
                   <div
                     key={strategy.id}
                     className="p-4 border dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors cursor-pointer"
-                    onClick={() => setFormData({ ...formData, strategy: strategy.id })}
+                    onClick={() => setFieldValue('strategy', strategy.id)}
                   >
                     <h3 className="font-medium text-gray-900 dark:text-white mb-1">
                       {strategy.name}
@@ -424,7 +421,8 @@ export function WavePickingPage() {
                 <div className="flex justify-center mt-6">
                   <Pagination
                     currentPage={strategiesPage}
-                    totalPages={strategiesTotalPages}
+                    totalItems={filteredStrategies.length}
+                    pageSize={strategiesPageSize}
                     onPageChange={setStrategiesPage}
                   />
                 </div>
