@@ -128,7 +128,10 @@ export function ScheduleManagementPage() {
           if (editingSchedule) {
             await updateMutation.mutateAsync({
               scheduleId: editingSchedule,
-              updates: formData,
+              updates: {
+                ...formData,
+                nextRunDate: new Date(formData.nextRunDate),
+              },
             });
             showToast('Schedule updated successfully', 'success');
           } else {

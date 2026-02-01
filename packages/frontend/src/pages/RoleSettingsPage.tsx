@@ -127,13 +127,6 @@ const DEFAULT_ROLES: RoleConfig[] = [
 
 // Base roles that cannot be hidden - keys for quick lookup
 const BASE_ROLE_KEYS = new Set(['admin', 'picking', 'packing', 'stock-control']);
-const BASE_ROLES: Set<UserRole> = new Set([
-  UserRole.PICKER,
-  UserRole.PACKER,
-  UserRole.STOCK_CONTROLLER,
-  UserRole.ADMIN,
-  UserRole.SUPERVISOR,
-]);
 
 // Constant state for base roles - never changes, immune to all events
 const BASE_ROLE_STATE: RoleConfig[] = [
@@ -166,10 +159,6 @@ const BASE_ROLE_STATE: RoleConfig[] = [
     visible: true,
   },
 ];
-
-function isBaseRole(role: UserRole): boolean {
-  return BASE_ROLES.has(role);
-}
 
 function isBaseRoleKey(key: string): boolean {
   return BASE_ROLE_KEYS.has(key);
@@ -387,7 +376,7 @@ function RoleSettingsPage() {
       const allRoles = getAllUserRoles();
       const colors: Record<string, string> = {};
       allRoles.forEach(role => {
-        colors[role] = getUserRoleColor(currentUser.userId, role).color;
+        colors[role] = getUserRoleColor(currentUser.userId, role as UserRole).color;
       });
       setRoleColors(colors);
     }
@@ -519,7 +508,7 @@ function RoleSettingsPage() {
     if (currentUser) {
       // Save all role colors
       Object.entries(roleColors).forEach(([role, color]) => {
-        saveUserRoleColor(currentUser.userId, role, color);
+        saveUserRoleColor(currentUser.userId, role as UserRole, color);
       });
       setHasColorChange(false);
       playSound('success');
@@ -532,7 +521,7 @@ function RoleSettingsPage() {
       const allRoles = getAllUserRoles();
       const colors: Record<string, string> = {};
       allRoles.forEach(role => {
-        colors[role] = getUserRoleColor(currentUser.userId, role).color;
+        colors[role] = getUserRoleColor(currentUser.userId, role as UserRole).color;
       });
       setRoleColors(colors);
       setHasColorChange(false);
