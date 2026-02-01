@@ -319,6 +319,11 @@ export default function CycleCountKPIPage() {
   const { data: dashboard, isLoading: dashboardLoading, refetch } = useCycleCountDashboard();
 
   const overallKPIs = dashboard?.overallKPIs;
+  const accuracyTrend = dashboard?.accuracyTrend || [];
+  const topDiscrepancies = dashboard?.topDiscrepancies || [];
+  const zonePerformance = dashboard?.zonePerformance || [];
+  const userPerformance = dashboard?.userPerformance || [];
+  const countTypeEffectiveness = dashboard?.countTypeEffectiveness || [];
 
   const handleRefresh = () => {
     refetch();

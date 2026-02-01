@@ -39,7 +39,7 @@ router.get(
   '/stats',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const stats = await Promise.all([
       pool.query('SELECT COUNT(*) FROM orders'),
       pool.query('SELECT COUNT(*) FROM users'),
@@ -190,7 +190,7 @@ router.delete(
   '/clear-audit-logs',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const result = await pool.query('DELETE FROM audit_logs');
     res.json({
       message: `Cleared ${result.rowCount || 0} audit logs`,
@@ -206,7 +206,7 @@ router.delete(
   '/cancel-all-orders',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const result = await pool.query("UPDATE orders SET status = 'cancelled'");
     res.json({
       message: `Cancelled ${result.rowCount || 0} orders`,
@@ -222,7 +222,7 @@ router.post(
   '/reset-orders',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     await pool.query(`
       UPDATE orders SET status = 'pending', claimed_at = NULL, claimed_by = NULL
       WHERE status != 'shipped' AND status != 'cancelled'
@@ -244,7 +244,7 @@ router.get(
   '/health',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     // Check database connection
     const dbStart = Date.now();
     await pool.query('SELECT 1');
@@ -282,7 +282,7 @@ router.get(
   '/database/health',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const requiredTables: Record<string, string[]> = {
       core: ['users', 'orders', 'order_items', 'skus', 'pick_tasks', 'bin_locations'],
       audit: ['audit_logs'],
@@ -362,7 +362,7 @@ router.get(
   '/audit-summary',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const result = await pool.query(`
       SELECT action_type, COUNT(*) as count,
              MAX(occurred_at) as last_occurred
@@ -465,7 +465,7 @@ router.get(
   '/test-users',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const result = await pool.query(
       `SELECT user_id, email, name, role, active, created_at
        FROM users
@@ -630,7 +630,7 @@ router.get(
   '/feature-flags',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const flags = await getAllFlags();
     res.json({ flags });
   })
@@ -644,7 +644,7 @@ router.get(
   '/feature-flags/categories',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const summary = await getCategorySummary();
     const flagsByCategory: Record<string, any[]> = {};
 
@@ -825,7 +825,7 @@ router.get(
   '/monitoring/metrics',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const metrics = await getMetricsSummary();
     res.json(metrics);
   })
@@ -870,7 +870,7 @@ router.get(
   '/data/scenarios',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const scenarios = await getScenarios();
     res.json({ scenarios, count: scenarios.length });
   })
@@ -966,7 +966,7 @@ router.get(
   '/data/export',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const data = await exportCurrentState();
     res.json(data);
   })
@@ -1005,7 +1005,7 @@ router.get(
   '/data/migrations',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const migrations = await getMigrations();
     res.json({ migrations, count: migrations.length });
   })
@@ -1117,7 +1117,7 @@ router.get(
   '/testing/presets',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const presets = [
       {
         id: 'fresh',
@@ -1366,7 +1366,7 @@ router.get(
   '/crawler/status',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     res.json({
       isRunning: crawlerState.isRunning,
       lastRun: crawlerState.lastRun,
@@ -1582,7 +1582,7 @@ router.post(
   '/crawler/stop',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     if (!crawlerState.isRunning) {
       res.status(400).json({ error: 'Crawler is not running' });
       return;
@@ -1628,7 +1628,7 @@ router.get(
   '/crawler/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const resultsPath = path.join(AI_LOOP_DIR, 'normalized-errors.json');
     const errorLogPath = path.join(AI_LOOP_DIR, 'error-log.json');
 
@@ -1678,7 +1678,7 @@ router.get(
   '/crawler/fix-prompt',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const fixPromptPath = path.join(AI_LOOP_DIR, 'fix-prompt.md');
 
     if (!fs.existsSync(fixPromptPath)) {
@@ -1699,7 +1699,7 @@ router.delete(
   '/crawler/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     // Clear in-memory state
     crawlerState.lastResults = null;
     crawlerState.lastRun = null;
@@ -1730,7 +1730,7 @@ router.get(
   '/crawler/logs',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const logPath = path.join(AI_LOOP_DIR, 'error-log.json');
 
     if (!fs.existsSync(logPath)) {
@@ -1812,7 +1812,7 @@ router.get(
   '/e2e/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const resultsPath = path.join(AI_LOOP_DIR, 'e2e-results.json');
 
     if (!fs.existsSync(resultsPath)) {
@@ -1898,7 +1898,7 @@ router.get(
   '/workflows/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const resultsPath = path.join(AI_LOOP_DIR, 'workflow-results.json');
 
     if (!fs.existsSync(resultsPath)) {
@@ -1971,7 +1971,7 @@ router.get(
       [sku, parseInt(limit as string)]
     );
 
-    void res.json({
+    res.json({
       sku,
       transactions: result.rows,
       count: result.rows.length,
@@ -2005,7 +2005,7 @@ router.get(
       [entityType, entityId, parseInt(limit as string)]
     );
 
-    void res.json({
+    res.json({
       entityType,
       entityId,
       auditLogs: result.rows,
@@ -2035,7 +2035,7 @@ router.get(
       [sku]
     );
 
-    void res.json({
+    res.json({
       sku,
       locations: result.rows,
       count: result.rows.length,
@@ -2051,7 +2051,7 @@ router.post(
   '/test/setup',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     try {
       // Create test SKU with known quantity
       const testSku = `TEST-SKU-${Date.now()}`;
@@ -2080,7 +2080,7 @@ router.post(
         [testOrderId, testSku]
       );
 
-      void res.json({
+      res.json({
         message: 'Test data created successfully',
         testSku,
         testOrderId,
@@ -2124,7 +2124,7 @@ router.post(
       await pool.query('DELETE FROM audit_logs WHERE entity_id = $1', [testSku]);
       await pool.query('DELETE FROM audit_logs WHERE entity_id = $1', [testOrderId]);
 
-      void res.json({
+      res.json({
         message: 'Test data cleaned up successfully',
       });
     } catch (error: any) {
@@ -2168,7 +2168,7 @@ router.get(
       [orderId]
     );
 
-    void res.json({
+    res.json({
       order: orderResult.rows[0],
       items: itemsResult.rows,
     });
@@ -2183,7 +2183,7 @@ router.get(
   '/test/stats',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     // Get various counts for test validation
     const [ordersCount, skusCount, pickTasksCount, auditLogsCount] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM orders'),
@@ -2192,7 +2192,7 @@ router.get(
       pool.query('SELECT COUNT(*) FROM audit_logs'),
     ]);
 
-    void res.json({
+    res.json({
       orders: parseInt(ordersCount.rows[0].count),
       skus: parseInt(skusCount.rows[0].count),
       pickTasks: parseInt(pickTasksCount.rows[0].count),

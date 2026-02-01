@@ -258,7 +258,7 @@ router.post(
 router.get(
   '/printers',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const printers = await nzcService.getPrinters();
     res.json(printers);
   })
@@ -270,7 +270,7 @@ router.get(
  */
 router.get(
   '/stocksizes',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const stockSizes = await nzcService.getStockSizes();
     res.json(stockSizes);
   })

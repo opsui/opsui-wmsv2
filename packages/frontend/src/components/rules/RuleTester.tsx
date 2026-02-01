@@ -57,6 +57,11 @@ function evaluateCondition(condition: RuleCondition, data: Record<string, any>):
     }
   }
 
+  // For non-group conditions, field and operator must be defined
+  if (!condition.field || !condition.operator) {
+    return false;
+  }
+
   // Get field value from data (supports dot notation)
   const fieldValue = getNestedValue(data, condition.field);
   const conditionValue = condition.value;

@@ -45,14 +45,6 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 // TYPES
 // ============================================================================
 
-interface RuleConditionFormData {
-  field: string;
-  operator: ConditionOperator;
-  value: string | number | boolean;
-  value2?: string | number;
-  logicalOperator: 'AND' | 'OR';
-}
-
 // ============================================================================
 // MAIN PAGE COMPONENT
 // ============================================================================
@@ -270,7 +262,7 @@ export function BusinessRulesPage() {
                 </tr>
               </thead>
               <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                {paginatedRules.map(rule => (
+                {paginatedRules.map((rule: BusinessRule) => (
                   <tr key={rule.ruleId} className="hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -344,7 +336,8 @@ export function BusinessRulesPage() {
               <div className="mt-4 flex justify-center">
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={totalPages}
+                  totalItems={paginatedRules.length}
+                  pageSize={itemsPerPage}
                   onPageChange={setCurrentPage}
                 />
               </div>
@@ -454,7 +447,7 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
   const { showToast } = useToast();
 
   // Convert existing rule conditions to RuleBuilder format
-  const initialConditions =
+  const initialConditions: import('@/components/rules/RuleBuilder').RuleCondition[] =
     rule?.conditions?.map(cond => ({
       id: cond.conditionId,
       field: cond.field,
@@ -464,7 +457,7 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
     })) || [];
 
   // Convert existing rule actions to ActionBuilder format
-  const initialActions =
+  const initialActions: import('@/components/rules/ActionBuilder').RuleAction[] =
     rule?.actions?.map(action => ({
       id: action.actionId,
       type: action.actionType,
@@ -481,8 +474,8 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
     handleChange,
     handleSubmit,
     isSubmitting,
-    reset,
-    setFieldValue,
+    reset: _reset,
+    setFieldValue: _setFieldValue,
   } = useFormValidation({
     initialValues: {
       name: rule?.name || '',
@@ -517,8 +510,8 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
       const ruleConditions = conditions.map((cond, index) => ({
         conditionId: cond.id,
         ruleId: rule?.ruleId || '',
-        field: cond.field,
-        operator: cond.operator as ConditionOperator,
+        field: cond.field || '',
+        operator: (cond.operator as ConditionOperator) || ConditionOperator.EQUALS,
         value: cond.value,
         order: index,
       }));
@@ -527,7 +520,7 @@ function RuleModal({ rule, onClose, onSave }: RuleModalProps) {
       const ruleActions = actions.map((action, index) => ({
         actionId: action.id,
         ruleId: rule?.ruleId || '',
-        actionType: action.type as ActionType,
+        actionType: (action.type as ActionType) || ActionType.SEND_NOTIFICATION,
         parameters: action.parameters,
         order: index,
       }));

@@ -25,7 +25,7 @@ router.use(authenticate);
  */
 router.get(
   '/carriers',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const carriers = await shippingService.getActiveCarriers();
     res.json(carriers);
   })

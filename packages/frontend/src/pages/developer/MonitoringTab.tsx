@@ -396,11 +396,16 @@ export function MonitoringTab() {
                         }
                         return acc;
                       }, [])
-                      .slice(-20)}
-                    xAxisKey="time"
-                    lines={[{ dataKey: 'count', name: 'Requests/min', color: '#3b82f6' }]}
-                    formatXAxis={value => {
-                      const date = new Date(value);
+                      .slice(-20)
+                      .map((d: any) => ({
+                        timestamp: d.time,
+                        value: d.count,
+                      }))}
+                    title="Requests per Minute"
+                    color="blue"
+                    height={256}
+                    labelFormatter={(t: string | Date) => {
+                      const date = new Date(t);
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
                   />
@@ -432,13 +437,16 @@ export function MonitoringTab() {
                         }
                         return acc;
                       }, [])
-                      .slice(-20)}
-                    xAxisKey="time"
-                    lines={[
-                      { dataKey: 'avgDuration', name: 'Avg Duration (ms)', color: '#10b981' },
-                    ]}
-                    formatXAxis={value => {
-                      const date = new Date(value);
+                      .slice(-20)
+                      .map((d: any) => ({
+                        timestamp: d.time,
+                        value: d.avgDuration,
+                      }))}
+                    title="Average Response Time (ms)"
+                    color="green"
+                    height={256}
+                    labelFormatter={(t: string | Date) => {
+                      const date = new Date(t);
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
                   />
@@ -501,13 +509,14 @@ export function MonitoringTab() {
                       }, [])
                       .slice(-20)
                       .map(d => ({
-                        ...d,
-                        errorRate: d.total > 0 ? (d.errors / d.total) * 100 : 0,
+                        timestamp: d.time,
+                        value: d.total > 0 ? (d.errors / d.total) * 100 : 0,
                       }))}
-                    xAxisKey="time"
-                    lines={[{ dataKey: 'errorRate', name: 'Error Rate (%)', color: '#ef4444' }]}
-                    formatXAxis={value => {
-                      const date = new Date(value);
+                    title="Error Rate (%)"
+                    color="red"
+                    height={256}
+                    labelFormatter={(t: string | Date) => {
+                      const date = new Date(t);
                       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }}
                   />

@@ -31,7 +31,7 @@ export class OrderExceptionService {
 
     try {
       // Calculate quantity short
-      const _quantityShort = dto.quantityExpected - dto.quantityActual;
+      dto.quantityExpected - dto.quantityActual;
 
       // Determine initial status based on exception type
       let initialStatus = ExceptionStatus.OPEN;

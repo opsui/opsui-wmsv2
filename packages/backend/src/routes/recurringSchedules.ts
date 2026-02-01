@@ -129,7 +129,7 @@ router.delete(
 router.post(
   '/process',
   authorize(UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const result = await recurringScheduleService.processDueSchedules();
     res.json(result);
   })

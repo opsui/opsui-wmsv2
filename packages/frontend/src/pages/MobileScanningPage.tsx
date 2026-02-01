@@ -93,7 +93,9 @@ export function MobileScanningPage() {
 
   // Get pending entries (not yet counted)
   const pendingEntries =
-    plan?.countEntries?.filter(e => e.countedQuantity === 0 || e.countedQuantity == null) || [];
+    plan?.countEntries?.filter(
+      (e: CycleCountEntry) => e.countedQuantity === 0 || e.countedQuantity == null
+    ) || [];
 
   const currentEntry = pendingEntries[currentIndex];
   const completedCount = scanHistory.length;
@@ -277,7 +279,6 @@ export function MobileScanningPage() {
               placeholder="Scan or enter barcode"
               className="input-barcode-large"
               autoComplete="off"
-              inputMode="scan"
             />
             <button onClick={startCamera} className="btn-camera">
               <svg viewBox="0 0 24 24" fill="currentColor">

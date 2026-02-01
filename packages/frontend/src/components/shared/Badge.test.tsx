@@ -13,7 +13,7 @@ import {
   TaskStatusBadge,
   ProgressBadge,
 } from './Badge';
-import type { OrderStatus, OrderPriority, UserRole, TaskStatus } from '@opsui/shared';
+import { OrderStatus, OrderPriority, UserRole, TaskStatus } from '@opsui/shared';
 
 describe('Badge Component', () => {
   describe('Basic Badge', () => {
@@ -91,14 +91,14 @@ describe('Badge Component', () => {
 
   describe('OrderStatusBadge', () => {
     const statuses: OrderStatus[] = [
-      'PENDING',
-      'PICKING',
-      'PICKED',
-      'PACKING',
-      'PACKED',
-      'SHIPPED',
-      'CANCELLED',
-      'BACKORDER',
+      OrderStatus.PENDING,
+      OrderStatus.PICKING,
+      OrderStatus.PICKED,
+      OrderStatus.PACKING,
+      OrderStatus.PACKED,
+      OrderStatus.SHIPPED,
+      OrderStatus.CANCELLED,
+      OrderStatus.BACKORDER,
     ];
 
     it.each(statuses)('renders OrderStatusBadge for %s', status => {
@@ -108,19 +108,19 @@ describe('Badge Component', () => {
 
     it('applies correct variant for each status', () => {
       const { container: pendingContainer } = renderWithProviders(
-        <OrderStatusBadge status="PENDING" />
+        <OrderStatusBadge status={OrderStatus.PENDING} />
       );
       const { container: pickingContainer } = renderWithProviders(
-        <OrderStatusBadge status="PICKING" />
+        <OrderStatusBadge status={OrderStatus.PICKING} />
       );
       const { container: pickedContainer } = renderWithProviders(
-        <OrderStatusBadge status="PICKED" />
+        <OrderStatusBadge status={OrderStatus.PICKED} />
       );
       const { container: shippedContainer } = renderWithProviders(
-        <OrderStatusBadge status="SHIPPED" />
+        <OrderStatusBadge status={OrderStatus.SHIPPED} />
       );
       const { container: cancelledContainer } = renderWithProviders(
-        <OrderStatusBadge status="CANCELLED" />
+        <OrderStatusBadge status={OrderStatus.CANCELLED} />
       );
 
       expect(pendingContainer.querySelector('span')).toHaveClass('badge-info');
@@ -132,7 +132,12 @@ describe('Badge Component', () => {
   });
 
   describe('OrderPriorityBadge', () => {
-    const priorities: OrderPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
+    const priorities: OrderPriority[] = [
+      OrderPriority.LOW,
+      OrderPriority.NORMAL,
+      OrderPriority.HIGH,
+      OrderPriority.URGENT,
+    ];
 
     it.each(priorities)('renders OrderPriorityBadge for %s', priority => {
       renderWithProviders(<OrderPriorityBadge priority={priority} />);
@@ -141,16 +146,16 @@ describe('Badge Component', () => {
 
     it('applies correct variant for each priority', () => {
       const { container: lowContainer } = renderWithProviders(
-        <OrderPriorityBadge priority="LOW" />
+        <OrderPriorityBadge priority={OrderPriority.LOW} />
       );
       const { container: normalContainer } = renderWithProviders(
-        <OrderPriorityBadge priority="NORMAL" />
+        <OrderPriorityBadge priority={OrderPriority.NORMAL} />
       );
       const { container: highContainer } = renderWithProviders(
-        <OrderPriorityBadge priority="HIGH" />
+        <OrderPriorityBadge priority={OrderPriority.HIGH} />
       );
       const { container: urgentContainer } = renderWithProviders(
-        <OrderPriorityBadge priority="URGENT" />
+        <OrderPriorityBadge priority={OrderPriority.URGENT} />
       );
 
       expect(lowContainer.querySelector('span')).toHaveClass('badge-info');
@@ -161,7 +166,12 @@ describe('Badge Component', () => {
   });
 
   describe('UserRoleBadge', () => {
-    const roles: UserRole[] = ['PICKER', 'PACKER', 'SUPERVISOR', 'ADMIN'];
+    const roles: UserRole[] = [
+      UserRole.PICKER,
+      UserRole.PACKER,
+      UserRole.SUPERVISOR,
+      UserRole.ADMIN,
+    ];
 
     it.each(roles)('renders UserRoleBadge for %s', role => {
       renderWithProviders(<UserRoleBadge role={role} />);
@@ -170,7 +180,12 @@ describe('Badge Component', () => {
   });
 
   describe('TaskStatusBadge', () => {
-    const taskStatuses: TaskStatus[] = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED'];
+    const taskStatuses: TaskStatus[] = [
+      TaskStatus.PENDING,
+      TaskStatus.IN_PROGRESS,
+      TaskStatus.COMPLETED,
+      TaskStatus.SKIPPED,
+    ];
 
     it.each(taskStatuses)('renders TaskStatusBadge for %s', status => {
       renderWithProviders(<TaskStatusBadge status={status} />);

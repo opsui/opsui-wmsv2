@@ -95,36 +95,22 @@ export function PickingPage() {
   // ==========================================================================
 
   // Subscribe to pick updates for this order
-  usePickUpdates({
-    onPickCompleted: data => {
-      // If this pick is for the current order, refresh the order data
-      if (data.orderId === orderId) {
-        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-      }
-    },
-    onPickStarted: data => {
-      // If this pick is for the current order, refresh the order data
-      if (data.orderId === orderId) {
-        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-      }
-    },
+  usePickUpdates((data: { orderId: string; orderItemId: string; pickedQuantity?: number }) => {
+    // If this pick is for the current order, refresh the order data
+    if (data.orderId === orderId) {
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+    }
   });
 
   // Subscribe to zone updates (for zone reassignments during picking)
-  useZoneUpdates({
-    onZoneAssignment: data => {
+  useZoneUpdates(
+    (data: { zoneId: string; pickerId?: string; taskCount?: number; pickerCount?: number }) => {
       // If this zone assignment affects the current user, refresh
       if (data.pickerId === currentUser?.userId) {
         queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-        showToast({
-          title: 'Zone Assignment Updated',
-          message: `You have been assigned to ${data.zone}`,
-          type: 'info',
-          duration: 3000,
-        });
       }
-    },
-  });
+    }
+  );
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);

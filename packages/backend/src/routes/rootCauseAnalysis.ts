@@ -26,7 +26,7 @@ router.use(authenticate);
  */
 router.get(
   '/categories',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const categories = await rootCauseAnalysisService.getAllCategories();
     res.json(categories);
   })

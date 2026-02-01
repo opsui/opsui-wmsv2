@@ -164,7 +164,7 @@ router.get(
 router.get(
   '/metrics',
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const metrics = await inventoryService.getInventoryMetrics();
     res.json(metrics);
   })

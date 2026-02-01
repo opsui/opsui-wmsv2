@@ -8,8 +8,10 @@
 import { lazy } from 'react';
 
 // Create lazy-loaded components with loading fallback
-const createLazyPage = (importFn: () => Promise<{ default: React.ComponentType }>) => {
-  return lazy(importFn);
+const createLazyPage = (importFn: () => Promise<any>) => {
+  return lazy(() =>
+    importFn().then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
+  );
 };
 
 // ============================================================================

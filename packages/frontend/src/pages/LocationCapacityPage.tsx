@@ -101,7 +101,7 @@ function CapacityRuleModal({
     handleSubmit,
     isSubmitting,
     reset,
-    setFieldValue,
+    setFieldValue: _setFieldValue,
   } = useFormValidation({
     initialValues: {
       ruleName: rule?.ruleName || '',
@@ -158,10 +158,7 @@ function CapacityRuleModal({
           });
           showToast('Capacity rule updated successfully', 'success');
         } else {
-          await createMutation.mutateAsync({
-            ...payload,
-            createdBy: useAuthStore.getState().user!.userId,
-          });
+          await createMutation.mutateAsync(payload);
           showToast('Capacity rule created successfully', 'success');
         }
         onSuccess();
@@ -514,8 +511,14 @@ export function LocationCapacityPage() {
     }
   };
 
-  const totalCapacity = capacities.reduce((sum, cap) => sum + cap.maximumCapacity, 0);
-  const totalUtilization = capacities.reduce((sum, cap) => sum + cap.currentUtilization, 0);
+  const totalCapacity = capacities.reduce(
+    (sum: number, cap: { maximumCapacity: number }) => sum + cap.maximumCapacity,
+    0
+  );
+  const totalUtilization = capacities.reduce(
+    (sum: number, cap: { currentUtilization: number }) => sum + cap.currentUtilization,
+    0
+  );
   const overallUtilization = totalCapacity > 0 ? (totalUtilization / totalCapacity) * 100 : 0;
 
   return (
@@ -771,7 +774,8 @@ export function LocationCapacityPage() {
                         <div className="mt-4">
                           <Pagination
                             currentPage={currentPage}
-                            totalPages={totalCapacityPages}
+                            totalItems={filteredCapacities.length}
+                            pageSize={itemsPerPage}
                             onPageChange={setCurrentPage}
                           />
                         </div>
@@ -908,7 +912,8 @@ export function LocationCapacityPage() {
                       <div className="mt-4">
                         <Pagination
                           currentPage={rulesPage}
-                          totalPages={totalRulesPages}
+                          totalItems={filteredRules.length}
+                          pageSize={itemsPerPage}
                           onPageChange={setRulesPage}
                         />
                       </div>
@@ -1003,7 +1008,8 @@ export function LocationCapacityPage() {
                       <div className="mt-4">
                         <Pagination
                           currentPage={alertsPage}
-                          totalPages={totalAlertsPages}
+                          totalItems={filteredAlerts.length}
+                          pageSize={itemsPerPage}
                           onPageChange={setAlertsPage}
                         />
                       </div>

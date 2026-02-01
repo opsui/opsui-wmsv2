@@ -41,7 +41,7 @@ router.get(
  */
 router.get(
   '/categories',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const categories = await inventoryService.getCategories();
     res.json(categories);
   })

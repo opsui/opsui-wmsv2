@@ -88,10 +88,7 @@ describe('OrderQueuePage', () => {
       getEffectiveRole: () => 'PICKER',
     } as any);
 
-    mockUseOrderUpdates.mockReturnValue({
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-    });
+    mockUseOrderUpdates.mockImplementation(() => undefined);
 
     (api.useOrderQueue as jest.Mock).mockReturnValue({
       data: {
@@ -395,7 +392,7 @@ describe('OrderQueuePage', () => {
     });
 
     it('should refresh order queue when order is claimed', () => {
-      const invalidateQueries = jest.spyOn(queryClient, 'invalidateQueries');
+      jest.spyOn(queryClient, 'invalidateQueries');
 
       renderWithProviders(<OrderQueuePage />);
 

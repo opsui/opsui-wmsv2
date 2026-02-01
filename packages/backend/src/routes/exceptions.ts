@@ -141,7 +141,7 @@ router.get(
 router.get(
   '/summary',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const summary = await orderExceptionService.getExceptionSummary();
     res.json(summary);
   })

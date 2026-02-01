@@ -34,7 +34,7 @@ router.get(
   '/',
   authenticate,
   requireAdmin,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const users = await userRepo.getAllUsers();
     res.json(users);
   })
@@ -48,7 +48,7 @@ router.get(
 router.get(
   '/assignable',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const assignableRoles = [
       UserRole.PICKER,
       UserRole.PACKER,

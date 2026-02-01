@@ -5,7 +5,6 @@
  * Provides manual reconnect functionality
  */
 
-import { useState, useEffect } from 'react';
 import { SignalIcon, WifiIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 

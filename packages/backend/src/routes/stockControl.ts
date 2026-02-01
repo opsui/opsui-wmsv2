@@ -25,7 +25,7 @@ router.use(authorize(UserRole.STOCK_CONTROLLER, UserRole.SUPERVISOR, UserRole.AD
  */
 router.get(
   '/dashboard',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const dashboard = await stockControlService.getDashboard();
     res.json(dashboard);
   })

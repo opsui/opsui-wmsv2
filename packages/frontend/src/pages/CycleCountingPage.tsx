@@ -460,7 +460,7 @@ function CreateCycleCountModal({
 // ============================================================================
 
 export function CycleCountingPage() {
-  const { showToast } = useToast();
+  const { showToast: _showToast } = useToast();
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -473,7 +473,7 @@ export function CycleCountingPage() {
   const {
     data: plansData,
     isLoading,
-    refetch,
+    refetch: _refetch,
   } = useCycleCountPlans({
     status: filterStatus || undefined,
   });
@@ -763,7 +763,8 @@ export function CycleCountingPage() {
                       <div className="mt-4 flex justify-center">
                         <Pagination
                           currentPage={currentPage}
-                          totalPages={totalPages}
+                          totalItems={plansData?.plans?.length || 0}
+                          pageSize={itemsPerPage}
                           onPageChange={page => {
                             setCurrentPage(page);
                             window.scrollTo({ top: 0, behavior: 'smooth' });

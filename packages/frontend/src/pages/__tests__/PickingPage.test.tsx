@@ -78,15 +78,9 @@ describe('PickingPage', () => {
       getEffectiveRole: () => 'PICKER',
     } as any);
 
-    mockUsePickUpdates.mockReturnValue({
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-    });
+    mockUsePickUpdates.mockImplementation(() => undefined);
 
-    mockUseZoneUpdates.mockReturnValue({
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-    });
+    mockUseZoneUpdates.mockImplementation(() => undefined);
 
     (api.useOrder as jest.Mock).mockReturnValue({
       data: mockOrder,
@@ -381,12 +375,7 @@ describe('PickingPage', () => {
 
   describe('Zone Assignment', () => {
     it('should show toast notification when zone assignment received', async () => {
-      const mockSubscribe = jest.fn();
-
-      mockUseZoneUpdates.mockReturnValue({
-        subscribe: mockSubscribe,
-        unsubscribe: jest.fn(),
-      });
+      mockUseZoneUpdates.mockImplementation(() => undefined);
 
       navigateToPickingPage();
       renderWithProviders(<PickingPage />);
@@ -485,7 +474,7 @@ describe('PickingPage', () => {
     });
 
     it('should refresh order data on pick completion', () => {
-      const invalidateQueries = jest.spyOn(queryClient, 'invalidateQueries');
+      jest.spyOn(queryClient, 'invalidateQueries');
 
       navigateToPickingPage();
       renderWithProviders(<PickingPage />);

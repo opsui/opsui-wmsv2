@@ -56,9 +56,9 @@ describe('DashboardPage', () => {
       connectionStatus: 'connected',
       socketId: 'socket-123',
       subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
       connect: jest.fn(),
       disconnect: jest.fn(),
+      reconnect: jest.fn(),
     });
 
     // Mock API responses
@@ -301,7 +301,7 @@ describe('DashboardPage', () => {
 
   describe('Data Refreshing', () => {
     it('should invalidate queries when WebSocket events occur', async () => {
-      const invalidateQueries = jest.spyOn(queryClient, 'invalidateQueries');
+      jest.spyOn(queryClient, 'invalidateQueries');
 
       renderWithProviders(<DashboardPage />);
 

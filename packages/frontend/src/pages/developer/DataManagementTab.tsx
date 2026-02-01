@@ -22,7 +22,6 @@ import {
   TrashIcon,
   DocumentDuplicateIcon,
   PlusIcon,
-  XMarkIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
@@ -201,7 +200,6 @@ export function DataManagementTab() {
       addMessage('error', errorMsg);
     } finally {
       setLoading(false);
-      event.target.value = '';
     }
   };
 
@@ -306,10 +304,12 @@ export function DataManagementTab() {
                 className="hidden"
                 disabled={loading}
               />
-              <Button className="w-full" disabled={loading} as="span">
-                <ArrowUpTrayIcon className="h-4 w-4 inline mr-1" />
-                Import
-              </Button>
+              <span className="inline-block w-full">
+                <Button className="w-full" disabled={loading}>
+                  <ArrowUpTrayIcon className="h-4 w-4 inline mr-1" />
+                  Import
+                </Button>
+              </span>
             </label>
           </CardContent>
         </Card>

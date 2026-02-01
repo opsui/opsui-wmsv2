@@ -39,7 +39,7 @@ router.get(
   '/',
   authenticate,
   requireAdmin,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const assignments = await roleAssignmentRepo.getAllRoleAssignments();
     res.json(assignments);
   })

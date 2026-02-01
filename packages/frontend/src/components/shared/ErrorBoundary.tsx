@@ -168,12 +168,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // FUNCTIONAL ERROR BOUNDARY WRAPPER
 // ============================================================================
 
-interface ErrorBoundaryWrapperProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-}
-
 /**
  * Functional wrapper for ErrorBoundary
  * Use this for simpler integration with functional components

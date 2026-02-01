@@ -71,7 +71,7 @@ describe('CycleCountingPage', () => {
       getEffectiveRole: () => 'STOCK_CONTROLLER',
     } as any);
 
-    (api.useCycleCounts as jest.Mock).mockReturnValue({
+    (api.useStockCounts as jest.Mock).mockReturnValue({
       data: {
         counts: mockCycleCounts,
         total: 2,
@@ -81,12 +81,12 @@ describe('CycleCountingPage', () => {
       isLoading: false,
     });
 
-    (api.useStartCount as jest.Mock).mockReturnValue({
+    (api.useStartCycleCount as jest.Mock).mockReturnValue({
       mutateAsync: jest.fn().mockResolvedValue({}),
       isPending: false,
     });
 
-    (api.useCompleteCount as jest.Mock).mockReturnValue({
+    (api.useCompleteCycleCount as jest.Mock).mockReturnValue({
       mutateAsync: jest.fn().mockResolvedValue({}),
       isPending: false,
     });
@@ -241,7 +241,7 @@ describe('CycleCountingPage', () => {
   describe('Starting a Count', () => {
     it('should start a count when start button is clicked', async () => {
       const startCountMock = jest.fn().mockResolvedValue({});
-      (api.useStartCount as jest.Mock).mockReturnValue({
+      (api.useStartCycleCount as jest.Mock).mockReturnValue({
         mutateAsync: startCountMock,
         isPending: false,
       });
@@ -315,7 +315,7 @@ describe('CycleCountingPage', () => {
   describe('Completing a Count', () => {
     it('should allow completing an in-progress count', async () => {
       const completeCountMock = jest.fn().mockResolvedValue({});
-      (api.useCompleteCount as jest.Mock).mockReturnValue({
+      (api.useCompleteCycleCount as jest.Mock).mockReturnValue({
         mutateAsync: completeCountMock,
         isPending: false,
       });
@@ -359,7 +359,7 @@ describe('CycleCountingPage', () => {
         ],
       };
 
-      (api.useCycleCountDetails as jest.Mock).mockReturnValue({
+      (api.useCycleCountDashboard as jest.Mock).mockReturnValue({
         data: mockCountWithEntries,
         isLoading: false,
       });
@@ -396,7 +396,7 @@ describe('CycleCountingPage', () => {
 
   describe('Pagination', () => {
     it('should render pagination for multiple pages', () => {
-      (api.useCycleCounts as jest.Mock).mockReturnValue({
+      (api.useStockCounts as jest.Mock).mockReturnValue({
         data: {
           counts: mockCycleCounts,
           total: 50,
@@ -417,7 +417,7 @@ describe('CycleCountingPage', () => {
 
   describe('Loading State', () => {
     it('should show loading while counts load', () => {
-      (api.useCycleCounts as jest.Mock).mockReturnValue({
+      (api.useStockCounts as jest.Mock).mockReturnValue({
         data: undefined,
         isLoading: true,
       } as any);
@@ -430,7 +430,7 @@ describe('CycleCountingPage', () => {
 
   describe('Empty State', () => {
     it('should show empty state when no counts', () => {
-      (api.useCycleCounts as jest.Mock).mockReturnValue({
+      (api.useStockCounts as jest.Mock).mockReturnValue({
         data: {
           counts: [],
           total: 0,

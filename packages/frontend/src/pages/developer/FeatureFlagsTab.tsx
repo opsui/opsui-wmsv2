@@ -14,12 +14,11 @@ import {
   Button,
   ConfirmDialog,
 } from '@/components/shared';
-import { ToggleSwitch, ToggleGroup } from '@/components/shared/ToggleSwitch';
+import { ToggleSwitch } from '@/components/shared/ToggleSwitch';
 import { apiClient } from '@/lib/api-client';
 import {
   TagIcon,
   PlusIcon,
-  PencilIcon,
   TrashIcon,
   MagnifyingGlassIcon,
   XMarkIcon,

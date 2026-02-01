@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, useToast } from '@/components/shared';
+import { Button } from '@/components/shared';
 import { Tabs } from '@/components/shared/Tabs';
 import { OverviewTab } from './developer/OverviewTab';
 import { FeatureFlagsTab } from './developer/FeatureFlagsTab';

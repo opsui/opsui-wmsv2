@@ -26,7 +26,7 @@ router.use(authenticate);
 router.get(
   '/dashboard',
   authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const dashboard = await inboundReceivingService.getDashboardMetrics();
     res.json(dashboard);
   })

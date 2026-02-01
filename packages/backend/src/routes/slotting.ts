@@ -165,7 +165,7 @@ router.get('/velocity/:sku', authenticate, async (req: AuthenticatedRequest, res
  * GET /api/v1/slotting/stats
  * Get overall slotting statistics
  */
-router.get('/stats', authenticate, async (req: AuthenticatedRequest, res) => {
+router.get('/stats', authenticate, async (_req: AuthenticatedRequest, res) => {
   try {
     const stats = await slottingOptimizationService.getSlottingStats();
 

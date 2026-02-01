@@ -4,7 +4,7 @@
  * Tests API configuration, error handling, and utility functions
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import axios, { AxiosError } from 'axios';
 import { APIError, handleAPIError } from './api-client';
 

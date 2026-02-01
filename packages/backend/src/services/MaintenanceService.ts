@@ -135,7 +135,7 @@ export class MaintenanceService {
   }
 
   async getSchedulesByAsset(assetId: string): Promise<MaintenanceSchedule[]> {
-    const asset = await this.getAssetById(assetId);
+    await this.getAssetById(assetId);
     return await maintenanceRepository.findSchedulesByAsset(assetId);
   }
 
@@ -275,7 +275,7 @@ export class MaintenanceService {
   // ========================================================================
 
   async getAssetServiceHistory(assetId: string, limit: number = 50): Promise<ServiceLog[]> {
-    const asset = await this.getAssetById(assetId);
+    await this.getAssetById(assetId);
     return await maintenanceRepository.findServiceLogsByAsset(assetId, limit);
   }
 
@@ -343,7 +343,7 @@ export class MaintenanceService {
   }
 
   async getMeterReadingsByAsset(assetId: string, limit: number = 100): Promise<MeterReading[]> {
-    const asset = await this.getAssetById(assetId);
+    await this.getAssetById(assetId);
     return await maintenanceRepository.findMeterReadingsByAsset(assetId, limit);
   }
 

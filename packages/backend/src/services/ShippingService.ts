@@ -328,7 +328,7 @@ export class ShippingService {
       const shipmentId = `SHP-${nanoid(10)}`.toUpperCase();
 
       // Insert shipment
-      const result = await client.query(
+      await client.query(
         `INSERT INTO shipments
           (shipment_id, order_id, carrier_id, service_type, shipping_method,
            ship_from_address, ship_to_address, total_weight, total_packages,

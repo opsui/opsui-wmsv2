@@ -334,7 +334,7 @@ router.get(
 router.get(
   '/tolerances',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const tolerances = await cycleCountService.getAllTolerances();
     res.json(tolerances);
   })

@@ -105,7 +105,7 @@ function validateForm<T>(values: T, rules: ValidationRules<T>): FormErrors<T> {
   for (const fieldName in rules) {
     const rule = rules[fieldName];
     if (rule) {
-      const error = validateField(fieldName, values[fieldName], rule);
+      const error = validateField(fieldName as keyof T, values[fieldName], rule);
       if (error) {
         errors[fieldName] = error;
       }

@@ -410,7 +410,7 @@ export function PackingPage() {
 
   const handleScan = async (value: string) => {
     if (!currentItem) {
-      showToast('No current item to verify', 'success');
+      showToast('No current item to verify', 'error');
       return;
     }
 
@@ -553,7 +553,7 @@ export function PackingPage() {
         refetch();
       }
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to report problem');
+      showToast(error instanceof Error ? error.message : 'Failed to report problem', 'error');
     }
   };
 
@@ -587,7 +587,7 @@ export function PackingPage() {
         setScanError(null);
       }
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to revert skip');
+      showToast(error instanceof Error ? error.message : 'Failed to revert skip', 'error');
     }
   };
 
@@ -607,7 +607,7 @@ export function PackingPage() {
 
       const item = latestOrder?.items?.[index];
       if (!item) {
-        showToast('Item not found', 'success');
+        showToast('Item not found', 'error');
         return;
       }
 
@@ -622,7 +622,8 @@ export function PackingPage() {
 
       if (currentVerified <= 0) {
         showToast(
-          'No verified items to undo. The item may have already been undone or never verified.'
+          'No verified items to undo. The item may have already been undone or never verified.',
+          'error'
         );
         await refetch(); // Refresh to show current state
         return;
@@ -638,7 +639,7 @@ export function PackingPage() {
         ) || '';
 
       if (!reason.trim()) {
-        showToast('Reason is required to undo a verification', 'success');
+        showToast('Reason is required to undo a verification', 'error');
         return;
       }
 
@@ -672,15 +673,15 @@ export function PackingPage() {
         if (errorMsg.includes('Cannot undo more items than verified')) {
           // State changed between our fetch and the request - refresh and inform user
           await refetch();
-          showToast('State has changed. Please try again.', 'success');
+          showToast('State has changed. Please try again.', 'warning');
         } else {
-          showToast(errorMsg);
+          showToast(errorMsg, 'error');
           await refetch(); // Always refresh on error to sync state
         }
       }
     } catch (error) {
       console.error('Undo verification failed:', error);
-      showToast('Failed to undo verification. Please try again.', 'success');
+      showToast('Failed to undo verification. Please try again.', 'error');
       await refetch();
     } finally {
       setUndoLoading(prev => ({ ...prev, [index]: false }));
@@ -701,7 +702,7 @@ export function PackingPage() {
   const handleCreateShipment = async () => {
     // Validate shipping details
     if (!selectedCarrierId) {
-      showToast('Please select a carrier', 'success');
+      showToast('Please select a carrier', 'error');
       return;
     }
 
@@ -709,23 +710,23 @@ export function PackingPage() {
     const isNZCCarrier =
       carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
     if (isNZCCarrier && !selectedQuote) {
-      showToast('Please select a shipping rate/quote', 'success');
+      showToast('Please select a shipping rate/quote', 'error');
       return;
     }
 
     // For non-NZC carriers, require manual tracking number
     if (!isNZCCarrier && !trackingNumber.trim()) {
-      showToast('Please enter a tracking number', 'success');
+      showToast('Please enter a tracking number', 'error');
       return;
     }
 
     if (!totalWeight || parseFloat(totalWeight) <= 0) {
-      showToast('Please enter a valid weight', 'success');
+      showToast('Please enter a valid weight', 'error');
       return;
     }
 
     if (!totalPackages || parseInt(totalPackages) <= 0) {
-      showToast('Please enter a valid number of packages', 'success');
+      showToast('Please enter a valid number of packages', 'error');
       return;
     }
 
@@ -764,7 +765,7 @@ export function PackingPage() {
       if (isNZCCarrier) {
         // NZC Flow: Create shipment via NZC API, get label, complete packing
         if (!selectedQuote) {
-          showToast('Please select a shipping rate/quote', 'success');
+          showToast('Please select a shipping rate/quote', 'error');
           setIsCreatingShipment(false);
           return;
         }
@@ -802,7 +803,7 @@ export function PackingPage() {
         const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
         setNzcLabel(label);
 
-        showToast(`NZC Shipment created! Connote: ${connote}`);
+        showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
 
         // Create shipment record in database
         await apiClient.post('/shipping/shipments', {
@@ -850,7 +851,7 @@ export function PackingPage() {
           });
         }
 
-        showToast(`Shipment created! Tracking: ${trackingNumber || 'Pending'}`);
+        showToast(`Shipment created! Tracking: ${trackingNumber || 'Pending'}`, 'success');
 
         // Complete packing
         await completePackingMutation.mutateAsync({
@@ -865,7 +866,7 @@ export function PackingPage() {
         navigate('/packing');
       }
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to create shipment');
+      showToast(error instanceof Error ? error.message : 'Failed to create shipment', 'error');
     } finally {
       setIsCreatingShipment(false);
     }
@@ -895,7 +896,7 @@ export function PackingPage() {
       navigate('/packing');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to unclaim order';
-      showToast(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setIsUnclaiming(false);
     }

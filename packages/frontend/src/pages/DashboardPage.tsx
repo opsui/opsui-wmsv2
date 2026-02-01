@@ -118,8 +118,6 @@ function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     enabled: isOpen, // Only fetch when modal is actually open
   });
 
-  const totalPages = queueData?.totalPages || 1;
-
   // Filter orders based on search
   const filteredOrders = queueData?.orders
     ? queueData.orders.filter(order => {
@@ -243,15 +241,14 @@ function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               )}
 
               {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-4 flex justify-center">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                  />
-                </div>
-              )}
+              <div className="mt-4 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={queueData?.total || 0}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </>
           )}
         </div>
@@ -302,95 +299,57 @@ export function DashboardPage() {
   // ==========================================================================
 
   // Subscribe to order updates to refresh metrics and order data
-  useOrderUpdates({
-    onOrderClaimed: () => {
-      // Refresh dashboard metrics and role activity when an order is claimed
+  useOrderUpdates(
+    (data: { orderId: string; pickerId?: string; pickerName?: string; reason?: string }) => {
+      // Refresh dashboard metrics and role activity for all order events
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
       queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
-    },
-    onOrderCompleted: data => {
-      // Refresh all dashboard data when an order is completed
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
       queryClient.invalidateQueries({ queryKey: ['throughput'] });
-      queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
       queryClient.invalidateQueries({ queryKey: ['top-skus'] });
-      showToast({
-        title: 'Order Completed',
-        message: `Order ${data.orderId} has been completed`,
-        type: 'success',
-        duration: 3000,
-      });
-    },
-    onOrderCancelled: () => {
-      // Refresh dashboard metrics when an order is cancelled
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
-      showToast({
-        title: 'Order Cancelled',
-        message: `Order ${data.orderId} has been cancelled`,
-        type: 'warning',
-        duration: 3000,
-      });
-    },
-    onPriorityChanged: () => {
-      // Refresh order queue when priority changes
-      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-    },
-  });
+
+      // Show toast for specific events
+      if (data.reason) {
+        // Order was cancelled
+        showToast(`Order ${data.orderId} has been cancelled`, 'warning', 3000);
+      } else if (data.pickerName) {
+        // Order was claimed
+        // Don't show toast for claims as they happen frequently
+      } else {
+        // Order was completed
+        showToast(`Order ${data.orderId} has been completed`, 'success', 3000);
+      }
+    }
+  );
 
   // Subscribe to pick updates to refresh performance metrics
-  usePickUpdates({
-    onPickCompleted: () => {
-      // Refresh performance data and metrics
-      queryClient.invalidateQueries({ queryKey: ['picker-performance'] });
-      queryClient.invalidateQueries({ queryKey: ['packer-performance'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-    },
-    onPickStarted: () => {
-      // Refresh role activity when a pick starts
-      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
-    },
-    onZoneAssignment: () => {
-      // Refresh role activity when zones are assigned
-      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
-    },
+  usePickUpdates(() => {
+    // Refresh performance data and metrics for all pick events
+    queryClient.invalidateQueries({ queryKey: ['picker-performance'] });
+    queryClient.invalidateQueries({ queryKey: ['packer-performance'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    queryClient.invalidateQueries({ queryKey: ['role-activity'] });
   });
 
   // Subscribe to inventory updates
-  useInventoryUpdates({
-    onInventoryUpdated: () => {
-      // Refresh inventory-related metrics
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-    },
-    onLowStock: data => {
-      // Show alert toast for low stock
-      showToast({
-        title: 'Low Stock Alert',
-        message: `SKU ${data.sku} is running low (${data.quantity} remaining)`,
-        type: 'error',
-        duration: 5000,
-      });
-    },
+  useInventoryUpdates((data: { sku: string; binLocation?: string; quantity?: number }) => {
+    // Refresh inventory-related metrics
+    queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+
+    // Show alert toast for low stock
+    if (data.quantity !== undefined && data.quantity > 0) {
+      showToast(`SKU ${data.sku} is running low (${data.quantity} remaining)`, 'error', 5000);
+    }
   });
 
   // Subscribe to notifications
-  useNotifications({
-    onNotification: notification => {
-      // Show toast for notifications
-      showToast({
-        title: notification.title || 'Notification',
-        message: notification.message || '',
-        type:
-          notification.type === 'alert'
-            ? 'error'
-            : notification.type === 'warning'
-              ? 'warning'
-              : 'info',
-        duration: 4000,
-      });
-    },
+  useNotifications((notification: { notificationId: string; title: string; message: string }) => {
+    // Show toast for notifications
+    showToast(
+      `${notification.title || 'Notification'}: ${notification.message || ''}`,
+      'info',
+      4000
+    );
   });
 
   // ==========================================================================
@@ -426,11 +385,11 @@ export function DashboardPage() {
     error: statusBreakdownError,
   } = useOrderStatusBreakdown({
     enabled: canSupervise(),
-  });
+  }) as { data: any[] | undefined; isLoading: boolean; error: unknown };
 
   const { data: topSKUs, isLoading: topSKUsLoading } = useTopSKUs(10, scanType, topSKUsTimePeriod, {
     enabled: canSupervise(),
-  });
+  }) as { data: any[] | undefined; isLoading: boolean };
 
   // Calculate date range for performance based on selected time range
   // Use useMemo to prevent date objects from changing on every render

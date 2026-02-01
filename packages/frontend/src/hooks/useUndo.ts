@@ -52,7 +52,13 @@ export function useUndo<T>(initialState: T | null = null): UseUndoReturn<T> {
 
   const set = useCallback(
     (newPresent: T) => {
-      setPast(prev => [...prev, present].filter(p => p !== null) as T[][]);
+      setPast(prev => {
+        const history = [...prev];
+        if (present !== null) {
+          history.push([present]);
+        }
+        return history;
+      });
       setPresent(newPresent);
       setFuture([]);
     },
@@ -66,8 +72,11 @@ export function useUndo<T>(initialState: T | null = null): UseUndoReturn<T> {
     const newPast = past.slice(0, past.length - 1);
 
     setPast(newPast);
-    setPresent(previous);
-    setFuture([present, ...future].filter(p => p !== null) as T[][]);
+    setPresent(previous[0] ?? null);
+    setFuture(() => {
+      const history = present !== null ? [[present]] : [];
+      return [...history, ...future];
+    });
   }, [past, present, future]);
 
   const redo = useCallback(() => {
@@ -76,8 +85,14 @@ export function useUndo<T>(initialState: T | null = null): UseUndoReturn<T> {
     const next = future[0];
     const newFuture = future.slice(1);
 
-    setPast([...past, present].filter(p => p !== null) as T[][]);
-    setPresent(next);
+    setPast(() => {
+      const history = [...past];
+      if (present !== null) {
+        history.push([present]);
+      }
+      return history;
+    });
+    setPresent(next[0] ?? null);
     setFuture(newFuture);
   }, [past, present, future]);
 

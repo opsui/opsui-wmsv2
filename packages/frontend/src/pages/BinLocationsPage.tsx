@@ -14,7 +14,7 @@ import {
   useBatchCreateBinLocations,
 } from '@/services/api';
 import { useAuthStore } from '@/stores';
-import { BinType, UserRole } from '@opsui/shared';
+import { BinType, BinLocation, UserRole } from '@opsui/shared';
 import {
   PlusIcon,
   PencilIcon,
@@ -441,7 +441,7 @@ export function BinLocationsPage() {
     user?.role === UserRole.SUPERVISOR ||
     user?.role === UserRole.ADMIN;
 
-  const filteredLocations = locations.filter(loc => {
+  const filteredLocations = locations.filter((loc: BinLocation) => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -555,7 +555,7 @@ export function BinLocationsPage() {
                 className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
               >
                 <option value="">All Zones</option>
-                {zones.map(zone => (
+                {zones.map((zone: string) => (
                   <option key={zone} value={zone}>
                     Zone {zone}
                   </option>
@@ -614,13 +614,13 @@ export function BinLocationsPage() {
             <div className="glass-card rounded-lg p-4">
               <div className="text-sm text-gray-400">Active</div>
               <div className="text-2xl font-bold text-green-400">
-                {locations.filter(l => l.active).length}
+                {locations.filter((l: BinLocation) => l.active).length}
               </div>
             </div>
             <div className="glass-card rounded-lg p-4">
               <div className="text-sm text-gray-400">Inactive</div>
               <div className="text-2xl font-bold text-gray-400">
-                {locations.filter(l => !l.active).length}
+                {locations.filter((l: BinLocation) => !l.active).length}
               </div>
             </div>
             <div className="glass-card rounded-lg p-4">
@@ -678,7 +678,7 @@ export function BinLocationsPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                        {zoneLocations.map(location => (
+                        {zoneLocations.map((location: BinLocation) => (
                           <tr key={location.binId} className="hover:bg-gray-800/50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-medium text-white">{location.binId}</div>

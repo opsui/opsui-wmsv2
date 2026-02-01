@@ -785,7 +785,7 @@ router.post(
 router.get(
   '/packing-queue',
   authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const orders = await orderService.getPackingQueue();
     res.json(orders);
   })

@@ -186,7 +186,11 @@ export function ExceptionsPage() {
   }, [filterStatus, searchQuery]);
 
   const { data: openExceptions, refetch: refetchOpen } = useOpenExceptions();
-  const { data: summary, refetch: refetchSummary } = useExceptionSummary();
+  const {
+    data: summary,
+    refetch: refetchSummary,
+    isLoading: summaryLoading,
+  } = useExceptionSummary();
 
   const resolveMutation = useResolveException();
 

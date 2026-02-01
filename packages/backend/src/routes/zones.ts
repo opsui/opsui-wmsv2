@@ -17,7 +17,7 @@ const router = Router();
  * GET /api/v1/zones
  * Get all zones in the warehouse
  */
-router.get('/', authenticate, async (req: AuthenticatedRequest, res) => {
+router.get('/', authenticate, async (_req: AuthenticatedRequest, res) => {
   try {
     const zones = await zonePickingService.getZones();
 
@@ -69,7 +69,7 @@ router.get('/:zoneId/stats', authenticate, async (req: AuthenticatedRequest, res
  * GET /api/v1/zones/stats/all
  * Get statistics for all zones
  */
-router.get('/stats/all', authenticate, async (req: AuthenticatedRequest, res) => {
+router.get('/stats/all', authenticate, async (_req: AuthenticatedRequest, res) => {
   try {
     const stats = await zonePickingService.getAllZoneStats();
 

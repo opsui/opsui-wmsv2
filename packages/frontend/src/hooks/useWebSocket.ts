@@ -47,17 +47,6 @@ export function useWebSocket(autoConnect = true): UseWebSocketReturn {
       setSocketId(webSocketService.getSocketId());
     };
 
-    const _handleDisconnect = () => {
-      setIsConnected(false);
-      setConnectionStatus('disconnected');
-      setSocketId(undefined);
-    };
-
-    const _handleError = () => {
-      setConnectionStatus('error');
-      setIsConnected(false);
-    };
-
     // Subscribe to connection events
     const unsubscribeConnect = webSocketService.on('connected', handleConnect);
 
@@ -84,7 +73,11 @@ export function useWebSocket(autoConnect = true): UseWebSocketReturn {
       subscriptionsRef.current.get(event)!.add(handler);
 
       // Subscribe to WebSocket service
-      const unsubscribe = webSocketService.on(event, handler);
+      // Convert handler type to EventHandler<E> which takes spread args
+      const wrappedHandler = handler as ServerToClientEvents[E] as unknown as Parameters<
+        ServerToClientEvents[E]
+      >[0];
+      const unsubscribe = webSocketService.on(event, wrappedHandler as any);
 
       // Return cleanup function
       return () => {
@@ -139,7 +132,7 @@ export function useWebSocket(autoConnect = true): UseWebSocketReturn {
       // Unsubscribe all event handlers
       subscriptionsRef.current.forEach((handlers, event) => {
         handlers.forEach(handler => {
-          webSocketService.off(event, handler);
+          webSocketService.off(event, handler as any);
         });
       });
       subscriptionsRef.current.clear();
@@ -171,9 +164,9 @@ export function useOrderUpdates(
 
   useEffect(() => {
     const unsubscribes = [
-      subscribe('order:claimed', handler as any),
-      subscribe('order:completed', handler as any),
-      subscribe('order:cancelled', handler as any),
+      subscribe('order:claimed', handler as ServerToClientEvents['order:claimed']),
+      subscribe('order:completed', handler as ServerToClientEvents['order:completed']),
+      subscribe('order:cancelled', handler as ServerToClientEvents['order:cancelled']),
     ];
 
     return () => {
@@ -191,8 +184,11 @@ export function usePickUpdates(
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
-    const unsubscribe1 = subscribe('pick:updated', handler as any);
-    const unsubscribe2 = subscribe('pick:completed', handler as any);
+    const unsubscribe1 = subscribe('pick:updated', handler as ServerToClientEvents['pick:updated']);
+    const unsubscribe2 = subscribe(
+      'pick:completed',
+      handler as ServerToClientEvents['pick:completed']
+    );
 
     return () => {
       unsubscribe1();
@@ -210,8 +206,14 @@ export function useInventoryUpdates(
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
-    const unsubscribe1 = subscribe('inventory:updated', handler as any);
-    const unsubscribe2 = subscribe('inventory:low', handler as any);
+    const unsubscribe1 = subscribe(
+      'inventory:updated',
+      handler as ServerToClientEvents['inventory:updated']
+    );
+    const unsubscribe2 = subscribe(
+      'inventory:low',
+      handler as ServerToClientEvents['inventory:low']
+    );
 
     return () => {
       unsubscribe1();
@@ -229,8 +231,11 @@ export function useZoneUpdates(
   const { subscribe } = useWebSocket();
 
   useEffect(() => {
-    const unsubscribe1 = subscribe('zone:updated', handler as any);
-    const unsubscribe2 = subscribe('zone:assignment', handler as any);
+    const unsubscribe1 = subscribe('zone:updated', handler as ServerToClientEvents['zone:updated']);
+    const unsubscribe2 = subscribe(
+      'zone:assignment',
+      handler as ServerToClientEvents['zone:assignment']
+    );
 
     return () => {
       unsubscribe1();

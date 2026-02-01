@@ -83,7 +83,7 @@ describe('PackingPage', () => {
       refetch: jest.fn(),
     });
 
-    (api.useGenerateShippingLabel as jest.Mock).mockReturnValue({
+    (api.useNZCCreateShipment as jest.Mock).mockReturnValue({
       mutateAsync: jest.fn().mockResolvedValue({
         labelData: 'base64encodedpdf...',
         trackingNumber: '1Z999AA10123456784',
@@ -280,7 +280,7 @@ describe('PackingPage', () => {
         trackingNumber: '1Z999AA10123456784',
       });
 
-      (api.useGenerateShippingLabel as jest.Mock).mockReturnValue({
+      (api.useNZCCreateShipment as jest.Mock).mockReturnValue({
         mutateAsync: generateLabelMock,
         isPending: false,
       });

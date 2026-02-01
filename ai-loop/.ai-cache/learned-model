@@ -111,7 +111,12 @@
       "Inventory",
       "Warehouse",
       "Admin",
-      "Sign In"
+      "Sign In",
+      "System Administratoradmin@wms.local",
+      "Operations",
+      "Inventory",
+      "Warehouse",
+      "Admin"
     ],
     "/sales": [
       "admin@wms.local",
@@ -133,7 +138,12 @@
       "Warehouse",
       "Admin",
       "Sign In",
-      "Sign In"
+      "Sign In",
+      "System Administratoradmin@wms.local",
+      "Operations",
+      "Inventory",
+      "Warehouse",
+      "Admin"
     ],
     "/business-rules": [
       "admin@wms.local",
@@ -237,13 +247,23 @@
       "Sign In"
     ],
     "/exceptions": [
-      "Sign In"
+      "Sign In",
+      "System Administratoradmin@wms.local",
+      "Operations",
+      "Inventory",
+      "Warehouse",
+      "Admin"
     ],
     "/inwards": [
       "Sign In",
       "Sign In",
       "Sign In",
-      "Sign In"
+      "Sign In",
+      "System Administratoradmin@wms.local",
+      "Operations",
+      "Inventory",
+      "Warehouse",
+      "Admin"
     ],
     "/rma": [
       "Sign In",
@@ -506,7 +526,18 @@
     "Text-based selectors are highly reliable for primary action buttons like authentication.",
     "Search pages often expose authentication triggers for unauthenticated users.",
     "Usage of Playwright-style pseudo-classes (e.g., :has-text)",
-    "Direct text content matching for button identification"
+    "Direct text content matching for button identification",
+    "High-reliability text-based selectors (freq:1, rel:1)",
+    "Role-based access control buttons",
+    "Uniform interaction (all elements trigger click)",
+    "Text-based selectors are 100% relevant for all observed elements.",
+    "UI follows a flat list structure where element identity is defined by visible text content.",
+    "Capitalization conventions in labels (Title Case).",
+    "Semantic text selectors are highly reliable (freq:1, rel:1)",
+    "Uniform element type (button) used for all primary actions",
+    "Menu items follow a direct label-to-action mapping",
+    "Semantic Labeling: Element identification relies heavily on visible text (System Administrator, Operations, etc.).",
+    "Homogeneous Grouping: Multiple interactive elements of the same type (button) grouped together to provide functional context switching."
   ],
   "antiPatterns": [
     "Hardcoding specific user credentials (admin@wms.local) in selectors creates non-reusable tests.",
@@ -717,7 +748,16 @@
     "Hard-coding specific CSS classes that may change during UI refactoring.",
     "Relying solely on visible text 'Sign In' which may change or be duplicated",
     "Lack of data-testid or stable ID attributes for critical buttons",
-    "Ambiguous context: 'Sign In' on a settings page could imply a redirect or an impersonation feature"
+    "Ambiguous context: 'Sign In' on a settings page could imply a redirect or an impersonation feature",
+    "Using generic CSS selectors (e.g., 'button' without text)",
+    "Relying on element positioning/indexing",
+    "Hardcoding attribute values (e.g., specific IDs) that may change per environment",
+    "Avoid using CSS nth-child or indexing selectors, as the order of departments might change.",
+    "Avoid generic 'button' selectors without text filters, as there are multiple buttons on the page.",
+    "Avoid using CSS nth-child indices as menu reordering is likely",
+    "Avoid generic class selectors (e.g., .btn) without text context",
+    "Generic Selection: Using generic 'button' selectors without text filters will result in ambiguity (multiple matches).",
+    "Positional Binding: Avoid using index-based selectors (e.g., 'button:nth-child(1)') as the UI order may change, but labels remain constant."
   ],
   "selectorReliability": {
     "button:has-text(\"admin@wms.local\")": 1,
@@ -746,10 +786,10 @@
     "button:has-text(\"Dashboard\")": 0.7999999999999999,
     "button:has-text(\"Sign In\")": 1,
     "button:has-text(\"Stop\")": 0.6,
-    "button:has-text(\"System Administrator\")": 0.7,
+    "button:has-text(\"System Administrator\")": 1,
     "button:has-text(\"Pending\")": 0.6,
     "button:has-text(\"All Priority\")": 0.6
   },
   "testSuccessRates": {},
-  "lastUpdated": "2026-01-25T09:13:15.747Z"
+  "lastUpdated": "2026-01-30T05:28:40.215Z"
 }

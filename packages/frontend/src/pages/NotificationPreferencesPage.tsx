@@ -28,8 +28,6 @@ import {
   DevicePhoneMobileIcon,
   SunIcon,
   MoonIcon,
-  CheckIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import {

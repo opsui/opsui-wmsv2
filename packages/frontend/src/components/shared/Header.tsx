@@ -14,7 +14,7 @@ import {
   useMarkAsRead,
 } from '@/services/api';
 import { Button, UserRoleBadge } from './index';
-import type { OrderStatus, OrderPriority } from '@opsui/shared';
+import type { OrderStatus, OrderPriority, Notification } from '@opsui/shared';
 import {
   ArrowRightStartOnRectangleIcon,
   CubeIcon,
@@ -619,7 +619,7 @@ function NotificationPreview({
     );
   }
 
-  const typeColors = {
+  const typeColors: Record<string, string> = {
     ORDER_CLAIMED: 'text-blue-400',
     ORDER_COMPLETED: 'text-green-400',
     ORDER_CANCELLED: 'text-red-400',
@@ -637,7 +637,7 @@ function NotificationPreview({
     SYSTEM_ALERT: 'text-yellow-400',
   };
 
-  const handleNotificationClick = async (notification: any) => {
+  const handleNotificationClick = async (notification: Notification) => {
     // Mark as read
     if (notification.status !== 'READ') {
       await markAsRead.mutateAsync(notification.notificationId);
@@ -655,7 +655,7 @@ function NotificationPreview({
 
   return (
     <div className="space-y-1">
-      {notifications.map(notification => (
+      {notifications.map((notification: Notification) => (
         <div
           key={notification.notificationId}
           className={`px-5 py-3 dark:hover:bg-gray-800 hover:bg-gray-50 transition-all duration-200 cursor-pointer ${
@@ -691,16 +691,6 @@ function NotificationPreview({
 // ============================================================================
 // NOTIFICATION PANEL COMPONENT
 // ============================================================================
-
-interface NotificationItem {
-  key: string;
-  label: string;
-  description: string;
-  path: string;
-  icon: React.ComponentType<{ className?: string }>;
-  count: number;
-  color: 'error' | 'warning' | 'success' | 'primary';
-}
 
 function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);

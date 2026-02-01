@@ -119,7 +119,7 @@ router.post(
   '/configs/reset',
   requirePermission(Permission.MANAGE_BUSINESS_RULES),
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     await varianceSeverityService.resetToDefaults();
     res.json({ message: 'Severity configurations reset to defaults' });
   })

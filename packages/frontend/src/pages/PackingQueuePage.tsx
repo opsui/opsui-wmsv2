@@ -399,7 +399,8 @@ export function PackingQueuePage() {
                   <div className="flex justify-center mt-6">
                     <Pagination
                       currentPage={myOrdersCurrentPage}
-                      totalPages={Math.ceil(searchedMyOrders.length / myOrdersPerPage)}
+                      totalItems={searchedMyOrders.length}
+                      pageSize={myOrdersPerPage}
                       onPageChange={setMyOrdersCurrentPage}
                     />
                   </div>
@@ -530,7 +531,8 @@ export function PackingQueuePage() {
                   <div className="flex justify-center mt-6">
                     <Pagination
                       currentPage={waitingCurrentPage}
-                      totalPages={Math.ceil(filteredOrders.length / waitingPerPage)}
+                      totalItems={filteredOrders.length}
+                      pageSize={waitingPerPage}
                       onPageChange={setWaitingCurrentPage}
                     />
                   </div>

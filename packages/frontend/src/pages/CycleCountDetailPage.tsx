@@ -178,6 +178,7 @@ function CountEntryModal({
     isSubmitting,
     setFieldValue,
     handleBlur,
+    handleSubmit,
   } = useFormValidation({
     initialValues: {
       sku: prefillValues.sku || plan.sku || '',
@@ -293,7 +294,7 @@ function CountEntryModal({
 
       setBarcodeStatus('success');
       setBarcodeMessage(`Found: ${barcodeData.productName || barcodeData.sku}`);
-      setSku(barcodeData.sku);
+      setFieldValue('sku', barcodeData.sku);
       setSkuSearch('');
 
       // Update bin location quantities for this SKU
@@ -334,7 +335,7 @@ function CountEntryModal({
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
-        <form onSubmit={createEntry} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Barcode Scanning */}
           <div>
             <label className="block text-sm font-medium dark:text-gray-300 text-gray-700 mb-1">
@@ -895,6 +896,7 @@ export default function CycleCountDetailPage() {
   const bulkUpdateMutation = useBulkUpdateVarianceStatus();
   const cancelMutation = useCancelCycleCount();
   const exportMutation = useExportCycleCount();
+  const createEntryMutation = useCreateCycleCountEntry();
 
   // Check if user can reconcile cycle counts
   const canReconcile =
@@ -1634,7 +1636,7 @@ export default function CycleCountDetailPage() {
                       {getAutoGenerationInfo(plan?.countType || '').description}
                     </p>
                     <p className="text-xs dark:text-gray-400 text-gray-500 mt-2">
-                      {getCountTypeDescription(plan?.countType || '', plan?.location, plan?.sku)}
+                      {getCountTypeDescription(plan?.countType || '', plan?.location)}
                     </p>
                   </div>
                 </div>
@@ -2040,11 +2042,10 @@ export default function CycleCountDetailPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <QuickCountPanel
-              plan={plan}
               pendingEntries={getPendingEntries()}
               onCompleteEntry={(_entryId, countedQuantity) => {
                 // Submit the count entry
-                createMutation.mutate({
+                createEntryMutation.mutate({
                   planId: plan.planId,
                   sku: plan.sku || '',
                   binLocation: plan.location || '',

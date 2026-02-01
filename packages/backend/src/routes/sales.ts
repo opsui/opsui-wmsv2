@@ -26,7 +26,7 @@ router.use(authenticate);
  */
 router.get(
   '/dashboard',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const dashboard = await salesService.getDashboard();
     res.json(dashboard);
   })

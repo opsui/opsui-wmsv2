@@ -136,7 +136,7 @@ router.get(
  */
 router.get(
   '/zones',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const zones = await binLocationService.getZones();
     res.json({ zones });
   })

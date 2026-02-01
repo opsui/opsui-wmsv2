@@ -15,7 +15,7 @@ import { useAuthStore } from '@/stores';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
 import { ShoppingBagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import type { OrderPriority, OrderStatus } from '@opsui/shared';
+import { OrderPriority, OrderStatus } from '@opsui/shared';
 
 // ============================================================================
 // COMPONENT
@@ -31,7 +31,7 @@ export function OrderQueuePage() {
   // Track current page for admin dashboard
   usePageTracking({ view: PageViews.ORDER_QUEUE });
 
-  const [statusFilter, setStatusFilter] = useState<OrderStatus>('PENDING');
+  const [statusFilter, setStatusFilter] = useState<OrderStatus>(OrderStatus.PENDING);
   const [priorityFilter, setPriorityFilter] = useState<OrderPriority | undefined>();
   const [claimingOrderId, setClaimingOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,7 +117,7 @@ export function OrderQueuePage() {
       try {
         // Query for PICKING orders to check if picker has items in tote
         const result = await orderApi.getOrderQueue({
-          status: 'PICKING',
+          status: OrderStatus.PICKING,
           pickerId: userId,
         });
 
@@ -125,15 +125,15 @@ export function OrderQueuePage() {
         // Otherwise stay on PENDING tab (default)
         if (result.orders.length > 0) {
           console.log('[OrderQueue] Picker has items in tote, switching to TOTE tab');
-          setStatusFilter('PICKING');
+          setStatusFilter(OrderStatus.PICKING);
         } else {
           console.log('[OrderQueue] Picker has no items in tote, staying on PENDING tab');
-          setStatusFilter('PENDING');
+          setStatusFilter(OrderStatus.PENDING);
         }
       } catch (error) {
         console.error('[OrderQueue] Error checking for PICKING orders:', error);
         // Default to PENDING on error
-        setStatusFilter('PENDING');
+        setStatusFilter(OrderStatus.PENDING);
       } finally {
         setInitialTabSet(true);
       }
@@ -152,43 +152,17 @@ export function OrderQueuePage() {
   // ==========================================================================
 
   // Subscribe to order updates for real-time queue updates
-  useOrderUpdates({
-    onOrderClaimed: data => {
-      // Refresh order queue when an order is claimed
+  useOrderUpdates(
+    (data: { orderId: string; pickerId?: string; pickerName?: string; reason?: string }) => {
+      // Refresh order queue for all events
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-      // Show toast if the claimed order is relevant to current view
+
+      // Show toast for specific events related to current user
       if (data.pickerId === userId) {
-        showToast({
-          title: 'Order Claimed',
-          message: `Order ${data.orderId} has been claimed`,
-          type: 'success',
-          duration: 3000,
-        });
+        showToast(`Order ${data.orderId} has been claimed`, 'success', 3000);
       }
-    },
-    onOrderCompleted: () => {
-      // Refresh order queue when an order is completed
-      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-    },
-    onOrderCancelled: data => {
-      // Refresh order queue when an order is cancelled
-      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-      showToast({
-        title: 'Order Cancelled',
-        message: `Order ${data.orderId} has been cancelled`,
-        type: 'warning',
-        duration: 3000,
-      });
-    },
-    onPriorityChanged: () => {
-      // Refresh order queue when priority changes
-      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-    },
-    onProgressUpdated: () => {
-      // Refresh order queue when progress updates (for PICKING orders)
-      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-    },
-  });
+    }
+  );
 
   const claimMutation = useClaimOrder();
   const continueMutation = useContinueOrder();
@@ -200,7 +174,7 @@ export function OrderQueuePage() {
     }
 
     // For PICKING orders, call continue endpoint to log the action
-    if (orderStatus === 'PICKING') {
+    if (orderStatus === OrderStatus.PICKING) {
       try {
         await continueMutation.mutateAsync({ orderId });
       } catch {

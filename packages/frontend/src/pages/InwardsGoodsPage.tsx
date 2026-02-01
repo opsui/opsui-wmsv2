@@ -1048,7 +1048,8 @@ function InwardsGoodsPage() {
                       <div className="flex justify-center mt-6">
                         <Pagination
                           currentPage={asnsCurrentPage}
-                          totalPages={totalPages}
+                          totalItems={filteredAsns.length}
+                          pageSize={asnsPerPage}
                           onPageChange={setAsnsCurrentPage}
                         />
                       </div>
@@ -1136,7 +1137,8 @@ function InwardsGoodsPage() {
                       <div className="flex justify-center mt-6">
                         <Pagination
                           currentPage={receiptsCurrentPage}
-                          totalPages={totalPages}
+                          totalItems={filteredReceipts.length}
+                          pageSize={receiptsPerPage}
                           onPageChange={setReceiptsCurrentPage}
                         />
                       </div>
@@ -1187,7 +1189,7 @@ function InwardsGoodsPage() {
                     task.putawayTaskId?.toLowerCase().includes(query) ||
                     task.receiptId?.toLowerCase().includes(query) ||
                     task.sku?.toLowerCase().includes(query) ||
-                    task.binLocation?.toLowerCase().includes(query) ||
+                    task.targetBinLocation?.toLowerCase().includes(query) ||
                     task.status?.toLowerCase().includes(query)
                   );
                 });
@@ -1225,7 +1227,8 @@ function InwardsGoodsPage() {
                       <div className="flex justify-center mt-6">
                         <Pagination
                           currentPage={putawayCurrentPage}
-                          totalPages={totalPages}
+                          totalItems={filteredTasks.length}
+                          pageSize={putawayPerPage}
                           onPageChange={setPutawayCurrentPage}
                         />
                       </div>

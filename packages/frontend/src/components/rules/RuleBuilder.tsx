@@ -20,9 +20,9 @@ import { cn } from '@/lib/utils';
 
 export interface RuleCondition {
   id: string;
-  field: string;
-  operator: string;
-  value: any;
+  field?: string;
+  operator?: string;
+  value?: any;
   logicalOperator?: 'AND' | 'OR'; // For grouping conditions
   conditions?: RuleCondition[]; // Nested conditions for groups
 }

@@ -156,7 +156,7 @@ router.get(
 router.get(
   '/orders/status-breakdown',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const breakdown = await metricsService.getOrderStatusBreakdown();
     res.json(breakdown);
   })
@@ -169,7 +169,7 @@ router.get(
 router.get(
   '/orders/hourly-throughput',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const throughput = await metricsService.getHourlyThroughput();
     res.json(throughput);
   })
@@ -243,7 +243,7 @@ router.get(
 router.get(
   '/picker-activity',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     console.log('[MetricsRoute] Calling getPickerActivity');
     const activity = await metricsService.getPickerActivity();
     console.log('[MetricsRoute] Activity count:', activity?.length || 0);
@@ -275,7 +275,7 @@ router.get(
 router.get(
   '/packer-activity',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     console.log('[MetricsRoute] Calling getPackerActivity');
     const activity = await metricsService.getPackerActivity();
     console.log('[MetricsRoute] Packer activity count:', activity?.length || 0);
@@ -307,7 +307,7 @@ router.get(
 router.get(
   '/stock-controller-activity',
   authorize(UserRole.STOCK_CONTROLLER, UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     console.log('[MetricsRoute] Calling getStockControllerActivity');
     const activity = await metricsService.getStockControllerActivity();
     console.log('[MetricsRoute] Stock controller activity count:', activity?.length || 0);

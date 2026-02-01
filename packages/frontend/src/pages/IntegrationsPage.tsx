@@ -44,7 +44,6 @@ import {
   useWebhookEvents,
 } from '@/services/api';
 import { cn } from '@/lib/utils';
-import { useFormValidation, commonValidations } from '@/hooks/useFormValidation';
 
 // ============================================================================
 // TYPES
@@ -423,7 +422,8 @@ function IntegrationsTab({
         <div className="flex justify-center mt-6">
           <Pagination
             currentPage={currentPage}
-            totalPages={totalPages}
+            totalItems={integrations.length}
+            pageSize={10}
             onPageChange={onPageChange}
           />
         </div>

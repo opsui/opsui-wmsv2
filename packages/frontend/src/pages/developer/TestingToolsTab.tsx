@@ -633,7 +633,7 @@ export function TestingToolsTab() {
                     </thead>
                     <tbody>
                       {Object.entries(permissionMatrix.matrix).map(
-                        ([role, perms]: [string, any]) => (
+                        ([role, _perms]: [string, any]) => (
                           <tr key={role} className="border-b dark:border-gray-800">
                             <td className="p-2 dark:text-white">{role}</td>
                             {permissionMatrix.allRoles.map((r: string) => {
