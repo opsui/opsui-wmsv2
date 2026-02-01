@@ -28,7 +28,6 @@ import {
   MetricCardSkeleton,
   Skeleton,
   TableSkeleton,
-  ListSkeleton,
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
@@ -118,6 +117,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
     handleChange,
     handleSubmit,
     isSubmitting,
+    setFieldValue,
   } = useFormValidation({
     initialValues: {
       sku: '',
@@ -211,9 +211,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="sku"
                 value={formData.sku}
-                onChange={e =>
-                  handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })
-                }
+                onChange={e => setFieldValue('sku', e.target.value.toUpperCase())}
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
                   errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -229,9 +227,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="fromBin"
                 value={formData.fromBin}
-                onChange={e =>
-                  handleChange({ target: { name: 'fromBin', value: e.target.value.toUpperCase() } })
-                }
+                onChange={e => setFieldValue('fromBin', e.target.value.toUpperCase())}
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
                   errors.fromBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -247,9 +243,7 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="toBin"
                 value={formData.toBin}
-                onChange={e =>
-                  handleChange({ target: { name: 'toBin', value: e.target.value.toUpperCase() } })
-                }
+                onChange={e => setFieldValue('toBin', e.target.value.toUpperCase())}
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
                   errors.toBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -315,6 +309,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
     handleChange,
     handleSubmit,
     isSubmitting,
+    setFieldValue,
   } = useFormValidation({
     initialValues: {
       sku: '',
@@ -397,9 +392,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="sku"
                 value={formData.sku}
-                onChange={e =>
-                  handleChange({ target: { name: 'sku', value: e.target.value.toUpperCase() } })
-                }
+                onChange={e => setFieldValue('sku', e.target.value.toUpperCase())}
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
                   errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -415,11 +408,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="binLocation"
                 value={formData.binLocation}
-                onChange={e =>
-                  handleChange({
-                    target: { name: 'binLocation', value: e.target.value.toUpperCase() },
-                  })
-                }
+                onChange={e => setFieldValue('binLocation', e.target.value.toUpperCase())}
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
                   errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -487,10 +476,11 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
     handleChange,
     handleSubmit,
     isSubmitting,
+    setFieldValue,
   } = useFormValidation({
     initialValues: {
       binLocation: '',
-      type: 'SPOT' as 'FULL' | 'CYCLIC' | 'SPOT',
+      type: 'SPOT' as 'FULL' | 'CYCLE' | 'SPOT',
     },
     validationRules: {
       binLocation: {
@@ -548,11 +538,7 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
                 type="text"
                 name="binLocation"
                 value={formData.binLocation}
-                onChange={e =>
-                  handleChange({
-                    target: { name: 'binLocation', value: e.target.value.toUpperCase() },
-                  })
-                }
+                onChange={e => setFieldValue('binLocation', e.target.value.toUpperCase())}
                 className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all ${
                   errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
                 }`}
@@ -575,7 +561,7 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
                 }`}
               >
                 <option value="SPOT">Spot Count</option>
-                <option value="CYCLIC">Cyclic Count</option>
+                <option value="CYCLE">Cyclic Count</option>
                 <option value="FULL">Full Count</option>
               </select>
               {errors.type && <p className="mt-1 text-sm text-red-500">{errors.type}</p>}
@@ -1299,38 +1285,21 @@ export function StockControlPage() {
   // ==========================================================================
 
   // Subscribe to inventory updates for real-time stock changes
-  useInventoryUpdates({
-    onInventoryUpdated: data => {
-      // Refresh all stock control data when inventory changes
-      queryClient.invalidateQueries({ queryKey: ['stock-control'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
-    },
-    onLowStock: data => {
-      // Refresh low stock report and show alert
-      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
-      showToast({
-        title: 'Low Stock Alert',
-        message: `SKU ${data.sku} is running low (${data.quantity} remaining)`,
-        type: 'error',
-        duration: 5000,
-      });
-    },
+  useInventoryUpdates(data => {
+    // Refresh all stock control data when inventory changes
+    queryClient.invalidateQueries({ queryKey: ['stock-control'] });
+    queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    queryClient.invalidateQueries({ queryKey: ['low-stock'] });
+    // Show low stock alert
+    if (data.quantity !== undefined && data.quantity <= 10) {
+      showToast(`SKU ${data.sku} is running low (${data.quantity} remaining)`, 'error');
+    }
   });
 
   // Subscribe to notifications for stock control alerts
-  useNotifications({
-    onNotification: data => {
-      // Show toast for stock control notifications
-      if (data.category === 'STOCK_CONTROL' || data.category === 'INVENTORY') {
-        showToast({
-          title: data.title || 'Stock Notification',
-          message: data.message || '',
-          type: data.type === 'alert' ? 'error' : data.type === 'warning' ? 'warning' : 'info',
-          duration: 4000,
-        });
-      }
-    },
+  useNotifications(data => {
+    // Show toast for all notifications
+    showToast(data.message || data.title, 'info');
   });
 
   // Read active tab from URL query param, default to 'dashboard'

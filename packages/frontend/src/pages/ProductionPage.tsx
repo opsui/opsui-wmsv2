@@ -566,7 +566,7 @@ function ProductionPage() {
 
                   return (
                     <div className="space-y-6">
-                      {sortedDates.map((date, dateIndex) => (
+                      {sortedDates.map(date => (
                         <div key={date} className="relative">
                           {/* Date header */}
                           <div className="flex items-center gap-4 mb-4">

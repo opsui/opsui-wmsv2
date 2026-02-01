@@ -444,6 +444,7 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
   };
 
   const confirmDelete = async () => {
+    if (!checklist) return;
     try {
       await deleteMutation.mutateAsync(checklist.checklistId);
       showToast('Checklist deleted successfully', 'success');

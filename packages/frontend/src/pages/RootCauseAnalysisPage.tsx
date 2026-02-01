@@ -10,7 +10,6 @@ import {
   useRootCausePareto,
   useRootCauseCategoryBreakdown,
   useRootCauseTrending,
-  useRootCauseCategories,
 } from '@/services/api';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
@@ -37,7 +36,6 @@ export function RootCauseAnalysisPage() {
   const { data: trendingData = [], isLoading: isLoadingTrending } = useRootCauseTrending(
     filters.days
   );
-  const { data: categories = [] } = useRootCauseCategories();
 
   // Colors for charts
   const categoryColors: Record<string, string> = {
@@ -95,7 +93,7 @@ export function RootCauseAnalysisPage() {
               {searchTerm ? 'No root causes match your search' : 'No data available'}
             </div>
           ) : (
-            filteredData.map((item, index) => (
+            filteredData.map(item => (
               <div key={item.categoryId} className="pareto-bar-container">
                 <div className="bar-label">{item.category}</div>
                 <div className="bar-wrapper">

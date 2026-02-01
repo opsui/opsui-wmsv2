@@ -16,7 +16,6 @@ import {
   Pagination,
   ConfirmDialog,
 } from '@/components/shared';
-import { useToast } from '@/components/shared';
 import {
   UserGroupIcon,
   ArrowLeftIcon,
@@ -49,7 +48,6 @@ import UserModal, { UserFormData } from '@/components/users/UserModal';
 // ============================================================================
 
 function UserRolesPage() {
-  const { showToast } = useToast();
   const navigate = useNavigate();
   const { data: users, isLoading: usersLoading } = useUsers();
   const { data: assignments, isLoading: assignmentsLoading } = useAllRoleAssignments();
@@ -510,7 +508,8 @@ function UserRolesPage() {
             <div className="flex justify-center mt-6">
               <Pagination
                 currentPage={currentPage}
-                totalPages={totalPages}
+                totalItems={filteredUsers.length}
+                pageSize={usersPerPage}
                 onPageChange={setCurrentPage}
               />
             </div>

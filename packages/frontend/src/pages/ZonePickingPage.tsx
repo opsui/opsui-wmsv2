@@ -152,7 +152,7 @@ export function ZonePickingPage() {
                         <Badge
                           variant={
                             zone.currentUtilization > 80
-                              ? 'danger'
+                              ? 'error'
                               : zone.currentUtilization > 50
                                 ? 'warning'
                                 : 'success'
@@ -337,7 +337,7 @@ export function ZonePickingPage() {
                                               ? 'success'
                                               : task.status === 'IN_PROGRESS'
                                                 ? 'primary'
-                                                : 'secondary'
+                                                : 'info'
                                           }
                                         >
                                           {task.status.toLowerCase()}
@@ -358,7 +358,8 @@ export function ZonePickingPage() {
                             <div className="flex justify-center mt-4">
                               <Pagination
                                 currentPage={tasksCurrentPage}
-                                totalPages={totalPages}
+                                totalItems={tasks.length}
+                                pageSize={tasksPerPage}
                                 onPageChange={setTasksCurrentPage}
                               />
                             </div>
@@ -471,7 +472,7 @@ export function ZonePickingPage() {
                                           ? 'success'
                                           : stat.efficiency > 60
                                             ? 'warning'
-                                            : 'secondary'
+                                            : 'info'
                                       }
                                     >
                                       {stat.efficiency || 0}%
@@ -488,7 +489,8 @@ export function ZonePickingPage() {
                           <div className="flex justify-center mt-4">
                             <Pagination
                               currentPage={statsCurrentPage}
-                              totalPages={totalPages}
+                              totalItems={stats.length}
+                              pageSize={statsPerPage}
                               onPageChange={setStatsCurrentPage}
                             />
                           </div>

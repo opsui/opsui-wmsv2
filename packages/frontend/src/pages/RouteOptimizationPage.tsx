@@ -25,13 +25,6 @@ import { useNavigate } from 'react-router-dom';
 // TYPES
 // ============================================================================
 
-interface Location {
-  location: string;
-  zone: string;
-  aisle: number;
-  shelf: number;
-}
-
 interface OptimizedRoute {
   locations: string[];
   optimized_path: string[];
@@ -52,12 +45,6 @@ interface RouteComparison {
   best: string | null;
   best_distance: number;
   best_time: number;
-}
-
-interface Waypoint {
-  location: string;
-  sequence: number;
-  coordinates: { x: number; y: number };
 }
 
 // ============================================================================
