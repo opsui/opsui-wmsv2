@@ -23,14 +23,12 @@ import {
   PencilIcon,
   TrashIcon,
   KeyIcon,
-  CheckIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { Permission, PERMISSION_GROUPS } from '@opsui/shared';
 import {
   useCustomRoles,
-  useAllPermissions,
   useCreateCustomRole,
   useUpdateCustomRole,
   useDeleteCustomRole,
@@ -60,7 +58,6 @@ function RolesManagementPage() {
   const deduplicatedRoles = Array.from(
     new Map(allRolesData.map((role: Role) => [role.roleId, role])).values()
   );
-  const { data: permissionsData } = useAllPermissions();
   const createRoleMutation = useCreateCustomRole();
   const updateRoleMutation = useUpdateCustomRole();
   const deleteRoleMutation = useDeleteCustomRole();
@@ -110,7 +107,7 @@ function RolesManagementPage() {
         .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' '),
-      permissions: perms as Permission[],
+      permissions: [...perms] as Permission[],
     })
   );
 
@@ -135,7 +132,7 @@ function RolesManagementPage() {
     const groupsWithPermissions = new Set<string>();
     role.permissions.forEach(permission => {
       Object.entries(PERMISSION_GROUPS).forEach(([groupKey, groupPermissions]) => {
-        if (groupPermissions.includes(permission)) {
+        if ((groupPermissions as readonly Permission[]).includes(permission)) {
           groupsWithPermissions.add(groupKey);
         }
       });
@@ -192,7 +189,7 @@ function RolesManagementPage() {
     const counts: Record<string, number> = {};
     role.permissions.forEach(permission => {
       Object.entries(PERMISSION_GROUPS).forEach(([groupKey, groupPermissions]) => {
-        if (groupPermissions.includes(permission)) {
+        if ((groupPermissions as readonly Permission[]).includes(permission)) {
           counts[groupKey] = (counts[groupKey] || 0) + 1;
         }
       });
@@ -396,7 +393,8 @@ function RolesManagementPage() {
           <div className="flex justify-center mt-6">
             <Pagination
               currentPage={currentPage}
-              totalPages={totalPages}
+              totalItems={filteredRoles.length}
+              pageSize={rolesPerPage}
               onPageChange={setCurrentPage}
             />
           </div>

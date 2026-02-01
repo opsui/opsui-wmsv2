@@ -695,11 +695,11 @@ export function PackingPage() {
 
   const confirmCreateShipment = async () => {
     // This is called after user confirms the skipped items dialog
-    // Continue with the actual shipment creation logic
-    await executeCreateShipment();
+    // Continue with the actual shipment creation logic (skip the skipped items check)
+    await handleCreateShipment(true);
   };
 
-  const handleCreateShipment = async () => {
+  const handleCreateShipment = async (skipConfirmCheck = false) => {
     // Validate shipping details
     if (!selectedCarrierId) {
       showToast('Please select a carrier', 'error');
@@ -730,13 +730,15 @@ export function PackingPage() {
       return;
     }
 
-    // Check for skipped items
-    const skippedItems = order?.items?.filter(item => item.status === 'SKIPPED');
+    // Check for skipped items (unless skipConfirmCheck is true)
+    if (!skipConfirmCheck) {
+      const skippedItems = order?.items?.filter(item => item.status === 'SKIPPED');
 
-    if (skippedItems && skippedItems.length > 0) {
-      // Show confirmation dialog for skipped items
-      setCompleteShipmentConfirm({ isOpen: true, skippedItems });
-      return;
+      if (skippedItems && skippedItems.length > 0) {
+        // Show confirmation dialog for skipped items
+        setCompleteShipmentConfirm({ isOpen: true, skippedItems });
+        return;
+      }
     }
 
     setIsCreatingShipment(true);
@@ -1221,14 +1223,14 @@ export function PackingPage() {
                           size="sm"
                           onClick={() => {
                             // Open label in new tab for printing
-                            const window = window.open();
-                            if (window) {
-                              window.document.write(
+                            const newWindow = window.open();
+                            if (newWindow) {
+                              newWindow.document.write(
                                 `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
                                 <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
                               </body></html>`
                               );
-                              window.document.close();
+                              newWindow.document.close();
                             }
                           }}
                         >
@@ -1250,7 +1252,7 @@ export function PackingPage() {
                       variant="success"
                       size="lg"
                       fullWidth
-                      onClick={handleCreateShipment}
+                      onClick={() => handleCreateShipment()}
                       isLoading={isCreatingShipment}
                       disabled={isCreatingShipment || isViewMode}
                       className="shadow-glow"
@@ -1549,7 +1551,6 @@ export function PackingPage() {
           onClose={() => setShowUnclaimModal(false)}
           onConfirm={handleConfirmUnclaim}
           orderId={orderId!}
-          isPicking={false}
           isLoading={isUnclaiming}
         />
 

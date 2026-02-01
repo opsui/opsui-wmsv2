@@ -26,6 +26,7 @@ import {
   ReportFormat,
   Dashboard,
   ExportJob,
+  ChartType,
 } from '@opsui/shared';
 import { Header, Pagination, useToast, ConfirmDialog, Button } from '@/components/shared';
 import { ReportExecutionModal, DashboardBuilder } from '@/components/reports';
@@ -38,7 +39,6 @@ import {
   useUpdateReport,
   useDeleteReport,
   useExecuteReport,
-  useExportReport,
   useCreateDashboard,
   useUpdateDashboard,
   useDeleteDashboard,
@@ -99,7 +99,6 @@ export function ReportsPage() {
   const updateReport = useUpdateReport();
   const deleteReport = useDeleteReport();
   const executeReport = useExecuteReport();
-  const exportReport = useExportReport();
   const createDashboard = useCreateDashboard();
   const updateDashboard = useUpdateDashboard();
   const deleteDashboard = useDeleteDashboard();
@@ -120,7 +119,6 @@ export function ReportsPage() {
       report.name.toLowerCase().includes(reportsSearchTerm.toLowerCase()) ||
       report.reportId.toLowerCase().includes(reportsSearchTerm.toLowerCase())
   );
-  const reportsTotalPages = Math.ceil(searchedReports.length / reportsPageSize);
   const paginatedReports = searchedReports.slice(
     (reportsCurrentPage - 1) * reportsPageSize,
     reportsCurrentPage * reportsPageSize
@@ -133,7 +131,6 @@ export function ReportsPage() {
       dashboard.name.toLowerCase().includes(dashboardsSearchTerm.toLowerCase()) ||
       dashboard.dashboardId.toLowerCase().includes(dashboardsSearchTerm.toLowerCase())
   );
-  const dashboardsTotalPages = Math.ceil(searchedDashboards.length / dashboardsPageSize);
   const paginatedDashboards = searchedDashboards.slice(
     (dashboardsCurrentPage - 1) * dashboardsPageSize,
     dashboardsCurrentPage * dashboardsPageSize
@@ -193,10 +190,6 @@ export function ReportsPage() {
     return result;
   };
 
-  const handleExportReportWrapper = async (executionId: string, format: ReportFormat) => {
-    await exportReport.mutateAsync({ executionId, format });
-  };
-
   const handleSaveDashboard = async (
     dashboardData: Omit<Dashboard, 'dashboardId' | 'createdAt' | 'updatedAt' | 'createdBy'>
   ) => {
@@ -218,9 +211,6 @@ export function ReportsPage() {
       format,
       filters: [],
       fields: [],
-      status: ReportStatus.DRAFT,
-      createdBy: 'current-user',
-      createdAt: new Date(),
     });
     refetchExports();
   };
@@ -313,7 +303,8 @@ export function ReportsPage() {
             searchTerm={reportsSearchTerm}
             onSearchChange={setReportsSearchTerm}
             currentPage={reportsCurrentPage}
-            totalPages={reportsTotalPages}
+            totalItems={searchedReports.length}
+            pageSize={reportsPageSize}
             onPageChange={setReportsCurrentPage}
           />
         )}
@@ -321,7 +312,6 @@ export function ReportsPage() {
         {activeTab === 'dashboards' && (
           <DashboardsTab
             dashboards={paginatedDashboards}
-            reports={reports}
             isLoading={dashboardsLoading}
             onSelectDashboard={dashboard => {
               setSelectedDashboard(dashboard);
@@ -335,7 +325,8 @@ export function ReportsPage() {
             searchTerm={dashboardsSearchTerm}
             onSearchChange={setDashboardsSearchTerm}
             currentPage={dashboardsCurrentPage}
-            totalPages={dashboardsTotalPages}
+            totalItems={searchedDashboards.length}
+            pageSize={dashboardsPageSize}
             onPageChange={setDashboardsCurrentPage}
           />
         )}
@@ -416,7 +407,8 @@ interface ReportsTabProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   currentPage: number;
-  totalPages: number;
+  totalItems: number;
+  pageSize: number;
   onPageChange: (page: number) => void;
 }
 
@@ -433,7 +425,8 @@ function ReportsTab({
   searchTerm,
   onSearchChange,
   currentPage,
-  totalPages,
+  totalItems,
+  pageSize,
   onPageChange,
 }: ReportsTabProps) {
   return (
@@ -499,7 +492,9 @@ function ReportsTab({
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 flex items-center justify-center pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </span>
           <input
             type="text"
             value={searchTerm}
@@ -586,11 +581,12 @@ function ReportsTab({
       )}
 
       {/* Pagination */}
-      {!isLoading && !error && totalPages > 1 && (
+      {!isLoading && !error && Math.ceil(totalItems / pageSize) > 1 && (
         <div className="mt-6 flex justify-center">
           <Pagination
             currentPage={currentPage}
-            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
             onPageChange={onPageChange}
           />
         </div>
@@ -614,7 +610,6 @@ function ReportsTab({
 
 interface DashboardsTabProps {
   dashboards: Dashboard[];
-  reports: Report[];
   isLoading: boolean;
   onSelectDashboard: (dashboard: Dashboard) => void;
   onCreateDashboard: () => void;
@@ -622,13 +617,13 @@ interface DashboardsTabProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   currentPage: number;
-  totalPages: number;
+  totalItems: number;
+  pageSize: number;
   onPageChange: (page: number) => void;
 }
 
 function DashboardsTab({
   dashboards,
-  reports,
   isLoading,
   onSelectDashboard,
   onCreateDashboard,
@@ -636,7 +631,8 @@ function DashboardsTab({
   searchTerm,
   onSearchChange,
   currentPage,
-  totalPages,
+  totalItems,
+  pageSize,
   onPageChange,
 }: DashboardsTabProps) {
   return (
@@ -655,7 +651,9 @@ function DashboardsTab({
       {/* Search Bar */}
       <div className="mb-6">
         <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 flex items-center justify-center pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </span>
           <input
             type="text"
             value={searchTerm}
@@ -723,11 +721,12 @@ function DashboardsTab({
       )}
 
       {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
+      {!isLoading && Math.ceil(totalItems / pageSize) > 1 && (
         <div className="mt-6 flex justify-center">
           <Pagination
             currentPage={currentPage}
-            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
             onPageChange={onPageChange}
           />
         </div>
@@ -907,7 +906,7 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
           groups: report?.groups || [],
           chartConfig: report?.chartConfig || {
             enabled: false,
-            chartType: 'TABLE',
+            chartType: ChartType.TABLE,
             showLegend: false,
             showDataLabels: false,
           },
@@ -1022,9 +1021,7 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
               <label className="block text-sm font-medium text-white mb-1">Default Format</label>
               <select
                 value={formData.defaultFormat}
-                onChange={e =>
-                  setFormData({ ...formData, defaultFormat: e.target.value as ReportFormat })
-                }
+                onChange={e => setFieldValue('defaultFormat', e.target.value as ReportFormat)}
                 className="w-full px-3 py-2 bg-black/20 border border-white/[0.08] text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value={ReportFormat.PDF}>PDF</option>

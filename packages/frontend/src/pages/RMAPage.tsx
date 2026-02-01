@@ -15,7 +15,6 @@ import {
   Header,
   Button,
   Pagination,
-  useToast,
 } from '@/components/shared';
 import {
   ArrowPathIcon,
@@ -594,7 +593,8 @@ function RMAPage() {
                     <div className="flex justify-center mt-6">
                       <Pagination
                         currentPage={requestsCurrentPage}
-                        totalPages={totalPages}
+                        totalItems={filteredRequests.length}
+                        pageSize={itemsPerPage}
                         onPageChange={setRequestsCurrentPage}
                       />
                     </div>
@@ -667,7 +667,8 @@ function RMAPage() {
                     <div className="flex justify-center mt-6">
                       <Pagination
                         currentPage={processingCurrentPage}
-                        totalPages={totalPages}
+                        totalItems={filteredRequests.length}
+                        pageSize={itemsPerPage}
                         onPageChange={setProcessingCurrentPage}
                       />
                     </div>
@@ -739,7 +740,8 @@ function RMAPage() {
                     <div className="flex justify-center mt-6">
                       <Pagination
                         currentPage={completedCurrentPage}
-                        totalPages={totalPages}
+                        totalItems={filteredRequests.length}
+                        pageSize={itemsPerPage}
                         onPageChange={setCompletedCurrentPage}
                       />
                     </div>

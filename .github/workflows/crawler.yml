@@ -67,13 +67,27 @@ jobs:
       - name: Start dev server
         run: |
           npm run dev &
-          echo "Waiting for server to start..."
+          echo "Waiting for servers to start..."
+
+          # Wait for backend (port 3000)
+          echo "Waiting for backend on port 3000..."
           for i in {1..30}; do
-            if curl -s http://localhost:5173 > /dev/null; then
-              echo "Server is ready!"
+            if curl -s http://localhost:3000/health > /dev/null 2>&1 || curl -s http://localhost:3000 > /dev/null 2>&1; then
+              echo "Backend is ready!"
               break
             fi
-            echo "Waiting... ($i/30)"
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
+
+          # Wait for frontend (port 5173)
+          echo "Waiting for frontend on port 5173..."
+          for i in {1..30}; do
+            if curl -s http://localhost:5173 > /dev/null 2>&1; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Waiting for frontend... ($i/30)"
             sleep 2
           done
 

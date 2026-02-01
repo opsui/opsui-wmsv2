@@ -142,7 +142,6 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
     handleChange,
     handleSubmit,
     isSubmitting,
-    setFieldValue,
   } = useFormValidation({
     initialValues: {
       inspectionType: inspection?.inspectionType || InspectionType.INCOMING,
@@ -309,8 +308,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
               <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
               <input
                 type="text"
+                name="location"
                 value={formData.location}
-                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter location"
               />
@@ -320,8 +320,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
               <label className="block text-sm font-medium text-gray-700 mb-1">Lot Number</label>
               <input
                 type="text"
+                name="lotNumber"
                 value={formData.lotNumber}
-                onChange={e => setFormData({ ...formData, lotNumber: e.target.value })}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter lot number"
               />
@@ -332,8 +333,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <textarea
               rows={3}
+              name="notes"
               value={formData.notes}
-              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+              onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter inspection notes"
             />
@@ -372,6 +374,7 @@ interface ChecklistModalProps {
 }
 
 function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) {
+  const { showToast } = useToast();
   const isEdit = !!checklist;
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
@@ -436,7 +439,6 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
   };
 
   const handleDelete = async () => {
-    const { showToast } = useToast();
     if (!checklist) return;
     setDeleteConfirm(true);
   };
@@ -927,7 +929,8 @@ export function QualityControlPage() {
                 <div className="flex justify-center mt-4">
                   <Pagination
                     currentPage={inspectionsCurrentPage}
-                    totalPages={inspectionsTotalPages}
+                    totalItems={searchedInspections.length}
+                    pageSize={inspectionsPerPage}
                     onPageChange={setInspectionsCurrentPage}
                   />
                 </div>
@@ -1021,7 +1024,8 @@ export function QualityControlPage() {
                 <div className="flex justify-center mt-4">
                   <Pagination
                     currentPage={checklistsCurrentPage}
-                    totalPages={checklistsTotalPages}
+                    totalItems={searchedChecklists.length}
+                    pageSize={checklistsPerPage}
                     onPageChange={setChecklistsCurrentPage}
                   />
                 </div>
@@ -1148,7 +1152,8 @@ export function QualityControlPage() {
                 <div className="flex justify-center mt-4">
                   <Pagination
                     currentPage={returnsCurrentPage}
-                    totalPages={returnsTotalPages}
+                    totalItems={searchedReturns.length}
+                    pageSize={returnsPerPage}
                     onPageChange={setReturnsCurrentPage}
                   />
                 </div>

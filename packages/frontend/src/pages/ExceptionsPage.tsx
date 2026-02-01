@@ -438,6 +438,19 @@ export function ExceptionsPage() {
         },
         ...commonOptions,
       ],
+      [ExceptionType.UNDO_PICK]: [
+        {
+          value: ExceptionResolution.MANUAL_OVERRIDE,
+          label: 'Acknowledge',
+          description: 'Acknowledge the undo pick action',
+        },
+        {
+          value: ExceptionResolution.RETURN_TO_STOCK,
+          label: 'Return to Stock',
+          description: 'Return item to inventory',
+        },
+        ...commonOptions,
+      ],
       [ExceptionType.OTHER]: commonOptions,
     };
 
@@ -450,7 +463,7 @@ export function ExceptionsPage() {
       : allExceptions?.exceptions || [];
 
   // Filter exceptions based on search
-  const filteredExceptions = displayExceptions.filter(exc => {
+  const filteredExceptions = displayExceptions.filter((exc: OrderException) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -593,12 +606,12 @@ export function ExceptionsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(summary.byType).map(([type, count]) => (
+                    {Object.entries(summary.byType).map(([type, count]: [string, unknown]) => (
                       <div
                         key={type}
                         className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
                       >
-                        <p className="text-2xl font-bold text-white">{count}</p>
+                        <p className="text-2xl font-bold text-white">{count as number}</p>
                         <p className="text-xs text-gray-400 mt-1">{type.replace(/_/g, ' ')}</p>
                       </div>
                     ))}
@@ -657,7 +670,7 @@ export function ExceptionsPage() {
               <CardContent>
                 {filteredExceptions.length > 0 ? (
                   <div className="space-y-3">
-                    {filteredExceptions.map(exception => {
+                    {filteredExceptions.map((exception: OrderException) => {
                       return (
                         <div
                           key={exception.exceptionId}

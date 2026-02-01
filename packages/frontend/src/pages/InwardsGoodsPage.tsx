@@ -681,13 +681,14 @@ function UpdatePutawayTaskModal({
     },
     onSubmit: async values => {
       try {
+        const qty = Number(values.quantityPutaway);
         await updatePutawayTask.mutateAsync({
           putawayTaskId: task.putawayTaskId,
-          quantityPutaway: parseInt(values.quantityPutaway),
-          status:
-            parseInt(values.quantityPutaway) >= task.quantityToPutaway
-              ? PutawayStatus.COMPLETED
-              : PutawayStatus.IN_PROGRESS,
+          dto: {
+            quantityPutaway: qty,
+            status:
+              qty >= task.quantityToPutaway ? PutawayStatus.COMPLETED : PutawayStatus.IN_PROGRESS,
+          },
         });
         showToast('Putaway task updated successfully', 'success');
         onSuccess();
@@ -1187,7 +1188,7 @@ function InwardsGoodsPage() {
                   const query = putawaySearchTerm.toLowerCase();
                   return (
                     task.putawayTaskId?.toLowerCase().includes(query) ||
-                    task.receiptId?.toLowerCase().includes(query) ||
+                    task.receiptLineId?.toLowerCase().includes(query) ||
                     task.sku?.toLowerCase().includes(query) ||
                     task.targetBinLocation?.toLowerCase().includes(query) ||
                     task.status?.toLowerCase().includes(query)

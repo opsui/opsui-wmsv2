@@ -137,11 +137,13 @@ jobs:
         run: |
           cp .env.example .env
 
+      - name: Build backend
+        working-directory: ./packages/backend
+        run: npm run build
+
       - name: Run database migrations
         working-directory: ./packages/backend
-        run: |
-          npm run build
-          node dist/db/migrate.js
+        run: node dist/db/migrate.js
 
       - name: Run backend tests
         working-directory: ./packages/backend
@@ -303,6 +305,7 @@ jobs:
         run: npm ci
 
       - name: Run integration tests
+        working-directory: ./packages/frontend
         run: npm run test:integration
         env:
           DB_HOST: localhost

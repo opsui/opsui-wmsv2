@@ -37,7 +37,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
-import { TaskStatus, ExceptionType } from '@opsui/shared';
+import { TaskStatus, ExceptionType, OrderStatus } from '@opsui/shared';
 
 // ============================================================================
 // COMPONENT
@@ -192,9 +192,9 @@ export function PickingPage() {
         return;
       }
 
-      // Check if order is already claimed by current user OR is already in PICKING/IN_PROGRESS status
+      // Check if order is already claimed by current user OR is already in PICKING status
       const isAlreadyClaimed = order?.pickerId === currentUserId;
-      const isAlreadyInProgress = order?.status === 'PICKING' || order?.status === 'IN_PROGRESS';
+      const isAlreadyInProgress = order?.status === OrderStatus.PICKING;
 
       // Prevent multiple claim attempts - use ref + isPending check + isClaiming check + isError check
       // This prevents race conditions from rapid useEffect triggers
@@ -343,12 +343,12 @@ export function PickingPage() {
   }, [order, currentUser, userRole, refetch]);
 
   // Get current pick task
-  const currentTask = order?.items[currentTaskIndex];
+  const currentTask = order?.items?.[currentTaskIndex];
 
   // Calculate progress
-  const totalTasks = order?.items.length || 0;
+  const totalTasks = order?.items?.length || 0;
   const completedTasks =
-    order?.items.filter(item => item.pickedQuantity >= item.quantity).length || 0;
+    order?.items?.filter(item => item.pickedQuantity >= item.quantity).length || 0;
 
   // Reset scan error when current task changes
   useEffect(() => {
@@ -357,7 +357,7 @@ export function PickingPage() {
 
   // Auto-select first incomplete item when order loads
   useEffect(() => {
-    if (order && order.items.length > 0) {
+    if (order?.items && order.items.length > 0) {
       const firstIncompleteIndex = order.items.findIndex(
         item => item.pickedQuantity < item.quantity
       );
@@ -463,10 +463,10 @@ export function PickingPage() {
 
     // Perform pick - backend already handles both barcode and SKU validation
     try {
-      const result = await pickMutation.mutateAsync({
+      await pickMutation.mutateAsync({
         orderId,
         dto: {
-          barcode: currentTask.barcode || currentTask.sku,
+          sku: currentTask.sku,
           quantity: 1, // Pick one at a time for simplicity
           binLocation: currentTask.binLocation,
           pickTaskId: currentTask.orderItemId,
@@ -499,7 +499,7 @@ export function PickingPage() {
 
   const handleCompleteOrder = async () => {
     // Check for skipped items
-    const skippedItems = order?.items.filter(item => item.status === 'SKIPPED');
+    const skippedItems = order?.items?.filter(item => item.status === 'SKIPPED');
 
     if (skippedItems && skippedItems.length > 0) {
       // Show confirmation dialog for skipped items
@@ -540,7 +540,7 @@ export function PickingPage() {
   };
 
   const handleUnskipItem = async (index: number) => {
-    const item = order?.items[index];
+    const item = order?.items?.[index];
     if (!item) return;
 
     setUnskipConfirm({ isOpen: true, index, item });
@@ -574,7 +574,7 @@ export function PickingPage() {
   };
 
   const handleUndoPick = async (index: number) => {
-    const item = order?.items[index];
+    const item = order?.items?.[index];
     if (!item) return;
 
     // Can only undo if there's something picked
@@ -785,7 +785,7 @@ export function PickingPage() {
                 <Button
                   variant="danger"
                   onClick={handleUnclaimOrder}
-                  disabled={order.status !== 'PICKING' && order.status !== 'IN_PROGRESS'}
+                  disabled={order.status !== OrderStatus.PICKING}
                   className="touch-target"
                 >
                   Unclaim Order
@@ -974,7 +974,7 @@ export function PickingPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {order.items.map((item, index) => {
+              {order.items?.map((item, index) => {
                 const isCompleted = item.pickedQuantity >= item.quantity;
                 const isSkipped = item.status === 'SKIPPED';
                 const isCurrent = index === currentTaskIndex;
@@ -1478,7 +1478,6 @@ export function PickingPage() {
           onClose={() => setShowUnclaimModal(false)}
           onConfirm={handleConfirmUnclaim}
           orderId={orderId!}
-          isPicking={true}
           isLoading={isUnclaiming}
         />
 
@@ -1491,13 +1490,13 @@ export function PickingPage() {
               setUndoPickItemIndex(null);
             }}
             onConfirm={handleConfirmUndoPick}
-            itemName={order.items[undoPickItemIndex]?.name || ''}
-            sku={order.items[undoPickItemIndex]?.sku || ''}
-            currentQuantity={order.items[undoPickItemIndex]?.pickedQuantity || 0}
-            totalQuantity={order.items[undoPickItemIndex]?.quantity || 0}
+            itemName={order.items?.[undoPickItemIndex]?.name || ''}
+            sku={order.items?.[undoPickItemIndex]?.sku || ''}
+            currentQuantity={order.items?.[undoPickItemIndex]?.pickedQuantity || 0}
+            totalQuantity={order.items?.[undoPickItemIndex]?.quantity || 0}
             wasCompleted={
-              (order.items[undoPickItemIndex]?.pickedQuantity || 0) >=
-              (order.items[undoPickItemIndex]?.quantity || 0)
+              (order.items?.[undoPickItemIndex]?.pickedQuantity || 0) >=
+              (order.items?.[undoPickItemIndex]?.quantity || 0)
             }
             isLoading={isUndoingPick}
           />
