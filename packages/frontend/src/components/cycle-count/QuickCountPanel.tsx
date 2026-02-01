@@ -9,7 +9,6 @@ import { useState, useEffect, useRef } from 'react';
 import { CycleCountEntry, CycleCountPlan } from '@opsui/shared';
 
 interface QuickCountPanelProps {
-  plan: CycleCountPlan;
   pendingEntries: CycleCountEntry[];
   onCompleteEntry: (entryId: string, countedQuantity: number) => void;
   onCancel: () => void;
@@ -24,7 +23,6 @@ interface QuickCountState {
 }
 
 export function QuickCountPanel({
-  plan,
   pendingEntries,
   onCompleteEntry,
   onCancel,

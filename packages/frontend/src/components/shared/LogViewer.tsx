@@ -6,12 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@/components/shared';
-import {
-  XMarkIcon,
-  FunnelIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { classNames } from '@/components/shared/utils';
 
 export interface LogEntry {

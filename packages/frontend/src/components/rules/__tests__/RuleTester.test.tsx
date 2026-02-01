@@ -8,7 +8,7 @@ import { renderWithProviders } from '@/test/utils';
 import { RuleTester } from '../RuleTester';
 
 // Mock the evaluation engine
-const mockEvaluateRule = vi.fn();
+const _mockEvaluateRule = vi.fn();
 
 describe('RuleTester Component', () => {
   const mockConditions = [
@@ -31,7 +31,7 @@ describe('RuleTester Component', () => {
     },
   ];
 
-  const sampleTestData = {
+  const _sampleTestData = {
     order: {
       status: 'pending',
       priority: 'HIGH',

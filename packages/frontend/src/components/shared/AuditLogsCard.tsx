@@ -180,7 +180,7 @@ export function AuditLogsCard({
   onFiltersChange,
   hasNextPage,
   hasPreviousPage,
-  totalPages,
+  totalPages: _totalPages,
 }: AuditLogsCardProps) {
   const [filters, setFilters] = useState<AuditLogFilters>({
     category: null,

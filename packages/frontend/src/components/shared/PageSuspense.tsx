@@ -2,8 +2,6 @@
  * Page loading fallback component with spinner
  */
 
-import { classNames } from '@/lib/utils';
-
 export function PageLoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen">

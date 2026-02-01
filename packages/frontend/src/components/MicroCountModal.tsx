@@ -35,7 +35,6 @@ export function MicroCountModal({
   orderId,
   onSuccess,
 }: MicroCountModalProps) {
-  const { user } = useAuthStore();
   const createMicroCount = useCreateMicroCount();
 
   const [countedQuantity, setCountedQuantity] = useState('');

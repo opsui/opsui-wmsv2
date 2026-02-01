@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, Button } from '@/components/shared';
+import { Button } from '@/components/shared';
 import {
   XMarkIcon,
   ShieldCheckIcon,
@@ -47,7 +47,7 @@ function RoleModal({
   onSubmit,
   initialData,
   permissionGroups,
-  selectedPermissionGroups: initialSelectedGroups = new Set(),
+  selectedPermissionGroups: _initialSelectedGroups = new Set(),
   isEditing = false,
   isLoading = false,
 }: RoleModalProps) {
@@ -55,7 +55,7 @@ function RoleModal({
 
   // Track selected permissions by group
   const [selectedPermissionsByGroup, setSelectedPermissionsByGroup] = useState<
-    Record<string, Set<string>>
+    Record<string, Set<Permission>>
   >({});
 
   // Form validation
@@ -100,7 +100,7 @@ function RoleModal({
       const submitData: RoleFormData = {
         name: values.name.trim(),
         description: values.description.trim(),
-        permissions: allPermissions,
+        permissions: allPermissions as Permission[],
       };
 
       onSubmit(submitData);
@@ -117,15 +117,15 @@ function RoleModal({
       setFieldValue('permissions', initialData?.permissions || []);
 
       // Initialize selected permissions from initial data
-      const initialSelectedByGroup: Record<string, Set<string>> = {};
+      const initialSelectedByGroup: Record<string, Set<Permission>> = {};
       if (initialData?.permissions) {
         initialData.permissions.forEach(permission => {
           Object.entries(PERMISSION_GROUPS).forEach(([groupKey, groupPermissions]) => {
-            if (groupPermissions.includes(permission)) {
+            if ((groupPermissions as readonly Permission[]).includes(permission)) {
               if (!initialSelectedByGroup[groupKey]) {
-                initialSelectedByGroup[groupKey] = new Set();
+                initialSelectedByGroup[groupKey] = new Set<Permission>();
               }
-              initialSelectedByGroup[groupKey].add(permission);
+              initialSelectedByGroup[groupKey]!.add(permission);
             }
           });
         });

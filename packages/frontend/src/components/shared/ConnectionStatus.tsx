@@ -26,7 +26,7 @@ type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 import { useWebSocket as useWebSocketService } from '@/hooks/useWebSocket';
 
 export function useWebSocketConnection() {
-  const { isConnected, connectionStatus, socketId, reconnect } = useWebSocketService();
+  const { connectionStatus, socketId, reconnect } = useWebSocketService();
 
   // Map connection status from useWebSocket to our local types
   const statusMap: Record<string, ConnectionStatus> = {

@@ -13,7 +13,7 @@ import {
   TableCellsIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
-import { Report, ReportExecution, ReportFormat, ReportFilter } from '@opsui/shared';
+import { Report, ReportExecution, ReportFormat, ReportStatus } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
