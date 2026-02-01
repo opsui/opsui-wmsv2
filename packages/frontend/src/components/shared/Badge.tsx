@@ -57,7 +57,7 @@ export function loadRoleColors(): Record<UserRole, RoleColorSetting> {
       const parsed = JSON.parse(stored) as Record<string, RoleColorSetting>;
       // Merge with defaults, allowing stored values to override
       const result = { ...DEFAULT_ROLE_COLORS };
-      for (const [key, value] of Object.entries(parsed)) {
+      for (const [, value] of Object.entries(parsed)) {
         if (value && value.role) {
           result[value.role as UserRole] = value;
         }

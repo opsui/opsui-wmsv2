@@ -5,8 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
-import { RuleBuilder } from '../RuleBuilder';
-import type { RuleCondition, RuleAction } from '@opsui/shared';
+import { RuleBuilder, type RuleCondition } from '../RuleBuilder';
 
 // Mock @dnd-kit library
 vi.mock('@dnd-kit/core', () => ({
@@ -40,27 +39,32 @@ vi.mock('@dnd-kit/sortable', () => ({
 describe('RuleBuilder Component', () => {
   const mockFields = [
     {
-      key: 'order.status',
+      field: 'order.status',
       label: 'Order Status',
       type: 'select' as const,
-      options: ['pending', 'picking', 'picked', 'packed'],
+      options: [
+        { value: 'pending', label: 'Pending' },
+        { value: 'picking', label: 'Picking' },
+        { value: 'picked', label: 'Picked' },
+        { value: 'packed', label: 'Packed' },
+      ],
     },
     {
-      key: 'order.priority',
+      field: 'order.priority',
       label: 'Order Priority',
       type: 'select' as const,
-      options: ['LOW', 'NORMAL', 'HIGH', 'URGENT'],
+      options: [
+        { value: 'LOW', label: 'Low' },
+        { value: 'NORMAL', label: 'Normal' },
+        { value: 'HIGH', label: 'High' },
+        { value: 'URGENT', label: 'Urgent' },
+      ],
     },
-    { key: 'sku.quantity', label: 'SKU Quantity', type: 'number' as const },
-  ];
-
-  const mockOperators = [
-    { key: 'equals', label: 'Equals', requiresValue: true },
-    { key: 'not_equals', label: 'Not Equals', requiresValue: true },
-    { key: 'greater_than', label: 'Greater Than', requiresValue: true },
-    { key: 'less_than', label: 'Less Than', requiresValue: true },
-    { key: 'is_empty', label: 'Is Empty', requiresValue: false },
-    { key: 'contains', label: 'Contains', requiresValue: true },
+    {
+      field: 'sku.quantity',
+      label: 'SKU Quantity',
+      type: 'number' as const,
+    },
   ];
 
   const mockOnChange = vi.fn();
@@ -72,12 +76,7 @@ describe('RuleBuilder Component', () => {
   describe('Rendering', () => {
     it('renders empty rule builder', () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       expect(screen.getByText('Conditions')).toBeInTheDocument();
@@ -86,16 +85,11 @@ describe('RuleBuilder Component', () => {
 
     it('renders existing conditions', () => {
       const conditions: RuleCondition[] = [
-        { field: 'order.status', operator: 'equals', value: 'pending' },
+        { id: 'condition-1', field: 'order.status', operator: 'equals', value: 'pending' },
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       expect(screen.getByDisplayValue('order.status')).toBeInTheDocument();
@@ -105,12 +99,7 @@ describe('RuleBuilder Component', () => {
 
     it('renders logical operator toggle', () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       expect(screen.getByText('Match')).toBeInTheDocument();
@@ -119,12 +108,7 @@ describe('RuleBuilder Component', () => {
 
     it('renders field selector with all options', () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       // When adding a condition, fields should be available
@@ -141,12 +125,7 @@ describe('RuleBuilder Component', () => {
   describe('Adding Conditions', () => {
     it('calls onChange when adding condition', async () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       const addButton = screen.getByText('Add Condition');
@@ -166,12 +145,7 @@ describe('RuleBuilder Component', () => {
 
     it('adds condition with default values', async () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       const addButton = screen.getByText('Add Condition');
@@ -187,16 +161,11 @@ describe('RuleBuilder Component', () => {
   describe('Editing Conditions', () => {
     it('updates field when selected', async () => {
       const conditions: RuleCondition[] = [
-        { field: 'order.status', operator: 'equals', value: 'pending' },
+        { id: 'condition-1', field: 'order.status', operator: 'equals', value: 'pending' },
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       const fieldSelect = screen.getByDisplayValue('order.status');
@@ -209,16 +178,11 @@ describe('RuleBuilder Component', () => {
 
     it('updates operator when selected', async () => {
       const conditions: RuleCondition[] = [
-        { field: 'order.status', operator: 'equals', value: 'pending' },
+        { id: 'condition-1', field: 'order.status', operator: 'equals', value: 'pending' },
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       const operatorSelect = screen.getByDisplayValue('equals');
@@ -231,16 +195,11 @@ describe('RuleBuilder Component', () => {
 
     it('updates value when typed', async () => {
       const conditions: RuleCondition[] = [
-        { field: 'sku.quantity', operator: 'greater_than', value: '10' },
+        { id: 'condition-1', field: 'sku.quantity', operator: 'greater_than', value: '10' },
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       const valueInput = screen.getByDisplayValue('10');
@@ -261,17 +220,12 @@ describe('RuleBuilder Component', () => {
   describe('Removing Conditions', () => {
     it('calls onChange when removing condition', async () => {
       const conditions: RuleCondition[] = [
-        { field: 'order.status', operator: 'equals', value: 'pending' },
-        { field: 'order.priority', operator: 'equals', value: 'HIGH' },
+        { id: 'condition-1', field: 'order.status', operator: 'equals', value: 'pending' },
+        { id: 'condition-2', field: 'order.priority', operator: 'equals', value: 'HIGH' },
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       const removeButtons = screen.getAllByLabelText(/remove condition/i);
@@ -289,12 +243,7 @@ describe('RuleBuilder Component', () => {
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       const removeButtons = screen.getAllByLabelText(/remove condition/i);
@@ -310,12 +259,7 @@ describe('RuleBuilder Component', () => {
   describe('Logical Operator', () => {
     it('toggles between AND and OR', async () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       const andButton = screen.getByText('ALL');
@@ -331,21 +275,20 @@ describe('RuleBuilder Component', () => {
     it('supports nested condition groups', () => {
       const conditions: RuleCondition[] = [
         {
+          id: 'group-1',
+          field: '',
+          operator: '',
+          value: '',
           logicalOperator: 'OR',
           conditions: [
-            { field: 'order.status', operator: 'equals', value: 'pending' },
-            { field: 'order.status', operator: 'equals', value: 'picking' },
+            { id: 'condition-1', field: 'order.status', operator: 'equals', value: 'pending' },
+            { id: 'condition-2', field: 'order.status', operator: 'equals', value: 'picking' },
           ],
         },
       ];
 
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={conditions}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={conditions} onChange={mockOnChange} />
       );
 
       expect(screen.getByText('Match ANY')).toBeInTheDocument();
@@ -355,12 +298,7 @@ describe('RuleBuilder Component', () => {
   describe('Accessibility', () => {
     it('has proper aria labels', () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       expect(screen.getByRole('button', { name: /add condition/i })).toBeInTheDocument();
@@ -368,12 +306,7 @@ describe('RuleBuilder Component', () => {
 
     it('supports keyboard navigation', () => {
       renderWithProviders(
-        <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
-          conditions={[]}
-          onChange={mockOnChange}
-        />
+        <RuleBuilder availableFields={mockFields} conditions={[]} onChange={mockOnChange} />
       );
 
       const addButton = screen.getByRole('button', { name: /add condition/i });
@@ -386,12 +319,13 @@ describe('RuleBuilder Component', () => {
 
   describe('Validation', () => {
     it('shows error for incomplete conditions', () => {
-      const incompleteConditions: RuleCondition[] = [{ field: '', operator: '', value: '' }];
+      const incompleteConditions: RuleCondition[] = [
+        { id: 'condition-1', field: '', operator: '', value: '' },
+      ];
 
       renderWithProviders(
         <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
+          availableFields={mockFields}
           conditions={incompleteConditions}
           onChange={mockOnChange}
         />
@@ -402,15 +336,15 @@ describe('RuleBuilder Component', () => {
     });
 
     it('displays validation errors when showValidation is true', () => {
-      const incompleteConditions: RuleCondition[] = [{ field: '', operator: '', value: '' }];
+      const incompleteConditions: RuleCondition[] = [
+        { id: 'condition-1', field: '', operator: '', value: '' },
+      ];
 
       renderWithProviders(
         <RuleBuilder
-          fields={mockFields}
-          operators={mockOperators}
+          availableFields={mockFields}
           conditions={incompleteConditions}
           onChange={mockOnChange}
-          showValidation
         />
       );
 

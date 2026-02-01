@@ -5,10 +5,10 @@
  * Allows creating, editing, and viewing recurring count schedules.
  */
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
   useRecurringSchedules,
+  useAssignableUsers,
   useCreateRecurringSchedule,
   useUpdateRecurringSchedule,
   useDeleteRecurringSchedule,
@@ -16,7 +16,21 @@ import {
 import { CycleCountType } from '@opsui/shared';
 import { Header, useToast, ConfirmDialog } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import {
+  MagnifyingGlassIcon,
+  PlusIcon,
+  CalendarDaysIcon,
+  ClockIcon,
+  UserIcon,
+  MapPinIcon,
+  TagIcon,
+  DocumentTextIcon,
+  PencilIcon,
+  TrashIcon,
+  PlayIcon,
+  PauseIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 
 interface ScheduleFormData {
   scheduleName: string;
@@ -44,17 +58,10 @@ const DEFAULT_FORM_DATA: ScheduleFormData = {
 
 export function ScheduleManagementPage() {
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
 
   // Queries
   const { data: schedules = [], isLoading } = useRecurringSchedules();
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const response = await fetch('/api/v1/users/assignable');
-      return response.json();
-    },
-  });
+  const { data: users = [] } = useAssignableUsers();
 
   // Mutations
   const createMutation = useCreateRecurringSchedule();
@@ -66,15 +73,15 @@ export function ScheduleManagementPage() {
   const [editingSchedule, setEditingSchedule] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; scheduleId: string }>({
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    scheduleId: string;
+    scheduleName: string;
+  }>({
     isOpen: false,
     scheduleId: '',
+    scheduleName: '',
   });
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    // No pagination, but keeping effect for consistency
-  }, [searchTerm]);
 
   // Form validation
   const { values, errors, handleChange, handleSubmit, isSubmitting, reset, setFieldValue } =
@@ -111,6 +118,7 @@ export function ScheduleManagementPage() {
             if (!value) return 'Next run date is required';
             const date = new Date(value);
             if (isNaN(date.getTime())) return 'Invalid date format';
+            if (date < new Date()) return 'Next run date must be in the future';
             return null;
           },
         },
@@ -132,18 +140,16 @@ export function ScheduleManagementPage() {
           setEditingSchedule(null);
         } catch (error: any) {
           showToast(error?.message || 'Failed to save schedule', 'error');
-          throw error; // Re-throw to prevent form from resetting
+          throw error;
         }
       },
     });
 
   // Filter schedules
   const filteredSchedules = schedules.filter(schedule => {
-    // Status filter
     if (filterStatus === 'active' && !schedule.isActive) return false;
     if (filterStatus === 'inactive' && schedule.isActive) return false;
 
-    // Search filter
     if (searchTerm.trim()) {
       const query = searchTerm.toLowerCase();
       return (
@@ -186,8 +192,8 @@ export function ScheduleManagementPage() {
   };
 
   // Delete schedule
-  const handleDelete = async (scheduleId: string) => {
-    setDeleteConfirm({ isOpen: true, scheduleId });
+  const handleDelete = (scheduleId: string, scheduleName: string) => {
+    setDeleteConfirm({ isOpen: true, scheduleId, scheduleName });
   };
 
   const confirmDelete = async () => {
@@ -198,7 +204,7 @@ export function ScheduleManagementPage() {
     } catch (error: any) {
       showToast(error?.message || 'Failed to delete schedule', 'error');
     } finally {
-      setDeleteConfirm({ isOpen: false, scheduleId: '' });
+      setDeleteConfirm({ isOpen: false, scheduleId: '', scheduleName: '' });
     }
   };
 
@@ -226,19 +232,44 @@ export function ScheduleManagementPage() {
     });
   };
 
-  // Calculate frequency description
-  const getFrequencyDescription = (frequencyType: string, interval: number) => {
-    const intervalText = interval > 1 ? `Every ${interval} ` : '';
-    const typeText = frequencyType.toLowerCase();
-    return `${intervalText}${typeText}`;
+  // Get count type display name
+  const getCountTypeDisplayName = (type: string) => {
+    const names: Record<string, string> = {
+      ABC: 'ABC Analysis',
+      BLANKET: 'Blanket Count',
+      SPOT_CHECK: 'Spot Check',
+      RECEIVING: 'Receiving Count',
+      SHIPPING: 'Shipping Count',
+      AD_HOC: 'Ad Hoc',
+    };
+    return names[type] || type;
+  };
+
+  // Get frequency display name
+  const getFrequencyDisplayName = (type: string, interval: number) => {
+    const names: Record<string, string> = {
+      DAILY: interval === 1 ? 'Daily' : `Every ${interval} days`,
+      WEEKLY: interval === 1 ? 'Weekly' : `Every ${interval} weeks`,
+      MONTHLY: interval === 1 ? 'Monthly' : `Every ${interval} months`,
+      QUARTERLY: interval === 1 ? 'Quarterly' : `Every ${interval} quarters`,
+    };
+    return names[type] || `${type} (${interval})`;
+  };
+
+  // Get status badge styling
+  const getStatusBadgeClass = (isActive: boolean) => {
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen">
         <Header />
-        <div className="schedule-management-page loading">
-          <div className="loading-spinner">Loading schedules...</div>
+        <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-t-blue-500 border-solid rounded-full animate-spin" />
+            <p className="text-gray-400">Loading schedules...</p>
+          </div>
         </div>
       </div>
     );
@@ -247,185 +278,361 @@ export function ScheduleManagementPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <div className="schedule-management-page">
-        <div className="page-header">
-          <h1>Recurring Count Schedules</h1>
-          <button onClick={handleCreate} className="btn btn-primary">
-            + New Schedule
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="filters">
-          <div className="filter-group">
-            <button
-              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('all')}
-            >
-              All ({schedules.length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'active' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('active')}
-            >
-              Active ({schedules.filter(s => s.isActive).length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'inactive' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('inactive')}
-            >
-              Inactive ({schedules.filter(s => !s.isActive).length})
-            </button>
-          </div>
-
-          {/* Search Input */}
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search schedules..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* Schedules List */}
-        <div className="schedules-list">
-          {filteredSchedules.length === 0 ? (
-            <div className="empty-state">
-              <p>No schedules found.</p>
-              <button onClick={handleCreate} className="btn btn-primary">
-                Create your first schedule
-              </button>
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Page Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                <CalendarDaysIcon className="h-6 w-6 text-blue-400" />
+                Recurring Count Schedules
+              </h1>
+              <p className="text-gray-400 mt-1">
+                Automate your cycle counts by creating recurring schedules
+              </p>
             </div>
-          ) : (
-            <div className="schedules-grid">
-              {filteredSchedules.map(schedule => (
-                <div key={schedule.scheduleId} className="schedule-card">
-                  <div className="card-header">
-                    <div className="header-info">
-                      <h3>{schedule.scheduleName}</h3>
-                      <span className={`status-badge ${schedule.isActive ? 'active' : 'inactive'}`}>
-                        {schedule.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <div className="card-actions">
-                      <button
-                        onClick={() => handleToggleActive(schedule.scheduleId, schedule.isActive)}
-                        className="btn-icon"
-                        title={schedule.isActive ? 'Disable' : 'Enable'}
-                      >
-                        {schedule.isActive ? '⏸' : '▶️'}
-                      </button>
-                      <button
-                        onClick={() => handleEdit(schedule.scheduleId)}
-                        className="btn-icon"
-                        title="Edit"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDelete(schedule.scheduleId)}
-                        className="btn-icon btn-delete"
-                        title="Delete"
-                      >
-                        🗑️
-                      </button>
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Create Schedule
+            </button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass-card rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Schedules</p>
+                  <p className="text-3xl font-bold mt-2 text-blue-400">{schedules.length}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-blue-500/20">
+                  <CalendarDaysIcon className="h-8 w-8 text-blue-400" />
+                </div>
+              </div>
+            </div>
+            <div className="glass-card rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Active</p>
+                  <p className="text-3xl font-bold mt-2 text-green-400">
+                    {schedules.filter(s => s.isActive).length}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-green-500/20">
+                  <PlayIcon className="h-8 w-8 text-green-400" />
+                </div>
+              </div>
+            </div>
+            <div className="glass-card rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Inactive</p>
+                  <p className="text-3xl font-bold mt-2 text-gray-400">
+                    {schedules.filter(s => !s.isActive).length}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-gray-500/20">
+                  <PauseIcon className="h-8 w-8 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="glass-card rounded-lg p-4">
+            <div className="flex flex-wrap gap-4">
+              {/* Status Filters */}
+              <div className="flex gap-2">
+                <button
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    filterStatus === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                  onClick={() => setFilterStatus('all')}
+                >
+                  All ({schedules.length})
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    filterStatus === 'active'
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                  onClick={() => setFilterStatus('active')}
+                >
+                  Active ({schedules.filter(s => s.isActive).length})
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    filterStatus === 'inactive'
+                      ? 'bg-gray-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                  onClick={() => setFilterStatus('inactive')}
+                >
+                  Inactive ({schedules.filter(s => !s.isActive).length})
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search schedules..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Schedules Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredSchedules.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                <div className="glass-card rounded-lg p-8">
+                  <CalendarDaysIcon className="h-16 w-16 mx-auto mb-4 text-gray-600" />
+                  <h3 className="text-xl font-semibold text-white mb-3">No schedules found</h3>
+                  <p className="text-gray-400 mb-6 max-w-md">
+                    {filterStatus === 'all' && searchTerm === ''
+                      ? 'Get started by creating your first automated recurring count schedule.'
+                      : filterStatus === 'active'
+                        ? 'No active schedules found. Create a new schedule or enable an existing one.'
+                        : filterStatus === 'inactive'
+                          ? 'No inactive schedules found. Disable an active schedule to pause it.'
+                          : 'No schedules match your search criteria. Try adjusting your filters.'}
+                  </p>
+                  <button
+                    onClick={handleCreate}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    Create Your First Schedule
+                  </button>
+                </div>
+              </div>
+            ) : (
+              filteredSchedules.map(schedule => (
+                <div
+                  key={schedule.scheduleId}
+                  className="glass-card rounded-lg overflow-hidden hover:border-blue-500/30 transition-all"
+                >
+                  {/* Card Header */}
+                  <div className="bg-gray-900/50 px-4 py-3 border-b border-gray-800">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-base font-semibold text-white truncate pr-2">
+                            {schedule.scheduleName}
+                          </h3>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
+                              schedule.isActive
+                            )}`}
+                          >
+                            <div
+                              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                schedule.isActive ? 'bg-green-500' : 'bg-gray-500'
+                              }`}
+                            />
+                            {schedule.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-gray-400">
+                          <span className="inline-flex items-center gap-1">
+                            <TagIcon className="h-4 w-4" />
+                            {getCountTypeDisplayName(schedule.countType)}
+                          </span>
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1">
+                            <ClockIcon className="h-4 w-4" />
+                            {getFrequencyDisplayName(
+                              schedule.frequencyType,
+                              schedule.frequencyInterval
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleToggleActive(schedule.scheduleId, schedule.isActive)}
+                          className="p-1.5 rounded hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                          title={schedule.isActive ? 'Disable schedule' : 'Enable schedule'}
+                        >
+                          {schedule.isActive ? (
+                            <PauseIcon className="h-4 w-4" />
+                          ) : (
+                            <PlayIcon className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(schedule.scheduleId)}
+                          className="p-1.5 rounded hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                          title="Edit schedule"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(schedule.scheduleId, schedule.scheduleName)}
+                          className="p-1.5 rounded hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
+                          title="Delete schedule"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="card-body">
-                    <div className="schedule-details">
-                      <div className="detail-row">
-                        <span className="label">Type:</span>
-                        <span className="value">{schedule.countType}</span>
+                  {/* Card Body */}
+                  <div className="p-4 space-y-3">
+                    {/* Next Run */}
+                    <div className="flex items-start gap-2">
+                      <CalendarDaysIcon className="h-5 w-5 text-blue-400 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400 mb-1">Next Run</p>
+                        <p className="text-sm text-white font-medium">
+                          {formatDate(schedule.nextRunDate)}
+                        </p>
                       </div>
-                      <div className="detail-row">
-                        <span className="label">Frequency:</span>
-                        <span className="value">
-                          {getFrequencyDescription(
-                            schedule.frequencyType,
-                            schedule.frequencyInterval
-                          )}
-                        </span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="label">Next Run:</span>
-                        <span className="value">{formatDate(schedule.nextRunDate)}</span>
-                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {schedule.location && (
-                        <div className="detail-row">
-                          <span className="label">Location:</span>
-                          <span className="value">{schedule.location}</span>
+                        <div className="flex items-start gap-2">
+                          <MapPinIcon className="h-5 w-5 text-purple-400 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-400 mb-1">Location</p>
+                            <p className="text-white">{schedule.location}</p>
+                          </div>
                         </div>
                       )}
                       {schedule.sku && (
-                        <div className="detail-row">
-                          <span className="label">SKU:</span>
-                          <span className="value">{schedule.sku}</span>
+                        <div className="flex items-start gap-2">
+                          <TagIcon className="h-5 w-5 text-orange-400 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-400 mb-1">SKU</p>
+                            <p className="text-white font-mono">{schedule.sku}</p>
+                          </div>
                         </div>
                       )}
-                      <div className="detail-row">
-                        <span className="label">Assigned To:</span>
-                        <span className="value">{schedule.assignedTo}</span>
+                      <div className="flex items-start gap-2 sm:col-span-2">
+                        <UserIcon className="h-5 w-5 text-cyan-400 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-400 mb-1">Assigned To</p>
+                          <p className="text-white">
+                            {users.find((u: any) => u.userId === schedule.assignedTo)?.name ||
+                              schedule.assignedTo}
+                          </p>
+                        </div>
                       </div>
-                      {schedule.notes && (
-                        <div className="detail-row">
-                          <span className="label">Notes:</span>
-                          <span className="value">{schedule.notes}</span>
+                      {schedule.lastRunDate && (
+                        <div className="flex items-start gap-2">
+                          <ClockIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-400 mb-1">Last Run</p>
+                            <p className="text-sm text-gray-300">
+                              {formatDate(schedule.lastRunDate)}
+                            </p>
+                          </div>
                         </div>
                       )}
-                      {schedule.lastRunDate && (
-                        <div className="detail-row">
-                          <span className="label">Last Run:</span>
-                          <span className="value">{formatDate(schedule.lastRunDate)}</span>
+                      {schedule.notes && (
+                        <div className="flex items-start gap-2 col-span-1 sm:col-span-2">
+                          <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-400 mb-1">Notes</p>
+                            <p className="text-sm text-gray-300">{schedule.notes}</p>
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
         {/* Create/Edit Modal */}
         {showModal && (
-          <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>{editingSchedule ? 'Edit Schedule' : 'Create Schedule'}</h2>
-                <button onClick={() => setShowModal(false)} className="btn-close">
-                  ✕
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowModal(false)}
+          >
+            <div
+              className="bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 border border-gray-800 max-h-[90vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">
+                    {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
+                  </h2>
+                  <p className="text-sm text-gray-400">
+                    {editingSchedule
+                      ? 'Update the schedule configuration below.'
+                      : 'Configure a new automated recurring count schedule.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="modal-body">
-                <div className="form-group">
-                  <label htmlFor="scheduleName">Schedule Name *</label>
+              {/* Modal Body - Form */}
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {/* Schedule Name */}
+                <div>
+                  <label
+                    htmlFor="scheduleName"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
+                    Schedule Name <span className="text-red-400">*</span>
+                  </label>
                   <input
                     id="scheduleName"
                     name="scheduleName"
                     type="text"
                     value={values.scheduleName}
                     onChange={handleChange}
-                    className={`input ${errors.scheduleName ? 'input-error' : ''}`}
-                    placeholder="Weekly A-Items Count"
+                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 ${
+                      errors.scheduleName ? 'border-red-500' : 'border-gray-700'
+                    }`}
+                    placeholder="e.g., Weekly A-Items Count Zone A"
                   />
-                  {errors.scheduleName && <p className="error-text">{errors.scheduleName}</p>}
+                  {errors.scheduleName && (
+                    <p className="mt-1 text-sm text-red-400">{errors.scheduleName}</p>
+                  )}
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="countType">Count Type *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Count Type */}
+                  <div>
+                    <label
+                      htmlFor="countType"
+                      className="block text-sm font-medium text-gray-300 mb-1"
+                    >
+                      Count Type <span className="text-red-400">*</span>
+                    </label>
                     <select
                       id="countType"
                       name="countType"
                       value={values.countType}
                       onChange={handleChange}
-                      className={`select ${errors.countType ? 'input-error' : ''}`}
+                      className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
+                        errors.countType ? 'border-red-500' : 'border-gray-700'
+                      }`}
                     >
                       <option value={CycleCountType.ABC}>ABC Analysis</option>
                       <option value={CycleCountType.BLANKET}>Blanket Count</option>
@@ -434,129 +641,189 @@ export function ScheduleManagementPage() {
                       <option value={CycleCountType.SHIPPING}>Shipping Count</option>
                       <option value={CycleCountType.AD_HOC}>Ad Hoc</option>
                     </select>
-                    {errors.countType && <p className="error-text">{errors.countType}</p>}
+                    {errors.countType && (
+                      <p className="mt-1 text-sm text-red-400">{errors.countType}</p>
+                    )}
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="frequencyType">Frequency *</label>
+                  {/* Frequency Type */}
+                  <div>
+                    <label
+                      htmlFor="frequencyType"
+                      className="block text-sm font-medium text-gray-300 mb-1"
+                    >
+                      Frequency <span className="text-red-400">*</span>
+                    </label>
                     <select
                       id="frequencyType"
                       name="frequencyType"
                       value={values.frequencyType}
                       onChange={handleChange}
-                      className={`select ${errors.frequencyType ? 'input-error' : ''}`}
+                      className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
+                        errors.frequencyType ? 'border-red-500' : 'border-gray-700'
+                      }`}
                     >
                       <option value="DAILY">Daily</option>
                       <option value="WEEKLY">Weekly</option>
                       <option value="MONTHLY">Monthly</option>
                       <option value="QUARTERLY">Quarterly</option>
                     </select>
-                    {errors.frequencyType && <p className="error-text">{errors.frequencyType}</p>}
+                    {errors.frequencyType && (
+                      <p className="mt-1 text-sm text-red-400">{errors.frequencyType}</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="frequencyInterval">Interval *</label>
+                {/* Frequency Interval */}
+                <div>
+                  <label
+                    htmlFor="frequencyInterval"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
+                    Interval <span className="text-red-400">*</span>
+                  </label>
                   <input
                     id="frequencyInterval"
                     name="frequencyInterval"
                     type="number"
                     min="1"
+                    max="52"
                     value={values.frequencyInterval}
                     onChange={handleChange}
-                    className={`input ${errors.frequencyInterval ? 'input-error' : ''}`}
+                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 ${
+                      errors.frequencyInterval ? 'border-red-500' : 'border-gray-700'
+                    }`}
                     placeholder="1"
                   />
-                  <small>How often the schedule repeats (e.g., 2 for every 2 weeks)</small>
+                  <p className="mt-1 text-xs text-gray-500">
+                    How often to repeat (e.g., 2 = every 2 weeks, 6 = every 6 months)
+                  </p>
                   {errors.frequencyInterval && (
-                    <p className="error-text">{errors.frequencyInterval}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.frequencyInterval}</p>
                   )}
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="location">Location (Optional)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Location */}
+                  <div>
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium text-gray-300 mb-1"
+                    >
+                      Location <span className="text-gray-500">(optional)</span>
+                    </label>
                     <input
                       id="location"
                       name="location"
                       type="text"
                       value={values.location}
                       onChange={handleChange}
-                      className="input"
-                      placeholder="A-01-01"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                      placeholder="e.g., A-01-01 or leave blank"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label htmlFor="sku">SKU (Optional)</label>
+                  {/* SKU */}
+                  <div>
+                    <label htmlFor="sku" className="block text-sm font-medium text-gray-300 mb-1">
+                      SKU <span className="text-gray-500">(optional)</span>
+                    </label>
                     <input
                       id="sku"
                       name="sku"
                       type="text"
                       value={values.sku}
                       onChange={handleChange}
-                      className="input"
-                      placeholder="SKU-12345"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                      placeholder="e.g., SKU-12345 or leave blank"
                     />
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="assignedTo">Assigned To *</label>
-                    <select
-                      id="assignedTo"
-                      name="assignedTo"
-                      value={values.assignedTo}
-                      onChange={handleChange}
-                      className={`select ${errors.assignedTo ? 'input-error' : ''}`}
-                    >
-                      <option value="">Select user...</option>
-                      {users.map((user: any) => (
-                        <option key={user.userId} value={user.userId}>
-                          {user.name} ({user.role})
-                        </option>
-                      ))}
-                    </select>
-                    {errors.assignedTo && <p className="error-text">{errors.assignedTo}</p>}
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="nextRunDate">Next Run Date *</label>
-                    <input
-                      id="nextRunDate"
-                      name="nextRunDate"
-                      type="datetime-local"
-                      value={values.nextRunDate}
-                      onChange={handleChange}
-                      className={`input ${errors.nextRunDate ? 'input-error' : ''}`}
-                    />
-                    {errors.nextRunDate && <p className="error-text">{errors.nextRunDate}</p>}
-                  </div>
+                {/* Assigned To */}
+                <div>
+                  <label
+                    htmlFor="assignedTo"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
+                    Assigned To <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    id="assignedTo"
+                    name="assignedTo"
+                    value={values.assignedTo}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
+                      errors.assignedTo ? 'border-red-500' : 'border-gray-700'
+                    }`}
+                  >
+                    <option value="">Select a user...</option>
+                    {users.map((user: any) => (
+                      <option key={user.userId} value={user.userId}>
+                        {user.name} ({user.role})
+                      </option>
+                    ))}
+                  </select>
+                  {errors.assignedTo && (
+                    <p className="mt-1 text-sm text-red-400">{errors.assignedTo}</p>
+                  )}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="notes">Notes</label>
+                {/* Next Run Date */}
+                <div>
+                  <label
+                    htmlFor="nextRunDate"
+                    className="block text-sm font-medium text-gray-300 mb-1"
+                  >
+                    Next Run Date <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    id="nextRunDate"
+                    name="nextRunDate"
+                    type="datetime-local"
+                    value={values.nextRunDate}
+                    onChange={handleChange}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
+                      errors.nextRunDate ? 'border-red-500' : 'border-gray-700'
+                    }`}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">First time this schedule will run</p>
+                  {errors.nextRunDate && (
+                    <p className="mt-1 text-sm text-red-400">{errors.nextRunDate}</p>
+                  )}
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-1">
+                    Notes <span className="text-gray-500">(optional)</span>
+                  </label>
                   <textarea
                     id="notes"
                     name="notes"
                     value={values.notes}
                     onChange={handleChange}
-                    className="textarea"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 resize-none"
                     rows={3}
-                    placeholder="Additional notes..."
+                    placeholder="Add any additional notes or instructions..."
                   />
                 </div>
 
-                <div className="modal-footer">
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="btn btn-secondary"
+                    className="px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800"
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
                     {isSubmitting
                       ? 'Saving...'
                       : editingSchedule
@@ -569,18 +836,19 @@ export function ScheduleManagementPage() {
           </div>
         )}
 
+        {/* Delete Confirmation Dialog */}
         <ConfirmDialog
           isOpen={deleteConfirm.isOpen}
-          onClose={() => setDeleteConfirm({ isOpen: false, scheduleId: '' })}
+          onClose={() => setDeleteConfirm({ isOpen: false, scheduleId: '', scheduleName: '' })}
           onConfirm={confirmDelete}
           title="Delete Schedule"
-          message="Are you sure you want to delete this schedule? This action cannot be undone."
+          message={`Are you sure you want to delete "${deleteConfirm.scheduleName}"? This action cannot be undone and will permanently remove this schedule.`}
           confirmText="Delete"
           cancelText="Cancel"
           variant="danger"
           isLoading={deleteMutation.isPending}
         />
-      </div>
+      </main>
     </div>
   );
 }

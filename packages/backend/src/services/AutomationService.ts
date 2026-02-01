@@ -13,9 +13,7 @@ import {
   CreateAutomationTaskDTO,
   AutomationTaskType,
   AutomationTaskStatus,
-  RFIDTag,
   RFIDScanResult,
-  CycleCountEntry,
   VarianceStatus,
 } from '@opsui/shared';
 

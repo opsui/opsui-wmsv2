@@ -8,17 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { orderApi, useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Button,
-  Badge,
-  Header,
-  Pagination,
-  useToast,
-} from '@/components/shared';
+import { Card, CardContent, Button, Header, Pagination, useToast } from '@/components/shared';
 import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
 import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
@@ -176,7 +166,7 @@ export function OrderQueuePage() {
         });
       }
     },
-    onOrderCompleted: data => {
+    onOrderCompleted: () => {
       // Refresh order queue when an order is completed
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
@@ -190,11 +180,11 @@ export function OrderQueuePage() {
         duration: 3000,
       });
     },
-    onPriorityChanged: data => {
+    onPriorityChanged: () => {
       // Refresh order queue when priority changes
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
-    onProgressUpdated: data => {
+    onProgressUpdated: () => {
       // Refresh order queue when progress updates (for PICKING orders)
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },

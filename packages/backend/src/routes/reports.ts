@@ -8,7 +8,7 @@ import { Router, Request, Response } from 'express';
 import { reportsRepository } from '../repositories/ReportsRepository';
 import { reportsService } from '../services/ReportsService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
-import { Report, ReportType, ReportStatus, ReportFormat, UserRole } from '@opsui/shared';
+import { ReportType, ReportStatus, ReportFormat, UserRole } from '@opsui/shared';
 
 const router = Router();
 

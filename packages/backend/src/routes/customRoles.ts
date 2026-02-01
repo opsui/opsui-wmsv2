@@ -52,7 +52,7 @@ router.get(
   '/',
   authenticate,
   requireAdmin,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
     const roles = await customRoleRepo.getAllRolesWithPermissions();
 
     // Also include system roles (predefined UserRole enum)
@@ -82,7 +82,7 @@ router.get(
   '/system',
   authenticate,
   requireAdmin,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
     const systemRoles = await customRoleRepo.getSystemRoles();
     res.json(systemRoles);
   })
@@ -97,7 +97,7 @@ router.get(
   '/permissions',
   authenticate,
   requireAdmin,
-  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
     // Import permission groups
     const { PERMISSION_GROUPS } = await import('@opsui/shared');
 
@@ -238,8 +238,9 @@ router.post(
         'custom_role',
         roleId,
         `Created custom role "${name}" (${roleId})`,
-        null,
+        undefined,
         { name, description, permissions },
+        undefined,
         ipAddress,
         userAgent
       );
@@ -330,8 +331,9 @@ router.put(
               description: existingRole.description,
               permissions: existingRole.permissions,
             }
-          : null,
+          : undefined,
         { name, description, permissions },
+        undefined,
         ipAddress,
         userAgent
       );
@@ -383,8 +385,9 @@ router.delete(
               description: existingRole.description,
               permissions: existingRole.permissions,
             }
-          : null,
-        null,
+          : undefined,
+        undefined,
+        undefined,
         ipAddress,
         userAgent
       );

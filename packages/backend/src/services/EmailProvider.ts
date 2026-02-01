@@ -320,7 +320,10 @@ export class EmailProvider {
   // SES (AWS Simple Email Service)
   // --------------------------------------------------------------------------
 
-  private async sendWithSES({ client, command }: any, params: EmailParams): Promise<EmailResult> {
+  private async sendWithSES(
+    { client, command: CommandClass }: any,
+    params: EmailParams
+  ): Promise<EmailResult> {
     const to = Array.isArray(params.to) ? params.to : [params.to];
 
     const emailParams: any = {
@@ -357,7 +360,7 @@ export class EmailProvider {
     }
 
     try {
-      const command = new command(emailParams);
+      const command = new CommandClass(emailParams);
       const response = await client.send(command);
       return {
         success: true,
@@ -495,14 +498,15 @@ export function getEmailProvider(): EmailProvider {
             replyTo: process.env.POSTMARK_REPLY_TO_EMAIL,
           }
         : undefined,
-      ses: process.env.AWS_SES_ACCESS_KEY_ID
-        ? {
-            region: process.env.AWS_SES_REGION || 'us-east-1',
-            accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
-            from: process.env.AWS_SES_FROM_EMAIL,
-          }
-        : undefined,
+      ses:
+        process.env.AWS_SES_ACCESS_KEY_ID && process.env.AWS_SES_SECRET_ACCESS_KEY
+          ? {
+              region: process.env.AWS_SES_REGION || 'us-east-1',
+              accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID,
+              secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY,
+              from: process.env.AWS_SES_FROM_EMAIL,
+            }
+          : undefined,
     };
 
     emailProviderInstance = new EmailProvider(config);

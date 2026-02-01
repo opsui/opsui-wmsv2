@@ -11,7 +11,7 @@ import { customRoleRepository } from '../repositories/CustomRoleRepository';
 
 // Cache for user permissions to avoid repeated database lookups
 const permissionsCache = new Map<string, { permissions: Permission[]; expiresAt: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// const CACHE_TTL = 5 * 60 * 1000; // 5 minutes - temporarily unused due to cache bypass
 
 /**
  * Clean up expired cache entries
@@ -122,7 +122,7 @@ export function hasAllPermissions(
  * router.get('/orders', requirePermission(Permission.VIEW_ORDERS), getOrdersHandler);
  */
 export function requirePermission(permission: Permission) {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
         throw new ForbiddenError('Authentication required');
@@ -198,7 +198,7 @@ export function requirePermission(permission: Permission) {
  * ]), generateReportHandler);
  */
 export function requireAnyPermission(permissions: Permission[]) {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
         throw new ForbiddenError('Authentication required');
@@ -229,7 +229,7 @@ export function requireAnyPermission(permissions: Permission[]) {
  * ]), createOrderHandler);
  */
 export function requireAllPermissions(permissions: Permission[]) {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  return async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
         throw new ForbiddenError('Authentication required');

@@ -15,8 +15,6 @@ import {
   RuleExecutionLog,
   RuleStatus,
   RuleType,
-  ConditionOperator,
-  ActionType,
   RuleEventType,
 } from '@opsui/shared';
 

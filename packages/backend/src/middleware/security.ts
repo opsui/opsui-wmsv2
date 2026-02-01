@@ -167,7 +167,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 /**
  * Add security-related headers to responses
  */
-export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
+export const securityHeaders = (_req: Request, res: Response, next: NextFunction) => {
   // Content Security Policy
   res.setHeader(
     'Content-Security-Policy',
@@ -210,10 +210,11 @@ export const requestSizeLimit = (req: Request, res: Response, next: NextFunction
       contentLength,
     });
 
-    return res.status(413).json({
+    res.status(413).json({
       error: 'Payload too large',
       message: 'Request body size exceeds maximum allowed size (10MB)',
     });
+    return;
   }
 
   next();
@@ -227,7 +228,7 @@ export const requestSizeLimit = (req: Request, res: Response, next: NextFunction
  * Basic input sanitization middleware
  * Removes potentially dangerous characters from request body
  */
-export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
+export const sanitizeInput = (req: Request, _res: Response, next: NextFunction) => {
   if (req.body && typeof req.body === 'object') {
     sanitizeObject(req.body);
   }

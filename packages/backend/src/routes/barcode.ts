@@ -15,7 +15,7 @@ import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 import { requirePicker } from '../middleware/auth';
 import { getAuditService, AuditEventType, AuditCategory } from '../services/AuditService';
 import { logger } from '../config/logger';
-import { getOrderById } from '../services/OrderService';
+import { orderService } from '../services/OrderService';
 import { inventoryService } from '../services/InventoryService';
 import { BinLocationService } from '../services/BinLocationService';
 import { query } from '../db/client';
@@ -46,8 +46,9 @@ router.get('/lookup/:barcode', authenticate, async (req: AuthenticatedRequest, r
       const auditService = getAuditService();
       await auditService.logSecurityEvent(
         AuditEventType.UNAUTHORIZED_ACCESS_ATTEMPT,
-        req.ip || null,
-        req.get('user-agent') || null,
+        `SKU not found for barcode: ${barcode}`,
+        req.ip || 'unknown',
+        req.get('user-agent') || 'unknown',
         { barcode, reason: 'SKU_NOT_FOUND' }
       );
 
@@ -83,17 +84,14 @@ router.get('/lookup/:barcode', authenticate, async (req: AuthenticatedRequest, r
     const auditService = getAuditService();
     await auditService.log({
       userId: req.user?.userId ?? null,
-      username: req.user?.email ?? null,
-      action: AuditEventType.ORDER_VIEWED,
-      category: AuditCategory.DATA_ACCESS,
+      userEmail: req.user?.email ?? null,
+      actionType: AuditEventType.ORDER_VIEWED,
+      actionCategory: AuditCategory.DATA_ACCESS,
       resourceType: 'SKU',
       resourceId: sku.sku,
+      actionDescription: 'Viewed SKU details',
       ipAddress: req.ip || null,
       userAgent: req.get('user-agent') || null,
-      details: { barcode },
-      oldValues: null,
-      newValues: null,
-      traceId: null,
     });
   } catch (error) {
     logger.error('Barcode lookup error', { error });
@@ -201,8 +199,9 @@ router.post(
         const auditService = getAuditService();
         await auditService.logSecurityEvent(
           AuditEventType.UNAUTHORIZED_ACCESS_ATTEMPT,
-          req.ip || null,
-          req.get('user-agent') || null,
+          `Barcode mismatch for SKU: ${sku}`,
+          req.ip || 'unknown',
+          req.get('user-agent') || 'unknown',
           {
             action: 'barcode_mismatch',
             expectedSku: sku,
@@ -235,7 +234,7 @@ router.post(
       await inventoryService.reserveInventory(sku, binLocation, quantity, orderId);
 
       // Update order pick quantity (this would typically be handled by PickTaskService)
-      const order = await getOrderById(orderId);
+      const order = await orderService.getOrder(orderId);
 
       if (!order) {
         res.status(404).json({
@@ -253,10 +252,11 @@ router.post(
         req.user?.email ?? null,
         'Order',
         orderId,
-        null,
+        `Confirmed pick: ${quantity}x ${sku} from ${binLocation}`,
+        undefined,
         { sku, quantity, binLocation, pickerId: req.user!.userId },
-        req.ip || null,
-        req.get('user-agent') || null
+        req.ip || 'unknown',
+        req.get('user-agent') || 'unknown'
       );
 
       res.json({
@@ -353,21 +353,19 @@ router.post('/inventory/verify', authenticate, async (req: AuthenticatedRequest,
     const auditService = getAuditService();
     await auditService.log({
       userId: req.user?.userId ?? null,
-      username: req.user?.email ?? null,
-      action: AuditEventType.REPORT_GENERATED,
-      category: AuditCategory.DATA_ACCESS,
+      userEmail: req.user?.email ?? null,
+      actionType: AuditEventType.REPORT_GENERATED,
+      actionCategory: AuditCategory.DATA_ACCESS,
       resourceType: 'BinLocation',
       resourceId: binLocation,
+      actionDescription: 'Generated bin location report',
       ipAddress: req.ip || null,
       userAgent: req.get('user-agent') || null,
-      details: {
+      newValues: {
         binLocation,
         itemsScanned: scans.length,
         discrepanciesFound: discrepancies.length,
       },
-      oldValues: null,
-      newValues: null,
-      traceId: null,
     });
 
     res.json({
@@ -436,14 +434,15 @@ router.post('/putaway', authenticate, requirePicker, async (req: AuthenticatedRe
       req.user?.email ?? null,
       'Inventory',
       `${skuRecord.sku}@${binLocation}`,
-      null,
+      `Putaway: ${quantity}x ${skuRecord.sku} to ${binLocation}`,
+      undefined,
       {
         sku: skuRecord.sku,
         binLocation,
         quantity,
       },
-      req.ip || null,
-      req.get('user-agent') || null
+      req.ip || 'unknown',
+      req.get('user-agent') || 'unknown'
     );
 
     res.json({

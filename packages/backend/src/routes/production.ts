@@ -4,7 +4,7 @@
  * API endpoints for production orders, BOMs, and manufacturing workflows
  */
 
-import { Router, Response, NextFunction } from 'express';
+import { Router, Response } from 'express';
 import { productionService } from '../services/ProductionService';
 import { authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';

@@ -20,6 +20,7 @@ import {
   WrenchIcon,
   ArrowPathIcon,
   ChevronDownIcon,
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
 
@@ -634,7 +635,7 @@ export function RoleActivityCard({
                         </div>
                       ) : (
                         // Order Card
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <h4 className="text-sm font-semibold dark:text-white text-gray-900">
@@ -672,6 +673,21 @@ export function RoleActivityCard({
                               </div>
                             </div>
                           </div>
+                          {(item.status === 'PICKING' ||
+                            item.status === 'PICKED' ||
+                            item.progress === 100) && (
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              onClick={() =>
+                                (window.location.href = `/orders/${item.orderId}/pick`)
+                              }
+                              className="flex items-center gap-2 shrink-0"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                              Live View
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

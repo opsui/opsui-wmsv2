@@ -27,7 +27,6 @@ import {
 } from '@opsui/shared';
 import { query } from '../db/client';
 import { logger } from '../config/logger';
-import { NotFoundError } from '@opsui/shared';
 
 // ============================================================================
 // NOTIFICATION REPOSITORY

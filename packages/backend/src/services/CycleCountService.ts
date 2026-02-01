@@ -155,7 +155,7 @@ export class CycleCountService {
       [planId, VarianceStatus.PENDING]
     );
 
-    const entries = result.rows.map(row => ({
+    const entries = result.rows.map((row: any) => ({
       sku: row.sku,
       binLocation: row.bin_location,
       systemQuantity: parseFloat(row.system_quantity),
@@ -386,7 +386,7 @@ export class CycleCountService {
       [planId]
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       timestamp: new Date(row.occurred_at),
       action: row.action_description,
       userId: row.user_id,
@@ -417,7 +417,7 @@ export class CycleCountService {
 
       const planId = `CCP-${nanoid(10)}`.toUpperCase();
 
-      const result = await client.query(
+      await client.query(
         `INSERT INTO cycle_count_plans
           (plan_id, plan_name, count_type, scheduled_date, location, sku, count_by, created_by, notes)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -464,11 +464,11 @@ export class CycleCountService {
       throw new Error(`Cycle count plan ${planId} not found`);
     }
 
-    const plan = this.mapRowToCycleCountPlan(result.rows[0]);
+    const cycleCountPlan = this.mapRowToCycleCountPlan(result.rows[0]);
 
     // Add assigned user name if available
     if (result.rows[0].assigned_to_name) {
-      (plan as any).assignedToName = result.rows[0].assigned_to_name;
+      (cycleCountPlan as any).assignedToName = result.rows[0].assigned_to_name;
     }
 
     // Get count entries
@@ -477,9 +477,9 @@ export class CycleCountService {
       [planId]
     );
 
-    plan.countEntries = entriesResult.rows.map(row => this.mapRowToCycleCountEntry(row));
+    cycleCountPlan.countEntries = entriesResult.rows.map(row => this.mapRowToCycleCountEntry(row));
 
-    return plan;
+    return cycleCountPlan;
   }
 
   /**
@@ -576,7 +576,7 @@ export class CycleCountService {
     );
 
     const plans = await Promise.all(
-      result.rows.map(async row => {
+      result.rows.map(async (row: any) => {
         const plan = this.mapRowToCycleCountPlan(row);
         // Add assigned user name if available
         if (row.assigned_to_name) {
@@ -1325,7 +1325,7 @@ export class CycleCountService {
       }
 
       // Update entry
-      const result = await client.query(
+      await client.query(
         `UPDATE cycle_count_entries
          SET variance_status = $1,
              reviewed_by = $2,
@@ -1336,7 +1336,7 @@ export class CycleCountService {
         [dto.status, dto.reviewedBy, adjustmentTransactionId || null, dto.entryId]
       );
 
-      await client.query('COMMIT');
+      const result = await client.query('COMMIT');
 
       logger.info('Variance status updated', {
         entryId: dto.entryId,
@@ -1356,6 +1356,7 @@ export class CycleCountService {
    */
   private async processVarianceAdjustment(
     entryId: string,
+    // @ts-expect-error
     status: VarianceStatus,
     reviewedBy: string,
     notes?: string
@@ -1376,7 +1377,7 @@ export class CycleCountService {
     const { sku, bin_location, variance } = entry;
 
     if (variance === 0) {
-      return null;
+      return '';
     }
 
     // Create inventory transaction

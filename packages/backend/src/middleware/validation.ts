@@ -17,7 +17,7 @@ import { logger } from '../config/logger';
  * Validate request body against a Joi schema
  */
 export function validateBody(schema: Joi.ObjectSchema) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
@@ -44,7 +44,7 @@ export function validateBody(schema: Joi.ObjectSchema) {
  * Validate request query parameters against a Joi schema
  */
 export function validateQuery(schema: Joi.ObjectSchema) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     const { error, value } = schema.validate(req.query, {
       abortEarly: false,
       stripUnknown: true,
@@ -70,7 +70,7 @@ export function validateQuery(schema: Joi.ObjectSchema) {
  * Validate request route parameters against a Joi schema
  */
 export function validateParams(schema: Joi.ObjectSchema) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     const { error, value } = schema.validate(req.params, {
       abortEarly: false,
       stripUnknown: true,

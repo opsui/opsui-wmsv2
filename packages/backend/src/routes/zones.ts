@@ -9,6 +9,7 @@ import { authenticate, AuthenticatedRequest, requirePicker } from '../middleware
 import { authorize } from '../middleware/auth';
 import { zonePickingService } from '../services/ZonePickingService';
 import { logger } from '../config/logger';
+import { UserRole } from '@opsui/shared';
 
 const router = Router();
 
@@ -92,7 +93,7 @@ router.get('/stats/all', authenticate, async (req: AuthenticatedRequest, res) =>
 router.post(
   '/assign',
   authenticate,
-  authorize('ADMIN', 'SUPERVISOR'),
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { pickerId, zoneId } = req.body;
@@ -175,7 +176,7 @@ router.post('/release', authenticate, requirePicker, async (req: AuthenticatedRe
 router.post(
   '/rebalance',
   authenticate,
-  authorize('ADMIN', 'SUPERVISOR'),
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: AuthenticatedRequest, res) => {
     try {
       const context = {

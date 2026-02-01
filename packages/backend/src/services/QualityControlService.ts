@@ -19,7 +19,6 @@ import {
   CreateReturnAuthorizationDTO,
   InspectionStatus,
   InspectionType,
-  DispositionAction,
 } from '@opsui/shared';
 import { notifyUser, NotificationType, NotificationPriority } from './NotificationHelper';
 
@@ -216,7 +215,7 @@ export class QualityControlService {
 
       const inspectorName = userResult.rows[0]?.name || 'Unknown';
 
-      const result = await client.query(
+      await client.query(
         `INSERT INTO quality_inspections
           (inspection_id, inspection_type, reference_type, reference_id, sku, quantity_inspected,
            inspector_id, inspector_name, location, lot_number, expiration_date, checklist_id, notes)
@@ -414,7 +413,7 @@ export class QualityControlService {
 
       updateParams.push(dto.inspectionId);
 
-      const result = await client.query(
+      await client.query(
         `UPDATE quality_inspections
          SET ${updateFields.join(', ')}
          WHERE inspection_id = $${paramCount}
@@ -510,7 +509,7 @@ export class QualityControlService {
 
     const resultId = `IR-${nanoid(10)}`.toUpperCase();
 
-    const result = await client.query(
+    const insertResult = await client.query(
       `INSERT INTO inspection_results
         (result_id, inspection_id, checklist_item_id, result, passed, notes, image_url)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -528,7 +527,7 @@ export class QualityControlService {
 
     logger.info('Inspection result saved', { resultId, inspectionId: data.inspectionId });
 
-    return this.mapRowToInspectionResult(result.rows[0]);
+    return this.mapRowToInspectionResult(insertResult.rows[0]);
   }
 
   /**

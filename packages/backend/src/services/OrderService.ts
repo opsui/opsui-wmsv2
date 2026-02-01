@@ -51,9 +51,7 @@ import {
 } from '@opsui/shared';
 import { orderRepository } from '../repositories/OrderRepository';
 import { pickTaskRepository } from '../repositories/PickTaskRepository';
-import { inventoryRepository } from '../repositories/InventoryRepository';
 import { validateOrderItems, validatePickSKU, validatePickQuantity } from '@opsui/shared';
-import { generateOrderId } from '@opsui/shared';
 import { logger } from '../config/logger';
 import { query } from '../db/client';
 import { notificationService } from './NotificationService';
@@ -592,7 +590,7 @@ export class OrderService {
         orderId: order.orderId,
         pickerId: dto.pickerId,
         completedAt: new Date(),
-        itemCount: order.items.length,
+        itemCount: order.items?.length || 0,
       });
     }
 

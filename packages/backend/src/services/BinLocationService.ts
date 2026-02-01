@@ -6,7 +6,6 @@
 
 import { getPool } from '../db/client';
 import { logger } from '../config/logger';
-import { nanoid } from 'nanoid';
 import { BinLocation, CreateBinLocationDTO, UpdateBinLocationDTO, BinType } from '@opsui/shared';
 
 // ============================================================================

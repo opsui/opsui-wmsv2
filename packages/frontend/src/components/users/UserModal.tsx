@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserRole } from '@opsui/shared';
-import { Card, CardContent, Button } from '@/components/shared';
+import { CardContent, Button } from '@/components/shared';
 import {
   XMarkIcon,
   UserIcon,

@@ -6,9 +6,8 @@
 
 import { Router } from 'express';
 import { cycleCountKPIService } from '../services/CycleCountKPIService';
-import { asyncHandler, authenticate, authorize } from '../middleware';
+import { asyncHandler, authenticate } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { UserRole } from '@opsui/shared';
 
 const router = Router();
 

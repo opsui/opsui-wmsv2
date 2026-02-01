@@ -32,11 +32,8 @@ export const BACKEND_CONFIG = {
   API_VERSION: 'v1',
 
   /** Full API base URL (constructed from host, port, base path, version) */
-  getApiBaseUrl(
-    host: string = BACKEND_CONFIG.DEFAULT_HOST,
-    port: number = BACKEND_CONFIG.DEFAULT_PORT
-  ): string {
-    return `http://${host}:${port}${BACKEND_CONFIG.API_BASE_PATH}/${BACKEND_CONFIG.API_VERSION}`;
+  getApiBaseUrl(host: string = '0.0.0.0', port: number = 3001): string {
+    return `http://${host}:${port}${this.API_BASE_PATH}/${this.API_VERSION}`;
   },
 } as const;
 

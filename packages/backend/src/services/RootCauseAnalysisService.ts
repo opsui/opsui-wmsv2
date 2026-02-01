@@ -228,7 +228,7 @@ export class RootCauseAnalysisService {
   /**
    * Get breakdown by category with trend analysis
    */
-  async getCategoryBreakdown(days: number = 30): Promise<CategoryBreakdown[]> {
+  async getCategoryBreakdown(_days: number = 30): Promise<CategoryBreakdown[]> {
     const client = await getPool();
 
     const result = await client.query(

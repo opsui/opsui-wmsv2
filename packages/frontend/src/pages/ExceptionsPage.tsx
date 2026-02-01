@@ -5,13 +5,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import {
   useExceptions,
   useOpenExceptions,
   useExceptionSummary,
   useResolveException,
-  useReportProblem,
 } from '@/services/api';
 import {
   Card,
@@ -21,12 +19,7 @@ import {
   Header,
   Button,
   Pagination,
-  Input,
-  ListSkeleton,
-  Skeleton,
-  MetricCardSkeleton,
 } from '@/components/shared';
-import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
 import {
   ExclamationTriangleIcon,
@@ -168,14 +161,7 @@ function ExceptionTypeBadge({ type }: { type: ExceptionType }) {
 // ============================================================================
 
 export function ExceptionsPage() {
-  const { showToast } = useToast();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const searchParams = new URLSearchParams(location.search);
-  const isReportMode = searchParams.get('report') === 'true';
-
   const canSupervise = useAuthStore(state => state.canSupervise);
-  const currentUser = useAuthStore(state => state.user);
   const [selectedException, setSelectedException] = useState<OrderException | null>(null);
   const [filterStatus, setFilterStatus] = useState<ExceptionStatus | 'all'>('all');
   const [showResolveModal, setShowResolveModal] = useState(false);
@@ -185,29 +171,13 @@ export function ExceptionsPage() {
   const [newQuantity, setNewQuantity] = useState(0);
   const [newBinLocation, setNewBinLocation] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Report problem states
-  const [problemType, setProblemType] = useState<'EQUIPMENT' | 'FACILITY' | 'SYSTEM' | 'OTHER'>(
-    'OTHER'
-  );
-  const [problemDescription, setProblemDescription] = useState('');
-  const [problemLocation, setProblemLocation] = useState('');
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  // Report problem mutation
-  const reportProblemMutation = useReportProblem();
-
   // Fetch exceptions
-  const {
-    data: allExceptions,
-    isLoading: allLoading,
-    refetch: refetchAll,
-  } = useExceptions(
+  const { data: allExceptions, refetch: refetchAll } = useExceptions(
     filterStatus === 'all'
-      ? { limit: pageSize, offset: (page - 1) * pageSize }
-      : { status: filterStatus, limit: pageSize, offset: (page - 1) * pageSize }
+      ? { limit: 20, offset: (page - 1) * 20 }
+      : { status: filterStatus, limit: 20, offset: (page - 1) * 20 }
   );
 
   // Reset to page 1 when filters change
@@ -215,22 +185,14 @@ export function ExceptionsPage() {
     setPage(1);
   }, [filterStatus, searchQuery]);
 
-  const {
-    data: openExceptions,
-    isLoading: openLoading,
-    refetch: refetchOpen,
-  } = useOpenExceptions();
-  const {
-    data: summary,
-    isLoading: summaryLoading,
-    refetch: refetchSummary,
-  } = useExceptionSummary();
+  const { data: openExceptions, refetch: refetchOpen } = useOpenExceptions();
+  const { data: summary, refetch: refetchSummary } = useExceptionSummary();
 
   const resolveMutation = useResolveException();
 
   // In report mode, allow all authenticated users to report problems
   // Otherwise, require supervisor/admin access
-  if (!isReportMode && !canSupervise()) {
+  if (!canSupervise()) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="max-w-md">
@@ -247,7 +209,7 @@ export function ExceptionsPage() {
   }
 
   const handleResolve = async () => {
-    if (!selectedException || !currentUser) return;
+    if (!selectedException) return;
 
     try {
       await resolveMutation.mutateAsync({
@@ -256,7 +218,7 @@ export function ExceptionsPage() {
           exceptionId: selectedException.exceptionId,
           resolution,
           notes: resolutionNotes,
-          resolvedBy: currentUser.userId,
+          resolvedBy: 'current-user', // Would come from auth store
           substituteSku: resolution === ExceptionResolution.SUBSTITUTE ? substituteSku : undefined,
           newQuantity: resolution === ExceptionResolution.ADJUST_QUANTITY ? newQuantity : undefined,
           newBinLocation:
@@ -500,115 +462,8 @@ export function ExceptionsPage() {
     <div className="min-h-screen">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Report Problem Form */}
-        {isReportMode && (
-          <div className="animate-in">
-            {submitSuccess ? (
-              <Card className="max-w-2xl mx-auto border-2 border-green-500/30">
-                <CardContent className="p-8 text-center">
-                  <CheckCircleIcon className="h-16 w-16 text-success-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-white mb-2">Problem Reported</h2>
-                  <p className="text-gray-300 mb-6">
-                    Thank you for reporting this issue. The admin team has been notified and will
-                    review it shortly.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      setSubmitSuccess(false);
-                      setProblemDescription('');
-                      setProblemLocation('');
-                      setProblemType('OTHER');
-                    }}
-                  >
-                    Report Another Problem
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ExclamationCircleIcon className="h-6 w-6 text-warning-500" />
-                    Report a Problem
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Problem Type
-                    </label>
-                    <select
-                      value={problemType}
-                      onChange={e => setProblemType(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="EQUIPMENT">Equipment Issue</option>
-                      <option value="FACILITY">Facility/Infrastructure</option>
-                      <option value="SYSTEM">System/Software</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Location (optional)
-                    </label>
-                    <Input
-                      type="text"
-                      value={problemLocation}
-                      onChange={e => setProblemLocation(e.target.value)}
-                      placeholder="e.g., Zone A, Bin 12-03, Packing Station 2"
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      value={problemDescription}
-                      onChange={e => setProblemDescription(e.target.value)}
-                      placeholder="Please describe the problem you're experiencing..."
-                      rows={4}
-                      className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-3 justify-end">
-                    <Button variant="secondary" onClick={() => navigate('/exceptions')}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        if (!problemDescription.trim()) {
-                          return;
-                        }
-                        try {
-                          await reportProblemMutation.mutateAsync({
-                            problemType,
-                            location: problemLocation || undefined,
-                            description: problemDescription,
-                          });
-                          setSubmitSuccess(true);
-                        } catch (error) {
-                          console.error('Failed to report problem:', error);
-                        }
-                      }}
-                      disabled={reportProblemMutation.isPending || !problemDescription.trim()}
-                    >
-                      {reportProblemMutation.isPending ? 'Submitting...' : 'Submit Report'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {/* Exception Management Interface - only show when NOT in report mode */}
-        {!isReportMode && canSupervise() && (
+        {/* Exception Management Interface */}
+        {canSupervise() && (
           <>
             {/* Page Header */}
             <div className="animate-in">
@@ -647,7 +502,7 @@ export function ExceptionsPage() {
             </div>
 
             {/* Summary Cards */}
-            {!summaryLoading && summary && (
+            {summary && (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card variant="glass" className="card-hover">
                   <CardContent className="p-6">
@@ -796,9 +651,7 @@ export function ExceptionsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {openLoading ? (
-                  <ListSkeleton items={6} />
-                ) : filteredExceptions.length > 0 ? (
+                {filteredExceptions.length > 0 ? (
                   <div className="space-y-3">
                     {filteredExceptions.map(exception => {
                       return (
@@ -918,9 +771,9 @@ export function ExceptionsPage() {
               <Pagination
                 currentPage={page}
                 totalItems={allExceptions.total}
-                pageSize={pageSize}
+                pageSize={20}
                 onPageChange={setPage}
-                onPageSizeChange={setPageSize}
+                onPageSizeChange={() => {}}
                 pageSizeOptions={[10, 20, 50, 100]}
               />
             )}

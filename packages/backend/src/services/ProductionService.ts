@@ -14,6 +14,7 @@ import {
   RecordProductionOutputDTO,
   CreateBOMDTO,
   ProductionOrderStatus,
+  BillOfMaterialStatus,
   NotFoundError,
 } from '@opsui/shared';
 
@@ -41,9 +42,10 @@ export class ProductionService {
 
     const bom = await productionRepository.createBOM({
       ...dto,
-      status: 'DRAFT',
+      status: BillOfMaterialStatus.DRAFT,
+      version: '1.0',
       createdBy,
-    });
+    } as any);
 
     return bom;
   }
@@ -87,18 +89,21 @@ export class ProductionService {
       throw new NotFoundError('BOM', dto.bomId);
     }
 
-    if (bom.status !== 'ACTIVE') {
+    if (bom.status !== BillOfMaterialStatus.ACTIVE) {
       throw new Error('BOM must be active to create production order');
     }
 
-    // Get product name from BOM
+    // Get product name and unit of measure from BOM
     const productId = bom.productId;
 
     const order = await productionRepository.createProductionOrder({
       ...dto,
       productId,
       productName: `Product ${productId}`, // Would fetch from SKU service
-      status: 'PLANNED',
+      unitOfMeasure: bom.unitOfMeasure || 'EA',
+      status: ProductionOrderStatus.PLANNED,
+      materialsReserved: false,
+      priority: dto.priority || ('NORMAL' as any),
       createdBy,
     });
 
@@ -156,7 +161,7 @@ export class ProductionService {
     // This would integrate with inventory service
 
     const updated = await productionRepository.updateProductionOrder(orderId, {
-      status: 'RELEASED',
+      status: ProductionOrderStatus.RELEASED,
       materialsReserved: true,
       updatedBy: userId,
     });
@@ -172,7 +177,7 @@ export class ProductionService {
     }
 
     const updated = await productionRepository.updateProductionOrder(orderId, {
-      status: 'IN_PROGRESS',
+      status: ProductionOrderStatus.IN_PROGRESS,
       actualStartDate: new Date(),
       updatedBy: userId,
     });
@@ -214,6 +219,7 @@ export class ProductionService {
 
     const output = await productionRepository.createProductionOutput({
       ...dto,
+      productId: order.productId,
       producedAt: new Date(),
       producedBy: userId,
     });
@@ -221,7 +227,7 @@ export class ProductionService {
     // Check if order is complete
     if (totalCompleted >= order.quantityToProduce) {
       await productionRepository.updateProductionOrder(dto.orderId, {
-        status: 'COMPLETED',
+        status: ProductionOrderStatus.COMPLETED,
         actualEndDate: new Date(),
         updatedBy: userId,
       });
@@ -244,10 +250,10 @@ export class ProductionService {
     newStatus: ProductionOrderStatus
   ): void {
     const validTransitions: Record<ProductionOrderStatus, ProductionOrderStatus[]> = {
-      DRAFT: ['PLANNED', 'CANCELLED'],
-      PLANNED: ['RELEASED', 'CANCELLED'],
-      RELEASED: ['IN_PROGRESS', 'CANCELLED'],
-      IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
+      DRAFT: [ProductionOrderStatus.PLANNED, ProductionOrderStatus.CANCELLED],
+      PLANNED: [ProductionOrderStatus.RELEASED, ProductionOrderStatus.CANCELLED],
+      RELEASED: [ProductionOrderStatus.IN_PROGRESS, ProductionOrderStatus.CANCELLED],
+      IN_PROGRESS: [ProductionOrderStatus.COMPLETED, ProductionOrderStatus.CANCELLED],
       COMPLETED: [],
       CANCELLED: [],
     };

@@ -223,7 +223,7 @@ export class IntegrationsService {
     }
   }
 
-  private async syncErpSystem(integration: Integration): Promise<any> {
+  private async syncErpSystem(_integration: Integration): Promise<any> {
     // ERP sync implementation
     // This would connect to SAP/Oracle APIs and sync inventory, orders, etc.
     return {
@@ -234,7 +234,7 @@ export class IntegrationsService {
     };
   }
 
-  private async syncEcommercePlatform(integration: Integration): Promise<any> {
+  private async syncEcommercePlatform(_integration: Integration): Promise<any> {
     // E-commerce sync implementation
     // This would connect to Shopify/WooCommerce APIs and sync orders, products
     return {
@@ -245,7 +245,7 @@ export class IntegrationsService {
     };
   }
 
-  private async syncCarrierSystem(integration: Integration): Promise<any> {
+  private async syncCarrierSystem(_integration: Integration): Promise<any> {
     // Carrier sync implementation
     // This would connect to carrier APIs and sync shipment statuses
     return {
@@ -353,32 +353,32 @@ export class IntegrationsService {
     }
   }
 
-  private async handleOrderCreated(payload: any, integration: Integration): Promise<void> {
+  private async handleOrderCreated(payload: any, _integration: Integration): Promise<void> {
     // Handle order creation from e-commerce platform
     console.log('Handling order created webhook:', payload.orderId);
   }
 
-  private async handleOrderUpdated(payload: any, integration: Integration): Promise<void> {
+  private async handleOrderUpdated(payload: any, _integration: Integration): Promise<void> {
     // Handle order update from e-commerce platform
     console.log('Handling order updated webhook:', payload.orderId);
   }
 
-  private async handleOrderCancelled(payload: any, integration: Integration): Promise<void> {
+  private async handleOrderCancelled(payload: any, _integration: Integration): Promise<void> {
     // Handle order cancellation from e-commerce platform
     console.log('Handling order cancelled webhook:', payload.orderId);
   }
 
-  private async handleProductUpdated(payload: any, integration: Integration): Promise<void> {
+  private async handleProductUpdated(payload: any, _integration: Integration): Promise<void> {
     // Handle product update from e-commerce platform
     console.log('Handling product updated webhook:', payload.productId);
   }
 
-  private async handleInventoryUpdated(payload: any, integration: Integration): Promise<void> {
+  private async handleInventoryUpdated(payload: any, _integration: Integration): Promise<void> {
     // Handle inventory update from ERP system
     console.log('Handling inventory updated webhook:', payload.sku);
   }
 
-  private async handleShipmentStatusUpdate(payload: any, integration: Integration): Promise<void> {
+  private async handleShipmentStatusUpdate(payload: any, _integration: Integration): Promise<void> {
     // Handle shipment status update from carrier
     console.log('Handling shipment status update webhook:', payload.trackingNumber);
   }

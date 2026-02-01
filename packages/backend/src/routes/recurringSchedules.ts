@@ -7,9 +7,8 @@
 import { Router } from 'express';
 import { recurringScheduleService } from '../services/RecurringScheduleService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
-import { requirePermission } from '../middleware/permissions';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { UserRole, Permission } from '@opsui/shared';
+import { UserRole } from '@opsui/shared';
 
 const router = Router();
 
@@ -71,7 +70,7 @@ router.get(
         req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
       assignedTo: req.query.assignedTo as string | undefined,
       frequencyType: req.query.frequencyType as string | undefined,
-      countType: req.query.countType as string | undefined,
+      countType: req.query.countType as any,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
       offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,
     };

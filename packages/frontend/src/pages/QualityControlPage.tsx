@@ -12,8 +12,10 @@ import {
   EyeIcon,
   TrashIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Pagination, Header, useToast, ConfirmDialog } from '@/components/shared';
+import { Pagination, Header, useToast, ConfirmDialog, Button } from '@/components/shared';
+import { useNavigate } from 'react-router-dom';
 import {
   InspectionType,
   InspectionStatus,
@@ -614,6 +616,7 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
 // ============================================================================
 
 export function QualityControlPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'inspections' | 'checklists' | 'returns'>(
     'inspections'
   );
@@ -743,11 +746,21 @@ export function QualityControlPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Quality Control</h1>
-              <p className="text-sm text-gray-400 mt-1">
-                Manage inspections, checklists, and returns
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Quality Control</h1>
+                <p className="text-sm text-gray-400 mt-1">
+                  Manage inspections, checklists, and returns
+                </p>
+              </div>
             </div>
             <div className="flex space-x-3">
               {activeTab === 'inspections' && (

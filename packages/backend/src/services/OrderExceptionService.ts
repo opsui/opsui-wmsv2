@@ -31,7 +31,7 @@ export class OrderExceptionService {
 
     try {
       // Calculate quantity short
-      const quantityShort = dto.quantityExpected - dto.quantityActual;
+      const _quantityShort = dto.quantityExpected - dto.quantityActual;
 
       // Determine initial status based on exception type
       let initialStatus = ExceptionStatus.OPEN;
@@ -424,7 +424,7 @@ export class OrderExceptionService {
 
       // Insert problem report into order_exceptions with a special type
       // This allows us to reuse existing exception tracking infrastructure
-      const result = await client.query(
+      await client.query(
         `INSERT INTO order_exceptions
           (exception_id, order_id, order_item_id, sku, type, status,
            quantity_expected, quantity_actual, reason, reported_by,
@@ -624,14 +624,14 @@ export class OrderExceptionService {
       resolutionNotes: row.resolution_notes,
       substituteSku: row.substitute_sku,
       // Cycle count variance specific fields
-      cycleCountEntryId: row.cycle_count_entry_id,
+      ...(row.cycle_count_entry_id ? { cycleCountEntryId: row.cycle_count_entry_id } : {}),
       cycleCountPlanId: row.cycle_count_plan_id,
       binLocation: row.bin_location,
       systemQuantity: row.system_quantity ? parseFloat(row.system_quantity) : undefined,
       countedQuantity: row.counted_quantity ? parseFloat(row.counted_quantity) : undefined,
       variancePercent: row.variance_percent ? parseFloat(row.variance_percent) : undefined,
       varianceReasonCode: row.variance_reason_code,
-    };
+    } as any;
   }
 }
 

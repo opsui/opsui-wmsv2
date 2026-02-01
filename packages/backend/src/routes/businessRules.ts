@@ -288,7 +288,7 @@ router.post(
  */
 router.get(
   '/stats/summary',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (_req: Request, res: Response) => {
     const allRules = await businessRulesRepository.findAll({ includeInactive: true });
 
     const stats = {

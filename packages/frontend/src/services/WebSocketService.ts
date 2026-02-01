@@ -61,7 +61,7 @@ class WebSocketService {
       return;
     }
 
-    const token = useAuthStore.getState().tokens?.accessToken;
+    const token = useAuthStore.getState().accessToken;
     if (!token) {
       console.warn('[WebSocket] No auth token available');
       return;

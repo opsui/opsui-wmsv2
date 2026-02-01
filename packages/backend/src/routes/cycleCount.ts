@@ -9,13 +9,7 @@ import { cycleCountService } from '../services/CycleCountService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { requirePermission } from '../middleware/permissions';
 import { AuthenticatedRequest } from '../middleware/auth';
-import {
-  UserRole,
-  CycleCountStatus,
-  CycleCountType,
-  VarianceStatus,
-  Permission,
-} from '@opsui/shared';
+import { UserRole, CycleCountStatus, CycleCountType, Permission } from '@opsui/shared';
 
 const router = Router();
 
@@ -358,10 +352,11 @@ router.get(
 
       if (!req.user) {
         console.log('[debug-permissions] No user found in request');
-        return res.status(401).json({
+        res.status(401).json({
           error: 'Not authenticated',
           code: 'NOT_AUTHENTICATED',
         });
+        return;
       }
 
       const { customRoleRepository } = await import('../repositories/CustomRoleRepository');
@@ -375,7 +370,8 @@ router.get(
       );
 
       const user = req.user;
-      const defaultPerms = DEFAULT_ROLE_PERMISSIONS[user.role as any] || [];
+      const userRoleKey = user.role as keyof typeof DEFAULT_ROLE_PERMISSIONS;
+      const defaultPerms = DEFAULT_ROLE_PERMISSIONS[userRoleKey] || [];
       console.log(
         '[debug-permissions] Default permissions for role',
         user.role,

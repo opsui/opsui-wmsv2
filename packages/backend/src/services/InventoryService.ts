@@ -33,14 +33,7 @@
  * @see {@link packages/backend/src/db/schema.sql} for inventory table constraints
  */
 
-import {
-  InventoryUnit,
-  TransactionType,
-  InventoryTransaction,
-  DashboardMetricsResponse,
-  NotFoundError,
-  ConflictError,
-} from '@opsui/shared';
+import { InventoryUnit, TransactionType, InventoryTransaction } from '@opsui/shared';
 import { inventoryRepository } from '../repositories/InventoryRepository';
 import { skuRepository } from '../repositories/SKURepository';
 import { logger } from '../config/logger';
@@ -156,15 +149,16 @@ export class InventoryService {
       orderId
     );
 
-    // Check for low stock after deduction
-    if (inventory.quantity <= inventory.minThreshold) {
+    // Check for low stock after deduction (using default threshold of 10)
+    const minThreshold = 10; // Default threshold - could be made configurable per SKU
+    if (inventory.quantity <= minThreshold) {
       const broadcaster = wsServer.getBroadcaster();
       if (broadcaster) {
         broadcaster.broadcastInventoryLow({
           sku: inventory.sku,
           binLocation: inventory.binLocation,
           quantity: inventory.quantity,
-          minThreshold: inventory.minThreshold,
+          minThreshold: minThreshold,
           alertedAt: new Date(),
         });
       }
@@ -176,13 +170,13 @@ export class InventoryService {
         type: 'INVENTORY_LOW',
         channel: 'IN_APP',
         title: 'Low Stock Alert',
-        message: `SKU ${sku} at ${binLocation} is low (${inventory.quantity} units, min: ${inventory.minThreshold})`,
+        message: `SKU ${sku} at ${binLocation} is low (${inventory.quantity} units, min: ${minThreshold})`,
         priority: 'HIGH',
         data: {
           sku: inventory.sku,
           binLocation: inventory.binLocation,
           quantity: inventory.quantity,
-          minThreshold: inventory.minThreshold,
+          minThreshold: minThreshold,
         },
       });
 
@@ -190,7 +184,7 @@ export class InventoryService {
         sku,
         binLocation,
         quantity: inventory.quantity,
-        minThreshold: inventory.minThreshold,
+        minThreshold: minThreshold,
       });
     }
 

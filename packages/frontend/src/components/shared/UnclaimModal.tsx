@@ -239,7 +239,6 @@ interface UnclaimModalProps {
   onClose: () => void;
   onConfirm: (reason: string, notes: string) => void;
   orderId: string;
-  isPicking?: boolean;
   isLoading?: boolean;
 }
 
@@ -248,7 +247,6 @@ export function UnclaimModal({
   onClose,
   onConfirm,
   orderId,
-  isPicking = true,
   isLoading = false,
 }: UnclaimModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -441,7 +439,7 @@ export function UnclaimModal({
           {/* Modal footer */}
           <div className="bg-white/[0.02] px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse gap-3 border-t border-white/[0.08]">
             <Button
-              variant="error"
+              variant="danger"
               onClick={handleConfirm}
               disabled={!canConfirm || isLoading}
               className="w-full sm:w-auto"

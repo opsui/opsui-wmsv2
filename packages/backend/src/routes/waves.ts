@@ -9,6 +9,7 @@ import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 import { authorize } from '../middleware/auth';
 import { wavePickingService, WaveStrategy, WaveCriteria } from '../services/WavePickingService';
 import { logger } from '../config/logger';
+import { UserRole } from '@opsui/shared';
 
 const router = Router();
 
@@ -61,7 +62,7 @@ router.post('/create', authenticate, async (req: AuthenticatedRequest, res) => {
 router.post(
   '/:waveId/release',
   authenticate,
-  authorize('ADMIN', 'SUPERVISOR'),
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { waveId } = req.params;
@@ -153,7 +154,7 @@ router.get('/picker/:pickerId', authenticate, async (req: AuthenticatedRequest, 
 router.post(
   '/:waveId/complete',
   authenticate,
-  authorize('ADMIN', 'SUPERVISOR'),
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { waveId } = req.params;
@@ -187,7 +188,7 @@ router.post(
  * GET /api/v1/waves/strategies
  * Get available wave strategies
  */
-router.get('/strategies', authenticate, (req, res) => {
+router.get('/strategies', authenticate, (_req, res) => {
   res.json({
     success: true,
     data: {

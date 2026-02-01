@@ -8,8 +8,8 @@
  * - Account Settings
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Card,
   CardHeader,
@@ -18,7 +18,6 @@ import {
   Header,
   Button,
   Badge,
-  useToast,
 } from '@/components/shared';
 import { useMyRoles } from '@/services/api';
 import { useAuthStore } from '@/stores';
@@ -34,7 +33,6 @@ import {
   ScaleIcon,
   InboxIcon,
   CurrencyDollarIcon,
-  CogIcon as WrenchIcon,
   WrenchScrewdriverIcon,
   ArrowPathIcon,
   SunIcon,
@@ -45,7 +43,6 @@ import {
   SpeakerWaveIcon,
   UserIcon,
   KeyIcon,
-  SwatchIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore, playSound } from '@/stores';
 
@@ -150,14 +147,6 @@ function saveRoleVisibility(settings: Record<string, boolean>) {
   } catch (error) {
     console.error('Failed to save role visibility settings:', error);
   }
-}
-
-function getInitialRoles(): RoleConfig[] {
-  const visibility = loadRoleVisibility();
-  return DEFAULT_ROLES.map(role => ({
-    ...role,
-    visible: visibility[role.key] !== false,
-  }));
 }
 
 // ============================================================================
@@ -308,7 +297,6 @@ const SECTIONS: Section[] = [
 
 function AdminSettingsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentSection = (searchParams.get('section') as Section['key']) || 'role-switcher';
 

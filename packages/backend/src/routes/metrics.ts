@@ -7,7 +7,6 @@ import { metricsService } from '../services/MetricsService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole } from '@opsui/shared';
-import { query } from '../db/client';
 
 const router = Router();
 
@@ -21,7 +20,7 @@ router.use(authenticate);
 router.get(
   '/dashboard',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const metrics = await metricsService.getDashboardMetrics();
     res.json(metrics);
   })

@@ -47,13 +47,13 @@ export function useWebSocket(autoConnect = true): UseWebSocketReturn {
       setSocketId(webSocketService.getSocketId());
     };
 
-    const handleDisconnect = () => {
+    const _handleDisconnect = () => {
       setIsConnected(false);
       setConnectionStatus('disconnected');
       setSocketId(undefined);
     };
 
-    const handleError = () => {
+    const _handleError = () => {
       setConnectionStatus('error');
       setIsConnected(false);
     };

@@ -4,7 +4,7 @@
  * Supervisor dashboard showing real-time warehouse metrics
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   useDashboardMetrics,
   useRoleActivity,
@@ -303,7 +303,7 @@ export function DashboardPage() {
 
   // Subscribe to order updates to refresh metrics and order data
   useOrderUpdates({
-    onOrderClaimed: data => {
+    onOrderClaimed: () => {
       // Refresh dashboard metrics and role activity when an order is claimed
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
@@ -323,7 +323,7 @@ export function DashboardPage() {
         duration: 3000,
       });
     },
-    onOrderCancelled: data => {
+    onOrderCancelled: () => {
       // Refresh dashboard metrics when an order is cancelled
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
@@ -334,7 +334,7 @@ export function DashboardPage() {
         duration: 3000,
       });
     },
-    onPriorityChanged: data => {
+    onPriorityChanged: () => {
       // Refresh order queue when priority changes
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
     },
@@ -342,17 +342,17 @@ export function DashboardPage() {
 
   // Subscribe to pick updates to refresh performance metrics
   usePickUpdates({
-    onPickCompleted: data => {
+    onPickCompleted: () => {
       // Refresh performance data and metrics
       queryClient.invalidateQueries({ queryKey: ['picker-performance'] });
       queryClient.invalidateQueries({ queryKey: ['packer-performance'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
     },
-    onPickStarted: data => {
+    onPickStarted: () => {
       // Refresh role activity when a pick starts
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
     },
-    onZoneAssignment: data => {
+    onZoneAssignment: () => {
       // Refresh role activity when zones are assigned
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
     },
@@ -360,7 +360,7 @@ export function DashboardPage() {
 
   // Subscribe to inventory updates
   useInventoryUpdates({
-    onInventoryUpdated: data => {
+    onInventoryUpdated: () => {
       // Refresh inventory-related metrics
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
     },
@@ -377,12 +377,17 @@ export function DashboardPage() {
 
   // Subscribe to notifications
   useNotifications({
-    onNotification: data => {
+    onNotification: notification => {
       // Show toast for notifications
       showToast({
-        title: data.title || 'Notification',
-        message: data.message || '',
-        type: data.type === 'alert' ? 'error' : data.type === 'warning' ? 'warning' : 'info',
+        title: notification.title || 'Notification',
+        message: notification.message || '',
+        type:
+          notification.type === 'alert'
+            ? 'error'
+            : notification.type === 'warning'
+              ? 'warning'
+              : 'info',
         duration: 4000,
       });
     },

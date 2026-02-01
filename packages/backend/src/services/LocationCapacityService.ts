@@ -16,7 +16,6 @@ import {
   CapacityType,
   CapacityUnit,
   CapacityRuleStatus,
-  BinType,
 } from '@opsui/shared';
 
 // ============================================================================

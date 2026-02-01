@@ -122,6 +122,7 @@ export interface MaintenanceWorkOrder {
   scheduledStartTime?: string; // HH:mm format
   estimatedDurationHours: number;
   assignedTo?: string; // User ID or team
+  partsRequired?: MaintenancePart[];
   actualStartDate?: Date;
   actualEndDate?: Date;
   actualDurationHours?: number;

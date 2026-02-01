@@ -7,17 +7,16 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { RuleTester } from '../RuleTester';
 
-// Mock the evaluation engine
-const _mockEvaluateRule = vi.fn();
-
 describe('RuleTester Component', () => {
   const mockConditions = [
     {
+      id: 'cond-1',
       field: 'order.status',
       operator: 'equals',
       value: 'pending',
     },
     {
+      id: 'cond-2',
       field: 'order.priority',
       operator: 'equals',
       value: 'HIGH',
@@ -26,21 +25,11 @@ describe('RuleTester Component', () => {
 
   const mockActions = [
     {
+      id: 'action-1',
       type: 'set_priority',
       parameters: { priority: 'URGENT' },
     },
   ];
-
-  const _sampleTestData = {
-    order: {
-      status: 'pending',
-      priority: 'HIGH',
-      id: 'ORD-001',
-    },
-    sku: {
-      quantity: 100,
-    },
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -96,6 +85,7 @@ describe('RuleTester Component', () => {
     it('shows unmatched conditions when rule fails', async () => {
       const differentConditions = [
         {
+          id: 'cond-diff-1',
           field: 'order.status',
           operator: 'equals',
           value: 'picked',
@@ -171,7 +161,9 @@ describe('RuleTester Component', () => {
     });
 
     it('shows failure result with red styling', async () => {
-      const failConditions = [{ field: 'order.status', operator: 'equals', value: 'picked' }];
+      const failConditions = [
+        { id: 'cond-fail-1', field: 'order.status', operator: 'equals', value: 'picked' },
+      ];
 
       renderWithProviders(<RuleTester conditions={failConditions} actions={mockActions} />);
 
@@ -212,10 +204,11 @@ describe('RuleTester Component', () => {
     it('evaluates nested AND/OR groups', async () => {
       const nestedConditions = [
         {
-          logicalOperator: 'OR',
+          id: 'cond-nested-1',
+          logicalOperator: 'OR' as const,
           conditions: [
-            { field: 'order.status', operator: 'equals', value: 'pending' },
-            { field: 'order.status', operator: 'equals', value: 'picking' },
+            { id: 'cond-nested-2', field: 'order.status', operator: 'equals', value: 'pending' },
+            { id: 'cond-nested-3', field: 'order.status', operator: 'equals', value: 'picking' },
           ],
         },
       ];
@@ -233,10 +226,21 @@ describe('RuleTester Component', () => {
     it('shows condition nesting in results', async () => {
       const nestedConditions = [
         {
-          logicalOperator: 'OR',
+          id: 'cond-nested-result-1',
+          logicalOperator: 'OR' as const,
           conditions: [
-            { field: 'order.status', operator: 'equals', value: 'pending' },
-            { field: 'order.status', operator: 'equals', value: 'picking' },
+            {
+              id: 'cond-nested-result-2',
+              field: 'order.status',
+              operator: 'equals',
+              value: 'pending',
+            },
+            {
+              id: 'cond-nested-result-3',
+              field: 'order.status',
+              operator: 'equals',
+              value: 'picking',
+            },
           ],
         },
       ];
@@ -254,7 +258,9 @@ describe('RuleTester Component', () => {
 
   describe('Operators', () => {
     it('evaluates equals operator correctly', async () => {
-      const conditions = [{ field: 'order.status', operator: 'equals', value: 'pending' }];
+      const conditions = [
+        { id: 'cond-op-1', field: 'order.status', operator: 'equals', value: 'pending' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -267,7 +273,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates not_equals operator correctly', async () => {
-      const conditions = [{ field: 'order.status', operator: 'not_equals', value: 'picked' }];
+      const conditions = [
+        { id: 'cond-op-2', field: 'order.status', operator: 'not_equals', value: 'picked' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -280,7 +288,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates greater_than operator correctly', async () => {
-      const conditions = [{ field: 'sku.quantity', operator: 'greater_than', value: '50' }];
+      const conditions = [
+        { id: 'cond-op-3', field: 'sku.quantity', operator: 'greater_than', value: '50' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -293,7 +303,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates contains operator correctly', async () => {
-      const conditions = [{ field: 'order.notes', operator: 'contains', value: 'urgent' }];
+      const conditions = [
+        { id: 'cond-op-4', field: 'order.notes', operator: 'contains', value: 'urgent' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -317,7 +329,9 @@ describe('RuleTester Component', () => {
     });
 
     it('evaluates is_empty operator correctly', async () => {
-      const conditions = [{ field: 'order.notes', operator: 'is_empty', value: '' }];
+      const conditions = [
+        { id: 'cond-op-5', field: 'order.notes', operator: 'is_empty', value: '' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -343,7 +357,9 @@ describe('RuleTester Component', () => {
     });
 
     it('handles null values in test data', async () => {
-      const conditions = [{ field: 'order.notes', operator: 'is_empty', value: '' }];
+      const conditions = [
+        { id: 'cond-null-1', field: 'order.notes', operator: 'is_empty', value: '' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -366,7 +382,9 @@ describe('RuleTester Component', () => {
     });
 
     it('handles missing fields in test data', async () => {
-      const conditions = [{ field: 'order.notes', operator: 'contains', value: 'test' }];
+      const conditions = [
+        { id: 'cond-missing-1', field: 'order.notes', operator: 'contains', value: 'test' },
+      ];
 
       renderWithProviders(<RuleTester conditions={conditions} actions={mockActions} />);
 
@@ -405,7 +423,9 @@ describe('RuleTester Component', () => {
       // Change conditions
       rerender(
         <RuleTester
-          conditions={[{ field: 'order.status', operator: 'equals', value: 'picked' }]}
+          conditions={[
+            { id: 'cond-change-1', field: 'order.status', operator: 'equals', value: 'picked' },
+          ]}
           actions={mockActions}
         />
       );

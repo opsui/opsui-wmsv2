@@ -6,8 +6,9 @@
 
 import { query, closePool } from './client';
 import { logger } from '../config/logger';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 
 interface BackupData {
   timestamp: string;
@@ -93,7 +94,7 @@ export async function restoreBackup(backupPath: string): Promise<void> {
     logger.info('Restoring database from backup...', { backupPath });
 
     // Read backup file
-    const backupContent = require('fs').readFileSync(backupPath, 'utf-8');
+    const backupContent = readFileSync(backupPath, 'utf-8');
     const backupData: BackupData = JSON.parse(backupContent);
 
     logger.info('Backup info', {
@@ -153,18 +154,17 @@ export async function restoreBackup(backupPath: string): Promise<void> {
  */
 export async function listBackups(): Promise<string[]> {
   const backupDir = join(process.cwd(), 'backups');
-  const { readdirSync } = require('fs');
 
   if (!existsSync(backupDir)) {
     return [];
   }
 
   const files = readdirSync(backupDir)
-    .filter(f => f.endsWith('.json'))
+    .filter((f: string) => f.endsWith('.json'))
     .sort()
     .reverse();
 
-  return files.map(f => join(backupDir, f));
+  return files.map((f: string) => join(backupDir, f));
 }
 
 // CLI Entry Point
@@ -195,9 +195,10 @@ async function main() {
         } else {
           console.log('\n📋 Available backups:\n');
           backups.forEach((backup, i) => {
-            const stats = require('fs').statSync(backup);
+            const stats = statSync(backup);
             const size = (stats.size / 1024).toFixed(2);
-            console.log(`  ${i + 1}. ${backup.split('\\').pop().split('/').pop()} (${size} KB)`);
+            const fileName = backup.split('\\').pop()?.split('/').pop() || backup;
+            console.log(`  ${i + 1}. ${fileName} (${size} KB)`);
           });
         }
         break;
@@ -217,7 +218,9 @@ async function main() {
   }
 }
 
-if (require.main === module) {
+// Check if this file is being run directly
+const modulePath = fileURLToPath(import.meta.url);
+if (process.argv[1] === modulePath) {
   main();
 }
 

@@ -113,7 +113,7 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
     }
 
     // Create the role
-    const role = await this.insert({
+    await this.insert({
       roleId: data.roleId,
       name: data.name,
       description: data.description,
@@ -269,7 +269,8 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
       typeof userRole
     );
 
-    const defaultPermissions = DEFAULT_ROLE_PERMISSIONS[userRole as any] || [];
+    const defaultPermissions =
+      DEFAULT_ROLE_PERMISSIONS[userRole as keyof typeof DEFAULT_ROLE_PERMISSIONS] || [];
     console.log('[getUserPermissions] defaultPermissions count:', defaultPermissions.length);
     if (defaultPermissions.length > 0) {
       console.log('[getUserPermissions] First few permissions:', defaultPermissions.slice(0, 5));

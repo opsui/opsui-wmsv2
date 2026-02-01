@@ -109,7 +109,7 @@ export function useFilteredArray<T, U = T>(
     const result = items.map(item => predicate(item));
     // If predicate returns boolean, it's a filter
     if (result.length > 0 && typeof result[0] === 'boolean') {
-      return items.filter((item, index) => result[index] as boolean);
+      return items.filter((_item, index) => result[index] as boolean);
     }
     // Otherwise it's a map
     return result as U[];

@@ -20,6 +20,7 @@ import {
   TruckIcon,
   SignalIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import {
   Integration,
@@ -31,7 +32,8 @@ import {
   SyncFrequency,
   WebhookEventType,
 } from '@opsui/shared';
-import { Header, Pagination, useToast, ConfirmDialog } from '@/components/shared';
+import { Header, Pagination, ConfirmDialog, Button } from '@/components/shared';
+import { useNavigate } from 'react-router-dom';
 import {
   useIntegrations,
   useCreateIntegration,
@@ -94,7 +96,7 @@ interface IntegrationFormData {
 // ============================================================================
 
 export function IntegrationsPage() {
-  const { showToast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'integrations' | 'sync-jobs' | 'webhooks'>(
     'integrations'
   );
@@ -102,10 +104,6 @@ export function IntegrationsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | IntegrationStatus>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; integrationId: string }>({
-    isOpen: false,
-    integrationId: '',
-  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -157,6 +155,16 @@ export function IntegrationsPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="secondary"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold text-white">Integrations</h1>
           <p className="mt-2 text-gray-400">
             Connect and manage external systems (ERP, e-commerce, carriers)
@@ -280,6 +288,10 @@ function IntegrationsTab({
   onPageChange,
 }: IntegrationsTabProps) {
   const deleteIntegration = useDeleteIntegration();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; integrationId: string }>({
+    isOpen: false,
+    integrationId: '',
+  });
 
   const handleDeleteIntegration = (integrationId: string) => {
     setDeleteConfirm({ isOpen: true, integrationId });

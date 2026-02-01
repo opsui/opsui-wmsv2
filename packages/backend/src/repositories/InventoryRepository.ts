@@ -8,7 +8,6 @@ import { BaseRepository } from './BaseRepository';
 import { InventoryUnit, TransactionType, InventoryTransaction } from '@opsui/shared';
 import { query } from '../db/client';
 import { NotFoundError, ConflictError } from '@opsui/shared';
-import { logger } from '../config/logger';
 
 // ============================================================================
 // INVENTORY REPOSITORY
@@ -63,7 +62,10 @@ export class InventoryRepository extends BaseRepository<InventoryUnit> {
       [sku]
     );
 
-    return result.rows;
+    return result.rows.map((row: any) => ({
+      binLocation: row.bin_location,
+      available: row.available,
+    }));
   }
 
   // --------------------------------------------------------------------------
@@ -159,7 +161,7 @@ export class InventoryRepository extends BaseRepository<InventoryUnit> {
       [`TXN-REL-${orderId}-${sku}-${Date.now()}`, sku, quantity, orderId, binLocation]
     );
 
-    return result.rows[0];
+    return result.rows[0] as InventoryUnit;
   }
 
   // --------------------------------------------------------------------------
@@ -184,7 +186,7 @@ export class InventoryRepository extends BaseRepository<InventoryUnit> {
         throw new NotFoundError('Inventory unit', `${sku} at ${binLocation}`);
       }
 
-      const { quantity: currentQty, reserved } = checkResult.rows[0];
+      const { quantity: currentQty } = checkResult.rows[0];
 
       if (currentQty < quantity) {
         throw new ConflictError(
@@ -326,7 +328,12 @@ export class InventoryRepository extends BaseRepository<InventoryUnit> {
       [threshold]
     );
 
-    return result.rows;
+    return result.rows.map((row: any) => ({
+      sku: row.sku,
+      binLocation: row.bin_location,
+      available: row.available,
+      quantity: row.quantity,
+    }));
   }
 
   // --------------------------------------------------------------------------

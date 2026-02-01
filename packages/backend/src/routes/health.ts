@@ -12,7 +12,7 @@ const router = Router();
  * GET /health
  * Basic health check (doesn't require DB)
  */
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -25,7 +25,7 @@ router.get('/', (req, res) => {
  * GET /health/detailed
  * Detailed health check (includes DB status)
  */
-router.get('/detailed', async (req, res) => {
+router.get('/detailed', async (_req, res) => {
   const dbHealth = await getHealthStatus();
 
   const health = {
@@ -53,7 +53,7 @@ router.get('/detailed', async (req, res) => {
  * GET /health/ready
  * Readiness probe (for Kubernetes)
  */
-router.get('/ready', async (req, res) => {
+router.get('/ready', async (_req, res) => {
   const dbHealth = await getHealthStatus();
 
   if (dbHealth.healthy) {
@@ -67,7 +67,7 @@ router.get('/ready', async (req, res) => {
  * GET /health/live
  * Liveness probe (for Kubernetes)
  */
-router.get('/live', (req, res) => {
+router.get('/live', (_req, res) => {
   res.status(200).json({ status: 'alive' });
 });
 

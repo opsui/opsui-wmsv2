@@ -11,13 +11,10 @@ const pool = getPool();
 import {
   Report,
   ReportExecution,
-  ReportSchedule,
   Dashboard,
-  ReportTemplate,
   ExportJob,
   ReportType,
   ReportStatus,
-  ReportFormat,
 } from '@opsui/shared';
 
 // ============================================================================
@@ -180,7 +177,7 @@ export class ReportsRepository {
         RETURNING *
       `;
 
-      const result = await client.query(query, [
+      await client.query(query, [
         reportId,
         report.name,
         report.description || null,
@@ -499,7 +496,7 @@ export class ReportsRepository {
       RETURNING *
     `;
 
-    const result = await pool.query(query, [
+    await pool.query(query, [
       dashboardId,
       dashboard.name,
       dashboard.description || null,

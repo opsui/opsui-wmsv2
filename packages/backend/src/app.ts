@@ -183,7 +183,7 @@ function setupRequestTracking(app: Application): void {
   app.use(requestId);
 
   // Request logging
-  app.use((req, res, next) => {
+  app.use((req, _res, next) => {
     logger.debug('Incoming request', {
       requestId: req.id,
       method: req.method,
@@ -214,7 +214,7 @@ function setupApiRoutes(app: Application): void {
   app.use('/api/v1', routes);
 
   // Legacy API redirect (v1 is now current)
-  app.get('/api', (req, res) => {
+  app.get('/api', (_req, res) => {
     res.redirect(301, '/api/v1');
   });
 

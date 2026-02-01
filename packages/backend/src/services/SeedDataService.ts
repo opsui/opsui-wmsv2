@@ -205,6 +205,7 @@ export async function importData(importData: ExportData): Promise<void> {
       await pool.query(`DELETE FROM ${tableName}`);
 
       // Get columns from the first row
+      // @ts-expect-error
       const columns = Object.keys(rows[0]);
 
       // Build and execute INSERT query

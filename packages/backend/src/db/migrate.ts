@@ -6,7 +6,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { query, getPool, closePool } from './client';
+import { query, closePool } from './client';
 import { logger } from '../config/logger';
 
 // ============================================================================

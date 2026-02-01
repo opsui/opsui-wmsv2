@@ -216,7 +216,7 @@ class WebSocketServer {
     socket.on('update:activity', data => {
       const userId = socket.userId!;
       // Broadcast activity to admin/supervisor users
-      this.io?.to('user:activity').emit('user:activity', {
+      (this.io?.to('user:activity') as any).emit('user:activity', {
         userId,
         ...data,
       });

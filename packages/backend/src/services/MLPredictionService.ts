@@ -4,9 +4,6 @@
  * Uses both local heuristic models and external ML API when available
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
-
 interface OrderFeatures {
   order_id?: string;
   order_item_count: number;

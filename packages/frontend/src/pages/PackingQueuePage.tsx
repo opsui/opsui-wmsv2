@@ -278,6 +278,9 @@ export function PackingQueuePage() {
           >
             Waiting ({filteredOrders.length})
           </Button>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/shipped-orders')}>
+            Shipped Orders
+          </Button>
         </div>
 
         {/* Priority Filters - only show on Waiting tab */}

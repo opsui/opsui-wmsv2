@@ -15,7 +15,6 @@ import {
   DocumentTextIcon,
   ArrowPathIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ClockIcon,
   CircleStackIcon,
 } from '@heroicons/react/24/outline';
@@ -59,9 +58,8 @@ export function MonitoringTab() {
   const [requests, setRequests] = useState<RequestLog[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [requestStats, setRequestStats] = useState<RequestStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(5000);
+  const [refreshInterval] = useState(5000);
   const [duration, setDuration] = useState<'1h' | '24h' | '7d'>('1h');
   const [activeTab, setActiveTab] = useState<'requests' | 'logs' | 'metrics'>('requests');
 
@@ -123,8 +121,6 @@ export function MonitoringTab() {
       setRequestStats(response.data);
     } catch (error) {
       console.error('Failed to load request stats:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -10,7 +10,6 @@ import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  ArrowsPointingOutIcon,
   EyeIcon,
   SquaresPlusIcon,
 } from '@heroicons/react/24/outline';
@@ -31,19 +30,6 @@ interface DashboardBuilderProps {
   className?: string;
 }
 
-interface WidgetPosition {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-interface DragState {
-  widgetId: string | null;
-  offsetX: number;
-  offsetY: number;
-}
-
 // ============================================================================
 // WIDGET CARD COMPONENT
 // ============================================================================
@@ -53,10 +39,11 @@ interface WidgetCardProps {
   report: Report | undefined;
   isEditing: boolean;
   isSelected: boolean;
+  isDragging?: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onResize: (size: { width: number; height: number }) => void;
-  onPositionChange: (position: WidgetPosition) => void;
+  onPositionChange?: (position: { x: number; y: number; width: number; height: number }) => void;
 }
 
 function WidgetCard({
@@ -64,13 +51,12 @@ function WidgetCard({
   report,
   isEditing,
   isSelected,
+  isDragging = false,
   onEdit,
   onDelete,
   onResize,
-  onPositionChange,
 }: WidgetCardProps) {
-  const [isResizing, setIsResizing] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [, setIsResizing] = useState(false);
 
   const handleResize = (direction: 'nw' | 'ne' | 'sw' | 'se', e: React.MouseEvent) => {
     e.stopPropagation();
@@ -463,7 +449,6 @@ export function DashboardBuilder({
                   position: { ...widget.position, ...size },
                 })
               }
-              onPositionChange={position => handleUpdateWidget(widget.widgetId, { position })}
             />
           ))}
 

@@ -13,19 +13,11 @@ import {
   Button,
   Badge,
   Select,
-  Progress,
   Header,
   Pagination,
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
-import {
-  useZones,
-  useAllZoneStats,
-  useZonePickTasks,
-  useAssignPickerToZone,
-  useReleasePickerFromZone,
-  useRebalancePickers,
-} from '@/services/api';
+import { useZones, useAllZoneStats, useZonePickTasks, useRebalancePickers } from '@/services/api';
 import { useAuthStore } from '@/stores';
 
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
@@ -34,10 +26,10 @@ import {
   UserIcon,
   ArrowPathIcon,
   ChartBarIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENT
@@ -45,6 +37,7 @@ import {
 
 export function ZonePickingPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   usePageTracking({ view: PageViews.ZONE_PICKING });
 
   const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
@@ -77,35 +70,15 @@ export function ZonePickingPage() {
   const { data: allStats } = useAllZoneStats();
   const { data: zoneTasks } = useZonePickTasks(selectedZone || '', taskStatusFilter);
 
-  const assignMutation = useAssignPickerToZone();
-  const releaseMutation = useReleasePickerFromZone();
   const rebalanceMutation = useRebalancePickers();
 
   const selectedZoneData = zones?.find((z: any) => z.zoneId === selectedZone);
   const selectedStats = allStats?.stats?.find((s: any) => s.zoneId === selectedZone);
 
-  const handleAssignPicker = async (pickerId: string, zoneId: string) => {
-    try {
-      await assignMutation.mutateAsync({ pickerId, zoneId });
-      showToast('Picker assigned to zone', 'success', 'error');
-    } catch (error) {
-      // Error is handled by the mutation
-    }
-  };
-
-  const handleReleasePicker = async (pickerId: string) => {
-    try {
-      await releaseMutation.mutateAsync(pickerId);
-      showToast('Picker released from zone', 'success', 'error');
-    } catch (error) {
-      // Error is handled by the mutation
-    }
-  };
-
   const handleRebalance = async () => {
     try {
       await rebalanceMutation.mutateAsync();
-      showToast('Pickers rebalanced successfully', 'success', 'error');
+      showToast('Pickers rebalanced successfully', 'success');
     } catch (error) {
       // Error is handled by the mutation
     }
@@ -118,11 +91,21 @@ export function ZonePickingPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Zone Picking</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Manage warehouse zones and picker assignments
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Zone Picking</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Manage warehouse zones and picker assignments
+                </p>
+              </div>
             </div>
             <div className="flex gap-2">
               {canManage && (

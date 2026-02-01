@@ -5,17 +5,12 @@
  */
 
 import { BaseRepository } from './BaseRepository';
-import { Order, OrderItem, OrderStatus, OrderPriority, CreateOrderDTO } from '@opsui/shared';
+import { Order, OrderStatus, OrderPriority, CreateOrderDTO } from '@opsui/shared';
 import { query } from '../db/client';
 import { ConflictError, NotFoundError } from '@opsui/shared';
 import { logger } from '../config/logger';
 import { generatePickTaskId, generateOrderId } from '@opsui/shared';
-import {
-  FETCH_PICK_TASKS_WITH_BARCODE_QUERY,
-  FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY,
-  getOrderItemsQuery,
-  mapOrderItem,
-} from './queries/OrderQueries';
+import { getOrderItemsQuery, mapOrderItem } from './queries/OrderQueries';
 
 // ============================================================================
 // ORDER REPOSITORY
@@ -235,7 +230,7 @@ export class OrderRepository extends BaseRepository<Order> {
     );
 
     return {
-      orders,
+      orders: orders as Order[],
       total,
     };
   }
@@ -428,7 +423,7 @@ export class OrderRepository extends BaseRepository<Order> {
       ? `UPDATE orders SET status = $1, ${timestampColumnValue} = NOW() WHERE order_id = $2 RETURNING *`
       : `UPDATE orders SET status = $1 WHERE order_id = $2 RETURNING *`;
 
-    const result = await query(updateQuery, [status, orderId]);
+    await query(updateQuery, [status, orderId]);
 
     return this.getOrderWithItems(orderId);
   }
@@ -478,7 +473,7 @@ export class OrderRepository extends BaseRepository<Order> {
       [pickerId]
     );
 
-    return result.rows;
+    return result.rows as Order[];
   }
 }
 

@@ -19,9 +19,9 @@ const auditService = getAuditService();
 const userRepo = new UserRepository();
 
 // Helper middleware to check if user is admin
-// ADMIN base role always has access (same as authorize middleware)
+// ADMIN role always has access (same as authorize middleware)
 const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  if (req.user?.baseRole !== UserRole.ADMIN) {
+  if (req.user?.role !== UserRole.ADMIN) {
     res.status(403).json({
       error: 'Admin access required',
       code: 'FORBIDDEN',
@@ -153,8 +153,8 @@ router.post(
         'user_role',
         finalUserId,
         `Granted role "${role}" to user ${targetUser?.name || finalUserId}`,
-        null,
-        null,
+        undefined,
+        undefined,
         {
           details: {
             role: role,
@@ -227,8 +227,8 @@ router.delete(
         'user_role',
         finalUserId,
         `Revoked role "${role}" from user ${targetUser?.name || finalUserId}`,
-        null,
-        null,
+        undefined,
+        undefined,
         {
           details: {
             role: role,

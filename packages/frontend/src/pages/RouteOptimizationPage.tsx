@@ -13,13 +13,13 @@ import {
   ChartBarIcon,
   ClockIcon,
   ArrowsRightLeftIcon,
-  SignalIcon,
   CheckCircleIcon,
   XCircleIcon,
-  MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Header, useToast } from '@/components/shared';
+import { Header, Button } from '@/components/shared';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // TYPES
@@ -65,6 +65,7 @@ interface Waypoint {
 // ============================================================================
 
 export function RouteOptimizationPage() {
+  const navigate = useNavigate();
   const [locations, setLocations] = useState<string[]>([]);
   const [startPoint, setStartPoint] = useState<string>('A-01-01');
   const [algorithm, setAlgorithm] = useState<'tsp' | 'nearest' | 'aisle' | 'zone'>('nearest');
@@ -73,7 +74,6 @@ export function RouteOptimizationPage() {
   const [result, setResult] = useState<OptimizedRoute | null>(null);
   const [comparison, setComparison] = useState<RouteComparison | null>(null);
   const [view, setView] = useState<'optimize' | 'compare'>('optimize');
-  const [searchQuery, setSearchQuery] = useState('');
 
   const handleAddLocation = () => {
     if (locations.length < 50) {
@@ -152,7 +152,7 @@ export function RouteOptimizationPage() {
     }
   };
 
-  const generateWarehouseLayout = () => {
+  const generateSampleLocations = () => {
     // Generate sample warehouse locations
     const sampleLocations = [
       'A-05-03',
@@ -193,6 +193,16 @@ export function RouteOptimizationPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="secondary"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold text-white">Route Optimization</h1>
           <p className="mt-2 text-gray-400">
             Calculate optimal picking routes through warehouse locations
@@ -238,7 +248,7 @@ export function RouteOptimizationPage() {
                     Locations to Visit
                   </h2>
                   <button
-                    onClick={generateWarehouseLayout}
+                    onClick={generateSampleLocations}
                     className="text-sm text-blue-400 hover:text-blue-300"
                   >
                     Generate Sample
@@ -247,19 +257,12 @@ export function RouteOptimizationPage() {
 
                 <div className="space-y-2 mb-4">
                   {(() => {
-                    const filteredLocations = searchQuery
-                      ? locations.filter(loc => {
-                          const query = searchQuery.toLowerCase();
-                          return loc.toLowerCase().includes(query);
-                        })
-                      : locations;
+                    const filteredLocations = locations;
 
-                    return filteredLocations.length === 0 && searchQuery ? (
-                      <div className="text-center py-4 text-gray-400">
-                        No locations match your search
-                      </div>
+                    return filteredLocations.length === 0 ? (
+                      <div className="text-center py-4 text-gray-400">No locations</div>
                     ) : (
-                      filteredLocations.map((location, index) => {
+                      filteredLocations.map(location => {
                         const actualIndex = locations.indexOf(location);
                         const parsed = parseLocation(location);
                         return (
@@ -395,13 +398,7 @@ export function RouteOptimizationPage() {
                 </button>
               </div>
 
-              {comparison && (
-                <ComparisonResults
-                  comparison={comparison}
-                  getZoneColor={getZoneColor}
-                  parseLocation={parseLocation}
-                />
-              )}
+              {comparison && <ComparisonResults comparison={comparison} />}
             </div>
           </div>
         )}
@@ -484,11 +481,9 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
 
 interface ComparisonResultsProps {
   comparison: RouteComparison;
-  getZoneColor: (zone: string) => string;
-  parseLocation: (loc: string) => { zone: string; aisle: number; shelf: number } | null;
 }
 
-function ComparisonResults({ comparison, getZoneColor, parseLocation }: ComparisonResultsProps) {
+function ComparisonResults({ comparison }: ComparisonResultsProps) {
   return (
     <div className="space-y-6">
       {/* Best Result Summary */}

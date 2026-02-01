@@ -21,9 +21,11 @@ import {
   TrashIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Header, Pagination, useToast, ConfirmDialog } from '@/components/shared';
+import { Header, Pagination, useToast, ConfirmDialog, Button } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENTS
@@ -400,6 +402,7 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 export function BinLocationsPage() {
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
@@ -485,9 +488,19 @@ export function BinLocationsPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Bin Locations</h1>
-              <p className="text-gray-400 mt-1">Manage warehouse bin locations</p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Bin Locations</h1>
+                <p className="text-gray-400 mt-1">Manage warehouse bin locations</p>
+              </div>
             </div>
             {canManageLocations && (
               <div className="flex gap-2">

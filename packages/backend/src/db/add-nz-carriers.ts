@@ -168,12 +168,12 @@ async function addNZCarriers() {
 
 // Run the migration
 addNZCarriers()
-  .then(() => {
+  .then(async () => {
     console.log('Migration completed successfully');
-    closePool();
+    await closePool();
   })
-  .catch(error => {
+  .catch(async error => {
     console.error('Migration failed:', error);
-    closePool();
+    await closePool();
     process.exit(1);
   });

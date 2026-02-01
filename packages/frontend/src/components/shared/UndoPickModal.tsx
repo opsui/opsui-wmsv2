@@ -222,7 +222,6 @@ export function UndoPickModal({
   itemName,
   sku,
   currentQuantity,
-  totalQuantity,
   wasCompleted,
   isLoading = false,
 }: UndoPickModalProps) {

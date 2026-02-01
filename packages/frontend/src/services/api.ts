@@ -24,80 +24,26 @@ import {
   type AuthTokens,
   type ExceptionType,
   type ExceptionStatus,
-  type ExceptionResolution,
   type LogExceptionDTO,
   type ResolveExceptionDTO,
   type CycleCountStatus,
   type CycleCountType,
-  type CycleCountPlan,
-  type CycleCountEntry,
-  type CycleCountTolerance,
-  type CycleCountKPI,
-  type AccuracyTrend,
-  type TopDiscrepancySKU,
-  type CountByUser,
-  type ZonePerformance,
-  type CountTypeEffectiveness,
-  type DailyStats,
-  type CycleCountDashboard,
-  type MicroCount,
-  type CreateMicroCountDTO,
-  type MicroCountStats,
-  type LocationCapacity,
-  type CapacityRule,
-  type CapacityAlert,
-  type QualityInspection,
-  type InspectionChecklist,
-  type ReturnAuthorization,
-  type ASNStatus,
-  type ReceiptStatus,
-  type PutawayStatus,
-  type AdvanceShippingNotice,
-  type Receipt,
-  type PutawayTask,
   type NZCRateRequest,
   type NZCRateResponse,
   type NZCShipmentRequest,
   type NZCShipmentResponse,
   type NZCLabelResponse,
-  type NZCQuote,
   type BusinessRule,
   type RuleStatus,
   type RuleType,
-  type RuleEventType,
-  ReportType,
-  ReportFormat,
-  ReportStatus,
-  ScheduleFrequency,
-  ChartType,
-  AggregationType,
   type Report,
   type ReportField,
   type ReportFilter,
-  type ReportGroup,
-  type ChartConfig,
-  type SeriesConfig,
   type ReportExecution,
   type ReportSchedule,
-  type ScheduleConfig,
   type Dashboard,
-  type DashboardLayout,
-  type DashboardWidget,
-  type ReportTemplate,
   type ExportJob,
-  IntegrationType,
-  IntegrationStatus,
-  IntegrationProvider,
-  SyncDirection,
-  SyncFrequency,
-  WebhookEventType,
-  ApiAuthType,
-  SyncStatus,
   type Integration,
-  type IntegrationConfig,
-  type SyncSettings,
-  type WebhookSettings,
-  type WebhookEvent,
 } from '@opsui/shared';
 
 // ============================================================================
@@ -833,7 +779,7 @@ export const useUpdateCurrentView = () => {
       console.log('[useUpdateCurrentView] Success:', response.data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       console.log('[useUpdateCurrentView] onSuccess - View updated:', variables);
     },
     onError: error => {
@@ -1133,7 +1079,7 @@ export const usePickItem = () => {
   return useMutation({
     mutationFn: ({ orderId, dto }: { orderId: string; dto: PickItemDTO }) =>
       orderApi.pickItem(orderId, dto),
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['orders', variables.orderId] });
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
       queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
@@ -2525,7 +2471,7 @@ export const useCreateCycleCountPlan = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: cycleCountApi.createPlan,
-    onSuccess: async data => {
+    onSuccess: async () => {
       // Invalidate all cycle-count queries and force refetch
       await queryClient.invalidateQueries({
         predicate: query => query.queryKey[0] === 'cycle-count',
@@ -2930,10 +2876,13 @@ export const recurringSchedulesApi = {
     assignedTo?: string;
     frequencyType?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY';
   }) => {
-    const response = await apiClient.get<RecurringCountSchedule[]>('/cycle-count/schedules', {
-      params,
-    });
-    return response.data;
+    const response = await apiClient.get<{ schedules: RecurringCountSchedule[]; total: number }>(
+      '/cycle-count/schedules',
+      {
+        params,
+      }
+    );
+    return response.data.schedules;
   },
 
   /**

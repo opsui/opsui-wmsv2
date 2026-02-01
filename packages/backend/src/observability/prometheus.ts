@@ -6,7 +6,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import promClient, { Registry, Counter, Histogram, Gauge, Summary } from 'prom-client';
+import promClient, { Registry, Counter, Histogram, Gauge } from 'prom-client';
 import { logger } from '../config/logger';
 
 // ============================================================================
@@ -316,7 +316,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
  * Metrics endpoint handler for Prometheus scraping
  * Returns metrics in Prometheus text format
  */
-export async function metricsEndpoint(req: Request, res: Response): Promise<void> {
+export async function metricsEndpoint(_req: Request, res: Response): Promise<void> {
   try {
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
@@ -329,7 +329,7 @@ export async function metricsEndpoint(req: Request, res: Response): Promise<void
 /**
  * Health check endpoint that includes metrics
  */
-export async function healthWithMetrics(req: Request, res: Response): Promise<void> {
+export async function healthWithMetrics(_req: Request, res: Response): Promise<void> {
   try {
     res.json({
       status: 'healthy',

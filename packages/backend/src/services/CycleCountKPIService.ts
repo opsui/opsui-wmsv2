@@ -5,7 +5,6 @@
  */
 
 import { getPool } from '../db/client';
-import { logger } from '../config/logger';
 
 // ============================================================================
 // TYPES

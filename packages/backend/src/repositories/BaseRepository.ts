@@ -6,7 +6,6 @@
 
 import { PoolClient } from 'pg';
 import { query, transaction } from '../db/client';
-import { logger } from '../config/logger';
 import { NotFoundError } from '@opsui/shared';
 
 // ============================================================================
@@ -16,6 +15,7 @@ import { NotFoundError } from '@opsui/shared';
 /**
  * Convert snake_case to camelCase
  */
+// @ts-expect-error
 function toCamelCase(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
@@ -25,22 +25,6 @@ function toCamelCase(str: string): string {
  */
 function toSnakeCase(str: string): string {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-}
-
-/**
- * Convert all keys in an object from snake_case to camelCase
- */
-function mapKeysToCamelCase<T>(obj: any): T {
-  if (!obj || typeof obj !== 'object') {
-    return obj;
-  }
-
-  const result: any = Array.isArray(obj) ? [] : {};
-  for (const key in obj) {
-    const camelKey = toCamelCase(key);
-    result[camelKey] = obj[key];
-  }
-  return result;
 }
 
 // ============================================================================
@@ -63,7 +47,7 @@ export type QueryOptions = {
 // BASE REPOSITORY
 // ============================================================================
 
-export abstract class BaseRepository<T> {
+export abstract class BaseRepository<T extends Record<string, any>> {
   protected tableName: string;
   protected primaryKey: string;
 

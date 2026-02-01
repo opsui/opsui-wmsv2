@@ -193,7 +193,7 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
 
     // Reset picked_quantity to 0 in pick_tasks (instead of decrementing)
     // Do the UPDATE, then immediately SELECT to get fresh data
-    const updateResult = await query(
+    await query(
       `UPDATE pick_tasks
        SET picked_quantity = 0,
            status = 'PENDING'
@@ -252,7 +252,7 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
       throw new NotFoundError('PickTask', pickTaskId);
     }
 
-    return result.rows[0];
+    return result.rows[0] as PickTask;
   }
 
   // --------------------------------------------------------------------------
@@ -345,7 +345,7 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
       throw new NotFoundError('PickTask', pickTaskId);
     }
 
-    return result.rows[0];
+    return result.rows[0] as PickTask;
   }
 
   // --------------------------------------------------------------------------

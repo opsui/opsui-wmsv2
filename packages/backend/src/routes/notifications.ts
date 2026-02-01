@@ -4,12 +4,12 @@
  * Provides endpoints for managing user notifications
  */
 
-import { Router, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import { notificationService } from '../services/NotificationService';
 import { asyncHandler, authenticate } from '../middleware';
 import { requirePermission } from '../middleware/permissions';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { Permission, UserRole } from '@opsui/shared';
+import { Permission } from '@opsui/shared';
 
 const router = Router();
 

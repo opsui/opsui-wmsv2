@@ -26,7 +26,7 @@ router.use(authenticate);
 router.get(
   '/dashboard',
   authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const dashboard = await inboundReceivingService.getDashboardMetrics();
     res.json(dashboard);
   })
@@ -92,12 +92,12 @@ router.post(
 router.get(
   '/asn',
   authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const filters = {
-      status: _req.query.status as ASNStatus | undefined,
-      supplierId: _req.query.supplierId as string | undefined,
-      limit: _req.query.limit ? parseInt(_req.query.limit as string) : 50,
-      offset: _req.query.offset ? parseInt(_req.query.offset as string) : 0,
+      status: req.query.status as ASNStatus | undefined,
+      supplierId: req.query.supplierId as string | undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
     };
 
     const result = await inboundReceivingService.getAllASNs(filters);

@@ -8,25 +8,12 @@
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import * as diag from '@opentelemetry/api';
 import config from '../config';
-
-// ============================================================================
-// RESOURCE ATTRIBUTES
-// ============================================================================
-
-const resourceAttributes = {
-  'service.name': config.otel.serviceName || 'wms-backend',
-  'service.version': process.env.npm_package_version || '1.0.0',
-  'deployment.environment': process.env.NODE_ENV || 'development',
-  'process.pid': process.pid.toString(),
-  'host.name': require('os').hostname(),
-};
 
 // ============================================================================
 // EXPORTERS

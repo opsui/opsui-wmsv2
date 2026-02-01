@@ -151,6 +151,6 @@ export function addOrderByClause(
 /**
  * Add pagination (LIMIT/OFFSET) to SQL query
  */
-export function addPaginationClause(sql: string, offset: number, limit: number): string {
+export function addPaginationClause(sql: string, offset: number, _limit: number): string {
   return `${sql} LIMIT $${offset + 1} OFFSET $${offset + 2}`;
 }

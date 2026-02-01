@@ -75,7 +75,7 @@ export class WebSocketBroadcaster {
     data: Parameters<ServerToClientEvents[E]>[0]
   ): void {
     try {
-      this.io.emit(event, data);
+      (this.io as any).emit(event, data);
       logger.debug('Broadcast to all', { event, data });
     } catch (error) {
       logger.error('Failed to broadcast to all', { event, error });
@@ -91,7 +91,7 @@ export class WebSocketBroadcaster {
     data: Parameters<ServerToClientEvents[E]>[0]
   ): void {
     try {
-      this.io.to(room).emit(event, data);
+      (this.io.to(room) as any).emit(event, data);
       logger.debug('Broadcast to room', { room, event, data });
     } catch (error) {
       logger.error('Failed to broadcast to room', { room, event, error });
@@ -107,7 +107,7 @@ export class WebSocketBroadcaster {
     data: Parameters<ServerToClientEvents[E]>[0]
   ): void {
     try {
-      this.io.to(`user:${userId}`).emit(event, data);
+      (this.io.to(`user:${userId}`) as any).emit(event, data);
       logger.debug('Broadcast to user', { userId, event, data });
     } catch (error) {
       logger.error('Failed to broadcast to user', { userId, event, error });
@@ -307,9 +307,9 @@ export class WebSocketBroadcaster {
  * This is useful for calling from services that don't have direct access to the WebSocket server
  */
 export function broadcastEvent<E extends keyof ServerToClientEvents>(
-  event: E,
-  data: Parameters<ServerToClientEvents[E]>[0],
-  room?: string
+  _event: E,
+  _data: Parameters<ServerToClientEvents[E]>[0],
+  _room?: string
 ): void {
   // This will be called from the singleton wsServer instance
   // The actual implementation is in the WebSocketServer class

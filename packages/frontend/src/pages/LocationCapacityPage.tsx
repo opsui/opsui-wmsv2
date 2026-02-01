@@ -26,6 +26,7 @@ import {
   CheckIcon,
   ArrowPathIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import {
   Header,
@@ -36,8 +37,10 @@ import {
   FormSelect,
   FormTextarea,
   ConfirmDialog,
+  Button,
 } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENTS
@@ -391,6 +394,7 @@ function CapacityRuleModal({
 
 export function LocationCapacityPage() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'rules' | 'alerts'>('overview');
   const [showRuleModal, setShowRuleModal] = useState(false);
@@ -521,11 +525,21 @@ export function LocationCapacityPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Location Capacity</h1>
-              <p className="text-gray-400 mt-1">
-                Monitor and manage bin location capacity constraints
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Location Capacity</h1>
+                <p className="text-gray-400 mt-1">
+                  Monitor and manage bin location capacity constraints
+                </p>
+              </div>
             </div>
             {canManageRules && (
               <button

@@ -150,7 +150,7 @@ const MOCK_ORDERS: Order[] = [
     packer_id: 'USR-JMSQXXDN',
     claimed_at: new Date(Date.now() - 1000 * 60 * 130),
     picked_at: new Date(Date.now() - 1000 * 60 * 120),
-    packed_at: null,
+    packed_at: undefined,
     progress: 100,
   },
 

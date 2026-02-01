@@ -38,7 +38,7 @@ export interface AuthenticatedRequest extends Request {
  * Supports active role switching for multi-role users
  * TEST MODE: When config.testMode is true, requires special test API key
  */
-export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export function authenticate(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
   try {
     // SECURITY: Test mode requires special X-Test-API-Key header for authenticated test requests
     // This prevents accidental exposure while allowing automated testing
@@ -128,7 +128,7 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
  * ADMIN base role always has access regardless of effective role
  */
 export function authorize(...allowedRoles: UserRole[]) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       return next(new UnauthorizedError('User not authenticated'));
     }
@@ -153,7 +153,7 @@ export function authorize(...allowedRoles: UserRole[]) {
  * Check if user is admin
  * ADMIN base role always has access regardless of effective role
  */
-export function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export function requireAdmin(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
   if (!req.user) {
     return next(new UnauthorizedError('User not authenticated'));
   }
@@ -171,7 +171,7 @@ export function requireAdmin(req: AuthenticatedRequest, res: Response, next: Nex
  */
 export function requireSupervisor(
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void {
   if (!req.user) {
@@ -188,7 +188,7 @@ export function requireSupervisor(
 /**
  * Check if user is a picker
  */
-export function requirePicker(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export function requirePicker(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
   if (!req.user) {
     return next(new UnauthorizedError('User not authenticated'));
   }
@@ -225,7 +225,7 @@ export function generateToken(user: {
 
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
-  });
+  } as jwt.SignOptions);
 }
 
 /**

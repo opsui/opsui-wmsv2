@@ -593,7 +593,7 @@ router.post(
                 pickTask.picked_quantity + quantityReduced, // original quantity before undo
                 pickTask.picked_quantity, // new quantity after undo
                 `${reason} (reduced by ${quantityReduced})`,
-                req.user.userId,
+                req.user?.userId || 'system',
                 'OPEN',
               ]
             );
@@ -785,7 +785,7 @@ router.post(
 router.get(
   '/packing-queue',
   authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const orders = await orderService.getPackingQueue();
     res.json(orders);
   })

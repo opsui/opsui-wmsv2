@@ -62,7 +62,7 @@ export function requestId(req: Request, res: Response, next: NextFunction): void
  * Enhance logger to include request ID automatically
  * This ensures all logs for a request are correlated
  */
-export function enhanceLoggerWithRequestId(req: Request, res: Response, next: NextFunction): void {
+export function enhanceLoggerWithRequestId(req: Request, _res: Response, next: NextFunction): void {
   if (req.id) {
     // Add request ID to all log context
     logger.defaultMeta = {

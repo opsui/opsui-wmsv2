@@ -865,7 +865,7 @@ function App() {
 
   // WebSocket connection management
   useEffect(() => {
-    const accessToken = useAuthStore.getState().tokens?.accessToken;
+    const accessToken = useAuthStore.getState().accessToken;
 
     // Connect WebSocket when authenticated
     if (accessToken && !webSocketService.isConnected()) {
@@ -874,7 +874,7 @@ function App() {
 
     // Subscribe to auth state changes
     const unsubscribe = useAuthStore.subscribe(state => {
-      const token = state.tokens?.accessToken;
+      const token = state.accessToken;
       if (token && !webSocketService.isConnected()) {
         webSocketService.connect();
       } else if (!token && webSocketService.isConnected()) {

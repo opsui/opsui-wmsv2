@@ -121,7 +121,7 @@ router.post(
  */
 router.get(
   '/schedules',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const schedules = await maintenanceService.getUpcomingMaintenance(30);
     res.json({ schedules, count: schedules.length });
   })

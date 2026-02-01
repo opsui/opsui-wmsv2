@@ -21,7 +21,9 @@ export class MaintenanceRepository {
   // ASSETS
   // ========================================================================
 
-  async createAsset(asset: Omit<Asset, 'assetId' | 'createdAt' | 'updatedAt'>): Promise<Asset> {
+  async createAsset(
+    asset: Omit<Asset, 'assetId' | 'assetNumber' | 'createdAt' | 'updatedAt'>
+  ): Promise<Asset> {
     const client = await getPool();
 
     const assetId = `AST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -149,6 +151,13 @@ export class MaintenanceRepository {
       paramCount++;
     }
 
+    // Handle lastMaintenanceDate update
+    if ((updates as any).lastMaintenanceDate !== undefined) {
+      fields.push(`last_maintenance_date = $${paramCount}`);
+      values.push((updates as any).lastMaintenanceDate);
+      paramCount++;
+    }
+
     fields.push(`updated_at = NOW()`);
     values.push(assetId);
     paramCount++;
@@ -202,7 +211,7 @@ export class MaintenanceRepository {
         schedule.intervalDays || null,
         schedule.estimatedDurationHours,
         schedule.assignedTo || null,
-        schedule.partsRequired ? JSON.stringify(schedule.partsRequired) : null,
+        (schedule as any).partsRequired ? JSON.stringify((schedule as any).partsRequired) : null,
         schedule.instructions || null,
         schedule.isActive,
         schedule.createdBy,
@@ -281,7 +290,7 @@ export class MaintenanceRepository {
         workOrder.scheduledStartTime || null,
         workOrder.estimatedDurationHours,
         workOrder.assignedTo || null,
-        workOrder.partsRequired ? JSON.stringify(workOrder.partsRequired) : null,
+        (workOrder as any).partsRequired ? JSON.stringify((workOrder as any).partsRequired) : null,
         workOrder.createdBy,
       ]
     );
@@ -404,9 +413,70 @@ export class MaintenanceRepository {
     await this.updateAsset(workOrder.assetId, {
       lastMaintenanceDate: new Date(),
       updatedBy: completionData.completedBy,
-    } as any);
+    } as Partial<Asset>);
 
     logger.info('Work order completed', { workOrderId });
+    return this.mapRowToWorkOrder(result.rows[0]);
+  }
+
+  async updateWorkOrder(
+    workOrderId: string,
+    updates: Partial<MaintenanceWorkOrder>
+  ): Promise<MaintenanceWorkOrder | null> {
+    const client = await getPool();
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (updates.status !== undefined) {
+      fields.push(`status = $${paramCount}`);
+      values.push(updates.status);
+      paramCount++;
+    }
+
+    if (updates.actualStartDate !== undefined) {
+      fields.push(`actual_start_date = $${paramCount}`);
+      values.push(updates.actualStartDate);
+      paramCount++;
+    }
+
+    if (updates.actualEndDate !== undefined) {
+      fields.push(`actual_end_date = $${paramCount}`);
+      values.push(updates.actualEndDate);
+      paramCount++;
+    }
+
+    if (updates.performedBy !== undefined) {
+      fields.push(`performed_by = $${paramCount}`);
+      values.push(updates.performedBy);
+      paramCount++;
+    }
+
+    if (updates.updatedBy !== undefined) {
+      fields.push(`updated_by = $${paramCount}`);
+      values.push(updates.updatedBy);
+      paramCount++;
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(workOrderId);
+    paramCount++;
+
+    if (fields.length === 1) {
+      return await this.findWorkOrderById(workOrderId);
+    }
+
+    const result = await client.query(
+      `UPDATE maintenance_work_orders SET ${fields.join(', ')} WHERE work_order_id = $${paramCount} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    logger.info('Work order updated', { workOrderId });
     return this.mapRowToWorkOrder(result.rows[0]);
   }
 
@@ -444,7 +514,8 @@ export class MaintenanceRepository {
     return {
       logId,
       ...log,
-    };
+      createdAt: new Date(),
+    } as ServiceLog;
   }
 
   async findServiceLogsByAsset(assetId: string, limit: number = 50): Promise<ServiceLog[]> {

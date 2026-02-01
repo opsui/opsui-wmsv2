@@ -216,7 +216,7 @@ export class NotificationService {
     const total = parseInt(countResult.rows[0].count, 10);
 
     return {
-      notifications: result.rows,
+      notifications: result.rows as any,
       total,
     };
   }

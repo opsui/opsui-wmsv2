@@ -20,10 +20,10 @@
  * - Dynamic Order Batching for WMS
  */
 
-import { Pool } from 'pg';
-import { getPool, query } from '../db/client';
+import { Pool, PoolClient } from 'pg';
+import { getPool } from '../db/client';
 import { logger } from '../config/logger';
-import { routeOptimizationService, PickTask, OptimizedRoute } from './RouteOptimizationService';
+import { routeOptimizationService, PickTask } from './RouteOptimizationService';
 import { getAuditService, AuditEventType, AuditCategory } from './AuditService';
 import { notifyAll, NotificationType, NotificationPriority } from './NotificationHelper';
 import wsServer from '../websocket';
@@ -150,7 +150,7 @@ class WavePickingService {
         estimatedTime: optimizedRoute.estimatedTime,
         estimatedDistance: optimizedRoute.totalDistance,
         createdAt: new Date(),
-        createdBy: context.userId || 'SYSTEM',
+        createdBy: String(context.userId || 'SYSTEM'),
       };
 
       // Store wave in database
@@ -228,13 +228,13 @@ class WavePickingService {
       // Log the release
       const auditSvc = getAuditService();
       await auditSvc.log({
-        userId: typeof context.userId === 'number' ? context.userId : null,
-        username: context.userEmail || null,
-        action: AuditEventType.ORDER_UPDATED,
-        category: AuditCategory.DATA_MODIFICATION,
+        userId:
+          typeof context.userId === 'number' ? String(context.userId) : (context.userId ?? null),
+        actionType: AuditEventType.ORDER_UPDATED,
+        actionCategory: AuditCategory.DATA_MODIFICATION,
         resourceType: 'Wave',
         resourceId: waveId,
-        details: { description: `Wave picking released: ${wave.name}` },
+        actionDescription: `Wave picking released: ${wave.name}`,
         oldValues: null,
         newValues: {
           waveId,
@@ -243,7 +243,7 @@ class WavePickingService {
         },
         ipAddress: context.ipAddress || null,
         userAgent: context.userAgent || null,
-        traceId: null,
+        metadata: { traceId: null },
       });
 
       logger.info('Wave released successfully', { waveId, waveName: wave.name });
@@ -355,13 +355,13 @@ class WavePickingService {
       // Log completion
       const auditSvc = getAuditService();
       await auditSvc.log({
-        userId: typeof context.userId === 'number' ? context.userId : null,
-        username: context.userEmail || null,
-        action: AuditEventType.ORDER_UPDATED,
-        category: AuditCategory.DATA_MODIFICATION,
+        userId:
+          typeof context.userId === 'number' ? String(context.userId) : (context.userId ?? null),
+        actionType: AuditEventType.ORDER_UPDATED,
+        actionCategory: AuditCategory.DATA_MODIFICATION,
         resourceType: 'Wave',
         resourceId: waveId,
-        details: { description: `Wave picking completed: ${wave.name}` },
+        actionDescription: `Wave picking completed: ${wave.name}`,
         oldValues: null,
         newValues: {
           waveId,
@@ -371,7 +371,7 @@ class WavePickingService {
         },
         ipAddress: context.ipAddress || null,
         userAgent: context.userAgent || null,
-        traceId: null,
+        metadata: { traceId: null },
       });
 
       logger.info('Wave completed successfully', { waveId, waveName: wave.name });
@@ -672,7 +672,7 @@ class WavePickingService {
         INSERT INTO wave_pick_tasks (wave_id, task_id, sequence)
         VALUES ($1, $2, $3)
         `,
-        [wave.waveId, task.taskId, task.sequence]
+        [wave.waveId, task.taskId, (task as any).sequence]
       );
     }
   }

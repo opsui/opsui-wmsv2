@@ -15,11 +15,13 @@ import {
   XMarkIcon,
   CalendarIcon,
   CheckIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import { OrderStatus, OrderPriority } from '@opsui/shared';
 import { Header, Pagination, Card, Badge, Button, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useShippedOrders, useExportShippedOrders } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // TYPES
@@ -55,6 +57,7 @@ interface FilterOptions {
 
 export default function ShippedOrdersPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -237,6 +240,12 @@ export default function ShippedOrdersPage() {
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <Button variant="secondary" onClick={() => navigate(-1)} className="flex items-center gap-2">
+        <ChevronLeftIcon className="h-4 w-4" />
+        Back to Dashboard
+      </Button>
+
       {/* Header */}
       <Header
         title="Shipped Orders"

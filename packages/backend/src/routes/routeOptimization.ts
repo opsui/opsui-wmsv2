@@ -150,7 +150,7 @@ router.post('/optimize-detailed', async (req: Request, res: Response): Promise<v
  * GET /api/route-optimization/config
  * Get current warehouse configuration
  */
-router.get('/config', (req: Request, res: Response): void => {
+router.get('/config', (_req: Request, res: Response): void => {
   try {
     const config = routeOptimizationService.getConfig();
     res.json({
@@ -238,15 +238,20 @@ router.post('/compare', async (req: Request, res: Response): Promise<void> => {
 
     // Find best result
     const validResults = results.filter(r => !('error' in r));
-    const best = validResults.sort((a, b) => a.total_distance_meters - b.total_distance_meters)[0];
+    const best =
+      validResults.length > 0
+        ? validResults.sort(
+            (a: any, b: any) => a.total_distance_meters - b.total_distance_meters
+          )[0]
+        : null;
 
     res.json({
       success: true,
       data: {
         comparison: results,
         best: best ? best.algorithm : null,
-        best_distance: best ? best.total_distance_meters : 0,
-        best_time: best ? best.estimated_time_minutes : 0,
+        best_distance: (best as any)?.total_distance_meters ?? 0,
+        best_time: (best as any)?.estimated_time_minutes ?? 0,
       },
     });
   } catch (error) {
@@ -387,7 +392,7 @@ router.post('/forecast-demand', async (req: Request, res: Response): Promise<voi
  * GET /api/route-optimization/model-status
  * Check ML model health and availability
  */
-router.get('/model-status', (req: Request, res: Response): void => {
+router.get('/model-status', (_req: Request, res: Response): void => {
   const useLocalOnly = process.env.ML_USE_LOCAL_ONLY === 'true';
   const mlApiUrl = process.env.ML_API_URL || 'http://localhost:8001';
 

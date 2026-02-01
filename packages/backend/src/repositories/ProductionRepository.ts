@@ -11,11 +11,7 @@ import {
   ProductionOrder,
   ProductionOutput,
   ProductionJournal,
-  CreateProductionOrderDTO,
-  UpdateProductionOrderDTO,
-  RecordProductionOutputDTO,
   ProductionOrderStatus,
-  CreateBOMDTO,
 } from '@opsui/shared';
 
 export class ProductionRepository {
@@ -176,7 +172,16 @@ export class ProductionRepository {
   // ========================================================================
 
   async createProductionOrder(
-    order: Omit<ProductionOrder, 'orderId' | 'createdAt' | 'updatedAt'>
+    order: Omit<
+      ProductionOrder,
+      | 'orderId'
+      | 'orderNumber'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'components'
+      | 'quantityCompleted'
+      | 'quantityRejected'
+    >
   ): Promise<ProductionOrder> {
     const client = await getPool();
 
@@ -194,13 +199,13 @@ export class ProductionRepository {
       }
 
       // Insert production order
-      const result = await client.query(
+      await client.query(
         `INSERT INTO production_orders
           (order_id, order_number, product_id, product_name, bom_id, status, priority,
            quantity_to_produce, quantity_completed, quantity_rejected, unit_of_measure,
            scheduled_start_date, scheduled_end_date, assigned_to, work_center, notes,
            created_by, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 9, 10, $11, $12, $13, $14, $15, $16, $17, NOW())
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
          RETURNING *`,
         [
           orderId,
@@ -222,8 +227,6 @@ export class ProductionRepository {
           order.createdBy,
         ]
       );
-
-      const orderRow = result.rows[0];
 
       // Insert components from BOM
       for (const bomComponent of bom.components) {
@@ -489,7 +492,7 @@ export class ProductionRepository {
     );
 
     logger.info('Production journal entry created', { journalId });
-    return entry; // Return the input for now
+    return entry as ProductionOutput; // Return the input for now
   }
 
   async findProductionJournalEntries(orderId: string): Promise<ProductionJournal[]> {

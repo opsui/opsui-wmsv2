@@ -39,7 +39,9 @@ import {
   UsersIcon,
   CubeIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // TYPES
@@ -59,6 +61,7 @@ interface WaveFormData {
 
 export function WavePickingPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   usePageTracking({ view: PageViews.WAVE_PICKING });
 
   const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
@@ -172,11 +175,21 @@ export function WavePickingPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Wave Picking</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Create and manage picking waves for efficient batch processing
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Wave Picking</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Create and manage picking waves for efficient batch processing
+                </p>
+              </div>
             </div>
             <Squares2X2Icon className="h-8 w-8 text-gray-400" />
           </div>

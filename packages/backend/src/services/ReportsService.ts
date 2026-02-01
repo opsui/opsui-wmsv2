@@ -13,7 +13,6 @@ import {
   ReportType,
   ReportStatus,
   ReportFormat,
-  AggregationType,
   ExportJob,
 } from '@opsui/shared';
 
@@ -65,7 +64,7 @@ export class ReportsService {
       const completedExecution = await reportsRepository.createExecution({
         ...execution,
         status: ReportStatus.COMPLETED,
-        rowCount: result.rowCount,
+        rowCount: result.rowCount ?? undefined,
         executionTimeMs,
         fileUrl: this.generateFileUrl(reportId, format),
       });

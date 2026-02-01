@@ -4,27 +4,15 @@
  * Real-time dashboard for cycle count metrics and analytics
  */
 
-import { useState } from 'react';
 import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   CheckCircleIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
-  UsersIcon,
-  MapPinIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { Header, useToast } from '@/components/shared';
-import {
-  useCycleCountDashboard,
-  useCycleCountKPIs,
-  useCycleCountAccuracyTrend,
-  useCycleCountTopDiscrepancies,
-  useCycleCountUserPerformance,
-  useCycleCountZonePerformance,
-  useCycleCountTypeEffectiveness,
-} from '@/services/api';
+import { Header } from '@/components/shared';
+import { useCycleCountDashboard } from '@/services/api';
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -327,23 +315,12 @@ function CountTypeEffectivenessTable({
 // ============================================================================
 
 export default function CycleCountKPIPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [filters, setFilters] = useState({
-    days: 30,
-  });
-
   // Fetch dashboard data
   const { data: dashboard, isLoading: dashboardLoading, refetch } = useCycleCountDashboard();
 
   const overallKPIs = dashboard?.overallKPIs;
-  const accuracyTrend = dashboard?.accuracyTrend || [];
-  const topDiscrepancies = dashboard?.topDiscrepancies || [];
-  const userPerformance = dashboard?.userPerformance || [];
-  const zonePerformance = dashboard?.zonePerformance || [];
-  const countTypeEffectiveness = dashboard?.countTypeEffectiveness || [];
 
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
     refetch();
   };
 

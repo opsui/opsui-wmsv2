@@ -36,7 +36,6 @@ import {
   XMarkIcon,
   UserGroupIcon,
   ShoppingBagIcon,
-  QrCodeIcon,
   QueueListIcon,
   TagIcon,
   AdjustmentsHorizontalIcon,
@@ -48,7 +47,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
 import { useState, useRef, useEffect } from 'react';
-import { useDashboardMetrics, useNotificationStats } from '@/services/api';
+import { useNotificationStats } from '@/services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import webSocketService from '@/services/WebSocketService';
@@ -739,13 +738,6 @@ function NotificationPanel() {
   }, [queryClient]);
 
   // Show notification panel for all authenticated users
-  const colorStyles = {
-    error: 'dark:bg-error-600 bg-error-500 dark:shadow-error-500/50 shadow-error-500/50',
-    warning: 'dark:bg-warning-600 bg-warning-500 dark:shadow-warning-500/50 shadow-warning-500/50',
-    success: 'dark:bg-success-600 bg-success-500 dark:shadow-success-500/50 shadow-success-500/50',
-    primary: 'dark:bg-primary-600 bg-primary-500 dark:shadow-primary-500/50 shadow-primary-500/50',
-    info: 'dark:bg-info-600 bg-info-500 dark:shadow-info-500/50 shadow-info-500/50',
-  };
 
   return (
     <div className="relative z-[9999]" ref={dropdownRef}>
@@ -829,9 +821,6 @@ interface RoleViewDropdownProps {
 }
 
 const STORAGE_KEY = 'admin-role-visibility';
-
-// Base role keys that cannot be hidden - must match RoleSettingsPage
-const BASE_ROLE_KEYS = new Set(['admin', 'picking', 'packing', 'stock-control']);
 
 function loadRoleVisibility(): Record<string, boolean> {
   try {
@@ -1093,13 +1082,11 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Track color updates to force re-render when color changes
-  const [colorUpdateTimestamp, setColorUpdateTimestamp] = useState(Date.now());
-
   // Listen for role color changes
   useEffect(() => {
     const handleRoleColorChanged = () => {
-      setColorUpdateTimestamp(Date.now());
+      // Force re-render when role colors change
+      setMobileMenuOpen(prev => prev); // Trigger re-render
     };
     window.addEventListener('role-color-changed', handleRoleColorChanged);
     return () => window.removeEventListener('role-color-changed', handleRoleColorChanged);
@@ -1198,22 +1185,13 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
       }
 
       // Cycle Counting - available to all roles in this group
+      // Schedule Management is accessible as a tab within the Cycle Counting page
       items.push({
         key: 'cycle-counting',
         label: 'Cycle Counting',
         path: '/cycle-counting',
         icon: ClipboardDocumentListIcon,
       });
-
-      // Schedule Management - only for supervisors and admins
-      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-        items.push({
-          key: 'schedule-management',
-          label: 'Schedule Management',
-          path: '/cycle-counting/schedules',
-          icon: QueueListIcon,
-        });
-      }
 
       // Location Capacity, Bin Locations, Quality Control - only for supervisors and admins
       if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
@@ -1303,19 +1281,13 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
         icon: MapIcon,
       });
 
-      // Shipped Orders - available to packers, supervisors, and admins
-      if (
-        effectiveRole === UserRole.SUPERVISOR ||
-        effectiveRole === UserRole.ADMIN ||
-        effectiveRole === UserRole.PACKER
-      ) {
-        items.push({
-          key: 'shipped-orders',
-          label: 'Shipped Orders',
-          path: '/shipped-orders',
-          icon: TruckIcon,
-        });
-      }
+      // Shipped Orders - available to pickers, packers, supervisors, and admins
+      items.push({
+        key: 'shipped-orders',
+        label: 'Shipped Orders',
+        path: '/shipped-orders',
+        icon: TruckIcon,
+      });
 
       if (items.length > 0) {
         groups.push({
@@ -1325,6 +1297,111 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
           items,
         });
       }
+    }
+
+    // Packer Operations Group - for packers
+    if (effectiveRole === UserRole.PACKER) {
+      groups.push({
+        key: 'packing-ops',
+        label: 'Packing',
+        icon: CubeIcon,
+        items: [
+          { key: 'packing', label: 'Packing Queue', path: '/packing', icon: CubeIcon },
+          {
+            key: 'shipped-orders',
+            label: 'Shipped Orders',
+            path: '/shipped-orders',
+            icon: TruckIcon,
+          },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+        ],
+      });
+    }
+
+    // Inwards Operations Group - for inwards/receiving
+    if (effectiveRole === ('INWARDS' as UserRole)) {
+      groups.push({
+        key: 'inwards-ops',
+        label: 'Receiving',
+        icon: InboxIcon,
+        items: [
+          { key: 'inwards', label: 'Inwards/Receiving', path: '/inwards', icon: InboxIcon },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
+        ],
+      });
+    }
+
+    // Sales Operations Group - for sales
+    if (effectiveRole === ('SALES' as UserRole)) {
+      groups.push({
+        key: 'sales-ops',
+        label: 'Sales',
+        icon: CurrencyDollarIcon,
+        items: [
+          { key: 'sales', label: 'Sales Dashboard', path: '/sales', icon: CurrencyDollarIcon },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+          {
+            key: 'shipped-orders',
+            label: 'Shipped Orders',
+            path: '/shipped-orders',
+            icon: TruckIcon,
+          },
+        ],
+      });
+    }
+
+    // Production Operations Group - for production
+    if (effectiveRole === ('PRODUCTION' as UserRole)) {
+      groups.push({
+        key: 'production-ops',
+        label: 'Production',
+        icon: CogIcon,
+        items: [
+          { key: 'production', label: 'Production', path: '/production', icon: CogIcon },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
+        ],
+      });
+    }
+
+    // Maintenance Operations Group - for maintenance
+    if (effectiveRole === ('MAINTENANCE' as UserRole)) {
+      groups.push({
+        key: 'maintenance-ops',
+        label: 'Maintenance',
+        icon: WrenchScrewdriverIcon,
+        items: [
+          {
+            key: 'maintenance',
+            label: 'Maintenance',
+            path: '/maintenance',
+            icon: WrenchScrewdriverIcon,
+          },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+          { key: 'bin-locations', label: 'Bin Locations', path: '/bin-locations', icon: CubeIcon },
+        ],
+      });
+    }
+
+    // RMA Operations Group - for RMA/returns
+    if (effectiveRole === ('RMA' as UserRole)) {
+      groups.push({
+        key: 'rma-ops',
+        label: 'Returns',
+        icon: ArrowPathIcon,
+        items: [
+          { key: 'rma', label: 'RMA/Returns', path: '/rma', icon: ArrowPathIcon },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+          {
+            key: 'shipped-orders',
+            label: 'Shipped Orders',
+            path: '/shipped-orders',
+            icon: TruckIcon,
+          },
+          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
+        ],
+      });
     }
 
     // Admin Tools Group - for admins only

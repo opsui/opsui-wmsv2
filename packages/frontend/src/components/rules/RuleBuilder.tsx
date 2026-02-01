@@ -11,7 +11,6 @@ import {
   TrashIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
@@ -481,7 +480,9 @@ export function RuleBuilder({
               onToggleGroup={() => {
                 const updated = {
                   ...condition,
-                  logicalOperator: condition.logicalOperator === 'AND' ? 'OR' : 'AND',
+                  logicalOperator: (condition.logicalOperator === 'AND' ? 'OR' : 'AND') as
+                    | 'AND'
+                    | 'OR',
                 };
                 updateCondition(index, updated);
               }}
@@ -519,11 +520,11 @@ interface RulePreviewProps {
 }
 
 export function RulePreview({ conditions, fieldDefinitions = DEFAULT_FIELDS }: RulePreviewProps) {
-  const renderCondition = (condition: RuleCondition, index = 0): string => {
+  const renderCondition = (condition: RuleCondition): string => {
     if (condition.conditions) {
       // Group
       const operator = condition.logicalOperator || 'AND';
-      const inner = condition.conditions.map((c, i) => renderCondition(c, i)).join(` ${operator} `);
+      const inner = condition.conditions.map(c => renderCondition(c)).join(` ${operator} `);
       return `(${inner})`;
     }
 
@@ -552,7 +553,7 @@ export function RulePreview({ conditions, fieldDefinitions = DEFAULT_FIELDS }: R
     );
   }
 
-  const preview = conditions.map((c, i) => renderCondition(c)).join(' AND ');
+  const preview = conditions.map(c => renderCondition(c)).join(' AND ');
 
   return (
     <div className="p-3 rounded-lg bg-black/20 border border-white/[0.08]">

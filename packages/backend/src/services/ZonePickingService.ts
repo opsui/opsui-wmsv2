@@ -16,8 +16,8 @@
  * - Warehouse Zone Optimization
  */
 
-import { Pool } from 'pg';
-import { getPool, query } from '../db/client';
+import { Pool, PoolClient } from 'pg';
+import { getPool } from '../db/client';
 import { logger } from '../config/logger';
 import { getAuditService, AuditEventType, AuditCategory } from './AuditService';
 import { notifyUser, NotificationType, NotificationPriority } from './NotificationHelper';
@@ -298,18 +298,18 @@ class ZonePickingService {
       // Log the assignment
       const auditSvc = getAuditService();
       await auditSvc.log({
-        userId: typeof context.userId === 'number' ? context.userId : null,
-        username: context.userEmail || null,
-        action: AuditEventType.ORDER_UPDATED,
-        category: AuditCategory.DATA_MODIFICATION,
+        userId:
+          typeof context.userId === 'number' ? String(context.userId) : (context.userId ?? null),
+        actionType: AuditEventType.ORDER_UPDATED,
+        actionCategory: AuditCategory.DATA_MODIFICATION,
         resourceType: 'Zone',
         resourceId: zoneId,
-        details: { description: `Picker ${pickerId} assigned to zone ${zoneId}` },
+        actionDescription: `Picker ${pickerId} assigned to zone ${zoneId}`,
         oldValues: null,
         newValues: { pickerId, zoneId },
         ipAddress: context.ipAddress || null,
         userAgent: context.userAgent || null,
-        traceId: null,
+        metadata: { traceId: null },
       });
 
       logger.info('Picker assigned to zone', { pickerId, zoneId });
@@ -557,18 +557,18 @@ class ZonePickingService {
 
       const auditSvc = getAuditService();
       await auditSvc.log({
-        userId: typeof context.userId === 'number' ? context.userId : null,
-        username: context.userEmail || null,
-        action: AuditEventType.ORDER_UPDATED,
-        category: AuditCategory.DATA_MODIFICATION,
+        userId:
+          typeof context.userId === 'number' ? String(context.userId) : (context.userId ?? null),
+        actionType: AuditEventType.ORDER_UPDATED,
+        actionCategory: AuditCategory.DATA_MODIFICATION,
         resourceType: 'Zone',
         resourceId: pickerId,
-        details: { description: `Picker ${pickerId} released from zone` },
+        actionDescription: `Picker ${pickerId} released from zone`,
         oldValues: null,
         newValues: null,
         ipAddress: context.ipAddress || null,
         userAgent: context.userAgent || null,
-        traceId: null,
+        metadata: { traceId: null },
       });
 
       logger.info('Picker released from zone', { pickerId });

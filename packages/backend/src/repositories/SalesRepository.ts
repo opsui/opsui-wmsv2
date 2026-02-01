@@ -13,10 +13,6 @@ import {
   Quote,
   QuoteLineItem,
   CustomerInteraction,
-  CreateCustomerDTO,
-  CreateLeadDTO,
-  CreateOpportunityDTO,
-  CreateQuoteDTO,
   CustomerStatus,
   LeadStatus,
   OpportunityStage,
@@ -334,9 +330,10 @@ export class SalesRepository {
       paramCount++;
     }
 
-    if (updates.notes !== undefined) {
+    // Handle notes as description (Lead type uses description)
+    if ((updates as any).notes !== undefined) {
       fields.push(`description = $${paramCount}`);
-      values.push(updates.notes);
+      values.push((updates as any).notes);
       paramCount++;
     }
 
@@ -471,6 +468,79 @@ export class SalesRepository {
     return { opportunities, total };
   }
 
+  async updateOpportunity(
+    opportunityId: string,
+    updates: Partial<Opportunity>
+  ): Promise<Opportunity | null> {
+    const client = await getPool();
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (updates.stage !== undefined) {
+      fields.push(`stage = $${paramCount}`);
+      values.push(updates.stage);
+      paramCount++;
+    }
+
+    if (updates.amount !== undefined) {
+      fields.push(`amount = $${paramCount}`);
+      values.push(updates.amount);
+      paramCount++;
+    }
+
+    if (updates.probability !== undefined) {
+      fields.push(`probability = $${paramCount}`);
+      values.push(updates.probability);
+      paramCount++;
+    }
+
+    if (updates.expectedCloseDate !== undefined) {
+      fields.push(`expected_close_date = $${paramCount}`);
+      values.push(updates.expectedCloseDate);
+      paramCount++;
+    }
+
+    if (updates.closedAt !== undefined) {
+      fields.push(`closed_at = $${paramCount}`);
+      values.push(updates.closedAt);
+      paramCount++;
+    }
+
+    if (updates.closedBy !== undefined) {
+      fields.push(`closed_by = $${paramCount}`);
+      values.push(updates.closedBy);
+      paramCount++;
+    }
+
+    if (updates.updatedBy !== undefined) {
+      fields.push(`updated_by = $${paramCount}`);
+      values.push(updates.updatedBy);
+      paramCount++;
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(opportunityId);
+    paramCount++;
+
+    if (fields.length === 1) {
+      return await this.findOpportunityById(opportunityId);
+    }
+
+    const result = await client.query(
+      `UPDATE opportunities SET ${fields.join(', ')} WHERE opportunity_id = $${paramCount} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    logger.info('Opportunity updated', { opportunityId });
+    return this.mapRowToOpportunity(result.rows[0]);
+  }
+
   // ========================================================================
   // QUOTES
   // ========================================================================
@@ -478,7 +548,17 @@ export class SalesRepository {
   async createQuote(
     quote: Omit<
       Quote,
-      'quoteId' | 'quoteNumber' | 'createdAt' | 'updatedAt' | 'sentAt' | 'acceptedAt' | 'rejectedAt'
+      | 'quoteId'
+      | 'quoteNumber'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'sentAt'
+      | 'acceptedAt'
+      | 'rejectedAt'
+      | 'subtotal'
+      | 'taxAmount'
+      | 'discountAmount'
+      | 'totalAmount'
     >
   ): Promise<Quote> {
     const client = await getPool();
@@ -496,11 +576,11 @@ export class SalesRepository {
       }
 
       const taxAmount = subtotal * 0.15; // Default 15% tax
-      const discountAmount = quote.discountAmount || 0;
+      const discountAmount = (quote as any).discountAmount || 0;
       const totalAmount = subtotal + taxAmount - discountAmount;
 
       // Insert quote
-      const result = await client.query(
+      await client.query(
         `INSERT INTO quotes
           (quote_id, quote_number, customer_id, opportunity_id, status, valid_until,
            subtotal, tax_amount, discount_amount, total_amount, notes, terms_and_conditions,
@@ -676,7 +756,8 @@ export class SalesRepository {
     return {
       interactionId,
       ...interaction,
-    };
+      createdAt: new Date(),
+    } as CustomerInteraction;
   }
 
   async findInteractionsByCustomer(
@@ -717,8 +798,15 @@ export class SalesRepository {
       contactName: row.contact_name,
       email: row.email,
       phone: row.phone,
-      billingAddress: row.billing_address,
-      shippingAddress: row.shipping_address,
+      billingAddress:
+        typeof row.billing_address === 'string'
+          ? JSON.parse(row.billing_address)
+          : row.billing_address,
+      shippingAddress: row.shipping_address
+        ? typeof row.shipping_address === 'string'
+          ? JSON.parse(row.shipping_address)
+          : row.shipping_address
+        : undefined,
       status: row.status,
       taxId: row.tax_id,
       paymentTerms: row.payment_terms,

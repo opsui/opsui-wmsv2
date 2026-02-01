@@ -18,7 +18,6 @@ import {
   ChatBubbleLeftRightIcon,
   DevicePhoneMobileIcon,
   CheckIcon,
-  XMarkIcon,
   TrashIcon,
   ChevronDownIcon,
   MagnifyingGlassIcon,
@@ -57,6 +56,7 @@ interface Notification {
   status: 'PENDING' | 'SENT' | 'DELIVERED' | 'FAILED' | 'READ';
   createdAt: string;
   readAt?: string;
+  data?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -103,7 +103,7 @@ const typeLabels: Record<NotificationType, string> = {
 // MAIN COMPONENT
 // ============================================================================
 
-export function NotificationHistory({ userId, limit = 50, className }: NotificationHistoryProps) {
+export function NotificationHistory({ limit = 50, className }: NotificationHistoryProps) {
   const [filterType, setFilterType] = useState<NotificationType | ''>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -121,10 +121,10 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
   const markAllAsRead = useMarkAllAsRead();
   const deleteNotification = useDeleteNotification();
 
-  const notifications = data?.notifications || [];
+  const notifications = (data?.notifications || []) as Notification[];
 
   // Filter by search query
-  const filteredNotifications = notifications.filter(notification => {
+  const filteredNotifications = notifications.filter((notification: Notification) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -146,7 +146,7 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
     await deleteNotification.mutateAsync(id);
   };
 
-  const unreadCount = notifications.filter(n => n.status !== 'READ').length;
+  const unreadCount = notifications.filter((n: Notification) => n.status !== 'READ').length;
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -235,7 +235,7 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
         </div>
       ) : (
         <div className="space-y-2">
-          {filteredNotifications.map(notification => {
+          {filteredNotifications.map((notification: Notification) => {
             const ChannelIcon = channelIcons[notification.channel];
             const statusInfo = statusConfig[notification.status];
             const isUnread = notification.status !== 'READ';
@@ -273,7 +273,7 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
                           <span className="text-sm font-medium text-white">
                             {notification.title}
                           </span>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="default" className="text-xs">
                             {typeLabels[notification.type]}
                           </Badge>
                         </div>
@@ -326,6 +326,18 @@ export function NotificationHistory({ userId, limit = 50, className }: Notificat
                       <CheckIcon className="h-5 w-5" />
                     </button>
                   )}
+
+                  {/* Delete button */}
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleDelete(notification.notificationId);
+                    }}
+                    className="flex-shrink-0 p-2 text-gray-400 hover:text-red-400 transition-colors"
+                    title="Delete notification"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
                 </div>
 
                 {/* Expanded details */}

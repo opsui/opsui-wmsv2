@@ -51,7 +51,7 @@ export interface UseFormValidationOptions<T> {
 // VALIDATION FUNCTIONS
 // ============================================================================
 
-function validateField<T>(fieldName: keyof T, value: any, rules: ValidationRule): string | null {
+function validateField<T>(_fieldName: keyof T, value: any, rules: ValidationRule): string | null {
   // Required validation
   if (rules.required) {
     if (value === undefined || value === null || value === '') {

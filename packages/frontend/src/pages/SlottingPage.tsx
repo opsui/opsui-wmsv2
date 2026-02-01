@@ -4,7 +4,7 @@
  * ABC analysis and slotting recommendations for warehouse optimization
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardHeader,
@@ -36,7 +36,9 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // TYPES
@@ -60,6 +62,7 @@ interface RecommendationItem {
 // ============================================================================
 
 export function SlottingPage() {
+  const navigate = useNavigate();
   usePageTracking({ view: PageViews.SLOTTING });
 
   const [selectedDays, setSelectedDays] = useState<number>(90);
@@ -132,13 +135,23 @@ export function SlottingPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Slotting Optimization
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                ABC analysis and slotting recommendations
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Slotting Optimization
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  ABC analysis and slotting recommendations
+                </p>
+              </div>
             </div>
             <ChartBarIcon className="h-8 w-8 text-gray-400" />
           </div>

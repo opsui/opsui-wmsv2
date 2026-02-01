@@ -6,8 +6,7 @@
 
 import { query } from './client';
 import { logger } from '../config/logger';
-import { generateOrderId, generateUserId } from '@opsui/shared';
-import { getPool } from './client';
+import { generateOrderId } from '@opsui/shared';
 
 // ============================================================================
 // SEED DATA

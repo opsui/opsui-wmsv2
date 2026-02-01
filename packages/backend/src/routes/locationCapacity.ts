@@ -85,7 +85,7 @@ router.post(
  */
 router.get(
   '/rules',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const rules = await locationCapacityService.getAllCapacityRules();
     res.json(rules);
   })

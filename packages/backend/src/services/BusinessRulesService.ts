@@ -50,8 +50,10 @@ export class BusinessRulesService {
   /**
    * Trigger rule evaluation for an event
    */
-  async triggerEvent(context: RuleContext): Promise<void> {
-    const startTime = Date.now();
+  async triggerEvent(context?: RuleContext): Promise<void> {
+    if (!context) {
+      return;
+    }
 
     // Find all active rules for this event type
     const rules = await businessRulesRepository.findActiveRulesByEventType(context.eventType);
@@ -112,6 +114,7 @@ export class BusinessRulesService {
       await businessRulesRepository.createExecutionLog(log);
     } catch (error: any) {
       // Log execution error
+      const errorTime = Date.now();
       await businessRulesRepository.createExecutionLog({
         ruleId: rule.ruleId,
         eventType: context.eventType,
@@ -120,7 +123,7 @@ export class BusinessRulesService {
         triggeredAt: new Date(),
         triggeredBy: context.userId,
         conditionsMet: false,
-        executionTimeMs: Date.now() - startTime,
+        executionTimeMs: errorTime - startTime,
         executionResults: [],
         errorMessage: error.message,
       });
@@ -307,7 +310,7 @@ export class BusinessRulesService {
   // ACTION IMPLEMENTATIONS
   // ==========================================================================
 
-  private async actionSetPriority(action: RuleAction, context: RuleContext): Promise<any> {
+  private async actionSetPriority(action: RuleAction, _context: RuleContext): Promise<any> {
     const { field, value } = action.parameters;
     // This would typically update the entity in the database
     // For now, we return a marker indicating the action should be performed
@@ -318,7 +321,7 @@ export class BusinessRulesService {
     };
   }
 
-  private async actionAssignUser(action: RuleAction, context: RuleContext): Promise<any> {
+  private async actionAssignUser(action: RuleAction, _context: RuleContext): Promise<any> {
     const { userId, role } = action.parameters;
     return {
       type: 'ASSIGN_USER',
@@ -327,7 +330,7 @@ export class BusinessRulesService {
     };
   }
 
-  private async actionSendNotification(action: RuleAction, context: RuleContext): Promise<any> {
+  private async actionSendNotification(action: RuleAction, _context: RuleContext): Promise<any> {
     const { message, recipients, type } = action.parameters;
     // This would integrate with a notification service
     return {
@@ -338,7 +341,7 @@ export class BusinessRulesService {
     };
   }
 
-  private async actionBlockAction(action: RuleAction, context: RuleContext): Promise<any> {
+  private async actionBlockAction(action: RuleAction, _context: RuleContext): Promise<any> {
     const { reason } = action.parameters;
     // This would prevent an action from completing
     return {

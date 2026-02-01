@@ -4,24 +4,16 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Clock, TrendingUp, AlertCircle } from '@heroicons/react/24/outline';
-import { api } from '@/api/client';
-import { useQuery } from '@tanstack/react-query';
+import {
+  ClockIcon,
+  ArrowTrendingUpIcon,
+  ExclamationTriangleIcon,
+} from '@heroicons/react/24/outline';
+import { apiClient } from '@/lib/api-client';
 
 interface DurationPrediction {
   duration_minutes: number;
   duration_hours: number;
-}
-
-interface PredictionResponse {
-  prediction_id: string;
-  model_version: string;
-  prediction: DurationPrediction;
-  confidence: number;
-  metadata: {
-    model_type: string;
-    predicted_at: string;
-  };
 }
 
 interface OrderDurationPredictionProps {
@@ -62,7 +54,10 @@ export function OrderDurationPrediction({ orderId, orderData }: OrderDurationPre
                 ? 2
                 : 1;
 
-        const response = await api.post('/ml/predict/duration', {
+        const response = await apiClient.post<{
+          prediction: DurationPrediction;
+          confidence: number;
+        }>('/ml/predict/duration', {
           order_id: orderId,
           order_item_count: orderData.item_count,
           order_total_value: orderData.total_value,
@@ -106,7 +101,7 @@ export function OrderDurationPrediction({ orderId, orderData }: OrderDurationPre
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+          <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-2" />
           <span className="text-red-700">{error}</span>
         </div>
       </div>
@@ -133,7 +128,7 @@ export function OrderDurationPrediction({ orderId, orderData }: OrderDurationPre
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
-          <Clock className="h-6 w-6 text-indigo-600 mr-2" />
+          <ClockIcon className="h-6 w-6 text-indigo-600 mr-2" />
           <h3 className="text-lg font-semibold text-gray-900">Predicted Fulfillment Time</h3>
         </div>
         {confidence && (
@@ -199,7 +194,7 @@ export function OrderDurationPrediction({ orderId, orderData }: OrderDurationPre
       {/* Additional insights */}
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex items-center text-sm text-gray-600">
-          <TrendingUp className="h-4 w-4 mr-1" />
+          <ArrowTrendingUpIcon className="h-4 w-4 mr-1" />
           <span>Based on ML model v1.0.0 (XGBoost)</span>
         </div>
       </div>

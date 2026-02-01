@@ -17,6 +17,7 @@ import {
   TrashIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import {
   Report,
@@ -26,8 +27,9 @@ import {
   Dashboard,
   ExportJob,
 } from '@opsui/shared';
-import { Header, Pagination, useToast, ConfirmDialog } from '@/components/shared';
+import { Header, Pagination, useToast, ConfirmDialog, Button } from '@/components/shared';
 import { ReportExecutionModal, DashboardBuilder } from '@/components/reports';
+import { useNavigate } from 'react-router-dom';
 import {
   useReports,
   useDashboards,
@@ -51,6 +53,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 
 export function ReportsPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'reports' | 'dashboards' | 'exports'>('reports');
   const [selectedReport, setSelectedReport] = useState<Report | undefined>();
   const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | undefined>();
@@ -228,6 +231,16 @@ export function ReportsPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="secondary"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold text-white">Reports & Analytics</h1>
           <p className="mt-2 text-gray-400">
             Create custom reports, view dashboards, and export data

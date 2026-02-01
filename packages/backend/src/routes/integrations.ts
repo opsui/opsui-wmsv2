@@ -142,7 +142,7 @@ router.delete(
 router.post(
   '/:integrationId/test',
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     try {
       const result = await service.testConnection(req.params.integrationId);
       res.json(result);

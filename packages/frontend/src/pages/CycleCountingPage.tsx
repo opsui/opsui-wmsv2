@@ -22,8 +22,11 @@ import {
   ChartBarIcon,
   ClipboardDocumentCheckIcon,
   MagnifyingGlassIcon,
+  CalendarDaysIcon,
+  LightBulbIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Header, Select, Pagination } from '@/components/shared';
+import { Header, Select, Pagination, Button } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 
@@ -462,7 +465,7 @@ export function CycleCountingPage() {
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'counts' | 'analytics'>('counts');
+  const [activeTab, setActiveTab] = useState<'counts' | 'analytics' | 'schedules'>('counts');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [searchTerm, setSearchTerm] = useState('');
@@ -542,11 +545,21 @@ export function CycleCountingPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Cycle Counting</h1>
-              <p className="text-gray-400 mt-1">
-                Manage scheduled and ad-hoc inventory cycle counts
-              </p>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2"
+              >
+                <ChevronLeftIcon className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Cycle Counting</h1>
+                <p className="text-gray-400 mt-1">
+                  Manage scheduled and ad-hoc inventory cycle counts
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               {/* Tab Navigation */}
@@ -559,12 +572,37 @@ export function CycleCountingPage() {
                   Counts
                 </TabButton>
                 {canViewAnalytics && (
+                  <>
+                    <TabButton
+                      active={activeTab === 'analytics'}
+                      onClick={() => setActiveTab('analytics')}
+                      icon={ChartBarIcon}
+                    >
+                      Analytics
+                    </TabButton>
+                    <TabButton
+                      active={false}
+                      onClick={() => navigate('/cycle-counting/kpi')}
+                      icon={ChartBarIcon}
+                    >
+                      KPI
+                    </TabButton>
+                    <TabButton
+                      active={false}
+                      onClick={() => navigate('/cycle-counting/root-cause')}
+                      icon={LightBulbIcon}
+                    >
+                      Root Cause
+                    </TabButton>
+                  </>
+                )}
+                {(user?.role === UserRole.SUPERVISOR || user?.role === UserRole.ADMIN) && (
                   <TabButton
-                    active={activeTab === 'analytics'}
-                    onClick={() => setActiveTab('analytics')}
-                    icon={ChartBarIcon}
+                    active={false}
+                    onClick={() => navigate('/cycle-counting/schedules')}
+                    icon={CalendarDaysIcon}
                   >
-                    Analytics
+                    Schedules
                   </TabButton>
                 )}
               </div>

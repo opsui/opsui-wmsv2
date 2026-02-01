@@ -34,7 +34,7 @@ export class UserRepository extends BaseRepository<User> {
       return null;
     }
 
-    const user = result.rows[0];
+    const user = result.rows[0] as User;
     return await this.attachAdditionalRoles(user);
   }
 
@@ -49,7 +49,7 @@ export class UserRepository extends BaseRepository<User> {
       [id]
     );
 
-    const user = result.rows[0];
+    const user = result.rows[0] as User;
     return user ? await this.attachAdditionalRoles(user) : null;
   }
 
@@ -199,7 +199,7 @@ export class UserRepository extends BaseRepository<User> {
     if (!user) return null;
 
     // Attach additional roles
-    return await this.attachAdditionalRoles(user);
+    return await this.attachAdditionalRoles(user as User);
   }
 
   // --------------------------------------------------------------------------
@@ -290,7 +290,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0]);
+    return await this.attachAdditionalRoles(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -311,7 +311,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0]);
+    return await this.attachAdditionalRoles(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -332,7 +332,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0]);
+    return await this.attachAdditionalRoles(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -363,7 +363,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0]);
+    return await this.attachAdditionalRoles(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -419,7 +419,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0]);
+    return await this.attachAdditionalRoles(result.rows[0] as User);
   }
 }
 

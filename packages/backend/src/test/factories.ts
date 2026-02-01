@@ -11,11 +11,12 @@ import {
   OrderStatus,
   OrderPriority,
   OrderItem,
+  OrderItemStatus,
   User,
   UserRole,
   PickTask,
   TaskStatus,
-  Inventory,
+  InventoryUnit,
 } from '@opsui/shared/types';
 
 /**
@@ -25,13 +26,12 @@ export const userFactory = {
   create(overrides: Partial<User> = {}): User {
     const roles = Object.values(UserRole);
     return {
-      id: `USR-${faker.string.uuid()}`,
+      userId: `USR-${faker.string.uuid()}`,
       email: faker.internet.email(),
       name: faker.person.fullName(),
       role: faker.helpers.arrayElement(roles),
       active: true,
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
+      createdAt: faker.date.past(),
       ...overrides,
     };
   },
@@ -78,11 +78,12 @@ export const orderFactory = {
       customerId: `CUST-${faker.string.numeric(6)}`,
       status: OrderStatus.PENDING,
       priority: faker.helpers.arrayElement(Object.values(OrderPriority)),
-      pickerId: null,
-      packerId: null,
+      pickerId: undefined,
+      packerId: undefined,
       items: [],
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
+      progress: 0,
+      createdAt: faker.date.past(),
+      updatedAt: faker.date.recent(),
       ...overrides,
     };
   },
@@ -91,7 +92,7 @@ export const orderFactory = {
     const picker = userFactory.createPicker();
     return this.create({
       status: OrderStatus.PICKING,
-      pickerId: picker.id,
+      pickerId: picker.userId,
       ...overrides,
     });
   },
@@ -100,7 +101,7 @@ export const orderFactory = {
     const picker = userFactory.createPicker();
     return this.create({
       status: OrderStatus.PICKED,
-      pickerId: picker.id,
+      pickerId: picker.userId,
       items: orderItemFactory.createList(3, { pickedQuantity: 10 }),
       ...overrides,
     });
@@ -111,8 +112,8 @@ export const orderFactory = {
     const packer = userFactory.createPacker();
     return this.create({
       status: OrderStatus.PACKING,
-      pickerId: picker.id,
-      packerId: packer.id,
+      pickerId: picker.userId,
+      packerId: packer.userId,
       items: orderItemFactory.createList(3, { pickedQuantity: 10 }),
       ...overrides,
     });
@@ -123,8 +124,8 @@ export const orderFactory = {
     const packer = userFactory.createPacker();
     return this.create({
       status: OrderStatus.SHIPPED,
-      pickerId: picker.id,
-      packerId: packer.id,
+      pickerId: picker.userId,
+      packerId: packer.userId,
       items: orderItemFactory.createList(3, { pickedQuantity: 10 }),
       ...overrides,
     });
@@ -147,10 +148,11 @@ export const orderItemFactory = {
       orderItemId: `ITM-${faker.string.uuid()}`,
       orderId: orderFactory.create().orderId,
       sku: `PROD-${faker.string.alphanumeric({ casing: 'upper', length: 6 })}`,
-      productName: faker.commerce.productName(),
+      name: faker.commerce.productName(),
       quantity: faker.number.int({ min: 1, max: 100 }),
       pickedQuantity: 0,
-      binLocation: `${faker.helpers.arrayElement(['A', 'B', 'C'])}-${faker.number.int({ min: 1, max: 20 })}-${faker.number.int({ min: 1, max: 20 })}`,
+      binLocation: `A-${faker.string.numeric(2)}-${faker.string.numeric(2)}`,
+      status: OrderItemStatus.PENDING,
       ...overrides,
     };
   },
@@ -178,18 +180,15 @@ export const pickTaskFactory = {
     const item = orderItemFactory.create({ orderId: order.orderId });
 
     return {
-      taskId: `TSK-${faker.date.past().toISOString().slice(0, 10).replace(/-/g, '')}-${faker.string.numeric(6)}`,
+      pickTaskId: `TSK-${faker.date.past().toISOString().slice(0, 10).replace(/-/g, '')}-${faker.string.numeric(6)}`,
       orderId: order.orderId,
       orderItemId: item.orderItemId,
       sku: item.sku,
-      productName: item.productName,
+      name: item.name,
+      targetBin: item.binLocation,
       quantity: item.quantity,
-      binLocation: item.binLocation,
+      pickedQuantity: 0,
       status: TaskStatus.PENDING,
-      pickerId: null,
-      priority: order.priority,
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
       ...overrides,
     };
   },
@@ -198,7 +197,8 @@ export const pickTaskFactory = {
     const picker = userFactory.createPicker();
     return this.create({
       status: TaskStatus.IN_PROGRESS,
-      pickerId: picker.id,
+      pickerId: picker.userId,
+      startedAt: faker.date.recent(),
       ...overrides,
     });
   },
@@ -207,7 +207,8 @@ export const pickTaskFactory = {
     const picker = userFactory.createPicker();
     return this.create({
       status: TaskStatus.COMPLETED,
-      pickerId: picker.id,
+      pickerId: picker.userId,
+      completedAt: faker.date.recent(),
       ...overrides,
     });
   },
@@ -221,35 +222,32 @@ export const pickTaskFactory = {
  * Factory for creating test inventory
  */
 export const inventoryFactory = {
-  create(overrides: Partial<Inventory> = {}): Inventory {
+  create(overrides: Partial<InventoryUnit> = {}): InventoryUnit {
     const quantity = faker.number.int({ min: 10, max: 1000 });
-    const reserved = faker.number.int({ min: 0, min: Math.floor(quantity / 2) });
+    const reserved = faker.number.int({ min: 0, max: Math.floor(quantity / 2) });
 
     return {
+      unitId: `INV-${faker.string.uuid()}`,
       sku: `PROD-${faker.string.alphanumeric({ casing: 'upper', length: 6 })}`,
-      productName: faker.commerce.productName(),
       quantity,
       reserved,
       available: quantity - reserved,
       binLocation: `${faker.helpers.arrayElement(['A', 'B', 'C'])}-${faker.number.int({ min: 1, max: 20 })}-${faker.number.int({ min: 1, max: 20 })}`,
-      lowStockThreshold: faker.number.int({ min: 5, max: 20 }),
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
+      lastUpdated: faker.date.recent(),
       ...overrides,
     };
   },
 
-  createLowStock(overrides: Partial<Inventory> = {}): Inventory {
+  createLowStock(overrides: Partial<InventoryUnit> = {}): InventoryUnit {
     return this.create({
       quantity: 15,
       reserved: 10,
       available: 5,
-      lowStockThreshold: 10,
       ...overrides,
     });
   },
 
-  createOutOfStock(overrides: Partial<Inventory> = {}): Inventory {
+  createOutOfStock(overrides: Partial<InventoryUnit> = {}): InventoryUnit {
     return this.create({
       quantity: 0,
       reserved: 0,
@@ -258,7 +256,7 @@ export const inventoryFactory = {
     });
   },
 
-  createList(count: number, overrides: Partial<Inventory> = {}): Inventory[] {
+  createList(count: number, overrides: Partial<InventoryUnit> = {}): InventoryUnit[] {
     return Array.from({ length: count }, () => this.create(overrides));
   },
 };

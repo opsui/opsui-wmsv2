@@ -9,20 +9,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { cycleCountApi } from '@/services/api';
-import { CycleCountPlan, CycleCountEntry } from '@opsui/shared';
-import { useToast } from '@/components/shared';
+import { CycleCountEntry } from '@opsui/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 
 export function MobileScanningPage() {
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [cameraActive, setCameraActive] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [scanHistory, setScanHistory] = useState<CycleCountEntry[]>([]);
+  const [scanHistory] = useState<CycleCountEntry[]>([]);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +51,6 @@ export function MobileScanningPage() {
     },
     onSubmit: async values => {
       if (!currentEntry) {
-        showToast('No current entry to count', 'error');
         return;
       }
 
@@ -61,7 +58,6 @@ export function MobileScanningPage() {
       try {
         await submitMutation.mutateAsync({ entryId: currentEntry.entryId, quantity: qty });
       } catch (error: any) {
-        showToast(error?.message || 'Failed to submit count', 'error');
         playFeedback('error');
       }
     },
@@ -76,7 +72,7 @@ export function MobileScanningPage() {
 
   // Mutation for submitting counts
   const submitMutation = useMutation({
-    mutationFn: ({ entryId, quantity }: { entryId: string; quantity: number }) =>
+    mutationFn: ({ quantity }: { entryId: string; quantity: number }) =>
       cycleCountApi.createEntry({
         planId: planId!,
         sku: currentEntry?.sku || '',
@@ -84,15 +80,13 @@ export function MobileScanningPage() {
         countedQuantity: quantity,
       }),
     onSuccess: () => {
-      showToast('Count submitted successfully', 'success');
       playFeedback('success');
       setCurrentIndex(prev => prev + 1);
       setBarcodeInput('');
       // Reset form
       setFieldValue('quantity', '');
     },
-    onError: (error: Error) => {
-      showToast(error.message || 'Failed to submit count', 'error');
+    onError: () => {
       playFeedback('error');
     },
   });
@@ -184,7 +178,6 @@ export function MobileScanningPage() {
 
   // Skip current item
   const handleSkip = () => {
-    showToast('Item skipped', 'info');
     setCurrentIndex(prev => prev + 1);
     setBarcodeInput('');
     setFieldValue('quantity', '');
@@ -363,7 +356,7 @@ export function MobileScanningPage() {
             {scanHistory
               .slice(-5)
               .reverse()
-              .map((entry, idx) => (
+              .map(entry => (
                 <div key={entry.entryId} className="history-item">
                   <span className="sku">{entry.sku}</span>
                   <span className="qty">{entry.countedQuantity}</span>

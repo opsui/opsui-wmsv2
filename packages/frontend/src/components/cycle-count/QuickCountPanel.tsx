@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { CycleCountEntry, CycleCountPlan } from '@opsui/shared';
+import { CycleCountEntry } from '@opsui/shared';
 
 interface QuickCountPanelProps {
   pendingEntries: CycleCountEntry[];

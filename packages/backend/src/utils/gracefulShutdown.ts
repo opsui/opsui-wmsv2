@@ -39,7 +39,7 @@ const state: ShutdownState = {
  * Setup comprehensive graceful shutdown handlers
  */
 export function setupGracefulShutdown(options: ShutdownOptions): void {
-  const { server, port, logger, cleanupTasks = [], forceTimeout = 30000 } = options;
+  const { logger, forceTimeout = 30000 } = options;
 
   // Handle termination signals
   const signals = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
@@ -128,7 +128,7 @@ async function gracefulShutdown(signal: string, options: ShutdownOptions): Promi
     logger.info('✅ Port lock released');
 
     // Step 3: Run custom cleanup tasks
-    if (cleanupTasks.length > 0) {
+    if (cleanupTasks && cleanupTasks.length > 0) {
       logger.info('🧹 Step 3/7: Running cleanup tasks...', {
         taskCount: cleanupTasks.length,
       });
@@ -234,7 +234,7 @@ export function getShutdownState(): ShutdownState {
 /**
  * Register additional cleanup task
  */
-export function addCleanupTask(task: () => Promise<void>): void {
+export function addCleanupTask(_task: () => Promise<void>): void {
   // This would be integrated into the shutdown options
   // For now, it's a placeholder for extensibility
 }

@@ -21,7 +21,6 @@ import {
   PutawayTask,
   CreateASNDTO,
   CreateReceiptDTO,
-  CreatePutawayTaskDTO,
   UpdatePutawayTaskDTO,
 } from '@opsui/shared';
 
@@ -111,7 +110,7 @@ export class InboundReceivingService {
       const asnId = `ASN-${nanoid(10)}`.toUpperCase();
 
       // Insert ASN
-      const asnResult = await client.query(
+      await client.query(
         `INSERT INTO advance_shipping_notices
           (asn_id, supplier_id, purchase_order_number, status, expected_arrival_date,
            carrier, tracking_number, shipment_notes, created_by)
@@ -293,7 +292,7 @@ export class InboundReceivingService {
       const receiptId = `RCP-${nanoid(10)}`.toUpperCase();
 
       // Insert receipt
-      const receiptResult = await client.query(
+      await client.query(
         `INSERT INTO receipts
           (receipt_id, asn_id, receipt_date, receipt_type, status, received_by)
          VALUES ($1, $2, CURRENT_DATE, $3, $4, $5)

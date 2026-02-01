@@ -6,7 +6,7 @@
  * FIXED: Now properly fetches current_view from database
  */
 
-import { DashboardMetricsResponse, OrderStatus } from '@opsui/shared';
+import { DashboardMetricsResponse } from '@opsui/shared';
 import { query } from '../db/client';
 import { logger } from '../config/logger';
 

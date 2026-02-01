@@ -140,7 +140,7 @@ function shouldExclude(req: Request): boolean {
 /**
  * Get resource type from request path
  */
-function getResourceType(path: string, method: string): string {
+function getResourceType(path: string, _method: string): string {
   // Remove /api prefix if present
   const cleanPath = path.replace(/^\/api\//, '/');
 
@@ -553,7 +553,7 @@ async function generateMetadataSummary(
     eventType === AuditEventType.LOGIN_SUCCESS || eventType === AuditEventType.LOGIN_FAILED
       ? req.body?.email || 'Unknown user'
       : req.user?.email || 'Unknown user';
-  const userRole = req.user?.effectiveRole || 'Unknown role';
+  // const userRole = req.user?.effectiveRole || 'Unknown role';
 
   switch (eventType) {
     case AuditEventType.LOGIN_SUCCESS:
@@ -791,7 +791,7 @@ function extractResourceIdFromResponse(responseData: any, eventType: string): st
  */
 function extractKeyDetails(
   req: Request,
-  eventType: string,
+  _eventType: string,
   resourceId: string | null
 ): Record<string, unknown> {
   const details: Record<string, unknown> = {};
@@ -1035,7 +1035,7 @@ async function generateHumanReadableDescription(
 
         // Include SKU and quantity in description for regular pick
         const sku = req.body?.sku || '';
-        const qty = req.body?.quantity || 1;
+        // const qty = req.body?.quantity || 1;
         if (sku) {
           return `Confirmed Order List for order ${orderId}`;
         }
@@ -1248,7 +1248,10 @@ async function logRequest(req: Request, statusCode: number, responseData: any): 
 
     // Include wave details if available
     if (waveDetails) {
-      Object.assign(metadata.details, waveDetails);
+      metadata.details = {
+        ...(metadata.details as Record<string, unknown>),
+        ...waveDetails,
+      };
     }
 
     // Only include technical details for non-authentication events (login/logout shouldn't show request data)

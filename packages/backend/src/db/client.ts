@@ -145,7 +145,10 @@ function mapKeysToCamelCase<T>(obj: any): T {
 /**
  * Execute a query with parameters
  */
-export async function query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+export async function query<T extends Record<string, any> = Record<string, any>>(
+  text: string,
+  params?: any[]
+): Promise<QueryResult<T>> {
   const start = Date.now();
   try {
     const result = await getPool().query<any>(text, params);

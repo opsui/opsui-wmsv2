@@ -173,6 +173,9 @@ export const TRANSITION_PREREQUISITES = {
     // Before: PENDING → PICKING
     check: async (context: TransitionContext) => {
       // 1. Picker must have < MAX_ORDERS_PER_PICKER active orders
+      if (!context.pickerId) {
+        throw new Error('Picker ID is required for picking transition');
+      }
       const activeOrderCount = await context.getActiveOrderCount(context.pickerId);
       if (activeOrderCount >= context.maxOrdersPerPicker) {
         throw new Error(`Picker has reached maximum active orders (${context.maxOrdersPerPicker})`);
@@ -336,7 +339,8 @@ export async function validateTransition(
   }
 
   // 2. Check prerequisites
-  const prerequisiteCheck = TRANSITION_PREREQUISITES[toStatus];
+  const prerequisiteCheck =
+    TRANSITION_PREREQUISITES[toStatus as keyof typeof TRANSITION_PREREQUISITES];
   if (prerequisiteCheck) {
     await prerequisiteCheck.check(context);
   }

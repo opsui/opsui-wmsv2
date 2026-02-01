@@ -116,10 +116,10 @@ function CountEntryModal({
   const createEntryMutation = useCreateCycleCountEntry();
   const [errorMessage, setErrorMessage] = useState('');
   const [skuSearch, setSkuSearch] = useState('');
-  const [prefillValues, setPrefillValues] = useState({
+  const prefillValues = useState({
     sku: prefillSku,
     location: prefillLocation,
-  });
+  })[0];
 
   // Barcode scanning state
   const [barcode, setBarcode] = useState('');
@@ -175,7 +175,6 @@ function CountEntryModal({
     values: formData,
     errors,
     handleChange,
-    handleSubmit,
     isSubmitting,
     setFieldValue,
     handleBlur,
@@ -809,7 +808,7 @@ function VarianceApprovalModal({
 }
 
 // Helper to get count type description
-function getCountTypeDescription(countType: string, location?: string, sku?: string): string {
+function getCountTypeDescription(countType: string, location?: string): string {
   switch (countType) {
     case CycleCountType.BLANKET:
       return `Starting BLANKET count will auto-generate count entries for ALL SKUs in location ${location || 'the specified location'}. You will then enter the actual counted quantity for each entry.`;
@@ -2043,7 +2042,7 @@ export default function CycleCountDetailPage() {
             <QuickCountPanel
               plan={plan}
               pendingEntries={getPendingEntries()}
-              onCompleteEntry={(entryId, countedQuantity) => {
+              onCompleteEntry={(_entryId, countedQuantity) => {
                 // Submit the count entry
                 createMutation.mutate({
                   planId: plan.planId,

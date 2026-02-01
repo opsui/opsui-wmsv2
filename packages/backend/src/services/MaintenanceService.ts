@@ -38,7 +38,9 @@ export class MaintenanceService {
 
     const asset = await maintenanceRepository.createAsset({
       ...dto,
-      status: 'OPERATIONAL',
+      purchaseDate: dto.purchaseDate ? new Date(dto.purchaseDate) : undefined,
+      warrantyExpiry: dto.warrantyExpiry ? new Date(dto.warrantyExpiry) : undefined,
+      status: AssetStatus.OPERATIONAL,
       createdBy,
     });
 
@@ -79,12 +81,12 @@ export class MaintenanceService {
   async retireAsset(assetId: string, userId: string): Promise<Asset> {
     const asset = await this.getAssetById(assetId);
 
-    if (asset.status === 'RETIRED') {
+    if (asset.status === AssetStatus.RETIRED) {
       throw new Error('Asset already retired');
     }
 
     const updated = await maintenanceRepository.updateAsset(assetId, {
-      status: 'RETIRED',
+      status: AssetStatus.RETIRED,
       updatedBy: userId,
     });
 
@@ -124,8 +126,10 @@ export class MaintenanceService {
 
     const schedule = await maintenanceRepository.createSchedule({
       ...dto,
+      nextDueDate: new Date(dto.nextDueDate),
+      isActive: true,
       createdBy,
-    });
+    } as any);
 
     return schedule;
   }
@@ -169,13 +173,16 @@ export class MaintenanceService {
 
     const workOrder = await maintenanceRepository.createWorkOrder({
       ...dto,
+      scheduledDate: new Date(dto.scheduledDate),
+      scheduledStartTime: dto.scheduledStartTime, // Keep as string (HH:mm format)
+      status: MaintenanceStatus.SCHEDULED,
       createdBy,
-    });
+    } as any);
 
     // Update asset status if maintenance type is not preventive
     if (dto.maintenanceType !== 'PREVENTIVE') {
       await maintenanceRepository.updateAsset(dto.assetId, {
-        status: 'IN_MAINTENANCE',
+        status: AssetStatus.IN_MAINTENANCE,
         updatedBy: createdBy,
       });
     }
@@ -237,9 +244,13 @@ export class MaintenanceService {
       completedBy: userId,
     });
 
+    if (!completed) {
+      throw new Error('Failed to complete work order');
+    }
+
     // Update asset back to operational
     await maintenanceRepository.updateAsset(workOrder.assetId, {
-      status: 'OPERATIONAL',
+      status: AssetStatus.OPERATIONAL,
       updatedBy: userId,
     });
 
@@ -254,7 +265,6 @@ export class MaintenanceService {
       cost: completed.totalCost,
       notes: dto.notes,
       createdBy: userId,
-      createdAt: new Date(),
     });
 
     return completed;
@@ -282,7 +292,6 @@ export class MaintenanceService {
 
     const serviceLog = await maintenanceRepository.createServiceLog({
       ...log,
-      createdAt: new Date(),
     });
 
     // Update asset last maintenance date
@@ -318,8 +327,13 @@ export class MaintenanceService {
     }
 
     const reading = await maintenanceRepository.addMeterReading({
-      ...dto,
+      assetId: dto.assetId,
+      meterType: dto.meterType,
+      value: dto.value,
+      unit: dto.unit,
+      readingDate: new Date(dto.readingDate),
       readBy: userId,
+      notes: dto.notes,
     });
 
     // Check if reading triggers maintenance

@@ -24,7 +24,13 @@ interface LineChartProps {
   className?: string;
 }
 
-const colorMap = {
+type ColorMap = {
+  stroke: string;
+  fill: string;
+  gradient: [string, string];
+};
+
+const colorMap: Record<string, ColorMap> = {
   blue: {
     stroke: '#3b82f6',
     fill: 'rgba(59, 130, 246, 0.1)',

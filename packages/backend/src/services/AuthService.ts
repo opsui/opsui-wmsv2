@@ -34,7 +34,7 @@
  * @see {@link packages/backend/src/routes/auth.ts} for auth endpoints
  */
 
-import { User, UserRole, NotFoundError, UnauthorizedError } from '@opsui/shared';
+import { User, UserRole, UnauthorizedError } from '@opsui/shared';
 import { userRepository } from '../repositories/UserRepository';
 import { generateToken, generateRefreshToken, JWTPayload } from '../middleware/auth';
 import { logger } from '../config/logger';

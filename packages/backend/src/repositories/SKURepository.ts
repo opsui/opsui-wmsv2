@@ -191,7 +191,7 @@ export class SKURepository extends BaseRepository<SKU> {
       throw new NotFoundError('SKU', sku);
     }
 
-    return result.rows[0];
+    return result.rows[0] as SKU;
   }
 
   // --------------------------------------------------------------------------

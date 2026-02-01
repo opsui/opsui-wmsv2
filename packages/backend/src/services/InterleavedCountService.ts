@@ -7,7 +7,6 @@
 import { getPool } from '../db/client';
 import { logger } from '../config/logger';
 import { nanoid } from 'nanoid';
-import { cycleCountService } from './CycleCountService';
 import {
   MicroCount,
   CreateMicroCountDTO,

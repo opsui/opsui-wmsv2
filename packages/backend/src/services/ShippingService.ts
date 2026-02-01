@@ -9,7 +9,6 @@ import { logger } from '../config/logger';
 import { nanoid } from 'nanoid';
 import {
   ShipmentStatus,
-  LabelFormat,
   Carrier,
   Shipment,
   ShippingLabel,

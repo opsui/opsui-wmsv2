@@ -14,8 +14,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Calendar } from '@heroicons/react/24/outline';
-import { api } from '@/api/client';
+import { ArrowTrendingUpIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { apiClient } from '@/lib/api-client';
 
 interface ForecastDataPoint {
   day: number;
@@ -55,7 +55,7 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
       setError(null);
 
       try {
-        const response = await api.post('/ml/predict/demand', {
+        const response = await apiClient.post<ForecastResponse>('/ml/predict/demand', {
           sku_id: skuId,
           forecast_horizon_days: forecastHorizonDays,
         });
@@ -110,14 +110,14 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <TrendingUp className="h-6 w-6 text-indigo-600 mr-2" />
+          <ArrowTrendingUpIcon className="h-6 w-6 text-indigo-600 mr-2" />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Demand Forecast</h3>
             <p className="text-sm text-gray-500">SKU: {forecast.prediction.sku_id}</p>
           </div>
         </div>
         <div className="flex items-center text-sm text-gray-500">
-          <Calendar className="h-4 w-4 mr-1" />
+          <CalendarIcon className="h-4 w-4 mr-1" />
           <span>{forecastHorizonDays}-day forecast</span>
         </div>
       </div>

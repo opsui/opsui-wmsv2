@@ -282,7 +282,7 @@ router.get(
   '/database/health',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const requiredTables: Record<string, string[]> = {
       core: ['users', 'orders', 'order_items', 'skus', 'pick_tasks', 'bin_locations'],
       audit: ['audit_logs'],
@@ -1117,7 +1117,7 @@ router.get(
   '/testing/presets',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const presets = [
       {
         id: 'fresh',
@@ -1366,7 +1366,7 @@ router.get(
   '/crawler/status',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     res.json({
       isRunning: crawlerState.isRunning,
       lastRun: crawlerState.lastRun,
@@ -1582,7 +1582,7 @@ router.post(
   '/crawler/stop',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!crawlerState.isRunning) {
       res.status(400).json({ error: 'Crawler is not running' });
       return;
@@ -1628,7 +1628,7 @@ router.get(
   '/crawler/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const resultsPath = path.join(AI_LOOP_DIR, 'normalized-errors.json');
     const errorLogPath = path.join(AI_LOOP_DIR, 'error-log.json');
 
@@ -1678,7 +1678,7 @@ router.get(
   '/crawler/fix-prompt',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const fixPromptPath = path.join(AI_LOOP_DIR, 'fix-prompt.md');
 
     if (!fs.existsSync(fixPromptPath)) {
@@ -1699,7 +1699,7 @@ router.delete(
   '/crawler/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     // Clear in-memory state
     crawlerState.lastResults = null;
     crawlerState.lastRun = null;
@@ -1730,7 +1730,7 @@ router.get(
   '/crawler/logs',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const logPath = path.join(AI_LOOP_DIR, 'error-log.json');
 
     if (!fs.existsSync(logPath)) {
@@ -1812,7 +1812,7 @@ router.get(
   '/e2e/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const resultsPath = path.join(AI_LOOP_DIR, 'e2e-results.json');
 
     if (!fs.existsSync(resultsPath)) {
@@ -1898,7 +1898,7 @@ router.get(
   '/workflows/results',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     const resultsPath = path.join(AI_LOOP_DIR, 'workflow-results.json');
 
     if (!fs.existsSync(resultsPath)) {
@@ -1971,7 +1971,7 @@ router.get(
       [sku, parseInt(limit as string)]
     );
 
-    return res.json({
+    void res.json({
       sku,
       transactions: result.rows,
       count: result.rows.length,
@@ -2005,7 +2005,7 @@ router.get(
       [entityType, entityId, parseInt(limit as string)]
     );
 
-    return res.json({
+    void res.json({
       entityType,
       entityId,
       auditLogs: result.rows,
@@ -2035,7 +2035,7 @@ router.get(
       [sku]
     );
 
-    return res.json({
+    void res.json({
       sku,
       locations: result.rows,
       count: result.rows.length,
@@ -2080,7 +2080,7 @@ router.post(
         [testOrderId, testSku]
       );
 
-      return res.json({
+      void res.json({
         message: 'Test data created successfully',
         testSku,
         testOrderId,
@@ -2124,7 +2124,7 @@ router.post(
       await pool.query('DELETE FROM audit_logs WHERE entity_id = $1', [testSku]);
       await pool.query('DELETE FROM audit_logs WHERE entity_id = $1', [testOrderId]);
 
-      return res.json({
+      void res.json({
         message: 'Test data cleaned up successfully',
       });
     } catch (error: any) {
@@ -2168,7 +2168,7 @@ router.get(
       [orderId]
     );
 
-    return res.json({
+    void res.json({
       order: orderResult.rows[0],
       items: itemsResult.rows,
     });
@@ -2183,7 +2183,7 @@ router.get(
   '/test/stats',
   requireDevelopment,
   authenticate,
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
     // Get various counts for test validation
     const [ordersCount, skusCount, pickTasksCount, auditLogsCount] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM orders'),
@@ -2192,7 +2192,7 @@ router.get(
       pool.query('SELECT COUNT(*) FROM audit_logs'),
     ]);
 
-    return res.json({
+    void res.json({
       orders: parseInt(ordersCount.rows[0].count),
       skus: parseInt(skusCount.rows[0].count),
       pickTasks: parseInt(pickTasksCount.rows[0].count),

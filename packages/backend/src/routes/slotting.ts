@@ -9,6 +9,7 @@ import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 import { authorize } from '../middleware/auth';
 import { slottingOptimizationService, ABCClass } from '../services/SlottingOptimizationService';
 import { logger } from '../config/logger';
+import { UserRole } from '@opsui/shared';
 
 const router = Router();
 
@@ -77,7 +78,7 @@ router.get('/recommendations', authenticate, async (req: AuthenticatedRequest, r
 router.post(
   '/implement',
   authenticate,
-  authorize('ADMIN', 'SUPERVISOR'),
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { sku, fromLocation, toLocation } = req.body;
@@ -100,7 +101,14 @@ router.post(
       };
 
       await slottingOptimizationService.implementRecommendation(
-        { sku, fromLocation, toLocation, estimatedBenefit: {}, effort: 'LOW', priority: 1 },
+        {
+          sku,
+          fromLocation,
+          toLocation,
+          estimatedBenefit: { travelTimeReduction: 0, annualSavings: 0 },
+          effort: 'LOW',
+          priority: 1,
+        },
         context
       );
 
@@ -178,7 +186,7 @@ router.get('/stats', authenticate, async (req: AuthenticatedRequest, res) => {
  * GET /api/v1/slotting/classes
  * Get ABC class definitions
  */
-router.get('/classes', authenticate, (req, res) => {
+router.get('/classes', authenticate, (_req, res) => {
   res.json({
     success: true,
     data: {

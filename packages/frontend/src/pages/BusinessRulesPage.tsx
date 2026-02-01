@@ -26,8 +26,10 @@ import {
   ActionType,
   RuleEventType,
 } from '@opsui/shared';
-import { Header, Pagination, useToast, ConfirmDialog } from '@/components/shared';
+import { Header, Pagination, useToast, ConfirmDialog, Button } from '@/components/shared';
 import { RuleBuilder, ActionBuilder, RuleTester } from '@/components/rules';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import {
   useBusinessRules,
   useCreateBusinessRule,
@@ -57,6 +59,7 @@ interface RuleConditionFormData {
 
 export function BusinessRulesPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<'ALL' | RuleStatus>('ALL');
   const [selectedRule, setSelectedRule] = useState<BusinessRule | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
@@ -138,6 +141,16 @@ export function BusinessRulesPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <Button
+              variant="secondary"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold text-white">Business Rules</h1>
           <p className="mt-2 text-gray-400">
             Configure automated decision logic for order allocation, picking, and shipping

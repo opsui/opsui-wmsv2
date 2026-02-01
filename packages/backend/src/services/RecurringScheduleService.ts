@@ -9,7 +9,7 @@ import { getPool } from '../db/client';
 import { logger } from '../config/logger';
 import { nanoid } from 'nanoid';
 import { cycleCountService } from './CycleCountService';
-import { CycleCountType, CycleCountStatus } from '@opsui/shared';
+import { CycleCountType } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
@@ -217,9 +217,9 @@ export class RecurringScheduleService {
     const row = result.rows[0];
     return {
       ...this.mapRowToSchedule(row),
-      assignedToName: row.assigned_to_name,
+      ...(row.assigned_to_name ? { assignedToName: row.assigned_to_name } : {}),
       createdByName: row.created_by_name,
-    };
+    } as any;
   }
 
   /**
