@@ -49,7 +49,12 @@ global.WebSocket = vi.fn().mockImplementation(() => ({
   close: vi.fn(),
   addEventListener: vi.fn(),
   removeEventListener: vi.fn(),
-}));
+})) as any;
+// Add WebSocket static constants
+(global.WebSocket as any).CONNECTING = 0;
+(global.WebSocket as any).OPEN = 1;
+(global.WebSocket as any).CLOSING = 2;
+(global.WebSocket as any).CLOSED = 3;
 
 // Suppress console errors in tests (optional)
 const originalError = console.error;

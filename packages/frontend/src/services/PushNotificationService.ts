@@ -75,7 +75,7 @@ class PushNotificationServiceClass {
     try {
       this.registration = await navigator.serviceWorker.register('/sw-push.js', {
         scope: '/',
-        updateViaCache: 'refresh',
+        updateViaCache: 'all',
       });
 
       // Listen for updates
@@ -141,15 +141,16 @@ class PushNotificationServiceClass {
       // Get existing subscription or create new one
       const subscription = await this.registration!.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: this.urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
       });
 
       // Convert subscription to JSON format
+      const subscriptionJson = subscription.toJSON();
       this.subscription = {
         endpoint: subscription.endpoint,
         keys: {
-          p256dh: subscription.toJSON().keys.p256dh,
-          auth: subscription.toJSON().keys.auth,
+          p256dh: subscriptionJson.keys?.p256dh || '',
+          auth: subscriptionJson.keys?.auth || '',
         },
       };
 
@@ -244,11 +245,12 @@ class PushNotificationServiceClass {
       const subscription = await this.registration.pushManager.getSubscription();
 
       if (subscription) {
+        const subscriptionJson = subscription.toJSON();
         this.subscription = {
           endpoint: subscription.endpoint,
           keys: {
-            p256dh: subscription.toJSON().keys.p256dh,
-            auth: subscription.toJSON().keys.auth,
+            p256dh: subscriptionJson.keys?.p256dh || '',
+            auth: subscriptionJson.keys?.auth || '',
           },
         };
       }

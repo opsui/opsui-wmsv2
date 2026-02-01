@@ -299,6 +299,3 @@ class WebSocketService {
 const webSocketService = new WebSocketService();
 
 export default webSocketService;
-
-// Export type for use in components
-export type { ServerToClientEvents, ClientToServerEvents };

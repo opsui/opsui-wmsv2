@@ -40,7 +40,7 @@ import {
   type ReportField,
   type ReportFilter,
   type ReportType,
-  type ReportStatus,
+  ReportStatus,
   type ReportFormat,
   type ReportExecution,
   type ReportSchedule,
@@ -49,6 +49,11 @@ import {
   type Dashboard,
   type ExportJob,
   type Integration,
+  IntegrationType,
+  IntegrationStatus,
+  IntegrationProvider,
+  SyncStatus,
+  WebhookEventType,
 } from '@opsui/shared';
 
 // ============================================================================
@@ -1156,7 +1161,7 @@ export const usePackerActivity = (options?: Omit<UseQueryOptions, 'queryKey' | '
     queryKey: ['metrics', 'packer-activity'],
     queryFn: async () => {
       const data = await metricsApi.getPackerActivity();
-      return data;
+      return data as unknown[];
     },
     refetchInterval: 1000, // Poll every 1 second for real-time updates
     staleTime: 0, // Always consider data stale
@@ -1227,7 +1232,7 @@ export const useExportShippedOrders = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['orders', 'shipped']);
+      queryClient.invalidateQueries({ queryKey: ['orders', 'shipped'] });
     },
   });
 };
@@ -1239,7 +1244,7 @@ export const useStockControllerActivity = (
     queryKey: ['metrics', 'stock-controller-activity'],
     queryFn: async () => {
       const data = await metricsApi.getStockControllerActivity();
-      return data;
+      return data as unknown[];
     },
     refetchInterval: 1000, // Poll every 1 second for real-time updates
     staleTime: 0, // Always consider data stale
@@ -1282,10 +1287,10 @@ export const useRoleActivity = (
 
   // If role is 'all', return all activities combined (including empty arrays for roles without endpoints)
   if (role === 'all') {
-    const combinedData: Record<UserRole, any[]> = {
-      [UserRole.PICKER]: pickerActivity.data || [],
-      [UserRole.PACKER]: packerActivity.data || [],
-      [UserRole.STOCK_CONTROLLER]: stockControllerActivity.data || [],
+    const combinedData: Record<UserRole, unknown> = {
+      [UserRole.PICKER]: pickerActivity.data,
+      [UserRole.PACKER]: packerActivity.data,
+      [UserRole.STOCK_CONTROLLER]: stockControllerActivity.data,
       [UserRole.INWARDS]: [],
       [UserRole.PRODUCTION]: [],
       [UserRole.SALES]: [],
@@ -1465,7 +1470,7 @@ export const useAuditStatistics = (
 };
 
 export const useAuditCategories = () => {
-  return useQuery<string[]>({
+  return useQuery({
     queryKey: ['audit', 'categories'],
     queryFn: auditApi.getCategories,
     staleTime: 300000, // Categories don't change often
@@ -1473,7 +1478,7 @@ export const useAuditCategories = () => {
 };
 
 export const useAuditActions = () => {
-  return useQuery<string[]>({
+  return useQuery({
     queryKey: ['audit', 'actions'],
     queryFn: auditApi.getActions,
     staleTime: 300000, // Actions don't change often
@@ -1481,19 +1486,19 @@ export const useAuditActions = () => {
 };
 
 export const useAuditUsers = (options?: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>) => {
-  return useQuery<string[]>({
+  return useQuery({
     queryKey: ['audit', 'users'],
     queryFn: auditApi.getUsers,
-    staleTime: 300000,
     ...options,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
 export const useAuditResourceTypes = (options?: Omit<UseQueryOptions, 'queryKey' | 'queryFn'>) => {
-  return useQuery<string[]>({
+  return useQuery({
     queryKey: ['audit', 'resource-types'],
     queryFn: auditApi.getResourceTypes,
-    staleTime: 300000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
 };
@@ -2439,7 +2444,7 @@ export const useCycleCountDashboard = (filters?: {
 };
 
 export const useCycleCountPlans = (params?: {
-  status?: string;
+  status?: CycleCountStatus;
   countType?: CycleCountType;
   location?: string;
   countBy?: string;

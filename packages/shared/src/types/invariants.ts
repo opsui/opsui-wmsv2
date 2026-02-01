@@ -12,7 +12,7 @@
  * If an invariant is violated, data corruption has occurred.
  */
 
-import { OrderStatus, OrderPriority } from './index';
+import { OrderStatus } from './index';
 
 // ============================================================================
 // INVARIANT VALIDATION FUNCTIONS

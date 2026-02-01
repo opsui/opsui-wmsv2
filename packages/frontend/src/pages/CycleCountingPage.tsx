@@ -464,7 +464,7 @@ export function CycleCountingPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<CycleCountStatus | ''>('');
   const [activeTab, setActiveTab] = useState<'counts' | 'analytics' | 'schedules'>('counts');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -638,7 +638,7 @@ export function CycleCountingPage() {
                     <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
                     <Select
                       value={filterStatus}
-                      onChange={e => setFilterStatus(e.target.value)}
+                      onChange={e => setFilterStatus(e.target.value as CycleCountStatus | '')}
                       options={[
                         { value: '', label: 'All Statuses' },
                         { value: CycleCountStatus.SCHEDULED, label: 'Scheduled' },

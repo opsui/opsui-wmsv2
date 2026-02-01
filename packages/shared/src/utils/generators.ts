@@ -14,7 +14,7 @@
  * Example: SO6334
  * Uses random number generation for variety while keeping it short
  */
-export function generateOrderId(date: Date = new Date()): string {
+export function generateOrderId(): string {
   // Generate a random 4-digit number (1000-9999)
   const orderNum = Math.floor(Math.random() * 9000) + 1000;
   return `SO${orderNum}`;

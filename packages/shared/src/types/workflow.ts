@@ -232,7 +232,7 @@ export const TRANSITION_PREREQUISITES = {
 
   [OrderStatus.PACKED]: {
     // Before: PACKING → PACKED
-    check: async (context: TransitionContext) => {
+    check: async () => {
       // 1. All items must be packed
       // (Implementation depends on packing workflow)
     },
