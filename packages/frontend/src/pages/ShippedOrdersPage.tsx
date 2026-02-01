@@ -5,7 +5,7 @@
  * filtering, and export capabilities.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   TruckIcon,
   DocumentTextIcon,
@@ -18,38 +18,10 @@ import {
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import { OrderStatus, OrderPriority } from '@opsui/shared';
-import { Header, Pagination, Card, Badge, Button, useToast } from '@/components/shared';
+import { Pagination, Card, Badge, Button, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
-import { useShippedOrders, useExportShippedOrders } from '@/services/api';
+import { useShippedOrders, useExportShippedOrders, type ShippedOrdersFilters } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-interface ShippedOrder {
-  id: string;
-  orderId: string;
-  customerName: string;
-  status: OrderStatus;
-  priority: OrderPriority;
-  itemCount: number;
-  totalValue: number;
-  shippedAt: string;
-  deliveredAt?: string;
-  trackingNumber?: string;
-  carrier?: string;
-  shippingAddress: string;
-  shippedBy: string;
-  notes?: string;
-}
-
-interface FilterOptions {
-  dateFrom: string;
-  dateTo: string;
-  carrier: string;
-  search: string;
-}
 
 // ============================================================================
 // MAIN COMPONENT
@@ -64,7 +36,7 @@ export default function ShippedOrdersPage() {
   const [pageSize] = useState(20);
 
   // Filter state
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [filters, setFilters] = useState<ShippedOrdersFilters>({
     dateFrom: '',
     dateTo: '',
     carrier: '',
@@ -88,7 +60,7 @@ export default function ShippedOrdersPage() {
   } = useShippedOrders({
     page: currentPage,
     limit: pageSize,
-    filters,
+    ...filters,
     sortBy,
     sortOrder,
   });
@@ -96,7 +68,7 @@ export default function ShippedOrdersPage() {
   const exportedOrdersMutation = useExportShippedOrders();
 
   // Handle filter changes
-  const updateFilter = (key: keyof FilterOptions, value: string) => {
+  const updateFilter = (key: keyof ShippedOrdersFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setCurrentPage(1); // Reset to first page when filters change
   };
@@ -124,25 +96,16 @@ export default function ShippedOrdersPage() {
   // Handle export
   const handleExport = async () => {
     if (selectedOrders.size === 0) {
-      showToast({
-        type: 'error',
-        message: 'Please select orders to export',
-      });
+      showToast('Please select orders to export', 'error');
       return;
     }
 
     try {
       await exportedOrdersMutation.mutateAsync(Array.from(selectedOrders));
-      showToast({
-        type: 'success',
-        message: `${selectedOrders.size} orders exported successfully`,
-      });
+      showToast(`${selectedOrders.size} orders exported successfully`, 'success');
       setSelectedOrders(new Set());
     } catch {
-      showToast({
-        type: 'error',
-        message: 'Failed to export orders',
-      });
+      showToast('Failed to export orders', 'error');
     }
   };
 
@@ -159,17 +122,21 @@ export default function ShippedOrdersPage() {
     });
   };
 
+  // Get orders from response
+  const orders = shippedOrdersData?.data?.orders || [];
+  const total = shippedOrdersData?.data?.total || 0;
+
   // Select all visible orders
   const toggleSelectAll = () => {
-    if (shippedOrdersData?.orders) {
-      const allSelected = shippedOrdersData.orders.every(order => selectedOrders.has(order.id));
+    if (orders.length > 0) {
+      const allSelected = orders.every(order => selectedOrders.has(order.id));
 
       if (allSelected) {
         // Deselect all
         setSelectedOrders(new Set());
       } else {
         // Select all
-        setSelectedOrders(new Set(shippedOrdersData.orders.map(order => order.id)));
+        setSelectedOrders(new Set(orders.map(order => order.id)));
       }
     }
   };
@@ -193,27 +160,11 @@ export default function ShippedOrdersPage() {
     }).format(new Date(dateString));
   };
 
-  // Get priority badge color
-  const getPriorityColor = (priority: OrderPriority) => {
-    switch (priority) {
-      case OrderPriority.URGENT:
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case OrderPriority.HIGH:
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-      case OrderPriority.LOW:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
-
   // Get status badge color
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case OrderStatus.SHIPPED:
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case OrderStatus.DELIVERED:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
@@ -221,18 +172,17 @@ export default function ShippedOrdersPage() {
 
   // Calculate statistics
   const statistics = useMemo(() => {
-    if (!shippedOrdersData?.orders) {
+    if (!orders || orders.length === 0) {
       return { totalOrders: 0, totalValue: 0, deliveredCount: 0, pendingDelivery: 0 };
     }
 
-    const orders = shippedOrdersData.orders;
     return {
       totalOrders: orders.length,
-      totalValue: orders.reduce((sum, order) => sum + order.totalValue, 0),
+      totalValue: orders.reduce((sum, order) => sum + (order.totalValue || 0), 0),
       deliveredCount: orders.filter(o => o.deliveredAt).length,
       pendingDelivery: orders.filter(o => !o.deliveredAt).length,
     };
-  }, [shippedOrdersData]);
+  }, [orders]);
 
   const activeFiltersCount = Object.values(filters).filter(
     v => v !== '' && v !== null && v !== undefined
@@ -247,11 +197,15 @@ export default function ShippedOrdersPage() {
       </Button>
 
       {/* Header */}
-      <Header
-        title="Shipped Orders"
-        icon={<TruckIcon className="h-6 w-6" />}
-        description="View and manage all shipped orders"
-      />
+      <div className="flex items-center gap-4">
+        <TruckIcon className="h-8 w-8 text-primary-600" />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shipped Orders</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            View and manage all shipped orders
+          </p>
+        </div>
+      </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -259,7 +213,7 @@ export default function ShippedOrdersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Total Shipped</p>
-              <p className="text-2xl font-bold">{shippedOrdersData?.total || 0}</p>
+              <p className="text-2xl font-bold">{total || 0}</p>
             </div>
             <TruckIcon className="h-8 w-8 text-gray-400" />
           </div>
@@ -306,7 +260,7 @@ export default function ShippedOrdersPage() {
               <input
                 type="text"
                 placeholder="Search by order ID, customer..."
-                value={filters.search}
+                value={filters.search || ''}
                 onChange={e => updateFilter('search', e.target.value)}
                 className={cn(
                   'w-full rounded-md border-0 py-2 pl-10 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-gray-800 dark:text-white dark:ring-gray-600',
@@ -338,8 +292,8 @@ export default function ShippedOrdersPage() {
           </Button>
 
           {/* Refresh Button */}
-          <Button variant="secondary" onClick={() => refetch()} isLoading={isLoading}>
-            Refresh
+          <Button variant="secondary" onClick={() => refetch()}>
+            {isLoading ? 'Loading...' : 'Refresh'}
           </Button>
         </div>
 
@@ -352,7 +306,7 @@ export default function ShippedOrdersPage() {
               </label>
               <input
                 type="date"
-                value={filters.dateFrom}
+                value={filters.dateFrom || ''}
                 onChange={e => updateFilter('dateFrom', e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
               />
@@ -364,7 +318,7 @@ export default function ShippedOrdersPage() {
               </label>
               <input
                 type="date"
-                value={filters.dateTo}
+                value={filters.dateTo || ''}
                 onChange={e => updateFilter('dateTo', e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
               />
@@ -375,7 +329,7 @@ export default function ShippedOrdersPage() {
                 Carrier
               </label>
               <select
-                value={filters.carrier}
+                value={filters.carrier || ''}
                 onChange={e => updateFilter('carrier', e.target.value)}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
               >
@@ -407,24 +361,24 @@ export default function ShippedOrdersPage() {
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-600">Failed to load shipped orders</div>
-        ) : shippedOrdersData?.orders && shippedOrdersData.orders.length > 0 ? (
+        ) : orders.length > 0 ? (
           <>
             {/* Toolbar */}
             <div className="border-b px-6 py-3 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <input
                   type="checkbox"
-                  checked={shippedOrdersData.orders.every(order => selectedOrders.has(order.id))}
+                  checked={orders.length > 0 && orders.every(order => selectedOrders.has(order.id))}
                   onChange={toggleSelectAll}
                   className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Select All ({shippedOrdersData.orders.length})
+                  Select All ({orders.length})
                 </span>
               </div>
 
               <div className="text-sm text-gray-500">
-                Showing {shippedOrdersData.orders.length} of {shippedOrdersData.total} orders
+                Showing {orders.length} of {total} orders
               </div>
             </div>
 
@@ -436,7 +390,7 @@ export default function ShippedOrdersPage() {
                     <th className="px-6 py-3 text-left">
                       <input
                         type="checkbox"
-                        checked={shippedOrdersData.orders.every(order =>
+                        checked={orders.length > 0 && orders.every(order =>
                           selectedOrders.has(order.id)
                         )}
                         onChange={toggleSelectAll}
@@ -479,7 +433,7 @@ export default function ShippedOrdersPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {shippedOrdersData.orders.map(order => (
+                  {orders.map(order => (
                     <tr
                       key={order.id}
                       className={cn(
@@ -545,12 +499,12 @@ export default function ShippedOrdersPage() {
             <div className="border-t px-6 py-4 flex items-center justify-between">
               <div className="text-sm text-gray-700 dark:text-gray-300">
                 Showing {(currentPage - 1) * pageSize + 1} to{' '}
-                {Math.min(currentPage * pageSize, shippedOrdersData.total)} of{' '}
-                {shippedOrdersData.total} orders
+                {Math.min(currentPage * pageSize, total)} of {total} orders
               </div>
               <Pagination
                 currentPage={currentPage}
-                totalPages={Math.ceil((shippedOrdersData.total || 0) / pageSize)}
+                totalItems={total}
+                pageSize={pageSize}
                 onPageChange={setCurrentPage}
               />
             </div>

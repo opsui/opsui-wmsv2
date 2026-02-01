@@ -12,7 +12,6 @@ import {
   CardContent,
   Button,
   Badge,
-  Progress,
   Select,
   Header,
   Pagination,
@@ -26,7 +25,6 @@ import {
   useImplementSlotting,
   useRunSlottingAnalysis,
 } from '@/services/api';
-import { showSuccess, showError } from '@/stores/uiStore';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import {
   ChartBarIcon,
@@ -92,7 +90,7 @@ export function SlottingPage() {
 
   const { data: classes } = useSlottingClasses();
   const { data: stats } = useSlottingStats();
-  const { data: analysis, refetch: refetchAnalysis } = useSlottingAnalysis(
+  const { data: analysis } = useSlottingAnalysis(
     selectedDays,
     showAnalysis
   );
@@ -347,7 +345,7 @@ export function SlottingPage() {
                                           ? 'success'
                                           : item.abcClass === 'B'
                                             ? 'warning'
-                                            : 'secondary'
+                                            : 'info'
                                       }
                                     >
                                       {item.abcClass}
@@ -360,10 +358,10 @@ export function SlottingPage() {
                                     <Badge
                                       variant={
                                         item.priority === 'HIGH'
-                                          ? 'danger'
+                                          ? 'error'
                                           : item.priority === 'MEDIUM'
                                             ? 'warning'
-                                            : 'secondary'
+                                            : 'info'
                                       }
                                     >
                                       {item.priority}
@@ -380,7 +378,8 @@ export function SlottingPage() {
                           <div className="flex justify-center mt-4">
                             <Pagination
                               currentPage={analysisCurrentPage}
-                              totalPages={totalPages}
+                              totalItems={filteredAnalysis.length}
+                              pageSize={analysisPageSize}
                               onPageChange={setAnalysisCurrentPage}
                             />
                           </div>
@@ -466,10 +465,10 @@ export function SlottingPage() {
                                   <Badge
                                     variant={
                                       rec.priority >= 8
-                                        ? 'danger'
+                                        ? 'error'
                                         : rec.priority >= 5
                                           ? 'warning'
-                                          : 'secondary'
+                                          : 'info'
                                     }
                                   >
                                     Priority: {rec.priority}
@@ -502,7 +501,7 @@ export function SlottingPage() {
                                         ? 'success'
                                         : rec.effort === 'MEDIUM'
                                           ? 'warning'
-                                          : 'danger'
+                                          : 'error'
                                     }
                                   >
                                     {rec.effort} Effort
@@ -525,7 +524,8 @@ export function SlottingPage() {
                             <div className="flex justify-center mt-4">
                               <Pagination
                                 currentPage={recsCurrentPage}
-                                totalPages={totalPages}
+                                totalItems={allRecs.length}
+                                pageSize={recsPageSize}
                                 onPageChange={setRecsCurrentPage}
                               />
                             </div>
