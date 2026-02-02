@@ -28,9 +28,7 @@ describe('StockControlService', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  // between tests. jest.clearAllMocks() clears call history instead.
 
   // ==========================================================================
   // GET DASHBOARD TESTS

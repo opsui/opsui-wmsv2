@@ -18,7 +18,6 @@ describe('MLPredictionService', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   // ==========================================================================

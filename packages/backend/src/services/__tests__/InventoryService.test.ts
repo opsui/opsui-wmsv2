@@ -47,7 +47,6 @@ describe('InventoryService', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   // ==========================================================================

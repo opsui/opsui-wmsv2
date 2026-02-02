@@ -51,7 +51,6 @@ describe('Inventory Routes', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
   });
 
   // ==========================================================================
