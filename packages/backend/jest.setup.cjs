@@ -57,3 +57,27 @@ jest.mock('nanoid', () => {
     nanoid: nanoidMock,
   };
 });
+
+// Mock db/client module - provide default mock pool that can be overridden in tests
+jest.mock('../src/db/client', () => {
+  const mockPool = {
+    query: jest.fn(),
+    connect: jest.fn(),
+    end: jest.fn(),
+    on: jest.fn(),
+    totalCount: 10,
+    idleCount: 5,
+    waitingCount: 0,
+  };
+
+  return {
+    getPool: jest.fn(() => mockPool),
+    closePool: jest.fn(),
+    testConnection: jest.fn(),
+    query: jest.fn(),
+    transaction: jest.fn(),
+    getClient: jest.fn(),
+    getHealthStatus: jest.fn(),
+    setupShutdownHandlers: jest.fn(),
+  };
+});
