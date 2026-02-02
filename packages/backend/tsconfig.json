@@ -28,7 +28,7 @@
     "alwaysStrict": true,
     "composite": true,
     "paths": {
-      "@opsui/shared": ["../shared/src/index.ts"]
+      "@opsui/shared": ["../shared/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*"],
