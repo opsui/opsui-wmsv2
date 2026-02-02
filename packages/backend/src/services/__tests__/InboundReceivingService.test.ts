@@ -373,7 +373,7 @@ describe('InboundReceivingService', () => {
 
       const dto = {
         asnId: 'ASN-001',
-        receiptType: ReceiptType.ASN,
+        receiptType: ReceiptType.PO,
         receivedBy: mockUser.userId,
         lineItems: [
           {
@@ -447,7 +447,7 @@ describe('InboundReceivingService', () => {
       getPool.mockResolvedValue(mockClient);
 
       const dto = {
-        receiptType: ReceiptType.ASN,
+        receiptType: ReceiptType.PO,
         receivedBy: mockUser.userId,
         lineItems: [],
       };
@@ -464,7 +464,7 @@ describe('InboundReceivingService', () => {
         receipt_id: 'RCP-001',
         asn_id: 'ASN-001',
         receipt_date: '2025-01-30',
-        receipt_type: ReceiptType.ASN,
+        receipt_type: ReceiptType.PO,
         status: ReceiptStatus.RECEIVING,
         created_at: '2025-01-30T10:00:00Z',
         completed_at: null,
@@ -526,7 +526,7 @@ describe('InboundReceivingService', () => {
         {
           receipt_id: 'RCP-001',
           asn_id: 'ASN-001',
-          receipt_type: ReceiptType.ASN,
+          receipt_type: ReceiptType.PO,
           status: ReceiptStatus.RECEIVING,
           ...{},
         },
@@ -596,7 +596,7 @@ describe('InboundReceivingService', () => {
           .fn()
           .mockResolvedValueOnce({ rows: [{ count: '1' }] })
           .mockResolvedValueOnce({
-            rows: [{ receipt_id: 'RCP-001', receipt_type: ReceiptType.ASN, ...{} }],
+            rows: [{ receipt_id: 'RCP-001', receipt_type: ReceiptType.PO, ...{} }],
           })
           .mockResolvedValueOnce({ rows: [] }),
       };
@@ -604,7 +604,7 @@ describe('InboundReceivingService', () => {
       getPool.mockResolvedValue(mockClient);
 
       const result = await inboundReceivingService.getAllReceipts({
-        receiptType: ReceiptType.ASN,
+        receiptType: ReceiptType.PO,
         limit: 10,
         offset: 0,
       });
@@ -912,7 +912,7 @@ describe('InboundReceivingService', () => {
       getPool.mockResolvedValue(mockClient);
 
       const dto = {
-        receiptType: ReceiptType.ASN,
+        receiptType: ReceiptType.PO,
         receivedBy: mockUser.userId,
         lineItems: [
           {
@@ -950,7 +950,7 @@ describe('InboundReceivingService', () => {
       getPool.mockResolvedValue(mockClient);
 
       const dto = {
-        receiptType: ReceiptType.ASN,
+        receiptType: ReceiptType.PO,
         receivedBy: mockUser.userId,
         lineItems: [
           {

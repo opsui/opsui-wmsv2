@@ -1356,8 +1356,7 @@ export class CycleCountService {
    */
   private async processVarianceAdjustment(
     entryId: string,
-    // @ts-expect-error
-    status: VarianceStatus,
+    _status: VarianceStatus,
     reviewedBy: string,
     notes?: string
   ): Promise<string> {

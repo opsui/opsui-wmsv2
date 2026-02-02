@@ -100,7 +100,7 @@ export interface WaveSummary {
 // WAVE PICKING SERVICE
 // ============================================================================
 
-class WavePickingService {
+export class WavePickingService {
   private pool: Pool;
 
   constructor() {

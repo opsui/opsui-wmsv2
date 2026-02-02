@@ -90,7 +90,7 @@ export interface ZoneStats {
 // ZONE PICKING SERVICE
 // ============================================================================
 
-class ZonePickingService {
+export class ZonePickingService {
   private pool: Pool;
 
   constructor() {

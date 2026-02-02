@@ -4,7 +4,7 @@
  */
 
 import { StockControlService } from '../StockControlService';
-import { NotFoundError, ConflictError } from '@opsui/shared';
+import { NotFoundError, ConflictError, TransactionType } from '@opsui/shared';
 
 // Mock dependencies
 jest.mock('../../repositories/InventoryRepository');
@@ -719,8 +719,8 @@ describe('StockControlService', () => {
       });
 
       const result = await stockControlService.getTransactionHistory({
-        page: 1,
         limit: 10,
+        offset: 0,
       });
 
       expect(result.transactions).toHaveLength(2);
@@ -737,8 +737,8 @@ describe('StockControlService', () => {
 
       const result = await stockControlService.getTransactionHistory({
         sku: 'SKU001',
-        page: 1,
         limit: 10,
+        offset: 0,
       });
 
       expect(result.transactions).toHaveLength(1);
@@ -754,12 +754,12 @@ describe('StockControlService', () => {
       });
 
       const result = await stockControlService.getTransactionHistory({
-        type: 'RECEIPT',
-        page: 1,
+        type: TransactionType.RECEIPT,
         limit: 10,
+        offset: 0,
       });
 
-      expect(result.transactions[0].type).toBe('RECEIPT');
+      expect(result.transactions[0].type).toBe(TransactionType.RECEIPT);
     });
 
     it('should filter by date range', async () => {
@@ -773,8 +773,8 @@ describe('StockControlService', () => {
       const result = await stockControlService.getTransactionHistory({
         startDate: '2024-01-01',
         endDate: '2024-12-31',
-        page: 1,
         limit: 10,
+        offset: 0,
       });
 
       expect(result.transactions).toHaveLength(1);
@@ -932,6 +932,7 @@ describe('StockControlService', () => {
           binLocation: 'A-01-01',
           systemQuantity: 100,
           actualQuantity: 95,
+          variance: -5,
           reason: 'Cycle count correction',
         },
         {
@@ -939,6 +940,7 @@ describe('StockControlService', () => {
           binLocation: 'A-01-02',
           systemQuantity: 50,
           actualQuantity: 55,
+          variance: 5,
           reason: 'Found stock',
         },
       ];
@@ -966,6 +968,7 @@ describe('StockControlService', () => {
           binLocation: 'A-01-01',
           systemQuantity: 100,
           actualQuantity: 100,
+          variance: 0,
           reason: 'No variance',
         },
       ];

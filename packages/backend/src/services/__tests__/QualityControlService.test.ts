@@ -8,7 +8,7 @@ import { QualityControlService, qualityControlService } from '../QualityControlS
 import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import { notifyUser } from '../NotificationHelper';
-import { InspectionStatus, InspectionType, DispositionAction } from '@opsui/shared';
+import { InspectionStatus, InspectionType, DispositionAction, DefectType } from '@opsui/shared';
 
 // Mock dependencies
 jest.mock('../../db/client');
@@ -42,25 +42,25 @@ describe('QualityControlService', () => {
       const data = {
         checklistName: 'Incoming Goods Inspection',
         description: 'Standard receiving inspection',
-        inspectionType: InspectionType.RECEIVING,
+        inspectionType: InspectionType.INCOMING,
         sku: 'SKU-001',
         category: 'Electronics',
         items: [
           {
             itemDescription: 'Check packaging integrity',
-            itemType: 'PASS_FAIL',
+            itemType: 'PASS_FAIL' as const,
             isRequired: true,
             displayOrder: 1,
           },
           {
             itemDescription: 'Verify quantity',
-            itemType: 'NUMBER',
+            itemType: 'NUMBER' as const,
             isRequired: true,
             displayOrder: 2,
           },
           {
             itemDescription: 'Take photos',
-            itemType: 'PHOTO',
+            itemType: 'PHOTO' as const,
             isRequired: false,
             displayOrder: 3,
           },
@@ -100,7 +100,7 @@ describe('QualityControlService', () => {
     it('should handle checklist with no items', async () => {
       const data = {
         checklistName: 'Empty Checklist',
-        inspectionType: InspectionType.IN_PROCESS,
+        inspectionType: InspectionType.INVENTORY,
         items: [],
         createdBy: 'admin-123',
       };
@@ -130,7 +130,7 @@ describe('QualityControlService', () => {
         checklist_id: 'CHK-001',
         checklist_name: 'Receiving Inspection',
         description: 'Standard checklist',
-        inspection_type: InspectionType.RECEIVING,
+        inspection_type: InspectionType.INCOMING,
         sku: 'SKU-001',
         category: 'Electronics',
         is_active: true,
@@ -176,7 +176,7 @@ describe('QualityControlService', () => {
         {
           checklist_id: 'CHK-001',
           checklist_name: 'Receiving Inspection',
-          inspection_type: InspectionType.RECEIVING,
+          inspection_type: InspectionType.INCOMING,
           sku: null,
           category: null,
           is_active: true,
@@ -190,7 +190,7 @@ describe('QualityControlService', () => {
       mockClient.query.mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllInspectionChecklists({
-        inspectionType: InspectionType.RECEIVING,
+        inspectionType: InspectionType.INCOMING,
       });
 
       expect(result).toHaveLength(1);
@@ -201,7 +201,7 @@ describe('QualityControlService', () => {
         {
           checklist_id: 'CHK-001',
           checklist_name: 'Inspection 1',
-          inspection_type: InspectionType.RECEIVING,
+          inspection_type: InspectionType.INCOMING,
           is_active: true,
           created_by: 'admin-123',
           created_at: '2024-01-01',
@@ -210,7 +210,7 @@ describe('QualityControlService', () => {
         {
           checklist_id: 'CHK-002',
           checklist_name: 'Inspection 2',
-          inspection_type: InspectionType.IN_PROCESS,
+          inspection_type: InspectionType.INVENTORY,
           is_active: true,
           created_by: 'admin-456',
           created_at: '2024-01-01',
@@ -236,8 +236,8 @@ describe('QualityControlService', () => {
   describe('createInspection', () => {
     it('should create a new quality inspection', async () => {
       const dto = {
-        inspectionType: InspectionType.RECEIVING,
-        referenceType: 'INBOUND_RECEIPT',
+        inspectionType: InspectionType.INCOMING,
+        referenceType: 'RECEIPT' as const,
         referenceId: 'ASN-001',
         sku: 'SKU-001',
         quantityInspected: 100,
@@ -267,7 +267,7 @@ describe('QualityControlService', () => {
 
       const result = await service.createInspection(dto);
 
-      expect(result.inspectionType).toBe(InspectionType.RECEIVING);
+      expect(result.inspectionType).toBe(InspectionType.INCOMING);
     });
   });
 
@@ -275,7 +275,7 @@ describe('QualityControlService', () => {
     it('should return inspection details', async () => {
       const mockInspection = {
         inspection_id: 'QI-001',
-        inspection_type: InspectionType.RECEIVING,
+        inspection_type: InspectionType.INCOMING,
         status: InspectionStatus.PENDING,
         reference_type: 'INBOUND_RECEIPT',
         reference_id: 'ASN-001',
@@ -325,13 +325,13 @@ describe('QualityControlService', () => {
       const mockInspections = [
         {
           inspection_id: 'QI-001',
-          inspection_type: InspectionType.RECEIVING,
+          inspection_type: InspectionType.INCOMING,
           status: InspectionStatus.PENDING,
           created_at: '2024-01-01',
         },
         {
           inspection_id: 'QI-002',
-          inspection_type: InspectionType.IN_PROCESS,
+          inspection_type: InspectionType.INVENTORY,
           status: InspectionStatus.IN_PROGRESS,
           created_at: '2024-01-02',
         },
@@ -371,9 +371,9 @@ describe('QualityControlService', () => {
         status: InspectionStatus.PASSED,
         quantityPassed: 95,
         quantityFailed: 5,
-        defectType: 'Minor damage',
+        defectType: DefectType.DAMAGED,
         defectDescription: 'Small scratches',
-        dispositionAction: DispositionAction.ACCEPT_WITH_MINOR_REWORK,
+        dispositionAction: DispositionAction.REWORK,
         dispositionNotes: 'Repaired and accepted',
         approvedBy: 'admin-456',
       };
@@ -558,7 +558,7 @@ describe('QualityControlService', () => {
             name: 'Product 1',
             quantity: 1,
             returnReason: 'Damaged',
-            condition: 'USED',
+            condition: 'OPENED' as const,
             refundAmount: 49.99,
           },
           {
@@ -567,7 +567,7 @@ describe('QualityControlService', () => {
             name: 'Product 2',
             quantity: 1,
             returnReason: 'Wrong item',
-            condition: 'NEW',
+            condition: 'NEW' as const,
             refundAmount: 50.0,
           },
         ],
@@ -762,11 +762,11 @@ describe('QualityControlService', () => {
     it('should handle checklist with options (dropdown items)', async () => {
       const data = {
         checklistName: 'Options Checklist',
-        inspectionType: InspectionType.IN_PROCESS,
+        inspectionType: InspectionType.INVENTORY,
         items: [
           {
             itemDescription: 'Select defect type',
-            itemType: 'TEXT',
+            itemType: 'TEXT' as const,
             isRequired: true,
             displayOrder: 1,
             options: ['Cosmetic', 'Functional', 'Packaging'],
@@ -793,8 +793,8 @@ describe('QualityControlService', () => {
 
     it('should handle inspection with missing optional fields', async () => {
       const dto = {
-        inspectionType: InspectionType.IN_PROCESS,
-        referenceType: 'PRODUCTION',
+        inspectionType: InspectionType.INVENTORY,
+        referenceType: 'INVENTORY' as const,
         referenceId: 'PROD-001',
         sku: 'SKU-001',
         quantityInspected: 50,

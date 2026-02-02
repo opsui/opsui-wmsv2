@@ -15,8 +15,7 @@ import { NotFoundError } from '@opsui/shared';
 /**
  * Convert snake_case to camelCase
  */
-// @ts-expect-error
-function toCamelCase(str: string): string {
+export function toCamelCase(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 

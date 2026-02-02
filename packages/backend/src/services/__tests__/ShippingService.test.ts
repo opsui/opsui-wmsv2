@@ -181,7 +181,7 @@ describe('ShippingService', () => {
         } as Address,
         totalWeight: 10.5,
         totalPackages: 2,
-        dimensions: { length: 12, width: 10, height: 8, unit: 'inches' },
+        dimensions: { length: 12, width: 10, height: 8, unit: 'IN' },
         createdBy: 'user-123',
       };
 
@@ -609,7 +609,7 @@ describe('ShippingService', () => {
         shipmentId: 'SHP-001',
         packageNumber: 1,
         packageWeight: 5.25,
-        packageDimensions: { length: 12, width: 10, height: 8, unit: 'inches' },
+        packageDimensions: { length: 12, width: 10, height: 8, unit: 'IN' },
         createdBy: 'user-123',
       };
 
