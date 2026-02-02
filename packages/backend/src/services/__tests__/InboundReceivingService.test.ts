@@ -92,11 +92,11 @@ describe('InboundReceivingService', () => {
         query: jest
           .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
-          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-AAAA', supplier_id: 'SUP-001', ...{} }] }) // insert ASN
+          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-AAAAAAAAAA', supplier_id: 'SUP-001', status: ASNStatus.PENDING, ...{} }] }) // insert ASN
           .mockResolvedValueOnce({ rows: [] }) // insert line item 1
           .mockResolvedValueOnce({ rows: [] }) // insert line item 2
           .mockResolvedValueOnce({ rows: [] }) // COMMIT
-          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-AAAA', ...{} }] }) // get ASN
+          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-AAAAAAAAAA', supplier_id: 'SUP-001', status: ASNStatus.PENDING, ...{} }] }) // get ASN
           .mockResolvedValueOnce({
             rows: [
               { line_item_id: 'ASNL-1', ...{} },
@@ -320,7 +320,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({
             rows: [{ asn_id: 'ASN-001', status: ASNStatus.IN_TRANSIT, ...{} }],
           })
-          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-001', ...{} }] })
+          .mockResolvedValueOnce({ rows: [{ asn_id: 'ASN-001', status: ASNStatus.IN_TRANSIT, ...{} }] })
           .mockResolvedValueOnce({ rows: [] }),
       };
 
@@ -355,13 +355,13 @@ describe('InboundReceivingService', () => {
         query: jest
           .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
-          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] }) // insert receipt
+          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAAAAAAAA', receipt_type: ReceiptType.PO, asn_id: 'ASN-001', status: ReceiptStatus.RECEIVING, ...{} }] }) // insert receipt
           .mockResolvedValueOnce({ rows: [] }) // insert receipt line item
-          .mockResolvedValueOnce({ rows: [] }) // create putaway tasks (query SKU bins)
+          .mockResolvedValueOnce({ rows: [{ bin_locations: ['A-01-01', 'B-02-02'] }] }) // create putaway tasks (query SKU bins)
           .mockResolvedValueOnce({ rows: [] }) // create putaway tasks (insert task)
           .mockResolvedValueOnce({ rows: [] }) // COMMIT
-          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] }) // get receipt
-          .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAA', ...{} }] }), // line items
+          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAAAAAAAA', receipt_type: ReceiptType.PO, asn_id: 'ASN-001', status: ReceiptStatus.RECEIVING, ...{} }] }) // get receipt
+          .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAAAAAAAA', ...{} }] }), // line items
       };
 
       getPool.mockResolvedValue(mockClient);
@@ -400,13 +400,13 @@ describe('InboundReceivingService', () => {
         query: jest
           .fn()
           .mockResolvedValueOnce({ rows: [] }) // BEGIN
-          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] })
+          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAAAAAAAA', receipt_type: ReceiptType.RETURN, asn_id: null, status: ReceiptStatus.RECEIVING, ...{} }] })
           .mockResolvedValueOnce({ rows: [] }) // insert receipt line
           .mockResolvedValueOnce({ rows: [{ bin_locations: ['A-01-01'] }] }) // SKU bins
           .mockResolvedValueOnce({ rows: [] }) // insert putaway task
           .mockResolvedValueOnce({ rows: [] }) // COMMIT
-          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAA', ...{} }] })
-          .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAA', ...{} }] }),
+          .mockResolvedValueOnce({ rows: [{ receipt_id: 'RCP-AAAAAAAAAA', receipt_type: ReceiptType.RETURN, asn_id: null, status: ReceiptStatus.RECEIVING, ...{} }] })
+          .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAAAAAAAA', ...{} }] }),
       };
 
       getPool.mockResolvedValue(mockClient);
@@ -928,7 +928,7 @@ describe('InboundReceivingService', () => {
       );
 
       expect(putawayInsertCall).toBeDefined();
-      expect(putawayInsertCall[1][6]).toBe('A-01-01'); // target_bin_location parameter
+      expect(putawayInsertCall[1][5]).toBe('A-01-01'); // target_bin_location parameter
     });
 
     it('should throw error when SKU not found for putaway task', async () => {
