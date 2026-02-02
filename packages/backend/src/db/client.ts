@@ -155,7 +155,8 @@ export async function query<T extends Record<string, any> = Record<string, any>>
     const duration = Date.now() - start;
 
     // Map column names from snake_case to camelCase
-    const mappedRows = result.rows.map(row => mapKeysToCamelCase<T>(row));
+    const rows = result.rows || [];
+    const mappedRows = rows.map(row => mapKeysToCamelCase<T>(row));
 
     logger.debug('Query executed', {
       duration: `${duration}ms`,
