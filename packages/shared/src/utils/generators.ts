@@ -106,11 +106,13 @@ function generateRandomString(length: number): string {
 /**
  * Parse a bin location ID into components
  */
-export function parseBinLocation(binId: string): {
-  zone: string;
-  aisle: string;
-  shelf: string;
-} | undefined {
+export function parseBinLocation(binId: string):
+  | {
+      zone: string;
+      aisle: string;
+      shelf: string;
+    }
+  | undefined {
   const match = binId.match(/^([A-Z])-([0-9]{1,3})-([0-9]{2})$/);
   if (!match) return undefined;
 

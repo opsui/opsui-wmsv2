@@ -20,7 +20,11 @@ import {
 import { OrderStatus } from '@opsui/shared';
 import { Pagination, Card, Badge, Button, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
-import { useShippedOrders, useExportShippedOrders, type ShippedOrdersFilters } from '@/services/api';
+import {
+  useShippedOrders,
+  useExportShippedOrders,
+  type ShippedOrdersFilters,
+} from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
@@ -143,8 +147,10 @@ export default function ShippedOrdersPage() {
   };
 
   // Get orders from response
-  const orders: ShippedOrder[] = (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.orders || [];
-  const total = (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.total || 0;
+  const orders: ShippedOrder[] =
+    (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.orders || [];
+  const total =
+    (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.total || 0;
 
   // Select all visible orders
   const toggleSelectAll = () => {
@@ -410,9 +416,9 @@ export default function ShippedOrdersPage() {
                     <th className="px-6 py-3 text-left">
                       <input
                         type="checkbox"
-                        checked={orders.length > 0 && orders.every(order =>
-                          selectedOrders.has(order.id)
-                        )}
+                        checked={
+                          orders.length > 0 && orders.every(order => selectedOrders.has(order.id))
+                        }
                         onChange={toggleSelectAll}
                         className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                       />

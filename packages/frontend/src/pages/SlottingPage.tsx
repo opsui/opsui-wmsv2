@@ -90,10 +90,7 @@ export function SlottingPage() {
 
   const { data: classes } = useSlottingClasses();
   const { data: stats } = useSlottingStats();
-  const { data: analysis } = useSlottingAnalysis(
-    selectedDays,
-    showAnalysis
-  );
+  const { data: analysis } = useSlottingAnalysis(selectedDays, showAnalysis);
   const { data: recommendations } = useSlottingRecommendations();
 
   const runAnalysisMutation = useRunSlottingAnalysis();
