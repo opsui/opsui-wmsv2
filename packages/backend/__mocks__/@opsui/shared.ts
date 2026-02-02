@@ -112,6 +112,13 @@ export enum InspectionType {
   QUALITY_HOLD = 'QUALITY_HOLD',
 }
 
+export enum DefectType {
+  DAMAGED = 'DAMAGED',
+  DEFECTIVE = 'DEFECTIVE',
+  MISSING_PARTS = 'MISSING_PARTS',
+  WRONG_ITEM = 'WRONG_ITEM',
+}
+
 export enum PutawayStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
