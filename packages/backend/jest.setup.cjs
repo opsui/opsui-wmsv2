@@ -59,7 +59,7 @@ jest.mock('nanoid', () => {
 });
 
 // Mock db/client module - provide default mock pool that can be overridden in tests
-jest.mock('../src/db/client', () => {
+jest.mock('./src/db/client', () => {
   const mockPool = {
     query: jest.fn(),
     connect: jest.fn(),
