@@ -73,7 +73,7 @@ print_success "ESLint passed"
 # 3. TypeScript type check
 echo "🔷 Checking TypeScript types..."
 cd packages/backend
-if ! npx tsc --noEmit --pretty false 2>&1 | grep -q "error TS"; then
+if npx tsc --noEmit --pretty false 2>&1 | grep -q "error TS"; then
   print_error "TypeScript errors found!"
   exit 1
 fi

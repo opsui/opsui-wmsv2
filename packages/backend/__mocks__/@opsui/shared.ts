@@ -314,3 +314,76 @@ export const recordWorkflowAction = jest.fn(() => ({ success: true }));
 // Mock invariants
 export const checkInventoryInvariant = jest.fn(() => ({ holds: true, violation: undefined }));
 export const checkOrderInvariant = jest.fn(() => ({ holds: true, violation: undefined }));
+
+// ============================================================================
+// ERROR CLASSES
+// ============================================================================
+
+/**
+ * Base WMS Error class for mocking
+ */
+export class WMSError extends Error {
+  constructor(
+    public code: string,
+    public statusCode: number,
+    message: string,
+    public details?: unknown
+  ) {
+    super(message);
+    this.name = 'WMSError';
+  }
+}
+
+/**
+ * Inventory Error - thrown when inventory operations fail
+ */
+export class InventoryError extends WMSError {
+  constructor(message: string, details?: unknown) {
+    super('INVENTORY_ERROR', 409, message, details);
+  }
+}
+
+/**
+ * Validation Error - thrown when input validation fails
+ */
+export class ValidationError extends WMSError {
+  constructor(message: string, details?: unknown) {
+    super('VALIDATION_ERROR', 400, message, details);
+  }
+}
+
+/**
+ * Not Found Error - thrown when a resource is not found
+ */
+export class NotFoundError extends WMSError {
+  constructor(resource: string, id?: string) {
+    super('NOT_FOUND', 404, `${resource}${id !== undefined ? ` (${id})` : ''} not found`);
+  }
+}
+
+/**
+ * Conflict Error - thrown when there's a conflict with existing data
+ */
+export class ConflictError extends WMSError {
+  constructor(message: string, details?: unknown) {
+    super('CONFLICT', 409, message, details);
+  }
+}
+
+/**
+ * Unauthorized Error - thrown when authentication is required but missing
+ */
+export class UnauthorizedError extends WMSError {
+  constructor(message: string = 'Unauthorized') {
+    super('UNAUTHORIZED', 401, message);
+  }
+}
+
+/**
+ * Forbidden Error - thrown when user lacks permission
+ */
+export class ForbiddenError extends WMSError {
+  constructor(message: string = 'Forbidden') {
+    super('FORBIDDEN', 403, message);
+  }
+}
