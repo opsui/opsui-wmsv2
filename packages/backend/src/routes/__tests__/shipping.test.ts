@@ -50,8 +50,7 @@ describe('Shipping Routes', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET /api/shipping/carriers

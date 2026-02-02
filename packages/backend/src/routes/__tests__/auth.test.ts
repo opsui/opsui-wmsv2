@@ -50,8 +50,7 @@ describe('Auth Routes', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // POST /api/auth/login

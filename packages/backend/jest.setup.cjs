@@ -59,25 +59,39 @@ jest.mock('nanoid', () => {
 });
 
 // Mock db/client module - provide default mock pool that can be overridden in tests
-jest.mock('./src/db/client', () => {
-  const mockPool = {
-    query: jest.fn(),
-    connect: jest.fn(),
-    end: jest.fn(),
-    on: jest.fn(),
-    totalCount: 10,
-    idleCount: 5,
-    waitingCount: 0,
-  };
+// Create mock pool at module level so it can be accessed in tests
+const mockPool = {
+  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  connect: jest.fn().mockResolvedValue({
+    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+    release: jest.fn(),
+  }),
+  end: jest.fn().mockResolvedValue(undefined),
+  on: jest.fn(),
+  totalCount: 10,
+  idleCount: 5,
+  waitingCount: 0,
+};
 
-  return {
-    getPool: jest.fn(() => mockPool),
-    closePool: jest.fn(),
-    testConnection: jest.fn(),
-    query: jest.fn(),
-    transaction: jest.fn(),
-    getClient: jest.fn(),
-    getHealthStatus: jest.fn(),
-    setupShutdownHandlers: jest.fn(),
-  };
+// Export mock pool globally for tests to access
+global.mockPool = mockPool;
+
+jest.mock('./src/db/client', () => ({
+  getPool: jest.fn(() => mockPool),
+  closePool: jest.fn(),
+  testConnection: jest.fn(),
+  query: jest.fn(),
+  transaction: jest.fn(),
+  getClient: jest.fn(),
+  getHealthStatus: jest.fn(),
+  setupShutdownHandlers: jest.fn(),
+}));
+
+// Reset mock pool before each test for clean state
+beforeEach(() => {
+  mockPool.query = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
+  mockPool.connect = jest.fn().mockResolvedValue({
+    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+    release: jest.fn(),
+  });
 });

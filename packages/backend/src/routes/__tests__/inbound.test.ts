@@ -50,8 +50,7 @@ describe('Inbound Routes', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET /api/inbound/asns

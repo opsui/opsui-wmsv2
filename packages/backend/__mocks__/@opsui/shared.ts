@@ -295,12 +295,20 @@ export const validateSKU = jest.fn(() => ({ valid: true, errors: [] }));
 export const validateBinLocation = jest.fn(() => ({ valid: true, errors: [] }));
 export const validateQuantity = jest.fn(() => ({ valid: true, errors: [] }));
 
-// Mock generators
-export const generateId = jest.fn(() => 'test-id-' + Math.random().toString(36).slice(2, 11));
-export const generateSKU = jest.fn(
-  () => 'TEST-SKU-' + Math.random().toString(36).slice(2, 8).toUpperCase()
-);
-export const generateOrderId = jest.fn(() => 'ORD-' + Date.now());
+// Mock generators - use counter for predictable values
+let idCounter = 1;
+export const generateId = jest.fn(() => `test-id-${String(idCounter++).padStart(3, '0')}`);
+let skuCounter = 1;
+export const generateSKU = jest.fn(() => `TEST-SKU-${String(skuCounter++).padStart(3, '0')}`);
+let orderIdCounter = 1;
+export const generateOrderId = jest.fn(() => `ORD-${String(orderIdCounter++).padStart(3, '0')}`);
+
+// Helper to reset counters - call this in beforeEach if needed
+export function resetGeneratorMocks() {
+  idCounter = 1;
+  skuCounter = 1;
+  orderIdCounter = 1;
+}
 
 // Mock system constants
 export const WAREHOUSE_ZONES = ['A', 'B', 'C', 'D'];

@@ -50,8 +50,7 @@ describe('Orders Routes', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET /api/orders

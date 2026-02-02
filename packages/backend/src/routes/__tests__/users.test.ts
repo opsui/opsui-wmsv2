@@ -50,8 +50,7 @@ describe('Users Routes', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET /api/users

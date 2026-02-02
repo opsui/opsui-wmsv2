@@ -10,10 +10,9 @@ import { NotFoundError, ConflictError, TransactionType } from '@opsui/shared';
 jest.mock('../../repositories/InventoryRepository');
 jest.mock('../../repositories/SKURepository');
 jest.mock('../../config/logger');
-jest.mock('../../db/client');
+// Note: db/client is mocked globally in jest.setup.cjs, not here
 
 const { logger } = require('../../config/logger');
-const { getPool } = require('../../db/client');
 
 describe('StockControlService', () => {
   let stockControlService: StockControlService;
@@ -26,6 +25,12 @@ describe('StockControlService', () => {
   beforeEach(() => {
     stockControlService = new StockControlService();
     jest.clearAllMocks();
+    // Reset mockPool query function to a fresh mock for each test
+    (global.mockPool.query as any) = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
+    (global.mockPool.connect as any) = jest.fn().mockResolvedValue({
+      query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+      release: jest.fn(),
+    });
   });
 
   // between tests. jest.clearAllMocks() clears call history instead.
@@ -46,16 +51,14 @@ describe('StockControlService', () => {
         ],
       };
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '150' }] }) // total SKUs
-          .mockResolvedValueOnce({ rows: [{ count: '200' }] }) // total bins
-          .mockResolvedValueOnce({ rows: [{ count: '15' }] }) // low stock
-          .mockResolvedValueOnce({ rows: [{ count: '5' }] }) // out of stock
-          .mockResolvedValueOnce({ rows: [{ count: '3' }] }) // pending counts
-          .mockResolvedValueOnce({ rows: [] }), // recent transactions
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '150' }] }) // total SKUs
+        .mockResolvedValueOnce({ rows: [{ count: '200' }] }) // total bins
+        .mockResolvedValueOnce({ rows: [{ count: '15' }] }) // low stock
+        .mockResolvedValueOnce({ rows: [{ count: '5' }] }) // out of stock
+        .mockResolvedValueOnce({ rows: [{ count: '3' }] }) // pending counts
+        .mockResolvedValueOnce({ rows: [] }); // recent transactions
 
       const result = await stockControlService.getDashboard();
 
@@ -69,7 +72,7 @@ describe('StockControlService', () => {
     });
 
     it('should handle database errors', async () => {
-      getPool.mockImplementation(() => {
+      (global.mockPool.query as any) = jest.fn().mockImplementation(() => {
         throw new Error('Database connection failed');
       });
 
@@ -110,12 +113,10 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
-          .mockResolvedValueOnce({ rows: mockItems }), // data
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
+        .mockResolvedValueOnce({ rows: mockItems }); // data
 
       const result = await stockControlService.getInventoryList({
         page: 1,
@@ -141,12 +142,10 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: mockItems }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+        .mockResolvedValueOnce({ rows: mockItems });
 
       const result = await stockControlService.getInventoryList({
         name: 'Test',
@@ -171,12 +170,10 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: mockItems }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+        .mockResolvedValueOnce({ rows: mockItems });
 
       const result = await stockControlService.getInventoryList({
         lowStock: true,
@@ -198,12 +195,10 @@ describe('StockControlService', () => {
         available: 100,
       }));
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '25' }] }) // total 25 items
-          .mockResolvedValueOnce({ rows: mockItems }), // page 1 with 10 items
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '25' }] }) // total 25 items
+        .mockResolvedValueOnce({ rows: mockItems }); // page 1 with 10 items
 
       const result = await stockControlService.getInventoryList({
         page: 1,
@@ -261,13 +256,11 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [mockSKU] }) // SKU details
-          .mockResolvedValueOnce({ rows: mockLocations }) // inventory by location
-          .mockResolvedValueOnce({ rows: mockTransactions }), // transactions
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [mockSKU] }) // SKU details
+        .mockResolvedValueOnce({ rows: mockLocations }) // inventory by location
+        .mockResolvedValueOnce({ rows: mockTransactions }); // transactions
 
       const result = await stockControlService.getSKUInventoryDetail('SKU001');
 
@@ -280,9 +273,7 @@ describe('StockControlService', () => {
     });
 
     it('should throw NotFoundError for non-existent SKU', async () => {
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValue({ rows: [] });
 
       await expect(stockControlService.getSKUInventoryDetail('NONEXISTENT')).rejects.toThrow(
         NotFoundError
@@ -299,12 +290,10 @@ describe('StockControlService', () => {
     it('should create a stock count', async () => {
       const mockBin = { bin_id: 'A-01-01', zone: 'A', active: true };
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [mockBin] }) // bin exists
-          .mockResolvedValueOnce({ rows: [] }), // insert result
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [mockBin] }) // bin exists
+        .mockResolvedValueOnce({ rows: [] }); // insert result
 
       const result = await stockControlService.createStockCount('A-01-01', 'FULL', mockUser.userId);
 
@@ -317,9 +306,7 @@ describe('StockControlService', () => {
     });
 
     it('should throw NotFoundError for non-existent bin', async () => {
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: [] });
 
       await expect(
         stockControlService.createStockCount('INVALID-BIN', 'FULL', mockUser.userId)
@@ -329,12 +316,14 @@ describe('StockControlService', () => {
     it('should create different count types', async () => {
       const mockBin = { bin_id: 'A-01-01', zone: 'A', active: true };
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [mockBin] })
-          .mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [mockBin] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [mockBin] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [mockBin] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const types = ['FULL', 'CYCLIC', 'SPOT'] as const;
 
@@ -374,17 +363,16 @@ describe('StockControlService', () => {
       };
 
       mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockCount] }) // get count
         .mockResolvedValueOnce({ rows: [mockInventory[0]] }) // get SKU001 inventory
         .mockResolvedValueOnce({ rows: [] }) // insert count item
         .mockResolvedValueOnce({ rows: [mockInventory[1]] }) // get SKU002 inventory
         .mockResolvedValueOnce({ rows: [] }) // insert count item
-        .mockResolvedValueOnce({ rows: [] }); // update count status
+        .mockResolvedValueOnce({ rows: [] }) // update count status
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-        query: jest.fn(),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       const result = await stockControlService.submitStockCount('SC-001', items, mockUser.userId);
 
@@ -402,9 +390,7 @@ describe('StockControlService', () => {
         release: jest.fn(),
       };
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       await expect(
         stockControlService.submitStockCount('SC-001', [], mockUser.userId)
@@ -416,13 +402,11 @@ describe('StockControlService', () => {
 
     it('should throw NotFoundError for non-existent count', async () => {
       const mockClient = {
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
+        query: jest.fn().mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }),
         release: jest.fn(),
       };
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       await expect(
         stockControlService.submitStockCount('NONEXISTENT', [], mockUser.userId)
@@ -454,19 +438,18 @@ describe('StockControlService', () => {
       const mockClient = {
         query: jest
           .fn()
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [mockSourceInventory] }) // source exists
           .mockResolvedValueOnce({ rows: [] }) // deduct from source
           .mockResolvedValueOnce({ rows: [mockDestInventory] }) // dest exists
           .mockResolvedValueOnce({ rows: [] }) // add to dest
           .mockResolvedValueOnce({ rows: [] }) // log transaction 1
-          .mockResolvedValueOnce({ rows: [] }), // log transaction 2
+          .mockResolvedValueOnce({ rows: [] }) // log transaction 2
+          .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
       };
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-        query: jest.fn(),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       const result = await stockControlService.transferStock(
         'SKU001',
@@ -487,13 +470,11 @@ describe('StockControlService', () => {
 
     it('should throw NotFoundError when source inventory does not exist', async () => {
       const mockClient = {
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
+        query: jest.fn().mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }),
         release: jest.fn(),
       };
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       await expect(
         stockControlService.transferStock(
@@ -517,13 +498,14 @@ describe('StockControlService', () => {
       };
 
       const mockClient = {
-        query: jest.fn().mockResolvedValueOnce({ rows: [mockSourceInventory] }),
+        query: jest
+          .fn()
+          .mockResolvedValueOnce({ rows: [] })
+          .mockResolvedValueOnce({ rows: [mockSourceInventory] }),
         release: jest.fn(),
       };
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       await expect(
         stockControlService.transferStock(
@@ -549,18 +531,18 @@ describe('StockControlService', () => {
       const mockClient = {
         query: jest
           .fn()
+          .mockResolvedValueOnce({ rows: [] }) // BEGIN
           .mockResolvedValueOnce({ rows: [mockSourceInventory] }) // source exists
           .mockResolvedValueOnce({ rows: [] }) // deduct from source
           .mockResolvedValueOnce({ rows: [] }) // dest does not exist
           .mockResolvedValueOnce({ rows: [] }) // insert new dest
           .mockResolvedValueOnce({ rows: [] }) // log transaction 1
-          .mockResolvedValueOnce({ rows: [] }), // log transaction 2
+          .mockResolvedValueOnce({ rows: [] }) // log transaction 2
+          .mockResolvedValueOnce({ rows: [] }), // COMMIT
         release: jest.fn(),
       };
 
-      getPool.mockReturnValue({
-        connect: jest.fn().mockResolvedValue(mockClient),
-      });
+      (global.mockPool.connect as any) = jest.fn().mockResolvedValue(mockClient);
 
       const result = await stockControlService.transferStock(
         'SKU001',
@@ -592,13 +574,11 @@ describe('StockControlService', () => {
         available: 100,
       };
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [mockCurrentInventory] }) // current inventory
-          .mockResolvedValueOnce({ rows: [] }) // update inventory
-          .mockResolvedValueOnce({ rows: [] }), // log transaction
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [mockCurrentInventory] }) // current inventory
+        .mockResolvedValueOnce({ rows: [] }) // update inventory
+        .mockResolvedValueOnce({ rows: [] }); // log transaction
 
       const result = await stockControlService.adjustInventory(
         'SKU001',
@@ -625,13 +605,11 @@ describe('StockControlService', () => {
         available: 100,
       };
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [mockCurrentInventory] })
-          .mockResolvedValueOnce({ rows: [] })
-          .mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [mockCurrentInventory] })
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
 
       const result = await stockControlService.adjustInventory(
         'SKU001',
@@ -647,9 +625,7 @@ describe('StockControlService', () => {
     });
 
     it('should throw NotFoundError when inventory does not exist', async () => {
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: [] });
 
       await expect(
         stockControlService.adjustInventory('SKU001', 'A-01-01', 10, 'Test', mockUser.userId)
@@ -665,9 +641,9 @@ describe('StockControlService', () => {
         available: 5,
       };
 
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: [mockCurrentInventory] }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValue({ rows: [mockCurrentInventory] });
 
       await expect(
         stockControlService.adjustInventory('SKU001', 'A-01-01', -10, 'Test', mockUser.userId)
@@ -709,12 +685,10 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
-          .mockResolvedValueOnce({ rows: mockTransactions }), // transactions
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
+        .mockResolvedValueOnce({ rows: mockTransactions }); // transactions
 
       const result = await stockControlService.getTransactionHistory({
         limit: 10,
@@ -726,12 +700,10 @@ describe('StockControlService', () => {
     });
 
     it('should filter by SKU', async () => {
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001', sku: 'SKU001' }] }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001', sku: 'SKU001' }] });
 
       const result = await stockControlService.getTransactionHistory({
         sku: 'SKU001',
@@ -744,12 +716,10 @@ describe('StockControlService', () => {
     });
 
     it('should filter by transaction type', async () => {
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001', type: 'RECEIPT' }] }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001', type: 'RECEIPT' }] });
 
       const result = await stockControlService.getTransactionHistory({
         type: TransactionType.RECEIPT,
@@ -761,12 +731,10 @@ describe('StockControlService', () => {
     });
 
     it('should filter by date range', async () => {
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001' }] }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN001' }] });
 
       const result = await stockControlService.getTransactionHistory({
         startDate: '2024-01-01',
@@ -804,9 +772,7 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: mockItems }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: mockItems });
 
       const result = await stockControlService.getLowStockReport(10);
 
@@ -817,9 +783,7 @@ describe('StockControlService', () => {
     });
 
     it('should return empty array when no low stock items', async () => {
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: [] });
 
       const result = await stockControlService.getLowStockReport(5);
 
@@ -852,9 +816,7 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: mockMovements }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: mockMovements });
 
       const result = await stockControlService.getMovementReport({
         startDate: '2024-01-01',
@@ -868,19 +830,17 @@ describe('StockControlService', () => {
     });
 
     it('should filter by SKU', async () => {
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({
-          rows: [
-            {
-              sku: 'SKU001',
-              name: 'Product 1',
-              receipts: 100,
-              deductions: 50,
-              adjustments: 0,
-              net_change: 50,
-            },
-          ],
-        }),
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({
+        rows: [
+          {
+            sku: 'SKU001',
+            name: 'Product 1',
+            receipts: 100,
+            deductions: 50,
+            adjustments: 0,
+            net_change: 50,
+          },
+        ],
       });
 
       const result = await stockControlService.getMovementReport({
@@ -913,16 +873,14 @@ describe('StockControlService', () => {
         available: 50,
       };
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [mockCurrentInventory1] }) // get SKU001
-          .mockResolvedValueOnce({ rows: [] }) // update SKU001
-          .mockResolvedValueOnce({ rows: [] }) // log SKU001
-          .mockResolvedValueOnce({ rows: [mockCurrentInventory2] }) // get SKU002
-          .mockResolvedValueOnce({ rows: [] }) // update SKU002
-          .mockResolvedValueOnce({ rows: [] }), // log SKU002
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [mockCurrentInventory1] }) // get SKU001
+        .mockResolvedValueOnce({ rows: [] }) // update SKU001
+        .mockResolvedValueOnce({ rows: [] }) // log SKU001
+        .mockResolvedValueOnce({ rows: [mockCurrentInventory2] }) // get SKU002
+        .mockResolvedValueOnce({ rows: [] }) // update SKU002
+        .mockResolvedValueOnce({ rows: [] }); // log SKU002
 
       const discrepancies = [
         {
@@ -995,9 +953,7 @@ describe('StockControlService', () => {
         { bin_id: 'A-01-02', zone: 'A', aisle: '01', shelf: '02', type: 'SHELF', active: true },
       ];
 
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: mockBins }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: mockBins });
 
       const result = await stockControlService.getBinLocations({ active: true });
 
@@ -1010,9 +966,7 @@ describe('StockControlService', () => {
         { bin_id: 'A-01-01', zone: 'A', aisle: '01', shelf: '01', type: 'SHELF', active: true },
       ];
 
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: mockBins }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: mockBins });
 
       const result = await stockControlService.getBinLocations({ zone: 'A' });
 
@@ -1021,9 +975,7 @@ describe('StockControlService', () => {
     });
 
     it('should return empty array when no bins match', async () => {
-      getPool.mockReturnValue({
-        query: jest.fn().mockResolvedValueOnce({ rows: [] }),
-      });
+      (global.mockPool.query as any) = jest.fn().mockResolvedValueOnce({ rows: [] });
 
       const result = await stockControlService.getBinLocations({ zone: 'NONEXISTENT' });
 
@@ -1056,12 +1008,10 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
-          .mockResolvedValueOnce({ rows: mockCounts }), // counts
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total count
+        .mockResolvedValueOnce({ rows: mockCounts }); // counts
 
       const result = await stockControlService.getStockCounts({
         limit: 10,
@@ -1084,12 +1034,10 @@ describe('StockControlService', () => {
         },
       ];
 
-      getPool.mockReturnValue({
-        query: jest
-          .fn()
-          .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-          .mockResolvedValueOnce({ rows: mockCounts }),
-      });
+      (global.mockPool.query as any) = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] })
+        .mockResolvedValueOnce({ rows: mockCounts });
 
       const result = await stockControlService.getStockCounts({
         status: 'COMPLETED',

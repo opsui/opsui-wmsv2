@@ -19,7 +19,6 @@ jest.mock('../../db/client');
 // Note: nanoid is already mocked in jest.setup.cjs
 
 const { logger } = require('../../config/logger');
-const { getPool } = require('../../db/client');
 
 describe('InboundReceivingService', () => {
   let inboundReceivingService: InboundReceivingService;
@@ -32,10 +31,15 @@ describe('InboundReceivingService', () => {
   beforeEach(() => {
     inboundReceivingService = new InboundReceivingService();
     jest.clearAllMocks();
+    // Reset mockPool query function to a fresh mock for each test
+    (global.mockPool.query as any) = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
+    (global.mockPool.connect as any) = jest.fn().mockResolvedValue({
+      query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+      release: jest.fn(),
+    });
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET DASHBOARD METRICS TESTS
@@ -55,7 +59,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [{ count: '8' }] }), // today received
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getDashboardMetrics();
 
@@ -71,7 +75,7 @@ describe('InboundReceivingService', () => {
     });
 
     it('should handle database errors', async () => {
-      getPool.mockImplementation(() => {
+      (global.mockPool.query as any) = jest.fn().mockImplementation(() => {
         throw new Error('Database connection failed');
       });
 
@@ -122,7 +126,7 @@ describe('InboundReceivingService', () => {
           }), // line items
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         supplierId: 'SUP-001',
@@ -169,7 +173,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         supplierId: 'SUP-001',
@@ -225,7 +229,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: mockLineItems }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getASN('ASN-001');
 
@@ -239,7 +243,7 @@ describe('InboundReceivingService', () => {
         query: jest.fn().mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       await expect(inboundReceivingService.getASN('NONEXISTENT')).rejects.toThrow(
         'ASN NONEXISTENT not found'
@@ -275,7 +279,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [{ line_item_id: 'ASNL-002', ...{} }] }), // line items for ASN-002
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllASNs({ limit: 10, offset: 0 });
 
@@ -295,7 +299,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllASNs({
         status: ASNStatus.PENDING,
@@ -316,7 +320,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllASNs({
         supplierId: 'SUP-001',
@@ -343,7 +347,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.updateASNStatus('ASN-001', ASNStatus.IN_TRANSIT);
 
@@ -356,7 +360,7 @@ describe('InboundReceivingService', () => {
         query: jest.fn().mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       await expect(
         inboundReceivingService.updateASNStatus('NONEXISTENT', ASNStatus.RECEIVED)
@@ -403,7 +407,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAAAAAAAA', ...{} }] }), // line items
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         asnId: 'ASN-001',
@@ -468,7 +472,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAAAAAAAA', ...{} }] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         receiptType: ReceiptType.RETURN,
@@ -498,7 +502,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         receiptType: ReceiptType.PO,
@@ -551,7 +555,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: mockLineItems }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getReceipt('RCP-001');
 
@@ -566,7 +570,7 @@ describe('InboundReceivingService', () => {
         query: jest.fn().mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       await expect(inboundReceivingService.getReceipt('NONEXISTENT')).rejects.toThrow(
         'Receipt NONEXISTENT not found'
@@ -594,7 +598,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-001', ...{} }] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllReceipts({ limit: 10, offset: 0 });
 
@@ -613,7 +617,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllReceipts({
         status: ReceiptStatus.RECEIVING,
@@ -633,7 +637,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllReceipts({
         asnId: 'ASN-001',
@@ -655,7 +659,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getAllReceipts({
         receiptType: ReceiptType.PO,
@@ -700,7 +704,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: mockTasks }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getPutawayTasks({ limit: 10, offset: 0 });
 
@@ -728,7 +732,7 @@ describe('InboundReceivingService', () => {
           }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getPutawayTasks({
         status: PutawayStatus.PENDING,
@@ -758,7 +762,7 @@ describe('InboundReceivingService', () => {
           }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.getPutawayTasks({
         assignedTo: 'user-123',
@@ -787,7 +791,7 @@ describe('InboundReceivingService', () => {
         }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const result = await inboundReceivingService.assignPutawayTask('PTA-001', 'user-123');
 
@@ -802,7 +806,7 @@ describe('InboundReceivingService', () => {
         query: jest.fn().mockResolvedValueOnce({ rows: [] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       await expect(
         inboundReceivingService.assignPutawayTask('NONEXISTENT', 'user-123')
@@ -838,7 +842,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // update receipt line (not executed because not completed)
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         putawayTaskId: 'PTA-001',
@@ -882,7 +886,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // COMMIT
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         putawayTaskId: 'PTA-001',
@@ -906,7 +910,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // FOR UPDATE - no rows
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         putawayTaskId: 'NONEXISTENT',
@@ -928,7 +932,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         putawayTaskId: 'PTA-001',
@@ -963,7 +967,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [{ receipt_line_id: 'RCPL-AAAA', ...{} }] }),
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         receiptType: ReceiptType.PO,
@@ -1001,7 +1005,7 @@ describe('InboundReceivingService', () => {
           .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
       };
 
-      getPool.mockReturnValue(mockClient);
+      (global.mockPool.query as any) = mockClient.query;
 
       const dto = {
         receiptType: ReceiptType.PO,

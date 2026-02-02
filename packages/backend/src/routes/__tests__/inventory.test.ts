@@ -50,8 +50,7 @@ describe('Inventory Routes', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET /api/inventory

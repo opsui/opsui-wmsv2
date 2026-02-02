@@ -17,8 +17,7 @@ describe('MLPredictionService', () => {
     (service as any).cache.clear(); // Clear cache between tests
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // DURATION PREDICTION TESTS

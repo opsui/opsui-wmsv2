@@ -46,8 +46,7 @@ describe('InventoryService', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // GET INVENTORY BY SKU TESTS

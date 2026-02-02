@@ -47,8 +47,7 @@ describe('AuthService', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   // ==========================================================================
   // LOGIN TESTS
