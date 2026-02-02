@@ -4,26 +4,26 @@
  */
 
 export enum NotificationType {
-  INFO = "info",
-  WARNING = "warning",
-  ERROR = "error",
-  SUCCESS = "success",
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
+  SUCCESS = 'success',
   // Specific notification types
-  EXCEPTION_REPORTED = "exception_reported",
-  QUALITY_FAILED = "quality_failed",
-  QUALITY_APPROVED = "quality_approved",
-  ORDER_SHIPPED = "order_shipped",
-  WAVE_CREATED = "wave_created",
-  WAVE_COMPLETED = "wave_completed",
-  ZONE_ASSIGNED = "zone_assigned",
+  EXCEPTION_REPORTED = 'exception_reported',
+  QUALITY_FAILED = 'quality_failed',
+  QUALITY_APPROVED = 'quality_approved',
+  ORDER_SHIPPED = 'order_shipped',
+  WAVE_CREATED = 'wave_created',
+  WAVE_COMPLETED = 'wave_completed',
+  ZONE_ASSIGNED = 'zone_assigned',
 }
 
 export enum NotificationPriority {
-  LOW = "low",
-  NORMAL = "normal",
-  MEDIUM = "medium",
-  HIGH = "high",
-  URGENT = "urgent",
+  LOW = 'low',
+  NORMAL = 'normal',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
 }
 
 export interface NotificationMessage {
@@ -58,10 +58,7 @@ export async function notifyAll(notification: NotificationMessage): Promise<void
 /**
  * Broadcast an event to all connected clients
  */
-export async function broadcastEvent(
-  event: string,
-  _data: unknown
-): Promise<void> {
+export async function broadcastEvent(event: string, _data: unknown): Promise<void> {
   console.log(`[Broadcast Event] ${event}`);
 }
 
