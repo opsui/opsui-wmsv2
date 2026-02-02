@@ -99,7 +99,7 @@ export interface RuleAction {
   actionId: string;
   ruleId: string;
   actionType: ActionType;
-  parameters: Record<string, any>; // Action-specific parameters
+  parameters: Record<string, unknown>; // Action-specific parameters
   order: number; // Execution order for actions
 }
 
@@ -151,7 +151,7 @@ export interface RuleActionResult {
   actionId: string;
   actionType: ActionType;
   success: boolean;
-  result?: any;
+  result?: unknown;
   errorMessage?: string;
 }
 

@@ -151,7 +151,7 @@ export function invariantPickerRequiredForPickingStates(
   pickerId?: string
 ): void {
   const pickerRequiredStates = [OrderStatus.PICKING, OrderStatus.PICKED];
-  if (pickerRequiredStates.includes(status) && !pickerId) {
+  if (pickerRequiredStates.includes(status) && pickerId === undefined) {
     throw new Error(
       `INVARIANT VIOLATION: Order is in ${status} state but no picker is assigned. ` +
         `A picker must be assigned before order enters PICKING state.`
@@ -175,7 +175,7 @@ export function invariantPackerRequiredForPackingStates(
   packerId?: string
 ): void {
   const packerRequiredStates = [OrderStatus.PACKING, OrderStatus.PACKED];
-  if (packerRequiredStates.includes(status) && !packerId) {
+  if (packerRequiredStates.includes(status) && packerId === undefined) {
     throw new Error(
       `INVARIANT VIOLATION: Order is in ${status} state but no packer is assigned. ` +
         `A packer must be assigned before order enters PACKING state.`
@@ -270,7 +270,7 @@ export function invariantForeignKeysNeverDisabled(): never {
  * @throws Error if invariant is violated
  */
 export function invariantOrderIdUnique(existingOrder: unknown, orderId: string): void {
-  if (existingOrder) {
+  if (existingOrder !== undefined && existingOrder !== null) {
     throw new Error(
       `INVARIANT VIOLATION: Order ID ${orderId} already exists. ` +
         `Order IDs must be unique. This indicates a generation algorithm collision.`

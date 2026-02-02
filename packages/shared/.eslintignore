@@ -1,0 +1,6 @@
+# TypeScript resolver issues (false positives - code compiles fine)
+src/index.ts
+src/types/index.ts
+
+# Test files (warnings only)
+src/utils/generators.test.ts

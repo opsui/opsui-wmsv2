@@ -90,7 +90,7 @@ export interface Notification {
   channel: NotificationChannel;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   status: NotificationStatus;
   sentAt?: Date;
   deliveredAt?: Date;
@@ -177,7 +177,7 @@ export interface NotificationQueue {
   queueId: string;
   notificationId?: string;
   jobType: QueueJobType;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   status: QueueJobStatus;
   attempts: number;
   maxAttempts: number;
@@ -204,7 +204,7 @@ export interface CreateNotificationDTO {
   channel: NotificationChannel;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   priority?: NotificationPriority;
   scheduledFor?: Date;
 }
@@ -218,7 +218,7 @@ export interface BulkNotificationDTO {
   channels: NotificationChannel[];
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   priority?: NotificationPriority;
 }
 
@@ -255,7 +255,7 @@ export interface PushParams {
   userId: string;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 /**
@@ -266,7 +266,7 @@ export interface InAppNotificationParams {
   type: NotificationType;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   priority?: NotificationPriority;
 }
 

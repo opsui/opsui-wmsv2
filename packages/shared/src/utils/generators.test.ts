@@ -4,7 +4,7 @@
  * Tests ID generation and bin location utilities
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   generateOrderId,
   generateOrderItemId,
@@ -226,18 +226,18 @@ describe('Bin Location Utilities', () => {
       });
     });
 
-    it('should return null for invalid format', () => {
-      expect(parseBinLocation('INVALID')).toBeNull();
-      expect(parseBinLocation('A-1')).toBeNull();
-      expect(parseBinLocation('A-01-02-03')).toBeNull();
-      expect(parseBinLocation('')).toBeNull();
-      expect(parseBinLocation('a-01-02')).toBeNull(); // lowercase zone
+    it('should return undefined for invalid format', () => {
+      expect(parseBinLocation('INVALID')).toBeUndefined();
+      expect(parseBinLocation('A-1')).toBeUndefined();
+      expect(parseBinLocation('A-01-02-03')).toBeUndefined();
+      expect(parseBinLocation('')).toBeUndefined();
+      expect(parseBinLocation('a-01-02')).toBeUndefined(); // lowercase zone
     });
 
-    it('should return null for missing components', () => {
-      expect(parseBinLocation('A-01')).toBeNull();
-      expect(parseBinLocation('-01-02')).toBeNull();
-      expect(parseBinLocation('A--02')).toBeNull();
+    it('should return undefined for missing components', () => {
+      expect(parseBinLocation('A-01')).toBeUndefined();
+      expect(parseBinLocation('-01-02')).toBeUndefined();
+      expect(parseBinLocation('A--02')).toBeUndefined();
     });
   });
 

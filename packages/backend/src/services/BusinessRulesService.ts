@@ -356,10 +356,10 @@ export class BusinessRulesService {
     let finalValue = value;
 
     if (operation === 'add') {
-      const currentValue = this.getFieldValue(context.entity, field);
+      const currentValue = this.getFieldValue(context.entity, String(field));
       finalValue = Number(currentValue) + Number(value);
     } else if (operation === 'multiply') {
-      const currentValue = this.getFieldValue(context.entity, field);
+      const currentValue = this.getFieldValue(context.entity, String(field));
       finalValue = Number(currentValue) * Number(value);
     }
 

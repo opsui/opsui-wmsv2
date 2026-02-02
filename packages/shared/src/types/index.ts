@@ -815,7 +815,7 @@ export class ValidationError extends WMSError {
 
 export class NotFoundError extends WMSError {
   constructor(resource: string, id?: string) {
-    super('NOT_FOUND', 404, `${resource}${id ? ` (${id})` : ''} not found`);
+    super('NOT_FOUND', 404, `${resource}${id !== undefined ? ` (${id})` : ''} not found`);
   }
 }
 
@@ -1193,7 +1193,7 @@ export interface Shipment {
   estimatedDeliveryDate?: Date;
   actualDeliveryDate?: Date;
   carrierShipmentId?: string;
-  carrierResponse?: any;
+  carrierResponse?: unknown;
   createdAt: Date;
   updatedAt: Date;
   shippedAt?: Date;
@@ -1232,7 +1232,7 @@ export interface ShipmentTrackingEvent {
   eventLocation?: string;
   eventDate: Date;
   eventSource: string;
-  rawEventData?: any;
+  rawEventData?: unknown;
 }
 
 // ============================================================================
@@ -1278,7 +1278,7 @@ export interface AddTrackingEventDTO {
   eventLocation?: string;
   eventDate: Date;
   eventSource: string;
-  rawEventData?: any;
+  rawEventData?: unknown;
 }
 
 // ============================================================================
@@ -2367,7 +2367,7 @@ export interface NZCRateRequest {
  */
 export interface NZCRateResponse {
   Quotes: NZCQuote[];
-  Suppressed: any[];
+  Suppressed: unknown[];
   Rejected: Array<{
     Carrier: string;
     Reason: string;

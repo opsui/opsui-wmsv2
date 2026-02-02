@@ -110,9 +110,9 @@ export function parseBinLocation(binId: string): {
   zone: string;
   aisle: string;
   shelf: string;
-} | null {
+} | undefined {
   const match = binId.match(/^([A-Z])-([0-9]{1,3})-([0-9]{2})$/);
-  if (!match) return null;
+  if (!match) return undefined;
 
   return {
     zone: match[1],

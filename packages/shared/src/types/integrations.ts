@@ -148,7 +148,7 @@ export interface IntegrationConfig {
   retryAttempts?: number;
   retryDelayMs?: number;
   customHeaders?: Record<string, string>;
-  customSettings?: Record<string, any>;
+  customSettings?: Record<string, unknown>;
 }
 
 /**
@@ -207,7 +207,7 @@ export interface FieldMapping {
   transformType?: 'NONE' | 'UPPERCASE' | 'LOWERCASE' | 'TRIM' | 'CUSTOM';
   transformFunction?: string; // For custom transforms
   required: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
 }
 
 /**
@@ -216,7 +216,7 @@ export interface FieldMapping {
 export interface DataFilter {
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in';
-  value: any;
+  value: unknown;
 }
 
 /**
@@ -260,7 +260,7 @@ export interface SyncLogEntry {
   entityType?: string;
   entityId?: string;
   externalId?: string;
-  errorDetails?: any;
+  errorDetails?: unknown;
 }
 
 /**
@@ -270,7 +270,7 @@ export interface WebhookEvent {
   eventId: string;
   integrationId: string;
   eventType: WebhookEventType;
-  payload: any;
+  payload: unknown;
   receivedAt: Date;
   processedAt?: Date;
   status: 'PENDING' | 'PROCESSED' | 'FAILED';

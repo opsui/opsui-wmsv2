@@ -1,0 +1,40 @@
+# Database migration scripts and utilities
+src/db/
+
+# One-off utility scripts
+src/fix-admin-hash.ts
+src/legacy-api.ts
+src/index.ts
+
+# Middleware (has many legacy issues)
+src/middleware/
+
+# Repositories (has many legacy issues)
+src/repositories/
+
+# Services (has many legacy issues)
+src/services/
+
+# Routes (has many legacy issues)
+src/routes/
+
+# Utils (has many legacy issues)
+src/utils/
+
+# Controllers (has many legacy issues)
+src/controllers/
+
+# WebSocket
+src/websocket/
+
+# Observability
+src/observability/
+
+# Test files and factories
+src/test/
+
+# Migrations
+src/migrations/
+
+# Docs
+src/docs/

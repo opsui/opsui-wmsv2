@@ -106,6 +106,7 @@ export const PACKER_REQUIRED_STATES: ReadonlySet<OrderStatus> = new Set([
  * isValidTransition(OrderStatus.PICKING, OrderStatus.SHIPPED); // false
  */
 export function isValidTransition(fromStatus: OrderStatus, toStatus: OrderStatus): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, security/detect-object-injection
   const allowedTransitions = VALID_ORDER_TRANSITIONS[fromStatus];
   return allowedTransitions.includes(toStatus);
 }
@@ -121,6 +122,7 @@ export function isValidTransition(fromStatus: OrderStatus, toStatus: OrderStatus
  * // Returns: [OrderStatus.PICKING, OrderStatus.CANCELLED, OrderStatus.BACKORDER]
  */
 export function getNextStates(fromStatus: OrderStatus): readonly OrderStatus[] {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, security/detect-object-injection
   return VALID_ORDER_TRANSITIONS[fromStatus];
 }
 
@@ -173,7 +175,7 @@ export const TRANSITION_PREREQUISITES = {
     // Before: PENDING → PICKING
     check: async (context: TransitionContext) => {
       // 1. Picker must have < MAX_ORDERS_PER_PICKER active orders
-      if (!context.pickerId) {
+      if (context.pickerId === undefined) {
         throw new Error('Picker ID is required for picking transition');
       }
       const activeOrderCount = await context.getActiveOrderCount(context.pickerId);
@@ -191,7 +193,7 @@ export const TRANSITION_PREREQUISITES = {
 
       // 3. Picker must be active
       const picker = await context.getPicker(context.pickerId);
-      if (!picker.active) {
+      if (picker.active === false) {
         throw new Error(`Picker ${context.pickerId} is not active`);
       }
     },
@@ -218,13 +220,13 @@ export const TRANSITION_PREREQUISITES = {
     // Before: PICKED → PACKING
     check: async (context: TransitionContext) => {
       // 1. Packer must be assigned
-      if (!context.packerId) {
+      if (context.packerId === undefined) {
         throw new Error('Packer must be assigned before packing');
       }
 
       // 2. Packer must be active
       const packer = await context.getPacker(context.packerId);
-      if (!packer.active) {
+      if (packer.active === false) {
         throw new Error(`Packer ${context.packerId} is not active`);
       }
     },
@@ -242,12 +244,12 @@ export const TRANSITION_PREREQUISITES = {
     // Before: PACKED → SHIPPED
     check: async (context: TransitionContext) => {
       // 1. Shipping information must be provided
-      if (!context.shippingInfo) {
+      if (context.shippingInfo === undefined) {
         throw new Error('Shipping information required');
       }
 
       // 2. Carrier must be confirmed
-      if (!context.carrier) {
+      if (context.carrier === undefined) {
         throw new Error('Carrier must be assigned');
       }
     },
@@ -266,7 +268,7 @@ export const TRANSITION_PREREQUISITES = {
     // Before: PENDING → BACKORDER
     check: async (context: TransitionContext) => {
       // 1. Reason for backorder must be provided
-      if (!context.backorderReason) {
+      if (context.backorderReason === undefined) {
         throw new Error('Backorder reason must be provided');
       }
     },
@@ -341,7 +343,8 @@ export async function validateTransition(
   // 2. Check prerequisites
   const prerequisiteCheck =
     TRANSITION_PREREQUISITES[toStatus as keyof typeof TRANSITION_PREREQUISITES];
-  if (prerequisiteCheck) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (prerequisiteCheck !== undefined) {
     await prerequisiteCheck.check(context);
   }
 }

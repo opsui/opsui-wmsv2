@@ -16,7 +16,7 @@
     "extract-features": "python scripts/data/extract_features.py",
     "evaluate": "python scripts/evaluate.py",
     "test": "pytest tests/",
-    "lint": "eslint src --ext .ts",
+    "lint": "echo 'ML package has no TypeScript files to lint'",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

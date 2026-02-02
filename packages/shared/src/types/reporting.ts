@@ -105,8 +105,8 @@ export interface ReportFilter {
     | 'less_than'
     | 'between'
     | 'in';
-  value: any;
-  value2?: any; // For between operations
+  value: unknown;
+  value2?: unknown; // For between operations
   displayName?: string;
 }
 
@@ -180,7 +180,7 @@ export interface ReportExecution {
   executedBy: string;
   status: ReportStatus;
   format: ReportFormat;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   fileUrl?: string;
   fileSizeBytes?: number;
   rowCount?: number;
