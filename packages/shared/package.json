@@ -18,7 +18,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc --noEmitOnError false",
+    "build": "tsc --noEmitOnError false && node scripts/fix-imports.js",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
