@@ -17,6 +17,7 @@
     "test:e2e": "jest --testPathPattern=tests/e2e",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "check:unused": "ts-unused-exports tsconfig.json",
     "db:migrate": "node dist/db/migrate.js",
     "db:seed": "node dist/db/seed.js",
     "db:reset": "node dist/db/reset.js",

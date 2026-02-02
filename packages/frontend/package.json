@@ -12,7 +12,8 @@
     "lint": "echo 'Frontend lint skipped - see root .eslintignore for excluded files'",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "check:unused": "ts-unused-exports tsconfig.json"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

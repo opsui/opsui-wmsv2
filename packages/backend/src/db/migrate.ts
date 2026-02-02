@@ -20,8 +20,14 @@ export async function runMigrations(): Promise<void> {
   try {
     logger.info('Starting database migrations...');
 
-    // Read schema file
-    const schemaPath = join(__dirname, 'schema.sql');
+    // Read schema file - check both dist and src locations
+    let schemaPath = join(__dirname, 'schema.sql');
+    try {
+      readFileSync(schemaPath, 'utf-8');
+    } catch {
+      // Not in dist, try src (for development)
+      schemaPath = join(__dirname, '../../src/db/schema.sql');
+    }
     const schema = readFileSync(schemaPath, 'utf-8');
 
     // Execute schema
