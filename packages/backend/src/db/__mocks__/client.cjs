@@ -3,8 +3,8 @@
  * Provides mock implementations for database operations in tests
  */
 
-// Create a mock pool that returns a proper query result
-const createMockPool = () => ({
+// Default mock pool
+const defaultMockPool = {
   query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
   connect: jest.fn().mockResolvedValue({
     query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
@@ -15,20 +15,10 @@ const createMockPool = () => ({
   totalCount: 10,
   idleCount: 5,
   waitingCount: 0,
-});
+};
 
-// Create default mock pool instance
-const mockPoolInstance = createMockPool();
-
-// Mock getPool function - returns the mock pool by default
-const getPool = jest.fn(() => mockPoolInstance);
-
-// Allow tests to override the return value
-getPool.mockReturnValue = jest.fn((value) => {
-  mockPoolInstance.query = value?.query || mockPoolInstance.query;
-  mockPoolInstance.connect = value?.connect || mockPoolInstance.connect;
-  return getPool;
-});
+// getPool mock with default return value
+const getPool = jest.fn(() => defaultMockPool);
 
 // Other mock functions
 const closePool = jest.fn();
