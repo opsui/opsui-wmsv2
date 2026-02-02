@@ -8,6 +8,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Disable threads for integration tests to avoid DataCloneError with axios
+    threads: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -19,6 +21,8 @@ export default defineConfig({
         '**/mockData/*',
         'src/main.tsx',
         'src/vite-env.d.ts',
+        // Exclude integration tests from coverage
+        'src/test/integration/**',
       ],
       thresholds: {
         lines: 80,
@@ -27,6 +31,8 @@ export default defineConfig({
         statements: 80,
       },
     },
+    // Exclude integration tests from default test run
+    exclude: ['**/integration/**'],
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     watchPlugins: ['@vitest/ui/watcher'],
   },

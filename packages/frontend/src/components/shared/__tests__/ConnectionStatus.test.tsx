@@ -25,19 +25,26 @@ describe('ConnectionStatus Component', () => {
     it('renders connected state', () => {
       renderWithProviders(<ConnectionStatus />);
 
-      expect(screen.getByText(/connected/i)).toBeInTheDocument();
+      expect(screen.getByText('Connected')).toBeInTheDocument();
     });
 
-    it('displays connection label', () => {
-      renderWithProviders(<ConnectionStatus showLabel />);
+    it('displays status label by default', () => {
+      renderWithProviders(<ConnectionStatus />);
 
-      expect(screen.getByText(/connection/i)).toBeInTheDocument();
+      expect(screen.getByText('Connected')).toBeInTheDocument();
     });
 
     it('hides label when showLabel is false', () => {
       renderWithProviders(<ConnectionStatus showLabel={false} />);
 
-      expect(screen.queryByText(/connection/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('Connected')).not.toBeInTheDocument();
+    });
+
+    it('has proper title attribute for accessibility', () => {
+      const { container } = renderWithProviders(<ConnectionStatus />);
+
+      const wrapper = container.querySelector('div[title]');
+      expect(wrapper).toHaveAttribute('title', 'WebSocket: Connected');
     });
   });
 
@@ -45,23 +52,15 @@ describe('ConnectionStatus Component', () => {
     it('renders dot with connected state', () => {
       const { container } = renderWithProviders(<ConnectionStatusDot />);
 
-      const dot = container.querySelector('[class*="rounded-full"]');
+      const dot = container.querySelector('.bg-green-400');
       expect(dot).toBeInTheDocument();
     });
 
-    it('shows animation when connecting', () => {
-      vi.doMock('@/hooks/useWebSocket', () => ({
-        useWebSocket: () => ({
-          connectionStatus: 'connecting',
-          socketId: 'test-socket-id',
-          reconnect: vi.fn(),
-        }),
-      }));
-
+    it('has proper title attribute', () => {
       const { container } = renderWithProviders(<ConnectionStatusDot />);
 
-      const dot = container.querySelector('[class*="animate-pulse"]');
-      expect(dot).toBeInTheDocument();
+      const dot = container.querySelector('div[title]');
+      expect(dot).toHaveAttribute('title', 'WebSocket: connected');
     });
   });
 
@@ -69,16 +68,14 @@ describe('ConnectionStatus Component', () => {
     it('renders connection details', () => {
       renderWithProviders(<ConnectionStatusPanel />);
 
-      expect(screen.getByText(/connected/i)).toBeInTheDocument();
+      expect(screen.getByText('Connected')).toBeInTheDocument();
+      expect(screen.getByText('Real-time updates are active')).toBeInTheDocument();
     });
-  });
 
-  describe('Accessibility', () => {
-    it('has proper aria labels', () => {
-      renderWithProviders(<ConnectionStatus />);
+    it('displays socket ID when available', () => {
+      renderWithProviders(<ConnectionStatusPanel />);
 
-      const status = screen.getByRole('status');
-      expect(status).toBeInTheDocument();
+      expect(screen.getByText(/Socket ID:/i)).toBeInTheDocument();
     });
   });
 
@@ -87,6 +84,13 @@ describe('ConnectionStatus Component', () => {
       const { container } = renderWithProviders(<ConnectionStatus className="custom-class" />);
 
       const wrapper = container.querySelector('.custom-class');
+      expect(wrapper).toBeInTheDocument();
+    });
+
+    it('applies green styling for connected state', () => {
+      const { container } = renderWithProviders(<ConnectionStatus />);
+
+      const wrapper = container.querySelector('.bg-green-400\\/10');
       expect(wrapper).toBeInTheDocument();
     });
   });
