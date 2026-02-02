@@ -222,11 +222,16 @@ describe('ShippingService', () => {
       const result = await service.createShipment(dto);
 
       // Verify BEGIN was called
-      const beginCall = mockClient.query.mock.calls.find((call: unknown[]) => typeof call[0] === 'string' && call[0].includes('BEGIN'));
+      const beginCall = mockClient.query.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('BEGIN')
+      );
       expect(beginCall).toBeDefined();
 
       // Verify INSERT was called with correct parameters
-      const insertCall = mockClient.query.mock.calls.find((call: unknown[]) => typeof call[0] === 'string' && call[0].includes('INSERT INTO shipments'));
+      const insertCall = mockClient.query.mock.calls.find(
+        (call: unknown[]) =>
+          typeof call[0] === 'string' && call[0].includes('INSERT INTO shipments')
+      );
       expect(insertCall).toBeDefined();
       expect(insertCall[1]).toContain('ORD-001');
       expect(insertCall[1]).toContain('CARR-001');
@@ -260,7 +265,9 @@ describe('ShippingService', () => {
       await expect(service.createShipment(dto)).rejects.toThrow('Database error');
 
       // Verify ROLLBACK was called
-      const rollbackCall = mockClient.query.mock.calls.find((call: unknown[]) => typeof call[0] === 'string' && call[0].includes('ROLLBACK'));
+      const rollbackCall = mockClient.query.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('ROLLBACK')
+      );
       expect(rollbackCall).toBeDefined();
       expect(logger.error).toHaveBeenCalledWith('Error creating shipment', expect.any(Error));
     });
