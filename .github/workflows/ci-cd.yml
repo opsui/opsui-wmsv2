@@ -149,6 +149,12 @@ jobs:
 
       - name: Run database migrations
         working-directory: ./packages/backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: ${{ env.POSTGRES_DB }}
+          DB_USER: ${{ env.POSTGRES_USER }}
+          DB_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
         run: node dist/db/migrate.js
 
       - name: Run backend tests
