@@ -44,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build shared package
+        run: cd packages/shared && npm run build
+
       - name: Run ESLint
         run: npm run lint
 
@@ -132,6 +135,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build shared package
+        run: cd packages/shared && npm run build
+
       - name: Setup environment
         working-directory: ./packages/backend
         run: |
@@ -193,6 +199,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build shared package
+        run: cd packages/shared && npm run build
 
       - name: Run frontend tests
         working-directory: ./packages/frontend
