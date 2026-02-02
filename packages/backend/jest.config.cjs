@@ -23,7 +23,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@shared/(.*)$': '<rootDir>/../shared/src/$1',
+    '^@shared/(.*)$': '<rootDir>/../shared/dist/$1',
   },
   // Enable verbose output
   verbose: false,
