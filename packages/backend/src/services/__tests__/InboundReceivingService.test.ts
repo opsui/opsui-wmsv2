@@ -16,11 +16,10 @@ import {
 // Mock dependencies
 jest.mock('../../config/logger');
 jest.mock('../../db/client');
-jest.mock('nanoid');
+// Note: nanoid is already mocked in jest.setup.cjs
 
 const { logger } = require('../../config/logger');
 const { getPool } = require('../../db/client');
-const nanoid = require('nanoid');
 
 describe('InboundReceivingService', () => {
   let inboundReceivingService: InboundReceivingService;
@@ -33,10 +32,6 @@ describe('InboundReceivingService', () => {
   beforeEach(() => {
     inboundReceivingService = new InboundReceivingService();
     jest.clearAllMocks();
-    // Mock nanoid to return predictable values
-    nanoid.mockImplementation((length: number) => {
-      return 'a'.repeat(length);
-    });
   });
 
   afterEach(() => {

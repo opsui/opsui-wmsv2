@@ -46,3 +46,14 @@ jest.mock('redis', () => ({
     on: jest.fn(),
   })),
 }));
+
+// Mock nanoid - provide a mock function that can be overridden in tests
+// nanoid is an ES module that exports a function as both default and named export
+jest.mock('nanoid', () => {
+  const nanoidMock = jest.fn((length = 21) => 'a'.repeat(length));
+  return {
+    __esModule: true,
+    default: nanoidMock,
+    nanoid: nanoidMock,
+  };
+});
