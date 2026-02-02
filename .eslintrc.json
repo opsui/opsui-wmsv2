@@ -173,6 +173,7 @@
       },
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
+        "no-shadow": "off",
         "sonarjs/no-duplicated-branches": "off",
         "@typescript-eslint/no-unused-vars": "warn",
         "@typescript-eslint/no-unnecessary-condition": "off",

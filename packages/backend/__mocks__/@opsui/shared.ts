@@ -154,6 +154,20 @@ export enum CapacityUnit {
   PALLET = 'PALLET',
 }
 
+export enum LabelFormat {
+  PDF = 'PDF',
+  PNG = 'PNG',
+  ZPLII = 'ZPLII',
+  EPL2 = 'EPL2',
+}
+
+export enum NZCLabelFormat {
+  PNG_100X175 = 'LABEL_PNG_100X175',
+  PNG_100X150 = 'LABEL_PNG_100X150',
+  PDF_100X175 = 'LABEL_PDF_100X175',
+  PDF = 'LABEL_PDF',
+}
+
 // ============================================================================
 // MOCK FUNCTIONS
 // ============================================================================
