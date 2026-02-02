@@ -27,6 +27,12 @@ export enum OrderPriority {
   URGENT = 'URGENT',
 }
 
+export enum OrderItemStatus {
+  PENDING = 'PENDING',
+  PARTIAL_PICKED = 'PARTIAL_PICKED',
+  FULLY_PICKED = 'FULLY_PICKED',
+}
+
 export enum TaskStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -119,6 +125,15 @@ export enum DefectType {
   WRONG_ITEM = 'WRONG_ITEM',
 }
 
+export enum DispositionAction {
+  RETURN_TO_VENDOR = 'RETURN_TO_VENDOR',
+  SCRAP = 'SCRAP',
+  REWORK = 'REWORK',
+  QUARANTINE = 'QUARANTINE',
+  SELL_AS_IS = 'SELL_AS_IS',
+  DISCOUNT = 'DISCOUNT',
+}
+
 export enum PutawayStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -174,6 +189,86 @@ export enum CapacityUnit {
   CUBIC_M = 'CUBIC_M',
   UNITS = 'UNITS',
   PALLET = 'PALLET',
+}
+
+export enum CapacityRuleStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  WARNING = 'WARNING',
+  EXCEEDED = 'EXCEEDED',
+}
+
+export enum ExceptionType {
+  UNCLAIM = 'UNCLAIM',
+  UNDO_PICK = 'UNDO_PICK',
+  SHORT_PICK = 'SHORT_PICK',
+  SHORT_PICK_BACKORDER = 'SHORT_PICK_BACKORDER',
+  DAMAGE = 'DAMAGE',
+  DEFECTIVE = 'DEFECTIVE',
+  WRONG_ITEM = 'WRONG_ITEM',
+  SUBSTITUTION = 'SUBSTITUTION',
+  OUT_OF_STOCK = 'OUT_OF_STOCK',
+  BIN_MISMATCH = 'BIN_MISMATCH',
+}
+
+export enum ExceptionStatus {
+  OPEN = 'OPEN',
+  REVIEWING = 'REVIEWING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  RESOLVED = 'RESOLVED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum ExceptionResolution {
+  BACKORDER = 'BACKORDER',
+  SUBSTITUTE = 'SUBSTITUTE',
+  CANCEL_ITEM = 'CANCEL_ITEM',
+  CANCEL_ORDER = 'CANCEL_ORDER',
+  ADJUST_QUANTITY = 'ADJUST_QUANTITY',
+  RETURN_TO_STOCK = 'RETURN_TO_STOCK',
+  WRITE_OFF = 'WRITE_OFF',
+  TRANSFER_BIN = 'TRANSFER_BIN',
+  CONTACT_CUSTOMER = 'CONTACT_CUSTOMER',
+  MANUAL_OVERRIDE = 'MANUAL_OVERRIDE',
+}
+
+export enum AutomationTaskType {
+  CYCLE_COUNT = 'CYCLE_COUNT',
+  INVENTORY_CHECK = 'INVENTORY_CHECK',
+  PICK = 'PICK',
+  PUTAWAY = 'PUTAWAY',
+  REPLENISHMENT = 'REPLENISHMENT',
+}
+
+export enum AutomationTaskStatus {
+  PENDING = 'PENDING',
+  ASSIGNED = 'ASSIGNED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum UnitLevel {
+  PALLET = 'PALLET',
+  CASE = 'CASE',
+  EACH = 'EACH',
+}
+
+// Permission enum - common permissions
+export enum Permission {
+  VIEW_ORDERS = 'view_orders',
+  CREATE_ORDERS = 'create_orders',
+  EDIT_ORDERS = 'edit_orders',
+  DELETE_ORDERS = 'delete_orders',
+  ASSIGN_ORDERS = 'assign_orders',
+  VIEW_PICK_TASKS = 'view_pick_tasks',
+  CLAIM_PICK_TASK = 'claim_pick_task',
+  COMPLETE_PICK_TASK = 'complete_pick_task',
+  SKIP_PICK_TASK = 'skip_pick_task',
+  VIEW_INVENTORY = 'view_inventory',
+  ADJUST_INVENTORY = 'adjust_inventory',
 }
 
 export enum LabelFormat {
