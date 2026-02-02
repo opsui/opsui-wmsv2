@@ -105,6 +105,13 @@ export enum InspectionStatus {
   PARTIAL = 'PARTIAL',
 }
 
+export enum InspectionType {
+  INCOMING = 'INCOMING',
+  OUTGOING = 'OUTGOING',
+  INVENTORY = 'INVENTORY',
+  QUALITY_HOLD = 'QUALITY_HOLD',
+}
+
 export enum PutawayStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
