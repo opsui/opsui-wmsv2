@@ -6,7 +6,10 @@
     "strict": false,
     "strictNullChecks": false,
     "strictFunctionTypes": false,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "paths": {
+      "@shared/*": ["../shared/src/*"]
+    }
   },
-  "include": ["src/**/*.test.ts", "src/**/*.spec.ts"]
+  "include": ["src/**/*.test.ts", "src/**/*.spec.ts", "../shared/src/**/*.ts"]
 }

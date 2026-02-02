@@ -12,6 +12,9 @@ module.exports = {
       },
     ],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(?:.pnpm/)?@opsui/shared)',
+  ],
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/index.ts', '!src/db/**'],
   coverageThreshold: {
     global: {
@@ -23,7 +26,8 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@shared/(.*)$': '<rootDir>/../shared/dist/$1',
+    // Mock the entire @opsui/shared package for Jest
+    '^@opsui/shared$': '<rootDir>/__mocks__/@opsui/shared.ts',
   },
   // Enable verbose output
   verbose: false,
