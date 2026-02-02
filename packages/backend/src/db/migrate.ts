@@ -5,9 +5,13 @@
  */
 
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { query, closePool } from './client';
 import { logger } from '../config/logger';
+
+// ES module equivalent of __dirname
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ============================================================================
 // MIGRATION FUNCTIONS
