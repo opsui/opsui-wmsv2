@@ -988,7 +988,7 @@ describe('InboundReceivingService', () => {
       );
 
       expect(putawayInsertCall).toBeDefined();
-      expect(putawayInsertCall[1][5]).toBe('A-01-01'); // target_bin_location parameter
+      expect(putawayInsertCall[1][4]).toBe('A-01-01'); // target_bin_location parameter
     });
 
     it('should throw error when SKU not found for putaway task', async () => {

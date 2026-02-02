@@ -97,6 +97,14 @@ export enum QualityStatus {
   PARTIAL = 'PARTIAL',
 }
 
+export enum InspectionStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  PASSED = 'PASSED',
+  FAILED = 'FAILED',
+  PARTIAL = 'PARTIAL',
+}
+
 export enum PutawayStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
