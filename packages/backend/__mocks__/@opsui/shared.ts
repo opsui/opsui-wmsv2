@@ -30,6 +30,3 @@ export const recordWorkflowAction = jest.fn(() => ({ success: true }));
 // Mock invariants
 export const checkInventoryInvariant = jest.fn(() => ({ holds: true, violation: undefined }));
 export const checkOrderInvariant = jest.fn(() => ({ holds: true, violation: undefined }));
-
-// Re-export jest mock functions
-export { jest };
