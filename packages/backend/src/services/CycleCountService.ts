@@ -1325,7 +1325,7 @@ export class CycleCountService {
       }
 
       // Update entry
-      await client.query(
+      const result = await client.query(
         `UPDATE cycle_count_entries
          SET variance_status = $1,
              reviewed_by = $2,
@@ -1336,7 +1336,7 @@ export class CycleCountService {
         [dto.status, dto.reviewedBy, adjustmentTransactionId || null, dto.entryId]
       );
 
-      const result = await client.query('COMMIT');
+      await client.query('COMMIT');
 
       logger.info('Variance status updated', {
         entryId: dto.entryId,

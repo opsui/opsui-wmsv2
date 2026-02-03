@@ -309,7 +309,7 @@ export async function getPerformanceMetrics(duration: string = '24h'): Promise<a
       '30d': '1 day',
     };
 
-    // @ts-expect-error - Variable kept for future use
+    // @ts-ignore - Variable kept for future use
     const _bucketSize = intervalMap[duration] || intervalMap['24h'];
 
     const result = await pool.query(

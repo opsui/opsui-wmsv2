@@ -95,8 +95,12 @@ jest.mock('./src/db/client', () => ({
 beforeEach(() => {
   nanoidCounter = 1; // Reset nanoid counter
   mockPool.query = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
-  mockPool.connect = jest.fn().mockResolvedValue({
+  // Create fresh mock client for each test
+  const mockClient = {
     query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
     release: jest.fn(),
-  });
+  };
+  mockPool.connect = jest.fn().mockResolvedValue(mockClient);
+  // Make mock client accessible globally for tests that use pool.connect()
+  global.mockClient = mockClient;
 });

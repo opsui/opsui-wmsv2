@@ -559,10 +559,43 @@ describe('CycleCountService', () => {
         notes: 'Reconciled',
       };
 
-      const mockEntries = [
-        { entry_id: 'CCE-001', variance: 5 },
-        { entry_id: 'CCE-002', variance: -3 },
-      ];
+      const mockEntry1 = {
+        entry_id: 'CCE-001',
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '100',
+        counted_quantity: '105',
+        variance: '5',
+        variance_percent: '5',
+        variance_status: 'PENDING',
+        counted_at: '2024-01-15',
+        counted_by: 'user-123',
+        reviewed_by: null,
+        reviewed_at: null,
+        adjustment_transaction_id: null,
+        notes: null,
+      };
+
+      const mockEntry2 = {
+        entry_id: 'CCE-002',
+        plan_id: 'CCP-001',
+        sku: 'SKU-002',
+        bin_location: 'A-01-02',
+        system_quantity: '50',
+        counted_quantity: '47',
+        variance: '-3',
+        variance_percent: '6',
+        variance_status: 'PENDING',
+        counted_at: '2024-01-15',
+        counted_by: 'user-123',
+        reviewed_by: null,
+        reviewed_at: null,
+        adjustment_transaction_id: null,
+        notes: null,
+      };
+
+      const mockEntries = [mockEntry1, mockEntry2];
 
       const mockPlan = {
         plan_id: 'CCP-001',
@@ -586,9 +619,15 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [] }) // UPDATE status
         .mockResolvedValueOnce({ rows: mockEntries }) // get pending
-        .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment for entry 1
+        .mockResolvedValueOnce({ rows: [mockEntry1] }) // SELECT CCE-001 for processVarianceAdjustment
+        .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT for entry 1
+        .mockResolvedValueOnce({ rows: [{ quantity: mockEntry1.system_quantity }] }) // adjustInventoryUp SELECT existing
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryUp UPDATE
         .mockResolvedValueOnce({ rows: [] }) // UPDATE entry 1
-        .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment for entry 2
+        .mockResolvedValueOnce({ rows: [mockEntry2] }) // SELECT CCE-002 for processVarianceAdjustment
+        .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT for entry 2
+        .mockResolvedValueOnce({ rows: [{ quantity: mockEntry2.system_quantity }] }) // adjustInventoryDown SELECT existing
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryDown UPDATE
         .mockResolvedValueOnce({ rows: [] }) // UPDATE entry 2
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
@@ -613,7 +652,7 @@ describe('CycleCountService', () => {
         planId: 'CCP-001',
         sku: 'SKU-001',
         binLocation: 'A-01-01',
-        countedQuantity: 12,
+        countedQuantity: 11,
         countedBy: 'user-123',
       };
 
@@ -630,9 +669,9 @@ describe('CycleCountService', () => {
         sku: 'SKU-001',
         bin_location: 'A-01-01',
         system_quantity: '10',
-        counted_quantity: '12',
-        variance: '2',
-        variance_percent: '20',
+        counted_quantity: '11',
+        variance: '1',
+        variance_percent: '10',
         variance_status: 'AUTO_ADJUSTED',
         counted_at: new Date(),
         counted_by: 'user-123',
@@ -646,8 +685,9 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockInventory }) // get system quantity
         .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
-        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // createAdjustmentTransaction
-        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryUp
+        .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT
+        .mockResolvedValueOnce({ rows: mockInventory }) // adjustInventoryUp SELECT existing
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryUp UPDATE
         .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
@@ -739,8 +779,13 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ ...mockEntry, variance_status: 'PENDING', adjustment_transaction_id: null }],
-        }) // get entry
-        .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
+        }) // get entry (for updateVarianceStatus)
+        .mockResolvedValueOnce({
+          rows: [{ ...mockEntry, variance_status: 'PENDING', adjustment_transaction_id: null }],
+        }) // SELECT entry (for processVarianceAdjustment)
+        .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT
+        .mockResolvedValueOnce({ rows: [{ quantity: '10' }] }) // adjustInventoryUp SELECT existing
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryUp UPDATE
         .mockResolvedValueOnce({ rows: [mockEntry] }) // UPDATE entry
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
