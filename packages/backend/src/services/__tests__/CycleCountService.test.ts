@@ -626,8 +626,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // UPDATE entry 1
         .mockResolvedValueOnce({ rows: [mockEntry2] }) // SELECT CCE-002 for processVarianceAdjustment
         .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT for entry 2
-        .mockResolvedValueOnce({ rows: [{ quantity: mockEntry2.system_quantity }] }) // adjustInventoryDown SELECT existing
-        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryDown UPDATE
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryDown UPDATE (no SELECT)
         .mockResolvedValueOnce({ rows: [] }) // UPDATE entry 2
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
@@ -652,7 +651,7 @@ describe('CycleCountService', () => {
         planId: 'CCP-001',
         sku: 'SKU-001',
         binLocation: 'A-01-01',
-        countedQuantity: 11,
+        countedQuantity: 10.5,
         countedBy: 'user-123',
       };
 
@@ -669,9 +668,9 @@ describe('CycleCountService', () => {
         sku: 'SKU-001',
         bin_location: 'A-01-01',
         system_quantity: '10',
-        counted_quantity: '11',
-        variance: '1',
-        variance_percent: '10',
+        counted_quantity: '10.5',
+        variance: '0.5',
+        variance_percent: '5',
         variance_status: 'AUTO_ADJUSTED',
         counted_at: new Date(),
         counted_by: 'user-123',
@@ -892,12 +891,12 @@ describe('CycleCountService', () => {
         counted_quantity: '10',
         variance: '0',
         variance_percent: '0',
-        variance_status: 'PENDING',
+        variance_status: 'AUTO_ADJUSTED',
         counted_at: new Date(),
         counted_by: 'user-123',
         reviewed_by: null,
         reviewed_at: null,
-        adjustment_transaction_id: null,
+        adjustment_transaction_id: 'TXN-001',
         notes: null,
       };
 
@@ -905,7 +904,8 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockInventory }) // get system quantity
         .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
-        .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
+        .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT (variance=0 still creates transaction)
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry (no adjustInventory since variance=0)
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.createCycleCountEntry(dto);
@@ -936,13 +936,13 @@ describe('CycleCountService', () => {
         system_quantity: '0',
         counted_quantity: '5',
         variance: '5',
-        variance_percent: '100',
-        variance_status: 'PENDING',
+        variance_percent: '0', // variancePercent is 0 when systemQuantity is 0
+        variance_status: 'AUTO_ADJUSTED',
         counted_at: new Date(),
         counted_by: 'user-123',
         reviewed_by: null,
         reviewed_at: null,
-        adjustment_transaction_id: null,
+        adjustment_transaction_id: 'TXN-001',
         notes: null,
       };
 
@@ -950,6 +950,9 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [] }) // No inventory found
         .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
+        .mockResolvedValueOnce({ rows: [] }) // createAdjustmentTransaction INSERT (variance > 0, triggers auto-adjustment)
+        .mockResolvedValueOnce({ rows: [{ quantity: '0' }] }) // adjustInventoryUp SELECT existing (no inventory, will INSERT)
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryUp INSERT new inventory unit
         .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
