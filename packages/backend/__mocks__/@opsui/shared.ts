@@ -285,6 +285,22 @@ export enum NZCLabelFormat {
   PDF = 'LABEL_PDF',
 }
 
+// User type for authentication and user management
+export interface User {
+  userId: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  activeRole?: UserRole | null;
+  additionalRoles?: UserRole[];
+  active: boolean;
+  createdAt: Date;
+  lastLoginAt?: Date;
+  deletedAt?: Date;
+  password?: string; // For password hashing in tests
+  currentTaskId?: string;
+}
+
 // ============================================================================
 // MOCK FUNCTIONS
 // ============================================================================
