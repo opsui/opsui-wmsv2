@@ -220,7 +220,9 @@ class RouteOptimizationService {
       });
 
       // Determine traversal direction based on entry point
-      const entryLoc = this.parseLocation(currentLocation);
+      const entryLoc = this.parseLocation(
+        currentLocation === 'DEPOT' ? 'A-01-01' : currentLocation
+      );
       const entryFromFront = entryLoc.aisle <= aisle;
 
       // If entering from front, go low to high; else high to low

@@ -457,7 +457,7 @@ class SlottingOptimizationService {
    * Generate slotting recommendation
    */
   private generateRecommendation(
-    // @ts-expect-error
+    // @ts-ignore - Unused private method parameter kept for API completeness
     sku: string,
     abcClass: ABCClass,
     velocity: number,
@@ -472,7 +472,7 @@ class SlottingOptimizationService {
           : this.config.zoneC;
 
     // Check if already in appropriate zone
-    // @ts-expect-error
+    // @ts-ignore - Unused variable kept for API completeness
     const currentZone = currentLocation.split('-')[0];
 
     const isInAppropriateZone = appropriateZones.some(zone => currentLocation.startsWith(zone));
