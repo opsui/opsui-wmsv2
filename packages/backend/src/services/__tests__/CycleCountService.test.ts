@@ -223,7 +223,8 @@ describe('CycleCountService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockPlan] }) // get plan
-        .mockResolvedValueOnce({ rows: [] }); // UPDATE
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getCycleCountPlan call
       global.mockPool.query
@@ -250,7 +251,8 @@ describe('CycleCountService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: [mockPlan] });
+        .mockResolvedValueOnce({ rows: [mockPlan] })
+        .mockResolvedValueOnce({ rows: [] }); // ROLLBACK (from catch block)
 
       await expect(service.cancelCycleCountPlan(dto)).rejects.toThrow(
         'Cannot cancel a COMPLETED cycle count'
