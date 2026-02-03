@@ -47,10 +47,14 @@ jest.mock('redis', () => ({
   })),
 }));
 
-// Mock nanoid - provide a mock function that can be overridden in tests
+// Mock nanoid - provide predictable IDs for tests
 // nanoid is an ES module that exports a function as both default and named export
+let nanoidCounter = 1;
 jest.mock('nanoid', () => {
-  const nanoidMock = jest.fn((length = 21) => 'a'.repeat(length));
+  const nanoidMock = jest.fn((length = 21) => {
+    const id = String(nanoidCounter++).padStart(length, '0').slice(0, length);
+    return id;
+  });
   return {
     __esModule: true,
     default: nanoidMock,
@@ -89,6 +93,7 @@ jest.mock('./src/db/client', () => ({
 
 // Reset mock pool before each test for clean state
 beforeEach(() => {
+  nanoidCounter = 1; // Reset nanoid counter
   mockPool.query = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
   mockPool.connect = jest.fn().mockResolvedValue({
     query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
