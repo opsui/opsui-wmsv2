@@ -201,7 +201,7 @@ describe('Shipping Routes', () => {
         carrierId: 'carrier-1',
       };
 
-      (shippingService.getShipmentById as jest.Mock).mockResolvedValue(mockShipment);
+      (shippingService.getShipment as jest.Mock).mockResolvedValue(mockShipment);
 
       const response = await request(app)
         .get('/api/shipping/shipments/SHIP-001')
@@ -213,7 +213,7 @@ describe('Shipping Routes', () => {
     });
 
     it('should return 404 when shipment not found', async () => {
-      (shippingService.getShipmentById as jest.Mock).mockRejectedValue(
+      (shippingService.getShipment as jest.Mock).mockRejectedValue(
         new Error('Shipment SHIP-NONEXISTENT not found')
       );
 
@@ -222,7 +222,7 @@ describe('Shipping Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
-      expect(shippingService.getShipmentById).toHaveBeenCalledWith('SHIP-NONEXISTENT');
+      expect(shippingService.getShipment).toHaveBeenCalledWith('SHIP-NONEXISTENT');
     });
   });
 

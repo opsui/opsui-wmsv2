@@ -325,7 +325,7 @@ describe('ShippingService', () => {
       expect(result.orderId).toBe('ORD-001');
       expect(result.trackingNumber).toBe('TRK123456');
       expect(result.labels).toHaveLength(1);
-      expect(result.labels[0].labelId).toBe('LBL-001');
+      expect(result.labels[0].labelId).toBe('LBL-0000000001');
     });
 
     it('should throw error when shipment not found', async () => {
@@ -641,11 +641,11 @@ describe('ShippingService', () => {
 
       const result = await service.createShippingLabel(dto);
 
-      expect(result.labelId).toBe('LBL-001');
+      expect(result.labelId).toBe('LBL-0000000001');
       expect(result.packageNumber).toBe(1);
       expect(result.packageWeight).toBe(5.25);
       expect(logger.info).toHaveBeenCalledWith('Shipping label created', {
-        labelId: 'LBL-001',
+        labelId: 'LBL-0000000001',
         shipmentId: 'SHP-001',
       });
     });

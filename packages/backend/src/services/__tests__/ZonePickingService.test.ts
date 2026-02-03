@@ -30,10 +30,10 @@ describe('ZonePickingService', () => {
 
     (getAuditService as jest.Mock).mockReturnValue(mockAuditService);
 
-    // Reset global mockPool.query and mockPool.connect
-    global.mockPool.query = jest.fn();
+    // Reset global mockPool.query and mockPool.connect with default return values
+    global.mockPool.query = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
     global.mockPool.connect = jest.fn().mockResolvedValue({
-      query: jest.fn(),
+      query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
       release: jest.fn(),
     });
 
