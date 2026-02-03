@@ -538,7 +538,7 @@ describe('Orders Routes', () => {
         next();
       });
 
-      await request(app)
+      const response = await request(app)
         .get('/api/orders')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);

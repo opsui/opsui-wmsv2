@@ -17,7 +17,7 @@ import {
   PickTask,
   TaskStatus,
   InventoryUnit,
-} from '@opsui/shared/types';
+} from '@opsui/shared';
 
 /**
  * Factory for creating test users

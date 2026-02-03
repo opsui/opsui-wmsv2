@@ -171,7 +171,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      (authService.getUserById as jest.Mock).mockResolvedValue(mockUser);
+      (userRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
 
       const response = await request(app)
         .get('/api/users/user-001')
@@ -183,7 +183,7 @@ describe('Users Routes', () => {
     });
 
     it('should return 404 when user not found', async () => {
-      (authService.getUserById as jest.Mock).mockRejectedValue(
+      (userRepo.getUserById as jest.Mock).mockRejectedValue(
         new Error('User user-nonexistent not found')
       );
 
@@ -192,7 +192,7 @@ describe('Users Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
-      expect(authService.getUserById).toHaveBeenCalledWith('user-nonexistent');
+      expect(userRepo.getUserById).toHaveBeenCalledWith('user-nonexistent');
     });
   });
 
@@ -217,7 +217,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      (authService.createUser as jest.Mock).mockResolvedValue(mockCreatedUser);
+      (userRepo.createUser as jest.Mock).mockResolvedValue(mockCreatedUser);
 
       const response = await request(app)
         .post('/api/users')
@@ -227,7 +227,7 @@ describe('Users Routes', () => {
 
       expect(response.body.userId).toBe('user-new');
       expect(response.body.email).toBe('newuser@example.com');
-      expect(authService.createUser).toHaveBeenCalledWith(newUser);
+      expect(userRepo.createUser).toHaveBeenCalledWith(newUser);
     });
 
     it('should return 400 when email is missing', async () => {
@@ -294,7 +294,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      (authService.updateUser as jest.Mock).mockResolvedValue(mockUpdatedUser);
+      (userRepo.updateUser as jest.Mock).mockResolvedValue(mockUpdatedUser);
 
       const response = await request(app)
         .put('/api/users/user-001')
@@ -334,7 +334,7 @@ describe('Users Routes', () => {
         active: false,
       };
 
-      (authService.deactivateUser as jest.Mock).mockResolvedValue(mockDeactivatedUser);
+      (userRepo.deactivateUser as jest.Mock).mockResolvedValue(mockDeactivatedUser);
 
       const response = await request(app)
         .delete('/api/users/user-001')
@@ -345,7 +345,7 @@ describe('Users Routes', () => {
     });
 
     it('should return 400 when trying to deactivate self', async () => {
-      (authService.deactivateUser as jest.Mock).mockRejectedValue(
+      (userRepo.deactivateUser as jest.Mock).mockRejectedValue(
         new Error('Cannot deactivate your own account')
       );
 
@@ -354,7 +354,7 @@ describe('Users Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
-      expect(authService.deactivateUser).toHaveBeenCalledWith('user-123');
+      expect(userRepo.deactivateUser).toHaveBeenCalledWith('user-123');
     });
   });
 
@@ -372,7 +372,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      (authService.activateUser as jest.Mock).mockResolvedValue(mockActivatedUser);
+      (userRepo.activateUser as jest.Mock).mockResolvedValue(mockActivatedUser);
 
       const response = await request(app)
         .post('/api/users/user-001/activate')
@@ -401,7 +401,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      (authService.resetPassword as jest.Mock).mockResolvedValue(mockUpdatedUser);
+      (userRepo.resetPassword as jest.Mock).mockResolvedValue(mockUpdatedUser);
 
       const response = await request(app)
         .post('/api/users/user-001/password')
@@ -409,7 +409,7 @@ describe('Users Routes', () => {
         .send(passwordData)
         .expect(200);
 
-      expect(authService.resetPassword).toHaveBeenCalledWith('user-001', 'NewSecurePass123!');
+      expect(userRepo.resetPassword).toHaveBeenCalledWith('user-001', 'NewSecurePass123!');
     });
 
     it('should return 400 when password is missing', async () => {
@@ -451,7 +451,7 @@ describe('Users Routes', () => {
         { role: UserRole.ADMIN, description: 'System administrator' },
       ];
 
-      (authService.getAvailableRoles as jest.Mock).mockResolvedValue(mockRoles);
+      (userRepo.getAvailableRoles as jest.Mock).mockResolvedValue(mockRoles);
 
       const response = await request(app)
         .get('/api/users/roles')
@@ -481,7 +481,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      (authService.updateUserRole as jest.Mock).mockResolvedValue(mockUpdatedUser);
+      (userRepo.updateUserRole as jest.Mock).mockResolvedValue(mockUpdatedUser);
 
       const response = await request(app)
         .post('/api/users/user-001/role')
