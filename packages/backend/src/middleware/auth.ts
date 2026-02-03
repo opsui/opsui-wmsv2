@@ -25,17 +25,10 @@ export interface JWTPayload {
   exp?: number;
 }
 
-// Override Express Request type globally to use JWTPayload instead of Passport's User
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
-  }
+// AuthenticatedRequest extends Request with typed user property
+export interface AuthenticatedRequest extends Request {
+  user?: JWTPayload;
 }
-
-// AuthenticatedRequest is just an alias for Request since we've overridden the user property
-export type AuthenticatedRequest = Request;
 
 // ============================================================================
 // AUTHENTICATION MIDDLEWARE

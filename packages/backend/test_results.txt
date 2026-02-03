@@ -1,0 +1,2460 @@
+
+> @opsui/backend@1.0.0 test
+> jest --ci --coverage
+
+PASS src/services/__tests__/MLPredictionService.test.ts (9.518 s)
+FAIL src/services/__tests__/QualityControlService.test.ts (10.376 s)
+  ● QualityControlService › updateInspectionStatus › should update inspection to PASSED status
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"type": "QUALITY_APPROVED"}
+    Received: {"data": {"inspectionId": "QI-001", "quantityFailed": 5, "quantityPassed": 95, "sku": "SKU-001", "status": "PASSED"}, "message": "Inspection QI-001 for SKU-001 - PASSED", "priority": "normal", "title": "Quality Inspection Approved", "type": "quality_approved", "userId": "admin-456"}
+
+    Number of calls: 1
+
+    [0m [90m 392 |[39m
+     [90m 393 |[39m       expect(result[33m.[39mstatus)[33m.[39mtoBe([33mInspectionStatus[39m[33m.[39m[33mPASSED[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 394 |[39m       expect(notifyUser)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 395 |[39m         expect[33m.[39mobjectContaining({
+     [90m 396 |[39m           type[33m:[39m [32m'QUALITY_APPROVED'[39m[33m,[39m
+     [90m 397 |[39m         })[0m
+
+      at Object.<anonymous> (src/services/__tests__/QualityControlService.test.ts:394:26)
+
+FAIL src/services/__tests__/RouteOptimizationService.test.ts (10.366 s)
+  ● RouteOptimizationService › optimizeRoute › should optimize route with default algorithm
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 5
+    Received length: 4
+    Received array:  [{"binLocation": "A-05-03", "distance": 18, "estimatedTime": 12872.142857142857, "fromLocation": "DEPOT", "orderId": "ORD-001", "priority": "NORMAL", "quantity": 10, "sequence": 1, "sku": "SKU-001", "taskId": "task-1", "toLocation": "A-05-03"}, {"binLocation": "B-03-05", "distance": 18, "estimatedTime": 12872.142857142857, "fromLocation": "A-05-03", "orderId": "ORD-001", "priority": "NORMAL", "quantity": 20, "sequence": 2, "sku": "SKU-003", "taskId": "task-3", "toLocation": "B-03-05"}, {"binLocation": "C-08-06", "distance": 43, "estimatedTime": 30729.285714285714, "fromLocation": "B-03-05", "orderId": "ORD-001", "priority": "NORMAL", "quantity": 8, "sequence": 3, "sku": "SKU-005", "taskId": "task-5", "toLocation": "C-08-06"}, {"binLocation": "A-12-08", "distance": 37, "estimatedTime": 26443.57142857143, "fromLocation": "C-08-06", "orderId": "ORD-001", "priority": "HIGH", "quantity": 5, "sequence": 4, "sku": "SKU-002", "taskId": "task-2", "toLocation": "A-12-08"}]
+
+    [0m [90m 68 |[39m
+     [90m 69 |[39m       expect(result)[33m.[39mtoBeDefined()[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m       expect(result[33m.[39mtasks)[33m.[39mtoHaveLength(mockTasks[33m.[39mlength)[33m;[39m
+     [90m    |[39m                            [31m[1m^[22m[39m
+     [90m 71 |[39m       expect(result[33m.[39mtotalDistance)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 72 |[39m       expect(result[33m.[39mestimatedTime)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 73 |[39m       expect(result[33m.[39mwaypoints)[33m.[39mtoBeDefined()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:70:28)
+
+  ● RouteOptimizationService › optimizeRoute › should use aisle-by-aisle when specified
+
+    Invalid location format: DEPOT
+
+    [0m [90m 409 |[39m
+     [90m 410 |[39m     [36mif[39m ([33m![39mmatch) {
+    [31m[1m>[22m[39m[90m 411 |[39m       [36mthrow[39m [36mnew[39m [33mError[39m([32m`Invalid location format: ${location}`[39m)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 412 |[39m     }
+     [90m 413 |[39m
+     [90m 414 |[39m     [36mreturn[39m {[0m
+
+      at RouteOptimizationService.parseLocation (src/services/RouteOptimizationService.ts:411:13)
+      at RouteOptimizationService.parseLocation [as solveAisleByAisle] (src/services/RouteOptimizationService.ts:223:29)
+      at RouteOptimizationService.solveAisleByAisle [as optimizeRoute] (src/services/RouteOptimizationService.ts:121:22)
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:93:47)
+
+  ● RouteOptimizationService › optimizeRoute › should handle single task
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 110 |[39m       [36mconst[39m result [33m=[39m routeOptimizationService[33m.[39moptimizeRoute(singleTask[33m,[39m [32m'A-01-01'[39m)[33m;[39m
+     [90m 111 |[39m
+    [31m[1m>[22m[39m[90m 112 |[39m       expect(result[33m.[39mtasks)[33m.[39mtoHaveLength([35m1[39m)[33m;[39m
+     [90m     |[39m                            [31m[1m^[22m[39m
+     [90m 113 |[39m       expect(result[33m.[39mtasks[[35m0[39m][33m.[39mtaskId)[33m.[39mtoBe([32m'task-1'[39m)[33m;[39m
+     [90m 114 |[39m       expect(result[33m.[39mtotalDistance)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m 115 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:112:28)
+
+  ● RouteOptimizationService › OptimizedPickTask properties › should preserve original task properties
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "task-2"
+    Received: "task-3"
+
+    [0m [90m 166 |[39m
+     [90m 167 |[39m       result[33m.[39mtasks[33m.[39mforEach((task[33m,[39m index) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 168 |[39m         expect(task[33m.[39mtaskId)[33m.[39mtoBe(mockTasks[index][33m.[39mtaskId)[33m;[39m
+     [90m     |[39m                             [31m[1m^[22m[39m
+     [90m 169 |[39m         expect(task[33m.[39morderId)[33m.[39mtoBe(mockTasks[index][33m.[39morderId)[33m;[39m
+     [90m 170 |[39m         expect(task[33m.[39msku)[33m.[39mtoBe(mockTasks[index][33m.[39msku)[33m;[39m
+     [90m 171 |[39m         expect(task[33m.[39mquantity)[33m.[39mtoBe(mockTasks[index][33m.[39mquantity)[33m;[39m[0m
+
+      at src/services/__tests__/RouteOptimizationService.test.ts:168:29
+          at Array.forEach (<anonymous>)
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:167:20)
+
+  ● RouteOptimizationService › Distance calculation › should calculate distance between adjacent locations
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 249 |[39m
+     [90m 250 |[39m       [36mconst[39m result [33m=[39m routeOptimizationService[33m.[39moptimizeRoute(tasks[33m,[39m [32m'A-01-01'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 251 |[39m       expect(result[33m.[39mtotalDistance)[33m.[39mtoBeGreaterThan([35m0[39m)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 252 |[39m       expect(result[33m.[39mtotalDistance)[33m.[39mtoBeLessThan([35m100[39m)[33m;[39m [90m// Should be small for adjacent locations[39m
+     [90m 253 |[39m     })[33m;[39m
+     [90m 254 |[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:251:36)
+
+  ● RouteOptimizationService › Distance calculation › should calculate greater distance for locations in different zones
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+    [0m [90m 298 |[39m       )[33m;[39m
+     [90m 299 |[39m
+    [31m[1m>[22m[39m[90m 300 |[39m       expect(differentZoneResult[33m.[39mtotalDistance)[33m.[39mtoBeGreaterThan(sameZoneResult[33m.[39mtotalDistance)[33m;[39m
+     [90m     |[39m                                                 [31m[1m^[22m[39m
+     [90m 301 |[39m     })[33m;[39m
+     [90m 302 |[39m   })[33m;[39m
+     [90m 303 |[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:300:49)
+
+  ● RouteOptimizationService › Time estimation › should estimate time based on distance and picks
+
+    expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 202571.42857142858
+    Received:    82917.14285714286
+
+    [0m [90m 316 |[39m       [36mconst[39m pickTime [33m=[39m mockTasks[33m.[39mlength [33m*[39m [35m15000[39m[33m;[39m [90m// 15s per pick in ms[39m
+     [90m 317 |[39m
+    [31m[1m>[22m[39m[90m 318 |[39m       expect(result[33m.[39mestimatedTime)[33m.[39mtoBeGreaterThanOrEqual(travelTime [33m+[39m pickTime [33m-[39m [35m1000[39m)[33m;[39m
+     [90m     |[39m                                    [31m[1m^[22m[39m
+     [90m 319 |[39m       expect(result[33m.[39mestimatedTime)[33m.[39mtoBeLessThanOrEqual(travelTime [33m+[39m pickTime [33m+[39m [35m1000[39m)[33m;[39m
+     [90m 320 |[39m     })[33m;[39m
+     [90m 321 |[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:318:36)
+
+  ● RouteOptimizationService › Error handling › should handle DEPOT as start location
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "DEPOT"
+    Received: "B-15-12"
+
+    [0m [90m 402 |[39m
+     [90m 403 |[39m       expect(result[33m.[39mwaypoints[[35m0[39m][33m.[39mlocation)[33m.[39mtoBe([32m'DEPOT'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 404 |[39m       expect(result[33m.[39mwaypoints[result[33m.[39mwaypoints[33m.[39mlength [33m-[39m [35m1[39m][33m.[39mlocation)[33m.[39mtoBe([32m'DEPOT'[39m)[33m;[39m
+     [90m     |[39m                                                                      [31m[1m^[22m[39m
+     [90m 405 |[39m     })[33m;[39m
+     [90m 406 |[39m
+     [90m 407 |[39m     it([32m'should handle custom start location'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:404:70)
+
+  ● RouteOptimizationService › Error handling › should handle custom start location
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "A-05-05"
+    Received: "B-15-12"
+
+    [0m [90m 409 |[39m
+     [90m 410 |[39m       expect(result[33m.[39mwaypoints[[35m0[39m][33m.[39mlocation)[33m.[39mtoBe([32m'A-05-05'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 411 |[39m       expect(result[33m.[39mwaypoints[result[33m.[39mwaypoints[33m.[39mlength [33m-[39m [35m1[39m][33m.[39mlocation)[33m.[39mtoBe([32m'A-05-05'[39m)[33m;[39m
+     [90m     |[39m                                                                      [31m[1m^[22m[39m
+     [90m 412 |[39m     })[33m;[39m
+     [90m 413 |[39m   })[33m;[39m
+     [90m 414 |[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:411:70)
+
+  ● RouteOptimizationService › Algorithm comparison › should produce different routes with different algorithms
+
+    Invalid location format: DEPOT
+
+    [0m [90m 409 |[39m
+     [90m 410 |[39m     [36mif[39m ([33m![39mmatch) {
+    [31m[1m>[22m[39m[90m 411 |[39m       [36mthrow[39m [36mnew[39m [33mError[39m([32m`Invalid location format: ${location}`[39m)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 412 |[39m     }
+     [90m 413 |[39m
+     [90m 414 |[39m     [36mreturn[39m {[0m
+
+      at RouteOptimizationService.parseLocation (src/services/RouteOptimizationService.ts:411:13)
+      at RouteOptimizationService.parseLocation [as solveAisleByAisle] (src/services/RouteOptimizationService.ts:223:29)
+      at RouteOptimizationService.solveAisleByAisle [as optimizeRoute] (src/services/RouteOptimizationService.ts:121:22)
+      at Object.<anonymous> (src/services/__tests__/RouteOptimizationService.test.ts:468:51)
+
+PASS src/services/__tests__/StockControlService.test.ts (10.472 s)
+FAIL src/services/__tests__/ShippingService.test.ts (10.677 s)
+  ● ShippingService › getShipment › should return shipment with labels
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "LBL-0000000001"
+    Received: "LBL-001"
+
+    [0m [90m 326 |[39m       expect(result[33m.[39mtrackingNumber)[33m.[39mtoBe([32m'TRK123456'[39m)[33m;[39m
+     [90m 327 |[39m       expect(result[33m.[39mlabels)[33m.[39mtoHaveLength([35m1[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 328 |[39m       expect(result[33m.[39mlabels[[35m0[39m][33m.[39mlabelId)[33m.[39mtoBe([32m'LBL-0000000001'[39m)[33m;[39m
+     [90m     |[39m                                        [31m[1m^[22m[39m
+     [90m 329 |[39m     })[33m;[39m
+     [90m 330 |[39m
+     [90m 331 |[39m     it([32m'should throw error when shipment not found'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/ShippingService.test.ts:328:40)
+
+  ● ShippingService › createShippingLabel › should create shipping label successfully
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "LBL-0000000001"
+    Received: "LBL-001"
+
+    [0m [90m 642 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mcreateShippingLabel(dto)[33m;[39m
+     [90m 643 |[39m
+    [31m[1m>[22m[39m[90m 644 |[39m       expect(result[33m.[39mlabelId)[33m.[39mtoBe([32m'LBL-0000000001'[39m)[33m;[39m
+     [90m     |[39m                              [31m[1m^[22m[39m
+     [90m 645 |[39m       expect(result[33m.[39mpackageNumber)[33m.[39mtoBe([35m1[39m)[33m;[39m
+     [90m 646 |[39m       expect(result[33m.[39mpackageWeight)[33m.[39mtoBe([35m5.25[39m)[33m;[39m
+     [90m 647 |[39m       expect(logger[33m.[39minfo)[33m.[39mtoHaveBeenCalledWith([32m'Shipping label created'[39m[33m,[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/ShippingService.test.ts:644:30)
+
+PASS src/services/__tests__/InboundReceivingService.test.ts (10.9 s)
+FAIL src/routes/__tests__/inventory.test.ts
+  ● Test suite failed to run
+
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m76[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m76[0m       (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
+    [7m  [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m99[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m99[0m       expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
+    [7m  [0m [91m                              ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m108[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m108[0m       (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m120[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m120[0m       expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
+    [7m   [0m [91m                              ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m128[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m128[0m       (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m138[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m138[0m       expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
+    [7m   [0m [91m                              ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m146[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m146[0m       (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m158[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m158[0m       expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
+    [7m   [0m [91m                              ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m277[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'transferInventory' does not exist on type 'InventoryService'.
+
+    [7m277[0m       (inventoryService.transferInventory as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m292[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'transferInventory' does not exist on type 'InventoryService'.
+
+    [7m292[0m       expect(inventoryService.transferInventory).toHaveBeenCalledWith(transfer);
+    [7m   [0m [91m                              ~~~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m337[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getTransactions' does not exist on type 'InventoryService'.
+
+    [7m337[0m       (inventoryService.getTransactions as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m354[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getTransactions' does not exist on type 'InventoryService'.
+
+    [7m354[0m       (inventoryService.getTransactions as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m364[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'getTransactions' does not exist on type 'InventoryService'.
+
+    [7m364[0m       expect(inventoryService.getTransactions).toHaveBeenCalledWith(
+    [7m   [0m [91m                              ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m372[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getTransactions' does not exist on type 'InventoryService'.
+
+    [7m372[0m       (inventoryService.getTransactions as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m382[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'getTransactions' does not exist on type 'InventoryService'.
+
+    [7m382[0m       expect(inventoryService.getTransactions).toHaveBeenCalledWith(
+    [7m   [0m [91m                              ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m404[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'recordCount' does not exist on type 'InventoryService'.
+
+    [7m404[0m       (inventoryService.recordCount as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m453[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m453[0m       (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inventory.test.ts[0m:[93m480[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'getAllInventory' does not exist on type 'InventoryService'.
+
+    [7m480[0m       (inventoryService.getAllInventory as jest.Mock).mockRejectedValue(
+    [7m   [0m [91m                        ~~~~~~~~~~~~~~~[0m
+
+FAIL src/services/__tests__/CycleCountService.test.ts (11.297 s)
+  ● CycleCountService › cancelCycleCountPlan › should cancel a scheduled cycle count plan
+
+    Cycle count plan CCP-001 not found
+
+    [0m [90m 462 |[39m
+     [90m 463 |[39m     [36mif[39m (result[33m.[39mrows[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 464 |[39m       [36mthrow[39m [36mnew[39m [33mError[39m([32m`Cycle count plan ${planId} not found`[39m)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 465 |[39m     }
+     [90m 466 |[39m
+     [90m 467 |[39m     [36mconst[39m cycleCountPlan [33m=[39m [36mthis[39m[33m.[39mmapRowToCycleCountPlan(result[33m.[39mrows[[35m0[39m])[33m;[39m[0m
+
+      at CycleCountService.getCycleCountPlan (src/services/CycleCountService.ts:464:13)
+      at CycleCountService.cancelCycleCountPlan (src/services/CycleCountService.ts:231:14)
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:235:22)
+
+  ● CycleCountService › reconcileCycleCountPlan › should reconcile plan and process pending variances
+
+    Cycle count entry CCE-001 not found
+
+    [0m [90m 1370 |[39m
+     [90m 1371 |[39m     [36mif[39m (entryResult[33m.[39mrows[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 1372 |[39m       [36mthrow[39m [36mnew[39m [33mError[39m([32m`Cycle count entry ${entryId} not found`[39m)[33m;[39m
+     [90m      |[39m             [31m[1m^[22m[39m
+     [90m 1373 |[39m     }
+     [90m 1374 |[39m
+     [90m 1375 |[39m     [36mconst[39m entry [33m=[39m entryResult[33m.[39mrows[[35m0[39m][33m;[39m[0m
+
+      at CycleCountService.processVarianceAdjustment (src/services/CycleCountService.ts:1372:13)
+      at CycleCountService.reconcileCycleCountPlan (src/services/CycleCountService.ts:690:11)
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:598:22)
+
+  ● CycleCountService › createCycleCountEntry › should create entry with auto-adjustment within tolerance
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "AUTO_ADJUSTED"
+    Received: undefined
+
+    [0m [90m 652 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mcreateCycleCountEntry(dto)[33m;[39m
+     [90m 653 |[39m
+    [31m[1m>[22m[39m[90m 654 |[39m       expect(result[33m.[39mvarianceStatus)[33m.[39mtoBe([33mVarianceStatus[39m[33m.[39m[33mAUTO_ADJUSTED[39m)[33m;[39m
+     [90m     |[39m                                     [31m[1m^[22m[39m
+     [90m 655 |[39m     })[33m;[39m
+     [90m 656 |[39m
+     [90m 657 |[39m     it([32m'should create pending entry when variance exceeds tolerance'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:654:37)
+
+  ● CycleCountService › createCycleCountEntry › should create pending entry when variance exceeds tolerance
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: ObjectContaining {"type": "EXCEPTION_REPORTED"}
+    Received: {"data": {"binLocation": "A-01-01", "countedQuantity": 15, "entryId": "CCE-0000000001", "sku": "SKU-001", "systemQuantity": 10, "variance": 5, "variancePercent": 50}, "message": "Large variance detected for SKU-001 at A-01-01: +5 units (50.0%)", "priority": "urgent", "title": "Significant Cycle Count Variance", "type": "exception_reported"}
+
+    Number of calls: 1
+
+    [0m [90m 699 |[39m
+     [90m 700 |[39m       expect(result[33m.[39mvarianceStatus)[33m.[39mtoBe([33mVarianceStatus[39m[33m.[39m[33mPENDING[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 701 |[39m       expect(notifyAll)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 702 |[39m         expect[33m.[39mobjectContaining({
+     [90m 703 |[39m           type[33m:[39m [32m'EXCEPTION_REPORTED'[39m[33m,[39m
+     [90m 704 |[39m         })[0m
+
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:701:25)
+
+  ● CycleCountService › updateVarianceStatus › should approve variance and create adjustment
+
+    Cycle count entry CCE-001 not found
+
+    [0m [90m 1370 |[39m
+     [90m 1371 |[39m     [36mif[39m (entryResult[33m.[39mrows[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 1372 |[39m       [36mthrow[39m [36mnew[39m [33mError[39m([32m`Cycle count entry ${entryId} not found`[39m)[33m;[39m
+     [90m      |[39m             [31m[1m^[22m[39m
+     [90m 1373 |[39m     }
+     [90m 1374 |[39m
+     [90m 1375 |[39m     [36mconst[39m entry [33m=[39m entryResult[33m.[39mrows[[35m0[39m][33m;[39m[0m
+
+      at CycleCountService.processVarianceAdjustment (src/services/CycleCountService.ts:1372:13)
+      at CycleCountService.updateVarianceStatus (src/services/CycleCountService.ts:1319:35)
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:745:22)
+
+  ● CycleCountService › updateVarianceStatus › should reject variance without adjustment
+
+    TypeError: Cannot read properties of undefined (reading 'entry_id')
+
+    [0m [90m 1585 |[39m   [36mprivate[39m mapRowToCycleCountEntry(row[33m:[39m any)[33m:[39m [33mCycleCountEntry[39m {
+     [90m 1586 |[39m     [36mreturn[39m {
+    [31m[1m>[22m[39m[90m 1587 |[39m       entryId[33m:[39m row[33m.[39mentry_id[33m,[39m
+     [90m      |[39m                    [31m[1m^[22m[39m
+     [90m 1588 |[39m       planId[33m:[39m row[33m.[39mplan_id[33m,[39m
+     [90m 1589 |[39m       sku[33m:[39m row[33m.[39msku[33m,[39m
+     [90m 1590 |[39m       binLocation[33m:[39m row[33m.[39mbin_location[33m,[39m[0m
+
+      at CycleCountService.entry_id [as mapRowToCycleCountEntry] (src/services/CycleCountService.ts:1587:20)
+      at CycleCountService.mapRowToCycleCountEntry [as updateVarianceStatus] (src/services/CycleCountService.ts:1346:19)
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:781:22)
+
+  ● CycleCountService › Edge Cases › should handle zero variance in entry
+
+    TypeError: Cannot read properties of undefined (reading 'entry_id')
+
+    [0m [90m 1585 |[39m   [36mprivate[39m mapRowToCycleCountEntry(row[33m:[39m any)[33m:[39m [33mCycleCountEntry[39m {
+     [90m 1586 |[39m     [36mreturn[39m {
+    [31m[1m>[22m[39m[90m 1587 |[39m       entryId[33m:[39m row[33m.[39mentry_id[33m,[39m
+     [90m      |[39m                    [31m[1m^[22m[39m
+     [90m 1588 |[39m       planId[33m:[39m row[33m.[39mplan_id[33m,[39m
+     [90m 1589 |[39m       sku[33m:[39m row[33m.[39msku[33m,[39m
+     [90m 1590 |[39m       binLocation[33m:[39m row[33m.[39mbin_location[33m,[39m[0m
+
+      at CycleCountService.entry_id [as mapRowToCycleCountEntry] (src/services/CycleCountService.ts:1587:20)
+      at CycleCountService.mapRowToCycleCountEntry [as createCycleCountEntry] (src/services/CycleCountService.ts:1227:21)
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:864:22)
+
+  ● CycleCountService › Edge Cases › should handle missing inventory for entry
+
+    TypeError: Cannot read properties of undefined (reading 'rows')
+
+    [0m [90m 1225 |[39m         })[33m;[39m
+     [90m 1226 |[39m
+    [31m[1m>[22m[39m[90m 1227 |[39m         [36mreturn[39m [36mthis[39m[33m.[39mmapRowToCycleCountEntry(result[33m.[39mrows[[35m0[39m])[33m;[39m
+     [90m      |[39m                                                    [31m[1m^[22m[39m
+     [90m 1228 |[39m       } [36melse[39m {
+     [90m 1229 |[39m         [90m// Pending approval - create exception record[39m
+     [90m 1230 |[39m         [36mconst[39m result [33m=[39m [36mawait[39m client[33m.[39mquery([0m
+
+      at CycleCountService.rows [as createCycleCountEntry] (src/services/CycleCountService.ts:1227:52)
+      at Object.<anonymous> (src/services/__tests__/CycleCountService.test.ts:909:22)
+
+PASS src/services/__tests__/AuthService.test.ts (11.782 s)
+FAIL src/routes/__tests__/shipping.test.ts
+  ● Test suite failed to run
+
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m248[0m:[93m24[0m - [91merror[0m[90m TS2551: [0mProperty 'getShipments' does not exist on type 'ShippingService'. Did you mean 'getShipment'?
+
+    [7m248[0m       (shippingService.getShipments as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                       ~~~~~~~~~~~~[0m
+
+      [96msrc/services/ShippingService.ts[0m:[93m368[0m:[93m9[0m
+        [7m368[0m   async getShipment(shipmentId: string): Promise<Shipment> {
+        [7m   [0m [96m        ~~~~~~~~~~~[0m
+        'getShipment' is declared here.
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m265[0m:[93m24[0m - [91merror[0m[90m TS2551: [0mProperty 'getShipments' does not exist on type 'ShippingService'. Did you mean 'getShipment'?
+
+    [7m265[0m       (shippingService.getShipments as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                       ~~~~~~~~~~~~[0m
+
+      [96msrc/services/ShippingService.ts[0m:[93m368[0m:[93m9[0m
+        [7m368[0m   async getShipment(shipmentId: string): Promise<Shipment> {
+        [7m   [0m [96m        ~~~~~~~~~~~[0m
+        'getShipment' is declared here.
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m275[0m:[93m30[0m - [91merror[0m[90m TS2551: [0mProperty 'getShipments' does not exist on type 'ShippingService'. Did you mean 'getShipment'?
+
+    [7m275[0m       expect(shippingService.getShipments).toHaveBeenCalledWith(
+    [7m   [0m [91m                             ~~~~~~~~~~~~[0m
+
+      [96msrc/services/ShippingService.ts[0m:[93m368[0m:[93m9[0m
+        [7m368[0m   async getShipment(shipmentId: string): Promise<Shipment> {
+        [7m   [0m [96m        ~~~~~~~~~~~[0m
+        'getShipment' is declared here.
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m283[0m:[93m24[0m - [91merror[0m[90m TS2551: [0mProperty 'getShipments' does not exist on type 'ShippingService'. Did you mean 'getShipment'?
+
+    [7m283[0m       (shippingService.getShipments as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                       ~~~~~~~~~~~~[0m
+
+      [96msrc/services/ShippingService.ts[0m:[93m368[0m:[93m9[0m
+        [7m368[0m   async getShipment(shipmentId: string): Promise<Shipment> {
+        [7m   [0m [96m        ~~~~~~~~~~~[0m
+        'getShipment' is declared here.
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m293[0m:[93m30[0m - [91merror[0m[90m TS2551: [0mProperty 'getShipments' does not exist on type 'ShippingService'. Did you mean 'getShipment'?
+
+    [7m293[0m       expect(shippingService.getShipments).toHaveBeenCalledWith(
+    [7m   [0m [91m                             ~~~~~~~~~~~~[0m
+
+      [96msrc/services/ShippingService.ts[0m:[93m368[0m:[93m9[0m
+        [7m368[0m   async getShipment(shipmentId: string): Promise<Shipment> {
+        [7m   [0m [96m        ~~~~~~~~~~~[0m
+        'getShipment' is declared here.
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m319[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'generateLabel' does not exist on type 'ShippingService'.
+
+    [7m319[0m       (shippingService.generateLabel as jest.Mock).mockResolvedValue(mockLabel);
+    [7m   [0m [91m                       ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m368[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'trackShipment' does not exist on type 'ShippingService'.
+
+    [7m368[0m       (shippingService.trackShipment as jest.Mock).mockResolvedValue(mockTracking);
+    [7m   [0m [91m                       ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m381[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'trackShipment' does not exist on type 'ShippingService'.
+
+    [7m381[0m       (shippingService.trackShipment as jest.Mock).mockRejectedValue(
+    [7m   [0m [91m                       ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m390[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'trackShipment' does not exist on type 'ShippingService'.
+
+    [7m390[0m       expect(shippingService.trackShipment).toHaveBeenCalledWith('INVALID_TRACKING');
+    [7m   [0m [91m                             ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m406[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'cancelShipment' does not exist on type 'ShippingService'.
+
+    [7m406[0m       (shippingService.cancelShipment as jest.Mock).mockResolvedValue(cancelledShipment);
+    [7m   [0m [91m                       ~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m417[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'cancelShipment' does not exist on type 'ShippingService'.
+
+    [7m417[0m       expect(shippingService.cancelShipment).toHaveBeenCalledWith('SHIP-001', 'Customer request');
+    [7m   [0m [91m                             ~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m421[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'cancelShipment' does not exist on type 'ShippingService'.
+
+    [7m421[0m       (shippingService.cancelShipment as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                       ~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/shipping.test.ts[0m:[93m452[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'updateShipment' does not exist on type 'ShippingService'.
+
+    [7m452[0m       (shippingService.updateShipment as jest.Mock).mockResolvedValue(updatedShipment);
+    [7m   [0m [91m                       ~~~~~~~~~~~~~~[0m
+
+FAIL src/routes/__tests__/users.test.ts
+  ● Test suite failed to run
+
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m174[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'getUserById' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m174[0m       (userRepo.getUserById as jest.Mock).mockResolvedValue(mockUser);
+    [7m   [0m [91m                ~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m186[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'getUserById' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m186[0m       (userRepo.getUserById as jest.Mock).mockRejectedValue(
+    [7m   [0m [91m                ~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m195[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'getUserById' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m195[0m       expect(userRepo.getUserById).toHaveBeenCalledWith('user-nonexistent');
+    [7m   [0m [91m                      ~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m220[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'createUser' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m220[0m       (userRepo.createUser as jest.Mock).mockResolvedValue(mockCreatedUser);
+    [7m   [0m [91m                ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m230[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'createUser' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m230[0m       expect(userRepo.createUser).toHaveBeenCalledWith(newUser);
+    [7m   [0m [91m                      ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m404[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'resetPassword' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m404[0m       (userRepo.resetPassword as jest.Mock).mockResolvedValue(mockUpdatedUser);
+    [7m   [0m [91m                ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m412[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'resetPassword' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m412[0m       expect(userRepo.resetPassword).toHaveBeenCalledWith('user-001', 'NewSecurePass123!');
+    [7m   [0m [91m                      ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m454[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'getAvailableRoles' does not exist on type 'Mocked<UserRepository>'.
+
+    [7m454[0m       (userRepo.getAvailableRoles as jest.Mock).mockResolvedValue(mockRoles);
+    [7m   [0m [91m                ~~~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/users.test.ts[0m:[93m484[0m:[93m17[0m - [91merror[0m[90m TS2551: [0mProperty 'updateUserRole' does not exist on type 'Mocked<UserRepository>'. Did you mean 'updateUser'?
+
+    [7m484[0m       (userRepo.updateUserRole as jest.Mock).mockResolvedValue(mockUpdatedUser);
+    [7m   [0m [91m                ~~~~~~~~~~~~~~[0m
+
+      [96msrc/repositories/UserRepository.ts[0m:[93m373[0m:[93m9[0m
+        [7m373[0m   async updateUser(
+        [7m   [0m [96m        ~~~~~~~~~~[0m
+        'updateUser' is declared here.
+
+FAIL src/routes/__tests__/inbound.test.ts
+  ● Test suite failed to run
+
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m222[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'getASNById' does not exist on type 'InboundReceivingService'.
+
+    [7m222[0m       (inboundReceivingService.getASNById as jest.Mock).mockResolvedValue(mockAsn);
+    [7m   [0m [91m                               ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m234[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'getASNById' does not exist on type 'InboundReceivingService'.
+
+    [7m234[0m       (inboundReceivingService.getASNById as jest.Mock).mockRejectedValue(
+    [7m   [0m [91m                               ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m243[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'getASNById' does not exist on type 'InboundReceivingService'.
+
+    [7m243[0m       expect(inboundReceivingService.getASNById).toHaveBeenCalledWith('ASN-NONEXISTENT');
+    [7m   [0m [91m                                     ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m265[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'receiveASN' does not exist on type 'InboundReceivingService'.
+
+    [7m265[0m       (inboundReceivingService.receiveASN as jest.Mock).mockResolvedValue(mockReceipt);
+    [7m   [0m [91m                               ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m278[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'receiveASN' does not exist on type 'InboundReceivingService'.
+
+    [7m278[0m       (inboundReceivingService.receiveASN as jest.Mock).mockRejectedValue(
+    [7m   [0m [91m                               ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m290[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'receiveASN' does not exist on type 'InboundReceivingService'.
+
+    [7m290[0m       expect(inboundReceivingService.receiveASN).toHaveBeenCalled();
+    [7m   [0m [91m                                     ~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m313[0m:[93m32[0m - [91merror[0m[90m TS2551: [0mProperty 'getReceipts' does not exist on type 'InboundReceivingService'. Did you mean 'getReceipt'?
+
+    [7m313[0m       (inboundReceivingService.getReceipts as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                               ~~~~~~~~~~~[0m
+
+      [96msrc/services/InboundReceivingService.ts[0m:[93m356[0m:[93m9[0m
+        [7m356[0m   async getReceipt(receiptId: string): Promise<Receipt> {
+        [7m   [0m [96m        ~~~~~~~~~~[0m
+        'getReceipt' is declared here.
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m330[0m:[93m32[0m - [91merror[0m[90m TS2551: [0mProperty 'getReceipts' does not exist on type 'InboundReceivingService'. Did you mean 'getReceipt'?
+
+    [7m330[0m       (inboundReceivingService.getReceipts as jest.Mock).mockResolvedValue({
+    [7m   [0m [91m                               ~~~~~~~~~~~[0m
+
+      [96msrc/services/InboundReceivingService.ts[0m:[93m356[0m:[93m9[0m
+        [7m356[0m   async getReceipt(receiptId: string): Promise<Receipt> {
+        [7m   [0m [96m        ~~~~~~~~~~[0m
+        'getReceipt' is declared here.
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m340[0m:[93m38[0m - [91merror[0m[90m TS2551: [0mProperty 'getReceipts' does not exist on type 'InboundReceivingService'. Did you mean 'getReceipt'?
+
+    [7m340[0m       expect(inboundReceivingService.getReceipts).toHaveBeenCalledWith(
+    [7m   [0m [91m                                     ~~~~~~~~~~~[0m
+
+      [96msrc/services/InboundReceivingService.ts[0m:[93m356[0m:[93m9[0m
+        [7m356[0m   async getReceipt(receiptId: string): Promise<Receipt> {
+        [7m   [0m [96m        ~~~~~~~~~~[0m
+        'getReceipt' is declared here.
+    [96msrc/routes/__tests__/inbound.test.ts[0m:[93m441[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'completePutawayTask' does not exist on type 'InboundReceivingService'.
+
+    [7m441[0m       (inboundReceivingService.completePutawayTask as jest.Mock).mockResolvedValue(
+    [7m   [0m [91m                               ~~~~~~~~~~~~~~~~~~~[0m
+
+FAIL src/routes/__tests__/orders.test.ts
+  ● Test suite failed to run
+
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m200[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'getOrderById' does not exist on type 'OrderService'. Did you mean 'getOrder'?
+
+    [7m200[0m       (orderService.getOrderById as jest.Mock).mockResolvedValue(mockOrder);
+    [7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+      [96msrc/services/OrderService.ts[0m:[93m517[0m:[93m9[0m
+        [7m517[0m   async getOrder(orderId: string): Promise<Order> {
+        [7m   [0m [96m        ~~~~~~~~[0m
+        'getOrder' is declared here.
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m208[0m:[93m27[0m - [91merror[0m[90m TS2551: [0mProperty 'getOrderById' does not exist on type 'OrderService'. Did you mean 'getOrder'?
+
+    [7m208[0m       expect(orderService.getOrderById).toHaveBeenCalledWith('ORD-001');
+    [7m   [0m [91m                          ~~~~~~~~~~~~[0m
+
+      [96msrc/services/OrderService.ts[0m:[93m517[0m:[93m9[0m
+        [7m517[0m   async getOrder(orderId: string): Promise<Order> {
+        [7m   [0m [96m        ~~~~~~~~[0m
+        'getOrder' is declared here.
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m212[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'getOrderById' does not exist on type 'OrderService'. Did you mean 'getOrder'?
+
+    [7m212[0m       (orderService.getOrderById as jest.Mock).mockRejectedValue(
+    [7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+      [96msrc/services/OrderService.ts[0m:[93m517[0m:[93m9[0m
+        [7m517[0m   async getOrder(orderId: string): Promise<Order> {
+        [7m   [0m [96m        ~~~~~~~~[0m
+        'getOrder' is declared here.
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m221[0m:[93m27[0m - [91merror[0m[90m TS2551: [0mProperty 'getOrderById' does not exist on type 'OrderService'. Did you mean 'getOrder'?
+
+    [7m221[0m       expect(orderService.getOrderById).toHaveBeenCalledWith('ORD-NONEXISTENT');
+    [7m   [0m [91m                          ~~~~~~~~~~~~[0m
+
+      [96msrc/services/OrderService.ts[0m:[93m517[0m:[93m9[0m
+        [7m517[0m   async getOrder(orderId: string): Promise<Order> {
+        [7m   [0m [96m        ~~~~~~~~[0m
+        'getOrder' is declared here.
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m315[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'updateOrder' does not exist on type 'OrderService'.
+
+    [7m315[0m       (orderService.updateOrder as jest.Mock).mockResolvedValue(updatedOrder);
+    [7m   [0m [91m                    ~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m353[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'updateOrderPriority' does not exist on type 'OrderService'.
+
+    [7m353[0m       (orderService.updateOrderPriority as jest.Mock).mockResolvedValue(updatedOrder);
+    [7m   [0m [91m                    ~~~~~~~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m426[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'ON_HOLD' does not exist on type 'typeof OrderStatus'.
+
+    [7m426[0m         status: OrderStatus.ON_HOLD,
+    [7m   [0m [91m                            ~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m429[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'holdOrder' does not exist on type 'OrderService'.
+
+    [7m429[0m       (orderService.holdOrder as jest.Mock).mockResolvedValue(heldOrder);
+    [7m   [0m [91m                    ~~~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m436[0m:[93m53[0m - [91merror[0m[90m TS2339: [0mProperty 'ON_HOLD' does not exist on type 'typeof OrderStatus'.
+
+    [7m436[0m       expect(response.body.status).toBe(OrderStatus.ON_HOLD);
+    [7m   [0m [91m                                                    ~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m451[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'releaseOrder' does not exist on type 'OrderService'.
+
+    [7m451[0m       (orderService.releaseOrder as jest.Mock).mockResolvedValue(releasedOrder);
+    [7m   [0m [91m                    ~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m481[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'getOrderItems' does not exist on type 'OrderService'.
+
+    [7m481[0m       (orderService.getOrderItems as jest.Mock).mockResolvedValue(mockItems);
+    [7m   [0m [91m                    ~~~~~~~~~~~~~[0m
+    [96msrc/routes/__tests__/orders.test.ts[0m:[93m501[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'addOrderItems' does not exist on type 'OrderService'.
+
+    [7m501[0m       (orderService.addOrderItems as jest.Mock).mockResolvedValue(newItems);
+    [7m   [0m [91m                    ~~~~~~~~~~~~~[0m
+
+PASS src/services/__tests__/InventoryService.test.ts (13.168 s)
+PASS src/services/__tests__/OrderService.test.ts (13.305 s)
+FAIL src/services/__tests__/ZonePickingService.test.ts (14.486 s)
+  ● ZonePickingService › getZones › should return all zones with statistics
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 2
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 79 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZones()[33m;[39m
+     [90m 80 |[39m
+    [31m[1m>[22m[39m[90m 81 |[39m       expect(result)[33m.[39mtoHaveLength([35m2[39m)[33m;[39m
+     [90m    |[39m                      [31m[1m^[22m[39m
+     [90m 82 |[39m       expect(result[[35m0[39m])[33m.[39mtoEqual({
+     [90m 83 |[39m         zoneId[33m:[39m [32m'A'[39m[33m,[39m
+     [90m 84 |[39m         name[33m:[39m [32m'Fast Moving Zone (A)'[39m[33m,[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:81:22)
+
+  ● ZonePickingService › getZones › should infer zone type based on zone ID
+
+    TypeError: Cannot read properties of undefined (reading 'zoneType')
+
+    [0m [90m 106 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZones()[33m;[39m
+     [90m 107 |[39m
+    [31m[1m>[22m[39m[90m 108 |[39m       expect(result[[35m0[39m][33m.[39mzoneType)[33m.[39mtoBe([32m'SLOW_MOVING'[39m)[33m;[39m [90m// C[39m
+     [90m     |[39m                        [31m[1m^[22m[39m
+     [90m 109 |[39m       expect(result[[35m1[39m][33m.[39mzoneType)[33m.[39mtoBe([32m'BULK'[39m)[33m;[39m [90m// E[39m
+     [90m 110 |[39m       expect(result[[35m2[39m][33m.[39mzoneType)[33m.[39mtoBe([32m'COLD_STORAGE'[39m)[33m;[39m [90m// F[39m
+     [90m 111 |[39m       expect(result[[35m3[39m][33m.[39mzoneType)[33m.[39mtoBe([32m'HAZARDOUS'[39m)[33m;[39m [90m// G[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:108:24)
+
+  ● ZonePickingService › getZones › should handle zones with null aisle values
+
+    TypeError: Cannot read properties of undefined (reading 'aisleStart')
+
+    [0m [90m 136 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZones()[33m;[39m
+     [90m 137 |[39m
+    [31m[1m>[22m[39m[90m 138 |[39m       expect(result[[35m0[39m][33m.[39maisleStart)[33m.[39mtoBe([35m0[39m)[33m;[39m
+     [90m     |[39m                        [31m[1m^[22m[39m
+     [90m 139 |[39m       expect(result[[35m0[39m][33m.[39maisleEnd)[33m.[39mtoBe([35m0[39m)[33m;[39m
+     [90m 140 |[39m     })[33m;[39m
+     [90m 141 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:138:24)
+
+  ● ZonePickingService › getZoneStats › should return zone statistics
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 7
+    + Received  + 7
+
+      Object {
+    -   "activePickers": 3,
+    -   "averageTimePerTask": 46,
+    -   "completedTasks": 20,
+    -   "estimatedTimeRemaining": 675,
+    -   "inProgressTasks": 5,
+    -   "pendingTasks": 10,
+    -   "totalItems": 35,
+    +   "activePickers": 0,
+    +   "averageTimePerTask": 60,
+    +   "completedTasks": 0,
+    +   "estimatedTimeRemaining": 0,
+    +   "inProgressTasks": 0,
+    +   "pendingTasks": 0,
+    +   "totalItems": 0,
+        "zoneId": "A",
+      }
+
+    [0m [90m 166 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZoneStats(zoneId)[33m;[39m
+     [90m 167 |[39m
+    [31m[1m>[22m[39m[90m 168 |[39m       expect(result)[33m.[39mtoEqual({
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 169 |[39m         zoneId[33m:[39m [32m'A'[39m[33m,[39m
+     [90m 170 |[39m         pendingTasks[33m:[39m [35m10[39m[33m,[39m
+     [90m 171 |[39m         inProgressTasks[33m:[39m [35m5[39m[33m,[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:168:22)
+
+  ● ZonePickingService › getZoneStats › should handle missing average time with default
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 300
+    Received: 0
+
+    [0m [90m 211 |[39m
+     [90m 212 |[39m       expect(result[33m.[39maverageTimePerTask)[33m.[39mtoBe([35m60[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 213 |[39m       expect(result[33m.[39mestimatedTimeRemaining)[33m.[39mtoBe([35m300[39m)[33m;[39m [90m// 5 * 60[39m
+     [90m     |[39m                                             [31m[1m^[22m[39m
+     [90m 214 |[39m     })[33m;[39m
+     [90m 215 |[39m
+     [90m 216 |[39m     it([32m'should handle database errors gracefully'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:213:45)
+
+  ● ZonePickingService › getZoneStats › should handle database errors gracefully
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "Error getting zone stats", ObjectContaining {"zoneId": "A"}
+
+    Number of calls: 0
+
+    [0m [90m 229 |[39m         averageTimePerTask[33m:[39m [35m60[39m[33m,[39m
+     [90m 230 |[39m       })[33m;[39m
+    [31m[1m>[22m[39m[90m 231 |[39m       expect(logger[33m.[39merror)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                            [31m[1m^[22m[39m
+     [90m 232 |[39m         [32m'Error getting zone stats'[39m[33m,[39m
+     [90m 233 |[39m         expect[33m.[39mobjectContaining({ zoneId[33m:[39m [32m'A'[39m })
+     [90m 234 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:231:28)
+
+  ● ZonePickingService › getAllZoneStats › should return statistics for all zones
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 2
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 276 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetAllZoneStats()[33m;[39m
+     [90m 277 |[39m
+    [31m[1m>[22m[39m[90m 278 |[39m       expect(result)[33m.[39mtoHaveLength([35m2[39m)[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 279 |[39m       expect(result[[35m0[39m][33m.[39mzoneId)[33m.[39mtoBe([32m'A'[39m)[33m;[39m
+     [90m 280 |[39m       expect(result[[35m1[39m][33m.[39mzoneId)[33m.[39mtoBe([32m'B'[39m)[33m;[39m
+     [90m 281 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:278:22)
+
+  ● ZonePickingService › assignPickerToZone › should assign picker to zone successfully
+
+    Zone A not found
+
+    [0m [90m 251 |[39m
+     [90m 252 |[39m       [36mif[39m ([33m![39mzone) {
+    [31m[1m>[22m[39m[90m 253 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Zone ${zoneId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 254 |[39m       }
+     [90m 255 |[39m
+     [90m 256 |[39m       [90m// Check if picker is already assigned to a zone[39m[0m
+
+      at ZonePickingService.assignPickerToZone (src/services/ZonePickingService.ts:253:15)
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:322:22)
+
+  ● ZonePickingService › assignPickerToZone › should throw error when picker already assigned to zone
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Picker picker-123 is already assigned to zone B"
+    Received message:   "Zone A not found"
+
+        [0m [90m 251 |[39m
+         [90m 252 |[39m       [36mif[39m ([33m![39mzone) {
+        [31m[1m>[22m[39m[90m 253 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Zone ${zoneId} not found`[39m)[33m;[39m
+         [90m     |[39m               [31m[1m^[22m[39m
+         [90m 254 |[39m       }
+         [90m 255 |[39m
+         [90m 256 |[39m       [90m// Check if picker is already assigned to a zone[39m[0m
+
+      at ZonePickingService.assignPickerToZone (src/services/ZonePickingService.ts:253:15)
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:367:7)
+      at Object.toThrow (../../node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:367:83)
+
+  ● ZonePickingService › assignPickerToZone › should broadcast zone assignment via WebSocket
+
+    Zone A not found
+
+    [0m [90m 251 |[39m
+     [90m 252 |[39m       [36mif[39m ([33m![39mzone) {
+    [31m[1m>[22m[39m[90m 253 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Zone ${zoneId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 254 |[39m       }
+     [90m 255 |[39m
+     [90m 256 |[39m       [90m// Check if picker is already assigned to a zone[39m[0m
+
+      at ZonePickingService.assignPickerToZone (src/services/ZonePickingService.ts:253:15)
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:397:7)
+
+  ● ZonePickingService › assignPickerToZone › should send notification to picker
+
+    Zone A not found
+
+    [0m [90m 251 |[39m
+     [90m 252 |[39m       [36mif[39m ([33m![39mzone) {
+    [31m[1m>[22m[39m[90m 253 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Zone ${zoneId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 254 |[39m       }
+     [90m 255 |[39m
+     [90m 256 |[39m       [90m// Check if picker is already assigned to a zone[39m[0m
+
+      at ZonePickingService.assignPickerToZone (src/services/ZonePickingService.ts:253:15)
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:432:7)
+
+  ● ZonePickingService › getZonePickTasks › should return all pick tasks for a zone
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 2
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 478 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZonePickTasks(zoneId)[33m;[39m
+     [90m 479 |[39m
+    [31m[1m>[22m[39m[90m 480 |[39m       expect(result)[33m.[39mtoHaveLength([35m2[39m)[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 481 |[39m       expect(result[[35m0[39m])[33m.[39mtoEqual({
+     [90m 482 |[39m         taskId[33m:[39m [32m'task-1'[39m[33m,[39m
+     [90m 483 |[39m         orderId[33m:[39m [32m'ORD-001'[39m[33m,[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:480:22)
+
+  ● ZonePickingService › getZonePickTasks › should filter tasks by status when provided
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 512 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZonePickTasks(zoneId[33m,[39m [[32m'PENDING'[39m[33m,[39m [32m'IN_PROGRESS'[39m])[33m;[39m
+     [90m 513 |[39m
+    [31m[1m>[22m[39m[90m 514 |[39m       expect(result)[33m.[39mtoHaveLength([35m1[39m)[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 515 |[39m       expect(global[33m.[39mmockPool[33m.[39mquery)[33m.[39mtoHaveBeenCalledWith(
+     [90m 516 |[39m         expect[33m.[39mstringContaining([32m'AND pt.status = ANY'[39m)[33m,[39m
+     [90m 517 |[39m         [zoneId[33m,[39m [[32m'PENDING'[39m[33m,[39m [32m'IN_PROGRESS'[39m]][0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:514:22)
+
+  ● ZonePickingService › getZonePickTasks › should order tasks by priority and bin location
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "ORDER BY pt.priority DESC, pt.bin_location", Any<Array>
+
+    Number of calls: 0
+
+    [0m [90m 538 |[39m       [36mawait[39m service[33m.[39mgetZonePickTasks([32m'A'[39m)[33m;[39m
+     [90m 539 |[39m
+    [31m[1m>[22m[39m[90m 540 |[39m       expect(global[33m.[39mmockPool[33m.[39mquery)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                                     [31m[1m^[22m[39m
+     [90m 541 |[39m         expect[33m.[39mstringContaining([32m'ORDER BY pt.priority DESC, pt.bin_location'[39m)[33m,[39m
+     [90m 542 |[39m         expect[33m.[39many([33mArray[39m)
+     [90m 543 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:540:37)
+
+  ● ZonePickingService › rebalancePickers › should rebalance pickers across zones based on workload
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "Picker rebalancing completed", ObjectContaining {"totalPickers": 3}
+    Received: "Picker rebalancing completed", {"totalPickers": 0, "zonesRebalanced": 0}
+
+    Number of calls: 1
+
+    [0m [90m 606 |[39m       [90m// Zone A with 100 tasks needs 2 pickers (100/50 = 2)[39m
+     [90m 607 |[39m       [90m// Zone B with 20 tasks needs 1 picker (20/50 = 1, rounded to 1)[39m
+    [31m[1m>[22m[39m[90m 608 |[39m       expect(logger[33m.[39minfo)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                           [31m[1m^[22m[39m
+     [90m 609 |[39m         [32m'Picker rebalancing completed'[39m[33m,[39m
+     [90m 610 |[39m         expect[33m.[39mobjectContaining({
+     [90m 611 |[39m           totalPickers[33m:[39m [35m3[39m[33m,[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:608:27)
+
+  ● ZonePickingService › releasePickerFromZone › should release picker from zone successfully
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "UPDATE zone_assignments", ["picker-123"]
+
+    Number of calls: 0
+
+    [0m [90m 716 |[39m       [36mawait[39m service[33m.[39mreleasePickerFromZone(pickerId[33m,[39m context)[33m;[39m
+     [90m 717 |[39m
+    [31m[1m>[22m[39m[90m 718 |[39m       expect(global[33m.[39mmockPool[33m.[39mquery)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                                     [31m[1m^[22m[39m
+     [90m 719 |[39m         expect[33m.[39mstringContaining([32m'UPDATE zone_assignments'[39m)[33m,[39m
+     [90m 720 |[39m         [pickerId]
+     [90m 721 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:718:37)
+
+  ● ZonePickingService › Edge Cases › should handle unknown zone type for zone ID
+
+    TypeError: Cannot read properties of undefined (reading 'zoneType')
+
+    [0m [90m 781 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetZones()[33m;[39m
+     [90m 782 |[39m
+    [31m[1m>[22m[39m[90m 783 |[39m       expect(result[[35m0[39m][33m.[39mzoneType)[33m.[39mtoBe([32m'SLOW_MOVING'[39m)[33m;[39m [90m// Default[39m
+     [90m     |[39m                        [31m[1m^[22m[39m
+     [90m 784 |[39m     })[33m;[39m
+     [90m 785 |[39m
+     [90m 786 |[39m     it([32m'should handle zone stats with null values'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/ZonePickingService.test.ts:783:24)
+
+FAIL src/services/__tests__/WavePickingService.test.ts (14.552 s)
+  ● WavePickingService › createWave › should create a CARRIER strategy wave successfully
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:102:22)
+
+  ● WavePickingService › createWave › should create a PRIORITY strategy wave
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:136:22)
+
+  ● WavePickingService › createWave › should create a ZONE strategy wave
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:165:22)
+
+  ● WavePickingService › createWave › should create a DEADLINE strategy wave
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:194:22)
+
+  ● WavePickingService › createWave › should create a BALANCED strategy wave
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:223:22)
+
+  ● WavePickingService › createWave › should limit orders to maxOrdersPerWave
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:270:22)
+
+  ● WavePickingService › createWave › should assign pickers based on task count
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:302:22)
+
+  ● WavePickingService › createWave › should broadcast wave creation via WebSocket
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:329:7)
+
+  ● WavePickingService › createWave › should send notification to all users
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:361:7)
+
+  ● WavePickingService › releaseWave › should release a planned wave successfully
+
+    Wave WAVE-TEST-001 not found
+
+    [0m [90m 210 |[39m
+     [90m 211 |[39m       [36mif[39m ([33m![39mwave) {
+    [31m[1m>[22m[39m[90m 212 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Wave ${waveId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 213 |[39m       }
+     [90m 214 |[39m
+     [90m 215 |[39m       [36mif[39m (wave[33m.[39mstatus [33m!==[39m [33mWaveStatus[39m[33m.[39m[33mPLANNED[39m) {[0m
+
+      at WavePickingService.releaseWave (src/services/WavePickingService.ts:212:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:405:22)
+
+  ● WavePickingService › releaseWave › should throw error when wave is not in PLANNED status
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "Wave WAVE-TEST-001 is not in PLANNED status"
+    Received message:   "Wave WAVE-TEST-001 not found"
+
+        [0m [90m 210 |[39m
+         [90m 211 |[39m       [36mif[39m ([33m![39mwave) {
+        [31m[1m>[22m[39m[90m 212 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Wave ${waveId} not found`[39m)[33m;[39m
+         [90m     |[39m               [31m[1m^[22m[39m
+         [90m 213 |[39m       }
+         [90m 214 |[39m
+         [90m 215 |[39m       [36mif[39m (wave[33m.[39mstatus [33m!==[39m [33mWaveStatus[39m[33m.[39m[33mPLANNED[39m) {[0m
+
+      at WavePickingService.releaseWave (src/services/WavePickingService.ts:212:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:447:7)
+      at Object.toThrow (../../node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:447:75)
+
+  ● WavePickingService › releaseWave › should assign tasks to pickers on release
+
+    Wave WAVE-TEST-001 not found
+
+    [0m [90m 210 |[39m
+     [90m 211 |[39m       [36mif[39m ([33m![39mwave) {
+    [31m[1m>[22m[39m[90m 212 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Wave ${waveId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 213 |[39m       }
+     [90m 214 |[39m
+     [90m 215 |[39m       [36mif[39m (wave[33m.[39mstatus [33m!==[39m [33mWaveStatus[39m[33m.[39m[33mPLANNED[39m) {[0m
+
+      at WavePickingService.releaseWave (src/services/WavePickingService.ts:212:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:483:7)
+
+  ● WavePickingService › getWaveStatus › should return wave summary with progress
+
+    expect(received).not.toBeNull()
+
+    Received: null
+
+    [0m [90m 523 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetWaveStatus(waveId)[33m;[39m
+     [90m 524 |[39m
+    [31m[1m>[22m[39m[90m 525 |[39m       expect(result)[33m.[39mnot[33m.[39mtoBeNull()[33m;[39m
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 526 |[39m       expect(result[33m.[39mwaveId)[33m.[39mtoBe(waveId)[33m;[39m
+     [90m 527 |[39m       expect(result[33m.[39mprogress)[33m.[39mtoBe([35m50[39m)[33m;[39m [90m// 2/4 completed[39m
+     [90m 528 |[39m       expect(result[33m.[39morderCount)[33m.[39mtoBe([35m2[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:525:26)
+
+  ● WavePickingService › getWaveStatus › should calculate estimated time remaining
+
+    TypeError: Cannot read properties of null (reading 'estimatedTimeRemaining')
+
+    [0m [90m 562 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetWaveStatus(waveId)[33m;[39m
+     [90m 563 |[39m
+    [31m[1m>[22m[39m[90m 564 |[39m       expect(result[33m.[39mestimatedTimeRemaining)[33m.[39mtoBe([35m2400[39m)[33m;[39m [90m// 2 * 1200[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 565 |[39m     })[33m;[39m
+     [90m 566 |[39m
+     [90m 567 |[39m     it([32m'should handle zero total picks'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:564:21)
+
+  ● WavePickingService › getWaveStatus › should handle zero total picks
+
+    TypeError: Cannot read properties of null (reading 'progress')
+
+    [0m [90m 587 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetWaveStatus(waveId)[33m;[39m
+     [90m 588 |[39m
+    [31m[1m>[22m[39m[90m 589 |[39m       expect(result[33m.[39mprogress)[33m.[39mtoBe([35m0[39m)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 590 |[39m       expect(result[33m.[39mestimatedTimeRemaining)[33m.[39mtoBe([35m0[39m)[33m;[39m
+     [90m 591 |[39m     })[33m;[39m
+     [90m 592 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:589:21)
+
+  ● WavePickingService › getActiveWavesForPicker › should return active waves for a picker
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 2
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 620 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetActiveWavesForPicker(pickerId)[33m;[39m
+     [90m 621 |[39m
+    [31m[1m>[22m[39m[90m 622 |[39m       expect(result)[33m.[39mtoHaveLength([35m2[39m)[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 623 |[39m       expect(result[[35m0[39m][33m.[39mwaveId)[33m.[39mtoBe([32m'WAVE-001'[39m)[33m;[39m
+     [90m 624 |[39m       expect(result[[35m0[39m][33m.[39mstatus)[33m.[39mtoBe([32m'RELEASED'[39m)[33m;[39m
+     [90m 625 |[39m       expect(result[[35m1[39m][33m.[39mstatus)[33m.[39mtoBe([32m'IN_PROGRESS'[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:622:22)
+
+  ● WavePickingService › getActiveWavesForPicker › should only include RELEASED and IN_PROGRESS waves
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 1
+    Received length: 0
+    Received array:  []
+
+    [0m [90m 652 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m service[33m.[39mgetActiveWavesForPicker([32m'picker-123'[39m)[33m;[39m
+     [90m 653 |[39m
+    [31m[1m>[22m[39m[90m 654 |[39m       expect(result)[33m.[39mtoHaveLength([35m1[39m)[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 655 |[39m       expect(result[[35m0[39m][33m.[39mstatus)[33m.[39mtoBe([32m'RELEASED'[39m)[33m;[39m
+     [90m 656 |[39m     })[33m;[39m
+     [90m 657 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:654:22)
+
+  ● WavePickingService › completeWave › should complete a wave successfully
+
+    Wave WAVE-TEST-001 not found
+
+    [0m [90m 344 |[39m
+     [90m 345 |[39m       [36mif[39m ([33m![39mwave) {
+    [31m[1m>[22m[39m[90m 346 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Wave ${waveId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 347 |[39m       }
+     [90m 348 |[39m
+     [90m 349 |[39m       [90m// Update wave status[39m[0m
+
+      at WavePickingService.completeWave (src/services/WavePickingService.ts:346:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:693:7)
+
+  ● WavePickingService › completeWave › should send notification on completion
+
+    Wave WAVE-TEST-001 not found
+
+    [0m [90m 344 |[39m
+     [90m 345 |[39m       [36mif[39m ([33m![39mwave) {
+    [31m[1m>[22m[39m[90m 346 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m`Wave ${waveId} not found`[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 347 |[39m       }
+     [90m 348 |[39m
+     [90m 349 |[39m       [90m// Update wave status[39m[0m
+
+      at WavePickingService.completeWave (src/services/WavePickingService.ts:346:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:730:7)
+
+  ● WavePickingService › Edge Cases › should handle empty pick tasks gracefully
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:777:22)
+
+  ● WavePickingService › Edge Cases › should handle when no pickers are available
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:804:22)
+
+  ● WavePickingService › Edge Cases › should generate unique wave IDs
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:826:21)
+
+  ● WavePickingService › Edge Cases › should generate human-readable wave names
+
+    No orders found matching the wave criteria
+
+    [0m [90m 119 |[39m
+     [90m 120 |[39m       [36mif[39m (orders[33m.[39mlength [33m===[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 121 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([32m'No orders found matching the wave criteria'[39m)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 122 |[39m       }
+     [90m 123 |[39m
+     [90m 124 |[39m       [90m// Limit orders per wave[39m[0m
+
+      at WavePickingService.createWave (src/services/WavePickingService.ts:121:15)
+      at Object.<anonymous> (src/services/__tests__/WavePickingService.test.ts:855:22)
+
+FAIL src/routes/__tests__/auth.test.ts
+  ● Test suite failed to run
+
+    [96msrc/routes/auth.ts[0m:[93m57[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m57[0m       await authService.logout(req.user.userId);
+    [7m  [0m [91m                                        ~~~~~~[0m
+    [96msrc/routes/auth.ts[0m:[93m79[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m79[0m     const user = await authService.getUserById(req.user.userId);
+    [7m  [0m [91m                                                        ~~~~~~[0m
+    [96msrc/routes/auth.ts[0m:[93m110[0m:[93m47[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m110[0m     await authService.changePassword(req.user.userId, currentPassword, newPassword);
+    [7m   [0m [91m                                              ~~~~~~[0m
+    [96msrc/routes/auth.ts[0m:[93m142[0m:[93m50[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m142[0m     await authService.updateCurrentView(req.user.userId, view);
+    [7m   [0m [91m                                                 ~~~~~~[0m
+    [96msrc/routes/auth.ts[0m:[93m163[0m:[93m40[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m163[0m     await authService.setIdle(req.user.userId);
+    [7m   [0m [91m                                       ~~~~~~[0m
+    [96msrc/routes/auth.ts[0m:[93m215[0m:[93m59[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m215[0m     const user = await authService.setActiveRole(req.user.userId, role);
+    [7m   [0m [91m                                                          ~~~~~~[0m
+    [96msrc/routes/auth.ts[0m:[93m270[0m:[93m59[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+    [7m270[0m     const user = await authService.setActiveRole(req.user.userId, role);
+    [7m   [0m [91m                                                          ~~~~~~[0m
+
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\middleware\auth.ts
+ERROR: [96msrc/middleware/auth.ts[0m:[93m32[0m:[93m7[0m - [91merror[0m[90m TS2717: [0mSubsequent property declarations must have the same type.  Property 'user' must be of type 'User', but here has type 'JWTPayload'.
+
+[7m32[0m       user?: JWTPayload;
+[7m  [0m [91m      ~~~~[0m
+
+  [96m../../node_modules/@types/passport/index.d.ts[0m:[93m12[0m:[93m13[0m
+    [7m12[0m             user?: User | undefined;
+    [7m  [0m [96m            ~~~~[0m
+    'user' was also declared here.
+[96msrc/middleware/auth.ts[0m:[93m145[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m145[0m     if (req.user.baseRole === UserRole.ADMIN) {
+[7m   [0m [91m                 ~~~~~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m150[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m150[0m     if (!allowedRoles.includes(req.user.role)) {
+[7m   [0m [91m                                        ~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m152[0m:[93m51[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m152[0m         new ForbiddenError(`User role '${req.user.role}' not authorized for this resource`)
+[7m   [0m [91m                                                  ~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m170[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m170[0m   if (req.user.baseRole !== UserRole.ADMIN) {
+[7m   [0m [91m               ~~~~~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m189[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m189[0m   if (req.user.role !== UserRole.SUPERVISOR && req.user.role !== UserRole.ADMIN) {
+[7m   [0m [91m               ~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m189[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m189[0m   if (req.user.role !== UserRole.SUPERVISOR && req.user.role !== UserRole.ADMIN) {
+[7m   [0m [91m                                                        ~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m204[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m204[0m   if (req.user.role !== UserRole.PICKER && req.user.role !== UserRole.ADMIN) {
+[7m   [0m [91m               ~~~~[0m
+[96msrc/middleware/auth.ts[0m:[93m204[0m:[93m53[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m204[0m   if (req.user.role !== UserRole.PICKER && req.user.role !== UserRole.ADMIN) {
+[7m   [0m [91m                                                    ~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\middleware\permissions.ts
+ERROR: [96msrc/middleware/permissions.ts[0m:[93m132[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m132[0m       if (req.user.baseRole === UserRole.ADMIN) {
+[7m   [0m [91m                   ~~~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m142[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m142[0m         req.user.userId,
+[7m   [0m [91m                 ~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m144[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m144[0m         req.user.role,
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m146[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m146[0m         req.user.baseRole
+[7m   [0m [91m                 ~~~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m148[0m:[93m65[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m148[0m       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                ~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m148[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m148[0m       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                                 ~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m167[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m167[0m           userId: req.user.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m168[0m:[93m26[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m168[0m           role: req.user.role,
+[7m   [0m [91m                         ~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m169[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m169[0m           baseRole: req.user.baseRole,
+[7m   [0m [91m                             ~~~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m207[0m:[93m65[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m207[0m       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                ~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m207[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m207[0m       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                                 ~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m238[0m:[93m65[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m238[0m       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                ~~~~~~[0m
+[96msrc/middleware/permissions.ts[0m:[93m238[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m238[0m       const userPermissions = await getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                                 ~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\middleware\audit.ts
+ERROR: [96msrc/middleware/audit.ts[0m:[93m548[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m548[0m       : req.user?.email || 'Unknown user';
+[7m   [0m [91m                  ~~~~~[0m
+[96msrc/middleware/audit.ts[0m:[93m1200[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m1200[0m     const userId = req.user?.userId || null;
+[7m    [0m [91m                             ~~~~~~[0m
+[96msrc/middleware/audit.ts[0m:[93m1204[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m1204[0m         : req.user?.email || null;
+[7m    [0m [91m                    ~~~~~[0m
+[96msrc/middleware/audit.ts[0m:[93m1205[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m1205[0m     const userRole = req.user?.effectiveRole || null;
+[7m    [0m [91m                               ~~~~~~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\automation.ts
+ERROR: [96msrc/routes/automation.ts[0m:[93m45[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m45[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+[96msrc/routes/automation.ts[0m:[93m130[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m130[0m       scannedBy: req.user!.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\auth.ts
+ERROR: [96msrc/routes/auth.ts[0m:[93m57[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m57[0m       await authService.logout(req.user.userId);
+[7m  [0m [91m                                        ~~~~~~[0m
+[96msrc/routes/auth.ts[0m:[93m79[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m79[0m     const user = await authService.getUserById(req.user.userId);
+[7m  [0m [91m                                                        ~~~~~~[0m
+[96msrc/routes/auth.ts[0m:[93m110[0m:[93m47[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m110[0m     await authService.changePassword(req.user.userId, currentPassword, newPassword);
+[7m   [0m [91m                                              ~~~~~~[0m
+[96msrc/routes/auth.ts[0m:[93m142[0m:[93m50[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m142[0m     await authService.updateCurrentView(req.user.userId, view);
+[7m   [0m [91m                                                 ~~~~~~[0m
+[96msrc/routes/auth.ts[0m:[93m163[0m:[93m40[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m163[0m     await authService.setIdle(req.user.userId);
+[7m   [0m [91m                                       ~~~~~~[0m
+[96msrc/routes/auth.ts[0m:[93m215[0m:[93m59[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m215[0m     const user = await authService.setActiveRole(req.user.userId, role);
+[7m   [0m [91m                                                          ~~~~~~[0m
+[96msrc/routes/auth.ts[0m:[93m270[0m:[93m59[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m270[0m     const user = await authService.setActiveRole(req.user.userId, role);
+[7m   [0m [91m                                                          ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\barcode.ts
+ERROR: [96msrc/routes/barcode.ts[0m:[93m40[0m:[93m64[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m40[0m     logger.info('Barcode lookup', { barcode, userId: req.user?.userId });
+[7m  [0m [91m                                                               ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m86[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m86[0m       userId: req.user?.userId ?? null,
+[7m  [0m [91m                        ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m87[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m87[0m       userEmail: req.user?.email ?? null,
+[7m  [0m [91m                           ~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m251[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m251[0m         req.user?.userId ?? null,
+[7m   [0m [91m                  ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m252[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m252[0m         req.user?.email ?? null,
+[7m   [0m [91m                  ~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m257[0m:[93m59[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m257[0m         { sku, quantity, binLocation, pickerId: req.user!.userId },
+[7m   [0m [91m                                                          ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m270[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m270[0m           pickerId: req.user!.userId,
+[7m   [0m [91m                              ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m355[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m355[0m       userId: req.user?.userId ?? null,
+[7m   [0m [91m                        ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m356[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m356[0m       userEmail: req.user?.email ?? null,
+[7m   [0m [91m                           ~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m433[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m433[0m       req.user?.userId ?? null,
+[7m   [0m [91m                ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m434[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m434[0m       req.user?.email ?? null,
+[7m   [0m [91m                ~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m456[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m456[0m         putawayBy: req.user!.userId,
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/barcode.ts[0m:[93m516[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m516[0m     const userId = req.user!.userId;
+[7m   [0m [91m                             ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\cycleCount.ts
+ERROR: [96msrc/routes/cycleCount.ts[0m:[93m49[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m49[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m75[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m75[0m       requestingUserRole: req.user!.role,
+[7m  [0m [91m                                    ~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m76[0m:[93m35[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m76[0m       requestingUserId: req.user!.userId,
+[7m  [0m [91m                                  ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m139[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m139[0m       reconciledBy: req.user!.userId,
+[7m   [0m [91m                              ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m176[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m176[0m       countedBy: req.user!.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m207[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m207[0m       reviewedBy: req.user!.userId,
+[7m   [0m [91m                            ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m238[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m238[0m       reviewedBy: req.user!.userId,
+[7m   [0m [91m                            ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m274[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m274[0m       cancelledBy: req.user!.userId,
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m367[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m367[0m         req.user.userId,
+[7m   [0m [91m                 ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m369[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m369[0m         req.user.role
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m373[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m373[0m       const userRoleKey = user.role as keyof typeof DEFAULT_ROLE_PERMISSIONS;
+[7m   [0m [91m                               ~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m377[0m:[93m14[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m377[0m         user.role,
+[7m   [0m [91m             ~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m382[0m:[93m76[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m382[0m       const userPerms = await customRoleRepository.getUserPermissions(user.userId, user.role);
+[7m   [0m [91m                                                                           ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m382[0m:[93m89[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m382[0m       const userPerms = await customRoleRepository.getUserPermissions(user.userId, user.role);
+[7m   [0m [91m                                                                                        ~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m386[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m386[0m         userId: user.userId,
+[7m   [0m [91m                     ~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m387[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m387[0m         role: user.role,
+[7m   [0m [91m                   ~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m388[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m388[0m         baseRole: user.baseRole,
+[7m   [0m [91m                       ~~~~~~~~[0m
+[96msrc/routes/cycleCount.ts[0m:[93m389[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m389[0m         effectiveRole: user.effectiveRole,
+[7m   [0m [91m                            ~~~~~~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\exceptions.ts
+ERROR: [96msrc/routes/exceptions.ts[0m:[93m88[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m88[0m       reportedBy: req.user.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+[96msrc/routes/exceptions.ts[0m:[93m193[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m193[0m       resolvedBy: req.user.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/exceptions.ts[0m:[93m232[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m232[0m       reportedBy: req.user.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/exceptions.ts[0m:[93m292[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m292[0m       resolvedBy: req.user.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\interleavedCount.ts
+ERROR: [96msrc/routes/interleavedCount.ts[0m:[93m43[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m43[0m       userId: req.user!.userId,
+[7m  [0m [91m                        ~~~~~~[0m
+[96msrc/routes/interleavedCount.ts[0m:[93m61[0m:[93m78[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m61[0m     const stats = await interleavedCountService.getMicroCountStats(req.user!.userId, days);
+[7m  [0m [91m                                                                             ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\inbound.ts
+ERROR: [96msrc/routes/inbound.ts[0m:[93m79[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m79[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+[96msrc/routes/inbound.ts[0m:[93m175[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m175[0m       receivedBy: req.user!.userId,
+[7m   [0m [91m                            ~~~~~~[0m
+[96msrc/routes/inbound.ts[0m:[93m255[0m:[93m91[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m255[0m     const task = await inboundReceivingService.assignPutawayTask(putawayTaskId, req.user!.userId);
+[7m   [0m [91m                                                                                          ~~~~~~[0m
+[96msrc/routes/inbound.ts[0m:[93m284[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m284[0m       userId: req.user!.userId,
+[7m   [0m [91m                        ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\locationCapacity.ts
+ERROR: [96msrc/routes/locationCapacity.ts[0m:[93m75[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m75[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+[96msrc/routes/locationCapacity.ts[0m:[93m227[0m:[93m33[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m227[0m       acknowledgedBy: req.user!.userId,
+[7m   [0m [91m                                ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\maintenance.ts
+ERROR: [96msrc/routes/maintenance.ts[0m:[93m31[0m:[93m76[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m31[0m     const asset = await maintenanceService.createAsset(req.body, req.user!.userId);
+[7m  [0m [91m                                                                           ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m79[0m:[93m85[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m79[0m     const asset = await maintenanceService.updateAsset(assetId, req.body, req.user!.userId);
+[7m  [0m [91m                                                                                    ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m94[0m:[93m75[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m94[0m     const asset = await maintenanceService.retireAsset(assetId, req.user!.userId);
+[7m  [0m [91m                                                                          ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m112[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m112[0m     const schedule = await maintenanceService.createSchedule(req.body, req.user!.userId);
+[7m   [0m [91m                                                                                 ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m173[0m:[93m84[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m173[0m     const workOrder = await maintenanceService.createWorkOrder(req.body, req.user!.userId);
+[7m   [0m [91m                                                                                   ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m221[0m:[93m86[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m221[0m     const workOrder = await maintenanceService.startWorkOrder(workOrderId, req.user!.userId);
+[7m   [0m [91m                                                                                     ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m239[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m239[0m       req.user!.userId
+[7m   [0m [91m                ~~~~~~[0m
+[96msrc/routes/maintenance.ts[0m:[93m297[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m297[0m     const reading = await maintenanceService.addMeterReading(req.body, req.user!.userId);
+[7m   [0m [91m                                                                                 ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\metrics.ts
+ERROR: [96msrc/routes/metrics.ts[0m:[93m360[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m360[0m       req.user.userId,
+[7m   [0m [91m               ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\inventory.ts
+ERROR: [96msrc/routes/inventory.ts[0m:[93m106[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m106[0m       req.user.userId,
+[7m   [0m [91m               ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\customRoles.ts
+ERROR: [96msrc/routes/customRoles.ts[0m:[93m25[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m25[0m   if (req.user?.baseRole !== UserRole.ADMIN) {
+[7m  [0m [91m                ~~~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m129[0m:[93m74[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m129[0m     const permissions = await customRoleRepo.getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                         ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m129[0m:[93m91[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m129[0m     const permissions = await customRoleRepo.getUserPermissions(req.user.userId, req.user.role);
+[7m   [0m [91m                                                                                          ~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m221[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m221[0m       grantedBy: req.user!.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m225[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m225[0m     const adminUser = await userRepo.findById(req.user!.userId);
+[7m   [0m [91m                                                        ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m235[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m235[0m         req.user!.userId,
+[7m   [0m [91m                  ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m236[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m236[0m         adminUser?.email || req.user!.email || null,
+[7m   [0m [91m                                      ~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m237[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m237[0m         adminUser?.role || req.user!.effectiveRole || null,
+[7m   [0m [91m                                     ~~~~~~~~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m308[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m308[0m       grantedBy: req.user!.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m312[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m312[0m     const adminUser = await userRepo.findById(req.user!.userId);
+[7m   [0m [91m                                                        ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m322[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m322[0m         req.user!.userId,
+[7m   [0m [91m                  ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m323[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m323[0m         adminUser?.email || req.user!.email || null,
+[7m   [0m [91m                                      ~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m324[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m324[0m         adminUser?.role || req.user!.effectiveRole || null,
+[7m   [0m [91m                                     ~~~~~~~~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m366[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m366[0m     const adminUser = await userRepo.findById(req.user!.userId);
+[7m   [0m [91m                                                        ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m376[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m376[0m         req.user!.userId,
+[7m   [0m [91m                  ~~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m377[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m377[0m         adminUser?.email || req.user!.email || null,
+[7m   [0m [91m                                      ~~~~~[0m
+[96msrc/routes/customRoles.ts[0m:[93m378[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m378[0m         adminUser?.role || req.user!.effectiveRole || null,
+[7m   [0m [91m                                     ~~~~~~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\notifications.ts
+ERROR: [96msrc/routes/notifications.ts[0m:[93m24[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m24[0m     const userId = req.user!.userId;
+[7m  [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m53[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m53[0m     const userId = req.user!.userId;
+[7m  [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m68[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m68[0m     const userId = req.user!.userId;
+[7m  [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m98[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m98[0m     const userId = req.user!.userId;
+[7m  [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m122[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m122[0m     const userId = req.user!.userId;
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m137[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m137[0m     const userId = req.user!.userId;
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m322[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m322[0m     const userId = req.user!.userId;
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/notifications.ts[0m:[93m336[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m336[0m     const userId = req.user!.userId;
+[7m   [0m [91m                             ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\shipping.ts
+ERROR: [96msrc/routes/shipping.ts[0m:[93m158[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m158[0m       createdBy: req.user!.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/shipping.ts[0m:[93m242[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m242[0m       req.user!.userId
+[7m   [0m [91m                ~~~~~~[0m
+[96msrc/routes/shipping.ts[0m:[93m306[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m306[0m       createdBy: req.user!.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\roleAssignments.ts
+ERROR: [96msrc/routes/roleAssignments.ts[0m:[93m24[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m24[0m   if (req.user?.role !== UserRole.ADMIN) {
+[7m  [0m [91m                ~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m59[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m59[0m     if (req.user?.userId !== userId && req.user?.role !== UserRole.ADMIN) {
+[7m  [0m [91m                  ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m59[0m:[93m50[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m59[0m     if (req.user?.userId !== userId && req.user?.role !== UserRole.ADMIN) {
+[7m  [0m [91m                                                 ~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m88[0m:[93m76[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m88[0m     const roles = await roleAssignmentRepo.getUserRoleAssignments(req.user.userId);
+[7m  [0m [91m                                                                           ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m133[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m133[0m       req.user.userId
+[7m   [0m [91m               ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m140[0m:[93m56[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m140[0m     const adminUser = await userRepo.findById(req.user.userId);
+[7m   [0m [91m                                                       ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m150[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m150[0m         req.user.userId,
+[7m   [0m [91m                 ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m151[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m151[0m         adminUser?.email || req.user.email || null,
+[7m   [0m [91m                                     ~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m152[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m152[0m         adminUser?.role || req.user?.effectiveRole || null,
+[7m   [0m [91m                                     ~~~~~~~~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m163[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m163[0m             grantedBy: adminUser?.name || req.user.userId,
+[7m   [0m [91m                                                   ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m164[0m:[93m58[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m164[0m             grantedByEmail: adminUser?.email || req.user.email,
+[7m   [0m [91m                                                         ~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m214[0m:[93m56[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m214[0m     const adminUser = await userRepo.findById(req.user.userId);
+[7m   [0m [91m                                                       ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m224[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m224[0m         req.user.userId,
+[7m   [0m [91m                 ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m225[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m225[0m         adminUser?.email || req.user.email || null,
+[7m   [0m [91m                                     ~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m226[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m226[0m         adminUser?.role || req.user?.effectiveRole || null,
+[7m   [0m [91m                                     ~~~~~~~~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m237[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m237[0m             revokedBy: adminUser?.name || req.user.userId,
+[7m   [0m [91m                                                   ~~~~~~[0m
+[96msrc/routes/roleAssignments.ts[0m:[93m238[0m:[93m58[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m238[0m             revokedByEmail: adminUser?.email || req.user.email,
+[7m   [0m [91m                                                         ~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\recurringSchedules.ts
+ERROR: [96msrc/routes/recurringSchedules.ts[0m:[93m54[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m54[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\stockControl.ts
+ERROR: [96msrc/routes/stockControl.ts[0m:[93m97[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m97[0m       req.user.userId
+[7m  [0m [91m               ~~~~~~[0m
+[96msrc/routes/stockControl.ts[0m:[93m127[0m:[93m88[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m127[0m     const result = await stockControlService.submitStockCount(countId, items, req.user.userId);
+[7m   [0m [91m                                                                                       ~~~~~~[0m
+[96msrc/routes/stockControl.ts[0m:[93m191[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m191[0m       req.user.userId
+[7m   [0m [91m               ~~~~~~[0m
+[96msrc/routes/stockControl.ts[0m:[93m236[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m236[0m       req.user.userId
+[7m   [0m [91m               ~~~~~~[0m
+[96msrc/routes/stockControl.ts[0m:[93m320[0m:[93m93[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m320[0m     const result = await stockControlService.reconcileDiscrepancies(discrepancies, req.user.userId);
+[7m   [0m [91m                                                                                            ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\rootCauseAnalysis.ts
+ERROR: [96msrc/routes/rootCauseAnalysis.ts[0m:[93m76[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m76[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\qualityControl.ts
+ERROR: [96msrc/routes/qualityControl.ts[0m:[93m48[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m48[0m       createdBy: req.user!.userId,
+[7m  [0m [91m                           ~~~~~~[0m
+[96msrc/routes/qualityControl.ts[0m:[93m132[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m132[0m       inspectorId: req.user!.userId,
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/qualityControl.ts[0m:[93m230[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m230[0m       approvedBy: req.user!.userId,
+[7m   [0m [91m                            ~~~~~~[0m
+[96msrc/routes/qualityControl.ts[0m:[93m327[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m327[0m       authorizedBy: req.user!.userId,
+[7m   [0m [91m                              ~~~~~~[0m
+[96msrc/routes/qualityControl.ts[0m:[93m391[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m391[0m       req.user!.userId
+[7m   [0m [91m                ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\sales.ts
+ERROR: [96msrc/routes/sales.ts[0m:[93m48[0m:[93m76[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m48[0m     const customer = await salesService.createCustomer(req.body, req.user!.userId);
+[7m  [0m [91m                                                                           ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m96[0m:[93m88[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m96[0m     const customer = await salesService.updateCustomer(customerId, req.body, req.user!.userId);
+[7m  [0m [91m                                                                                       ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m114[0m:[93m68[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m114[0m     const lead = await salesService.createLead(req.body, req.user!.userId);
+[7m   [0m [91m                                                                   ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m162[0m:[93m76[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m162[0m     const lead = await salesService.updateLead(leadId, req.body, req.user!.userId);
+[7m   [0m [91m                                                                           ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m177[0m:[93m81[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m177[0m     const customer = await salesService.convertLeadToCustomer(leadId, req.user!.userId);
+[7m   [0m [91m                                                                                ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m195[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m195[0m     const opportunity = await salesService.createOpportunity(req.body, req.user!.userId);
+[7m   [0m [91m                                                                                 ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m248[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m248[0m       req.user!.userId
+[7m   [0m [91m                ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m267[0m:[93m70[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m267[0m     const quote = await salesService.createQuote(req.body, req.user!.userId);
+[7m   [0m [91m                                                                     ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m315[0m:[93m67[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m315[0m     const quote = await salesService.sendQuote(quoteId, req.user!.userId);
+[7m   [0m [91m                                                                  ~~~~~~[0m
+[96msrc/routes/sales.ts[0m:[93m330[0m:[93m69[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m330[0m     const quote = await salesService.acceptQuote(quoteId, req.user!.userId);
+[7m   [0m [91m                                                                    ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\orders.ts
+ERROR: [96msrc/routes/orders.ts[0m:[93m77[0m:[93m70[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m77[0m     const orders = await orderService.getPickerActiveOrders(req.user.userId);
+[7m  [0m [91m                                                                     ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m128[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m128[0m         pickerId: req.user.userId,
+[7m   [0m [91m                           ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m183[0m:[93m82[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m183[0m     const result = await orderService.continueOrder(req.params.orderId, req.user.userId);
+[7m   [0m [91m                                                                                 ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m242[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m242[0m       [req.user.userId]
+[7m   [0m [91m                ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m325[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m325[0m       req.user.userId
+[7m   [0m [91m               ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m347[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m347[0m       userId: req.user.userId,
+[7m   [0m [91m                       ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m382[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m382[0m         req.user.userId,
+[7m   [0m [91m                 ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m441[0m:[93m87[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m441[0m     const order = await orderService.skipPickTask(pickTaskId, reason.trim(), req.user.userId);
+[7m   [0m [91m                                                                                      ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m475[0m:[93m26[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m475[0m       pickerId: req.user.userId,
+[7m   [0m [91m                         ~~~~~~[0m
+[96msrc/routes/orders.ts[0m:[93m596[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m596[0m                 req.user?.userId || 'system',
+[7m   [0m [91m                          ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\waves.ts
+ERROR: [96msrc/routes/waves.ts[0m:[93m34[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m34[0m       userId: req.user?.userId,
+[7m  [0m [91m                        ~~~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m35[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m35[0m       userEmail: req.user?.email,
+[7m  [0m [91m                           ~~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m36[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m36[0m       userRole: req.user?.role,
+[7m  [0m [91m                          ~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m71[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m71[0m         userId: req.user?.userId,
+[7m  [0m [91m                          ~~~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m72[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m72[0m         userEmail: req.user?.email,
+[7m  [0m [91m                             ~~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m73[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m73[0m         userRole: req.user?.role,
+[7m  [0m [91m                            ~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m163[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m163[0m         userId: req.user?.userId,
+[7m   [0m [91m                          ~~~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m164[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m164[0m         userEmail: req.user?.email,
+[7m   [0m [91m                             ~~~~~[0m
+[96msrc/routes/waves.ts[0m:[93m165[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m165[0m         userRole: req.user?.role,
+[7m   [0m [91m                            ~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\slotting.ts
+ERROR: [96msrc/routes/slotting.ts[0m:[93m95[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m95[0m         userId: req.user?.userId,
+[7m  [0m [91m                          ~~~~~~[0m
+[96msrc/routes/slotting.ts[0m:[93m96[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m96[0m         userEmail: req.user?.email,
+[7m  [0m [91m                             ~~~~~[0m
+[96msrc/routes/slotting.ts[0m:[93m97[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m97[0m         userRole: req.user?.role,
+[7m  [0m [91m                            ~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\users.ts
+ERROR: [96msrc/routes/users.ts[0m:[93m19[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m19[0m   if (req.user?.baseRole !== UserRole.ADMIN) {
+[7m  [0m [91m                ~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\developer.ts
+ERROR: [96msrc/routes/developer.ts[0m:[93m26[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m26[0m   const isAdmin = req.user?.baseRole === 'ADMIN' || req.user?.effectiveRole === 'ADMIN';
+[7m  [0m [91m                            ~~~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m26[0m:[93m63[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m26[0m   const isAdmin = req.user?.baseRole === 'ADMIN' || req.user?.effectiveRole === 'ADMIN';
+[7m  [0m [91m                                                              ~~~~~~~~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m494[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m494[0m     if (userId === req.user?.userId) {
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m531[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m531[0m     if (userId === req.user?.userId) {
+[7m   [0m [91m                             ~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m889[0m:[93m33[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m889[0m     const createdBy = req.user?.userId || 'unknown';
+[7m   [0m [91m                                ~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1053[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m1053[0m       userId: req.user?.userId,
+[7m    [0m [91m                        ~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1054[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m1054[0m       email: req.user?.email,
+[7m    [0m [91m                       ~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1055[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m1055[0m       baseRole: req.user?.baseRole,
+[7m    [0m [91m                          ~~~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1056[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'effectiveRole' does not exist on type 'User'.
+
+[7m1056[0m       effectiveRole: req.user?.effectiveRole,
+[7m    [0m [91m                               ~~~~~~~~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1097[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'baseRole' does not exist on type 'User'.
+
+[7m1097[0m     const userRole = req.user?.baseRole || 'PICKER';
+[7m    [0m [91m                               ~~~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1426[0m:[93m42[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m1426[0m               CRAWLER_USER_ID: req.user?.userId || '',
+[7m    [0m [91m                                         ~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1762[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m1762[0m         CRAWLER_USER_ID: req.user?.userId || '',
+[7m    [0m [91m                                   ~~~~~~[0m
+[96msrc/routes/developer.ts[0m:[93m1847[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m1847[0m           CRAWLER_USER_ID: req.user?.userId || '',
+[7m    [0m [91m                                     ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\production.ts
+ERROR: [96msrc/routes/production.ts[0m:[93m32[0m:[93m71[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m32[0m     const bom = await productionService.createBOM(req.body, req.user!.userId);
+[7m  [0m [91m                                                                      ~~~~~~[0m
+[96msrc/routes/production.ts[0m:[93m81[0m:[93m85[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m81[0m     const order = await productionService.createProductionOrder(req.body, req.user!.userId);
+[7m  [0m [91m                                                                                    ~~~~~~[0m
+[96msrc/routes/production.ts[0m:[93m132[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m132[0m       req.user!.userId
+[7m   [0m [91m                ~~~~~~[0m
+[96msrc/routes/production.ts[0m:[93m148[0m:[93m85[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m148[0m     const order = await productionService.releaseProductionOrder(orderId, req.user!.userId);
+[7m   [0m [91m                                                                                    ~~~~~~[0m
+[96msrc/routes/production.ts[0m:[93m163[0m:[93m83[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m163[0m     const order = await productionService.startProductionOrder(orderId, req.user!.userId);
+[7m   [0m [91m                                                                                  ~~~~~~[0m
+[96msrc/routes/production.ts[0m:[93m183[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m183[0m       req.user!.userId
+[7m   [0m [91m                ~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\services\DeveloperMetricsService.ts
+ERROR: [96msrc/services/DeveloperMetricsService.ts[0m:[93m312[0m:[93m5[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m312[0m     // @ts-expect-error - Variable kept for future use
+[7m   [0m [91m    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\zones.ts
+ERROR: [96msrc/routes/zones.ts[0m:[93m110[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m110[0m         userId: req.user?.userId,
+[7m   [0m [91m                          ~~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m111[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m111[0m         userEmail: req.user?.email,
+[7m   [0m [91m                             ~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m112[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m112[0m         userRole: req.user?.role,
+[7m   [0m [91m                            ~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m145[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m145[0m       req.body.pickerId = req.user?.userId;
+[7m   [0m [91m                                    ~~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m149[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m149[0m       userId: req.user?.userId,
+[7m   [0m [91m                        ~~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m150[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m150[0m       userEmail: req.user?.email,
+[7m   [0m [91m                           ~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m151[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m151[0m       userRole: req.user?.role,
+[7m   [0m [91m                          ~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m183[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'User'.
+
+[7m183[0m         userId: req.user?.userId,
+[7m   [0m [91m                          ~~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m184[0m:[93m30[0m - [91merror[0m[90m TS2339: [0mProperty 'email' does not exist on type 'User'.
+
+[7m184[0m         userEmail: req.user?.email,
+[7m   [0m [91m                             ~~~~~[0m
+[96msrc/routes/zones.ts[0m:[93m185[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'role' does not exist on type 'User'.
+
+[7m185[0m         userRole: req.user?.role,
+[7m   [0m [91m                            ~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\routes\routeOptimization.ts
+ERROR: [96msrc/routes/routeOptimization.ts[0m:[93m284[0m:[93m71[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ order_id?: string; order_item_count?: number; order_total_value?: number; hour_of_day?: number; day_of_week?: number; sku_count?: number; zone_diversity?: number; priority_level?: number; picker_count?: number; }' is not assignable to parameter of type 'OrderFeatures'.
+  Property 'order_item_count' is optional in type '{ order_id?: string; order_item_count?: number; order_total_value?: number; hour_of_day?: number; day_of_week?: number; sku_count?: number; zone_diversity?: number; priority_level?: number; picker_count?: number; }' but required in type 'OrderFeatures'.
+
+[7m284[0m     const prediction = await mlPredictionService.predictOrderDuration(body);
+[7m   [0m [91m                                                                      ~~~~[0m
+[96msrc/routes/routeOptimization.ts[0m:[93m321[0m:[93m73[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ order_id?: string; order_item_count?: number; hour_of_day?: number; day_of_week?: number; sku_count?: number; zone_diversity?: number; priority_level?: number; }' is not assignable to parameter of type 'OrderFeatures'.
+  Property 'order_item_count' is optional in type '{ order_id?: string; order_item_count?: number; hour_of_day?: number; day_of_week?: number; sku_count?: number; zone_diversity?: number; priority_level?: number; }' but required in type 'OrderFeatures'.
+
+[7m321[0m       body.orders.map(order => mlPredictionService.predictOrderDuration(order))
+[7m   [0m [91m                                                                        ~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\services\NZCService.ts
+ERROR: [96msrc/services/NZCService.ts[0m:[93m153[0m:[93m3[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m153[0m   // @ts-expect-error - Unused private method kept for API completeness
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/services/NZCService.ts[0m:[93m176[0m:[93m3[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m176[0m   // @ts-expect-error - Unused private method kept for API completeness
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/services/NZCService.ts[0m:[93m184[0m:[93m3[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m184[0m   // @ts-expect-error - Unused private method kept for API completeness
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\services\SlottingOptimizationService.ts
+ERROR: [96msrc/services/SlottingOptimizationService.ts[0m:[93m460[0m:[93m5[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m460[0m     // @ts-expect-error
+[7m   [0m [91m    ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/services/SlottingOptimizationService.ts[0m:[93m475[0m:[93m5[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m475[0m     // @ts-expect-error
+[7m   [0m [91m    ~~~~~~~~~~~~~~~~~~~[0m
+STACK: 
+Failed to collect coverage from C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend\src\services\SeedDataService.ts
+ERROR: [96msrc/services/SeedDataService.ts[0m:[93m208[0m:[93m7[0m - [91merror[0m[90m TS2578: [0mUnused '@ts-expect-error' directive.
+
+[7m208[0m       // @ts-expect-error
+[7m   [0m [91m      ~~~~~~~~~~~~~~~~~~~[0m
+STACK: 
+-----------------------------------|---------|----------|---------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+File                               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                                                        
+-----------------------------------|---------|----------|---------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+All files                          |   23.17 |    15.37 |   20.98 |   23.13 |                                                                                                                                                                          
+ src                               |       0 |        0 |       0 |       0 |                                                                                                                                                                          
+  app.ts                           |       0 |        0 |       0 |       0 | 7-360                                                                                                                                                                    
+  fix-admin-hash.ts                |       0 |        0 |       0 |       0 | 7-80                                                                                                                                                                     
+ src/config                        |   38.96 |    43.75 |   31.25 |   38.96 |                                                                                                                                                                          
+  index.ts                         |   34.88 |       50 |   33.33 |   34.88 | 77,93,99-103,115,121-123,160-304                                                                                                                                         
+  logger.ts                        |   44.11 |       25 |   28.57 |   44.11 | 17-19,29-31,50-57,74-84,107-110                                                                                                                                          
+ src/docs                          |       0 |      100 |       0 |       0 |                                                                                                                                                                          
+  swagger-config.ts                |       0 |      100 |     100 |       0 | 7-327                                                                                                                                                                    
+  swagger.ts                       |       0 |      100 |       0 |       0 | 8-365                                                                                                                                                                    
+ src/middleware                    |       0 |        0 |       0 |       0 |                                                                                                                                                                          
+  cache.ts                         |       0 |        0 |       0 |       0 | 9-226                                                                                                                                                                    
+  errorHandler.ts                  |       0 |        0 |       0 |       0 | 8-160                                                                                                                                                                    
+  index.ts                         |       0 |      100 |       0 |       0 | 7-18                                                                                                                                                                     
+  rateLimiter.ts                   |       0 |        0 |       0 |       0 | 7-56                                                                                                                                                                     
+  requestId.ts                     |       0 |        0 |       0 |       0 | 7-74                                                                                                                                                                     
+  security.ts                      |       0 |        0 |       0 |       0 | 7-262                                                                                                                                                                    
+  validation.ts                    |       0 |        0 |       0 |       0 | 8-266                                                                                                                                                                    
+ src/migrations                    |       0 |        0 |       0 |       0 |                                                                                                                                                                          
+  fix-order-item-status-trigger.ts |       0 |        0 |       0 |       0 | 6-95                                                                                                                                                                     
+ src/observability                 |   23.48 |    13.79 |    9.52 |   23.66 |                                                                                                                                                                          
+  prometheus.ts                    |       0 |        0 |       0 |       0 | 9-419                                                                                                                                                                    
+  telemetry.ts                     |   46.96 |    28.57 |   16.66 |   46.96 | 57-82,99-112,121-128,136-146,154-161,213                                                                                                                                 
+ src/repositories                  |    2.51 |        0 |    2.41 |    2.57 |                                                                                                                                                                          
+  BaseRepository.ts                |    8.45 |        0 |       4 |    9.37 | 19-26,63-265                                                                                                                                                             
+  BusinessRulesRepository.ts       |       0 |        0 |       0 |       0 | 8-597                                                                                                                                                                    
+  CustomRoleRepository.ts          |       0 |        0 |       0 |       0 | 7-331                                                                                                                                                                    
+  IntegrationsRepository.ts        |       0 |        0 |       0 |       0 | 8-694                                                                                                                                                                    
+  InventoryRepository.ts           |    8.21 |        0 |    5.55 |    8.45 | 26-385                                                                                                                                                                   
+  MaintenanceRepository.ts         |       0 |        0 |       0 |       0 | 7-693                                                                                                                                                                    
+  NotificationRepository.ts        |    4.63 |        0 |       5 |    4.63 | 45-566                                                                                                                                                                   
+  OrderRepository.ts               |    8.13 |        0 |    6.25 |    8.19 | 29-476                                                                                                                                                                   
+  PickTaskRepository.ts            |    7.44 |        0 |    6.66 |    7.44 | 27-419                                                                                                                                                                   
+  ProductionRepository.ts          |       0 |        0 |       0 |       0 | 7-591                                                                                                                                                                    
+  ReportsRepository.ts             |       0 |        0 |       0 |       0 | 8-717                                                                                                                                                                    
+  RoleAssignmentRepository.ts      |       0 |        0 |       0 |       0 | 10-138                                                                                                                                                                   
+  SKURepository.ts                 |   10.52 |        0 |    8.33 |   10.71 | 26-232                                                                                                                                                                   
+  SalesRepository.ts               |       0 |        0 |       0 |       0 | 7-901                                                                                                                                                                    
+  UserRepository.ts                |    6.93 |        0 |    3.84 |    7.14 | 28-422                                                                                                                                                                   
+  index.ts                         |       0 |      100 |       0 |       0 | 7-21                                                                                                                                                                     
+ src/repositories/queries          |   54.54 |        0 |       0 |   54.54 |                                                                                                                                                                          
+  OrderQueries.ts                  |      60 |        0 |       0 |      60 | 106,126-129                                                                                                                                                              
+  index.ts                         |       0 |      100 |     100 |       0 | 7                                                                                                                                                                        
+ src/routes                        |       0 |        0 |       0 |       0 |                                                                                                                                                                          
+  audit.ts                         |       0 |        0 |       0 |       0 | 7-257                                                                                                                                                                    
+  binLocations.ts                  |       0 |        0 |       0 |       0 | 7-210                                                                                                                                                                    
+  businessRules.ts                 |       0 |        0 |       0 |       0 | 8-317                                                                                                                                                                    
+  cycleCountKPI.ts                 |       0 |        0 |       0 |       0 | 7-134                                                                                                                                                                    
+  health.ts                        |       0 |        0 |       0 |       0 | 5-74                                                                                                                                                                     
+  index.ts                         |       0 |      100 |     100 |       0 | 7-138                                                                                                                                                                    
+  integrations.ts                  |       0 |        0 |       0 |       0 | 7-400                                                                                                                                                                    
+  nzc.ts                           |       0 |        0 |       0 |       0 | 7-279                                                                                                                                                                    
+  reports.ts                       |       0 |        0 |       0 |       0 | 7-359                                                                                                                                                                    
+  skus.ts                          |       0 |        0 |       0 |       0 | 5-133                                                                                                                                                                    
+  varianceSeverity.ts              |       0 |        0 |       0 |       0 | 7-150                                                                                                                                                                    
+ src/services                      |    38.1 |    23.95 |   37.39 |   38.14 |                                                                                                                                                                          
+  AuditService.ts                  |   36.48 |     4.12 |    9.09 |   36.81 | 237-240,250-983                                                                                                                                                          
+  AuthService.ts                   |     100 |      100 |     100 |     100 |                                                                                                                                                                          
+  AutomationService.ts             |       0 |        0 |       0 |       0 | 8-361                                                                                                                                                                    
+  BinLocationService.ts            |       0 |        0 |       0 |       0 | 7-284                                                                                                                                                                    
+  BusinessRulesService.ts          |       0 |        0 |       0 |       0 | 8-417                                                                                                                                                                    
+  CycleCountKPIService.ts          |       0 |        0 |       0 |       0 | 7-432                                                                                                                                                                    
+  CycleCountService.ts             |   65.15 |    54.19 |   76.08 |   64.93 | 125-127,201,260,376-389,443-445,471,521-523,527-529,533-535,539-541,550-552,583,614,635-637,656,699-702,728-754,768-769,827-1141,1193,1307,1379,1437-1438,1448,1457,1522 
+  EmailProvider.ts                 |    2.81 |        0 |       0 |    2.89 | 54-474,485-515                                                                                                                                                           
+  FeatureFlagService.ts            |       0 |        0 |       0 |       0 | 7-182                                                                                                                                                                    
+  InboundReceivingService.ts       |     100 |    90.66 |     100 |     100 | 229,422,470,520,641-647,675                                                                                                                                              
+  IntegrationsService.ts           |       0 |        0 |       0 |       0 | 9-470                                                                                                                                                                    
+  InterleavedCountService.ts       |       0 |        0 |       0 |       0 | 7-320                                                                                                                                                                    
+  InventoryService.ts              |   90.38 |    77.77 |     100 |      90 | 155-183                                                                                                                                                                  
+  LocationCapacityService.ts       |       0 |        0 |       0 |       0 | 7-725                                                                                                                                                                    
+  MLPredictionService.ts           |   96.89 |       80 |     100 |   96.55 | 124,305,330,351                                                                                                                                                          
+  MaintenanceService.ts            |       0 |        0 |       0 |       0 | 7-368                                                                                                                                                                    
+  MetricsService.ts                |       0 |        0 |       0 |       0 | 10-1375                                                                                                                                                                  
+  NotificationHelper.ts            |   84.61 |       50 |   33.33 |   84.61 | 48,55,62,72                                                                                                                                                              
+  NotificationService.ts           |   11.28 |     7.25 |   13.04 |   11.76 | 99-103,109-118,124-347,388-394,410-762,799-822                                                                                                                           
+  OrderExceptionService.ts         |       0 |        0 |       0 |       0 | 7-639                                                                                                                                                                    
+  OrderService.ts                  |   87.39 |    44.59 |   89.28 |   87.39 | 125,131,137,160,241-252,280,382,510,531,561-573,589,621,656,802,812,844,870,880,899,934,948                                                                              
+  ProductionService.ts             |       0 |        0 |       0 |       0 | 7-270                                                                                                                                                                    
+  PushProvider.ts                  |    4.23 |        0 |       0 |    4.34 | 48-432,443-453                                                                                                                                                           
+  QualityControlService.ts         |   85.03 |    79.04 |   92.85 |   85.48 | 103-105,159-161,165-167,246-248,296-298,302-304,308-310,314-316,409-411,465-467,606-608,667-669                                                                          
+  RecurringScheduleService.ts      |       0 |        0 |       0 |       0 | 8-509                                                                                                                                                                    
+  ReportsService.ts                |       0 |        0 |       0 |       0 | 8-463                                                                                                                                                                    
+  RootCauseAnalysisService.ts      |       0 |        0 |       0 |       0 | 8-519                                                                                                                                                                    
+  RouteOptimizationService.ts      |   96.56 |    89.58 |   97.14 |   96.25 | 127,217-219,228,355,451                                                                                                                                                  
+  SMSProvider.ts                   |     3.7 |        0 |       0 |    3.92 | 48-361,372-382                                                                                                                                                           
+  SalesService.ts                  |       0 |        0 |       0 |       0 | 7-440                                                                                                                                                                    
+  ShippingService.ts               |    71.5 |    48.38 |      75 |   73.09 | 115-311,646                                                                                                                                                              
+  StockControlService.ts           |   89.05 |    77.14 |   95.45 |   89.06 | 215-217,221-223,227-229,237,279-280,563-564,787-789,799-801,844-845,887-888,959-960,1040-1041                                                                            
+  VarianceSeverityService.ts       |       0 |        0 |       0 |       0 | 8-414                                                                                                                                                                    
+  WavePickingService.ts            |   54.49 |    43.28 |   45.83 |    55.9 | 125-195,215-251,271-280,350-380,459,502-601,614-712                                                                                                                      
+  ZonePickingService.ts            |   53.04 |    19.69 |   56.25 |   55.45 | 174-206,229-231,257-341,430-454,461,490-537                                                                                                                              
+  index.ts                         |       0 |      100 |       0 |       0 | 7-16                                                                                                                                                                     
+ src/test                          |       0 |        0 |       0 |       0 |                                                                                                                                                                          
+  factories.ts                     |       0 |        0 |       0 |       0 | 8-369                                                                                                                                                                    
+ src/utils                         |       0 |        0 |       0 |       0 |                                                                                                                                                                          
+  gracefulShutdown.ts              |       0 |        0 |       0 |       0 | 17-338                                                                                                                                                                   
+  pagination.ts                    |       0 |        0 |       0 |       0 | 43-155                                                                                                                                                                   
+  portLock.ts                      |       0 |        0 |       0 |       0 | 9-300                                                                                                                                                                    
+ src/websocket                     |    12.5 |        0 |    4.76 |   12.84 |                                                                                                                                                                          
+  broadcaster.ts                   |    8.33 |        0 |       0 |    8.33 | 68-297                                                                                                                                                                   
+  index.ts                         |   14.47 |        0 |    9.52 |   15.06 | 78-235,249-284                                                                                                                                                           
+-----------------------------------|---------|----------|---------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Jest: "global" coverage threshold for statements (80%) not met: 23.17%
+Jest: "global" coverage threshold for branches (80%) not met: 15.37%
+Jest: "global" coverage threshold for lines (80%) not met: 23.13%
+Jest: "global" coverage threshold for functions (80%) not met: 20.98%
+Test Suites: 12 failed, 6 passed, 18 total
+Tests:       61 failed, 304 passed, 365 total
+Snapshots:   0 total
+Time:        33.326 s
+Ran all test suites.
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend
+npm error workspace @opsui/backend@1.0.0
+npm error location C:\Users\Heinricht\Documents\Warehouse Management System\packages\backend
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c jest --ci --coverage

@@ -393,7 +393,7 @@ describe('QualityControlService', () => {
       expect(result.status).toBe(InspectionStatus.PASSED);
       expect(notifyUser).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'QUALITY_APPROVED',
+          type: 'quality_approved',
         })
       );
     });
