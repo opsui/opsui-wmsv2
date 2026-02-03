@@ -1172,11 +1172,7 @@ async function generateHumanReadableDescription(
 /**
  * Log the request to audit logs
  */
-async function logRequest(
-  req: Request,
-  statusCode: number,
-  responseData: any
-): Promise<void> {
+async function logRequest(req: Request, statusCode: number, responseData: any): Promise<void> {
   try {
     const startTime = (req as any)[REQUEST_START_TIME] || Date.now();
     const duration = Date.now() - startTime;

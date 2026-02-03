@@ -4,7 +4,7 @@
  * Handles JWT validation and role-based access control
  */
 
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../config/logger';
 import config from '../config';
@@ -34,7 +34,8 @@ declare global {
   }
 }
 
-export type AuthenticatedRequest = Express.Request;
+// AuthenticatedRequest is just an alias for Request since we've overridden the user property
+export type AuthenticatedRequest = Request;
 
 // ============================================================================
 // AUTHENTICATION MIDDLEWARE
