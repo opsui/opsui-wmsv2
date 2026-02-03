@@ -4,7 +4,7 @@
  * Handles JWT validation and role-based access control
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../config/logger';
 import config from '../config';
@@ -25,9 +25,16 @@ export interface JWTPayload {
   exp?: number;
 }
 
-export interface AuthenticatedRequest extends Request {
-  user?: JWTPayload;
+// Override Express Request type globally to use JWTPayload instead of Passport's User
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JWTPayload;
+    }
+  }
 }
+
+export type AuthenticatedRequest = Express.Request;
 
 // ============================================================================
 // AUTHENTICATION MIDDLEWARE
