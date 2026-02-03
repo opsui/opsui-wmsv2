@@ -86,7 +86,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: mockEntries })
         .mockResolvedValueOnce({ rows: [] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 
@@ -112,7 +112,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: mockEntries })
         .mockResolvedValue({ rows: [] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 
@@ -189,7 +189,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [mockPlan] }) // get plan
         .mockResolvedValueOnce({ rows: [] }); // UPDATE
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getCycleCountPlan call
       global.mockPool.query.mockResolvedValueOnce({
@@ -328,7 +328,7 @@ describe('CycleCountService', () => {
           rows: [{ plan_id: 'CCP-001', plan_name: dto.planName, status: 'SCHEDULED' }],
         });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getCycleCountPlan
       global.mockPool.query.mockResolvedValueOnce({
@@ -462,7 +462,7 @@ describe('CycleCountService', () => {
 
       global.mockPool.query.mockResolvedValue({ rows: [] }); // INSERT entries
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getCycleCountPlan
       global.mockPool.query
@@ -520,7 +520,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
         .mockResolvedValueOnce({ rows: [] }); // UPDATE entry
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getCycleCountPlan
       global.mockPool.query
@@ -570,7 +570,7 @@ describe('CycleCountService', () => {
 
       global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.createCycleCountEntry(dto);
 
@@ -605,7 +605,7 @@ describe('CycleCountService', () => {
 
       global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.createCycleCountEntry(dto);
 
@@ -641,7 +641,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
         .mockResolvedValueOnce({ rows: [mockEntry] }); // UPDATE entry
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.updateVarianceStatus(dto);
 
@@ -666,7 +666,7 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [mockEntry] })
         .mockResolvedValueOnce({ rows: [mockEntry] }); // UPDATE entry
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.updateVarianceStatus(dto);
 
@@ -735,7 +735,7 @@ describe('CycleCountService', () => {
 
       global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.createCycleCountEntry(dto);
 
@@ -765,7 +765,7 @@ describe('CycleCountService', () => {
 
       global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       const result = await service.createCycleCountEntry(dto);
 

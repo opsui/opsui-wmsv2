@@ -81,7 +81,7 @@ describe('ShippingService', () => {
 
       const result = await service.getActiveCarriers();
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT * FROM carriers WHERE is_active = true'),
         []
       );
@@ -448,7 +448,7 @@ describe('ShippingService', () => {
         carrierId: 'CARR-001',
       });
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('carrier_id ='),
         expect.arrayContaining(['CARR-001'])
       );
@@ -510,7 +510,7 @@ describe('ShippingService', () => {
         'user-123'
       );
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE shipments'),
         expect.arrayContaining([ShipmentStatus.SHIPPED, expect.any(String), 'user-123', 'SHP-001'])
       );
@@ -585,11 +585,10 @@ describe('ShippingService', () => {
         'https://track.com/TRK123456'
       );
 
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('UPDATE shipments'), [
-        'TRK123456',
-        'https://track.com/TRK123456',
-        'SHP-001',
-      ]);
+      expect(global.mockPool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE shipments'),
+        ['TRK123456', 'https://track.com/TRK123456', 'SHP-001']
+      );
       expect(logger.info).toHaveBeenCalledWith('Tracking number added', {
         shipmentId: 'SHP-001',
         trackingNumber: 'TRK123456',
@@ -683,7 +682,7 @@ describe('ShippingService', () => {
 
       await service.createShippingLabel(dto);
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE shipments'),
         expect.arrayContaining([ShipmentStatus.LABEL_CREATED, 'SHP-001'])
       );
@@ -712,7 +711,7 @@ describe('ShippingService', () => {
       const result = await service.markLabelPrinted('LBL-001');
 
       expect(result.printedAt).toEqual(expect.any(Date));
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE shipping_labels'),
         ['LBL-001']
       );
@@ -922,7 +921,7 @@ describe('ShippingService', () => {
 
       await service.createShipment(dto);
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO shipments'),
         expect.arrayContaining([null]) // ship_date should be null
       );
