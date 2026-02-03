@@ -217,13 +217,13 @@ describe('ShippingService', () => {
       const result = await service.createShipment(dto);
 
       // Verify BEGIN was called
-      const beginCall = mockClient.query.mock.calls.find(
+      const beginCall = global.mockPool.query.mock.calls.find(
         (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('BEGIN')
       );
       expect(beginCall).toBeDefined();
 
       // Verify INSERT was called with correct parameters
-      const insertCall = mockClient.query.mock.calls.find(
+      const insertCall = global.mockPool.query.mock.calls.find(
         (call: unknown[]) =>
           typeof call[0] === 'string' && call[0].includes('INSERT INTO shipments')
       );
@@ -260,7 +260,7 @@ describe('ShippingService', () => {
       await expect(service.createShipment(dto)).rejects.toThrow('Database error');
 
       // Verify ROLLBACK was called
-      const rollbackCall = mockClient.query.mock.calls.find(
+      const rollbackCall = global.mockPool.query.mock.calls.find(
         (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('ROLLBACK')
       );
       expect(rollbackCall).toBeDefined();
