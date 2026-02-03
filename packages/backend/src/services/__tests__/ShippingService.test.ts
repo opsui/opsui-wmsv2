@@ -301,7 +301,7 @@ describe('ShippingService', () => {
       };
 
       const mockLabelRow = {
-        label_id: 'LBL-001',
+        label_id: 'LBL-0000000001',
         shipment_id: 'SHP-001',
         label_format: LabelFormat.PDF,
         label_url: 'https://labels.com/LBL-001.pdf',
@@ -619,7 +619,7 @@ describe('ShippingService', () => {
       };
 
       const mockLabel = {
-        label_id: 'LBL-001',
+        label_id: 'LBL-0000000001',
         shipment_id: 'SHP-001',
         label_format: LabelFormat.PDF,
         label_url: null,
@@ -692,7 +692,7 @@ describe('ShippingService', () => {
   describe('markLabelPrinted', () => {
     it('should mark label as printed', async () => {
       const mockLabel = {
-        label_id: 'LBL-001',
+        label_id: 'LBL-0000000001',
         shipment_id: 'SHP-001',
         label_format: LabelFormat.PDF,
         label_url: null,
