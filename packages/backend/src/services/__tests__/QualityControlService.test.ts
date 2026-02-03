@@ -67,11 +67,11 @@ describe('QualityControlService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ checklist_id: 'CHK-001', checklist_name: data.checklistName }],
-        });
-
-      global.mockPool.query.mockResolvedValue({ rows: [] }); // items
-
-      await global.mockPool.query('COMMIT');
+        })
+        .mockResolvedValueOnce({ rows: [] }) // first item
+        .mockResolvedValueOnce({ rows: [] }) // second item
+        .mockResolvedValueOnce({ rows: [] }) // third item
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getInspectionChecklist
       global.mockPool.query
@@ -100,11 +100,12 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
-
-      global.mockPool.query.mockResolvedValue({ rows: [] });
-
-      await global.mockPool.query('COMMIT');
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({
+          rows: [{ checklist_id: 'CHK-001', checklist_name: data.checklistName }],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getInspectionChecklist
       global.mockPool.query
@@ -181,8 +182,9 @@ describe('QualityControlService', () => {
         },
       ];
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: mockChecklists });
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // items
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: mockChecklists })
+        .mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllInspectionChecklists({
         inspectionType: InspectionType.INCOMING,
@@ -213,8 +215,10 @@ describe('QualityControlService', () => {
         },
       ];
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: mockChecklists });
-      global.mockPool.query.mockResolvedValue({ rows: [] }); // items
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: mockChecklists })
+        .mockResolvedValueOnce({ rows: [] }) // items for CHK-001
+        .mockResolvedValueOnce({ rows: [] }); // items for CHK-002
 
       const result = await service.getAllInspectionChecklists({
         activeOnly: true,
@@ -251,9 +255,8 @@ describe('QualityControlService', () => {
         .mockResolvedValueOnce({ rows: [mockUser] }) // get user
         .mockResolvedValueOnce({
           rows: [{ inspection_id: 'QI-001', inspection_type: dto.inspectionType }],
-        });
-
-      await global.mockPool.query('COMMIT');
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getQualityInspection
       global.mockPool.query.mockResolvedValueOnce({
@@ -377,9 +380,8 @@ describe('QualityControlService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ inspection_id: 'QI-001', status: InspectionStatus.PASSED }],
-        });
-
-      await global.mockPool.query('COMMIT');
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getQualityInspection
       global.mockPool.query.mockResolvedValueOnce({
@@ -408,9 +410,8 @@ describe('QualityControlService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ inspection_id: 'QI-001', status: InspectionStatus.FAILED }],
-        });
-
-      await global.mockPool.query('COMMIT');
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getQualityInspection
       global.mockPool.query.mockResolvedValueOnce({
@@ -572,11 +573,10 @@ describe('QualityControlService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ return_id: 'RA-001', order_id: 'ORD-001' }],
-        });
-
-      global.mockPool.query.mockResolvedValue({ rows: [] }); // items
-
-      await global.mockPool.query('COMMIT');
+        })
+        .mockResolvedValueOnce({ rows: [] }) // item 1
+        .mockResolvedValueOnce({ rows: [] }) // item 2
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getReturnAuthorization
       global.mockPool.query
@@ -666,9 +666,8 @@ describe('QualityControlService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-        .mockResolvedValueOnce({ rows: mockReturns });
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // items
+        .mockResolvedValueOnce({ rows: mockReturns })
+        .mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllReturnAuthorizations({
         status: 'PENDING',
@@ -683,9 +682,8 @@ describe('QualityControlService', () => {
     it('should filter by order ID', async () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] })
-        .mockResolvedValueOnce({ rows: [{ return_id: 'RA-001' }] });
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // items
+        .mockResolvedValueOnce({ rows: [{ return_id: 'RA-001' }] })
+        .mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllReturnAuthorizations({
         orderId: 'ORD-001',
@@ -770,11 +768,13 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
-
-      global.mockPool.query.mockResolvedValue({ rows: [] });
-
-      await global.mockPool.query('COMMIT');
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({
+          rows: [{ checklist_id: 'CHK-001', checklist_name: data.checklistName }],
+        })
+        .mockResolvedValueOnce({ rows: [] }) // item insert
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getInspectionChecklist
       global.mockPool.query
@@ -797,11 +797,12 @@ describe('QualityControlService', () => {
       };
 
       global.mockPool.query
-        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [{ name: 'Inspector' }] })
-        .mockResolvedValueOnce({ rows: [{ inspection_id: 'QI-001' }] });
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({
+          rows: [{ inspection_id: 'QI-001', inspection_type: dto.inspectionType }],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       global.mockPool.query.mockResolvedValueOnce({
         rows: [{ inspection_id: 'QI-001', status: 'PENDING' }],

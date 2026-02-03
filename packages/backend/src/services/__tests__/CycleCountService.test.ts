@@ -58,8 +58,10 @@ describe('CycleCountService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockEntries }) // get entries
-        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // processVarianceAdjustment
-        .mockResolvedValueOnce({ rows: [] }); // UPDATE entry
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // processVarianceAdjustment for CCE-001
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE CCE-001
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-002' }] }) // processVarianceAdjustment for CCE-002
+        .mockResolvedValueOnce({ rows: [] }); // UPDATE CCE-002
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 
@@ -84,9 +86,7 @@ describe('CycleCountService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockEntries })
-        .mockResolvedValueOnce({ rows: [] });
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: [] }); // UPDATE
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 
@@ -109,10 +109,10 @@ describe('CycleCountService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: mockEntries })
-        .mockResolvedValue({ rows: [] });
+        .mockResolvedValueOnce({ rows: mockEntries });
 
-      await global.mockPool.query('COMMIT');
+      // Mock for UPDATE calls
+      global.mockPool.query.mockResolvedValue({ rows: [] });
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 
@@ -181,7 +181,20 @@ describe('CycleCountService', () => {
 
       const mockPlan = {
         plan_id: 'CCP-001',
+        plan_name: 'Test Plan',
+        count_type: CycleCountType.BLANKET,
         status: CycleCountStatus.SCHEDULED,
+        scheduled_date: '2024-01-15',
+        started_at: null,
+        completed_at: null,
+        reconciled_at: null,
+        location: 'A',
+        sku: null,
+        count_by: 'user-123',
+        created_by: 'admin-456',
+        notes: null,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
       };
 
       global.mockPool.query
@@ -189,12 +202,12 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [mockPlan] }) // get plan
         .mockResolvedValueOnce({ rows: [] }); // UPDATE
 
-      await global.mockPool.query('COMMIT');
-
       // Mock getCycleCountPlan call
-      global.mockPool.query.mockResolvedValueOnce({
-        rows: [{ plan_id: 'CCP-001', status: CycleCountStatus.CANCELLED }],
-      });
+      global.mockPool.query
+        .mockResolvedValueOnce({
+          rows: [{ ...mockPlan, status: CycleCountStatus.CANCELLED }],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // entries
 
       const result = await service.cancelCycleCountPlan(dto);
 
@@ -322,19 +335,37 @@ describe('CycleCountService', () => {
         notes: 'Monthly inventory count',
       };
 
+      const mockPlan = {
+        plan_id: 'CCP-001',
+        plan_name: dto.planName,
+        count_type: CycleCountType.BLANKET,
+        status: 'SCHEDULED',
+        scheduled_date: '2024-01-15',
+        started_at: null,
+        completed_at: null,
+        reconciled_at: null,
+        location: 'A',
+        sku: null,
+        count_by: 'user-123',
+        created_by: 'admin-456',
+        notes: 'Monthly inventory count',
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      };
+
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
-          rows: [{ plan_id: 'CCP-001', plan_name: dto.planName, status: 'SCHEDULED' }],
-        });
-
-      await global.mockPool.query('COMMIT');
+          rows: [mockPlan],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getCycleCountPlan
-      global.mockPool.query.mockResolvedValueOnce({
-        rows: [{ plan_id: 'CCP-001', plan_name: dto.planName }],
-      });
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // entries
+      global.mockPool.query
+        .mockResolvedValueOnce({
+          rows: [mockPlan],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // entries
 
       const result = await service.createCycleCountPlan(dto);
 
@@ -409,9 +440,8 @@ describe('CycleCountService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // count
-        .mockResolvedValueOnce({ rows: mockPlans }); // data
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // entries
+        .mockResolvedValueOnce({ rows: mockPlans }) // data
+        .mockResolvedValueOnce({ rows: [] }); // entries
 
       const result = await service.getAllCycleCountPlans({
         requestingUserRole: 'PICKER',
@@ -429,9 +459,9 @@ describe('CycleCountService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '2' }] })
-        .mockResolvedValueOnce({ rows: mockPlans });
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // entries
+        .mockResolvedValueOnce({ rows: mockPlans })
+        .mockResolvedValueOnce({ rows: [] }) // entries for CCP-001
+        .mockResolvedValueOnce({ rows: [] }); // entries for CCP-002
 
       const result = await service.getAllCycleCountPlans({
         requestingUserRole: 'ADMIN',
@@ -458,11 +488,10 @@ describe('CycleCountService', () => {
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockPlan] }) // get plan
         .mockResolvedValueOnce({ rows: [] }) // UPDATE status
-        .mockResolvedValueOnce({ rows: mockInventory }); // inventory for BLANKET
-
-      global.mockPool.query.mockResolvedValue({ rows: [] }); // INSERT entries
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: mockInventory }) // inventory for BLANKET
+        .mockResolvedValueOnce({ rows: [] }) // INSERT entry 1
+        .mockResolvedValueOnce({ rows: [] }) // INSERT entry 2
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getCycleCountPlan
       global.mockPool.query
@@ -510,21 +539,37 @@ describe('CycleCountService', () => {
         { entry_id: 'CCE-002', variance: -3 },
       ];
 
+      const mockPlan = {
+        plan_id: 'CCP-001',
+        plan_name: 'Test Plan',
+        count_type: CycleCountType.BLANKET,
+        status: 'RECONCILED',
+        scheduled_date: '2024-01-15',
+        started_at: '2024-01-15',
+        completed_at: '2024-01-15',
+        reconciled_at: '2024-01-15',
+        location: 'A',
+        sku: null,
+        count_by: 'user-123',
+        created_by: 'admin-456',
+        notes: null,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      };
+
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: [] }); // UPDATE status
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: mockEntries }); // get pending
-
-      global.mockPool.query
-        .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
-        .mockResolvedValueOnce({ rows: [] }); // UPDATE entry
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE status
+        .mockResolvedValueOnce({ rows: mockEntries }) // get pending
+        .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment for entry 1
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE entry 1
+        .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment for entry 2
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE entry 2
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getCycleCountPlan
       global.mockPool.query
-        .mockResolvedValueOnce({ rows: [{ status: 'RECONCILED' }] })
+        .mockResolvedValueOnce({ rows: [mockPlan] })
         .mockResolvedValueOnce({ rows: [] });
 
       const result = await service.reconcileCycleCountPlan(dto);
@@ -554,23 +599,32 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
+      const mockEntry = {
+        entry_id: 'CCE-001',
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '10',
+        counted_quantity: '12',
+        variance: '2',
+        variance_percent: '20',
+        variance_status: 'AUTO_ADJUSTED',
+        counted_at: new Date(),
+        counted_by: 'user-123',
+        reviewed_by: null,
+        reviewed_at: null,
+        adjustment_transaction_id: 'TXN-001',
+        notes: null,
+      };
+
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockInventory }) // get system quantity
-        .mockResolvedValueOnce({ rows: [mockTolerance] }); // get tolerance
-
-      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
         .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // createAdjustmentTransaction
-        .mockResolvedValueOnce({ rows: [] }); // adjustInventoryUp
-
-      const mockEntry = {
-        entry_id: 'CCE-001',
-        variance_status: 'AUTO_ADJUSTED',
-      };
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventoryUp
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.createCycleCountEntry(dto);
 
@@ -593,19 +647,30 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
-      global.mockPool.query
-        .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: mockInventory })
-        .mockResolvedValueOnce({ rows: [mockTolerance] });
-
       const mockEntry = {
         entry_id: 'CCE-001',
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '10',
+        counted_quantity: '15',
+        variance: '5',
+        variance_percent: '50',
         variance_status: 'PENDING',
+        counted_at: new Date(),
+        counted_by: 'user-123',
+        reviewed_by: null,
+        reviewed_at: null,
+        adjustment_transaction_id: null,
+        notes: null,
       };
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
-
-      await global.mockPool.query('COMMIT');
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: mockInventory }) // get system quantity
+        .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.createCycleCountEntry(dto);
 
@@ -629,19 +694,30 @@ describe('CycleCountService', () => {
 
       const mockEntry = {
         entry_id: 'CCE-001',
-        variance: 5,
-        adjustment_transaction_id: null,
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '10',
+        counted_quantity: '12',
+        variance: '2',
+        variance_percent: '20',
+        variance_status: 'APPROVED',
+        counted_at: new Date(),
+        counted_by: 'user-123',
+        reviewed_by: 'admin-456',
+        reviewed_at: new Date(),
+        adjustment_transaction_id: 'TXN-002',
+        notes: 'Approved',
       };
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: [mockEntry] }); // get entry
-
-      global.mockPool.query
+        .mockResolvedValueOnce({
+          rows: [{ ...mockEntry, variance_status: 'PENDING', adjustment_transaction_id: null }],
+        }) // get entry
         .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
-        .mockResolvedValueOnce({ rows: [mockEntry] }); // UPDATE entry
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // UPDATE entry
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.updateVarianceStatus(dto);
 
@@ -657,16 +733,27 @@ describe('CycleCountService', () => {
 
       const mockEntry = {
         entry_id: 'CCE-001',
-        variance: 5,
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '10',
+        counted_quantity: '15',
+        variance: '5',
+        variance_percent: '50',
+        variance_status: 'REJECTED',
+        counted_at: new Date(),
+        counted_by: 'user-123',
+        reviewed_by: 'admin-456',
+        reviewed_at: new Date(),
         adjustment_transaction_id: null,
+        notes: null,
       };
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: [mockEntry] })
-        .mockResolvedValueOnce({ rows: [mockEntry] }); // UPDATE entry
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: [{ ...mockEntry, variance_status: 'PENDING' }] }) // get entry
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // UPDATE entry
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.updateVarianceStatus(dto);
 
@@ -726,16 +813,30 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
+      const mockEntry = {
+        entry_id: 'CCE-001',
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '10',
+        counted_quantity: '10',
+        variance: '0',
+        variance_percent: '0',
+        variance_status: 'PENDING',
+        counted_at: new Date(),
+        counted_by: 'user-123',
+        reviewed_by: null,
+        reviewed_at: null,
+        adjustment_transaction_id: null,
+        notes: null,
+      };
+
       global.mockPool.query
-        .mockResolvedValueOnce({ rows: [] })
-        .mockResolvedValueOnce({ rows: mockInventory })
-        .mockResolvedValueOnce({ rows: [mockTolerance] });
-
-      const mockEntry = { entry_id: 'CCE-001', variance_status: 'PENDING' };
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
-
-      await global.mockPool.query('COMMIT');
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: mockInventory }) // get system quantity
+        .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.createCycleCountEntry(dto);
 
@@ -751,21 +852,36 @@ describe('CycleCountService', () => {
         countedBy: 'user-123',
       };
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }); // No inventory found
-
       const mockTolerance = {
         tolerance_id: 'TOL-001',
         allowable_variance_percent: 10,
         auto_adjust_threshold: 5,
       };
 
-      global.mockPool.query.mockResolvedValueOnce({ rows: [mockTolerance] });
+      const mockEntry = {
+        entry_id: 'CCE-001',
+        plan_id: 'CCP-001',
+        sku: 'SKU-001',
+        bin_location: 'A-01-01',
+        system_quantity: '0',
+        counted_quantity: '5',
+        variance: '5',
+        variance_percent: '100',
+        variance_status: 'PENDING',
+        counted_at: new Date(),
+        counted_by: 'user-123',
+        reviewed_by: null,
+        reviewed_at: null,
+        adjustment_transaction_id: null,
+        notes: null,
+      };
 
-      const mockEntry = { entry_id: 'CCE-001' };
-
-      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
-
-      await global.mockPool.query('COMMIT');
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [] }) // No inventory found
+        .mockResolvedValueOnce({ rows: [mockTolerance] }) // get tolerance - sku-specific found
+        .mockResolvedValueOnce({ rows: [mockEntry] }) // INSERT entry
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       const result = await service.createCycleCountEntry(dto);
 

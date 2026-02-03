@@ -309,7 +309,13 @@ describe('ZonePickingService', () => {
         .mockResolvedValueOnce({ rows: [mockZone] }) // getZoneById
         .mockResolvedValueOnce({ rows: [] }); // No existing assignment
 
-      global.mockPool.query.mockResolvedValue({ rows: [] }); // Insert
+      // Mock for insert
+      global.mockPool.query.mockImplementation((query: string) => {
+        if (query.includes('INSERT') || query.includes('UPDATE') || query.includes('SELECT')) {
+          return Promise.resolve({ rows: [] });
+        }
+        return Promise.resolve({ rows: [] });
+      });
 
       const context = { userId: 'admin-123', userEmail: 'admin@example.com' };
 
@@ -376,9 +382,15 @@ describe('ZonePickingService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockZone] })
-        .mockResolvedValueOnce({ rows: [] });
+        .mockResolvedValueOnce({ rows: [] }); // No existing assignment
 
-      global.mockPool.query.mockResolvedValue({ rows: [] });
+      // Mock for insert
+      global.mockPool.query.mockImplementation((query: string) => {
+        if (query.includes('INSERT') || query.includes('UPDATE') || query.includes('SELECT')) {
+          return Promise.resolve({ rows: [] });
+        }
+        return Promise.resolve({ rows: [] });
+      });
 
       const context = { userId: 'admin-123' };
 
@@ -405,9 +417,15 @@ describe('ZonePickingService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockZone] })
-        .mockResolvedValueOnce({ rows: [] });
+        .mockResolvedValueOnce({ rows: [] }); // No existing assignment
 
-      global.mockPool.query.mockResolvedValue({ rows: [] });
+      // Mock for insert
+      global.mockPool.query.mockImplementation((query: string) => {
+        if (query.includes('INSERT') || query.includes('UPDATE') || query.includes('SELECT')) {
+          return Promise.resolve({ rows: [] });
+        }
+        return Promise.resolve({ rows: [] });
+      });
 
       const context = { userId: 'admin-123' };
 
@@ -563,20 +581,22 @@ describe('ZonePickingService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones }) // getZones
         .mockResolvedValueOnce({ rows: [mockZoneStats[0]] }) // getZoneStats A
+        .mockResolvedValueOnce({ rows: [{ avg_time: '60' }] }) // avgTime A
         .mockResolvedValueOnce({ rows: [mockZoneStats[1]] }) // getZoneStats B
+        .mockResolvedValueOnce({ rows: [{ avg_time: '60' }] }) // avgTime B
         .mockResolvedValueOnce({ rows: mockPickers }); // getAvailablePickers
 
       // Check existing assignments and assign to zones
       global.mockPool.query.mockImplementation((query: string, params: any[]) => {
         if (query.includes('zone_assignments')) {
-          return { rows: [] }; // No existing assignments
+          return Promise.resolve({ rows: [] }); // No existing assignments
         }
         if (query.includes('zone =')) {
-          return {
+          return Promise.resolve({
             rows: [{ zone: params[0], aisle_start: '1', aisle_end: '10', location_count: '100' }],
-          };
+          });
         }
-        return { rows: [] };
+        return Promise.resolve({ rows: [] });
       });
 
       const context = { userId: 'admin-123' };
@@ -613,9 +633,16 @@ describe('ZonePickingService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones })
         .mockResolvedValueOnce({ rows: [mockZoneStats] })
+        .mockResolvedValueOnce({ rows: [{ avg_time: '60' }] })
         .mockResolvedValueOnce({ rows: mockPickers });
 
-      global.mockPool.query.mockResolvedValue({ rows: [] });
+      // Mock for zone_assignments checks
+      global.mockPool.query.mockImplementation((query: string) => {
+        if (query.includes('zone_assignments')) {
+          return Promise.resolve({ rows: [] });
+        }
+        return Promise.resolve({ rows: [] });
+      });
 
       const context = { userId: 'admin-123' };
 
@@ -652,14 +679,17 @@ describe('ZonePickingService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones })
         .mockResolvedValueOnce({ rows: [mockZoneStats] })
+        .mockResolvedValueOnce({ rows: [{ avg_time: '60' }] })
         .mockResolvedValueOnce({ rows: mockPickers });
 
       // Picker already has active assignment
       global.mockPool.query.mockImplementation((query: string) => {
         if (query.includes('zone_assignments')) {
-          return { rows: [{ picker_id: pickerId, zone_id: 'B', status: 'ACTIVE' }] };
+          return Promise.resolve({
+            rows: [{ picker_id: pickerId, zone_id: 'B', status: 'ACTIVE' }],
+          });
         }
-        return { rows: [] };
+        return Promise.resolve({ rows: [] });
       });
 
       const context = { userId: 'admin-123' };

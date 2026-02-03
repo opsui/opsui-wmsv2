@@ -16,16 +16,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { getAuditService, AuditEventType, AuditCategory } from '../services/AuditService';
 import { getPool } from '../db/client';
-import type { JWTPayload } from './auth';
+import type { AuthenticatedRequest } from './auth';
 
-// Extend Express Request type to include user info from auth middleware
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
-  }
-}
+// Use AuthenticatedRequest from auth.ts instead of redeclaring user property
+// This avoids conflict with Passport's User type declaration
 
 // Store request start time
 const REQUEST_START_TIME = Symbol('requestStartTime');
@@ -543,7 +537,7 @@ export async function auditLoggingMiddleware(
  * Generate a human-readable summary for the metadata
  */
 async function generateMetadataSummary(
-  req: Request,
+  req: AuthenticatedRequest,
   eventType: string,
   resourceId: string | null,
   waveDetails?: Record<string, unknown> | null
@@ -1179,7 +1173,11 @@ async function generateHumanReadableDescription(
 /**
  * Log the request to audit logs
  */
-async function logRequest(req: Request, statusCode: number, responseData: any): Promise<void> {
+async function logRequest(
+  req: AuthenticatedRequest,
+  statusCode: number,
+  responseData: any
+): Promise<void> {
   try {
     const startTime = (req as any)[REQUEST_START_TIME] || Date.now();
     const duration = Date.now() - startTime;

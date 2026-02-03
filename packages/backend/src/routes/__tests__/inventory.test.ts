@@ -81,7 +81,11 @@ describe('Inventory Routes', () => {
       });
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockUser };
+        req.user = {
+          ...mockUser,
+          baseRole: mockUser.role,
+          effectiveRole: mockUser.activeRole || mockUser.role,
+        };
         next();
       });
 
@@ -452,7 +456,11 @@ describe('Inventory Routes', () => {
       });
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockUser };
+        req.user = {
+          ...mockUser,
+          baseRole: mockUser.role,
+          effectiveRole: mockUser.activeRole || mockUser.role,
+        };
         next();
       });
 
@@ -474,7 +482,11 @@ describe('Inventory Routes', () => {
       );
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockUser };
+        req.user = {
+          ...mockUser,
+          baseRole: mockUser.role,
+          effectiveRole: mockUser.activeRole || mockUser.role,
+        };
         next();
       });
 

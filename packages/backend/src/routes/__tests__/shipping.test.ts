@@ -76,7 +76,11 @@ describe('Shipping Routes', () => {
       (shippingService.getActiveCarriers as jest.Mock).mockResolvedValue(mockCarriers);
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockUser };
+        req.user = {
+          ...mockUser,
+          baseRole: mockUser.role,
+          effectiveRole: mockUser.activeRole || mockUser.role,
+        };
         next();
       });
 
@@ -492,7 +496,11 @@ describe('Shipping Routes', () => {
       (shippingService.getActiveCarriers as jest.Mock).mockResolvedValue([]);
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockUser };
+        req.user = {
+          ...mockUser,
+          baseRole: mockUser.role,
+          effectiveRole: mockUser.activeRole || mockUser.role,
+        };
         next();
       });
 
@@ -514,7 +522,11 @@ describe('Shipping Routes', () => {
       );
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockUser };
+        req.user = {
+          ...mockUser,
+          baseRole: mockUser.role,
+          effectiveRole: mockUser.activeRole || mockUser.role,
+        };
         next();
       });
 
