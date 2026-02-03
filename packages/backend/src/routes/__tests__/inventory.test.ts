@@ -90,7 +90,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory')
+        .get('/api/v1/inventory')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -113,7 +113,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory?sku=SKU-001')
+        .get('/api/v1/inventory?sku=SKU-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -131,7 +131,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory?binLocation=A-01-01')
+        .get('/api/v1/inventory?binLocation=A-01-01')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -151,7 +151,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory?page=2&limit=20')
+        .get('/api/v1/inventory?page=2&limit=20')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -180,7 +180,7 @@ describe('Inventory Routes', () => {
       (inventoryService.getInventoryBySKU as jest.Mock).mockResolvedValue(mockInventory);
 
       const response = await request(app)
-        .get('/api/inventory/SKU-001')
+        .get('/api/v1/inventory/SKU-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -194,7 +194,7 @@ describe('Inventory Routes', () => {
       );
 
       const response = await request(app)
-        .get('/api/inventory/SKU-NONEXISTENT')
+        .get('/api/v1/inventory/SKU-NONEXISTENT')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
@@ -224,7 +224,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/inventory/adjust')
+        .post('/api/v1/inventory/adjust')
         .set('Authorization', 'Bearer valid-token')
         .send(adjustment)
         .expect(200);
@@ -235,7 +235,7 @@ describe('Inventory Routes', () => {
 
     it('should return 400 when SKU is missing', async () => {
       const response = await request(app)
-        .post('/api/inventory/adjust')
+        .post('/api/v1/inventory/adjust')
         .set('Authorization', 'Bearer valid-token')
         .send({
           binLocation: 'A-01-01',
@@ -248,7 +248,7 @@ describe('Inventory Routes', () => {
 
     it('should return 400 when quantity is missing', async () => {
       const response = await request(app)
-        .post('/api/inventory/adjust')
+        .post('/api/v1/inventory/adjust')
         .set('Authorization', 'Bearer valid-token')
         .send({
           sku: 'SKU-001',
@@ -283,7 +283,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/inventory/transfer')
+        .post('/api/v1/inventory/transfer')
         .set('Authorization', 'Bearer valid-token')
         .send(transfer)
         .expect(200);
@@ -294,7 +294,7 @@ describe('Inventory Routes', () => {
 
     it('should return 400 when from location equals to location', async () => {
       const response = await request(app)
-        .post('/api/inventory/transfer')
+        .post('/api/v1/inventory/transfer')
         .set('Authorization', 'Bearer valid-token')
         .send({
           sku: 'SKU-001',
@@ -342,7 +342,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory/transactions')
+        .get('/api/v1/inventory/transactions')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -357,7 +357,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory/transactions?type=adjustment')
+        .get('/api/v1/inventory/transactions?type=adjustment')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -375,7 +375,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory/transactions?sku=SKU-001')
+        .get('/api/v1/inventory/transactions?sku=SKU-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -408,7 +408,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/inventory/count')
+        .post('/api/v1/inventory/count')
         .set('Authorization', 'Bearer valid-token')
         .send(count)
         .expect(200);
@@ -419,7 +419,7 @@ describe('Inventory Routes', () => {
 
     it('should return 400 when counted quantity is negative', async () => {
       const response = await request(app)
-        .post('/api/inventory/count')
+        .post('/api/v1/inventory/count')
         .set('Authorization', 'Bearer valid-token')
         .send({
           sku: 'SKU-001',
@@ -444,7 +444,7 @@ describe('Inventory Routes', () => {
       });
 
       await request(app)
-        .get('/api/inventory')
+        .get('/api/v1/inventory')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
     });
@@ -465,7 +465,7 @@ describe('Inventory Routes', () => {
       });
 
       await request(app)
-        .get('/api/inventory')
+        .get('/api/v1/inventory')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
     });
@@ -491,7 +491,7 @@ describe('Inventory Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/inventory')
+        .get('/api/v1/inventory')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 

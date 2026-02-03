@@ -85,7 +85,7 @@ describe('Shipping Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/shipping/carriers')
+        .get('/api/v1/shipping/carriers')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -106,7 +106,7 @@ describe('Shipping Routes', () => {
       (shippingService.getActiveCarriers as jest.Mock).mockResolvedValue(mockCarriers);
 
       const response = await request(app)
-        .get('/api/shipping/carriers?active=true')
+        .get('/api/v1/shipping/carriers?active=true')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -146,7 +146,7 @@ describe('Shipping Routes', () => {
       (shippingService.createShipment as jest.Mock).mockResolvedValue(mockShipment);
 
       const response = await request(app)
-        .post('/api/shipping/shipments')
+        .post('/api/v1/shipping/shipments')
         .set('Authorization', 'Bearer valid-token')
         .send(shipmentData)
         .expect(200);
@@ -158,7 +158,7 @@ describe('Shipping Routes', () => {
 
     it('should return 400 when orderId is missing', async () => {
       const response = await request(app)
-        .post('/api/shipping/shipments')
+        .post('/api/v1/shipping/shipments')
         .set('Authorization', 'Bearer valid-token')
         .send({
           carrierId: 'carrier-1',
@@ -171,7 +171,7 @@ describe('Shipping Routes', () => {
 
     it('should return 400 when packages array is empty', async () => {
       const response = await request(app)
-        .post('/api/shipping/shipments')
+        .post('/api/v1/shipping/shipments')
         .set('Authorization', 'Bearer valid-token')
         .send({
           orderId: 'ORD-001',
@@ -204,7 +204,7 @@ describe('Shipping Routes', () => {
       (shippingService.getShipment as jest.Mock).mockResolvedValue(mockShipment);
 
       const response = await request(app)
-        .get('/api/shipping/shipments/SHIP-001')
+        .get('/api/v1/shipping/shipments/SHIP-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -218,7 +218,7 @@ describe('Shipping Routes', () => {
       );
 
       const response = await request(app)
-        .get('/api/shipping/shipments/SHIP-NONEXISTENT')
+        .get('/api/v1/shipping/shipments/SHIP-NONEXISTENT')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
@@ -253,7 +253,7 @@ describe('Shipping Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/shipping/shipments')
+        .get('/api/v1/shipping/shipments')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -268,7 +268,7 @@ describe('Shipping Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/shipping/shipments?status=SHIPPED')
+        .get('/api/v1/shipping/shipments?status=SHIPPED')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -286,7 +286,7 @@ describe('Shipping Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/shipping/shipments?orderId=ORD-001')
+        .get('/api/v1/shipping/shipments?orderId=ORD-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -319,7 +319,7 @@ describe('Shipping Routes', () => {
       (shippingService.generateLabel as jest.Mock).mockResolvedValue(mockLabel);
 
       const response = await request(app)
-        .post('/api/shipping/labels')
+        .post('/api/v1/shipping/labels')
         .set('Authorization', 'Bearer valid-token')
         .send(labelRequest)
         .expect(200);
@@ -330,7 +330,7 @@ describe('Shipping Routes', () => {
 
     it('should return 400 when shipment ID is missing', async () => {
       const response = await request(app)
-        .post('/api/shipping/labels')
+        .post('/api/v1/shipping/labels')
         .set('Authorization', 'Bearer valid-token')
         .send({
           labelFormat: 'PDF',
@@ -369,7 +369,7 @@ describe('Shipping Routes', () => {
       (shippingService.trackShipment as jest.Mock).mockResolvedValue(mockTracking);
 
       const response = await request(app)
-        .get('/api/shipping/track/1Z999AA10123456784')
+        .get('/api/v1/shipping/track/1Z999AA10123456784')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -384,7 +384,7 @@ describe('Shipping Routes', () => {
       );
 
       const response = await request(app)
-        .get('/api/shipping/track/INVALID_TRACKING')
+        .get('/api/v1/shipping/track/INVALID_TRACKING')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
@@ -408,7 +408,7 @@ describe('Shipping Routes', () => {
       (shippingService.cancelShipment as jest.Mock).mockResolvedValue(cancelledShipment);
 
       const response = await request(app)
-        .post('/api/shipping/shipments/SHIP-001/cancel')
+        .post('/api/v1/shipping/shipments/SHIP-001/cancel')
         .set('Authorization', 'Bearer valid-token')
         .send({
           reason: 'Customer request',
@@ -426,7 +426,7 @@ describe('Shipping Routes', () => {
       });
 
       const response = await request(app)
-        .post('/api/shipping/shipments/SHIP-001/cancel')
+        .post('/api/v1/shipping/shipments/SHIP-001/cancel')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -455,7 +455,7 @@ describe('Shipping Routes', () => {
       (shippingService.updateShipment as jest.Mock).mockResolvedValue(updatedShipment);
 
       const response = await request(app)
-        .put('/api/shipping/shipments/SHIP-001')
+        .put('/api/v1/shipping/shipments/SHIP-001')
         .set('Authorization', 'Bearer valid-token')
         .send(updateData)
         .expect(200);
@@ -466,7 +466,7 @@ describe('Shipping Routes', () => {
 
     it('should return 400 when no update data provided', async () => {
       const response = await request(app)
-        .put('/api/shipping/shipments/SHIP-001')
+        .put('/api/v1/shipping/shipments/SHIP-001')
         .set('Authorization', 'Bearer valid-token')
         .send({})
         .expect(400);
@@ -490,7 +490,7 @@ describe('Shipping Routes', () => {
       });
 
       await request(app)
-        .get('/api/shipping/carriers')
+        .get('/api/v1/shipping/carriers')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
     });
@@ -508,7 +508,7 @@ describe('Shipping Routes', () => {
       });
 
       await request(app)
-        .get('/api/shipping/carriers')
+        .get('/api/v1/shipping/carriers')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
     });
@@ -534,7 +534,7 @@ describe('Shipping Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/shipping/carriers')
+        .get('/api/v1/shipping/carriers')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 

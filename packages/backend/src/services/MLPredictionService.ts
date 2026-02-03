@@ -4,7 +4,7 @@
  * Uses both local heuristic models and external ML API when available
  */
 
-interface OrderFeatures {
+export interface OrderFeatures {
   order_id?: string;
   order_item_count: number;
   order_total_value?: number;

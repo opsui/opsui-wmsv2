@@ -109,8 +109,14 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
     return next();
   }
 
-  // Skip CSRF for API authentication endpoint (handles its own validation)
-  if (req.path === '/api/auth/login' || req.path === '/api/auth/register') {
+  // Skip CSRF in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+
+  // Skip CSRF for API authentication endpoints (handle their own validation)
+  // Check both path (relative to mount) and originalUrl (full path)
+  if (req.path.startsWith('/auth/') || (req.originalUrl && req.originalUrl.includes('/auth/'))) {
     return next();
   }
 

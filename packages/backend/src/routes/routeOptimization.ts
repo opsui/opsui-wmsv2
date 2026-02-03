@@ -9,7 +9,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { logger } from '../config/logger';
 import { routeOptimizationService } from '../services/RouteOptimizationService';
-import { mlPredictionService } from '../services/MLPredictionService';
+import { mlPredictionService, OrderFeatures } from '../services/MLPredictionService';
 
 // ============================================================================
 // ROUTER
@@ -281,7 +281,7 @@ router.post('/predict-duration', async (req: Request, res: Response): Promise<vo
       sku_count: body.sku_count,
     });
 
-    const prediction = await mlPredictionService.predictOrderDuration(body);
+    const prediction = await mlPredictionService.predictOrderDuration(body as OrderFeatures);
 
     res.json({
       success: true,
@@ -318,7 +318,7 @@ router.post('/predict-duration-batch', async (req: Request, res: Response): Prom
     });
 
     const predictions = await Promise.all(
-      body.orders.map(order => mlPredictionService.predictOrderDuration(order))
+      body.orders.map(order => mlPredictionService.predictOrderDuration(order as OrderFeatures))
     );
 
     res.json({
