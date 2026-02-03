@@ -332,7 +332,7 @@ describe('WavePickingService', () => {
       expect(broadcaster?.broadcastGlobalNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'New Wave Created',
-          type: 'INFO',
+          type: 'info',
         })
       );
     });
@@ -362,7 +362,7 @@ describe('WavePickingService', () => {
 
       expect(notifyAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'WAVE_CREATED',
+          type: 'wave_created',
           title: 'New Wave Created',
         })
       );
@@ -731,7 +731,7 @@ describe('WavePickingService', () => {
 
       expect(notifyAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'WAVE_COMPLETED',
+          type: 'wave_completed',
           title: 'Wave Completed',
         })
       );

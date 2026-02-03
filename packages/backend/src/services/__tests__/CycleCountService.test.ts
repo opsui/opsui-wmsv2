@@ -700,7 +700,7 @@ describe('CycleCountService', () => {
       expect(result.varianceStatus).toBe(VarianceStatus.PENDING);
       expect(notifyAll).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'EXCEPTION_REPORTED',
+          type: 'exception_reported',
         })
       );
     });

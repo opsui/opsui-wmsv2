@@ -434,7 +434,7 @@ describe('ZonePickingService', () => {
       expect(notifyUser).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: pickerId,
-          type: 'ZONE_ASSIGNED',
+          type: 'zone_assigned',
           title: 'Zone Assignment',
         })
       );
