@@ -5,7 +5,7 @@
 
 import request from 'supertest';
 import { createApp } from '../../app';
-import { authService } from '../../services/AuthService';
+import { UserRepository } from '../../repositories/UserRepository';
 import { authenticate } from '../../middleware/auth';
 import { User, UserRole } from '@opsui/shared';
 
@@ -24,12 +24,15 @@ jest.mock('../../middleware/auth', () => ({
   }),
 }));
 
-// Mock the authService
-jest.mock('../../services/AuthService');
+// Mock the UserRepository
+jest.mock('../../repositories/UserRepository');
 jest.mock('../../config/logger');
 jest.mock('../../db/client');
 
 const mockedAuthenticate = authenticate as jest.MockedFunction<typeof authenticate>;
+
+// Create a mock UserRepository instance
+const userRepo = new UserRepository() as jest.Mocked<UserRepository>;
 
 describe('Users Routes', () => {
   let app: any;
@@ -75,7 +78,7 @@ describe('Users Routes', () => {
         },
       ];
 
-      (authService.getAllUsers as jest.Mock).mockResolvedValue({
+      (userRepo.getAllUsers as jest.Mock).mockResolvedValue({
         users: mockUsers,
         total: 2,
         page: 1,
@@ -97,7 +100,7 @@ describe('Users Routes', () => {
     });
 
     it('should filter users by role', async () => {
-      (authService.getAllUsers as jest.Mock).mockResolvedValue({
+      (userRepo.getAllUsers as jest.Mock).mockResolvedValue({
         users: [],
         total: 0,
       });
@@ -107,7 +110,7 @@ describe('Users Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(authService.getAllUsers).toHaveBeenCalledWith(
+      expect(userRepo.getAllUsers).toHaveBeenCalledWith(
         expect.objectContaining({
           role: UserRole.PICKER,
         })
@@ -115,7 +118,7 @@ describe('Users Routes', () => {
     });
 
     it('should filter users by active status', async () => {
-      (authService.getAllUsers as jest.Mock).mockResolvedValue({
+      (userRepo.getAllUsers as jest.Mock).mockResolvedValue({
         users: [],
         total: 0,
       });
@@ -125,7 +128,7 @@ describe('Users Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(authService.getAllUsers).toHaveBeenCalledWith(
+      expect(userRepo.getAllUsers).toHaveBeenCalledWith(
         expect.objectContaining({
           active: true,
         })
@@ -133,7 +136,7 @@ describe('Users Routes', () => {
     });
 
     it('should paginate users', async () => {
-      (authService.getAllUsers as jest.Mock).mockResolvedValue({
+      (userRepo.getAllUsers as jest.Mock).mockResolvedValue({
         users: [],
         total: 50,
         page: 2,
@@ -145,7 +148,7 @@ describe('Users Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(authService.getAllUsers).toHaveBeenCalledWith(
+      expect(userRepo.getAllUsers).toHaveBeenCalledWith(
         expect.objectContaining({
           limit: 20,
           offset: 20,
@@ -517,7 +520,7 @@ describe('Users Routes', () => {
     });
 
     it('should allow access with admin role', async () => {
-      (authService.getAllUsers as jest.Mock).mockResolvedValue({
+      (userRepo.getAllUsers as jest.Mock).mockResolvedValue({
         users: [],
         total: 0,
       });
@@ -554,7 +557,7 @@ describe('Users Routes', () => {
 
   describe('Error Handling', () => {
     it('should handle service errors gracefully', async () => {
-      (authService.getAllUsers as jest.Mock).mockRejectedValue(
+      (userRepo.getAllUsers as jest.Mock).mockRejectedValue(
         new Error('Database connection failed')
       );
 

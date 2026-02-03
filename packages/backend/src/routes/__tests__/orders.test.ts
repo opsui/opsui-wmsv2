@@ -75,7 +75,7 @@ describe('Orders Routes', () => {
         },
       ];
 
-      (orderService.getAllOrders as jest.Mock).mockResolvedValue({
+      (orderService.getOrderQueue as jest.Mock).mockResolvedValue({
         orders: mockOrders,
         total: 2,
         page: 1,
@@ -94,7 +94,7 @@ describe('Orders Routes', () => {
 
       expect(response.body.orders).toHaveLength(2);
       expect(response.body.total).toBe(2);
-      expect(orderService.getAllOrders).toHaveBeenCalledWith(
+      expect(orderService.getOrderQueue).toHaveBeenCalledWith(
         expect.objectContaining({
           limit: 50,
           offset: 0,
@@ -103,7 +103,7 @@ describe('Orders Routes', () => {
     });
 
     it('should filter orders by status', async () => {
-      (orderService.getAllOrders as jest.Mock).mockResolvedValue({
+      (orderService.getOrderQueue as jest.Mock).mockResolvedValue({
         orders: [{ order_id: 'ORD-001', status: OrderStatus.PENDING }],
         total: 1,
         page: 1,
@@ -115,7 +115,7 @@ describe('Orders Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(orderService.getAllOrders).toHaveBeenCalledWith(
+      expect(orderService.getOrderQueue).toHaveBeenCalledWith(
         expect.objectContaining({
           status: OrderStatus.PENDING,
         })
@@ -123,7 +123,7 @@ describe('Orders Routes', () => {
     });
 
     it('should filter orders by priority', async () => {
-      (orderService.getAllOrders as jest.Mock).mockResolvedValue({
+      (orderService.getOrderQueue as jest.Mock).mockResolvedValue({
         orders: [{ order_id: 'ORD-001', priority: 'HIGH' }],
         total: 1,
       });
@@ -133,7 +133,7 @@ describe('Orders Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(orderService.getAllOrders).toHaveBeenCalledWith(
+      expect(orderService.getOrderQueue).toHaveBeenCalledWith(
         expect.objectContaining({
           priority: 'HIGH',
         })
@@ -141,7 +141,7 @@ describe('Orders Routes', () => {
     });
 
     it('should paginate orders', async () => {
-      (orderService.getAllOrders as jest.Mock).mockResolvedValue({
+      (orderService.getOrderQueue as jest.Mock).mockResolvedValue({
         orders: [],
         total: 100,
         page: 2,
@@ -153,7 +153,7 @@ describe('Orders Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(orderService.getAllOrders).toHaveBeenCalledWith(
+      expect(orderService.getOrderQueue).toHaveBeenCalledWith(
         expect.objectContaining({
           limit: 20,
           offset: 20,
@@ -162,7 +162,7 @@ describe('Orders Routes', () => {
     });
 
     it('should search orders by SKU', async () => {
-      (orderService.getAllOrders as jest.Mock).mockResolvedValue({
+      (orderService.getOrderQueue as jest.Mock).mockResolvedValue({
         orders: [],
         total: 0,
       });
@@ -172,7 +172,7 @@ describe('Orders Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(orderService.getAllOrders).toHaveBeenCalledWith(
+      expect(orderService.getOrderQueue).toHaveBeenCalledWith(
         expect.objectContaining({
           search: 'SKU-001',
         })
@@ -546,7 +546,7 @@ describe('Orders Routes', () => {
     });
 
     it('should allow access with valid authentication', async () => {
-      (orderService.getAllOrders as jest.Mock).mockResolvedValue({
+      (orderService.getOrderQueue as jest.Mock).mockResolvedValue({
         orders: [],
         total: 0,
       });
@@ -566,7 +566,7 @@ describe('Orders Routes', () => {
 
   describe('Error Handling', () => {
     it('should handle service errors gracefully', async () => {
-      (orderService.getAllOrders as jest.Mock).mockRejectedValue(
+      (orderService.getOrderQueue as jest.Mock).mockRejectedValue(
         new Error('Database connection failed')
       );
 

@@ -73,7 +73,7 @@ describe('Inbound Routes', () => {
         },
       ];
 
-      (inboundReceivingService.getASNs as jest.Mock).mockResolvedValue({
+      (inboundReceivingService.getAllASNs as jest.Mock).mockResolvedValue({
         asns: mockAsns,
         total: 2,
         page: 1,
@@ -95,7 +95,7 @@ describe('Inbound Routes', () => {
     });
 
     it('should filter ASNs by status', async () => {
-      (inboundReceivingService.getASNs as jest.Mock).mockResolvedValue({
+      (inboundReceivingService.getAllASNs as jest.Mock).mockResolvedValue({
         asns: [],
         total: 0,
       });
@@ -105,7 +105,7 @@ describe('Inbound Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(inboundReceivingService.getASNs).toHaveBeenCalledWith(
+      expect(inboundReceivingService.getAllASNs).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 'PENDING',
         })
@@ -113,7 +113,7 @@ describe('Inbound Routes', () => {
     });
 
     it('should paginate ASNs', async () => {
-      (inboundReceivingService.getASNs as jest.Mock).mockResolvedValue({
+      (inboundReceivingService.getAllASNs as jest.Mock).mockResolvedValue({
         asns: [],
         total: 50,
         page: 2,
@@ -125,7 +125,7 @@ describe('Inbound Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(inboundReceivingService.getASNs).toHaveBeenCalledWith(
+      expect(inboundReceivingService.getAllASNs).toHaveBeenCalledWith(
         expect.objectContaining({
           limit: 20,
           offset: 20,
@@ -549,7 +549,7 @@ describe('Inbound Routes', () => {
     });
 
     it('should allow access with valid authentication', async () => {
-      (inboundReceivingService.getASNs as jest.Mock).mockResolvedValue({
+      (inboundReceivingService.getAllASNs as jest.Mock).mockResolvedValue({
         asns: [],
         total: 0,
       });
@@ -572,7 +572,7 @@ describe('Inbound Routes', () => {
 
   describe('Error Handling', () => {
     it('should handle service errors gracefully', async () => {
-      (inboundReceivingService.getASNs as jest.Mock).mockRejectedValue(
+      (inboundReceivingService.getAllASNs as jest.Mock).mockRejectedValue(
         new Error('Database connection failed')
       );
 

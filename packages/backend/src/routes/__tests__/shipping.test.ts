@@ -73,7 +73,7 @@ describe('Shipping Routes', () => {
         },
       ];
 
-      (shippingService.getAllCarriers as jest.Mock).mockResolvedValue(mockCarriers);
+      (shippingService.getActiveCarriers as jest.Mock).mockResolvedValue(mockCarriers);
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
         req.user = { ...mockUser };
@@ -99,7 +99,7 @@ describe('Shipping Routes', () => {
         },
       ];
 
-      (shippingService.getAllCarriers as jest.Mock).mockResolvedValue(mockCarriers);
+      (shippingService.getActiveCarriers as jest.Mock).mockResolvedValue(mockCarriers);
 
       const response = await request(app)
         .get('/api/shipping/carriers?active=true')
@@ -107,7 +107,7 @@ describe('Shipping Routes', () => {
         .expect(200);
 
       expect(response.body).toHaveLength(1);
-      expect(shippingService.getAllCarriers).toHaveBeenCalledWith({ active: true });
+      expect(shippingService.getActiveCarriers).toHaveBeenCalledWith({ active: true });
     });
   });
 
@@ -489,7 +489,7 @@ describe('Shipping Routes', () => {
     });
 
     it('should allow access with valid authentication', async () => {
-      (shippingService.getAllCarriers as jest.Mock).mockResolvedValue([]);
+      (shippingService.getActiveCarriers as jest.Mock).mockResolvedValue([]);
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
         req.user = { ...mockUser };
@@ -509,7 +509,7 @@ describe('Shipping Routes', () => {
 
   describe('Error Handling', () => {
     it('should handle service errors gracefully', async () => {
-      (shippingService.getAllCarriers as jest.Mock).mockRejectedValue(
+      (shippingService.getActiveCarriers as jest.Mock).mockRejectedValue(
         new Error('Database connection failed')
       );
 
