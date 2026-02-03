@@ -139,7 +139,8 @@ class RouteOptimizationService {
    * Solve TSP using 2-opt local search (optimal for small n, good approximation for large n)
    */
   private solveTSP(tasks: PickTask[], startLocation: string): OptimizedRoute {
-    const locations = [startLocation, ...tasks.map(t => t.binLocation), startLocation];
+    // Don't add duplicate startLocation - handle return to start in buildOptimizedRoute
+    const locations = [startLocation, ...tasks.map(t => t.binLocation)];
     const distanceMatrix = this.buildDistanceMatrix(locations);
 
     // Initial solution using nearest neighbor
@@ -174,7 +175,8 @@ class RouteOptimizationService {
    * Nearest Neighbor heuristic (fast, good approximation)
    */
   private solveNearestNeighbor(tasks: PickTask[], startLocation: string): OptimizedRoute {
-    const locations = [startLocation, ...tasks.map(t => t.binLocation), startLocation];
+    // Don't add duplicate startLocation - handle return to start in buildOptimizedRoute
+    const locations = [startLocation, ...tasks.map(t => t.binLocation)];
     const distanceMatrix = this.buildDistanceMatrix(locations);
 
     const route = this.nearestNeighborTSP(locations, distanceMatrix);
@@ -233,7 +235,7 @@ class RouteOptimizationService {
       for (const task of aisleTasks) {
         route.push(task.binLocation);
         const distance = this.calculateDistance(currentLocation, task.binLocation);
-        const time = this.calculateTravelTime(distance) + this.config.pickTime;
+        const time = this.calculateTravelTime(distance) + this.config.pickTime * 1000; // Convert pickTime to ms
 
         optimizedTasks.push({
           ...task,
@@ -500,13 +502,14 @@ class RouteOptimizationService {
 
     let currentLocation = startLocation;
 
-    for (let i = 1; i < route.length - 1; i++) {
+    // Process route from index 1 onwards (skip startLocation, process all task locations)
+    for (let i = 1; i < route.length; i++) {
       const location = route[i];
       const tasksAtLocation = tasksByLocation.get(location);
 
       if (tasksAtLocation && tasksAtLocation.length > 0) {
         const distance = this.calculateDistance(currentLocation, location);
-        const time = this.calculateTravelTime(distance) + this.config.pickTime;
+        const time = this.calculateTravelTime(distance) + this.config.pickTime * 1000; // Convert pickTime to ms
 
         // Add all tasks at this location with the same sequence
         for (const task of tasksAtLocation) {
@@ -524,14 +527,39 @@ class RouteOptimizationService {
       }
     }
 
-    const totalDistance = this.calculateRouteDistance(route);
+    // Build waypoints ensuring start and end are correct
+    // Start with startLocation, add all unique pick locations from route, end with startLocation
+    const waypointLocations: string[] = [startLocation];
+    const seenLocations = new Set<string>([startLocation]);
+
+    for (let i = 1; i < route.length; i++) {
+      const loc = route[i];
+      if (!seenLocations.has(loc)) {
+        waypointLocations.push(loc);
+        seenLocations.add(loc);
+      }
+    }
+
+    // Always add end location (startLocation) - even if no tasks
+    waypointLocations.push(startLocation);
+
+    // Calculate totalDistance from the actual picking path (through tasks) + return to start
+    let taskDistance = 0;
+    let lastLocation = startLocation;
+    for (const task of optimizedTasks) {
+      taskDistance += this.calculateDistance(lastLocation, task.toLocation);
+      lastLocation = task.toLocation;
+    }
+    // Add return to start location
+    taskDistance += this.calculateDistance(lastLocation, startLocation);
+
     const totalTime = optimizedTasks.reduce((sum, t) => sum + t.estimatedTime, 0);
 
     return {
       tasks: optimizedTasks,
-      totalDistance,
+      totalDistance: taskDistance,
       estimatedTime: totalTime,
-      waypoints: this.buildWaypoints(route),
+      waypoints: this.buildWaypoints(waypointLocations),
       algorithm: 'tsp',
     };
   }
