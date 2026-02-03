@@ -6,7 +6,6 @@
  */
 
 import { CycleCountService, cycleCountService } from '../CycleCountService';
-import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import { notifyAll } from '../NotificationHelper';
 import {
@@ -18,21 +17,17 @@ import {
 } from '@opsui/shared';
 
 // Mock dependencies
-jest.mock('../../db/client');
 jest.mock('../../config/logger');
 jest.mock('../NotificationHelper');
 
 describe('CycleCountService', () => {
   let service: CycleCountService;
-  let mockClient: any;
 
   beforeEach(() => {
     service = new CycleCountService();
-    mockClient = {
-      query: jest.fn(),
-    };
 
-    (getPool as jest.Mock).mockResolvedValue(mockClient);
+    // Reset global mockPool.query
+    global.mockPool.query = jest.fn();
     jest.clearAllMocks();
   });
 
@@ -60,7 +55,7 @@ describe('CycleCountService', () => {
         { entry_id: 'CCE-003', variance: 0 },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockEntries }) // get entries
         .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // processVarianceAdjustment
@@ -86,7 +81,7 @@ describe('CycleCountService', () => {
         { entry_id: 'CCE-002', variance: 0 },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockEntries })
         .mockResolvedValueOnce({ rows: [] });
@@ -112,7 +107,7 @@ describe('CycleCountService', () => {
         { entry_id: 'CCE-002', variance: -2 },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockEntries })
         .mockResolvedValue({ rows: [] });
@@ -155,7 +150,7 @@ describe('CycleCountService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockEntries });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockEntries });
 
       const result = await service.getReconcileSummary('CCP-001');
 
@@ -166,7 +161,7 @@ describe('CycleCountService', () => {
     });
 
     it('should return empty summary when no entries', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getReconcileSummary('CCP-001');
 
@@ -189,7 +184,7 @@ describe('CycleCountService', () => {
         status: CycleCountStatus.SCHEDULED,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockPlan] }) // get plan
         .mockResolvedValueOnce({ rows: [] }); // UPDATE
@@ -197,7 +192,7 @@ describe('CycleCountService', () => {
       await mockClient.query('COMMIT');
 
       // Mock getCycleCountPlan call
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ plan_id: 'CCP-001', status: CycleCountStatus.CANCELLED }],
       });
 
@@ -217,7 +212,7 @@ describe('CycleCountService', () => {
         status: CycleCountStatus.COMPLETED,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockPlan] });
 
@@ -234,7 +229,7 @@ describe('CycleCountService', () => {
         location: null,
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockPlan] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockPlan] });
 
       const result = await service.checkForCollisions('CCP-001');
 
@@ -258,7 +253,7 @@ describe('CycleCountService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockPlan] })
         .mockResolvedValueOnce({ rows: mockCollisions });
 
@@ -290,7 +285,7 @@ describe('CycleCountService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockPlan] })
         .mockResolvedValueOnce({ rows: mockEntries });
 
@@ -303,7 +298,7 @@ describe('CycleCountService', () => {
     });
 
     it('should throw error when plan not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.exportCycleCountData('NONEXISTENT')).rejects.toThrow(
         'Cycle count plan NONEXISTENT not found'
@@ -327,7 +322,7 @@ describe('CycleCountService', () => {
         notes: 'Monthly inventory count',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ plan_id: 'CCP-001', plan_name: dto.planName, status: 'SCHEDULED' }],
@@ -336,10 +331,10 @@ describe('CycleCountService', () => {
       await mockClient.query('COMMIT');
 
       // Mock getCycleCountPlan
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ plan_id: 'CCP-001', plan_name: dto.planName }],
       });
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // entries
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // entries
 
       const result = await service.createCycleCountPlan(dto);
 
@@ -388,7 +383,7 @@ describe('CycleCountService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockPlan] })
         .mockResolvedValueOnce({ rows: mockEntries });
 
@@ -400,7 +395,7 @@ describe('CycleCountService', () => {
     });
 
     it('should throw error when plan not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.getCycleCountPlan('NONEXISTENT')).rejects.toThrow(
         'Cycle count plan NONEXISTENT not found'
@@ -412,11 +407,11 @@ describe('CycleCountService', () => {
     it('should apply role-based access control for PICKER role', async () => {
       const mockPlans = [{ plan_id: 'CCP-001', count_by: 'user-123', status: 'IN_PROGRESS' }];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // count
         .mockResolvedValueOnce({ rows: mockPlans }); // data
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // entries
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // entries
 
       const result = await service.getAllCycleCountPlans({
         requestingUserRole: 'PICKER',
@@ -432,11 +427,11 @@ describe('CycleCountService', () => {
         { plan_id: 'CCP-002', count_by: 'user-456', status: 'IN_PROGRESS' },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '2' }] })
         .mockResolvedValueOnce({ rows: mockPlans });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // entries
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // entries
 
       const result = await service.getAllCycleCountPlans({
         requestingUserRole: 'ADMIN',
@@ -459,18 +454,18 @@ describe('CycleCountService', () => {
         { sku: 'SKU-002', bin_location: 'A-01-02', quantity: '5' },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockPlan] }) // get plan
         .mockResolvedValueOnce({ rows: [] }) // UPDATE status
         .mockResolvedValueOnce({ rows: mockInventory }); // inventory for BLANKET
 
-      mockClient.query.mockResolvedValue({ rows: [] }); // INSERT entries
+      global.mockPool.query.mockResolvedValue({ rows: [] }); // INSERT entries
 
       await mockClient.query('COMMIT');
 
       // Mock getCycleCountPlan
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ ...mockPlan, status: 'IN_PROGRESS' }] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -487,10 +482,10 @@ describe('CycleCountService', () => {
         status: CycleCountStatus.IN_PROGRESS,
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockPlan] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockPlan] });
 
       // Mock getCycleCountPlan
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({
           rows: [{ ...mockPlan, status: 'COMPLETED', completed_at: expect.any(String) }],
         })
@@ -515,20 +510,20 @@ describe('CycleCountService', () => {
         { entry_id: 'CCE-002', variance: -3 },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [] }); // UPDATE status
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockEntries }); // get pending
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockEntries }); // get pending
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
         .mockResolvedValueOnce({ rows: [] }); // UPDATE entry
 
       await mockClient.query('COMMIT');
 
       // Mock getCycleCountPlan
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ status: 'RECONCILED' }] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -559,12 +554,12 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockInventory }) // get system quantity
         .mockResolvedValueOnce({ rows: [mockTolerance] }); // get tolerance
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // createAdjustmentTransaction
         .mockResolvedValueOnce({ rows: [] }); // adjustInventoryUp
 
@@ -573,7 +568,7 @@ describe('CycleCountService', () => {
         variance_status: 'AUTO_ADJUSTED',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockEntry] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
       await mockClient.query('COMMIT');
 
@@ -598,7 +593,7 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockInventory })
         .mockResolvedValueOnce({ rows: [mockTolerance] });
@@ -608,7 +603,7 @@ describe('CycleCountService', () => {
         variance_status: 'PENDING',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockEntry] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
       await mockClient.query('COMMIT');
 
@@ -638,11 +633,11 @@ describe('CycleCountService', () => {
         adjustment_transaction_id: null,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockEntry] }); // get entry
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // processVarianceAdjustment
         .mockResolvedValueOnce({ rows: [mockEntry] }); // UPDATE entry
 
@@ -666,7 +661,7 @@ describe('CycleCountService', () => {
         adjustment_transaction_id: null,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockEntry] })
         .mockResolvedValueOnce({ rows: [mockEntry] }); // UPDATE entry
@@ -701,7 +696,7 @@ describe('CycleCountService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockTolerances });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockTolerances });
 
       const result = await service.getAllTolerances();
 
@@ -731,14 +726,14 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: mockInventory })
         .mockResolvedValueOnce({ rows: [mockTolerance] });
 
       const mockEntry = { entry_id: 'CCE-001', variance_status: 'PENDING' };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockEntry] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
       await mockClient.query('COMMIT');
 
@@ -756,7 +751,7 @@ describe('CycleCountService', () => {
         countedBy: 'user-123',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }); // No inventory found
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] }); // No inventory found
 
       const mockTolerance = {
         tolerance_id: 'TOL-001',
@@ -764,11 +759,11 @@ describe('CycleCountService', () => {
         auto_adjust_threshold: 5,
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockTolerance] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockTolerance] });
 
       const mockEntry = { entry_id: 'CCE-001' };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockEntry] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEntry] });
 
       await mockClient.query('COMMIT');
 

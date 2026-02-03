@@ -5,7 +5,6 @@
  */
 
 import { ShippingService, shippingService } from '../ShippingService';
-import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import {
   ShipmentStatus,
@@ -21,21 +20,17 @@ import {
 } from '@opsui/shared';
 
 // Mock dependencies
-jest.mock('../../db/client');
 jest.mock('../../config/logger');
 jest.mock('../NotificationHelper');
 
 describe('ShippingService', () => {
   let service: ShippingService;
-  let mockClient: any;
 
   beforeEach(() => {
     service = new ShippingService();
-    mockClient = {
-      query: jest.fn(),
-    };
 
-    (getPool as jest.Mock).mockResolvedValue(mockClient);
+    // Reset global mockPool.query
+    global.mockPool.query = jest.fn();
     jest.clearAllMocks();
   });
 
@@ -82,7 +77,7 @@ describe('ShippingService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockCarriers });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockCarriers });
 
       const result = await service.getActiveCarriers();
 
@@ -109,7 +104,7 @@ describe('ShippingService', () => {
     });
 
     it('should return empty array when no active carriers exist', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getActiveCarriers();
 
@@ -135,7 +130,7 @@ describe('ShippingService', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockCarrier] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockCarrier] });
 
       const result = await service.getCarrier('CARR-001');
 
@@ -144,7 +139,7 @@ describe('ShippingService', () => {
     });
 
     it('should throw error when carrier not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.getCarrier('NONEXISTENT')).rejects.toThrow(
         'Carrier NONEXISTENT not found'
@@ -193,13 +188,13 @@ describe('ShippingService', () => {
         created_at: '2024-01-01T00:00:00Z',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockCreatedShipment] }) // INSERT
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
       // Mock getShipment call
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [
           {
             ...mockCreatedShipment,
@@ -217,7 +212,7 @@ describe('ShippingService', () => {
         ],
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // labels
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // labels
 
       const result = await service.createShipment(dto);
 
@@ -258,7 +253,7 @@ describe('ShippingService', () => {
         createdBy: 'user-123',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockRejectedValueOnce(new Error('Database error')); // INSERT
 
@@ -320,7 +315,7 @@ describe('ShippingService', () => {
         created_by: 'user-123',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockShipmentRow] })
         .mockResolvedValueOnce({ rows: [mockLabelRow] });
 
@@ -334,7 +329,7 @@ describe('ShippingService', () => {
     });
 
     it('should throw error when shipment not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.getShipment('NONEXISTENT')).rejects.toThrow(
         'Shipment NONEXISTENT not found'
@@ -374,7 +369,7 @@ describe('ShippingService', () => {
         shipped_by: null,
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockShipmentRow] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -385,7 +380,7 @@ describe('ShippingService', () => {
     });
 
     it('should return null when no shipment exists for order', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getShipmentByOrderId('NONEXISTENT');
 
@@ -427,11 +422,11 @@ describe('ShippingService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // count
         .mockResolvedValueOnce({ rows: mockShipments }); // data
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // labels
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // labels
 
       const result = await service.getAllShipments({
         status: ShipmentStatus.SHIPPED,
@@ -445,7 +440,7 @@ describe('ShippingService', () => {
     });
 
     it('should apply carrier filter', async () => {
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -470,10 +465,10 @@ describe('ShippingService', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockUpdatedRow] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockUpdatedRow] });
 
       // Mock getShipment call
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [
           {
             shipment_id: 'SHP-001',
@@ -507,7 +502,7 @@ describe('ShippingService', () => {
         ],
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // labels
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // labels
 
       const result = await service.updateShipmentStatus(
         'SHP-001',
@@ -529,7 +524,7 @@ describe('ShippingService', () => {
     });
 
     it('should throw error when shipment not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(
         service.updateShipmentStatus('NONEXISTENT', ShipmentStatus.SHIPPED)
@@ -545,10 +540,10 @@ describe('ShippingService', () => {
         tracking_url: 'https://track.com/TRK123456',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockUpdatedRow] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockUpdatedRow] });
 
       // Mock getShipment call
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [
           {
             shipment_id: 'SHP-001',
@@ -582,7 +577,7 @@ describe('ShippingService', () => {
         ],
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // labels
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // labels
 
       const result = await service.addTrackingNumber(
         'SHP-001',
@@ -602,7 +597,7 @@ describe('ShippingService', () => {
     });
 
     it('should throw error when shipment not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.addTrackingNumber('NONEXISTENT', 'TRK123456')).rejects.toThrow(
         'Shipment NONEXISTENT not found'
@@ -639,11 +634,11 @@ describe('ShippingService', () => {
         created_by: 'user-123',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockLabel] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockLabel] });
 
       // Mock updateShipmentLabelStatus calls
-      mockClient.query.mockResolvedValueOnce({ rows: [{ total_packages: '2' }] });
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '1' }] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [{ total_packages: '2' }] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [{ count: '1' }] });
 
       const result = await service.createShippingLabel(dto);
 
@@ -679,12 +674,12 @@ describe('ShippingService', () => {
         created_by: 'user-123',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockLabel] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockLabel] });
 
       // Mock updateShipmentLabelStatus - all labels created
-      mockClient.query.mockResolvedValueOnce({ rows: [{ total_packages: '2' }] });
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '2' }] });
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // UPDATE shipments
+      global.mockPool.query.mockResolvedValueOnce({ rows: [{ total_packages: '2' }] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [{ count: '2' }] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // UPDATE shipments
 
       await service.createShippingLabel(dto);
 
@@ -712,7 +707,7 @@ describe('ShippingService', () => {
         created_by: 'user-123',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockLabel] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockLabel] });
 
       const result = await service.markLabelPrinted('LBL-001');
 
@@ -724,7 +719,7 @@ describe('ShippingService', () => {
     });
 
     it('should throw error when label not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.markLabelPrinted('NONEXISTENT')).rejects.toThrow(
         'Shipping label NONEXISTENT not found'
@@ -759,7 +754,7 @@ describe('ShippingService', () => {
         raw_event_data: JSON.stringify(dto.rawEventData),
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockEvent] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockEvent] });
 
       const result = await service.addTrackingEvent(dto);
 
@@ -800,7 +795,7 @@ describe('ShippingService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockEvents });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockEvents });
 
       const result = await service.getTrackingEvents('SHP-001');
 
@@ -810,7 +805,7 @@ describe('ShippingService', () => {
     });
 
     it('should return empty array when no events exist', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getTrackingEvents('SHP-001');
 
@@ -854,8 +849,8 @@ describe('ShippingService', () => {
         shipped_by: null,
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockShipmentRow] });
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockShipmentRow] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getShipment('SHP-001');
 
@@ -875,7 +870,7 @@ describe('ShippingService', () => {
         createdBy: 'user-123',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [
@@ -890,7 +885,7 @@ describe('ShippingService', () => {
         })
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [
           {
             shipment_id: 'SHP-001',
@@ -923,7 +918,7 @@ describe('ShippingService', () => {
           },
         ],
       });
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // labels
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // labels
 
       await service.createShipment(dto);
 

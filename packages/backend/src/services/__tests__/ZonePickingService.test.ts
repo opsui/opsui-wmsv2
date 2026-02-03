@@ -6,14 +6,12 @@
  */
 
 import { ZonePickingService, zonePickingService } from '../ZonePickingService';
-import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import { getAuditService } from '../AuditService';
 import { notifyUser } from '../NotificationHelper';
 import wsServer from '../../websocket';
 
 // Mock dependencies
-jest.mock('../../db/client');
 jest.mock('../../config/logger');
 jest.mock('../AuditService');
 jest.mock('../NotificationHelper');
@@ -21,27 +19,23 @@ jest.mock('../../websocket');
 
 describe('ZonePickingService', () => {
   let service: ZonePickingService;
-  let mockClient: any;
   let mockAuditService: any;
 
   beforeEach(() => {
     service = new ZonePickingService();
-    mockClient = {
-      query: jest.fn(),
-      connect: jest.fn(),
-      release: jest.fn(),
-    };
 
     mockAuditService = {
       log: jest.fn().mockResolvedValue(undefined),
     };
 
-    (getPool as jest.Mock).mockReturnValue({
-      connect: jest.fn().mockResolvedValue(mockClient),
-    });
     (getAuditService as jest.Mock).mockReturnValue(mockAuditService);
 
-    mockClient.connect.mockResolvedValue(mockClient);
+    // Reset global mockPool.query and mockPool.connect
+    global.mockPool.query = jest.fn();
+    global.mockPool.connect = jest.fn().mockResolvedValue({
+      query: jest.fn(),
+      release: jest.fn(),
+    });
 
     // Mock WebSocket broadcaster
     const mockBroadcaster = {
@@ -80,7 +74,7 @@ describe('ZonePickingService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockZones });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockZones });
 
       const result = await service.getZones();
 
@@ -107,7 +101,7 @@ describe('ZonePickingService', () => {
         { zone: 'H', aisle_start: '1', aisle_end: '5', location_count: '50', active_pickers: '0' },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockZones });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockZones });
 
       const result = await service.getZones();
 
@@ -119,7 +113,7 @@ describe('ZonePickingService', () => {
     });
 
     it('should return empty array when no zones found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getZones();
 
@@ -137,7 +131,7 @@ describe('ZonePickingService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockZones });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockZones });
 
       const result = await service.getZones();
 
@@ -165,7 +159,7 @@ describe('ZonePickingService', () => {
         avg_time: '45.5',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockStats] })
         .mockResolvedValueOnce({ rows: [mockAvgTime] });
 
@@ -184,7 +178,7 @@ describe('ZonePickingService', () => {
     });
 
     it('should return default stats when no tasks found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getZoneStats('A');
 
@@ -209,7 +203,7 @@ describe('ZonePickingService', () => {
         active_pickers: '0',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockStats] })
         .mockResolvedValueOnce({ rows: [] }); // No avg time
 
@@ -220,7 +214,7 @@ describe('ZonePickingService', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockClient.query.mockRejectedValueOnce(new Error('Database error'));
+      global.mockPool.query.mockRejectedValueOnce(new Error('Database error'));
 
       const result = await service.getZoneStats('A');
 
@@ -272,7 +266,7 @@ describe('ZonePickingService', () => {
 
       const mockAvgTime = { avg_time: '60' };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones }) // getZones
         .mockResolvedValueOnce({ rows: [mockStatsA] }) // getZoneStats A
         .mockResolvedValueOnce({ rows: [mockAvgTime] })
@@ -287,7 +281,7 @@ describe('ZonePickingService', () => {
     });
 
     it('should return empty array when no zones exist', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getAllZoneStats();
 
@@ -311,11 +305,11 @@ describe('ZonePickingService', () => {
         location_count: '100',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockZone] }) // getZoneById
         .mockResolvedValueOnce({ rows: [] }); // No existing assignment
 
-      mockClient.query.mockResolvedValue({ rows: [] }); // Insert
+      global.mockPool.query.mockResolvedValue({ rows: [] }); // Insert
 
       const context = { userId: 'admin-123', userEmail: 'admin@example.com' };
 
@@ -324,7 +318,7 @@ describe('ZonePickingService', () => {
       expect(result.pickerId).toBe(pickerId);
       expect(result.zoneId).toBe(zoneId);
       expect(result.status).toBe('ACTIVE');
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO zone_assignments'),
         expect.arrayContaining([pickerId, zoneId])
       );
@@ -332,7 +326,7 @@ describe('ZonePickingService', () => {
     });
 
     it('should throw error when zone not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // Zone not found
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // Zone not found
 
       const context = { userId: 'admin-123' };
 
@@ -358,7 +352,7 @@ describe('ZonePickingService', () => {
         status: 'ACTIVE',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockZone] })
         .mockResolvedValueOnce({ rows: [existingAssignment] });
 
@@ -380,11 +374,11 @@ describe('ZonePickingService', () => {
         location_count: '100',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockZone] })
         .mockResolvedValueOnce({ rows: [] });
 
-      mockClient.query.mockResolvedValue({ rows: [] });
+      global.mockPool.query.mockResolvedValue({ rows: [] });
 
       const context = { userId: 'admin-123' };
 
@@ -409,11 +403,11 @@ describe('ZonePickingService', () => {
         location_count: '100',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockZone] })
         .mockResolvedValueOnce({ rows: [] });
 
-      mockClient.query.mockResolvedValue({ rows: [] });
+      global.mockPool.query.mockResolvedValue({ rows: [] });
 
       const context = { userId: 'admin-123' };
 
@@ -461,7 +455,7 @@ describe('ZonePickingService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockTasks });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockTasks });
 
       const result = await service.getZonePickTasks(zoneId);
 
@@ -495,19 +489,19 @@ describe('ZonePickingService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockTasks });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockTasks });
 
       const result = await service.getZonePickTasks(zoneId, ['PENDING', 'IN_PROGRESS']);
 
       expect(result).toHaveLength(1);
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('AND pt.status = ANY'),
         [zoneId, ['PENDING', 'IN_PROGRESS']]
       );
     });
 
     it('should return empty array when no tasks found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getZonePickTasks('A');
 
@@ -521,11 +515,11 @@ describe('ZonePickingService', () => {
         { task_id: 'task-3', bin_location: 'A-03-01', priority: 'HIGH' },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockTasks });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockTasks });
 
       await service.getZonePickTasks('A');
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY pt.priority DESC, pt.bin_location'),
         expect.any(Array)
       );
@@ -566,14 +560,14 @@ describe('ZonePickingService', () => {
         { user_id: 'picker-3' },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones }) // getZones
         .mockResolvedValueOnce({ rows: [mockZoneStats[0]] }) // getZoneStats A
         .mockResolvedValueOnce({ rows: [mockZoneStats[1]] }) // getZoneStats B
         .mockResolvedValueOnce({ rows: mockPickers }); // getAvailablePickers
 
       // Check existing assignments and assign to zones
-      mockClient.query.mockImplementation((query: string, params: any[]) => {
+      global.mockPool.query.mockImplementation((query: string, params: any[]) => {
         if (query.includes('zone_assignments')) {
           return { rows: [] }; // No existing assignments
         }
@@ -616,12 +610,12 @@ describe('ZonePickingService', () => {
 
       const mockPickers = [{ user_id: 'picker-1' }];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones })
         .mockResolvedValueOnce({ rows: [mockZoneStats] })
         .mockResolvedValueOnce({ rows: mockPickers });
 
-      mockClient.query.mockResolvedValue({ rows: [] });
+      global.mockPool.query.mockResolvedValue({ rows: [] });
 
       const context = { userId: 'admin-123' };
 
@@ -655,13 +649,13 @@ describe('ZonePickingService', () => {
 
       const mockPickers = [{ user_id: pickerId }];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: mockZones })
         .mockResolvedValueOnce({ rows: [mockZoneStats] })
         .mockResolvedValueOnce({ rows: mockPickers });
 
       // Picker already has active assignment
-      mockClient.query.mockImplementation((query: string) => {
+      global.mockPool.query.mockImplementation((query: string) => {
         if (query.includes('zone_assignments')) {
           return { rows: [{ picker_id: pickerId, zone_id: 'B', status: 'ACTIVE' }] };
         }
@@ -685,13 +679,13 @@ describe('ZonePickingService', () => {
     it('should release picker from zone successfully', async () => {
       const pickerId = 'picker-123';
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // UPDATE
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // UPDATE
 
       const context = { userId: 'admin-123', userEmail: 'admin@example.com' };
 
       await service.releasePickerFromZone(pickerId, context);
 
-      expect(mockClient.query).toHaveBeenCalledWith(
+      expect(global.mockPool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE zone_assignments'),
         [pickerId]
       );
@@ -709,7 +703,7 @@ describe('ZonePickingService', () => {
     it('should log release operation', async () => {
       const pickerId = 'picker-123';
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const context = { userId: 'admin-123', userAgent: 'Mozilla/5.0', ipAddress: '192.168.1.1' };
 
@@ -731,7 +725,7 @@ describe('ZonePickingService', () => {
 
   describe('Edge Cases', () => {
     it('should handle zone with no locations', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getZoneStats('NONEXISTENT');
 
@@ -752,7 +746,7 @@ describe('ZonePickingService', () => {
         { zone: 'Z', aisle_start: '1', aisle_end: '5', location_count: '50', active_pickers: '0' },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockZones });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockZones });
 
       const result = await service.getZones();
 
@@ -768,7 +762,7 @@ describe('ZonePickingService', () => {
         active_pickers: null,
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockStats] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockStats] });
 
       const result = await service.getZoneStats('A');
 

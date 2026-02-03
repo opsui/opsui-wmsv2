@@ -5,27 +5,22 @@
  */
 
 import { QualityControlService, qualityControlService } from '../QualityControlService';
-import { getPool } from '../../db/client';
 import { logger } from '../../config/logger';
 import { notifyUser } from '../NotificationHelper';
 import { InspectionStatus, InspectionType, DispositionAction, DefectType } from '@opsui/shared';
 
 // Mock dependencies
-jest.mock('../../db/client');
 jest.mock('../../config/logger');
 jest.mock('../NotificationHelper');
 
 describe('QualityControlService', () => {
   let service: QualityControlService;
-  let mockClient: any;
 
   beforeEach(() => {
     service = new QualityControlService();
-    mockClient = {
-      query: jest.fn(),
-    };
 
-    (getPool as jest.Mock).mockResolvedValue(mockClient);
+    // Reset global mockPool.query
+    global.mockPool.query = jest.fn();
     jest.clearAllMocks();
   });
 
@@ -68,18 +63,18 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ checklist_id: 'CHK-001', checklist_name: data.checklistName }],
         });
 
-      mockClient.query.mockResolvedValue({ rows: [] }); // items
+      global.mockPool.query.mockResolvedValue({ rows: [] }); // items
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getInspectionChecklist
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({
           rows: [{ checklist_id: 'CHK-001', checklist_name: data.checklistName }],
         })
@@ -105,14 +100,14 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
 
-      mockClient.query.mockResolvedValue({ rows: [] });
+      global.mockPool.query.mockResolvedValue({ rows: [] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getInspectionChecklist
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({
           rows: [{ checklist_id: 'CHK-001', checklist_name: data.checklistName }],
         })
@@ -150,7 +145,7 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockChecklist] })
         .mockResolvedValueOnce({ rows: mockItems });
 
@@ -162,7 +157,7 @@ describe('QualityControlService', () => {
     });
 
     it('should throw error when checklist not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.getInspectionChecklist('NONEXISTENT')).rejects.toThrow(
         'Inspection checklist NONEXISTENT not found'
@@ -186,8 +181,8 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockChecklists });
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // items
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockChecklists });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllInspectionChecklists({
         inspectionType: InspectionType.INCOMING,
@@ -218,8 +213,8 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockChecklists });
-      mockClient.query.mockResolvedValue({ rows: [] }); // items
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockChecklists });
+      global.mockPool.query.mockResolvedValue({ rows: [] }); // items
 
       const result = await service.getAllInspectionChecklists({
         activeOnly: true,
@@ -251,17 +246,17 @@ describe('QualityControlService', () => {
 
       const mockUser = { name: 'John Doe' };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [mockUser] }) // get user
         .mockResolvedValueOnce({
           rows: [{ inspection_id: 'QI-001', inspection_type: dto.inspectionType }],
         });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getQualityInspection
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ inspection_id: 'QI-001', inspection_type: dto.inspectionType, status: 'PENDING' }],
       });
 
@@ -303,7 +298,7 @@ describe('QualityControlService', () => {
         updated_at: '2024-01-01',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockInspection] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockInspection] });
 
       const result = await service.getQualityInspection('QI-001');
 
@@ -312,7 +307,7 @@ describe('QualityControlService', () => {
     });
 
     it('should throw error when inspection not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.getQualityInspection('NONEXISTENT')).rejects.toThrow(
         'Quality inspection NONEXISTENT not found'
@@ -337,7 +332,7 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '2' }] }) // total
         .mockResolvedValueOnce({ rows: mockInspections }); // data
 
@@ -352,7 +347,7 @@ describe('QualityControlService', () => {
     });
 
     it('should filter by inspector', async () => {
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] })
         .mockResolvedValueOnce({ rows: [{ inspection_id: 'QI-001' }] });
 
@@ -378,16 +373,16 @@ describe('QualityControlService', () => {
         approvedBy: 'admin-456',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ inspection_id: 'QI-001', status: InspectionStatus.PASSED }],
         });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getQualityInspection
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ inspection_id: 'QI-001', status: InspectionStatus.PASSED, sku: 'SKU-001' }],
       });
 
@@ -409,16 +404,16 @@ describe('QualityControlService', () => {
         approvedBy: 'admin-456',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ inspection_id: 'QI-001', status: InspectionStatus.FAILED }],
         });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getQualityInspection
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ inspection_id: 'QI-001', status: InspectionStatus.FAILED, sku: 'SKU-001' }],
       });
 
@@ -441,10 +436,10 @@ describe('QualityControlService', () => {
         status: InspectionStatus.PENDING,
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockInspection] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockInspection] });
 
       // Mock getQualityInspection
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ inspection_id: 'QI-001', status: InspectionStatus.IN_PROGRESS }],
       });
 
@@ -454,7 +449,7 @@ describe('QualityControlService', () => {
     });
 
     it('should throw error when inspection not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.startInspection('NONEXISTENT')).rejects.toThrow(
         'Quality inspection NONEXISTENT not found'
@@ -487,7 +482,7 @@ describe('QualityControlService', () => {
         image_url: 'https://example.com/image.jpg',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockResult] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockResult] });
 
       const result = await service.saveInspectionResult(data);
 
@@ -519,7 +514,7 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query.mockResolvedValueOnce({ rows: mockResults });
+      global.mockPool.query.mockResolvedValueOnce({ rows: mockResults });
 
       const result = await service.getInspectionResults('QI-001');
 
@@ -529,7 +524,7 @@ describe('QualityControlService', () => {
     });
 
     it('should return empty array when no results', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       const result = await service.getInspectionResults('QI-001');
 
@@ -573,18 +568,18 @@ describe('QualityControlService', () => {
         ],
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({
           rows: [{ return_id: 'RA-001', order_id: 'ORD-001' }],
         });
 
-      mockClient.query.mockResolvedValue({ rows: [] }); // items
+      global.mockPool.query.mockResolvedValue({ rows: [] }); // items
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getReturnAuthorization
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({
           rows: [{ return_id: 'RA-001', order_id: 'ORD-001', status: 'PENDING' }],
         })
@@ -638,7 +633,7 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [mockReturn] })
         .mockResolvedValueOnce({ rows: mockItems });
 
@@ -650,7 +645,7 @@ describe('QualityControlService', () => {
     });
 
     it('should throw error when return not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(service.getReturnAuthorization('NONEXISTENT')).rejects.toThrow(
         'Return authorization NONEXISTENT not found'
@@ -669,11 +664,11 @@ describe('QualityControlService', () => {
         },
       ];
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] })
         .mockResolvedValueOnce({ rows: mockReturns });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // items
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllReturnAuthorizations({
         status: 'PENDING',
@@ -686,11 +681,11 @@ describe('QualityControlService', () => {
     });
 
     it('should filter by order ID', async () => {
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ count: '1' }] })
         .mockResolvedValueOnce({ rows: [{ return_id: 'RA-001' }] });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }); // items
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }); // items
 
       const result = await service.getAllReturnAuthorizations({
         orderId: 'ORD-001',
@@ -707,10 +702,10 @@ describe('QualityControlService', () => {
         status: 'PENDING',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockReturn] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockReturn] });
 
       // Mock getReturnAuthorization
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ ...mockReturn, status: 'RECEIVED' }] })
         .mockResolvedValueOnce({ rows: [] }); // items
 
@@ -729,10 +724,10 @@ describe('QualityControlService', () => {
         status: 'RECEIVED',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [mockReturn] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [mockReturn] });
 
       // Mock getReturnAuthorization
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ ...mockReturn, status: 'INSPECTED' }] })
         .mockResolvedValueOnce({ rows: [] }); // items
 
@@ -746,7 +741,7 @@ describe('QualityControlService', () => {
     });
 
     it('should throw error when return not found', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] });
 
       await expect(
         service.updateReturnAuthorizationStatus('NONEXISTENT', 'RECEIVED')
@@ -775,14 +770,14 @@ describe('QualityControlService', () => {
         createdBy: 'admin-123',
       };
 
-      mockClient.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
+      global.mockPool.query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
 
-      mockClient.query.mockResolvedValue({ rows: [] });
+      global.mockPool.query.mockResolvedValue({ rows: [] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
       // Mock getInspectionChecklist
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [{ checklist_id: 'CHK-001' }] })
         .mockResolvedValueOnce({ rows: [{ options: '["Cosmetic","Functional","Packaging"]' }] });
 
@@ -801,14 +796,14 @@ describe('QualityControlService', () => {
         inspectorId: 'user-123',
       };
 
-      mockClient.query
+      global.mockPool.query
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [{ name: 'Inspector' }] })
         .mockResolvedValueOnce({ rows: [{ inspection_id: 'QI-001' }] });
 
-      await mockClient.query('COMMIT');
+      await global.mockPool.query('COMMIT');
 
-      mockClient.query.mockResolvedValueOnce({
+      global.mockPool.query.mockResolvedValueOnce({
         rows: [{ inspection_id: 'QI-001', status: 'PENDING' }],
       });
 
