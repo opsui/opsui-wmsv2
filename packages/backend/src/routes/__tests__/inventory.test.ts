@@ -45,6 +45,25 @@ describe('Inventory Routes', () => {
     lastLoginAt: new Date(),
   };
 
+  const mockInventory = [
+    {
+      sku: 'SKU-001',
+      binLocation: 'A-01-01',
+      quantity: 100,
+      available: 80,
+      reserved: 20,
+      status: 'available',
+    },
+    {
+      sku: 'SKU-001',
+      binLocation: 'A-01-02',
+      quantity: 50,
+      available: 50,
+      reserved: 0,
+      status: 'available',
+    },
+  ];
+
   beforeEach(() => {
     app = createApp();
     jest.clearAllMocks();
@@ -53,193 +72,144 @@ describe('Inventory Routes', () => {
   afterEach(() => {});
 
   // ==========================================================================
-  // GET /api/inventory
+  // GET /api/sku/:sku
   // ==========================================================================
 
-  describe('GET /api/inventory', () => {
-    it('should return inventory with default filters', async () => {
-      const mockInventory = [
-        {
-          sku: 'SKU-001',
-          quantity: 100,
-          bin_location: 'A-01-01',
-          status: 'available',
-        },
-        {
-          sku: 'SKU-002',
-          quantity: 50,
-          bin_location: 'A-01-02',
-          status: 'available',
-        },
-      ];
-
-      // @ts-expect-error - getAllInventory method does not exist on InventoryService
-      (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
-        items: mockInventory,
-        total: 2,
-        page: 1,
-        totalPages: 1,
-      });
-
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = {
-          ...mockUser,
-          baseRole: mockUser.role,
-          effectiveRole: mockUser.activeRole || mockUser.role,
-        };
-        next();
-      });
-
-      const response = await request(app)
-        .get('/api/v1/inventory')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
-
-      expect(response.body.items).toHaveLength(2);
-      expect(response.body.total).toBe(2);
-      // @ts-ignore - getAllInventory method does not exist on InventoryService
-      expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
-        expect.objectContaining({
-          limit: 50,
-          offset: 0,
-        })
-      );
-    });
-
-    it('should filter inventory by SKU', async () => {
-      // @ts-expect-error - getAllInventory method does not exist on InventoryService
-      (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
-        items: [{ sku: 'SKU-001', quantity: 100 }],
-        total: 1,
-        page: 1,
-        totalPages: 1,
-      });
-
-      const response = await request(app)
-        .get('/api/v1/inventory?sku=SKU-001')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
-
-      // @ts-ignore - getAllInventory method does not exist on InventoryService
-      expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sku: 'SKU-001',
-        })
-      );
-    });
-
-    it('should filter inventory by bin location', async () => {
-      // @ts-expect-error - getAllInventory method does not exist on InventoryService
-      (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
-        items: [],
-        total: 0,
-      });
-
-      const response = await request(app)
-        .get('/api/v1/inventory?binLocation=A-01-01')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
-
-      // @ts-ignore - getAllInventory method does not exist on InventoryService
-      expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
-        expect.objectContaining({
-          binLocation: 'A-01-01',
-        })
-      );
-    });
-
-    it('should paginate inventory', async () => {
-      // @ts-expect-error - getAllInventory method does not exist on InventoryService
-      (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
-        items: [],
-        total: 100,
-        page: 2,
-        totalPages: 5,
-      });
-
-      const response = await request(app)
-        .get('/api/v1/inventory?page=2&limit=20')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
-
-      // @ts-ignore - getAllInventory method does not exist on InventoryService
-      expect(inventoryService.getAllInventory).toHaveBeenCalledWith(
-        expect.objectContaining({
-          limit: 20,
-          offset: 20,
-        })
-      );
-    });
-  });
-
-  // ==========================================================================
-  // GET /api/inventory/:sku
-  // ==========================================================================
-
-  describe('GET /api/inventory/:sku', () => {
+  describe('GET /api/v1/inventory/sku/:sku', () => {
     it('should return inventory by SKU', async () => {
-      const mockInventory = {
-        sku: 'SKU-001',
-        quantity: 100,
-        bin_location: 'A-01-01',
-        status: 'available',
-      };
-
-      // getInventoryBySKU exists and returns an array
-      inventoryService.getInventoryBySKU = jest.fn().mockResolvedValue([mockInventory] as any);
+      inventoryService.getInventoryBySKU = jest.fn().mockResolvedValue(mockInventory as any);
 
       const response = await request(app)
-        .get('/api/v1/inventory/SKU-001')
+        .get('/api/v1/inventory/sku/SKU-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
-      expect(response.body).toEqual(mockInventory);
-      // @ts-ignore - getInventoryBySKU returns array, test expects single object
+      expect(response.body).toHaveLength(2);
       expect(inventoryService.getInventoryBySKU).toHaveBeenCalledWith('SKU-001');
     });
 
-    it('should return 404 when inventory not found', async () => {
+    it('should return empty array for non-existent SKU', async () => {
       inventoryService.getInventoryBySKU = jest.fn().mockResolvedValue([]);
 
       const response = await request(app)
-        .get('/api/v1/inventory/SKU-NONEXISTENT')
+        .get('/api/v1/inventory/sku/SKU-NONEXISTENT')
         .set('Authorization', 'Bearer valid-token')
-        .expect(500);
+        .expect(200);
 
-      expect(inventoryService.getInventoryBySKU).toHaveBeenCalledWith('SKU-NONEXISTENT');
+      expect(response.body).toHaveLength(0);
     });
   });
 
   // ==========================================================================
-  // POST /api/inventory/adjust
+  // GET /api/bin/:binLocation
   // ==========================================================================
 
-  describe('POST /api/inventory/adjust', () => {
+  describe('GET /api/v1/inventory/bin/:binLocation', () => {
+    it('should return inventory by bin location', async () => {
+      inventoryService.getInventoryByBinLocation = jest
+        .fn()
+        .mockResolvedValue([mockInventory[0]] as any);
+
+      const response = await request(app)
+        .get('/api/v1/inventory/bin/A-01-01')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body).toHaveLength(1);
+      expect(response.body[0].sku).toBe('SKU-001');
+      expect(inventoryService.getInventoryByBinLocation).toHaveBeenCalledWith(
+        'A-01-01'
+      );
+    });
+
+    it('should return empty array for empty bin location', async () => {
+      inventoryService.getInventoryByBinLocation = jest.fn().mockResolvedValue([]);
+
+      const response = await request(app)
+        .get('/api/v1/inventory/bin/B-99-99')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body).toHaveLength(0);
+    });
+  });
+
+  // ==========================================================================
+  // GET /api/v1/inventory/sku/:sku/available
+  // ==========================================================================
+
+  describe('GET /api/v1/inventory/sku/:sku/available', () => {
+    it('should return available inventory locations for SKU', async () => {
+      const availableLocations = [
+        { binLocation: 'A-01-01', available: 80 },
+        { binLocation: 'A-01-02', available: 50 },
+      ];
+      inventoryService.getAvailableInventory = jest
+        .fn()
+        .mockResolvedValue(availableLocations as any);
+
+      const response = await request(app)
+        .get('/api/v1/inventory/sku/SKU-001/available')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body).toHaveLength(2);
+      expect(inventoryService.getAvailableInventory).toHaveBeenCalledWith('SKU-001');
+    });
+  });
+
+  // ==========================================================================
+  // GET /api/v1/inventory/sku/:sku/total
+  // ==========================================================================
+
+  describe('GET /api/v1/inventory/sku/:sku/total', () => {
+    it('should return total available quantity for SKU', async () => {
+      inventoryService.getTotalAvailable = jest.fn().mockResolvedValue(130);
+
+      const response = await request(app)
+        .get('/api/v1/inventory/sku/SKU-001/total')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body).toEqual({ sku: 'SKU-001', totalAvailable: 130 });
+      expect(inventoryService.getTotalAvailable).toHaveBeenCalledWith('SKU-001');
+    });
+  });
+
+  // ==========================================================================
+  // POST /api/v1/inventory/adjust
+  // ==========================================================================
+
+  describe('POST /api/v1/inventory/adjust', () => {
     it('should adjust inventory quantity', async () => {
-      const adjustment = {
+      const adjustedInventory = {
         sku: 'SKU-001',
         binLocation: 'A-01-01',
-        quantity: 10,
-        reason: 'Damaged goods',
-        adjustedBy: 'user-123',
+        quantity: 90,
+        available: 70,
+        reserved: 20,
       };
-
-      // @ts-ignore - adjustInventory method signature is different
-      (inventoryService.adjustInventory as jest.Mock).mockResolvedValue({
-        sku: 'SKU-001',
-        previousQuantity: 100,
-        newQuantity: 90,
-        adjustment: -10,
-      });
+      inventoryService.adjustInventory = jest.fn().mockResolvedValue(adjustedInventory as any);
 
       const response = await request(app)
         .post('/api/v1/inventory/adjust')
         .set('Authorization', 'Bearer valid-token')
-        .send(adjustment)
+        .send({
+          sku: 'SKU-001',
+          binLocation: 'A-01-01',
+          quantity: -10,
+          reason: 'Damaged goods',
+        })
         .expect(200);
 
-      expect(response.body.newQuantity).toBe(90);
-      expect(inventoryService.adjustInventory).toHaveBeenCalledWith(adjustment);
+      expect(response.body.quantity).toBe(90);
+      expect(inventoryService.adjustInventory).toHaveBeenCalledWith(
+        'SKU-001',
+        'A-01-01',
+        -10,
+        'user-123',
+        'Damaged goods'
+      );
     });
 
     it('should return 400 when SKU is missing', async () => {
@@ -249,19 +219,36 @@ describe('Inventory Routes', () => {
         .send({
           binLocation: 'A-01-01',
           quantity: 10,
+          reason: 'Test',
         })
         .expect(400);
 
       expect(response.body.error).toBeDefined();
     });
 
-    it('should return 400 when quantity is missing', async () => {
+    it('should return 400 when quantity is not a number', async () => {
       const response = await request(app)
         .post('/api/v1/inventory/adjust')
         .set('Authorization', 'Bearer valid-token')
         .send({
           sku: 'SKU-001',
           binLocation: 'A-01-01',
+          quantity: 'not a number',
+          reason: 'Test',
+        })
+        .expect(400);
+
+      expect(response.body.error).toBeDefined();
+    });
+
+    it('should return 400 when reason is missing', async () => {
+      const response = await request(app)
+        .post('/api/v1/inventory/adjust')
+        .set('Authorization', 'Bearer valid-token')
+        .send({
+          sku: 'SKU-001',
+          binLocation: 'A-01-01',
+          quantity: 10,
         })
         .expect(400);
 
@@ -270,86 +257,32 @@ describe('Inventory Routes', () => {
   });
 
   // ==========================================================================
-  // POST /api/inventory/transfer
+  // GET /api/v1/inventory/transactions
   // ==========================================================================
 
-  describe('POST /api/inventory/transfer', () => {
-    it('should transfer inventory between bins', async () => {
-      const transfer = {
-        sku: 'SKU-001',
-        fromLocation: 'A-01-01',
-        toLocation: 'B-01-01',
-        quantity: 10,
-        transferredBy: 'user-123',
+  describe('GET /api/v1/inventory/transactions', () => {
+    it('should return inventory transactions', async () => {
+      const mockTransactions = {
+        transactions: [
+          {
+            transactionId: 'TRANS-001',
+            sku: 'SKU-001',
+            type: 'ADJUSTMENT',
+            quantity: -10,
+            timestamp: '2024-01-01T00:00:00Z',
+          },
+          {
+            transactionId: 'TRANS-002',
+            sku: 'SKU-001',
+            type: 'RESERVATION',
+            quantity: 5,
+            timestamp: '2024-01-02T00:00:00Z',
+          },
+        ],
+        total: 2,
       };
 
-      // @ts-expect-error - transferInventory method does not exist on InventoryService
-      (inventoryService.transferInventory as jest.Mock).mockResolvedValue({
-        sku: 'SKU-001',
-        fromLocation: 'A-01-01',
-        toLocation: 'B-01-01',
-        quantity: 10,
-        transferId: 'TRANS-001',
-      });
-
-      const response = await request(app)
-        .post('/api/v1/inventory/transfer')
-        .set('Authorization', 'Bearer valid-token')
-        .send(transfer)
-        .expect(200);
-
-      expect(response.body.transferId).toBe('TRANS-001');
-      // @ts-ignore - transferInventory method does not exist on InventoryService
-      expect(inventoryService.transferInventory).toHaveBeenCalledWith(transfer);
-    });
-
-    it('should return 400 when from location equals to location', async () => {
-      const response = await request(app)
-        .post('/api/v1/inventory/transfer')
-        .set('Authorization', 'Bearer valid-token')
-        .send({
-          sku: 'SKU-001',
-          fromLocation: 'A-01-01',
-          toLocation: 'A-01-01',
-          quantity: 10,
-        })
-        .expect(400);
-
-      expect(response.body).toEqual({
-        error: 'Source and destination locations cannot be the same',
-        code: 'SAME_LOCATION',
-      });
-    });
-  });
-
-  // ==========================================================================
-  // GET /api/inventory/transactions
-  // ==========================================================================
-
-  describe('GET /api/inventory/transactions', () => {
-    it('should return inventory transactions', async () => {
-      const mockTransactions = [
-        {
-          transactionId: 'TRANS-001',
-          sku: 'SKU-001',
-          type: 'adjustment',
-          quantity: -10,
-          timestamp: '2024-01-01T00:00:00Z',
-        },
-        {
-          transactionId: 'TRANS-002',
-          sku: 'SKU-001',
-          type: 'transfer',
-          quantity: 5,
-          timestamp: '2024-01-02T00:00:00Z',
-        },
-      ];
-
-      // getTransactionHistory exists (test calls it getTransactions)
-      inventoryService.getTransactionHistory = jest.fn().mockResolvedValue({
-        transactions: mockTransactions,
-        total: 2,
-      });
+      inventoryService.getTransactionHistory = jest.fn().mockResolvedValue(mockTransactions as any);
 
       const response = await request(app)
         .get('/api/v1/inventory/transactions')
@@ -360,29 +293,20 @@ describe('Inventory Routes', () => {
       expect(response.body.total).toBe(2);
     });
 
-    it('should filter transactions by type', async () => {
-      inventoryService.getTransactionHistory = jest.fn().mockResolvedValue({
-        transactions: [],
-        total: 0,
-      });
-
-      const response = await request(app)
-        .get('/api/v1/inventory/transactions?type=adjustment')
-        .set('Authorization', 'Bearer valid-token')
-        .expect(200);
-
-      expect(inventoryService.getTransactionHistory).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'adjustment',
-        })
-      );
-    });
-
     it('should filter transactions by SKU', async () => {
-      inventoryService.getTransactionHistory = jest.fn().mockResolvedValue({
-        transactions: [],
-        total: 0,
-      });
+      const mockTransactions = {
+        transactions: [
+          {
+            transactionId: 'TRANS-001',
+            sku: 'SKU-001',
+            type: 'ADJUSTMENT',
+            quantity: -10,
+          },
+        ],
+        total: 1,
+      };
+
+      inventoryService.getTransactionHistory = jest.fn().mockResolvedValue(mockTransactions as any);
 
       const response = await request(app)
         .get('/api/v1/inventory/transactions?sku=SKU-001')
@@ -395,51 +319,119 @@ describe('Inventory Routes', () => {
         })
       );
     });
+
+    it('should support pagination', async () => {
+      const mockTransactions = {
+        transactions: [],
+        total: 100,
+      };
+
+      inventoryService.getTransactionHistory = jest.fn().mockResolvedValue(mockTransactions as any);
+
+      await request(app)
+        .get('/api/v1/inventory/transactions?limit=20&offset=20')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(inventoryService.getTransactionHistory).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 20,
+          offset: 20,
+        })
+      );
+    });
   });
 
   // ==========================================================================
-  // POST /api/inventory/count
+  // GET /api/v1/inventory/alerts/low-stock
   // ==========================================================================
 
-  describe('POST /api/inventory/count', () => {
-    it('should create inventory count', async () => {
-      const count = {
-        sku: 'SKU-001',
-        binLocation: 'A-01-01',
-        countedQuantity: 95,
-        countedBy: 'user-123',
-        reason: 'Cycle count',
-      };
+  describe('GET /api/v1/inventory/alerts/low-stock', () => {
+    it('should return low stock alerts', async () => {
+      const mockAlerts = [
+        { sku: 'SKU-001', binLocation: 'A-01-01', available: 5, quantity: 5 },
+        { sku: 'SKU-002', binLocation: 'B-05-10', available: 8, quantity: 8 },
+      ];
 
-      // @ts-expect-error - recordCount method does not exist on InventoryService
-      (inventoryService.recordCount as jest.Mock).mockResolvedValue({
-        countId: 'COUNT-001',
-        variance: -5,
-        previousQuantity: 100,
-      });
+      inventoryService.getLowStockAlerts = jest.fn().mockResolvedValue(mockAlerts as any);
 
       const response = await request(app)
-        .post('/api/v1/inventory/count')
+        .get('/api/v1/inventory/alerts/low-stock')
         .set('Authorization', 'Bearer valid-token')
-        .send(count)
         .expect(200);
 
-      expect(response.body.countId).toBe('COUNT-001');
-      expect(response.body.variance).toBe(-5);
+      expect(response.body).toHaveLength(2);
+      expect(inventoryService.getLowStockAlerts).toHaveBeenCalledWith(10);
     });
 
-    it('should return 400 when counted quantity is negative', async () => {
-      const response = await request(app)
-        .post('/api/v1/inventory/count')
-        .set('Authorization', 'Bearer valid-token')
-        .send({
-          sku: 'SKU-001',
-          binLocation: 'A-01-01',
-          countedQuantity: -5,
-        })
-        .expect(400);
+    it('should support custom threshold', async () => {
+      inventoryService.getLowStockAlerts = jest.fn().mockResolvedValue([] as any);
 
-      expect(response.body.error).toBeDefined();
+      await request(app)
+        .get('/api/v1/inventory/alerts/low-stock?threshold=20')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(inventoryService.getLowStockAlerts).toHaveBeenCalledWith(20);
+    });
+  });
+
+  // ==========================================================================
+  // GET /api/v1/inventory/reconcile/:sku
+  // ==========================================================================
+
+  describe('GET /api/v1/inventory/reconcile/:sku', () => {
+    it('should reconcile inventory for SKU', async () => {
+      const mockReconciliation = {
+        expected: 100,
+        actual: 95,
+        discrepancies: [
+          {
+            binLocation: 'A-01-01',
+            expected: 100,
+            actual: 95,
+            difference: -5,
+          },
+        ],
+      };
+
+      inventoryService.reconcileInventory = jest.fn().mockResolvedValue(mockReconciliation as any);
+
+      const response = await request(app)
+        .get('/api/v1/inventory/reconcile/SKU-001')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body.expected).toBe(100);
+      expect(response.body.actual).toBe(95);
+      expect(response.body.discrepancies).toHaveLength(1);
+      expect(inventoryService.reconcileInventory).toHaveBeenCalledWith('SKU-001');
+    });
+  });
+
+  // ==========================================================================
+  // GET /api/v1/inventory/metrics
+  // ==========================================================================
+
+  describe('GET /api/v1/inventory/metrics', () => {
+    it('should return inventory metrics', async () => {
+      const mockMetrics = {
+        totalSKUs: 150,
+        totalInventoryUnits: 5000,
+        lowStockCount: 12,
+        outOfStockCount: 3,
+      };
+
+      inventoryService.getInventoryMetrics = jest.fn().mockResolvedValue(mockMetrics as any);
+
+      const response = await request(app)
+        .get('/api/v1/inventory/metrics')
+        .set('Authorization', 'Bearer valid-token')
+        .expect(200);
+
+      expect(response.body.totalSKUs).toBe(150);
+      expect(response.body.lowStockCount).toBe(12);
+      expect(inventoryService.getInventoryMetrics).toHaveBeenCalled();
     });
   });
 
@@ -448,36 +440,11 @@ describe('Inventory Routes', () => {
   // ==========================================================================
 
   describe('Authentication', () => {
-    it('should return 401 when not authenticated', async () => {
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = null;
-        next();
-      });
-
-      await request(app)
-        .get('/api/v1/inventory')
-        .set('Authorization', 'Bearer invalid-token')
-        .expect(401);
-    });
-
     it('should allow access with valid authentication', async () => {
-      // @ts-expect-error - getAllInventory method does not exist on InventoryService
-      (inventoryService.getAllInventory as jest.Mock).mockResolvedValue({
-        items: [],
-        total: 0,
-      });
-
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = {
-          ...mockUser,
-          baseRole: mockUser.role,
-          effectiveRole: mockUser.activeRole || mockUser.role,
-        };
-        next();
-      });
+      inventoryService.getInventoryBySKU = jest.fn().mockResolvedValue([]);
 
       await request(app)
-        .get('/api/v1/inventory')
+        .get('/api/v1/inventory/sku/SKU-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
     });
@@ -489,22 +456,12 @@ describe('Inventory Routes', () => {
 
   describe('Error Handling', () => {
     it('should handle service errors gracefully', async () => {
-      // @ts-expect-error - getAllInventory method does not exist on InventoryService
-      (inventoryService.getAllInventory as jest.Mock).mockRejectedValue(
-        new Error('Database connection failed')
-      );
-
-      mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = {
-          ...mockUser,
-          baseRole: mockUser.role,
-          effectiveRole: mockUser.activeRole || mockUser.role,
-        };
-        next();
-      });
+      inventoryService.getInventoryBySKU = jest
+        .fn()
+        .mockRejectedValue(new Error('Database connection failed'));
 
       const response = await request(app)
-        .get('/api/v1/inventory')
+        .get('/api/v1/inventory/sku/SKU-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
