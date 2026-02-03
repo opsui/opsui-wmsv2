@@ -149,8 +149,9 @@ class NZCService {
 
   /**
    * Convert WMS Address to NZC Destination format
+   * Note: Unused private method kept for API completeness
    */
-  // @ts-expect-error - Unused private method kept for API completeness
+  // @ts-ignore - Unused private method kept for API completeness
   private _addressToNZCDestination(address: any): NZCDestination {
     return {
       Name: address.company || address.name || 'Customer',
@@ -172,16 +173,18 @@ class NZCService {
 
   /**
    * Convert weight from lbs to kg (NZC uses kg)
+   * Note: Unused private method kept for API completeness
    */
-  // @ts-expect-error - Unused private method kept for API completeness
+  // @ts-ignore - Unused private method kept for API completeness
   private _lbsToKg(lbs: number): number {
     return Math.round(lbs * 0.453592 * 100) / 100;
   }
 
   /**
    * Convert dimensions from inches to cm (NZC uses cm)
+   * Note: Unused private method kept for API completeness
    */
-  // @ts-expect-error - Unused private method kept for API completeness
+  // @ts-ignore - Unused private method kept for API completeness
   private _inchesToCm(inches: number): number {
     return Math.round(inches * 2.54 * 10) / 10;
   }
