@@ -157,9 +157,9 @@ class RouteOptimizationService {
       for (let i = 1; i < route.length - 2; i++) {
         for (let j = i + 1; j < route.length - 1; j++) {
           const newRoute = this.twoOptSwap(route, i, j);
-          const newDistance = this.calculateRouteDistance(newRoute, distanceMatrix);
+          const newDistance = this.calculateRouteDistance(newRoute);
 
-          if (newDistance < this.calculateRouteDistance(route, distanceMatrix)) {
+          if (newDistance < this.calculateRouteDistance(route)) {
             route = newRoute;
             improved = true;
           }
@@ -167,7 +167,7 @@ class RouteOptimizationService {
       }
     }
 
-    return this.buildOptimizedRoute(route, tasks, startLocation, distanceMatrix);
+    return this.buildOptimizedRoute(route, tasks, startLocation);
   }
 
   /**
@@ -179,7 +179,7 @@ class RouteOptimizationService {
 
     const route = this.nearestNeighborTSP(locations, distanceMatrix);
 
-    return this.buildOptimizedRoute(route, tasks, startLocation, distanceMatrix);
+    return this.buildOptimizedRoute(route, tasks, startLocation);
   }
 
   /**
@@ -470,13 +470,11 @@ class RouteOptimizationService {
   /**
    * Calculate total route distance
    */
-  private calculateRouteDistance(route: string[], distanceMatrix: number[][]): number {
+  private calculateRouteDistance(route: string[]): number {
     let total = 0;
 
     for (let i = 0; i < route.length - 1; i++) {
-      const fromIndex = route.indexOf(route[i]);
-      const toIndex = route.indexOf(route[i + 1]);
-      total += distanceMatrix[fromIndex][toIndex];
+      total += this.calculateDistance(route[i], route[i + 1]);
     }
 
     return total;
@@ -488,8 +486,7 @@ class RouteOptimizationService {
   private buildOptimizedRoute(
     route: string[],
     tasks: PickTask[],
-    startLocation: string,
-    distanceMatrix: number[][]
+    startLocation: string
   ): OptimizedRoute {
     const optimizedTasks: OptimizedPickTask[] = [];
     // Group tasks by location to handle multiple tasks at the same bin
@@ -508,7 +505,7 @@ class RouteOptimizationService {
       const tasksAtLocation = tasksByLocation.get(location);
 
       if (tasksAtLocation && tasksAtLocation.length > 0) {
-        const distance = distanceMatrix[route.indexOf(currentLocation)][i];
+        const distance = this.calculateDistance(currentLocation, location);
         const time = this.calculateTravelTime(distance) + this.config.pickTime;
 
         // Add all tasks at this location with the same sequence
@@ -527,7 +524,7 @@ class RouteOptimizationService {
       }
     }
 
-    const totalDistance = this.calculateRouteDistance(route, distanceMatrix);
+    const totalDistance = this.calculateRouteDistance(route);
     const totalTime = optimizedTasks.reduce((sum, t) => sum + t.estimatedTime, 0);
 
     return {
