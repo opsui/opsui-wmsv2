@@ -50,18 +50,32 @@ describe('CycleCountService', () => {
       };
 
       const mockEntries = [
-        { entry_id: 'CCE-001', variance: 5 },
-        { entry_id: 'CCE-002', variance: -3 },
-        { entry_id: 'CCE-003', variance: 0 },
+        { entry_id: 'CCE-001', sku: 'SKU-001', bin_location: 'A-01-01', variance: 5 },
+        { entry_id: 'CCE-002', sku: 'SKU-002', bin_location: 'A-01-02', variance: -3 },
+        { entry_id: 'CCE-003', sku: 'SKU-003', bin_location: 'A-01-03', variance: 0 },
       ];
 
+      // Mock all queries: BEGIN, get entries, then for each entry:
+      // - entry lookup, createAdjustmentTransaction, adjustInventory, UPDATE
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: mockEntries }) // get entries
-        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // processVarianceAdjustment for CCE-001
+        // CCE-001 processing (variance 5)
+        .mockResolvedValueOnce({
+          rows: [{ entry_id: 'CCE-001', sku: 'SKU-001', bin_location: 'A-01-01', variance: 5 }],
+        }) // entry lookup
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // createAdjustmentTransaction
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventory
         .mockResolvedValueOnce({ rows: [] }) // UPDATE CCE-001
-        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-002' }] }) // processVarianceAdjustment for CCE-002
-        .mockResolvedValueOnce({ rows: [] }); // UPDATE CCE-002
+        // CCE-002 processing (variance -3)
+        .mockResolvedValueOnce({
+          rows: [{ entry_id: 'CCE-002', sku: 'SKU-002', bin_location: 'A-01-02', variance: -3 }],
+        }) // entry lookup
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-002' }] }) // createAdjustmentTransaction
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventory
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE CCE-002
+        // CCE-003 processing (variance 0, just UPDATE)
+        .mockResolvedValueOnce({ rows: [] }); // UPDATE CCE-003
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 
@@ -79,14 +93,23 @@ describe('CycleCountService', () => {
       };
 
       const mockEntries = [
-        { entry_id: 'CCE-001', variance: 5 },
-        { entry_id: 'CCE-002', variance: 0 },
+        { entry_id: 'CCE-001', sku: 'SKU-001', bin_location: 'A-01-01', variance: 5 },
+        { entry_id: 'CCE-002', sku: 'SKU-002', bin_location: 'A-01-02', variance: 0 },
       ];
 
+      // For CCE-001 (non-zero variance): process it
+      // For CCE-002 (zero variance with autoApproveZeroVariance=false): skip it
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: mockEntries })
-        .mockResolvedValueOnce({ rows: [] }); // UPDATE
+        .mockResolvedValueOnce({ rows: mockEntries }) // get entries
+        // CCE-001 processing (variance 5, autoApproveZeroVariance=false so process anyway)
+        .mockResolvedValueOnce({
+          rows: [{ entry_id: 'CCE-001', sku: 'SKU-001', bin_location: 'A-01-01', variance: 5 }],
+        }) // entry lookup
+        .mockResolvedValueOnce({ rows: [{ transaction_id: 'TXN-001' }] }) // createAdjustmentTransaction
+        .mockResolvedValueOnce({ rows: [] }) // adjustInventory
+        .mockResolvedValueOnce({ rows: [] }); // UPDATE CCE-001
+      // CCE-002 is skipped, so no UPDATE for it
 
       const result = await service.bulkUpdateVarianceStatus(dto);
 

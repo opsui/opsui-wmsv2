@@ -423,8 +423,8 @@ describe('QualityControlService', () => {
       expect(result.status).toBe(InspectionStatus.FAILED);
       expect(notifyUser).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'QUALITY_FAILED',
-          priority: 'HIGH',
+          type: 'quality_failed',
+          priority: 'high',
         })
       );
     });
