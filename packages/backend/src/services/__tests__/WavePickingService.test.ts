@@ -124,12 +124,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -153,12 +150,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -182,12 +176,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -211,12 +202,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -258,12 +246,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -317,12 +302,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -349,12 +331,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] });
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -678,15 +657,10 @@ describe('WavePickingService', () => {
         startedAt: new Date(Date.now() - 3600000), // Started 1 hour ago
       };
 
-      global.mockClient.query.mockResolvedValueOnce({ rows: [mockWave] });
-
-      // Mock for updateWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('UPDATE') || query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [mockWave] }) // getWave SELECT
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE waves
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT (if any)
 
       const context = { userId: 'user-123', userEmail: 'admin@example.com' };
 
@@ -715,15 +689,10 @@ describe('WavePickingService', () => {
         createdBy: 'user-123',
       };
 
-      global.mockClient.query.mockResolvedValueOnce({ rows: [mockWave] });
-
-      // Mock for updateWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('UPDATE') || query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [mockWave] }) // getWave SELECT
+        .mockResolvedValueOnce({ rows: [] }) // UPDATE waves
+        .mockResolvedValueOnce({ rows: [] }); // COMMIT (if any)
 
       const context = { userId: 'user-123' };
 
@@ -765,12 +734,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] }); // No pick tasks
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -792,12 +758,7 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] }); // No pick tasks
 
       // Mock for assignPickers - return no pickers
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query.mockResolvedValueOnce({ rows: [] });
 
       const context = { userId: 'user-123' };
 
@@ -814,12 +775,12 @@ describe('WavePickingService', () => {
       const mockOrders = [{ order_id: 'ORD-001', priority: 'NORMAL', item_count: 5 }];
 
       // Mock for both waves
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('fetchOrdersForWave') || query.includes('extractPickTasks')) {
-          return Promise.resolve({ rows: mockOrders });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: mockOrders }) // fetchOrdersForWave
+        .mockResolvedValueOnce({ rows: [] }) // extractPickTasks
+        .mockResolvedValueOnce({ rows: mockOrders }) // second wave fetchOrdersForWave
+        .mockResolvedValueOnce({ rows: [] }) // second wave extractPickTasks
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
@@ -843,12 +804,9 @@ describe('WavePickingService', () => {
         .mockResolvedValueOnce({ rows: [] }); // No pick tasks
 
       // Mock for assignPickers and saveWave
-      global.mockClient.query.mockImplementation((query: string) => {
-        if (query.includes('SELECT')) {
-          return Promise.resolve({ rows: [] });
-        }
-        return Promise.resolve({ rows: [] });
-      });
+      global.mockClient.query
+        .mockResolvedValueOnce({ rows: [] }) // assignPickers SELECT
+        .mockResolvedValueOnce({ rows: [] }); // saveWave
 
       const context = { userId: 'user-123' };
 
