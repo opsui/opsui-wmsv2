@@ -7,7 +7,8 @@ import request from 'supertest';
 import { createApp } from '../../app';
 import { inventoryService } from '../../services/InventoryService';
 import { authenticate } from '../../middleware/auth';
-import { User, UserRole } from '@opsui/shared';
+import { User, UserRole, ValidationError } from '@opsui/shared';
+import * as sharedModule from '@opsui/shared';
 
 // Mock the authentication middleware
 jest.mock('../../middleware/auth', () => ({
@@ -28,6 +29,18 @@ jest.mock('../../middleware/auth', () => ({
 jest.mock('../../services/InventoryService');
 jest.mock('../../config/logger');
 jest.mock('../../db/client');
+
+// Mock validators to throw errors like the real implementation
+jest.spyOn(sharedModule, 'validateSKU').mockImplementation((sku: string) => {
+  if (!sku || typeof sku !== 'string') {
+    throw new ValidationError('SKU is required');
+  }
+});
+jest.spyOn(sharedModule, 'validateBinLocation').mockImplementation((location: string) => {
+  if (!location || typeof location !== 'string') {
+    throw new ValidationError('Bin location is required');
+  }
+});
 
 const mockedAuthenticate = authenticate as jest.MockedFunction<typeof authenticate>;
 
@@ -117,9 +130,7 @@ describe('Inventory Routes', () => {
 
       expect(response.body).toHaveLength(1);
       expect(response.body[0].sku).toBe('SKU-001');
-      expect(inventoryService.getInventoryByBinLocation).toHaveBeenCalledWith(
-        'A-01-01'
-      );
+      expect(inventoryService.getInventoryByBinLocation).toHaveBeenCalledWith('A-01-01');
     });
 
     it('should return empty array for empty bin location', async () => {
