@@ -26,7 +26,13 @@ function cleanExpiredCacheEntries() {
 }
 
 // Run cache cleanup every minute
-setInterval(cleanExpiredCacheEntries, 60000);
+// Skip in test environment to prevent hanging intervals
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(cleanExpiredCacheEntries, 60000);
+}
+
+// Export interval ID for cleanup (not used in test mode)
+export let permissionsCleanupInterval = null;
 
 /**
  * Get all permissions for a user
