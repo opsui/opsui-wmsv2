@@ -304,6 +304,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./packages/backend/Dockerfile
           push: false
           tags: wms-backend:${{ github.sha }}
           cache-from: type=gha
@@ -313,6 +314,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./packages/frontend/Dockerfile
           push: false
           tags: wms-frontend:${{ github.sha }}
           cache-from: type=gha
