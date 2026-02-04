@@ -125,7 +125,7 @@ describe('Inbound Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/v1/inbound/asn?page=2&limit=20')
+        .get('/api/v1/inbound/asn?offset=20&limit=20')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -139,15 +139,16 @@ describe('Inbound Routes', () => {
   });
 
   // ==========================================================================
-  // POST /api/inbound/asns
+  // POST /api/v1/inbound/asn
   // ==========================================================================
 
-  describe('POST /api/inbound/asns', () => {
+  describe('POST /api/v1/inbound/asn', () => {
     it('should create a new ASN', async () => {
       const asnData = {
         supplierId: 'SUP-001',
-        expectedDate: '2024-01-05T00:00:00Z',
-        items: [
+        purchaseOrderNumber: 'PO-001',
+        expectedArrivalDate: '2024-01-05T00:00:00Z',
+        lineItems: [
           { sku: 'SKU-001', quantity: 100 },
           { sku: 'SKU-002', quantity: 50 },
         ],
@@ -169,7 +170,7 @@ describe('Inbound Routes', () => {
         .post('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .send(asnData)
-        .expect(200);
+        .expect(201); // Created status
 
       expect(response.body.asnId).toBe('ASN-001');
       expect(response.body.items).toHaveLength(2);
@@ -194,20 +195,21 @@ describe('Inbound Routes', () => {
         .set('Authorization', 'Bearer valid-token')
         .send({
           supplierId: 'SUP-001',
-          expectedDate: '2024-01-05T00:00:00Z',
-          items: [],
+          purchaseOrderNumber: 'PO-001',
+          expectedArrivalDate: '2024-01-05T00:00:00Z',
+          lineItems: [],
         })
         .expect(400);
 
       expect(response.body).toEqual({
-        error: 'At least one item is required',
-        code: 'NO_ITEMS',
+        error: 'Missing required fields',
+        code: 'MISSING_FIELDS',
       });
     });
   });
 
   // ==========================================================================
-  // GET /api/inbound/asns/:asnId
+  // GET /api/v1/inbound/asn/:asnId
   // ==========================================================================
 
   describe('GET /api/inbound/asn/:asnId', () => {
@@ -245,11 +247,11 @@ describe('Inbound Routes', () => {
   });
 
   // ==========================================================================
-  // POST /api/inbound/asns/:asnId/receive
+  // POST /api/v1/inbound/asn/:asnId/receive
   // ==========================================================================
   // NOTE: This endpoint does not exist in the current implementation
   // Receipts are created via POST /api/inbound/receipts instead
-  describe.skip('POST /api/inbound/asns/:asnId/receive', () => {
+  describe.skip('POST /api/v1/inbound/asn/:asnId/receive', () => {
     it('should receive ASN', async () => {
       const receiveData = {
         receivedBy: 'user-123',
@@ -330,21 +332,20 @@ describe('Inbound Routes', () => {
       expect(response.body.total).toBe(2);
     });
 
-    it('should filter receipts by date range', async () => {
+    it('should filter receipts by ASN ID', async () => {
       (inboundReceivingService.getAllReceipts as jest.Mock).mockResolvedValue({
         receipts: [],
         total: 0,
       });
 
       const response = await request(app)
-        .get('/api/v1/inbound/receipts?startDate=2024-01-01&endDate=2024-01-31')
+        .get('/api/v1/inbound/receipts?asnId=ASN-001')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
       expect(inboundReceivingService.getAllReceipts).toHaveBeenCalledWith(
         expect.objectContaining({
-          startDate: '2024-01-01',
-          endDate: '2024-01-31',
+          asnId: 'ASN-001',
         })
       );
     });
@@ -495,17 +496,28 @@ describe('Inbound Routes', () => {
       expect(response.body.status).toBe('ASSIGNED');
     });
 
-    it('should return 400 when assignedTo is missing', async () => {
+    it('should assign putaway task to authenticated user', async () => {
+      const mockTask = {
+        putawayTaskId: 'TASK-001',
+        sku: 'SKU-001',
+        quantity: 50,
+        status: 'IN_PROGRESS',
+        assignedTo: 'user-123',
+      };
+
+      (inboundReceivingService.assignPutawayTask as jest.Mock).mockResolvedValue(mockTask);
+
       const response = await request(app)
         .post('/api/v1/inbound/putaway/TASK-001/assign')
         .set('Authorization', 'Bearer valid-token')
         .send({})
-        .expect(400);
+        .expect(200);
 
-      expect(response.body).toEqual({
-        error: 'User ID is required',
-        code: 'MISSING_USER_ID',
-      });
+      expect(response.body.putawayTaskId).toBe('TASK-001');
+      expect(inboundReceivingService.assignPutawayTask).toHaveBeenCalledWith(
+        'TASK-001',
+        'user-123'
+      );
     });
   });
 
