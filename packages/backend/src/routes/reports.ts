@@ -46,6 +46,88 @@ router.get(
   })
 );
 
+// ============================================================================
+// DASHBOARDS
+// ============================================================================
+// NOTE: Dashboard routes must be defined BEFORE /:reportId to avoid route conflicts
+// (otherwise /dashboards would match /:reportId with reportId="dashboards")
+
+/**
+ * GET /api/dashboards
+ * Get all dashboards
+ */
+router.get(
+  '/dashboards',
+  asyncHandler(async (req: Request, res: Response) => {
+    const userId = (req as any).user?.userId;
+    const userRole = (req as any).user?.role;
+
+    // Users can see their own dashboards plus public ones
+    const dashboards = await reportsRepository.findDashboards({
+      owner: userRole === UserRole.ADMIN ? undefined : userId,
+      isPublic: userRole === UserRole.ADMIN ? undefined : true,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        dashboards,
+        count: dashboards.length,
+      },
+    });
+  })
+);
+
+/**
+ * GET /api/dashboards/:dashboardId
+ * Get a specific dashboard
+ */
+router.get(
+  '/dashboards/:dashboardId',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { dashboardId } = req.params;
+    const dashboard = await reportsRepository.findDashboardById(dashboardId);
+
+    if (!dashboard) {
+      res.status(404).json({
+        success: false,
+        error: 'Dashboard not found',
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: { dashboard },
+    });
+  })
+);
+
+/**
+ * POST /api/dashboards
+ * Create a new dashboard
+ */
+router.post(
+  '/dashboards',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  asyncHandler(async (req: Request, res: Response) => {
+    const dashboardData = req.body;
+    const userId = (req as any).user?.userId;
+
+    const dashboard = await reportsRepository.createDashboard({
+      ...dashboardData,
+      owner: userId,
+      createdBy: userId,
+      createdAt: new Date(),
+    });
+
+    res.status(201).json({
+      success: true,
+      data: { dashboard },
+    });
+  })
+);
+
 /**
  * GET /api/reports/:reportId
  * Get a specific report by ID
@@ -210,86 +292,6 @@ router.get(
         executions,
         count: executions.length,
       },
-    });
-  })
-);
-
-// ============================================================================
-// DASHBOARDS
-// ============================================================================
-
-/**
- * GET /api/dashboards
- * Get all dashboards
- */
-router.get(
-  '/dashboards',
-  asyncHandler(async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId;
-    const userRole = (req as any).user?.role;
-
-    // Users can see their own dashboards plus public ones
-    const dashboards = await reportsRepository.findDashboards({
-      owner: userRole === UserRole.ADMIN ? undefined : userId,
-      isPublic: userRole === UserRole.ADMIN ? undefined : true,
-    });
-
-    res.json({
-      success: true,
-      data: {
-        dashboards,
-        count: dashboards.length,
-      },
-    });
-  })
-);
-
-/**
- * GET /api/dashboards/:dashboardId
- * Get a specific dashboard
- */
-router.get(
-  '/dashboards/:dashboardId',
-  asyncHandler(async (req: Request, res: Response) => {
-    const { dashboardId } = req.params;
-    const dashboard = await reportsRepository.findDashboardById(dashboardId);
-
-    if (!dashboard) {
-      res.status(404).json({
-        success: false,
-        error: 'Dashboard not found',
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: { dashboard },
-    });
-  })
-);
-
-/**
- * POST /api/dashboards
- * Create a new dashboard
- */
-router.post(
-  '/dashboards',
-  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
-  asyncHandler(async (req: Request, res: Response) => {
-    const dashboardData = req.body;
-    const userId = (req as any).user?.userId;
-
-    const dashboard = await reportsRepository.createDashboard({
-      ...dashboardData,
-      owner: userId,
-      createdBy: userId,
-      createdAt: new Date(),
-    });
-
-    res.status(201).json({
-      success: true,
-      data: { dashboard },
     });
   })
 );
