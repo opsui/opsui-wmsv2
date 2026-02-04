@@ -15,6 +15,9 @@ RUN npm ci
 COPY packages/frontend ./packages/frontend
 COPY packages/shared ./packages/shared
 
+# Build shared package first (required for frontend TypeScript types)
+RUN npm run build --workspace=packages/shared
+
 # Build application
 RUN npm run build --workspace=packages/frontend
 
