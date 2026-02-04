@@ -263,6 +263,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build shared package
+        run: cd packages/shared && npm run build
+
       - name: Build all packages
         run: npm run build
 
