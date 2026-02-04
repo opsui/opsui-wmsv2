@@ -53,10 +53,10 @@ describe('Inbound Routes', () => {
   afterEach(() => {});
 
   // ==========================================================================
-  // GET /api/inbound/asns
+  // GET /api/inbound/asn
   // ==========================================================================
 
-  describe('GET /api/inbound/asns', () => {
+  describe('GET /api/v1/inbound/asn', () => {
     it('should return ASNs with default filters', async () => {
       const mockAsns = [
         {
@@ -90,7 +90,7 @@ describe('Inbound Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/v1/inbound/asns')
+        .get('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -105,7 +105,7 @@ describe('Inbound Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/v1/inbound/asns?status=PENDING')
+        .get('/api/v1/inbound/asn?status=PENDING')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -125,7 +125,7 @@ describe('Inbound Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/v1/inbound/asns?page=2&limit=20')
+        .get('/api/v1/inbound/asn?page=2&limit=20')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
 
@@ -166,7 +166,7 @@ describe('Inbound Routes', () => {
       (inboundReceivingService.createASN as jest.Mock).mockResolvedValue(mockAsn);
 
       const response = await request(app)
-        .post('/api/v1/inbound/asns')
+        .post('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .send(asnData)
         .expect(200);
@@ -177,7 +177,7 @@ describe('Inbound Routes', () => {
 
     it('should return 400 when supplierId is missing', async () => {
       const response = await request(app)
-        .post('/api/v1/inbound/asns')
+        .post('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .send({
           expectedDate: '2024-01-05T00:00:00Z',
@@ -190,7 +190,7 @@ describe('Inbound Routes', () => {
 
     it('should return 400 when items array is empty', async () => {
       const response = await request(app)
-        .post('/api/v1/inbound/asns')
+        .post('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .send({
           supplierId: 'SUP-001',
@@ -267,7 +267,7 @@ describe('Inbound Routes', () => {
       (inboundReceivingService.receiveASN as jest.Mock).mockResolvedValue(mockReceipt);
 
       const response = await request(app)
-        .post('/api/v1/inbound/asns/ASN-001/receive')
+        .post('/api/v1/inbound/asn/ASN-001/receive')
         .set('Authorization', 'Bearer valid-token')
         .send(receiveData)
         .expect(200);
@@ -283,7 +283,7 @@ describe('Inbound Routes', () => {
       );
 
       const response = await request(app)
-        .post('/api/v1/inbound/asns/ASN-001/receive')
+        .post('/api/v1/inbound/asn/ASN-001/receive')
         .set('Authorization', 'Bearer valid-token')
         .send({
           receivedBy: 'user-123',
@@ -548,7 +548,7 @@ describe('Inbound Routes', () => {
       });
 
       await request(app)
-        .get('/api/v1/inbound/asns')
+        .get('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
     });
@@ -569,7 +569,7 @@ describe('Inbound Routes', () => {
       });
 
       await request(app)
-        .get('/api/v1/inbound/asns')
+        .get('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .expect(200);
     });
@@ -595,7 +595,7 @@ describe('Inbound Routes', () => {
       });
 
       const response = await request(app)
-        .get('/api/v1/inbound/asns')
+        .get('/api/v1/inbound/asn')
         .set('Authorization', 'Bearer valid-token')
         .expect(500);
 
