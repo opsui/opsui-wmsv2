@@ -86,7 +86,11 @@ describe('Users Routes', () => {
       });
 
       mockedAuthenticate.mockImplementation((req, res, next) => {
-        req.user = { ...mockAdminUser };
+        req.user = {
+          ...mockAdminUser,
+          baseRole: mockAdminUser.role,
+          effectiveRole: mockAdminUser.activeRole || mockAdminUser.role,
+        } as any;
         next();
       });
 
@@ -452,8 +456,7 @@ describe('Users Routes', () => {
         { role: UserRole.ADMIN, description: 'System administrator' },
       ];
 
-      // @ts-expect-error - Method doesn't exist, test is skipped
-      (userRepo.getAvailableRoles as jest.Mock).mockResolvedValue(mockRoles);
+      (userRepo as any).getAvailableRoles?.mockResolvedValue(mockRoles as any);
 
       const response = await request(app)
         .get('/api/v1/users/roles')
@@ -483,8 +486,7 @@ describe('Users Routes', () => {
         active: true,
       };
 
-      // @ts-expect-error - Method doesn't exist, test is skipped
-      (userRepo.setActiveRole as jest.Mock).mockResolvedValue(mockUpdatedUser);
+      (userRepo as any).setActiveRole?.mockResolvedValue(mockUpdatedUser as any);
 
       const response = await request(app)
         .post('/api/v1/users/user-001/role')
