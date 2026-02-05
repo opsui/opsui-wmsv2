@@ -418,7 +418,7 @@ export function ProductionOrderDetailsModal({
                   Resume Order
                 </Button>
                 <Button
-                  variant="error"
+                  variant="danger"
                   className="flex items-center gap-1"
                   onClick={() => handleStatusChange('CANCELLED' as ProductionOrderStatus)}
                 >
