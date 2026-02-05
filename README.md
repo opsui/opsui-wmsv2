@@ -10,6 +10,8 @@ A production-ready WMS built with clean architecture principles, featuring real-
 
 **New team members?** Start with [QUICKSTART.md](QUICKSTART.md)
 
+**Need to set up the database?** See [DATABASE_SETUP.md](DATABASE_SETUP.md) for complete setup instructions
+
 **Setting up AI development?** Read [AI_RULES.md](AI_RULES.md)
 
 **Setting up MCP servers?** See [MCP_SETUP.md](MCP_SETUP.md) for custom AI tools
