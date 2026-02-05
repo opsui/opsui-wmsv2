@@ -82,6 +82,7 @@ function ProtectedRoute({
 }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
+  const activeRole = useAuthStore(state => state.activeRole);
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
 
   // Use effective role (active role if set, otherwise base role) for authorization
@@ -94,7 +95,35 @@ function ProtectedRoute({
 
   // Check role requirements using effective role
   if (requiredRoles && requiredRoles.length > 0) {
-    const hasRole = effectiveRole ? requiredRoles.includes(effectiveRole) : false;
+    // Special case: Admin/Supervisor users with an active worker role can still access
+    // their management routes. This allows useAdminRoleAutoSwitch hook to properly
+    // clear the active role when navigating from a worker view back to admin pages.
+    const isManagerWithWorkerRole =
+      (user.role === UserRole.ADMIN || user.role === UserRole.SUPERVISOR) &&
+      activeRole !== null &&
+      activeRole !== user.role;
+
+    // Check if user has access via effective role OR is manager with worker role accessing their management routes
+    let hasRole = effectiveRole ? requiredRoles.includes(effectiveRole) : false;
+
+    // Admin users with active worker role can access ADMIN required routes
+    if (
+      user.role === UserRole.ADMIN &&
+      isManagerWithWorkerRole &&
+      requiredRoles.includes(UserRole.ADMIN)
+    ) {
+      hasRole = true;
+    }
+
+    // Supervisor users with active worker role can access SUPERVISOR required routes
+    if (
+      user.role === UserRole.SUPERVISOR &&
+      isManagerWithWorkerRole &&
+      requiredRoles.includes(UserRole.SUPERVISOR)
+    ) {
+      hasRole = true;
+    }
+
     if (!hasRole) {
       // Redirect to appropriate page based on effective role
       if (effectiveRole === 'PICKER') {

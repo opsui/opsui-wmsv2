@@ -1323,11 +1323,20 @@ export function StockControlPage() {
 
   // Check if user has access (stock controller, supervisor, or admin)
   // Use effective role (activeRole if set, otherwise base role) for authorization
+  // Exception: Admin/Supervisor users with active worker roles can still access
   const effectiveRole = getEffectiveRole();
-  const hasAccess =
+  const activeRole = useAuthStore(state => state.activeRole);
+
+  // Check if user has access via effective role
+  let hasAccess =
     effectiveRole === 'STOCK_CONTROLLER' ||
     effectiveRole === 'SUPERVISOR' ||
     effectiveRole === 'ADMIN';
+
+  // Allow admin/supervisor users with active worker roles to access
+  if (!hasAccess && user && activeRole && activeRole !== user.role) {
+    hasAccess = user.role === 'ADMIN' || user.role === 'SUPERVISOR';
+  }
 
   if (!hasAccess) {
     return (

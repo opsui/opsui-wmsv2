@@ -37,11 +37,17 @@ function fixImportsInFile(filePath, baseDir) {
   const fileDir = dirname(filePath);
 
   // Fix relative imports without extensions
-  // Match: from './something' or from './something/else'
+  // Match: from './something' or from './something/else' or import('./something')
   // But NOT: from './something.js' or from 'npm-package' or from 'fs'
-  const importRegex = /(?:from|import)\s+['"]([^'"]+)['"]/g;
+  const importRegex = /(?:from|import)\s*\(\s*['"]([^'"]+)['"]|(?:from|import)\s+['"]([^'"]+)['"]/g;
 
-  content = content.replace(importRegex, (match, importPath) => {
+  content = content.replace(importRegex, (match, dynamicImportPath, staticImportPath) => {
+    // Get the import path from either capture group
+    const importPath = dynamicImportPath || staticImportPath;
+    if (!importPath) {
+      return match;
+    }
+
     // Skip if it's not a relative import
     if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
       return match;

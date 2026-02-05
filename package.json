@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "OpsUI - Production-ready Warehouse Operations Management System with real-time fulfillment",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],

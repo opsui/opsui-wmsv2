@@ -14,7 +14,7 @@ import {
   useMarkAsRead,
 } from '@/services/api';
 import { Button, UserRoleBadge } from './index';
-import type { OrderStatus, OrderPriority, Notification } from '@opsui/shared';
+import type { Notification } from '@opsui/shared';
 import {
   ArrowRightStartOnRectangleIcon,
   CubeIcon,
@@ -35,7 +35,6 @@ import {
   Bars3Icon,
   XMarkIcon,
   UserGroupIcon,
-  ShoppingBagIcon,
   QueueListIcon,
   TagIcon,
   AdjustmentsHorizontalIcon,
@@ -51,16 +50,6 @@ import { useNotificationStats } from '@/services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import webSocketService from '@/services/WebSocketService';
-
-// Props for order queue filters
-interface HeaderProps {
-  orderQueueFilters?: {
-    statusFilter: OrderStatus;
-    onStatusFilterChange: (status: OrderStatus) => void;
-    priorityFilter: OrderPriority | undefined;
-    onPriorityFilterChange: (priority: OrderPriority | undefined) => void;
-  };
-}
 
 // ============================================================================
 // MOBILE MENU COMPONENT
@@ -370,177 +359,6 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
                   {isActive && (
                     <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(0,0,0,0.3)] animate-pulse"></span>
                   )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// STATUS FILTER DROPDOWN COMPONENT
-// ============================================================================
-
-interface StatusFilterDropdownProps {
-  value: OrderStatus;
-  onChange: (status: OrderStatus) => void;
-}
-
-function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const options = [
-    { value: 'PENDING' as OrderStatus, label: 'Pending', icon: ShoppingBagIcon },
-    { value: 'PICKING' as OrderStatus, label: 'Tote', icon: ClipboardDocumentListIcon },
-  ];
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-          isOpen
-            ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
-            : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
-        }`}
-      >
-        {selectedOption && <selectedOption.icon className="h-4 w-4" />}
-        <span>{selectedOption?.label}</span>
-        <ChevronDownIcon
-          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
-          <div className="py-2">
-            {options.map(option => {
-              const OptionIcon = option.icon;
-              const isActive = option.value === value;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
-                      : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
-                  }`}
-                >
-                  <OptionIcon
-                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? 'dark:text-white text-black'
-                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700'
-                    }`}
-                  />
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// PRIORITY FILTER DROPDOWN COMPONENT
-// ============================================================================
-
-interface PriorityFilterDropdownProps {
-  value: OrderPriority | undefined;
-  onChange: (priority: OrderPriority | undefined) => void;
-}
-
-function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const options = [
-    { value: undefined as OrderPriority | undefined, label: 'All Priority', icon: QueueListIcon },
-    { value: 'URGENT' as OrderPriority, label: 'Urgent', icon: ExclamationTriangleIcon },
-    { value: 'HIGH' as OrderPriority, label: 'High', icon: ChartBarIcon },
-    { value: 'NORMAL' as OrderPriority, label: 'Normal', icon: ClipboardDocumentListIcon },
-    { value: 'LOW' as OrderPriority, label: 'Low', icon: ArrowPathIcon },
-  ];
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-          isOpen
-            ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
-            : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
-        }`}
-      >
-        {selectedOption && <selectedOption.icon className="h-4 w-4" />}
-        <span>{selectedOption?.label}</span>
-        <ChevronDownIcon
-          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
-          <div className="py-2">
-            {options.map(option => {
-              const OptionIcon = option.icon;
-              const isActive = option.value === value;
-              return (
-                <button
-                  key={option.label}
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
-                      : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
-                  }`}
-                >
-                  <OptionIcon
-                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? 'dark:text-white text-black'
-                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700'
-                    }`}
-                  />
-                  {option.label}
                 </button>
               );
             })}
@@ -1061,7 +879,7 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
 // COMPONENT
 // ============================================================================
 
-export function Header({ orderQueueFilters }: HeaderProps = {}) {
+export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore(state => state.user);
@@ -1348,7 +1166,12 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
         label: 'Production',
         icon: CogIcon,
         items: [
-          { key: 'production', label: 'Production', path: '/production', icon: CogIcon },
+          {
+            key: 'production',
+            label: 'Production Dashboard',
+            path: '/production',
+            icon: ChartBarIcon,
+          },
           { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
           { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
         ],
@@ -1410,6 +1233,23 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
             icon: CogIcon,
           },
           { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
+        ],
+      });
+    }
+
+    // Production Management - also available to ADMIN and SUPERVISOR
+    if (effectiveRole === UserRole.ADMIN || effectiveRole === UserRole.SUPERVISOR) {
+      groups.push({
+        key: 'production-management',
+        label: 'Production',
+        icon: CogIcon,
+        items: [
+          {
+            key: 'production',
+            label: 'Production Dashboard',
+            path: '/production',
+            icon: ChartBarIcon,
+          },
         ],
       });
     }
@@ -1513,9 +1353,9 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
     <>
       <header className="dark:glass-card backdrop-blur-xl dark:bg-white/[0.02] bg-white/90 dark:border-b border-b dark:border-white/[0.08] border-gray-200 relative z-50">
         <div className="w-full">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+          <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
             {/* Left side - User info */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 flex-shrink-0">
               {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -1553,9 +1393,9 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
               </div>
             </div>
 
-            {/* Center - Navigation dropdowns */}
+            {/* Center - Navigation dropdowns - Absolutely centered */}
             {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-1">
+              <nav className="hidden md:flex items-center space-x-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                 {navGroups.map(group => (
                   <NavDropdown
                     key={group.key}
@@ -1570,26 +1410,7 @@ export function Header({ orderQueueFilters }: HeaderProps = {}) {
             )}
 
             {/* Right side - Actions */}
-            <div className="flex items-center gap-3">
-              {/* Order Queue Filters - only show on orders page when in PICKER role view */}
-              {orderQueueFilters &&
-                location.pathname === '/orders' &&
-                getEffectiveRole() === UserRole.PICKER && (
-                  <>
-                    <StatusFilterDropdown
-                      value={orderQueueFilters.statusFilter}
-                      onChange={orderQueueFilters.onStatusFilterChange}
-                    />
-
-                    <PriorityFilterDropdown
-                      value={orderQueueFilters.priorityFilter}
-                      onChange={orderQueueFilters.onPriorityFilterChange}
-                    />
-
-                    <div className="w-px h-6 dark:bg-white/[0.1] bg-gray-300 mx-1"></div>
-                  </>
-                )}
-
+            <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
               {/* Notification Panel - for supervisors and admins */}
               <NotificationPanel />
 

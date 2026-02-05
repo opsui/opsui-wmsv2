@@ -30,6 +30,10 @@ export class OrderRepository extends BaseRepository<Order> {
       // Generate order ID
       const orderId = generateOrderId();
 
+      // Default currency
+      const currency = 'NZD';
+      let subtotal = 0;
+
       // Create order
       const order = await this.insert(
         {
@@ -39,6 +43,10 @@ export class OrderRepository extends BaseRepository<Order> {
           priority: dto.priority,
           status: OrderStatus.PENDING,
           progress: 0,
+          currency,
+          taxAmount: 0,
+          shippingCost: 0,
+          discountAmount: 0,
         } as any,
         client
       );
@@ -47,9 +55,9 @@ export class OrderRepository extends BaseRepository<Order> {
       for (let i = 0; i < dto.items.length; i++) {
         const item = dto.items[i];
 
-        // Get SKU details and bin location
+        // Get SKU details, bin location, and pricing
         const skuResult = await client.query(
-          `SELECT s.name, s.bin_locations[1] as bin_location FROM skus s WHERE s.sku = $1 AND s.active = true`,
+          `SELECT s.name, s.bin_locations[1] as bin_location, s.unit_price, s.currency FROM skus s WHERE s.sku = $1 AND s.active = true`,
           [item.sku]
         );
 
@@ -57,7 +65,12 @@ export class OrderRepository extends BaseRepository<Order> {
           throw new NotFoundError('SKU', item.sku);
         }
 
-        const { name, bin_location } = skuResult.rows[0];
+        const { name, bin_location, unit_price, skuCurrency } = skuResult.rows[0];
+
+        // Calculate line total
+        const unitPrice = unit_price ? parseFloat(unit_price) : 0;
+        const lineTotal = unitPrice * item.quantity;
+        subtotal += lineTotal;
 
         // Check inventory availability
         const inventoryResult = await client.query(
@@ -76,12 +89,33 @@ export class OrderRepository extends BaseRepository<Order> {
           );
         }
 
-        // Create order item
+        // Create order item with pricing
         await client.query(
-          `INSERT INTO order_items (order_item_id, order_id, sku, name, quantity, bin_location, status) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING')`,
-          [`OI-${order.orderId}-${i}`, order.orderId, item.sku, name, item.quantity, bin_location]
+          `INSERT INTO order_items (order_item_id, order_id, sku, name, quantity, bin_location, status, unit_price, line_total, currency) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, $9)`,
+          [
+            `OI-${order.orderId}-${i}`,
+            order.orderId,
+            item.sku,
+            name,
+            item.quantity,
+            bin_location,
+            unitPrice,
+            lineTotal,
+            skuCurrency || currency,
+          ]
         );
       }
+
+      // Calculate and update order totals
+      const taxAmount = 0; // TODO: Implement tax calculation based on customer location
+      const shippingCost = 0; // TODO: Implement shipping cost calculation
+      const discountAmount = 0; // TODO: Implement discount calculation
+      const totalAmount = subtotal + taxAmount + shippingCost - discountAmount;
+
+      await client.query(
+        `UPDATE orders SET subtotal = $1, tax_amount = $2, shipping_cost = $3, discount_amount = $4, total_amount = $5 WHERE order_id = $6`,
+        [subtotal, taxAmount, shippingCost, discountAmount, totalAmount, orderId]
+      );
 
       // Fetch complete order with items
       return this.getOrderWithItems(order.orderId);

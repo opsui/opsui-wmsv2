@@ -167,6 +167,102 @@ export class ProductionRepository {
     return boms;
   }
 
+  async updateBOM(bomId: string, updates: Partial<BillOfMaterial>): Promise<BillOfMaterial | null> {
+    const client = await getPool();
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (updates.name !== undefined) {
+      fields.push(`name = $${paramCount}`);
+      values.push(updates.name);
+      paramCount++;
+    }
+
+    if (updates.description !== undefined) {
+      fields.push(`description = $${paramCount}`);
+      values.push(updates.description);
+      paramCount++;
+    }
+
+    if (updates.status !== undefined) {
+      fields.push(`status = $${paramCount}`);
+      values.push(updates.status);
+      paramCount++;
+    }
+
+    if (updates.totalQuantity !== undefined) {
+      fields.push(`total_quantity = $${paramCount}`);
+      values.push(updates.totalQuantity);
+      paramCount++;
+    }
+
+    if (updates.unitOfMeasure !== undefined) {
+      fields.push(`unit_of_measure = $${paramCount}`);
+      values.push(updates.unitOfMeasure);
+      paramCount++;
+    }
+
+    if (updates.estimatedCost !== undefined) {
+      fields.push(`estimated_cost = $${paramCount}`);
+      values.push(updates.estimatedCost);
+      paramCount++;
+    }
+
+    if (updates.effectiveDate !== undefined) {
+      fields.push(`effective_date = $${paramCount}`);
+      values.push(updates.effectiveDate);
+      paramCount++;
+    }
+
+    if (updates.expiryDate !== undefined) {
+      fields.push(`expiry_date = $${paramCount}`);
+      values.push(updates.expiryDate);
+      paramCount++;
+    }
+
+    if (updates.updatedBy !== undefined) {
+      fields.push(`updated_by = $${paramCount}`);
+      values.push(updates.updatedBy);
+      paramCount++;
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(bomId);
+    paramCount++;
+
+    if (fields.length === 1) {
+      return await this.findBOMById(bomId);
+    }
+
+    const result = await client.query(
+      `UPDATE bill_of_materials SET ${fields.join(', ')} WHERE bom_id = $${paramCount} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    logger.info('BOM updated', { bomId });
+    return await this.findBOMById(bomId);
+  }
+
+  async deleteBOM(bomId: string): Promise<boolean> {
+    const client = await getPool();
+
+    const result = await client.query(`DELETE FROM bill_of_materials WHERE bom_id = $1`, [bomId]);
+
+    const success = (result.rowCount ?? 0) > 0;
+
+    if (success) {
+      logger.info('BOM deleted', { bomId });
+    }
+
+    return success;
+  }
+
   // ========================================================================
   // PRODUCTION ORDERS
   // ========================================================================
@@ -396,8 +492,10 @@ export class ProductionRepository {
     }
 
     fields.push(`updated_at = NOW()`);
+
+    // Don't increment paramCount for updated_at since it doesn't use a parameter
+    // The WHERE clause uses the next parameter number
     values.push(orderId);
-    paramCount++;
 
     if (fields.length === 1) {
       return await this.findProductionOrderById(orderId);

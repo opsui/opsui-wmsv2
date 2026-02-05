@@ -48,6 +48,9 @@ interface SearchResult {
   totalQuantity: number;
   totalAvailable: number;
   inventory: InventoryItem[];
+  unitPrice?: number;
+  unitCost?: number;
+  currency?: string;
 }
 
 interface BasicSKU {
@@ -56,6 +59,9 @@ interface BasicSKU {
   category: string;
   barcode: string;
   binLocations: string[];
+  unitPrice?: number;
+  unitCost?: number;
+  currency?: string;
 }
 
 // ============================================================================
@@ -252,6 +258,9 @@ export function ProductSearchPage() {
                           Category
                         </th>
                         <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                          Unit Price
+                        </th>
+                        <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
                           Actions
                         </th>
                       </tr>
@@ -272,6 +281,11 @@ export function ProductSearchPage() {
                           </td>
                           <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
                             {sku.category || '-'}
+                          </td>
+                          <td className="py-3 px-4 text-gray-900 dark:text-white">
+                            {sku.unitPrice != null
+                              ? `${sku.currency || 'NZD'} $${Number(sku.unitPrice).toFixed(2)}`
+                              : '-'}
                           </td>
                           <td className="py-3 px-4">
                             <Button
@@ -340,6 +354,39 @@ export function ProductSearchPage() {
                           </p>
                         </div>
                       </div>
+                      {/* Pricing information */}
+                      {((selectedSKUDetails as any).unitPrice ||
+                        (selectedSKUDetails as any).unitCost) && (
+                        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Unit Price</p>
+                            <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                              {(selectedSKUDetails as any).unitPrice != null
+                                ? `${(selectedSKUDetails as any).currency || 'NZD'} $${Number((selectedSKUDetails as any).unitPrice).toFixed(2)}`
+                                : '-'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Unit Cost</p>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {(selectedSKUDetails as any).unitCost != null
+                                ? `${(selectedSKUDetails as any).currency || 'NZD'} $${Number((selectedSKUDetails as any).unitCost).toFixed(2)}`
+                                : '-'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Margin</p>
+                            <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                              {(selectedSKUDetails as any).unitPrice &&
+                              (selectedSKUDetails as any).unitCost &&
+                              (selectedSKUDetails as any).unitPrice >
+                                (selectedSKUDetails as any).unitCost
+                                ? `${((((selectedSKUDetails as any).unitPrice - (selectedSKUDetails as any).unitCost) / (selectedSKUDetails as any).unitPrice) * 100).toFixed(1)}%`
+                                : '-'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                       <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div>
                           <p className="text-sm text-gray-500 dark:text-gray-400">Total Quantity</p>

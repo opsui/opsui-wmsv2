@@ -438,6 +438,13 @@ export interface Order {
   pickerId?: string;
   packerId?: string;
   progress: number; // 0-100, calculated server-side
+  // Pricing fields
+  subtotal?: number; // Sum of all line item totals
+  taxAmount?: number; // Total tax for the order
+  shippingCost?: number; // Shipping cost
+  discountAmount?: number; // Total discount applied
+  totalAmount?: number; // Final total (subtotal + tax + shipping - discount)
+  currency?: string; // Currency code for the order
 }
 
 /**
@@ -458,6 +465,9 @@ export interface OrderItem {
   status: OrderItemStatus | TaskStatus; // Can be either enum depending on order state
   barcode?: string; // EAN/UPC barcode from SKU
   skipReason?: string; // Reason for skipping (only present when status is SKIPPED)
+  unitPrice?: number; // Price per unit at time of order
+  lineTotal?: number; // Total for this line item (quantity * unitPrice)
+  currency?: string; // Currency code for this line item
 }
 
 /**
@@ -471,6 +481,9 @@ export interface SKU {
   category: string;
   barcode?: string; // EAN/UPC barcode
   binLocations: string[];
+  unitPrice?: number; // Selling price per unit
+  unitCost?: number; // Cost price for inventory valuation
+  currency?: string; // Currency code (e.g., USD, EUR, NZD)
   createdAt: Date;
   updatedAt: Date;
   active: boolean;

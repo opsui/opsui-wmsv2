@@ -17,6 +17,23 @@ const router = Router();
 router.use(authenticate);
 
 // ============================================================================
+// DASHBOARD
+// ============================================================================
+
+/**
+ * GET /api/production/dashboard
+ * Get production dashboard metrics
+ * Access: All authenticated users
+ */
+router.get(
+  '/dashboard',
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    const metrics = await productionService.getDashboardMetrics();
+    res.json(metrics);
+  })
+);
+
+// ============================================================================
 // BILLS OF MATERIALS
 // ============================================================================
 
@@ -62,6 +79,51 @@ router.get(
     const { bomId } = req.params;
     const bom = await productionService.getBOMById(bomId);
     res.json(bom);
+  })
+);
+
+/**
+ * PUT /api/production/bom/:bomId
+ * Update a Bill of Materials
+ * Access: ADMIN, SUPERVISOR, PRODUCTION
+ */
+router.put(
+  '/bom/:bomId',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { bomId } = req.params;
+    const bom = await productionService.updateBOM(bomId, req.body, req.user!.userId);
+    res.json(bom);
+  })
+);
+
+/**
+ * POST /api/production/bom/:bomId/activate
+ * Activate a BOM (DRAFT → ACTIVE)
+ * Access: ADMIN, SUPERVISOR, PRODUCTION
+ */
+router.post(
+  '/bom/:bomId/activate',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { bomId } = req.params;
+    const bom = await productionService.activateBOM(bomId, req.user!.userId);
+    res.json(bom);
+  })
+);
+
+/**
+ * DELETE /api/production/bom/:bomId
+ * Delete a Bill of Materials
+ * Access: ADMIN, SUPERVISOR
+ */
+router.delete(
+  '/bom/:bomId',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { bomId } = req.params;
+    await productionService.deleteBOM(bomId);
+    res.status(204).send();
   })
 );
 
@@ -197,6 +259,93 @@ router.get(
     const { orderId } = req.params;
     const journal = await productionService.getProductionJournal(orderId);
     res.json({ journal, count: journal.length });
+  })
+);
+
+/**
+ * POST /api/production/orders/:orderId/cancel
+ * Cancel a production order
+ * Access: ADMIN, SUPERVISOR, PRODUCTION
+ */
+router.post(
+  '/orders/:orderId/cancel',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { orderId } = req.params;
+    const order = await productionService.cancelProductionOrder(orderId, req.user!.userId);
+    res.json(order);
+  })
+);
+
+/**
+ * POST /api/production/orders/:orderId/hold
+ * Put a production order on hold
+ * Access: ADMIN, SUPERVISOR, PRODUCTION
+ */
+router.post(
+  '/orders/:orderId/hold',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { orderId } = req.params;
+    const order = await productionService.holdProductionOrder(orderId, req.user!.userId);
+    res.json(order);
+  })
+);
+
+/**
+ * POST /api/production/orders/:orderId/resume
+ * Resume a production order from hold
+ * Access: ADMIN, SUPERVISOR, PRODUCTION
+ */
+router.post(
+  '/orders/:orderId/resume',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { orderId } = req.params;
+    const order = await productionService.resumeProductionOrder(orderId, req.user!.userId);
+    res.json(order);
+  })
+);
+
+/**
+ * POST /api/production/orders/:orderId/materials/issue
+ * Issue materials to a production order
+ * Access: PRODUCTION, ADMIN, SUPERVISOR
+ */
+router.post(
+  '/orders/:orderId/materials/issue',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { orderId } = req.params;
+    await productionService.issueMaterial(
+      {
+        ...req.body,
+        orderId,
+      },
+      req.user!.userId
+    );
+    res.status(204).send();
+  })
+);
+
+/**
+ * POST /api/production/orders/:orderId/materials/return
+ * Return materials from a production order
+ * Access: PRODUCTION, ADMIN, SUPERVISOR
+ */
+router.post(
+  '/orders/:orderId/materials/return',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PRODUCTION),
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { orderId } = req.params;
+    await productionService.returnMaterial(
+      {
+        ...req.body,
+        orderId,
+      },
+      req.user!.userId
+    );
+    res.status(204).send();
   })
 );
 

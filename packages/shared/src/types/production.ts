@@ -13,6 +13,7 @@ export enum ProductionOrderStatus {
   PLANNED = 'PLANNED',
   RELEASED = 'RELEASED',
   IN_PROGRESS = 'IN_PROGRESS',
+  ON_HOLD = 'ON_HOLD',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
 }
@@ -200,4 +201,24 @@ export interface CreateBOMDTO {
   totalQuantity: number;
   unitOfMeasure: string;
   effectiveDate?: Date;
+}
+
+export interface UpdateBOMDTO {
+  name?: string;
+  description?: string;
+  status?: BillOfMaterialStatus;
+  totalQuantity?: number;
+  unitOfMeasure?: string;
+  estimatedCost?: number;
+  effectiveDate?: Date;
+  expiryDate?: Date;
+  components?: Omit<BOMComponent, 'componentId' | 'bomId'>[];
+}
+
+export interface ReturnMaterialDTO {
+  orderId: string;
+  componentId: string;
+  quantity: number;
+  binLocation?: string;
+  notes?: string;
 }

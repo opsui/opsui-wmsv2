@@ -24,7 +24,10 @@ export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
     pt.picked_quantity as picked_quantity,
     COALESCE(oi.verified_quantity, 0) as verified_quantity,
     pt.status,
-    pt.completed_at
+    pt.completed_at,
+    oi.unit_price,
+    oi.line_total,
+    COALESCE(oi.currency, s.currency, 'NZD') as currency
   FROM pick_tasks pt
   LEFT JOIN skus s ON pt.sku = s.sku
   LEFT JOIN order_items oi ON pt.order_item_id = oi.order_item_id
@@ -48,7 +51,10 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     oi.picked_quantity,
     COALESCE(oi.verified_quantity, 0) as verified_quantity,
     oi.status,
-    oi.skip_reason
+    oi.skip_reason,
+    oi.unit_price,
+    oi.line_total,
+    COALESCE(oi.currency, s.currency, 'NZD') as currency
   FROM order_items oi
   LEFT JOIN skus s ON oi.sku = s.sku
   WHERE oi.order_id = $1
@@ -116,6 +122,9 @@ export function mapOrderItem(row: any): any {
     status: row.status,
     skipReason: row.skip_reason || row.skipReason,
     completedAt: row.completed_at || row.completedAt,
+    unitPrice: row.unit_price,
+    lineTotal: row.line_total,
+    currency: row.currency,
   };
 }
 

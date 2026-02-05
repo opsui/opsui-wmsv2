@@ -6400,6 +6400,17 @@ export const useBOM = (bomId: string, enabled: boolean = true) => {
   });
 };
 
+export const useProductionJournal = (orderId: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['production', 'orders', orderId, 'journal'],
+    queryFn: async () => {
+      const response = await apiClient.get(`/production/orders/${orderId}/journal`);
+      return response.data;
+    },
+    enabled: enabled && !!orderId,
+  });
+};
+
 export const useCreateProductionOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -6433,6 +6444,179 @@ export const useProductionDashboard = () => {
     queryFn: async () => {
       const response = await apiClient.get('/production/dashboard');
       return response.data;
+    },
+  });
+};
+
+// BOM Mutations
+export const useCreateBOM = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.post('/production/bom', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'bom'] });
+    },
+  });
+};
+
+export const useUpdateBOM = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ bomId, data }: { bomId: string; data: any }) => {
+      const response = await apiClient.put(`/production/bom/${bomId}`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'bom'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'bom', variables.bomId] });
+    },
+  });
+};
+
+export const useActivateBOM = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (bomId: string) => {
+      const response = await apiClient.post(`/production/bom/${bomId}/activate`);
+      return response.data;
+    },
+    onSuccess: (_, bomId) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'bom'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'bom', bomId] });
+    },
+  });
+};
+
+export const useDeleteBOM = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (bomId: string) => {
+      await apiClient.delete(`/production/bom/${bomId}`);
+      return bomId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'bom'] });
+    },
+  });
+};
+
+// Production Order Workflow Mutations
+export const useCancelProductionOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/cancel`);
+      return response.data;
+    },
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'dashboard'] });
+    },
+  });
+};
+
+export const useHoldProductionOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/hold`);
+      return response.data;
+    },
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'dashboard'] });
+    },
+  });
+};
+
+export const useResumeProductionOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/resume`);
+      return response.data;
+    },
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'dashboard'] });
+    },
+  });
+};
+
+export const useReleaseProductionOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/release`);
+      return response.data;
+    },
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'dashboard'] });
+    },
+  });
+};
+
+export const useStartProductionOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/start`);
+      return response.data;
+    },
+    onSuccess: (_, orderId) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'dashboard'] });
+    },
+  });
+};
+
+export const useRecordProductionOutput = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ orderId, data }: { orderId: string; data: any }) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/output`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['production', 'dashboard'] });
+    },
+  });
+};
+
+// Material Management Mutations
+export const useIssueMaterial = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ orderId, data }: { orderId: string; data: any }) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/materials/issue`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', variables.orderId] });
+    },
+  });
+};
+
+export const useReturnMaterial = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ orderId, data }: { orderId: string; data: any }) => {
+      const response = await apiClient.post(`/production/orders/${orderId}/materials/return`, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['production', 'orders', variables.orderId] });
     },
   });
 };

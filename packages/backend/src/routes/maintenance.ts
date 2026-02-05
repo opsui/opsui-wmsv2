@@ -16,6 +16,23 @@ const router = Router();
 router.use(authenticate);
 
 // ============================================================================
+// DASHBOARD
+// ============================================================================
+
+/**
+ * GET /api/maintenance/dashboard
+ * Get maintenance dashboard metrics
+ * Access: All authenticated users
+ */
+router.get(
+  '/dashboard',
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const metrics = await maintenanceService.getDashboardMetrics();
+    res.json(metrics);
+  })
+);
+
+// ============================================================================
 // ASSETS
 // ============================================================================
 

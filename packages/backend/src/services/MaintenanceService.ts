@@ -348,6 +348,50 @@ export class MaintenanceService {
   }
 
   // ========================================================================
+  // DASHBOARD
+  // ========================================================================
+
+  async getDashboardMetrics(): Promise<{
+    openRequests: number;
+    inProgress: number;
+    completedToday: number;
+    urgent: number;
+    equipmentDown: number;
+    equipmentNeedsService: number;
+  }> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const workOrdersResult = await maintenanceRepository.findAllWorkOrders({
+      limit: 1000,
+    });
+    const assetsResult = await maintenanceRepository.findAllAssets({
+      limit: 1000,
+    });
+
+    const workOrders = workOrdersResult.workOrders;
+    const assets = assetsResult.assets;
+
+    return {
+      openRequests: workOrders.filter(wo => wo.status === 'SCHEDULED' || wo.status === 'OVERDUE')
+        .length,
+      inProgress: workOrders.filter(wo => wo.status === 'IN_PROGRESS').length,
+      completedToday: workOrders.filter(
+        wo =>
+          wo.status === 'COMPLETED' &&
+          wo.completedAt &&
+          new Date(wo.completedAt) >= today &&
+          new Date(wo.completedAt) < tomorrow
+      ).length,
+      urgent: workOrders.filter(wo => wo.priority === 'EMERGENCY' || wo.priority === 'HIGH').length,
+      equipmentDown: assets.filter(a => a.status === 'OUT_OF_SERVICE').length,
+      equipmentNeedsService: assets.filter(a => a.status === 'IN_MAINTENANCE').length,
+    };
+  }
+
+  // ========================================================================
   // PRIVATE HELPERS
   // ========================================================================
 

@@ -4,7 +4,7 @@
  * Lists available orders for pickers to claim
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { orderApi, useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
@@ -14,8 +14,180 @@ import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
-import { ShoppingBagIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import {
+  ShoppingBagIcon,
+  MagnifyingGlassIcon,
+  ClipboardDocumentListIcon,
+  QueueListIcon,
+  ExclamationTriangleIcon,
+  ChartBarIcon,
+  ArrowPathIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
+
+// ============================================================================
+// FILTER DROPDOWN COMPONENTS
+// ============================================================================
+
+interface StatusFilterDropdownProps {
+  value: OrderStatus;
+  onChange: (status: OrderStatus) => void;
+}
+
+function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const options = [
+    { value: 'PENDING' as OrderStatus, label: 'Pending', icon: ShoppingBagIcon },
+    { value: 'PICKING' as OrderStatus, label: 'Tote', icon: ClipboardDocumentListIcon },
+  ];
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative z-[9999]" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          isOpen
+            ? 'bg-primary-600 text-white shadow-lg'
+            : 'bg-white/[0.05] text-gray-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+        }`}
+      >
+        {selectedOption && <selectedOption.icon className="h-4 w-4" />}
+        <span>{selectedOption?.label}</span>
+        <ChevronDownIcon
+          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900 rounded-lg border border-white/[0.08] shadow-2xl animate-fade-in">
+          <div className="py-2">
+            {options.map(option => {
+              const OptionIcon = option.icon;
+              const isActive = option.value === value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+                    isActive
+                      ? 'text-white bg-primary-600'
+                      : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <OptionIcon
+                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
+                      isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-400'
+                    }`}
+                  />
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface PriorityFilterDropdownProps {
+  value: OrderPriority | undefined;
+  onChange: (priority: OrderPriority | undefined) => void;
+}
+
+function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const options = [
+    { value: undefined as OrderPriority | undefined, label: 'All Priority', icon: QueueListIcon },
+    { value: 'URGENT' as OrderPriority, label: 'Urgent', icon: ExclamationTriangleIcon },
+    { value: 'HIGH' as OrderPriority, label: 'High', icon: ChartBarIcon },
+    { value: 'NORMAL' as OrderPriority, label: 'Normal', icon: ClipboardDocumentListIcon },
+    { value: 'LOW' as OrderPriority, label: 'Low', icon: ArrowPathIcon },
+  ];
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative z-[9999]" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+          isOpen
+            ? 'bg-primary-600 text-white shadow-lg'
+            : 'bg-white/[0.05] text-gray-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+        }`}
+      >
+        {selectedOption && <selectedOption.icon className="h-4 w-4" />}
+        <span>{selectedOption?.label}</span>
+        <ChevronDownIcon
+          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900 rounded-lg border border-white/[0.08] shadow-2xl animate-fade-in">
+          <div className="py-2">
+            {options.map(option => {
+              const OptionIcon = option.icon;
+              const isActive = option.value === value;
+              return (
+                <button
+                  key={option.label}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+                    isActive
+                      ? 'text-white bg-primary-600'
+                      : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <OptionIcon
+                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
+                      isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-400'
+                    }`}
+                  />
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ============================================================================
 // COMPONENT
@@ -250,14 +422,7 @@ export function OrderQueuePage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <Header
-        orderQueueFilters={{
-          statusFilter,
-          onStatusFilterChange: setStatusFilter,
-          priorityFilter,
-          onPriorityFilterChange: setPriorityFilter,
-        }}
-      />
+      <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden">
         {/* Page Header - Centered */}
         <div className="text-center">
@@ -265,6 +430,12 @@ export function OrderQueuePage() {
           <p className="mt-2 text-gray-400 text-responsive-sm">
             {queueData?.total || 0} order{(queueData?.total || 0) !== 1 ? 's' : ''} available
           </p>
+        </div>
+
+        {/* Filter Bar - Status and Priority filters */}
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <StatusFilterDropdown value={statusFilter} onChange={setStatusFilter} />
+          <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
         </div>
 
         {/* Search Bar - Below Header */}
@@ -316,6 +487,14 @@ export function OrderQueuePage() {
                       <span>Items:</span>
                       <span className="text-white font-medium">{order.items?.length || 0}</span>
                     </div>
+                    {order.totalAmount != null && (
+                      <div className="flex items-center justify-between">
+                        <span>Total:</span>
+                        <span className="text-white font-medium">
+                          {order.currency || 'NZD'} ${Number(order.totalAmount).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <span>Progress:</span>
@@ -377,7 +556,7 @@ export function OrderQueuePage() {
                                   <span className="text-gray-300 break-all">{item.name}</span>
                                 </div>
                                 {/* Second row: Location and Quantity */}
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between mb-1">
                                   <span className="text-gray-400 text-xs">
                                     Loc:{' '}
                                     <span className="text-white font-medium">
@@ -390,6 +569,21 @@ export function OrderQueuePage() {
                                       : `${item.pickedQuantity || 0}/${item.quantity}`}
                                   </span>
                                 </div>
+                                {/* Third row: Pricing (if available) */}
+                                {item.unitPrice != null && (
+                                  <div className="flex items-center justify-between text-xs border-t border-white/[0.05] pt-1 mt-1">
+                                    <span className="text-gray-500">
+                                      {item.currency || 'NZD'} ${Number(item.unitPrice).toFixed(2)}
+                                      /ea
+                                    </span>
+                                    {item.lineTotal != null && (
+                                      <span className="text-white font-medium">
+                                        {item.currency || 'NZD'} $
+                                        {Number(item.lineTotal).toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}

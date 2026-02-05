@@ -121,19 +121,38 @@ export const useAuthStore = create<AuthState>()(
         return roles.includes(effectiveRole);
       },
 
-      // Check if user can pick (using effective role)
+      // Check if user can pick (admin users can always pick, regardless of active role)
       canPick: () => {
-        return get().hasRole(UserRoleEnum.PICKER, UserRoleEnum.ADMIN);
+        const state = get();
+        if (state.user?.role === UserRoleEnum.ADMIN) {
+          return true;
+        }
+        return state.hasRole(UserRoleEnum.PICKER, UserRoleEnum.ADMIN);
       },
 
-      // Check if user can pack (using effective role)
+      // Check if user can pack (admin users can always pack, regardless of active role)
       canPack: () => {
-        return get().hasRole(UserRoleEnum.PACKER, UserRoleEnum.ADMIN);
+        const state = get();
+        if (state.user?.role === UserRoleEnum.ADMIN) {
+          return true;
+        }
+        return state.hasRole(UserRoleEnum.PACKER, UserRoleEnum.ADMIN);
       },
 
-      // Check if user can supervise (using effective role)
+      // Check if user can supervise (using base role for admin/supervisor, not effective role)
+      // This allows admin/supervisor users to access supervision features even when
+      // they have an active worker role set (e.g., for testing or role switching)
       canSupervise: () => {
-        return get().hasRole(UserRoleEnum.SUPERVISOR, UserRoleEnum.ADMIN);
+        const state = get();
+        // Check base user role first - admin/supervisor users can always supervise
+        if (
+          state.user?.role === UserRoleEnum.ADMIN ||
+          state.user?.role === UserRoleEnum.SUPERVISOR
+        ) {
+          return true;
+        }
+        // For non-admin/supervisor base roles, check effective role
+        return state.hasRole(UserRoleEnum.SUPERVISOR, UserRoleEnum.ADMIN);
       },
     }),
     {
