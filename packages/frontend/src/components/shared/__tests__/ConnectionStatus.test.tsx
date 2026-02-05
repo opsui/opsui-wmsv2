@@ -21,6 +21,18 @@ vi.mock('@/hooks/useWebSocket', () => ({
 
 import { useWebSocket } from '@/hooks/useWebSocket';
 
+// Helper function to create a complete mock return value
+const createMockWebSocket = (overrides: Partial<ReturnType<typeof useWebSocket>> = {}) => ({
+  isConnected: true,
+  connectionStatus: 'connected' as const,
+  socketId: 'test-socket-id',
+  reconnect: vi.fn(),
+  subscribe: vi.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  ...overrides,
+});
+
 describe('useWebSocketConnection Hook', () => {
   const mockReconnect = vi.fn();
 
@@ -29,14 +41,14 @@ describe('useWebSocketConnection Hook', () => {
   });
 
   it('maps connected status', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'connected',
-      socketId: 'socket-123',
-      reconnect: mockReconnect,
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        isConnected: true,
+        connectionStatus: 'connected',
+        socketId: 'socket-123',
+        reconnect: mockReconnect,
+      })
+    );
 
     const { result } = renderHook(() => useWebSocketConnection());
     expect(result.current.status).toBe('connected');
@@ -45,56 +57,52 @@ describe('useWebSocketConnection Hook', () => {
   });
 
   it('maps connecting status', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'connecting',
-      socketId: null,
-      reconnect: mockReconnect,
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        isConnected: false,
+        connectionStatus: 'connecting',
+        socketId: undefined,
+      })
+    );
 
     const { result } = renderHook(() => useWebSocketConnection());
     expect(result.current.status).toBe('connecting');
   });
 
   it('maps disconnected status', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'disconnected',
-      socketId: null,
-      reconnect: mockReconnect,
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        isConnected: false,
+        connectionStatus: 'disconnected',
+        socketId: undefined,
+      })
+    );
 
     const { result } = renderHook(() => useWebSocketConnection());
     expect(result.current.status).toBe('disconnected');
   });
 
   it('maps error status', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'error',
-      socketId: null,
-      reconnect: mockReconnect,
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        isConnected: false,
+        connectionStatus: 'error',
+        socketId: undefined,
+      })
+    );
 
     const { result } = renderHook(() => useWebSocketConnection());
     expect(result.current.status).toBe('error');
   });
 
   it('defaults to disconnected for unknown status', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'unknown' as any,
-      socketId: null,
-      reconnect: mockReconnect,
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        isConnected: false,
+        connectionStatus: 'unknown' as any,
+        socketId: undefined,
+      })
+    );
 
     const { result } = renderHook(() => useWebSocketConnection());
     expect(result.current.status).toBe('disconnected');
@@ -107,26 +115,24 @@ describe('ConnectionStatus Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock - connected state
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'connected',
-      socketId: 'test-socket-id',
-      reconnect: mockReconnect,
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        connectionStatus: 'connected',
+        socketId: 'test-socket-id',
+        reconnect: mockReconnect,
+      })
+    );
   });
 
   describe('Connected State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'connected',
-        socketId: 'socket-123',
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'connected',
+          socketId: 'socket-123',
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('renders connected state', () => {
@@ -166,14 +172,12 @@ describe('ConnectionStatus Component', () => {
 
   describe('Connecting State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'connecting',
-        socketId: null,
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'connecting',
+          socketId: undefined,
+        })
+      );
     });
 
     it('renders connecting status', () => {
@@ -202,14 +206,13 @@ describe('ConnectionStatus Component', () => {
 
   describe('Disconnected State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'disconnected',
-        socketId: null,
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'disconnected',
+          socketId: undefined,
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('renders disconnected status', () => {
@@ -238,14 +241,13 @@ describe('ConnectionStatus Component', () => {
 
   describe('Error State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'error',
-        socketId: null,
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'error',
+          socketId: undefined,
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('renders error status', () => {
@@ -292,14 +294,12 @@ describe('ConnectionStatusDot Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default to connected state
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'connected',
-      socketId: 'socket-123',
-      reconnect: vi.fn(),
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        connectionStatus: 'connected',
+        socketId: 'socket-123',
+      })
+    );
   });
 
   it('renders dot with connected state', () => {
@@ -315,14 +315,12 @@ describe('ConnectionStatusDot Component', () => {
   });
 
   it('shows green dot when connected', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'connected',
-      socketId: 'socket-123',
-      reconnect: vi.fn(),
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        connectionStatus: 'connected',
+        socketId: 'socket-123',
+      })
+    );
 
     const { container } = renderWithProviders(<ConnectionStatusDot />);
     const dot = container.querySelector('div');
@@ -330,14 +328,12 @@ describe('ConnectionStatusDot Component', () => {
   });
 
   it('shows yellow dot when connecting', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'connecting',
-      socketId: null,
-      reconnect: vi.fn(),
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        connectionStatus: 'connecting',
+        socketId: undefined,
+      })
+    );
 
     const { container } = renderWithProviders(<ConnectionStatusDot />);
     const dot = container.querySelector('div');
@@ -345,14 +341,12 @@ describe('ConnectionStatusDot Component', () => {
   });
 
   it('shows gray dot when disconnected', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'disconnected',
-      socketId: null,
-      reconnect: vi.fn(),
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        connectionStatus: 'disconnected',
+        socketId: undefined,
+      })
+    );
 
     const { container } = renderWithProviders(<ConnectionStatusDot />);
     const dot = container.querySelector('div');
@@ -360,14 +354,12 @@ describe('ConnectionStatusDot Component', () => {
   });
 
   it('shows red dot when in error state', () => {
-    vi.mocked(useWebSocket).mockReturnValue({
-      connectionStatus: 'error',
-      socketId: null,
-      reconnect: vi.fn(),
-      lastMessage: null,
-      sendMessage: vi.fn(),
-      connectionHistory: [],
-    });
+    vi.mocked(useWebSocket).mockReturnValue(
+      createMockWebSocket({
+        connectionStatus: 'error',
+        socketId: undefined,
+      })
+    );
 
     const { container } = renderWithProviders(<ConnectionStatusDot />);
     const dot = container.querySelector('div');
@@ -390,14 +382,13 @@ describe('ConnectionStatusPanel Component', () => {
 
   describe('Connected State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'connected',
-        socketId: 'socket-123',
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'connected',
+          socketId: 'socket-123',
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('renders connection details', () => {
@@ -430,14 +421,12 @@ describe('ConnectionStatusPanel Component', () => {
 
   describe('Connecting State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'connecting',
-        socketId: null,
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'connecting',
+          socketId: undefined,
+        })
+      );
     });
 
     it('renders connecting status', () => {
@@ -464,14 +453,13 @@ describe('ConnectionStatusPanel Component', () => {
 
   describe('Disconnected State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'disconnected',
-        socketId: null,
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'disconnected',
+          socketId: undefined,
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('renders disconnected status', () => {
@@ -503,14 +491,13 @@ describe('ConnectionStatusPanel Component', () => {
 
   describe('Error State', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'error',
-        socketId: null,
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'error',
+          socketId: undefined,
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('renders error status', () => {
@@ -537,14 +524,13 @@ describe('ConnectionStatusPanel Component', () => {
 
   describe('Custom ClassName', () => {
     beforeEach(() => {
-      vi.mocked(useWebSocket).mockReturnValue({
-        connectionStatus: 'connected',
-        socketId: 'socket-123',
-        reconnect: mockReconnect,
-        lastMessage: null,
-        sendMessage: vi.fn(),
-        connectionHistory: [],
-      });
+      vi.mocked(useWebSocket).mockReturnValue(
+        createMockWebSocket({
+          connectionStatus: 'connected',
+          socketId: 'socket-123',
+          reconnect: mockReconnect,
+        })
+      );
     });
 
     it('applies custom className', () => {

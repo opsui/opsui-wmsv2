@@ -355,7 +355,7 @@ describe('useFormValidation', () => {
     });
 
     it('sets isSubmitting during submit', async () => {
-      const onSubmit = vi.fn(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const onSubmit = vi.fn(() => Promise.resolve() as Promise<void>);
       const validValues: TestForm = {
         name: 'John Doe',
         email: 'john@example.com',

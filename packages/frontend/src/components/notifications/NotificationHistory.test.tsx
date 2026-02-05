@@ -35,7 +35,7 @@ vi.mock('@/components/shared', () => ({
 
 // Mock date-fns
 vi.mock('date-fns', () => ({
-  formatDistanceToNow: vi.fn((date: Date) => '2 hours ago'),
+  formatDistanceToNow: vi.fn(() => '2 hours ago'),
 }));
 
 // Mock cn utility
@@ -87,16 +87,16 @@ const mockNotifications = [
 ];
 
 describe('NotificationHistory Component', () => {
-  let mockUseNotifications: ReturnType<typeof vi.fn>;
-  let mockUseMarkAsRead: ReturnType<typeof vi.fn>;
-  let mockUseMarkAllAsRead: ReturnType<typeof vi.fn>;
-  let mockUseDeleteNotification: ReturnType<typeof vi.fn>;
+  let mockUseNotifications: any;
+  let mockUseMarkAsRead: any;
+  let mockUseMarkAllAsRead: any;
+  let mockUseDeleteNotification: any;
 
   beforeEach(() => {
-    mockUseNotifications = vi.mocked(api.useNotifications);
-    mockUseMarkAsRead = vi.mocked(api.useMarkAsRead);
-    mockUseMarkAllAsRead = vi.mocked(api.useMarkAllAsRead);
-    mockUseDeleteNotification = vi.mocked(api.useDeleteNotification);
+    mockUseNotifications = api.useNotifications as any;
+    mockUseMarkAsRead = api.useMarkAsRead as any;
+    mockUseMarkAllAsRead = api.useMarkAllAsRead as any;
+    mockUseDeleteNotification = api.useDeleteNotification as any;
 
     mockUseNotifications.mockReturnValue({
       data: { notifications: mockNotifications },

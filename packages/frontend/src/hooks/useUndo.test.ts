@@ -5,9 +5,8 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useUndo, useUndoableAction, useKeyboardUndo } from './useUndo';
 
 describe('useUndo Hook', () => {

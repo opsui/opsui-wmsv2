@@ -5,9 +5,8 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { QuickCountPanel } from './QuickCountPanel';
 import { CycleCountEntry } from '@opsui/shared';
@@ -20,14 +19,11 @@ const mockPendingEntries: CycleCountEntry[] = [
     binLocation: 'A-01-01',
     sku: 'SKU-001',
     systemQuantity: 100,
-    countedQuantity: null,
-    status: 'PENDING',
-    countedBy: null,
-    countedAt: null,
-    variancePercent: null,
-    varianceAmount: null,
-    notes: null,
-    createdAt: new Date().toISOString(),
+    countedQuantity: 0,
+    variance: 0,
+    varianceStatus: 'PENDING' as any,
+    countedAt: new Date(),
+    countedBy: '',
   },
   {
     entryId: 'entry-2',
@@ -35,14 +31,11 @@ const mockPendingEntries: CycleCountEntry[] = [
     binLocation: 'B-02-02',
     sku: 'SKU-002',
     systemQuantity: 50,
-    countedQuantity: null,
-    status: 'PENDING',
-    countedBy: null,
-    countedAt: null,
-    variancePercent: null,
-    varianceAmount: null,
-    notes: null,
-    createdAt: new Date().toISOString(),
+    countedQuantity: 0,
+    variance: 0,
+    varianceStatus: 'PENDING' as any,
+    countedAt: new Date(),
+    countedBy: '',
   },
   {
     entryId: 'entry-3',
@@ -50,14 +43,11 @@ const mockPendingEntries: CycleCountEntry[] = [
     binLocation: 'C-03-03',
     sku: 'SKU-003',
     systemQuantity: 25,
-    countedQuantity: null,
-    status: 'PENDING',
-    countedBy: null,
-    countedAt: null,
-    variancePercent: null,
-    varianceAmount: null,
-    notes: null,
-    createdAt: new Date().toISOString(),
+    countedQuantity: 0,
+    variance: 0,
+    varianceStatus: 'PENDING' as any,
+    countedAt: new Date(),
+    countedBy: '',
   },
 ];
 

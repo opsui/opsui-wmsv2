@@ -33,11 +33,20 @@ describe('usePageTracking', () => {
     vi.mocked(useAuthStore.getState).mockReturnValue({
       isAuthenticated: true,
       user: null,
-      token: null,
+      accessToken: null,
+      refreshToken: null,
+      activeRole: null,
       login: vi.fn(),
       logout: vi.fn(),
+      updateTokens: vi.fn(),
       setUser: vi.fn(),
-      setToken: vi.fn(),
+      setActiveRole: vi.fn(),
+      clearAuth: vi.fn(),
+      getEffectiveRole: () => null,
+      hasRole: () => false,
+      canPick: () => false,
+      canPack: () => false,
+      canSupervise: () => false,
     });
     // Mock visibility state as visible
     Object.defineProperty(document, 'visibilityState', {
@@ -115,11 +124,20 @@ describe('usePageTracking', () => {
       vi.mocked(useAuthStore.getState).mockReturnValue({
         isAuthenticated: false,
         user: null,
-        token: null,
+        accessToken: null,
+        refreshToken: null,
+        activeRole: null,
         login: vi.fn(),
         logout: vi.fn(),
+        updateTokens: vi.fn(),
         setUser: vi.fn(),
-        setToken: vi.fn(),
+        setActiveRole: vi.fn(),
+        clearAuth: vi.fn(),
+        getEffectiveRole: () => null,
+        hasRole: () => false,
+        canPick: () => false,
+        canPack: () => false,
+        canSupervise: () => false,
       });
 
       const consoleSpy = vi.spyOn(console, 'log');
@@ -139,11 +157,20 @@ describe('usePageTracking', () => {
       vi.mocked(useAuthStore.getState).mockReturnValue({
         isAuthenticated: false,
         user: null,
-        token: null,
+        accessToken: null,
+        refreshToken: null,
+        activeRole: null,
         login: vi.fn(),
         logout: vi.fn(),
+        updateTokens: vi.fn(),
         setUser: vi.fn(),
-        setToken: vi.fn(),
+        setActiveRole: vi.fn(),
+        clearAuth: vi.fn(),
+        getEffectiveRole: () => null,
+        hasRole: () => false,
+        canPick: () => false,
+        canPack: () => false,
+        canSupervise: () => false,
       });
 
       vi.mocked(apiClient.post).mockResolvedValue({ success: true });
@@ -414,11 +441,20 @@ describe('usePageTracking Integration', () => {
     vi.mocked(useAuthStore.getState).mockReturnValue({
       isAuthenticated: true,
       user: null,
-      token: null,
+      accessToken: null,
+      refreshToken: null,
+      activeRole: null,
       login: vi.fn(),
       logout: vi.fn(),
+      updateTokens: vi.fn(),
       setUser: vi.fn(),
-      setToken: vi.fn(),
+      setActiveRole: vi.fn(),
+      clearAuth: vi.fn(),
+      getEffectiveRole: () => null,
+      hasRole: () => false,
+      canPick: () => false,
+      canPack: () => false,
+      canSupervise: () => false,
     });
   });
 

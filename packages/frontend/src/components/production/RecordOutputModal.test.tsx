@@ -4,7 +4,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -80,11 +79,27 @@ describe('RecordOutputModal Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
+    vi.mocked(useToast).mockReturnValue({
+      showToast: mockShowToast,
+      toasts: [],
+      dismissToast: vi.fn(),
+      clearAll: vi.fn(),
+    } as any);
     vi.mocked(useRecordProductionOutput).mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue({ outputId: 'output-123' }),
       isPending: false,
-    });
+      data: undefined,
+      error: null,
+      isError: false,
+      isIdle: true,
+      isLoading: false,
+      isPaused: false,
+      isSuccess: false,
+      mutate: vi.fn(),
+      reset: vi.fn(),
+      status: 'idle',
+      variables: undefined,
+    } as any);
   });
 
   describe('Rendering', () => {
@@ -312,7 +327,18 @@ describe('RecordOutputModal Component', () => {
       vi.mocked(useRecordProductionOutput).mockReturnValue({
         mutateAsync: vi.fn(),
         isPending: true,
-      });
+        data: undefined,
+        error: null,
+        isError: false,
+        isIdle: false,
+        isLoading: false,
+        isPaused: false,
+        isSuccess: false,
+        mutate: vi.fn(),
+        reset: vi.fn(),
+        status: 'pending',
+        variables: undefined,
+      } as any);
 
       renderWithProviders(
         <RecordOutputModal
@@ -331,7 +357,18 @@ describe('RecordOutputModal Component', () => {
       vi.mocked(useRecordProductionOutput).mockReturnValue({
         mutateAsync: vi.fn(),
         isPending: true,
-      });
+        data: undefined,
+        error: null,
+        isError: false,
+        isIdle: false,
+        isLoading: false,
+        isPaused: false,
+        isSuccess: false,
+        mutate: vi.fn(),
+        reset: vi.fn(),
+        status: 'pending',
+        variables: undefined,
+      } as any);
 
       renderWithProviders(
         <RecordOutputModal

@@ -4,7 +4,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -99,15 +98,46 @@ describe('CreateProductionOrderModal Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
+    vi.mocked(useToast).mockReturnValue({
+      showToast: mockShowToast,
+      toasts: [],
+      dismissToast: vi.fn(),
+      clearAll: vi.fn(),
+    } as any);
     vi.mocked(useCreateProductionOrder).mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue({ orderId: 'order-123' }),
       isPending: false,
-    });
+      data: undefined,
+      error: null,
+      isError: false,
+      isIdle: true,
+      isLoading: false,
+      isPaused: false,
+      isSuccess: false,
+      mutate: vi.fn(),
+      reset: vi.fn(),
+      status: 'idle',
+      variables: undefined,
+    } as any);
     vi.mocked(useBOMs).mockReturnValue({
       data: { boms: mockBOMs },
       isLoading: false,
-    });
+      error: null,
+      isError: false,
+      isIdle: false,
+      isPending: false,
+      isPaused: false,
+      isSuccess: true,
+      isRefetching: false,
+      isRefetchError: false,
+      isLoadingError: false,
+      isFetched: true,
+      isFetchedAfterMount: true,
+      isFetching: false,
+      fetchStatus: 'idle',
+      refetch: vi.fn(),
+      status: 'success',
+    } as any);
   });
 
   describe('Rendering', () => {
@@ -175,7 +205,22 @@ describe('CreateProductionOrderModal Component', () => {
       vi.mocked(useBOMs).mockReturnValue({
         data: { boms: [] },
         isLoading: false,
-      });
+        error: null,
+        isError: false,
+        isIdle: false,
+        isPending: false,
+        isPaused: false,
+        isSuccess: true,
+        isRefetching: false,
+        isRefetchError: false,
+        isLoadingError: false,
+        isFetched: true,
+        isFetchedAfterMount: true,
+        isFetching: false,
+        fetchStatus: 'idle',
+        refetch: vi.fn(),
+        status: 'success',
+      } as any);
 
       renderWithProviders(
         <CreateProductionOrderModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />
@@ -255,7 +300,18 @@ describe('CreateProductionOrderModal Component', () => {
       vi.mocked(useCreateProductionOrder).mockReturnValue({
         mutateAsync: vi.fn(),
         isPending: true,
-      });
+        data: undefined,
+        error: null,
+        isError: false,
+        isIdle: false,
+        isLoading: false,
+        isPaused: false,
+        isSuccess: false,
+        mutate: vi.fn(),
+        reset: vi.fn(),
+        status: 'pending',
+        variables: undefined,
+      } as any);
 
       renderWithProviders(
         <CreateProductionOrderModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />
@@ -268,7 +324,18 @@ describe('CreateProductionOrderModal Component', () => {
       vi.mocked(useCreateProductionOrder).mockReturnValue({
         mutateAsync: vi.fn(),
         isPending: true,
-      });
+        data: undefined,
+        error: null,
+        isError: false,
+        isIdle: false,
+        isLoading: false,
+        isPaused: false,
+        isSuccess: false,
+        mutate: vi.fn(),
+        reset: vi.fn(),
+        status: 'pending',
+        variables: undefined,
+      } as any);
 
       renderWithProviders(
         <CreateProductionOrderModal isOpen={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />
@@ -310,7 +377,22 @@ describe('CreateProductionOrderModal Component', () => {
       vi.mocked(useBOMs).mockReturnValue({
         data: { boms: [] },
         isLoading: false,
-      });
+        error: null,
+        isError: false,
+        isIdle: false,
+        isPending: false,
+        isPaused: false,
+        isSuccess: true,
+        isRefetching: false,
+        isRefetchError: false,
+        isLoadingError: false,
+        isFetched: true,
+        isFetchedAfterMount: true,
+        isFetching: false,
+        fetchStatus: 'idle',
+        refetch: vi.fn(),
+        status: 'success',
+      } as any);
     });
 
     it('shows warning message when no BOMs exist', () => {

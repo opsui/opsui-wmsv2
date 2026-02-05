@@ -736,13 +736,10 @@ export interface ResolveExceptionDTO {
 // ============================================================================
 
 export interface OrderQueueResponse {
-  orders: Array<{
-    orderId: string;
-    customerName: string;
-    priority: OrderPriority;
-    itemCount: number;
-    estimatedPickTime: number; // minutes
-  }>;
+  orders: Order[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface OrderDetailResponse {

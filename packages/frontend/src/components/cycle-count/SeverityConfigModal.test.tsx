@@ -4,7 +4,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -22,6 +21,8 @@ const mockConfigs: VarianceSeverityConfig[] = [
     autoAdjust: true,
     colorCode: '#10B981',
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     configId: 'config-2',
@@ -33,6 +34,8 @@ const mockConfigs: VarianceSeverityConfig[] = [
     autoAdjust: true,
     colorCode: '#F59E0B',
     isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     configId: 'config-3',
@@ -44,6 +47,8 @@ const mockConfigs: VarianceSeverityConfig[] = [
     autoAdjust: false,
     colorCode: '#EF4444',
     isActive: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
 
@@ -139,9 +144,7 @@ describe('SeverityConfigModal Component', () => {
     });
 
     it('does not render inactive configurations in main table', () => {
-      // HIGH is inactive
-      const highTexts = screen.queryAllByText('HIGH');
-      // Only check that HIGH appears in the inactive section
+      // HIGH is inactive, check that it appears in the inactive section
       expect(screen.getByText('Inactive Configurations (1)')).toBeInTheDocument();
     });
 

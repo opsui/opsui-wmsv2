@@ -16,7 +16,7 @@ import * as useFormValidationModule from '@/hooks/useFormValidation';
 // Mock useFormValidation hook
 const mockHandleSubmit = vi.fn(callback => (e: React.FormEvent) => {
   e.preventDefault();
-  callback();
+  return Promise.resolve(callback());
 });
 const mockReset = vi.fn();
 const mockSetFieldValue = vi.fn();
@@ -60,20 +60,25 @@ vi.mock('@/components/shared', () => ({
 
 // Mock PERMISSION_GROUPS
 vi.mock('@opsui/shared', async () => {
-  const actual = await vi.importActual('@opsui/shared');
+  const actual = await vi.importActual<typeof import('@opsui/shared')>('@opsui/shared');
   return {
     ...actual,
     PERMISSION_GROUPS: {
-      ORDERS: ['VIEW_ORDERS', 'CREATE_ORDERS', 'EDIT_ORDERS', 'DELETE_ORDERS'] as Permission[],
-      INVENTORY: ['VIEW_INVENTORY', 'ADJUST_INVENTORY', 'TRANSFER_STOCK'] as Permission[],
+      ORDERS: [
+        actual.Permission.VIEW_ORDERS,
+        actual.Permission.CREATE_ORDERS,
+        actual.Permission.EDIT_ORDERS,
+        actual.Permission.DELETE_ORDERS,
+      ],
+      INVENTORY: [actual.Permission.VIEW_INVENTORY, actual.Permission.ADJUST_INVENTORY],
       USERS: [
-        'VIEW_USERS',
-        'CREATE_USERS',
-        'EDIT_USERS',
-        'DELETE_USERS',
-        'ASSIGN_ROLES',
-      ] as Permission[],
-      REPORTS: ['VIEW_REPORTS', 'EXPORT_REPORTS'] as Permission[],
+        actual.Permission.VIEW_USERS,
+        actual.Permission.CREATE_USERS,
+        actual.Permission.EDIT_USERS,
+        actual.Permission.DELETE_USERS,
+        actual.Permission.MANAGE_USER_ROLES,
+      ],
+      REPORTS: [actual.Permission.VIEW_REPORTS, actual.Permission.EXPORT_DATA],
     },
   };
 });
@@ -82,28 +87,33 @@ const mockPermissionGroups = [
   {
     key: 'ORDERS',
     label: 'Orders',
-    permissions: ['VIEW_ORDERS', 'CREATE_ORDERS', 'EDIT_ORDERS', 'DELETE_ORDERS'] as Permission[],
+    permissions: [
+      Permission.VIEW_ORDERS,
+      Permission.CREATE_ORDERS,
+      Permission.EDIT_ORDERS,
+      Permission.DELETE_ORDERS,
+    ],
   },
   {
     key: 'INVENTORY',
     label: 'Inventory',
-    permissions: ['VIEW_INVENTORY', 'ADJUST_INVENTORY', 'TRANSFER_STOCK'] as Permission[],
+    permissions: [Permission.VIEW_INVENTORY, Permission.ADJUST_INVENTORY],
   },
   {
     key: 'USERS',
     label: 'Users',
     permissions: [
-      'VIEW_USERS',
-      'CREATE_USERS',
-      'EDIT_USERS',
-      'DELETE_USERS',
-      'ASSIGN_ROLES',
-    ] as Permission[],
+      Permission.VIEW_USERS,
+      Permission.CREATE_USERS,
+      Permission.EDIT_USERS,
+      Permission.DELETE_USERS,
+      Permission.MANAGE_USER_ROLES,
+    ],
   },
   {
     key: 'REPORTS',
     label: 'Reports',
-    permissions: ['VIEW_REPORTS', 'EXPORT_REPORTS'] as Permission[],
+    permissions: [Permission.VIEW_REPORTS, Permission.EXPORT_DATA],
   },
 ];
 
@@ -116,7 +126,7 @@ describe('RoleModal Component', () => {
     mockOnClose = vi.fn();
     mockHandleSubmit.mockImplementation(callback => (e: React.FormEvent) => {
       e.preventDefault();
-      callback();
+      return Promise.resolve(callback());
     });
     mockReset.mockClear();
     mockSetFieldValue.mockClear();
@@ -129,11 +139,15 @@ describe('RoleModal Component', () => {
         permissions: [],
       },
       errors: {},
+      touched: new Set<string>(),
+      isValid: true,
       handleChange: vi.fn(),
-      handleSubmit: mockHandleSubmit,
+      handleBlur: vi.fn(),
+      handleSubmit: mockHandleSubmit as any,
       isSubmitting: false,
       reset: mockReset,
       setFieldValue: mockSetFieldValue,
+      setFieldError: vi.fn(),
       validateOnChange: true,
     }));
   });
@@ -278,7 +292,7 @@ describe('RoleModal Component', () => {
           isEditing={true}
           initialData={{
             name: 'Custom Manager',
-            permissions: ['VIEW_ORDERS', 'EDIT_ORDERS'] as Permission[],
+            permissions: [Permission.VIEW_ORDERS, Permission.EDIT_ORDERS],
           }}
         />
       );
@@ -500,7 +514,7 @@ describe('RoleModal Component', () => {
           permissionGroups={mockPermissionGroups}
           initialData={{
             name: 'Test Role',
-            permissions: ['VIEW_ORDERS', 'EDIT_ORDERS'] as Permission[],
+            permissions: [Permission.VIEW_ORDERS, Permission.EDIT_ORDERS],
           }}
         />
       );

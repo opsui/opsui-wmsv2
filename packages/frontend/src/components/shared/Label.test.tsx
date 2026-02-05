@@ -130,7 +130,7 @@ describe('Label Component', () => {
       };
 
       renderWithProviders(<TestComponent />);
-      expect(ref?.tagName).toBe('LABEL');
+      expect((ref as HTMLLabelElement | null)?.tagName).toBe('LABEL');
     });
   });
 

@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import {
   useMemoized,
   useStableCallback,
@@ -30,7 +30,7 @@ describe('useMemoized', () => {
     };
 
     const { result, rerender } = renderHook(({ deps }) => useMemoized(factory, deps), {
-      initialProps: { deps: [1] } as unknown[],
+      initialProps: { deps: [1] } as { deps: unknown[] },
     });
 
     expect(result.current).toBe(42);
@@ -54,9 +54,12 @@ describe('useMemoized', () => {
 describe('useStableCallback', () => {
   it('creates stable callback reference', () => {
     const callback = vi.fn();
-    const { result, rerender } = renderHook(({ cb, deps }) => useStableCallback(cb, deps), {
-      initialProps: { cb: callback, deps: [1] } as [unknown, unknown[]],
-    });
+    const { result, rerender } = renderHook(
+      ({ cb, deps }: { cb: () => void; deps: unknown[] }) => useStableCallback(cb, deps),
+      {
+        initialProps: { cb: callback, deps: [1] },
+      }
+    );
 
     const firstRef = result.current;
     expect(firstRef).toBeInstanceOf(Function);
@@ -70,8 +73,8 @@ describe('useStableCallback', () => {
   });
 
   it('calls the callback with correct arguments', () => {
-    const callback = vi.fn((a: number, b: number) => a + b);
-    const { result } = renderHook(() => useStableCallback(callback, [callback]));
+    const callback = vi.fn((a: number, b: number) => a + b) as (...args: unknown[]) => unknown;
+    const { result } = renderHook(() => useStableCallback(callback, [callback] as unknown[]));
 
     act(() => {
       result.current(2, 3);
@@ -296,14 +299,14 @@ describe('usePrevious', () => {
   });
 
   it('handles different value types', () => {
-    const { result, rerender } = renderHook(({ value }) => usePrevious(value), {
-      initialProps: { value: 'first' },
+    const { result, rerender } = renderHook(({ value }: { value: unknown }) => usePrevious(value), {
+      initialProps: { value: 'first' as unknown },
     });
 
-    rerender({ value: 'second' });
+    rerender({ value: 'second' as unknown });
     expect(result.current).toBe('first');
 
-    rerender({ value: { foo: 'bar' } });
+    rerender({ value: { foo: 'bar' } as unknown });
     expect(result.current).toBe('second');
   });
 });
@@ -384,7 +387,7 @@ describe('useUpdateEffect', () => {
   it('skips first render', () => {
     const effect = vi.fn();
     const { rerender } = renderHook(({ deps }) => useUpdateEffect(effect, deps), {
-      initialProps: { deps: [1] } as unknown[],
+      initialProps: { deps: [1] } as { deps: unknown[] },
     });
 
     expect(effect).not.toHaveBeenCalled();
@@ -396,7 +399,7 @@ describe('useUpdateEffect', () => {
   it('runs on dependency changes after first render', () => {
     const effect = vi.fn();
     const { rerender } = renderHook(({ deps }) => useUpdateEffect(effect, deps), {
-      initialProps: { deps: [1] } as unknown[],
+      initialProps: { deps: [1] } as { deps: unknown[] },
     });
 
     rerender({ deps: [2] });
@@ -409,7 +412,7 @@ describe('useUpdateEffect', () => {
   it('does not run when dependencies unchanged', () => {
     const effect = vi.fn();
     const { rerender } = renderHook(({ deps }) => useUpdateEffect(effect, deps), {
-      initialProps: { deps: [1] } as unknown[],
+      initialProps: { deps: [1] } as { deps: unknown[] },
     });
 
     rerender({ deps: [1] });
@@ -427,7 +430,7 @@ describe('useUpdateEffect', () => {
     const effect = vi.fn(() => cleanup);
 
     const { rerender } = renderHook(({ deps }) => useUpdateEffect(effect, deps), {
-      initialProps: { deps: [1] } as unknown[],
+      initialProps: { deps: [1] } as { deps: unknown[] },
     });
 
     rerender({ deps: [2] });

@@ -5,9 +5,9 @@
  * @tested yes
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { act } from 'react';
-import type { User, UserRole, AuthTokens } from '@opsui/shared';
+import type { User, AuthTokens } from '@opsui/shared';
 import { UserRole as UserRoleEnum } from '@opsui/shared';
 import {
   useAuthStore,
@@ -27,20 +27,16 @@ const mockUser: User = {
   role: UserRoleEnum.PICKER,
   activeRole: null,
   additionalRoles: [UserRoleEnum.PACKER, UserRoleEnum.STOCK_CONTROLLER],
-  createdAt: '2024-01-01T00:00:00Z',
-  lastLoginAt: '2024-01-15T00:00:00Z',
-  isActive: true,
-  currentView: 'Dashboard',
-  currentViewUpdatedAt: '2024-01-15T00:00:00Z',
+  createdAt: new Date('2024-01-01T00:00:00Z'),
+  lastLoginAt: new Date('2024-01-15T00:00:00Z'),
   deletedAt: null,
-  isAdmin: false,
+  active: true,
 };
 
 const mockAdminUser: User = {
   ...mockUser,
   userId: 'USR-ADMIN',
   role: UserRoleEnum.ADMIN,
-  isAdmin: true,
   additionalRoles: [
     UserRoleEnum.PICKER,
     UserRoleEnum.PACKER,
@@ -104,7 +100,6 @@ describe('authStore', () => {
 
       expect(state.isAuthenticated).toBe(true);
       expect(state.user?.role).toBe(UserRoleEnum.ADMIN);
-      expect(state.user?.isAdmin).toBe(true);
     });
   });
 

@@ -45,7 +45,7 @@ describe('useWebSocket', () => {
   });
 
   it('should auto-connect when autoConnect is true', async () => {
-    const { result } = renderHook(() => useWebSocket(true));
+    renderHook(() => useWebSocket(true));
 
     await waitFor(() => {
       expect(webSocketService.connect).toHaveBeenCalled();
@@ -98,9 +98,9 @@ describe('useWebSocket', () => {
     const { result } = renderHook(() => useWebSocket(false));
     const handler = vi.fn();
 
-    const unsubscribe = result.current.subscribe('test-event', handler);
+    const unsubscribe = result.current.subscribe('order:updated' as any, handler);
 
-    expect(webSocketService.on).toHaveBeenCalledWith('test-event', handler);
+    expect(webSocketService.on).toHaveBeenCalledWith('order:updated', handler);
     expect(typeof unsubscribe).toBe('function');
 
     act(() => {

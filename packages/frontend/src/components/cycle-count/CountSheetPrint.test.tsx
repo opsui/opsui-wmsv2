@@ -4,22 +4,24 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { CountSheetPrint } from './CountSheetPrint';
-import { CycleCountPlan, CycleCountEntry } from '@opsui/shared';
+import { CycleCountPlan, CycleCountEntry, CycleCountType, CycleCountStatus } from '@opsui/shared';
 
 const mockPlan: CycleCountPlan = {
   planId: 'plan-1',
   planName: 'Monthly Aisle Count',
-  countType: 'FULL',
+  countType: CycleCountType.BLANKET,
   scheduledDate: new Date('2024-01-15'),
-  status: 'SCHEDULED',
+  status: CycleCountStatus.SCHEDULED,
   countBy: 'user-123',
   location: 'A-01',
   notes: 'Check all items in A-01 aisle',
+  createdBy: 'user-456',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
 };
 
 const mockEntries: CycleCountEntry[] = [
@@ -29,9 +31,11 @@ const mockEntries: CycleCountEntry[] = [
     sku: 'SKU001',
     binLocation: 'A-01-01',
     systemQuantity: 100,
-    countedQuantity: null,
-    variance: null,
-    status: 'PENDING',
+    countedQuantity: 0,
+    variance: 0,
+    varianceStatus: 'PENDING' as any,
+    countedAt: new Date('2024-01-15'),
+    countedBy: 'user-123',
   },
   {
     entryId: 'entry-2',
@@ -39,9 +43,11 @@ const mockEntries: CycleCountEntry[] = [
     sku: 'SKU002',
     binLocation: 'A-01-02',
     systemQuantity: 50,
-    countedQuantity: null,
-    variance: null,
-    status: 'PENDING',
+    countedQuantity: 0,
+    variance: 0,
+    varianceStatus: 'PENDING' as any,
+    countedAt: new Date('2024-01-15'),
+    countedBy: 'user-123',
   },
 ];
 

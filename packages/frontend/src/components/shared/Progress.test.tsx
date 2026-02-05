@@ -203,7 +203,7 @@ describe('Progress Component', () => {
       };
 
       renderWithProviders(<TestComponent />);
-      expect(ref?.classList.contains('relative')).toBe(true);
+      expect((ref as HTMLDivElement | null)?.classList.contains('relative')).toBe(true);
     });
   });
 

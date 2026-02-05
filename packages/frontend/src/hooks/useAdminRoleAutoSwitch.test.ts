@@ -38,10 +38,17 @@ describe('useAdminRoleAutoSwitch', () => {
 
   it('should not switch role for non-admin users', () => {
     useAuthStore.setState({
-      user: { id: '1', username: 'worker', role: UserRole.WORKER },
+      user: {
+        userId: '1',
+        name: 'worker',
+        email: 'worker@example.com',
+        role: UserRole.PICKER,
+        createdAt: new Date(),
+        active: true,
+      },
       activeRole: null,
       setActiveRole: vi.fn(),
-      getEffectiveRole: () => UserRole.WORKER,
+      getEffectiveRole: () => UserRole.PICKER,
     });
 
     const wrapper = createBrowserRouterWrapper();
@@ -56,7 +63,14 @@ describe('useAdminRoleAutoSwitch', () => {
   it('should not switch role when admin user is already in ADMIN role', () => {
     const setActiveRoleMock = vi.fn();
     useAuthStore.setState({
-      user: { id: '1', username: 'admin', role: UserRole.ADMIN },
+      user: {
+        userId: '1',
+        name: 'admin',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        active: true,
+      },
       activeRole: null,
       setActiveRole: setActiveRoleMock,
       getEffectiveRole: () => UserRole.ADMIN,
@@ -71,10 +85,17 @@ describe('useAdminRoleAutoSwitch', () => {
   it('should not switch role when on non-admin path', () => {
     const setActiveRoleMock = vi.fn();
     useAuthStore.setState({
-      user: { id: '1', username: 'admin', role: UserRole.ADMIN },
-      activeRole: UserRole.WORKER,
+      user: {
+        userId: '1',
+        name: 'admin',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        active: true,
+      },
+      activeRole: UserRole.PICKER,
       setActiveRole: setActiveRoleMock,
-      getEffectiveRole: () => UserRole.WORKER,
+      getEffectiveRole: () => UserRole.PICKER,
     });
 
     const wrapper = createMemoryRouterWrapper(['/picking']);
@@ -86,10 +107,17 @@ describe('useAdminRoleAutoSwitch', () => {
   it('should switch to ADMIN role when navigating directly to admin path from non-admin path', () => {
     const setActiveRoleMock = vi.fn();
     useAuthStore.setState({
-      user: { id: '1', username: 'admin', role: UserRole.ADMIN },
-      activeRole: UserRole.WORKER,
+      user: {
+        userId: '1',
+        name: 'admin',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        active: true,
+      },
+      activeRole: UserRole.PICKER,
       setActiveRole: setActiveRoleMock,
-      getEffectiveRole: () => UserRole.WORKER,
+      getEffectiveRole: () => UserRole.PICKER,
     });
 
     // Start from a non-admin path - the hook shouldn't trigger here
@@ -107,10 +135,17 @@ describe('useAdminRoleAutoSwitch', () => {
   it('should not switch when navigating from one admin path to another', () => {
     const setActiveRoleMock = vi.fn();
     useAuthStore.setState({
-      user: { id: '1', username: 'admin', role: UserRole.ADMIN },
-      activeRole: UserRole.WORKER,
+      user: {
+        userId: '1',
+        name: 'admin',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        active: true,
+      },
+      activeRole: UserRole.PICKER,
       setActiveRole: setActiveRoleMock,
-      getEffectiveRole: () => UserRole.WORKER,
+      getEffectiveRole: () => UserRole.PICKER,
     });
 
     const wrapper = createMemoryRouterWrapper(['/dashboard']);
@@ -131,7 +166,14 @@ describe('useAdminRoleAutoSwitch', () => {
   it('should not interfere with user-initiated role changes', () => {
     const setActiveRoleMock = vi.fn();
     useAuthStore.setState({
-      user: { id: '1', username: 'admin', role: UserRole.ADMIN },
+      user: {
+        userId: '1',
+        name: 'admin',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        active: true,
+      },
       activeRole: null,
       setActiveRole: setActiveRoleMock,
       getEffectiveRole: () => UserRole.ADMIN,
@@ -140,11 +182,11 @@ describe('useAdminRoleAutoSwitch', () => {
     const wrapper = createMemoryRouterWrapper(['/dashboard']);
     const { rerender } = renderHook(() => useAdminRoleAutoSwitch(), { wrapper });
 
-    // Simulate user switching to WORKER role (same path, role changes)
+    // Simulate user switching to PICKER role (same path, role changes)
     act(() => {
       useAuthStore.setState({
-        activeRole: UserRole.WORKER,
-        getEffectiveRole: () => UserRole.WORKER,
+        activeRole: UserRole.PICKER,
+        getEffectiveRole: () => UserRole.PICKER,
       });
     });
 
@@ -158,10 +200,17 @@ describe('useAdminRoleAutoSwitch', () => {
   it('should handle null previous path on first render', () => {
     const setActiveRoleMock = vi.fn();
     useAuthStore.setState({
-      user: { id: '1', username: 'admin', role: UserRole.ADMIN },
-      activeRole: UserRole.WORKER,
+      user: {
+        userId: '1',
+        name: 'admin',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+        createdAt: new Date(),
+        active: true,
+      },
+      activeRole: UserRole.PICKER,
       setActiveRole: setActiveRoleMock,
-      getEffectiveRole: () => UserRole.WORKER,
+      getEffectiveRole: () => UserRole.PICKER,
     });
 
     const wrapper = createMemoryRouterWrapper(['/dashboard']);
