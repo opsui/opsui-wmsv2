@@ -17,7 +17,6 @@ export { default as MaintenancePage } from './MaintenancePage';
 export * from './ExceptionsPage';
 export * from './CycleCountingPage';
 export { default as CycleCountDetailPage } from './CycleCountDetailPage';
-export { default as CycleCountKPIPage } from './CycleCountKPIPage';
 export * from './LocationCapacityPage';
 export { default as BinLocationsPage } from './BinLocationsPage';
 export * from './QualityControlPage';

@@ -45,7 +45,6 @@ import {
   DeveloperPage,
   NotificationPreferencesPage,
   NotificationsPage,
-  CycleCountKPIPage,
   MobileScanningPage,
   ScheduleManagementPage,
   RootCauseAnalysisPage,
@@ -624,16 +623,6 @@ function AppInner() {
               ]}
             >
               <CycleCountDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cycle-counting/kpi"
-          element={
-            <ProtectedRoute
-              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.STOCK_CONTROLLER]}
-            >
-              <CycleCountKPIPage />
             </ProtectedRoute>
           }
         />

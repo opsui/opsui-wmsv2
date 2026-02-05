@@ -47,7 +47,6 @@ export const LazyPackingPage = createLazyPage(() => import('./PackingPage'));
 export const LazyStockControlPage = createLazyPage(() => import('./StockControlPage'));
 export const LazyCycleCountingPage = createLazyPage(() => import('./CycleCountingPage'));
 export const LazyCycleCountDetailPage = createLazyPage(() => import('./CycleCountDetailPage'));
-export const LazyCycleCountKPIPage = createLazyPage(() => import('./CycleCountKPIPage'));
 export const LazyMobileScanningPage = createLazyPage(() => import('./MobileScanningPage'));
 export const LazyScheduleManagementPage = createLazyPage(() => import('./ScheduleManagementPage'));
 export const LazyLocationCapacityPage = createLazyPage(() => import('./LocationCapacityPage'));

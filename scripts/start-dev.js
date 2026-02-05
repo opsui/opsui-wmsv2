@@ -17,9 +17,17 @@
  * 6. Provide clear URLs and status
  */
 
-const { spawn, exec } = require('child_process');
-const http = require('http');
-const path = require('path');
+import { spawn, exec } from 'child_process';
+import http from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import net from 'net';
+import { Client } from 'pg';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Configuration
 const CONFIG = {
@@ -95,7 +103,6 @@ async function checkPrerequisites() {
 
   // Check if .env exists
   const envPath = path.join(__dirname, '..', 'packages', 'backend', '.env');
-  const fs = require('fs');
   if (!fs.existsSync(envPath)) {
     logWarning('Backend .env file not found');
     log('Creating from .env.example...');
@@ -118,7 +125,6 @@ async function checkPrerequisites() {
 async function checkPostgreSQL() {
   return new Promise(resolve => {
     // Use TCP connection check instead of pg_isready (works with Docker)
-    const net = require('net');
     const socket = new net.Socket();
 
     const timeout = setTimeout(() => {
@@ -226,7 +232,6 @@ async function killProcessOnPort(port) {
 async function verifyDatabase() {
   logStep(3, 'VERIFYING DATABASE CONNECTION');
 
-  const { Client } = require('pg');
   const client = new Client({
     host: CONFIG.databaseHost,
     port: parseInt(CONFIG.databasePort),

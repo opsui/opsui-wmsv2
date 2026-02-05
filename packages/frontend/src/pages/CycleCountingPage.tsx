@@ -4,7 +4,7 @@
  * Interface for scheduling and performing cycle counts
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useCycleCountPlans,
@@ -22,11 +22,18 @@ import {
   ChartBarIcon,
   ClipboardDocumentCheckIcon,
   MagnifyingGlassIcon,
-  CalendarDaysIcon,
-  LightBulbIcon,
-  ChevronLeftIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
-import { Header, Select, Pagination, Button } from '@/components/shared';
+import {
+  Header,
+  Pagination,
+  Select,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CycleCountNavigation,
+} from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 
@@ -34,40 +41,100 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 // COMPONENTS
 // ============================================================================
 
-// Tab Button Component
-function TabButton({
-  active,
-  onClick,
-  children,
-  icon: Icon,
+// Status Filter Dropdown Component (matches navbar styling)
+function StatusFilterDropdown({
+  value,
+  onChange,
 }: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  icon: React.ComponentType<{ className?: string }>;
+  value: CycleCountStatus | '';
+  onChange: (value: CycleCountStatus | '') => void;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const options = [
+    { value: '', label: 'All Statuses' },
+    { value: CycleCountStatus.SCHEDULED, label: 'Scheduled' },
+    { value: CycleCountStatus.IN_PROGRESS, label: 'In Progress' },
+    { value: CycleCountStatus.COMPLETED, label: 'Completed' },
+    { value: CycleCountStatus.RECONCILED, label: 'Reconciled' },
+  ];
+
+  const selectedOption = options.find(opt => opt.value === value);
+
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-        active
-          ? 'bg-blue-600 text-white shadow-lg'
-          : 'text-gray-400 hover:text-white hover:bg-gray-800'
-      }`}
-    >
-      <Icon className="h-5 w-5" />
-      {children}
-    </button>
+    <div className="relative z-50" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+          value
+            ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
+            : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
+        }`}
+      >
+        {selectedOption?.label || 'All Statuses'}
+        <ChevronDownIcon
+          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 w-56 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+          <div className="py-2">
+            {options.map((option, index) => {
+              const isActive = option.value === value;
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    onChange(option.value as CycleCountStatus | '');
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+                    isActive
+                      ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
+                      : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  {isActive && (
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(0,0,0,0.3)] animate-pulse"></span>
+                  )}
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 function StatusBadge({ status }: { status: CycleCountStatus }) {
   const styles = {
-    [CycleCountStatus.SCHEDULED]: 'bg-gray-100 text-gray-800',
-    [CycleCountStatus.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
-    [CycleCountStatus.COMPLETED]: 'bg-green-100 text-green-800',
-    [CycleCountStatus.RECONCILED]: 'bg-purple-100 text-purple-800',
-    [CycleCountStatus.CANCELLED]: 'bg-red-100 text-red-800',
+    [CycleCountStatus.SCHEDULED]: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
+    [CycleCountStatus.IN_PROGRESS]: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+    [CycleCountStatus.COMPLETED]: 'bg-green-500/20 text-green-300 border border-green-500/30',
+    [CycleCountStatus.RECONCILED]: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+    [CycleCountStatus.CANCELLED]: 'bg-red-500/20 text-red-300 border border-red-500/30',
+  };
+
+  const icons = {
+    [CycleCountStatus.SCHEDULED]: '📅',
+    [CycleCountStatus.IN_PROGRESS]: '⏳',
+    [CycleCountStatus.COMPLETED]: '✓',
+    [CycleCountStatus.RECONCILED]: '✓✓',
+    [CycleCountStatus.CANCELLED]: '✗',
   };
 
   const labels = {
@@ -79,7 +146,10 @@ function StatusBadge({ status }: { status: CycleCountStatus }) {
   };
 
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+    <span
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium ${styles[status]} inline-flex items-center gap-1.5`}
+    >
+      <span>{icons[status]}</span>
       {labels[status]}
     </span>
   );
@@ -546,75 +616,28 @@ export function CycleCountingPage() {
           {/* Header */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Button
-                variant="secondary"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
               <div>
-                <h1 className="text-2xl font-bold text-white">Cycle Counting</h1>
+                <h1 className="text-3xl font-bold text-white">Cycle Counting</h1>
                 <p className="text-gray-400 mt-1">
                   Manage scheduled and ad-hoc inventory cycle counts
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {/* Tab Navigation */}
-              <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1">
-                <TabButton
-                  active={activeTab === 'counts'}
-                  onClick={() => setActiveTab('counts')}
-                  icon={ClipboardDocumentListIcon}
-                >
-                  Counts
-                </TabButton>
-                {canViewAnalytics && (
-                  <>
-                    <TabButton
-                      active={activeTab === 'analytics'}
-                      onClick={() => setActiveTab('analytics')}
-                      icon={ChartBarIcon}
-                    >
-                      Analytics
-                    </TabButton>
-                    <TabButton
-                      active={false}
-                      onClick={() => navigate('/cycle-counting/kpi')}
-                      icon={ChartBarIcon}
-                    >
-                      KPI
-                    </TabButton>
-                    <TabButton
-                      active={false}
-                      onClick={() => navigate('/cycle-counting/root-cause')}
-                      icon={LightBulbIcon}
-                    >
-                      Root Cause
-                    </TabButton>
-                  </>
-                )}
-                {(user?.role === UserRole.SUPERVISOR || user?.role === UserRole.ADMIN) && (
-                  <TabButton
-                    active={false}
-                    onClick={() => navigate('/cycle-counting/schedules')}
-                    icon={CalendarDaysIcon}
-                  >
-                    Schedules
-                  </TabButton>
-                )}
-              </div>
-              {activeTab === 'counts' && canCreatePlan && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  New Cycle Count
-                </button>
-              )}
+              <CycleCountNavigation
+                activePage={activeTab === 'analytics' ? 'analytics' : 'counts'}
+                onLocalTabChange={tab => setActiveTab(tab)}
+              />
+              <button
+                onClick={() => setShowCreateModal(true)}
+                disabled={!canCreatePlan || activeTab !== 'counts'}
+                className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-0 disabled:pointer-events-none transition-opacity ${
+                  !canCreatePlan || activeTab !== 'counts' ? 'invisible' : ''
+                }`}
+              >
+                <PlusIcon className="h-5 w-5" />
+                New Cycle Count
+              </button>
             </div>
           </div>
 
@@ -624,31 +647,17 @@ export function CycleCountingPage() {
               {/* Filters */}
               <div className="glass-card rounded-lg p-4">
                 <div className="flex flex-wrap gap-4">
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="relative flex-1 min-w-[200px]">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       placeholder="Search plans..."
-                      className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
-                    <Select
-                      value={filterStatus}
-                      onChange={e => setFilterStatus(e.target.value as CycleCountStatus | '')}
-                      options={[
-                        { value: '', label: 'All Statuses' },
-                        { value: CycleCountStatus.SCHEDULED, label: 'Scheduled' },
-                        { value: CycleCountStatus.IN_PROGRESS, label: 'In Progress' },
-                        { value: CycleCountStatus.COMPLETED, label: 'Completed' },
-                        { value: CycleCountStatus.RECONCILED, label: 'Reconciled' },
-                      ]}
-                      className="w-48"
-                    />
-                  </div>
+                  <StatusFilterDropdown value={filterStatus} onChange={setFilterStatus} />
                 </div>
               </div>
 
@@ -782,162 +791,303 @@ export function CycleCountingPage() {
           {activeTab === 'analytics' && canViewAnalytics && (
             <div className="space-y-6">
               {dashboardLoading ? (
-                <div className="glass-card rounded-xl p-12 text-center text-gray-400">
-                  Loading analytics...
-                </div>
+                <Card variant="glass" className="p-12 text-center">
+                  <p className="text-gray-400">Loading analytics...</p>
+                </Card>
               ) : (
                 <>
                   {/* Overall KPI Cards */}
                   {overallKPIs && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      <div className="glass-card rounded-xl p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-400">Total Counts</p>
-                            <p className="text-3xl font-bold mt-2 text-blue-400">
-                              {overallKPIs.totalCounts}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {overallKPIs.completedCounts} completed
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-blue-500/20">
-                            <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-400" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="glass-card rounded-xl p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-400">Completion Rate</p>
-                            <p className="text-3xl font-bold mt-2 text-green-400">
-                              {overallKPIs.completionRate.toFixed(1)}%
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-green-500/20">
-                            <ChartBarIcon className="h-8 w-8 text-green-400" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="glass-card rounded-xl p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-400">Average Accuracy</p>
-                            <p className="text-3xl font-bold mt-2 text-purple-400">
-                              {overallKPIs.averageAccuracy.toFixed(1)}%
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-purple-500/20">
-                            <ClipboardDocumentCheckIcon className="h-8 w-8 text-purple-400" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="glass-card rounded-xl p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-400">Pending Variances</p>
-                            <p
-                              className={`text-3xl font-bold mt-2 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}
-                            >
-                              {overallKPIs.pendingVariances}
-                            </p>
-                            {overallKPIs.highValueVarianceCount > 0 && (
-                              <p className="text-sm text-orange-400 mt-1">
-                                {overallKPIs.highValueVarianceCount} high severity
+                      <Card variant="glass" hover className="group border-l-4 border-l-blue-500">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                                Total Counts
                               </p>
-                            )}
+                              <p className="text-4xl font-bold mt-3 text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+                                {overallKPIs.totalCounts}
+                              </p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-sm text-blue-400 font-medium">
+                                  {overallKPIs.completedCounts} completed
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20 shadow-lg shadow-blue-500/10 transition-all duration-300 group-hover:shadow-blue-500/20">
+                              <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-400" />
+                            </div>
                           </div>
-                          <div
-                            className={`p-3 rounded-lg ${overallKPIs.pendingVariances > 0 ? 'bg-yellow-500/20' : 'bg-green-500/20'}`}
-                          >
-                            <ChartBarIcon
-                              className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}
-                            />
+                        </CardContent>
+                      </Card>
+                      <Card variant="glass" hover className="group border-l-4 border-l-green-500">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                                Completion Rate
+                              </p>
+                              <p className="text-4xl font-bold mt-3 text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+                                {overallKPIs.completionRate.toFixed(1)}%
+                              </p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-sm text-green-400 font-medium">On track</span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/20 shadow-lg shadow-green-500/10 transition-all duration-300 group-hover:shadow-green-500/20">
+                              <ChartBarIcon className="h-8 w-8 text-green-400" />
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
+                      <Card variant="glass" hover className="group border-l-4 border-l-purple-500">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                                Average Accuracy
+                              </p>
+                              <p className="text-4xl font-bold mt-3 text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+                                {overallKPIs.averageAccuracy.toFixed(1)}%
+                              </p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span
+                                  className={`text-sm font-medium ${
+                                    overallKPIs.averageAccuracy >= 98
+                                      ? 'text-green-400'
+                                      : overallKPIs.averageAccuracy >= 95
+                                        ? 'text-yellow-400'
+                                        : 'text-red-400'
+                                  }`}
+                                >
+                                  {overallKPIs.averageAccuracy >= 98
+                                    ? 'Excellent'
+                                    : overallKPIs.averageAccuracy >= 95
+                                      ? 'Good'
+                                      : 'Needs attention'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20 shadow-lg shadow-purple-500/10 transition-all duration-300 group-hover:shadow-purple-500/20">
+                              <ClipboardDocumentCheckIcon className="h-8 w-8 text-purple-400" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        variant="glass"
+                        hover
+                        className={`group border-l-4 ${overallKPIs.pendingVariances > 0 ? 'border-l-yellow-500' : 'border-l-green-500'}`}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                                Pending Variances
+                              </p>
+                              <p
+                                className={`text-4xl font-bold mt-3 tracking-tight group-hover:scale-105 transition-transform duration-300 ${overallKPIs.pendingVariances > 0 ? 'text-white' : 'text-green-400'}`}
+                              >
+                                {overallKPIs.pendingVariances}
+                              </p>
+                              {overallKPIs.highValueVarianceCount > 0 && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs font-medium border border-orange-500/30">
+                                    {overallKPIs.highValueVarianceCount} high severity
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div
+                              className={`p-3 rounded-xl bg-gradient-to-br ${overallKPIs.pendingVariances > 0 ? 'from-yellow-500/20 to-yellow-600/10 border border-yellow-500/20 shadow-lg shadow-yellow-500/10' : 'from-green-500/20 to-green-600/10 border border-green-500/20 shadow-lg shadow-green-500/10'} transition-all duration-300 group-hover:shadow-yellow-500/20`}
+                            >
+                              <ChartBarIcon
+                                className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   )}
 
                   {/* Accuracy Trend Chart */}
-                  <div className="glass-card rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">
-                      Accuracy Trend (Last 30 Days)
-                    </h3>
-                    <div className="relative h-48">
-                      <div className="flex items-end justify-between h-full gap-1">
-                        {accuracyTrend.map((point: any, index: number) => {
-                          const maxAccuracy = Math.max(
-                            ...accuracyTrend.map((d: any) => d.accuracy),
-                            100
-                          );
-                          const minAccuracy = Math.min(
-                            ...accuracyTrend.map((d: any) => d.accuracy),
-                            0
-                          );
-                          const height =
-                            ((point.accuracy - minAccuracy) / (maxAccuracy - minAccuracy)) * 100;
-                          return (
-                            <div
-                              key={index}
-                              className="flex-1 flex flex-col items-center gap-2 group"
-                            >
-                              <div className="relative w-full flex items-end justify-center">
-                                <div
-                                  className="w-full bg-blue-500 hover:bg-blue-400 transition-all rounded-t"
-                                  style={{ height: `${Math.max(height, 5)}%` }}
-                                  title={`${point.period}: ${point.accuracy.toFixed(1)}%`}
-                                />
+                  <Card variant="glass" className="p-6">
+                    <CardHeader>
+                      <CardTitle className="text-white">Accuracy Trend (Last 30 Days)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="relative h-48">
+                        <div className="flex items-end justify-between h-full gap-1">
+                          {accuracyTrend.map((point: any, index: number) => {
+                            const maxAccuracy = Math.max(
+                              ...accuracyTrend.map((d: any) => d.accuracy),
+                              100
+                            );
+                            const minAccuracy = Math.min(
+                              ...accuracyTrend.map((d: any) => d.accuracy),
+                              0
+                            );
+                            const height =
+                              ((point.accuracy - minAccuracy) / (maxAccuracy - minAccuracy)) * 100;
+                            return (
+                              <div
+                                key={index}
+                                className="flex-1 flex flex-col items-center gap-2 group"
+                              >
+                                <div className="relative w-full flex items-end justify-center">
+                                  <div
+                                    className="w-full bg-blue-500 hover:bg-blue-400 transition-all rounded-t"
+                                    style={{ height: `${Math.max(height, 5)}%` }}
+                                    title={`${point.period}: ${point.accuracy.toFixed(1)}%`}
+                                  />
+                                </div>
+                                {accuracyTrend.length <= 10 && (
+                                  <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
+                                    {new Date(point.period).toLocaleDateString(undefined, {
+                                      month: 'short',
+                                      day: 'numeric',
+                                    })}
+                                  </span>
+                                )}
                               </div>
-                              {accuracyTrend.length <= 10 && (
-                                <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
-                                  {new Date(point.period).toLocaleDateString(undefined, {
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Two Column Layout */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Top Discrepancies */}
-                    <div className="glass-card rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Top Discrepancy SKUs
-                      </h3>
+                    <Card variant="glass" className="p-6">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-white">Top Discrepancy SKUs</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full">
+                            <thead>
+                              <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                                <th className="pb-3">SKU</th>
+                                <th className="pb-3">Name</th>
+                                <th className="pb-3 text-right">Variance Count</th>
+                                <th className="pb-3 text-right">Avg Variance %</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                              {topDiscrepancies.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="py-8 text-center text-gray-500">
+                                    No discrepancies found
+                                  </td>
+                                </tr>
+                              ) : (
+                                topDiscrepancies.map((item: any, index: number) => (
+                                  <tr key={index} className="hover:bg-gray-800/50">
+                                    <td className="py-3 font-medium text-white">{item.sku}</td>
+                                    <td className="py-3 text-gray-300">{item.name}</td>
+                                    <td className="py-3 text-right text-yellow-400">
+                                      {item.varianceCount}
+                                    </td>
+                                    <td className="py-3 text-right text-orange-400">
+                                      {item.averageVariancePercent.toFixed(1)}%
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Zone Performance */}
+                    <Card variant="glass" className="p-6">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-white">Zone Performance</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {zonePerformance.length === 0 ? (
+                            <p className="text-gray-500 text-center py-8">No zone data available</p>
+                          ) : (
+                            zonePerformance.map((zone: any, index: number) => (
+                              <div key={index} className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-white">Zone {zone.zone}</span>
+                                  <span className="text-sm text-gray-400">
+                                    {zone.countsCompleted} counts •{' '}
+                                    {zone.averageAccuracy.toFixed(1)}% accuracy
+                                  </span>
+                                </div>
+                                <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full transition-all ${
+                                      zone.averageAccuracy >= 98
+                                        ? 'bg-green-500'
+                                        : zone.averageAccuracy >= 95
+                                          ? 'bg-yellow-500'
+                                          : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${zone.averageAccuracy}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* User Performance */}
+                  <Card variant="glass" className="p-6">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-white">User Performance (Last 30 Days)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                       <div className="overflow-x-auto">
                         <table className="min-w-full">
                           <thead>
                             <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
-                              <th className="pb-3">SKU</th>
-                              <th className="pb-3">Name</th>
-                              <th className="pb-3 text-right">Variance Count</th>
-                              <th className="pb-3 text-right">Avg Variance %</th>
+                              <th className="pb-3">User</th>
+                              <th className="pb-3 text-right">Counts Completed</th>
+                              <th className="pb-3 text-right">Items Counted</th>
+                              <th className="pb-3 text-right">Accuracy</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-800">
-                            {topDiscrepancies.length === 0 ? (
+                            {userPerformance.length === 0 ? (
                               <tr>
                                 <td colSpan={4} className="py-8 text-center text-gray-500">
-                                  No discrepancies found
+                                  No performance data available
                                 </td>
                               </tr>
                             ) : (
-                              topDiscrepancies.map((item: any, index: number) => (
+                              userPerformance.map((user: any, index: number) => (
                                 <tr key={index} className="hover:bg-gray-800/50">
-                                  <td className="py-3 font-medium text-white">{item.sku}</td>
-                                  <td className="py-3 text-gray-300">{item.name}</td>
-                                  <td className="py-3 text-right text-yellow-400">
-                                    {item.varianceCount}
+                                  <td className="py-3 font-medium text-white">{user.name}</td>
+                                  <td className="py-3 text-right text-blue-400">
+                                    {user.countsCompleted}
                                   </td>
-                                  <td className="py-3 text-right text-orange-400">
-                                    {item.averageVariancePercent.toFixed(1)}%
+                                  <td className="py-3 text-right text-gray-300">
+                                    {user.itemsCounted}
+                                  </td>
+                                  <td className="py-3 text-right">
+                                    <span
+                                      className={`px-2 py-1 rounded text-sm ${
+                                        user.averageAccuracy >= 98
+                                          ? 'bg-green-500/20 text-green-400'
+                                          : user.averageAccuracy >= 95
+                                            ? 'bg-yellow-500/20 text-yellow-400'
+                                            : 'bg-red-500/20 text-red-400'
+                                      }`}
+                                    >
+                                      {user.averageAccuracy.toFixed(1)}%
+                                    </span>
                                   </td>
                                 </tr>
                               ))
@@ -945,186 +1095,111 @@ export function CycleCountingPage() {
                           </tbody>
                         </table>
                       </div>
-                    </div>
-
-                    {/* Zone Performance */}
-                    <div className="glass-card rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">Zone Performance</h3>
-                      <div className="space-y-4">
-                        {zonePerformance.length === 0 ? (
-                          <p className="text-gray-500 text-center py-8">No zone data available</p>
-                        ) : (
-                          zonePerformance.map((zone: any, index: number) => (
-                            <div key={index} className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium text-white">Zone {zone.zone}</span>
-                                <span className="text-sm text-gray-400">
-                                  {zone.countsCompleted} counts • {zone.averageAccuracy.toFixed(1)}%
-                                  accuracy
-                                </span>
-                              </div>
-                              <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full transition-all ${
-                                    zone.averageAccuracy >= 98
-                                      ? 'bg-green-500'
-                                      : zone.averageAccuracy >= 95
-                                        ? 'bg-yellow-500'
-                                        : 'bg-red-500'
-                                  }`}
-                                  style={{ width: `${zone.averageAccuracy}%` }}
-                                />
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* User Performance */}
-                  <div className="glass-card rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">
-                      User Performance (Last 30 Days)
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
-                            <th className="pb-3">User</th>
-                            <th className="pb-3 text-right">Counts Completed</th>
-                            <th className="pb-3 text-right">Items Counted</th>
-                            <th className="pb-3 text-right">Accuracy</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-800">
-                          {userPerformance.length === 0 ? (
-                            <tr>
-                              <td colSpan={4} className="py-8 text-center text-gray-500">
-                                No performance data available
-                              </td>
-                            </tr>
-                          ) : (
-                            userPerformance.map((user: any, index: number) => (
-                              <tr key={index} className="hover:bg-gray-800/50">
-                                <td className="py-3 font-medium text-white">{user.name}</td>
-                                <td className="py-3 text-right text-blue-400">
-                                  {user.countsCompleted}
-                                </td>
-                                <td className="py-3 text-right text-gray-300">
-                                  {user.itemsCounted}
-                                </td>
-                                <td className="py-3 text-right">
-                                  <span
-                                    className={`px-2 py-1 rounded text-sm ${
-                                      user.averageAccuracy >= 98
-                                        ? 'bg-green-500/20 text-green-400'
-                                        : user.averageAccuracy >= 95
-                                          ? 'bg-yellow-500/20 text-yellow-400'
-                                          : 'bg-red-500/20 text-red-400'
-                                    }`}
-                                  >
-                                    {user.averageAccuracy.toFixed(1)}%
-                                  </span>
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Count Type Effectiveness */}
-                  <div className="glass-card rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">
-                      Count Type Effectiveness (Last 90 Days)
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
-                            <th className="pb-3">Count Type</th>
-                            <th className="pb-3 text-right">Completed</th>
-                            <th className="pb-3 text-right">Accuracy</th>
-                            <th className="pb-3 text-right">Avg Duration</th>
-                            <th className="pb-3 text-right">Variance Detection</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-800">
-                          {countTypeEffectiveness.map((type: any, index: number) => {
-                            const formatDuration = (hours: number) => {
-                              if (hours < 1) return `${Math.round(hours * 60)}m`;
-                              return `${hours.toFixed(1)}h`;
-                            };
-                            return (
-                              <tr key={index} className="hover:bg-gray-800/50">
-                                <td className="py-3 font-medium text-white">
-                                  {type.countType
-                                    .replace(/_/g, ' ')
-                                    .toLowerCase()
-                                    .replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                                </td>
-                                <td className="py-3 text-right text-blue-400">
-                                  {type.countsCompleted}
-                                </td>
-                                <td className="py-3 text-right">
-                                  <span
-                                    className={`px-2 py-1 rounded text-sm ${
-                                      type.averageAccuracy >= 98
-                                        ? 'bg-green-500/20 text-green-400'
-                                        : type.averageAccuracy >= 95
-                                          ? 'bg-yellow-500/20 text-yellow-400'
-                                          : 'bg-red-500/20 text-red-400'
-                                    }`}
-                                  >
-                                    {type.averageAccuracy.toFixed(1)}%
-                                  </span>
-                                </td>
-                                <td className="py-3 text-right text-gray-300">
-                                  {formatDuration(type.averageDuration)}
-                                </td>
-                                <td className="py-3 text-right text-purple-400">
-                                  {type.varianceDetectionRate.toFixed(1)}%
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                  <Card variant="glass" className="p-6">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-white">
+                        Count Type Effectiveness (Last 90 Days)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <thead>
+                            <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                              <th className="pb-3">Count Type</th>
+                              <th className="pb-3 text-right">Completed</th>
+                              <th className="pb-3 text-right">Accuracy</th>
+                              <th className="pb-3 text-right">Avg Duration</th>
+                              <th className="pb-3 text-right">Variance Detection</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-800">
+                            {countTypeEffectiveness.map((type: any, index: number) => {
+                              const formatDuration = (hours: number) => {
+                                if (hours < 1) return `${Math.round(hours * 60)}m`;
+                                return `${hours.toFixed(1)}h`;
+                              };
+                              return (
+                                <tr key={index} className="hover:bg-gray-800/50">
+                                  <td className="py-3 font-medium text-white">
+                                    {type.countType
+                                      .replace(/_/g, ' ')
+                                      .toLowerCase()
+                                      .replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                  </td>
+                                  <td className="py-3 text-right text-blue-400">
+                                    {type.countsCompleted}
+                                  </td>
+                                  <td className="py-3 text-right">
+                                    <span
+                                      className={`px-2 py-1 rounded text-sm ${
+                                        type.averageAccuracy >= 98
+                                          ? 'bg-green-500/20 text-green-400'
+                                          : type.averageAccuracy >= 95
+                                            ? 'bg-yellow-500/20 text-yellow-400'
+                                            : 'bg-red-500/20 text-red-400'
+                                      }`}
+                                    >
+                                      {type.averageAccuracy.toFixed(1)}%
+                                    </span>
+                                  </td>
+                                  <td className="py-3 text-right text-gray-300">
+                                    {formatDuration(type.averageDuration)}
+                                  </td>
+                                  <td className="py-3 text-right text-purple-400">
+                                    {type.varianceDetectionRate.toFixed(1)}%
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Additional Stats Footer */}
                   {overallKPIs && (
-                    <div className="glass-card rounded-xl p-6">
+                    <Card variant="glass" className="p-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                        <div>
-                          <p className="text-2xl font-bold text-white">
+                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-blue-400 tracking-tight">
                             {overallKPIs.inProgressCounts}
                           </p>
-                          <p className="text-sm text-gray-400 mt-1">In Progress</p>
+                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                            In Progress
+                          </p>
                         </div>
-                        <div>
-                          <p className="text-2xl font-bold text-white">
+                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-purple-400 tracking-tight">
                             {overallKPIs.scheduledCounts}
                           </p>
-                          <p className="text-sm text-gray-400 mt-1">Scheduled</p>
+                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                            Scheduled
+                          </p>
                         </div>
-                        <div>
-                          <p className="text-2xl font-bold text-white">
+                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-green-400 tracking-tight">
                             {overallKPIs.totalItemsCounted}
                           </p>
-                          <p className="text-sm text-gray-400 mt-1">Items Counted</p>
+                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                            Items Counted
+                          </p>
                         </div>
-                        <div>
-                          <p className="text-2xl font-bold text-white">
+                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-yellow-400 tracking-tight">
                             {overallKPIs.totalVariances}
                           </p>
-                          <p className="text-sm text-gray-400 mt-1">Total Variances</p>
+                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                            Total Variances
+                          </p>
                         </div>
                       </div>
-                    </div>
+                    </Card>
                   )}
                 </>
               )}

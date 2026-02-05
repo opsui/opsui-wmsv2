@@ -304,7 +304,12 @@ export function DashboardPage() {
       // Refresh dashboard metrics and role activity for all order events
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['role-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
+      // Only invalidate order status breakdown on status changes (not on every pick/pack event)
+      // This prevents the chart from flashing constantly
+      if (data.reason) {
+        // Order was cancelled/completed - status definitely changed
+        queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
+      }
       queryClient.invalidateQueries({ queryKey: ['throughput'] });
       queryClient.invalidateQueries({ queryKey: ['top-skus'] });
 

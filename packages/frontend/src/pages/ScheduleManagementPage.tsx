@@ -14,7 +14,14 @@ import {
   useDeleteRecurringSchedule,
 } from '@/services/api';
 import { CycleCountType } from '@opsui/shared';
-import { Header, useToast, ConfirmDialog } from '@/components/shared';
+import {
+  Header,
+  useToast,
+  ConfirmDialog,
+  Card,
+  CardContent,
+  CycleCountNavigation,
+} from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import {
   MagnifyingGlassIcon,
@@ -284,75 +291,88 @@ export function ScheduleManagementPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Page Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                <CalendarDaysIcon className="h-6 w-6 text-blue-400" />
-                Recurring Count Schedules
-              </h1>
-              <p className="text-gray-400 mt-1">
-                Automate your cycle counts by creating recurring schedules
-              </p>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                  <CalendarDaysIcon className="h-6 w-6 text-blue-400" />
+                  Recurring Count Schedules
+                </h1>
+                <p className="text-gray-400 mt-1">
+                  Automate your cycle counts by creating recurring schedules
+                </p>
+              </div>
             </div>
-            <button
-              onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <PlusIcon className="h-5 w-5" />
-              Create Schedule
-            </button>
+            <div className="flex items-center gap-3">
+              <CycleCountNavigation activePage="schedules" />
+              <button
+                onClick={handleCreate}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Create Schedule
+              </button>
+            </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-card rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Schedules</p>
-                  <p className="text-3xl font-bold mt-2 text-blue-400">{schedules.length}</p>
+            <Card variant="glass" hover className="group border-l-4 border-l-blue-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-400 uppercase tracking-wide">Total Schedules</p>
+                    <p className="text-3xl font-bold mt-2 text-blue-400 group-hover:scale-105 transition-transform duration-300">
+                      {schedules.length}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-blue-500/20 border border-blue-500/30 shadow-lg shadow-blue-500/10 transition-all duration-300 group-hover:shadow-blue-500/20">
+                    <CalendarDaysIcon className="h-8 w-8 text-blue-400" />
+                  </div>
                 </div>
-                <div className="p-3 rounded-lg bg-blue-500/20">
-                  <CalendarDaysIcon className="h-8 w-8 text-blue-400" />
+              </CardContent>
+            </Card>
+            <Card variant="glass" hover className="group border-l-4 border-l-green-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-400 uppercase tracking-wide">Active</p>
+                    <p className="text-3xl font-bold mt-2 text-green-400 group-hover:scale-105 transition-transform duration-300">
+                      {schedules.filter(s => s.isActive).length}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30 shadow-lg shadow-green-500/10 transition-all duration-300 group-hover:shadow-green-500/20">
+                    <PlayIcon className="h-8 w-8 text-green-400" />
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="glass-card rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Active</p>
-                  <p className="text-3xl font-bold mt-2 text-green-400">
-                    {schedules.filter(s => s.isActive).length}
-                  </p>
+              </CardContent>
+            </Card>
+            <Card variant="glass" hover className="group border-l-4 border-l-gray-500">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-400 uppercase tracking-wide">Inactive</p>
+                    <p className="text-3xl font-bold mt-2 text-gray-400 group-hover:scale-105 transition-transform duration-300">
+                      {schedules.filter(s => !s.isActive).length}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gray-500/20 border border-gray-500/30 shadow-lg shadow-gray-500/10 transition-all duration-300 group-hover:shadow-gray-500/20">
+                    <PauseIcon className="h-8 w-8 text-gray-400" />
+                  </div>
                 </div>
-                <div className="p-3 rounded-lg bg-green-500/20">
-                  <PlayIcon className="h-8 w-8 text-green-400" />
-                </div>
-              </div>
-            </div>
-            <div className="glass-card rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Inactive</p>
-                  <p className="text-3xl font-bold mt-2 text-gray-400">
-                    {schedules.filter(s => !s.isActive).length}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-gray-500/20">
-                  <PauseIcon className="h-8 w-8 text-gray-400" />
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Filters */}
-          <div className="glass-card rounded-lg p-4">
+          <Card variant="glass" className="p-4">
             <div className="flex flex-wrap gap-4">
               {/* Status Filters */}
               <div className="flex gap-2">
                 <button
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === 'all'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                   }`}
                   onClick={() => setFilterStatus('all')}
@@ -362,7 +382,7 @@ export function ScheduleManagementPage() {
                 <button
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === 'active'
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-green-600 text-white shadow-lg shadow-green-500/20'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                   }`}
                   onClick={() => setFilterStatus('active')}
@@ -372,7 +392,7 @@ export function ScheduleManagementPage() {
                 <button
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === 'inactive'
-                      ? 'bg-gray-600 text-white'
+                      ? 'bg-gray-600 text-white shadow-lg shadow-gray-500/20'
                       : 'text-gray-400 hover:text-white hover:bg-gray-800'
                   }`}
                   onClick={() => setFilterStatus('inactive')}
@@ -393,7 +413,7 @@ export function ScheduleManagementPage() {
                 />
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Schedules Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

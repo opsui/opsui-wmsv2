@@ -12,6 +12,7 @@ import {
   useRootCauseTrending,
 } from '@/services/api';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Header, Card, CycleCountNavigation } from '@/components/shared';
 
 interface FilterState {
   days: number;
@@ -285,180 +286,235 @@ export function RootCauseAnalysisPage() {
   };
 
   return (
-    <div className="root-cause-analysis-page">
-      <div className="page-header">
-        <h1>Root Cause Analysis</h1>
-        <div className="header-actions">
-          <select
-            value={filters.days}
-            onChange={e => handleDaysChange(parseInt(e.target.value))}
-            className="select"
-          >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
-            <option value={365}>Last year</option>
-          </select>
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === 'pareto' ? 'active' : ''}`}
-          onClick={() => setActiveTab('pareto')}
-        >
-          Pareto Analysis
-        </button>
-        <button
-          className={`tab ${activeTab === 'breakdown' ? 'active' : ''}`}
-          onClick={() => setActiveTab('breakdown')}
-        >
-          Category Breakdown
-        </button>
-        <button
-          className={`tab ${activeTab === 'trending' ? 'active' : ''}`}
-          onClick={() => setActiveTab('trending')}
-        >
-          Trending
-        </button>
-        <button
-          className={`tab ${activeTab === 'sku' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sku')}
-        >
-          By SKU
-        </button>
-        <button
-          className={`tab ${activeTab === 'zone' ? 'active' : ''}`}
-          onClick={() => setActiveTab('zone')}
-        >
-          By Zone
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <div className="tab-content">
-        {activeTab === 'pareto' &&
-          (isLoadingPareto ? (
-            <div className="loading">Loading...</div>
-          ) : (
-            <ParetoChart data={paretoData} searchTerm={searchQuery} />
-          ))}
-
-        {activeTab === 'breakdown' &&
-          (isLoadingBreakdown ? (
-            <div className="loading">Loading...</div>
-          ) : (
-            <CategoryBreakdownChart data={categoryBreakdown} searchTerm={searchQuery} />
-          ))}
-
-        {activeTab === 'trending' &&
-          (isLoadingTrending ? (
-            <div className="loading">Loading...</div>
-          ) : (
-            <TrendingChart data={trendingData} searchTerm={searchQuery} />
-          ))}
-
-        {activeTab === 'sku' && (
-          <div className="sku-drilldown">
-            <div className="drilldown-header">
-              <h3>Drill Down by SKU</h3>
-              <div className="search-input">
-                <input
-                  type="text"
-                  value={skuInput}
-                  onChange={e => setSkuInput(e.target.value)}
-                  placeholder="Enter SKU..."
-                  className="input"
-                />
-                <button
-                  onClick={() => setFilters({ ...filters, sku: skuInput })}
-                  className="btn btn-primary"
-                  disabled={!skuInput}
-                >
-                  Analyze
-                </button>
+    <div className="min-h-screen">
+      <Header />
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-white">Root Cause Analysis</h1>
+                <p className="text-gray-400 mt-1">
+                  Analytics page for variance root cause categorization
+                </p>
               </div>
             </div>
-
-            {filters.sku && (
-              <div className="sku-results">
-                {/* Results would be fetched using useRootCauseBySKU hook */}
-                <p>Analysis for SKU: {filters.sku}</p>
-              </div>
-            )}
-
-            {!filters.sku && (
-              <div className="empty-state">
-                <p>Enter an SKU to view root cause analysis for that specific item.</p>
-              </div>
-            )}
+            <CycleCountNavigation activePage="root-cause" />
           </div>
-        )}
 
-        {activeTab === 'zone' && (
-          <div className="zone-drilldown">
-            <div className="drilldown-header">
-              <h3>Drill Down by Zone</h3>
-              <div className="search-input">
-                <input
-                  type="text"
-                  value={zoneInput}
-                  onChange={e => setZoneInput(e.target.value)}
-                  placeholder="Enter zone..."
-                  className="input"
-                />
-                <button
-                  onClick={() => setFilters({ ...filters, zone: zoneInput })}
-                  className="btn btn-primary"
-                  disabled={!zoneInput}
-                >
-                  Analyze
-                </button>
-              </div>
+          {/* Filters */}
+          <div className="flex items-center gap-2">
+            <select
+              value={filters.days}
+              onChange={e => handleDaysChange(parseInt(e.target.value))}
+              className="px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
+              <option value={365}>Last year</option>
+            </select>
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64 transition-all"
+              />
             </div>
-
-            {filters.zone && (
-              <div className="zone-results">
-                {/* Results would be fetched using useRootCauseByZone hook */}
-                <p>Analysis for Zone: {filters.zone}</p>
-              </div>
-            )}
-
-            {!filters.zone && (
-              <div className="empty-state">
-                <p>Enter a zone to view root cause analysis for that specific warehouse area.</p>
-              </div>
-            )}
           </div>
-        )}
-      </div>
 
-      {/* Summary Stats */}
-      <div className="summary-stats">
-        <div className="stat-card">
-          <span className="label">Total Root Causes Recorded</span>
-          <span className="value">{paretoData.reduce((sum, item) => sum + item.count, 0)}</span>
+          {/* Sub-Tab Navigation */}
+          <div className="flex items-center gap-2 bg-gray-800/30 backdrop-blur rounded-lg p-1 border border-gray-700/50">
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'pareto'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+              onClick={() => setActiveTab('pareto')}
+            >
+              Pareto Analysis
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'breakdown'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+              onClick={() => setActiveTab('breakdown')}
+            >
+              Category Breakdown
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'trending'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+              onClick={() => setActiveTab('trending')}
+            >
+              Trending
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'sku'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+              onClick={() => setActiveTab('sku')}
+            >
+              By SKU
+            </button>
+            <button
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === 'zone'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+              }`}
+              onClick={() => setActiveTab('zone')}
+            >
+              By Zone
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <Card variant="glass" className="p-6 min-h-[500px]">
+            {activeTab === 'pareto' &&
+              (isLoadingPareto ? (
+                <div className="loading">Loading...</div>
+              ) : (
+                <ParetoChart data={paretoData} searchTerm={searchQuery} />
+              ))}
+
+            {activeTab === 'breakdown' &&
+              (isLoadingBreakdown ? (
+                <div className="loading">Loading...</div>
+              ) : (
+                <CategoryBreakdownChart data={categoryBreakdown} searchTerm={searchQuery} />
+              ))}
+
+            {activeTab === 'trending' &&
+              (isLoadingTrending ? (
+                <div className="loading">Loading...</div>
+              ) : (
+                <TrendingChart data={trendingData} searchTerm={searchQuery} />
+              ))}
+
+            {activeTab === 'sku' && (
+              <div className="sku-drilldown">
+                <div className="drilldown-header">
+                  <h3>Drill Down by SKU</h3>
+                  <div className="search-input">
+                    <input
+                      type="text"
+                      value={skuInput}
+                      onChange={e => setSkuInput(e.target.value)}
+                      placeholder="Enter SKU..."
+                      className="input"
+                    />
+                    <button
+                      onClick={() => setFilters({ ...filters, sku: skuInput })}
+                      className="btn btn-primary"
+                      disabled={!skuInput}
+                    >
+                      Analyze
+                    </button>
+                  </div>
+                </div>
+
+                {filters.sku && (
+                  <div className="sku-results">
+                    {/* Results would be fetched using useRootCauseBySKU hook */}
+                    <p>Analysis for SKU: {filters.sku}</p>
+                  </div>
+                )}
+
+                {!filters.sku && (
+                  <div className="empty-state">
+                    <p>Enter an SKU to view root cause analysis for that specific item.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'zone' && (
+              <div className="zone-drilldown">
+                <div className="drilldown-header">
+                  <h3>Drill Down by Zone</h3>
+                  <div className="search-input">
+                    <input
+                      type="text"
+                      value={zoneInput}
+                      onChange={e => setZoneInput(e.target.value)}
+                      placeholder="Enter zone..."
+                      className="input"
+                    />
+                    <button
+                      onClick={() => setFilters({ ...filters, zone: zoneInput })}
+                      className="btn btn-primary"
+                      disabled={!zoneInput}
+                    >
+                      Analyze
+                    </button>
+                  </div>
+                </div>
+
+                {filters.zone && (
+                  <div className="zone-results">
+                    {/* Results would be fetched using useRootCauseByZone hook */}
+                    <p>Analysis for Zone: {filters.zone}</p>
+                  </div>
+                )}
+
+                {!filters.zone && (
+                  <div className="empty-state">
+                    <p>
+                      Enter a zone to view root cause analysis for that specific warehouse area.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+
+          {/* Summary Stats */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card
+              variant="glass"
+              className="p-5 border-l-4 border-l-blue-500 hover:bg-white/[0.02] transition-colors"
+            >
+              <p className="text-sm text-gray-400 uppercase tracking-wide">
+                Total Root Causes Recorded
+              </p>
+              <p className="text-3xl font-bold text-white mt-2">
+                {paretoData.reduce((sum, item) => sum + item.count, 0)}
+              </p>
+            </Card>
+            <Card
+              variant="glass"
+              className="p-5 border-l-4 border-l-purple-500 hover:bg-white/[0.02] transition-colors"
+            >
+              <p className="text-sm text-gray-400 uppercase tracking-wide">
+                Top Contributing Cause
+              </p>
+              <p className="text-xl font-bold text-white mt-2">
+                {paretoData[0]?.category || 'N/A'}
+              </p>
+            </Card>
+            <Card
+              variant="glass"
+              className="p-5 border-l-4 border-l-green-500 hover:bg-white/[0.02] transition-colors"
+            >
+              <p className="text-sm text-gray-400 uppercase tracking-wide">Analysis Period</p>
+              <p className="text-3xl font-bold text-white mt-2">Last {filters.days} days</p>
+            </Card>
+          </div>
         </div>
-        <div className="stat-card">
-          <span className="label">Top Contributing Cause</span>
-          <span className="value">{paretoData[0]?.category || 'N/A'}</span>
-        </div>
-        <div className="stat-card">
-          <span className="label">Analysis Period</span>
-          <span className="value">Last {filters.days} days</span>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
