@@ -649,6 +649,7 @@ function loadRoleVisibility(): Record<string, boolean> {
     production: true,
     maintenance: true,
     rma: true,
+    accounting: true,
     admin: true,
   };
 }
@@ -717,6 +718,13 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
       role: 'MAINTENANCE' as UserRole,
     },
     { key: 'rma', label: 'RMA View', path: '/rma', icon: ArrowPathIcon, role: 'RMA' as UserRole },
+    {
+      key: 'accounting',
+      label: 'Accounting View',
+      path: '/accounting',
+      icon: CurrencyDollarIcon,
+      role: 'ACCOUNTING' as UserRole,
+    },
   ];
 
   // Reload visibility settings when dropdown opens
@@ -1217,6 +1225,25 @@ export function Header() {
       });
     }
 
+    // Accounting Operations Group - for Accounting
+    if (effectiveRole === ('ACCOUNTING' as UserRole)) {
+      groups.push({
+        key: 'accounting-ops',
+        label: 'Accounting',
+        icon: CurrencyDollarIcon,
+        items: [
+          {
+            key: 'accounting',
+            label: 'Accounting Dashboard',
+            path: '/accounting',
+            icon: CurrencyDollarIcon,
+          },
+          { key: 'reports', label: 'Reports', path: '/reports', icon: DocumentChartBarIcon },
+          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
+        ],
+      });
+    }
+
     // Admin Tools Group - for admins only
     // Only show when effective role is ADMIN
     if (effectiveRole === UserRole.ADMIN) {
@@ -1233,6 +1260,7 @@ export function Header() {
             icon: CogIcon,
           },
           { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
+          { key: 'accounting', label: 'Accounting', path: '/accounting', icon: CurrencyDollarIcon },
         ],
       });
     }
@@ -1323,6 +1351,13 @@ export function Header() {
       role: 'MAINTENANCE' as UserRole,
     },
     { key: 'rma', label: 'RMA View', path: '/rma', icon: ArrowPathIcon, role: 'RMA' as UserRole },
+    {
+      key: 'accounting',
+      label: 'Accounting View',
+      path: '/accounting',
+      icon: CurrencyDollarIcon,
+      role: 'ACCOUNTING' as UserRole,
+    },
   ];
 
   // Filter role views to only include user's base role + granted additional roles

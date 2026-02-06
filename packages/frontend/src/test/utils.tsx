@@ -6,8 +6,9 @@
 
 import { render, RenderOptions } from '@testing-library/react';
 import { ReactElement } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ToastProvider } from '@/components/shared/Toast';
 
 // Create a custom render function that includes providers
 export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
@@ -22,9 +23,11 @@ export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptio
 
   const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
     return (
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </BrowserRouter>
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>{children}</ToastProvider>
+        </QueryClientProvider>
+      </MemoryRouter>
     );
   };
 

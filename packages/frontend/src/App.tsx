@@ -48,6 +48,7 @@ import {
   MobileScanningPage,
   ScheduleManagementPage,
   RootCauseAnalysisPage,
+  AccountingPage,
   NotFoundPage,
 } from '@/pages';
 import { UserRole } from '@opsui/shared';
@@ -441,9 +442,12 @@ function AppInner() {
     if (userRole === 'PACKER') return '/packing';
     if (userRole === 'STOCK_CONTROLLER') return '/stock-control';
     if (userRole === ('INWARDS' as UserRole)) return '/inwards';
+    if (userRole === ('DISPATCH' as UserRole)) return '/shipped-orders';
     if (userRole === ('PRODUCTION' as UserRole)) return '/production';
     if (userRole === ('MAINTENANCE' as UserRole)) return '/maintenance';
     if (userRole === ('SALES' as UserRole)) return '/sales';
+    if (userRole === ('RMA' as UserRole)) return '/rma';
+    if (userRole === ('ACCOUNTING' as UserRole)) return '/accounting';
     return '/dashboard';
   };
 
@@ -786,6 +790,18 @@ function AppInner() {
           element={
             <ProtectedRoute>
               <AdminSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Accounting & Financials route - Admin/Supervisor/Accounting only */}
+        <Route
+          path="/accounting"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <AccountingPage />
             </ProtectedRoute>
           }
         />

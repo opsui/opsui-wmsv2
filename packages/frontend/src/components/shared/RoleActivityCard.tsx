@@ -73,6 +73,13 @@ const ROLE_CONFIG: Record<
     idField: 'inwardsId',
     nameField: 'inwardsName',
   },
+  [UserRole.DISPATCH]: {
+    label: 'Dispatch',
+    icon: TruckIcon,
+    color: 'info',
+    idField: 'dispatchId',
+    nameField: 'dispatchName',
+  },
   [UserRole.PRODUCTION]: {
     label: 'Production',
     icon: CogIcon,
@@ -114,6 +121,13 @@ const ROLE_CONFIG: Record<
     color: 'gray',
     idField: 'adminId',
     nameField: 'adminName',
+  },
+  [UserRole.ACCOUNTING]: {
+    label: 'Accounting',
+    icon: DocumentTextIcon,
+    color: 'success',
+    idField: 'accountingId',
+    nameField: 'accountingName',
   },
 };
 

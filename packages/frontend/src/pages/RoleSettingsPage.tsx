@@ -31,6 +31,7 @@ import {
   WrenchScrewdriverIcon,
   ArrowPathIcon,
   SwatchIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
 import { useCurrentUser } from '@/services/api';
@@ -117,6 +118,20 @@ const DEFAULT_ROLES: RoleConfig[] = [
     label: 'RMA View',
     role: 'RMA' as UserRole,
     icon: ArrowPathIcon,
+    visible: true,
+  },
+  {
+    key: 'dispatch',
+    label: 'Dispatch View',
+    role: 'DISPATCH' as UserRole,
+    icon: TruckIcon,
+    visible: true,
+  },
+  {
+    key: 'accounting',
+    label: 'Accounting View',
+    role: 'ACCOUNTING' as UserRole,
+    icon: CurrencyDollarIcon,
     visible: true,
   },
 ];

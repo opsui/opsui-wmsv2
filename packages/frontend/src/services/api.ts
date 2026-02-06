@@ -760,6 +760,31 @@ export const skuApi = {
   },
 };
 
+// SKU hooks
+export const useSKUSearch = (query: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['skus', 'search', query],
+    queryFn: () => skuApi.search(query),
+    enabled: enabled && query.length >= 2,
+  });
+};
+
+export const useSKUCategories = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['skus', 'categories'],
+    queryFn: skuApi.getCategories,
+    enabled,
+  });
+};
+
+export const useSKUWithInventory = (sku: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['skus', sku],
+    queryFn: () => skuApi.getWithInventory(sku),
+    enabled: enabled && !!sku,
+  });
+};
+
 // ============================================================================
 // REACT QUERY HOOKS
 // ============================================================================
@@ -4003,6 +4028,366 @@ export const useUpdatePutawayTask = () => {
 };
 
 // ============================================================================
+// LICENSE PLATING API
+// ============================================================================
+
+export const licensePlateApi = {
+  /**
+   * Get all license plates
+   */
+  getAll: async (params?: {
+    receiptId?: string;
+    status?: string;
+    stagingLocation?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get('/inbound/license-plates', { params });
+    return response.data;
+  },
+
+  /**
+   * Get license plate by ID
+   */
+  get: async (licensePlateId: string) => {
+    const response = await apiClient.get(`/inbound/license-plates/${licensePlateId}`);
+    return response.data;
+  },
+
+  /**
+   * Get license plate by barcode
+   */
+  getByBarcode: async (barcode: string) => {
+    const response = await apiClient.get(`/inbound/license-plates/barcode/${barcode}`);
+    return response.data;
+  },
+
+  /**
+   * Create new license plate
+   */
+  create: async (dto: {
+    receiptId: string;
+    receiptLineId: string;
+    barcode: string;
+    sku: string;
+    quantity: number;
+    lotNumber?: string;
+    expirationDate?: Date;
+    serialNumbers?: string[];
+    stagingLocation?: string;
+    sealedBy: string;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/inbound/license-plates', dto);
+    return response.data;
+  },
+
+  /**
+   * Seal license plate (mark as ready for QC/Staging)
+   */
+  seal: async (licensePlateId: string) => {
+    const response = await apiClient.post(`/inbound/license-plates/${licensePlateId}/seal`);
+    return response.data;
+  },
+
+  /**
+   * Update license plate status
+   */
+  updateStatus: async (licensePlateId: string, status: string) => {
+    const response = await apiClient.patch(`/inbound/license-plates/${licensePlateId}/status`, {
+      status,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get suggested staging location for a license plate
+   */
+  getSuggestedStaging: async (sku: string) => {
+    const response = await apiClient.get(`/inbound/license-plates/suggest-staging/${sku}`);
+    return response.data;
+  },
+};
+
+// License plate hooks
+export const useLicensePlates = (params?: {
+  receiptId?: string;
+  status?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['inwards', 'license-plates', params],
+    queryFn: () => licensePlateApi.getAll(params),
+    enabled: params?.enabled ?? true,
+    refetchInterval: 10000,
+  });
+};
+
+export const useLicensePlate = (licensePlateId: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['inwards', 'license-plates', licensePlateId],
+    queryFn: () => licensePlateApi.get(licensePlateId),
+    enabled,
+  });
+};
+
+export const useCreateLicensePlate = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: licensePlateApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'license-plates'] });
+    },
+  });
+};
+
+export const useSealLicensePlate = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: licensePlateApi.seal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'license-plates'] });
+    },
+  });
+};
+
+export const useUpdateLicensePlateStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ licensePlateId, status }: { licensePlateId: string; status: string }) =>
+      licensePlateApi.updateStatus(licensePlateId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'license-plates'] });
+    },
+  });
+};
+
+// ============================================================================
+// STAGING LOCATIONS API
+// ============================================================================
+
+export const stagingLocationApi = {
+  /**
+   * Get all staging locations
+   */
+  getAll: async (params?: { zone?: string; status?: string; limit?: number; offset?: number }) => {
+    const response = await apiClient.get('/inbound/staging-locations', { params });
+    return response.data;
+  },
+
+  /**
+   * Get staging location by ID
+   */
+  get: async (stagingLocationId: string) => {
+    const response = await apiClient.get(`/inbound/staging-locations/${stagingLocationId}`);
+    return response.data;
+  },
+
+  /**
+   * Assign license plate to staging location
+   */
+  assignLicensePlate: async (dto: {
+    licensePlateId: string;
+    stagingLocationId: string;
+    assignedBy: string;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/inbound/staging-locations/assign', dto);
+    return response.data;
+  },
+
+  /**
+   * Release license plate from staging location
+   */
+  releaseLicensePlate: async (licensePlateId: string) => {
+    const response = await apiClient.post(`/inbound/staging-locations/release/${licensePlateId}`);
+    return response.data;
+  },
+
+  /**
+   * Get staging location contents
+   */
+  getContents: async (stagingLocationId: string) => {
+    const response = await apiClient.get(
+      `/inbound/staging-locations/${stagingLocationId}/contents`
+    );
+    return response.data;
+  },
+};
+
+// Staging location hooks
+export const useStagingLocations = (params?: {
+  zone?: string;
+  status?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['inwards', 'staging-locations', params],
+    queryFn: () => stagingLocationApi.getAll(params),
+    enabled: params?.enabled ?? true,
+    refetchInterval: 10000,
+  });
+};
+
+export const useStagingLocation = (stagingLocationId: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['inwards', 'staging-locations', stagingLocationId],
+    queryFn: () => stagingLocationApi.get(stagingLocationId),
+    enabled,
+  });
+};
+
+export const useAssignToStaging = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: stagingLocationApi.assignLicensePlate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'staging-locations'] });
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'license-plates'] });
+    },
+  });
+};
+
+export const useReleaseFromStaging = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: stagingLocationApi.releaseLicensePlate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'staging-locations'] });
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'license-plates'] });
+    },
+  });
+};
+
+// ============================================================================
+// RECEIVING EXCEPTIONS API
+// ============================================================================
+
+export const receivingExceptionApi = {
+  /**
+   * Get all receiving exceptions
+   */
+  getAll: async (params?: {
+    receiptId?: string;
+    status?: string;
+    exceptionType?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get('/inbound/exceptions', { params });
+    return response.data;
+  },
+
+  /**
+   * Get receiving exception by ID
+   */
+  get: async (exceptionId: string) => {
+    const response = await apiClient.get(`/inbound/exceptions/${exceptionId}`);
+    return response.data;
+  },
+
+  /**
+   * Create receiving exception
+   */
+  create: async (dto: {
+    receiptId: string;
+    receiptLineId: string;
+    asnId?: string;
+    exceptionType: string;
+    sku: string;
+    expectedQuantity: number;
+    actualQuantity: number;
+    lotNumber?: string;
+    expirationDate?: Date;
+    description: string;
+    reportedBy: string;
+    images?: string[];
+  }) => {
+    const response = await apiClient.post('/inbound/exceptions', dto);
+    return response.data;
+  },
+
+  /**
+   * Update receiving exception status
+   */
+  updateStatus: async (exceptionId: string, status: string) => {
+    const response = await apiClient.patch(`/inbound/exceptions/${exceptionId}/status`, { status });
+    return response.data;
+  },
+
+  /**
+   * Resolve receiving exception
+   */
+  resolve: async (
+    exceptionId: string,
+    dto: {
+      resolution: string;
+      resolutionNotes?: string;
+      resolvedBy: string;
+      creditAmount?: number;
+    }
+  ) => {
+    const response = await apiClient.post(`/inbound/exceptions/${exceptionId}/resolve`, dto);
+    return response.data;
+  },
+};
+
+// Receiving exception hooks
+export const useReceivingExceptions = (params?: {
+  receiptId?: string;
+  status?: string;
+  exceptionType?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['inwards', 'exceptions', params],
+    queryFn: () => receivingExceptionApi.getAll(params),
+    enabled: params?.enabled ?? true,
+    refetchInterval: 10000,
+  });
+};
+
+export const useReceivingException = (exceptionId: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['inwards', 'exceptions', exceptionId],
+    queryFn: () => receivingExceptionApi.get(exceptionId),
+    enabled,
+  });
+};
+
+export const useCreateReceivingException = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: receivingExceptionApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'exceptions'] });
+    },
+  });
+};
+
+export const useUpdateReceivingExceptionStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ exceptionId, status }: { exceptionId: string; status: string }) =>
+      receivingExceptionApi.updateStatus(exceptionId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'exceptions'] });
+    },
+  });
+};
+
+export const useResolveReceivingException = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ exceptionId, dto }: { exceptionId: string; dto: any }) =>
+      receivingExceptionApi.resolve(exceptionId, dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inwards', 'exceptions'] });
+    },
+  });
+};
+
+// ============================================================================
 // BIN LOCATIONS API
 // ============================================================================
 
@@ -6958,5 +7343,261 @@ export const useModelStatus = () => {
       const response = await apiClient.get('/route-optimization/model-status');
       return response.data;
     },
+  });
+};
+
+// ============================================================================
+// ACCOUNTING API
+// ============================================================================
+
+export const accountingApi = {
+  /**
+   * Get financial metrics
+   */
+  getFinancialMetrics: async (params?: {
+    period?: string;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    const response = await apiClient.get('/accounting/metrics', { params });
+    return response.data;
+  },
+
+  /**
+   * Get profit & loss statement
+   */
+  getProfitLoss: async (params?: { period?: string; startDate?: string; endDate?: string }) => {
+    const response = await apiClient.get('/accounting/profit-loss', { params });
+    return response.data;
+  },
+
+  /**
+   * Get inventory valuation
+   */
+  getInventoryValuation: async (params?: { category?: string; zone?: string; sku?: string }) => {
+    const response = await apiClient.get('/accounting/inventory/valuation', { params });
+    return response.data;
+  },
+
+  /**
+   * Get labor costs
+   */
+  getLaborCosts: async (params?: {
+    period?: string;
+    startDate?: string;
+    endDate?: string;
+    userId?: string;
+    role?: string;
+  }) => {
+    const response = await apiClient.get('/accounting/labor-costs', { params });
+    return response.data;
+  },
+
+  /**
+   * Get vendor financial performance
+   */
+  getVendorFinancial: async (
+    vendorId: string,
+    params?: {
+      period?: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  ) => {
+    const response = await apiClient.get(`/accounting/vendors/${vendorId}/financial`, { params });
+    return response.data;
+  },
+
+  /**
+   * Get customer financial summary
+   */
+  getCustomerFinancial: async (
+    customerId: string,
+    params?: {
+      period?: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  ) => {
+    const response = await apiClient.get(`/accounting/customers/${customerId}/financial`, {
+      params,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get transactions
+   */
+  getTransactions: async (params?: {
+    type?: string;
+    referenceType?: string;
+    customerId?: string;
+    vendorId?: string;
+    status?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get('/accounting/transactions', { params });
+    return response.data;
+  },
+
+  /**
+   * Create transaction
+   */
+  createTransaction: async (data: {
+    transactionType: string;
+    amount: number;
+    currency?: string;
+    referenceType: string;
+    referenceId: string;
+    description: string;
+    customerId?: string;
+    vendorId?: string;
+    account: string;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/accounting/transactions', data);
+    return response.data;
+  },
+};
+
+// Accounting query hooks
+export const useFinancialMetrics = (params?: {
+  period?: string;
+  startDate?: string;
+  endDate?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'metrics', params],
+    queryFn: () => accountingApi.getFinancialMetrics(params),
+    enabled: params?.enabled ?? true,
+    retry: 1,
+    staleTime: 60000,
+  });
+};
+
+export const useProfitLossStatement = (params?: {
+  period?: string;
+  startDate?: string;
+  endDate?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'profit-loss', params],
+    queryFn: () => accountingApi.getProfitLoss(params),
+    enabled: params?.enabled ?? true,
+    retry: 1,
+    staleTime: 60000,
+  });
+};
+
+export const useInventoryValuation = (params?: {
+  category?: string;
+  zone?: string;
+  sku?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'inventory-valuation', params],
+    queryFn: () => accountingApi.getInventoryValuation(params),
+    enabled: params?.enabled ?? true,
+    retry: 1,
+    staleTime: 60000,
+  });
+};
+
+export const useLaborCosts = (params?: {
+  period?: string;
+  startDate?: string;
+  endDate?: string;
+  userId?: string;
+  role?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'labor-costs', params],
+    queryFn: () => accountingApi.getLaborCosts(params),
+    enabled: params?.enabled ?? true,
+  });
+};
+
+export const useVendorFinancial = (
+  vendorId: string,
+  params?: {
+    period?: string;
+    startDate?: string;
+    endDate?: string;
+    enabled?: boolean;
+  }
+) => {
+  return useQuery({
+    queryKey: ['accounting', 'vendor-financial', vendorId, params],
+    queryFn: () => accountingApi.getVendorFinancial(vendorId, params),
+    enabled: (params?.enabled ?? true) && !!vendorId,
+  });
+};
+
+export const useCustomerFinancial = (
+  customerId: string,
+  params?: {
+    period?: string;
+    startDate?: string;
+    endDate?: string;
+    enabled?: boolean;
+  }
+) => {
+  return useQuery({
+    queryKey: ['accounting', 'customer-financial', customerId, params],
+    queryFn: () => accountingApi.getCustomerFinancial(customerId, params),
+    enabled: (params?.enabled ?? true) && !!customerId,
+  });
+};
+
+export const useTransactions = (params?: {
+  type?: string;
+  referenceType?: string;
+  customerId?: string;
+  vendorId?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'transactions', params],
+    queryFn: () => accountingApi.getTransactions(params),
+    enabled: params?.enabled ?? true,
+  });
+};
+
+export const useCreateTransaction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: accountingApi.createTransaction,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'transactions'] });
+    },
+  });
+};
+
+// ============================================================================
+// ROLE PERMISSIONS API
+// ============================================================================
+
+export const rolePermissionsApi = {
+  /**
+   * Get role permissions matrix
+   */
+  getPermissionsMatrix: async () => {
+    const response = await apiClient.get('/accounting/roles/permissions');
+    return response.data;
+  },
+};
+
+export const useRolePermissionsMatrix = () => {
+  return useQuery({
+    queryKey: ['roles', 'permissions-matrix'],
+    queryFn: rolePermissionsApi.getPermissionsMatrix,
   });
 };

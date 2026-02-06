@@ -2,8 +2,14 @@
  * Inwards Goods page
  *
  * Comprehensive inbound receiving interface for inwards goods personnel
- * Features: ASN management, receiving workflow, quality checks, putaway tasks
- * - Unique design: Workflow-focused with progress stages
+ * Features: ASN management, receiving workflow, QC inspection, staging, license plating, putaway tasks
+ * - Industry-standard tabbed navigation
+ * - Quality Control (QC) inspection stage
+ * - Staging area management
+ * - License plating for item tracking
+ * - Receiving exception handling (short/over/damaged)
+ * - Serial/Lot number capture
+ * - Smart putaway with location suggestions
  */
 
 import { useState, useEffect } from 'react';
@@ -17,6 +23,10 @@ import {
   useCreateReceipt,
   useUpdateASNStatus,
   useUpdatePutawayTask,
+  useQualityInspections,
+  useLicensePlates,
+  useStagingLocations,
+  useReceivingExceptions,
 } from '@/services/api';
 import {
   Card,
@@ -29,109 +39,109 @@ import {
   useToast,
   MetricCardSkeleton,
   Skeleton,
+  ConfirmDialog,
 } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import {
   InboxIcon,
   TruckIcon,
-  CheckCircleIcon,
   PlusIcon,
   XMarkIcon,
   CubeIcon,
-  ArrowRightIcon,
   MagnifyingGlassIcon,
+  ClipboardDocumentCheckIcon,
+  TagIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import {
   ASNStatus,
   ReceiptStatus,
   PutawayStatus,
+  QualityStatus,
+  InspectionStatus,
+  LicensePlateStatus,
+  StagingLocationStatus,
+  ReceivingExceptionStatus,
   type AdvanceShippingNotice,
   type Receipt,
   type PutawayTask,
+  type QualityInspection,
+  type LicensePlate,
+  type StagingLocation,
+  type ReceivingException,
 } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type WorkflowStage = 'dashboard' | 'asn' | 'receiving' | 'putaway';
+type TabStage = 'dashboard' | 'asn' | 'receiving' | 'qc' | 'staging' | 'exceptions' | 'putaway';
 
-interface StageConfig {
-  id: WorkflowStage;
+interface TabConfig {
+  id: TabStage;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   description: string;
+  badge?: string;
 }
 
 // ============================================================================
-// SUBCOMPONENTS
+// SUBCOMPONENTS - Segmented Tab Navigation
 // ============================================================================
 
-function WorkflowStage({
-  stage,
+function SegmentedTab({
+  tab,
   isActive,
-  isCompleted,
   onClick,
+  badge,
 }: {
-  stage: StageConfig;
+  tab: TabConfig;
   isActive: boolean;
-  isCompleted: boolean;
   onClick: () => void;
+  badge?: string;
 }) {
-  const StageIcon = stage.icon;
+  const TabIcon = tab.icon;
 
   return (
     <button
       onClick={onClick}
-      className={`relative flex-1 flex flex-col items-center p-4 rounded-xl transition-all duration-300 ${
+      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
         isActive
-          ? 'bg-primary-500/20 border-2 border-primary-500'
-          : isCompleted
-            ? 'bg-success-500/10 border border-success-500/30 cursor-pointer hover:border-success-500/50'
-            : 'bg-gray-800/50 border border-gray-700 cursor-pointer hover:border-gray-600'
+          ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+          : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
       }`}
     >
-      <div
-        className={`p-3 rounded-full mb-2 ${
-          isActive
-            ? 'bg-primary-500 text-white'
-            : isCompleted
-              ? 'bg-success-500/20 text-success-400'
-              : 'bg-gray-700 text-gray-400'
-        }`}
-      >
-        <StageIcon className="h-6 w-6" />
-      </div>
-      <span
-        className={`text-sm font-semibold ${
-          isActive ? 'text-white' : isCompleted ? 'text-success-400' : 'text-gray-400'
-        }`}
-      >
-        {stage.label}
-      </span>
-
-      {/* Connection line */}
-      <div
-        className={`absolute -right-3 top-1/2 -translate-y-1/2 z-10 ${
-          isCompleted ? 'text-success-500' : 'text-gray-700'
-        }`}
-      >
-        <ArrowRightIcon className="h-6 w-6" />
-      </div>
+      <TabIcon className="h-4 w-4" />
+      <span className="text-sm">{tab.label}</span>
+      {badge && (
+        <span
+          className={`ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+            isActive ? 'bg-white/20 text-white' : 'bg-primary-500/20 text-primary-400'
+          }`}
+        >
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
+
+// ============================================================================
+// SUBCOMPONENTS - Metric Cards
+// ============================================================================
 
 function MetricCard({
   title,
   value,
   icon: Icon,
   color = 'primary',
+  trend,
 }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   color?: 'primary' | 'success' | 'warning' | 'error';
+  trend?: string;
 }) {
   const colorStyles = {
     primary: 'from-primary-500/20 to-primary-500/5 border-primary-500/30',
@@ -141,74 +151,156 @@ function MetricCard({
   };
 
   return (
-    <div className={`bg-gradient-to-br ${colorStyles[color]} border rounded-xl p-6 card-hover`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-400 uppercase tracking-wider">{title}</p>
+    <div className={`bg-gradient-to-br ${colorStyles[color]} border rounded-xl p-5 card-hover`}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">{title}</p>
           <p className="mt-2 text-3xl font-bold text-white">{value}</p>
+          {trend && <p className="mt-1 text-xs text-gray-400">{trend}</p>}
         </div>
-        <Icon className={`h-8 w-8 text-${color === 'primary' ? 'primary' : color}-400`} />
+        <div
+          className={`p-3 rounded-lg ${
+            color === 'primary'
+              ? 'bg-primary-500/20'
+              : color === 'success'
+                ? 'bg-success-500/20'
+                : color === 'warning'
+                  ? 'bg-warning-500/20'
+                  : 'bg-error-500/20'
+          }`}
+        >
+          <Icon className={`h-5 w-5 text-${color === 'primary' ? 'primary' : color}-400`} />
+        </div>
       </div>
     </div>
   );
 }
+
+// ============================================================================
+// SUBCOMPONENTS - Status Badges
+// ============================================================================
 
 function StatusBadge({
   status,
   type = 'asn',
 }: {
   status: string;
-  type?: 'asn' | 'receipt' | 'putaway';
+  type?: 'asn' | 'receipt' | 'putaway' | 'qc' | 'license' | 'staging' | 'exception';
 }) {
   const getStatusStyles = () => {
+    const baseStyles = 'px-3 py-1 rounded-full text-xs font-medium border';
+
     if (type === 'asn') {
       switch (status) {
         case ASNStatus.PENDING:
-          return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+          return `${baseStyles} bg-gray-500/20 text-gray-300 border-gray-500/30`;
         case ASNStatus.IN_TRANSIT:
-          return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+          return `${baseStyles} bg-blue-500/20 text-blue-300 border-blue-500/30`;
         case ASNStatus.RECEIVED:
-          return 'bg-success-500/20 text-success-300 border border-success-500/30';
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
         case ASNStatus.PARTIALLY_RECEIVED:
-          return 'bg-warning-500/20 text-warning-300 border border-warning-500/30';
+          return `${baseStyles} bg-warning-500/20 text-warning-300 border-warning-500/30`;
         case ASNStatus.CANCELLED:
-          return 'bg-error-500/20 text-error-300 border border-error-500/30';
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
         default:
-          return 'bg-gray-500/20 text-gray-300';
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
       }
     } else if (type === 'receipt') {
       switch (status) {
         case ReceiptStatus.RECEIVING:
-          return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+          return `${baseStyles} bg-blue-500/20 text-blue-300 border-blue-500/30`;
         case ReceiptStatus.COMPLETED:
-          return 'bg-success-500/20 text-success-300 border border-success-500/30';
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
         case ReceiptStatus.CANCELLED:
-          return 'bg-error-500/20 text-error-300 border border-error-500/30';
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
         default:
-          return 'bg-gray-500/20 text-gray-300';
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
       }
-    } else {
+    } else if (type === 'putaway') {
       switch (status) {
         case PutawayStatus.PENDING:
-          return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+          return `${baseStyles} bg-gray-500/20 text-gray-300 border-gray-500/30`;
         case PutawayStatus.IN_PROGRESS:
-          return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+          return `${baseStyles} bg-blue-500/20 text-blue-300 border-blue-500/30`;
         case PutawayStatus.COMPLETED:
-          return 'bg-success-500/20 text-success-300 border border-success-500/30';
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
         case PutawayStatus.CANCELLED:
-          return 'bg-error-500/20 text-error-300 border border-error-500/30';
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
         default:
-          return 'bg-gray-500/20 text-gray-300';
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
+      }
+    } else if (type === 'qc') {
+      switch (status) {
+        case QualityStatus.PENDING:
+          return `${baseStyles} bg-gray-500/20 text-gray-300 border-gray-500/30`;
+        case QualityStatus.PASSED:
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
+        case QualityStatus.FAILED:
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
+        case QualityStatus.PARTIAL:
+          return `${baseStyles} bg-warning-500/20 text-warning-300 border-warning-500/30`;
+        default:
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
+      }
+    } else if (type === 'license') {
+      switch (status) {
+        case LicensePlateStatus.OPEN:
+          return `${baseStyles} bg-gray-500/20 text-gray-300 border-gray-500/30`;
+        case LicensePlateStatus.SEALED:
+          return `${baseStyles} bg-blue-500/20 text-blue-300 border-blue-500/30`;
+        case LicensePlateStatus.IN_QC:
+          return `${baseStyles} bg-purple-500/20 text-purple-300 border-purple-500/30`;
+        case LicensePlateStatus.QC_PASSED:
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
+        case LicensePlateStatus.QC_FAILED:
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
+        case LicensePlateStatus.IN_STAGING:
+          return `${baseStyles} bg-orange-500/20 text-orange-300 border-orange-500/30`;
+        case LicensePlateStatus.PUTAWAY_COMPLETE:
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
+        case LicensePlateStatus.CLOSED:
+          return `${baseStyles} bg-gray-500/20 text-gray-400 border-gray-500/30`;
+        default:
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
+      }
+    } else if (type === 'staging') {
+      switch (status) {
+        case StagingLocationStatus.AVAILABLE:
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
+        case StagingLocationStatus.OCCUPIED:
+          return `${baseStyles} bg-warning-500/20 text-warning-300 border-warning-500/30`;
+        case StagingLocationStatus.RESERVED:
+          return `${baseStyles} bg-blue-500/20 text-blue-300 border-blue-500/30`;
+        case StagingLocationStatus.BLOCKED:
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
+        default:
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
+      }
+    } else if (type === 'exception') {
+      switch (status) {
+        case ReceivingExceptionStatus.OPEN:
+          return `${baseStyles} bg-error-500/20 text-error-300 border-error-500/30`;
+        case ReceivingExceptionStatus.INVESTIGATING:
+          return `${baseStyles} bg-blue-500/20 text-blue-300 border-blue-500/30`;
+        case ReceivingExceptionStatus.AWAITING_DECISION:
+          return `${baseStyles} bg-warning-500/20 text-warning-300 border-warning-500/30`;
+        case ReceivingExceptionStatus.RESOLVED:
+          return `${baseStyles} bg-success-500/20 text-success-300 border-success-500/30`;
+        case ReceivingExceptionStatus.CANCELLED:
+          return `${baseStyles} bg-gray-500/20 text-gray-400 border-gray-500/30`;
+        default:
+          return `${baseStyles} bg-gray-500/20 text-gray-300`;
       }
     }
+    return `${baseStyles} bg-gray-500/20 text-gray-300`;
   };
 
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyles()}`}>
-      {status.replace(/_/g, ' ')}
-    </span>
-  );
+  return <span className={getStatusStyles()}>{status.replace(/_/g, ' ')}</span>;
 }
+
+// ============================================================================
+// SUBCOMPONENTS - Cards for each entity type
+// ============================================================================
 
 function ASNCard({
   asn,
@@ -233,7 +325,7 @@ function ASNCard({
             </div>
             <p className="text-sm text-gray-400">Supplier: {asn.supplierId}</p>
           </div>
-          <TruckIcon className="h-8 w-8 text-blue-400" />
+          <TruckIcon className="h-8 w-8 text-blue-400 flex-shrink-0" />
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-4 text-sm bg-white/5 p-3 rounded-lg">
@@ -284,26 +376,40 @@ function ASNCard({
 function ReceiptCard({
   receipt,
   onViewDetails,
+  onCreateLicensePlate,
 }: {
   receipt: Receipt;
   onViewDetails: (receiptId: string) => void;
+  onCreateLicensePlate?: (receiptId: string) => void;
 }) {
   const itemCount = receipt.lineItems?.length || 0;
+  const hasExceptions =
+    receipt.lineItems?.some(
+      item => item.quantityDamaged > 0 || item.quantityReceived !== item.quantityOrdered
+    ) || false;
 
   return (
-    <Card variant="glass" className="card-hover border-l-4 border-l-orange-500">
+    <Card
+      variant="glass"
+      className={`card-hover border-l-4 ${hasExceptions ? 'border-l-warning-500' : 'border-l-orange-500'}`}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h3 className="text-lg font-semibold text-white">{receipt.receiptId}</h3>
               <StatusBadge status={receipt.status} type="receipt" />
+              {hasExceptions && (
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-warning-500/20 text-warning-300 border border-warning-500/30">
+                  Exceptions
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-400">
               {new Date(receipt.receiptDate).toLocaleString()}
             </p>
           </div>
-          <InboxIcon className="h-8 w-8 text-orange-400" />
+          <InboxIcon className="h-8 w-8 text-orange-400 flex-shrink-0" />
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm bg-white/5 p-3 rounded-lg">
@@ -317,14 +423,285 @@ function ReceiptCard({
           </div>
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => onViewDetails(receipt.receiptId)}
-          className="w-full"
-        >
-          View Details
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onViewDetails(receipt.receiptId)}
+            className="flex-1"
+          >
+            View Details
+          </Button>
+          {onCreateLicensePlate && receipt.status === ReceiptStatus.RECEIVING && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onCreateLicensePlate(receipt.receiptId)}
+              className="flex-1"
+            >
+              <TagIcon className="h-4 w-4 mr-1" />
+              Create License Plate
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LicensePlateCard({
+  plate,
+  onSeal,
+  onStartQC,
+  onAssignToStaging,
+}: {
+  plate: LicensePlate;
+  onSeal: (plateId: string) => void;
+  onStartQC: (plateId: string) => void;
+  onAssignToStaging: (plateId: string) => void;
+}) {
+  const progress =
+    plate.quantity > 0 ? Math.round((plate.quantityPutaway / plate.quantity) * 100) : 0;
+
+  return (
+    <Card variant="glass" className="card-hover border-l-4 border-l-purple-500">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-lg font-semibold text-white truncate">{plate.barcode}</h3>
+              <StatusBadge status={plate.status} type="license" />
+            </div>
+            <p className="text-sm text-gray-400 truncate">SKU: {plate.sku}</p>
+            {plate.lotNumber && <p className="text-xs text-gray-500">Lot: {plate.lotNumber}</p>}
+          </div>
+          <TagIcon className="h-8 w-8 text-purple-400 flex-shrink-0" />
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-400">Putaway Progress</span>
+            <span className="text-white font-medium">
+              {plate.quantityPutaway} / {plate.quantity}
+            </span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div
+              className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          {plate.status === LicensePlateStatus.OPEN && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onSeal(plate.licensePlateId)}
+              className="flex-1"
+            >
+              Seal Plate
+            </Button>
+          )}
+          {plate.status === LicensePlateStatus.SEALED && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onStartQC(plate.licensePlateId)}
+              className="flex-1"
+            >
+              Start QC
+            </Button>
+          )}
+          {plate.status === LicensePlateStatus.QC_PASSED && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onAssignToStaging(plate.licensePlateId)}
+              className="flex-1"
+            >
+              Assign to Staging
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QCInspectionCard({
+  inspection,
+  onStartInspection,
+  onCompleteInspection,
+}: {
+  inspection: QualityInspection;
+  onStartInspection: (inspectionId: string) => void;
+  onCompleteInspection: (inspectionId: string) => void;
+}) {
+  return (
+    <Card variant="glass" className="card-hover border-l-4 border-l-green-500">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-lg font-semibold text-white">{inspection.sku}</h3>
+              <StatusBadge status={inspection.status} type="qc" />
+            </div>
+            <p className="text-sm text-gray-400">
+              Qty: {inspection.quantityInspected} | Passed: {inspection.quantityPassed} | Failed:{' '}
+              {inspection.quantityFailed}
+            </p>
+          </div>
+          <ClipboardDocumentCheckIcon className="h-8 w-8 text-green-400 flex-shrink-0" />
+        </div>
+
+        <div className="flex gap-2">
+          {inspection.status === InspectionStatus.PENDING && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onStartInspection(inspection.inspectionId)}
+              className="flex-1"
+            >
+              Start Inspection
+            </Button>
+          )}
+          {inspection.status === InspectionStatus.IN_PROGRESS && (
+            <Button
+              variant="success"
+              size="sm"
+              onClick={() => onCompleteInspection(inspection.inspectionId)}
+              className="flex-1"
+            >
+              Complete QC
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StagingLocationCard({
+  location,
+  onAssign,
+}: {
+  location: StagingLocation;
+  onAssign: (locationId: string) => void;
+}) {
+  const occupancyPercent = (location.currentOccupancy / location.capacity) * 100;
+
+  return (
+    <Card variant="glass" className="card-hover border-l-4 border-l-orange-500">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-lg font-semibold text-white">{location.locationCode}</h3>
+              <StatusBadge status={location.status} type="staging" />
+            </div>
+            <p className="text-sm text-gray-400">Zone: {location.zone}</p>
+          </div>
+          <CubeIcon className="h-8 w-8 text-orange-400 flex-shrink-0" />
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-400">Occupancy</span>
+            <span className="text-white font-medium">
+              {location.currentOccupancy} / {location.capacity}
+            </span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div
+              className={`h-2 rounded-full transition-all duration-300 ${
+                occupancyPercent > 90
+                  ? 'bg-error-500'
+                  : occupancyPercent > 70
+                    ? 'bg-warning-500'
+                    : 'bg-success-500'
+              }`}
+              style={{ width: `${occupancyPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {location.status === StagingLocationStatus.AVAILABLE && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => onAssign(location.stagingLocationId)}
+            className="w-full"
+          >
+            Assign License Plate
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReceivingExceptionCard({
+  exception,
+  onInvestigate,
+  onResolve,
+}: {
+  exception: ReceivingException;
+  onInvestigate: (exceptionId: string) => void;
+  onResolve: (exceptionId: string) => void;
+}) {
+  return (
+    <Card variant="glass" className="card-hover border-l-4 border-l-red-500">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-lg font-semibold text-white">{exception.sku}</h3>
+              <StatusBadge status={exception.status} type="exception" />
+            </div>
+            <p className="text-sm text-red-400 font-medium">
+              {exception.exceptionType.replace(/_/g, ' ')}
+            </p>
+          </div>
+          <ExclamationTriangleIcon className="h-8 w-8 text-red-400 flex-shrink-0" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-4 text-sm bg-white/5 p-3 rounded-lg">
+          <div>
+            <p className="text-gray-400 text-xs">Expected</p>
+            <p className="text-white font-medium">{exception.expectedQuantity}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 text-xs">Actual</p>
+            <p className="text-white font-medium">{exception.actualQuantity}</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-gray-300 mb-4 line-clamp-2">{exception.description}</p>
+
+        <div className="flex gap-2">
+          {exception.status === ReceivingExceptionStatus.OPEN && (
+            <Button
+              variant="warning"
+              size="sm"
+              onClick={() => onInvestigate(exception.exceptionId)}
+              className="flex-1"
+            >
+              Investigate
+            </Button>
+          )}
+          {exception.status === ReceivingExceptionStatus.INVESTIGATING && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onResolve(exception.exceptionId)}
+              className="flex-1"
+            >
+              Resolve
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -357,7 +734,7 @@ function PutawayTaskCard({
               Target: <span className="text-white font-medium">{task.targetBinLocation}</span>
             </p>
           </div>
-          <CubeIcon className="h-8 w-8 text-purple-400" />
+          <CubeIcon className="h-8 w-8 text-purple-400 flex-shrink-0" />
         </div>
 
         <div className="mb-4">
@@ -403,14 +780,13 @@ function PutawayTaskCard({
 }
 
 // ============================================================================
-// MODALS (simplified for brevity - same as before)
+// MODALS
 // ============================================================================
 
 function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const { showToast } = useToast();
   const createASN = useCreateASN();
 
-  // Form validation
   const {
     values: formData,
     errors,
@@ -557,7 +933,6 @@ function CreateReceiptModal({
   const { showToast } = useToast();
   const createReceipt = useCreateReceipt();
 
-  // Form validation
   const {
     values: formData,
     errors,
@@ -654,7 +1029,6 @@ function UpdatePutawayTaskModal({
 
   const remaining = task.quantityToPutaway - task.quantityPutaway;
 
-  // Form validation
   const {
     values: formData,
     errors,
@@ -784,89 +1158,204 @@ function UpdatePutawayTaskModal({
 function InwardsGoodsPage() {
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const currentStage = (searchParams.get('tab') as WorkflowStage) || 'dashboard';
+  const currentStage = (searchParams.get('tab') as TabStage) || 'dashboard';
   const navigate = useNavigate();
 
+  // Modal states
   const [asnModalOpen, setAsnModalOpen] = useState(false);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [putawayUpdateModalOpen, setPutawayUpdateModalOpen] = useState(false);
   const [selectedPutawayTask, setSelectedPutawayTask] = useState<PutawayTask | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingAsnId, setPendingAsnId] = useState<string | null>(null);
 
   // Search states
   const [asnsSearchTerm, setAsnsSearchTerm] = useState('');
   const [receiptsSearchTerm, setReceiptsSearchTerm] = useState('');
   const [putawaySearchTerm, setPutawaySearchTerm] = useState('');
+  const [qcSearchTerm, setQcSearchTerm] = useState('');
+  const [stagingSearchTerm, setStagingSearchTerm] = useState('');
+  const [exceptionsSearchTerm, setExceptionsSearchTerm] = useState('');
 
-  // Pagination state for ASNs
+  // Pagination states
   const [asnsCurrentPage, setAsnsCurrentPage] = useState(1);
   const asnsPerPage = 6;
-
-  // Pagination state for receipts
   const [receiptsCurrentPage, setReceiptsCurrentPage] = useState(1);
   const receiptsPerPage = 6;
-
-  // Pagination state for putaway tasks
   const [putawayCurrentPage, setPutawayCurrentPage] = useState(1);
   const putawayPerPage = 6;
+  const [qcCurrentPage, setQcCurrentPage] = useState(1);
+  const qcPerPage = 6;
+  const [exceptionsCurrentPage, setExceptionsCurrentPage] = useState(1);
+  const exceptionsPerPage = 6;
 
   // Reset pagination when search changes
   useEffect(() => {
     setAsnsCurrentPage(1);
   }, [asnsSearchTerm]);
-
   useEffect(() => {
     setReceiptsCurrentPage(1);
   }, [receiptsSearchTerm]);
-
   useEffect(() => {
     setPutawayCurrentPage(1);
   }, [putawaySearchTerm]);
+  useEffect(() => {
+    setQcCurrentPage(1);
+  }, [qcSearchTerm]);
+  useEffect(() => {
+    setExceptionsCurrentPage(1);
+  }, [exceptionsSearchTerm]);
 
-  const { data: dashboard, isLoading } = useInwardsDashboard();
-  const { data: asns, refetch: refetchAsns } = useASNs({ enabled: currentStage === 'asn' });
-  const { data: receipts, refetch: refetchReceipts } = useReceipts({
+  // Data fetching
+  const { data: dashboard, isLoading: isLoadingDashboard } = useInwardsDashboard();
+  const {
+    data: asnsData,
+    refetch: refetchAsns,
+    isLoading: isLoadingASNs,
+  } = useASNs({
+    enabled: currentStage === 'asn',
+  });
+  const {
+    data: receiptsData,
+    refetch: refetchReceipts,
+    isLoading: isLoadingReceipts,
+  } = useReceipts({
     enabled: currentStage === 'receiving',
   });
-  const { data: putawayTasks, refetch: refetchPutawayTasks } = usePutawayTasks({
+  const {
+    data: putawayData,
+    refetch: refetchPutawayTasks,
+    isLoading: isLoadingPutaway,
+  } = usePutawayTasks({
     enabled: currentStage === 'putaway',
   });
+  const { data: qcData, isLoading: isLoadingQC } = useQualityInspections({
+    referenceId: currentStage === 'qc' ? 'all' : undefined,
+    status: currentStage === 'qc' ? undefined : undefined,
+    enabled: currentStage === 'qc',
+  });
+  const { data: licensePlatesData, isLoading: isLoadingLicensePlates } = useLicensePlates({
+    enabled: currentStage === 'qc' || currentStage === 'staging',
+  });
+  const { data: stagingData, isLoading: isLoadingStaging } = useStagingLocations({
+    enabled: currentStage === 'staging',
+  });
+  const { data: exceptionsData, isLoading: isLoadingExceptions } = useReceivingExceptions({
+    enabled: currentStage === 'exceptions',
+  });
+
+  // Extract arrays from paginated responses
+  const asns = asnsData?.asns ?? [];
+  const receipts = receiptsData?.receipts ?? [];
+  const putawayTasks = putawayData?.tasks ?? [];
+  const qcInspections = qcData?.inspections ?? [];
+  const licensePlates = licensePlatesData?.licensePlates ?? [];
+  const stagingLocations = stagingData?.stagingLocations ?? [];
+  const receivingExceptions = exceptionsData?.exceptions ?? [];
+
+  // Calculate badges for tabs
+  const inTransitAsnCount = asns.filter(
+    (a: AdvanceShippingNotice) => a.status === ASNStatus.IN_TRANSIT
+  ).length;
+  const activeReceiptsCount = receipts.filter(
+    (r: Receipt) => r.status === ReceiptStatus.RECEIVING
+  ).length;
+  const pendingQcCount = qcInspections.filter(
+    (i: QualityInspection) => i.status === InspectionStatus.PENDING
+  ).length;
+  const openStagingCount = stagingLocations.filter(
+    (l: StagingLocation) => l.status === StagingLocationStatus.AVAILABLE
+  ).length;
+  const openExceptionsCount = receivingExceptions.filter(
+    (e: ReceivingException) => e.status === ReceivingExceptionStatus.OPEN
+  ).length;
+  const pendingPutawayCount = putawayTasks.filter(
+    (t: PutawayTask) => t.status === PutawayStatus.PENDING
+  ).length;
 
   const updateASNStatus = useUpdateASNStatus();
 
-  const stages: StageConfig[] = [
-    { id: 'dashboard', label: 'Overview', icon: CubeIcon, description: 'Dashboard and metrics' },
-    { id: 'asn', label: 'ASN', icon: TruckIcon, description: 'Advance Shipping Notices' },
-    { id: 'receiving', label: 'Receiving', icon: InboxIcon, description: 'Receive incoming goods' },
-    { id: 'putaway', label: 'Putaway', icon: CubeIcon, description: 'Store items in bins' },
+  const tabs: TabConfig[] = [
+    {
+      id: 'dashboard',
+      label: 'Overview',
+      icon: CubeIcon,
+      description: 'Dashboard and metrics',
+    },
+    {
+      id: 'asn',
+      label: 'ASN',
+      icon: TruckIcon,
+      description: 'Advance Shipping Notices',
+      badge: inTransitAsnCount > 0 ? String(inTransitAsnCount) : undefined,
+    },
+    {
+      id: 'receiving',
+      label: 'Receiving',
+      icon: InboxIcon,
+      description: 'Receive incoming goods',
+      badge: activeReceiptsCount > 0 ? String(activeReceiptsCount) : undefined,
+    },
+    {
+      id: 'qc',
+      label: 'QC Inspection',
+      icon: ClipboardDocumentCheckIcon,
+      description: 'Quality control checks',
+      badge: pendingQcCount > 0 ? String(pendingQcCount) : undefined,
+    },
+    {
+      id: 'staging',
+      label: 'Staging',
+      icon: TagIcon,
+      description: 'License plates & staging',
+      badge: openStagingCount > 0 ? String(openStagingCount) : undefined,
+    },
+    {
+      id: 'exceptions',
+      label: 'Exceptions',
+      icon: ExclamationTriangleIcon,
+      description: 'Receiving discrepancies',
+      badge: openExceptionsCount > 0 ? String(openExceptionsCount) : undefined,
+    },
+    {
+      id: 'putaway',
+      label: 'Putaway',
+      icon: CubeIcon,
+      description: 'Store items in bins',
+      badge: pendingPutawayCount > 0 ? String(pendingPutawayCount) : undefined,
+    },
   ];
 
-  const currentStageIndex = stages.findIndex(s => s.id === currentStage);
+  const handleStartReceiving = (asnId: string) => {
+    setPendingAsnId(asnId);
+    setConfirmDialogOpen(true);
+  };
 
-  const handleStartReceiving = async (asnId: string) => {
+  const handleConfirmStartReceiving = async () => {
+    if (!pendingAsnId) return;
+
     try {
-      await updateASNStatus.mutateAsync({ asnId, status: ASNStatus.RECEIVED });
+      await updateASNStatus.mutateAsync({ asnId: pendingAsnId, status: ASNStatus.RECEIVED });
       showToast('ASN marked as received', 'success');
       setReceiptModalOpen(true);
       refetchAsns();
     } catch (error: any) {
       console.error('Failed to update ASN status:', error);
       showToast(error?.message || 'Failed to update ASN status', 'error');
+    } finally {
+      setConfirmDialogOpen(false);
+      setPendingAsnId(null);
     }
   };
 
-  if (isLoading && currentStage === 'dashboard') {
+  // Loading skeleton
+  if (isLoadingDashboard && currentStage === 'dashboard') {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
           <Skeleton variant="text" className="w-64 h-10 mb-2" />
           <Skeleton variant="text" className="w-96 h-6 mb-6" />
-          <div className="flex items-stretch gap-2 mb-8">
-            <Skeleton variant="rounded" className="flex-1 h-28" />
-            <Skeleton variant="rounded" className="flex-1 h-28" />
-            <Skeleton variant="rounded" className="flex-1 h-28" />
-            <Skeleton variant="rounded" className="flex-1 h-28" />
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <MetricCardSkeleton />
             <MetricCardSkeleton />
@@ -882,24 +1371,20 @@ function InwardsGoodsPage() {
     <div className="min-h-screen">
       <Header />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {/* Workflow Stages */}
-        <div className="flex items-stretch gap-2 mb-8">
-          {stages.map((stage, index) => (
-            <div key={stage.id} className="flex-1 relative">
-              <WorkflowStage
-                stage={stage}
-                isActive={stage.id === currentStage}
-                isCompleted={index < currentStageIndex}
-                onClick={() => setSearchParams({ tab: stage.id })}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tabbed Navigation */}
+        <div className="mb-8 overflow-x-auto">
+          <div className="inline-flex gap-2 bg-white/5 p-2 rounded-xl min-w-full sm:min-w-0">
+            {tabs.map(tab => (
+              <SegmentedTab
+                key={tab.id}
+                tab={tab}
+                isActive={currentStage === tab.id}
+                badge={tab.badge}
+                onClick={() => setSearchParams({ tab: tab.id })}
               />
-              {index === stages.length - 1 && (
-                <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-gray-700">
-                  <CheckCircleIcon className="h-6 w-6" />
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Dashboard Stage */}
@@ -926,15 +1411,36 @@ function InwardsGoodsPage() {
                 color="warning"
               />
               <MetricCard
-                title="Pending Putaway"
-                value={dashboard.pendingPutaway}
-                icon={CubeIcon}
+                title="Pending QC"
+                value={pendingQcCount}
+                icon={ClipboardDocumentCheckIcon}
                 color="error"
               />
               <MetricCard
-                title="Received Today"
-                value={dashboard.todayReceived}
-                icon={CheckCircleIcon}
+                title="Pending Putaway"
+                value={dashboard.pendingPutaway}
+                icon={CubeIcon}
+                color="success"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <MetricCard
+                title="Open Exceptions"
+                value={openExceptionsCount}
+                icon={ExclamationTriangleIcon}
+                color="error"
+              />
+              <MetricCard
+                title="License Plates"
+                value={licensePlates.length}
+                icon={TagIcon}
+                color="primary"
+              />
+              <MetricCard
+                title="Available Staging"
+                value={openStagingCount}
+                icon={CubeIcon}
                 color="success"
               />
             </div>
@@ -944,7 +1450,7 @@ function InwardsGoodsPage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Button
                     variant="primary"
                     size="lg"
@@ -966,6 +1472,15 @@ function InwardsGoodsPage() {
                   <Button
                     variant="secondary"
                     size="lg"
+                    onClick={() => setSearchParams({ tab: 'exceptions' })}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <ExclamationTriangleIcon className="h-5 w-5" />
+                    View Exceptions
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="lg"
                     onClick={() => setSearchParams({ tab: 'putaway' })}
                     className="flex items-center justify-center gap-2"
                   >
@@ -980,281 +1495,257 @@ function InwardsGoodsPage() {
 
         {/* ASN Stage */}
         {currentStage === 'asn' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white">Advance Shipping Notices</h2>
-                <p className="text-gray-400 text-sm mt-1">
-                  Track incoming shipments before arrival
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search ASNs..."
-                    value={asnsSearchTerm}
-                    onChange={e => setAsnsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
-                  />
-                </div>
-                <Button variant="primary" onClick={() => setAsnModalOpen(true)}>
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  New ASN
-                </Button>
-              </div>
-            </div>
-
-            {asns && asns.length > 0 ? (
-              (() => {
-                const filteredAsns = asns.filter((asn: AdvanceShippingNotice) => {
-                  if (!asnsSearchTerm.trim()) return true;
-                  const query = asnsSearchTerm.toLowerCase();
-                  return (
-                    asn.asnId?.toLowerCase().includes(query) ||
-                    asn.purchaseOrderNumber?.toLowerCase().includes(query) ||
-                    asn.supplierId?.toLowerCase().includes(query) ||
-                    asn.status?.toLowerCase().includes(query)
-                  );
-                });
-                const totalPages = Math.ceil(filteredAsns.length / asnsPerPage);
-                const paginatedAsns = filteredAsns.slice(
-                  (asnsCurrentPage - 1) * asnsPerPage,
-                  asnsCurrentPage * asnsPerPage
-                );
-                return (
-                  <>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {paginatedAsns.length === 0 ? (
-                        <Card variant="glass">
-                          <CardContent className="p-12 text-center">
-                            <p className="text-gray-400">No ASNs match your search</p>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        paginatedAsns.map((asn: AdvanceShippingNotice) => (
-                          <ASNCard
-                            key={asn.asnId}
-                            asn={asn}
-                            onViewDetails={id => navigate(`/inwards/asn/${id}`)}
-                            onStartReceiving={handleStartReceiving}
-                          />
-                        ))
-                      )}
-                    </div>
-
-                    {/* Pagination for ASNs */}
-                    {totalPages > 1 && (
-                      <div className="flex justify-center mt-6">
-                        <Pagination
-                          currentPage={asnsCurrentPage}
-                          totalItems={filteredAsns.length}
-                          pageSize={asnsPerPage}
-                          onPageChange={setAsnsCurrentPage}
-                        />
-                      </div>
-                    )}
-                  </>
-                );
-              })()
-            ) : (
-              <Card variant="glass">
-                <CardContent className="p-12 text-center">
-                  <TruckIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No ASNs</h3>
-                  <p className="text-gray-400">Create an ASN to track incoming shipments</p>
-                </CardContent>
-              </Card>
+          <InwardsStageContent
+            title="Advance Shipping Notices"
+            subtitle="Track incoming shipments before arrival"
+            searchTerm={asnsSearchTerm}
+            onSearchChange={setAsnsSearchTerm}
+            onAddNew={() => setAsnModalOpen(true)}
+            addNewLabel="New ASN"
+            isLoading={isLoadingASNs}
+            items={asns}
+            currentPage={asnsCurrentPage}
+            setCurrentPage={setAsnsCurrentPage}
+            itemsPerPage={asnsPerPage}
+            renderCard={(asn: AdvanceShippingNotice) => (
+              <ASNCard
+                key={asn.asnId}
+                asn={asn}
+                onViewDetails={id => navigate(`/inwards/asn/${id}`)}
+                onStartReceiving={handleStartReceiving}
+              />
             )}
-          </div>
+            emptyIcon={TruckIcon}
+            emptyTitle="No ASNs"
+            emptyDescription="Create an ASN to track incoming shipments"
+          />
         )}
 
         {/* Receiving Stage */}
         {currentStage === 'receiving' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white">Receiving Dock</h2>
-                <p className="text-gray-400 text-sm mt-1">Receive and verify incoming goods</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search receipts..."
-                    value={receiptsSearchTerm}
-                    onChange={e => setReceiptsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
-                  />
-                </div>
-                <Button variant="primary" onClick={() => setReceiptModalOpen(true)}>
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  New Receipt
-                </Button>
-              </div>
-            </div>
-
-            {receipts && receipts.length > 0 ? (
-              (() => {
-                const filteredReceipts = receipts.filter((receipt: Receipt) => {
-                  if (!receiptsSearchTerm.trim()) return true;
-                  const query = receiptsSearchTerm.toLowerCase();
-                  return (
-                    receipt.receiptId?.toLowerCase().includes(query) ||
-                    receipt.asnId?.toLowerCase().includes(query) ||
-                    receipt.receiptType?.toLowerCase().includes(query) ||
-                    receipt.status?.toLowerCase().includes(query)
-                  );
-                });
-                const totalPages = Math.ceil(filteredReceipts.length / receiptsPerPage);
-                const paginatedReceipts = filteredReceipts.slice(
-                  (receiptsCurrentPage - 1) * receiptsPerPage,
-                  receiptsCurrentPage * receiptsPerPage
-                );
-                return (
-                  <>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {paginatedReceipts.length === 0 ? (
-                        <Card variant="glass">
-                          <CardContent className="p-12 text-center">
-                            <p className="text-gray-400">No receipts match your search</p>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        paginatedReceipts.map((receipt: Receipt) => (
-                          <ReceiptCard
-                            key={receipt.receiptId}
-                            receipt={receipt}
-                            onViewDetails={id => navigate(`/inwards/receipt/${id}`)}
-                          />
-                        ))
-                      )}
-                    </div>
-
-                    {/* Pagination for Receipts */}
-                    {totalPages > 1 && (
-                      <div className="flex justify-center mt-6">
-                        <Pagination
-                          currentPage={receiptsCurrentPage}
-                          totalItems={filteredReceipts.length}
-                          pageSize={receiptsPerPage}
-                          onPageChange={setReceiptsCurrentPage}
-                        />
-                      </div>
-                    )}
-                  </>
-                );
-              })()
-            ) : (
-              <Card variant="glass">
-                <CardContent className="p-12 text-center">
-                  <InboxIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No Receipts</h3>
-                  <p className="text-gray-400">Create a receipt to record incoming goods</p>
-                </CardContent>
-              </Card>
+          <InwardsStageContent
+            title="Receiving Dock"
+            subtitle="Receive and verify incoming goods"
+            searchTerm={receiptsSearchTerm}
+            onSearchChange={setReceiptsSearchTerm}
+            onAddNew={() => setReceiptModalOpen(true)}
+            addNewLabel="New Receipt"
+            isLoading={isLoadingReceipts}
+            items={receipts}
+            currentPage={receiptsCurrentPage}
+            setCurrentPage={setReceiptsCurrentPage}
+            itemsPerPage={receiptsPerPage}
+            renderCard={(receipt: Receipt) => (
+              <ReceiptCard
+                key={receipt.receiptId}
+                receipt={receipt}
+                onViewDetails={id => navigate(`/inwards/receipt/${id}`)}
+                onCreateLicensePlate={id => navigate(`/inwards/license-plate/create/${id}`)}
+              />
             )}
-          </div>
+            emptyIcon={InboxIcon}
+            emptyTitle="No Receipts"
+            emptyDescription="Create a receipt to record incoming goods"
+          />
         )}
 
-        {/* Putaway Stage */}
-        {currentStage === 'putaway' && (
+        {/* QC Inspection Stage */}
+        {currentStage === 'qc' && (
+          <InwardsStageContent
+            title="Quality Control Inspection"
+            subtitle="Inspect received goods for quality compliance"
+            searchTerm={qcSearchTerm}
+            onSearchChange={setQcSearchTerm}
+            addNewLabel={undefined}
+            isLoading={isLoadingQC}
+            items={qcInspections}
+            currentPage={qcCurrentPage}
+            setCurrentPage={setQcCurrentPage}
+            itemsPerPage={qcPerPage}
+            renderCard={(inspection: QualityInspection) => (
+              <QCInspectionCard
+                key={inspection.inspectionId}
+                inspection={inspection}
+                onStartInspection={id => navigate(`/inwards/qc/${id}`)}
+                onCompleteInspection={id => navigate(`/inwards/qc/${id}/complete`)}
+              />
+            )}
+            emptyIcon={ClipboardDocumentCheckIcon}
+            emptyTitle="No QC Inspections"
+            emptyDescription="QC inspections will appear after receiving"
+          />
+        )}
+
+        {/* Staging Stage */}
+        {currentStage === 'staging' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white">Putaway Tasks</h2>
-                <p className="text-gray-400 text-sm mt-1">
-                  Store received items in their bin locations
-                </p>
+                <h2 className="text-2xl font-bold text-white">Staging Areas</h2>
+                <p className="text-gray-400 text-sm mt-1">License plates and staging locations</p>
               </div>
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search tasks..."
-                  value={putawaySearchTerm}
-                  onChange={e => setPutawaySearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+                  placeholder="Search..."
+                  aria-label="Search staging"
+                  value={stagingSearchTerm}
+                  onChange={e => setStagingSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 w-full sm:w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
                 />
               </div>
             </div>
 
-            {putawayTasks && putawayTasks.length > 0 ? (
-              (() => {
-                const filteredTasks = putawayTasks.filter((task: PutawayTask) => {
-                  if (!putawaySearchTerm.trim()) return true;
-                  const query = putawaySearchTerm.toLowerCase();
-                  return (
-                    task.putawayTaskId?.toLowerCase().includes(query) ||
-                    task.receiptLineId?.toLowerCase().includes(query) ||
-                    task.sku?.toLowerCase().includes(query) ||
-                    task.targetBinLocation?.toLowerCase().includes(query) ||
-                    task.status?.toLowerCase().includes(query)
-                  );
-                });
-                const totalPages = Math.ceil(filteredTasks.length / putawayPerPage);
-                const paginatedTasks = filteredTasks.slice(
-                  (putawayCurrentPage - 1) * putawayPerPage,
-                  putawayCurrentPage * putawayPerPage
-                );
-                return (
-                  <>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {paginatedTasks.length === 0 ? (
-                        <Card variant="glass">
-                          <CardContent className="p-12 text-center">
-                            <p className="text-gray-400">No putaway tasks match your search</p>
-                          </CardContent>
-                        </Card>
-                      ) : (
-                        paginatedTasks.map((task: PutawayTask) => (
-                          <PutawayTaskCard
-                            key={task.putawayTaskId}
-                            task={task}
-                            onAssign={id => navigate(`/inwards/putaway/${id}`)}
-                            onUpdate={() => {
-                              setSelectedPutawayTask(task);
-                              setPutawayUpdateModalOpen(true);
-                            }}
-                          />
-                        ))
-                      )}
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Staging Locations */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">Staging Locations</h3>
+                {isLoadingStaging ? (
+                  <div className="space-y-4">
+                    <Skeleton variant="rounded" className="h-40" />
+                    <Skeleton variant="rounded" className="h-40" />
+                  </div>
+                ) : stagingLocations.length > 0 ? (
+                  stagingLocations
+                    .filter((l: StagingLocation) => {
+                      if (!stagingSearchTerm.trim()) return true;
+                      const query = stagingSearchTerm.toLowerCase();
+                      return (
+                        l.locationCode.toLowerCase().includes(query) ||
+                        l.zone.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice(0, 4)
+                    .map((location: StagingLocation) => (
+                      <StagingLocationCard
+                        key={location.stagingLocationId}
+                        location={location}
+                        onAssign={() =>
+                          navigate(`/inwards/staging/${location.stagingLocationId}/assign`)
+                        }
+                      />
+                    ))
+                ) : (
+                  <Card variant="glass">
+                    <CardContent className="p-8 text-center">
+                      <CubeIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400">No staging locations configured</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
 
-                    {/* Pagination for Putaway Tasks */}
-                    {totalPages > 1 && (
-                      <div className="flex justify-center mt-6">
-                        <Pagination
-                          currentPage={putawayCurrentPage}
-                          totalItems={filteredTasks.length}
-                          pageSize={putawayPerPage}
-                          onPageChange={setPutawayCurrentPage}
-                        />
-                      </div>
-                    )}
-                  </>
-                );
-              })()
-            ) : (
-              <Card variant="glass">
-                <CardContent className="p-12 text-center">
-                  <CubeIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No Putaway Tasks</h3>
-                  <p className="text-gray-400">Putaway tasks appear after receiving goods</p>
-                </CardContent>
-              </Card>
-            )}
+              {/* License Plates */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-white">License Plates</h3>
+                {isLoadingLicensePlates ? (
+                  <div className="space-y-4">
+                    <Skeleton variant="rounded" className="h-40" />
+                    <Skeleton variant="rounded" className="h-40" />
+                  </div>
+                ) : licensePlates.length > 0 ? (
+                  licensePlates
+                    .filter((p: LicensePlate) => {
+                      if (!stagingSearchTerm.trim()) return true;
+                      const query = stagingSearchTerm.toLowerCase();
+                      return (
+                        p.barcode.toLowerCase().includes(query) ||
+                        p.sku.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice(0, 4)
+                    .map((plate: LicensePlate) => (
+                      <LicensePlateCard
+                        key={plate.licensePlateId}
+                        plate={plate}
+                        onSeal={() =>
+                          navigate(`/inwards/license-plate/${plate.licensePlateId}/seal`)
+                        }
+                        onStartQC={() => navigate(`/inwards/qc/create/${plate.licensePlateId}`)}
+                        onAssignToStaging={() =>
+                          navigate(`/inwards/staging/assign/${plate.licensePlateId}`)
+                        }
+                      />
+                    ))
+                ) : (
+                  <Card variant="glass">
+                    <CardContent className="p-8 text-center">
+                      <TagIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400">No license plates created</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
           </div>
+        )}
+
+        {/* Exceptions Stage */}
+        {currentStage === 'exceptions' && (
+          <InwardsStageContent
+            title="Receiving Exceptions"
+            subtitle="Manage receiving discrepancies and exceptions"
+            searchTerm={exceptionsSearchTerm}
+            onSearchChange={setExceptionsSearchTerm}
+            addNewLabel={undefined}
+            isLoading={isLoadingExceptions}
+            items={receivingExceptions}
+            currentPage={exceptionsCurrentPage}
+            setCurrentPage={setExceptionsCurrentPage}
+            itemsPerPage={exceptionsPerPage}
+            renderCard={(exception: ReceivingException) => (
+              <ReceivingExceptionCard
+                key={exception.exceptionId}
+                exception={exception}
+                onInvestigate={id => navigate(`/inwards/exceptions/${id}`)}
+                onResolve={id => navigate(`/inwards/exceptions/${id}/resolve`)}
+              />
+            )}
+            emptyIcon={ExclamationTriangleIcon}
+            emptyTitle="No Exceptions"
+            emptyDescription="No receiving exceptions to display"
+          />
+        )}
+
+        {/* Putaway Stage */}
+        {currentStage === 'putaway' && (
+          <InwardsStageContent
+            title="Putaway Tasks"
+            subtitle="Store received items in their bin locations"
+            searchTerm={putawaySearchTerm}
+            onSearchChange={setPutawaySearchTerm}
+            addNewLabel={undefined}
+            isLoading={isLoadingPutaway}
+            items={putawayTasks}
+            currentPage={putawayCurrentPage}
+            setCurrentPage={setPutawayCurrentPage}
+            itemsPerPage={putawayPerPage}
+            renderCard={(task: PutawayTask) => (
+              <PutawayTaskCard
+                key={task.putawayTaskId}
+                task={task}
+                onAssign={id => navigate(`/inwards/putaway/${id}`)}
+                onUpdate={() => {
+                  setSelectedPutawayTask(task);
+                  setPutawayUpdateModalOpen(true);
+                }}
+              />
+            )}
+            emptyIcon={CubeIcon}
+            emptyTitle="No Putaway Tasks"
+            emptyDescription="Putaway tasks appear after receiving goods"
+          />
         )}
       </main>
 
+      {/* Modals */}
       {asnModalOpen && (
         <CreateASNModal onClose={() => setAsnModalOpen(false)} onSuccess={() => refetchAsns()} />
       )}
       {receiptModalOpen && (
         <CreateReceiptModal
+          asnId={undefined}
           onClose={() => setReceiptModalOpen(false)}
           onSuccess={() => refetchReceipts()}
         />
@@ -1268,6 +1759,144 @@ function InwardsGoodsPage() {
           }}
           onSuccess={() => refetchPutawayTasks()}
         />
+      )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialogOpen}
+        onClose={() => {
+          setConfirmDialogOpen(false);
+          setPendingAsnId(null);
+        }}
+        onConfirm={handleConfirmStartReceiving}
+        title="Start Receiving Process"
+        message="This will mark the ASN as received and create a receipt. Are you sure you want to proceed?"
+        confirmText="Start Receiving"
+        cancelText="Cancel"
+        variant="info"
+        isLoading={updateASNStatus.isPending}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// HELPER COMPONENT - Stage Content Layout
+// ============================================================================
+
+function InwardsStageContent<T>({
+  title,
+  subtitle,
+  searchTerm,
+  onSearchChange,
+  onAddNew,
+  addNewLabel,
+  isLoading,
+  items,
+  currentPage,
+  setCurrentPage,
+  itemsPerPage,
+  renderCard,
+  emptyIcon: EmptyIcon,
+  emptyTitle,
+  emptyDescription,
+}: {
+  title: string;
+  subtitle: string;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  onAddNew?: () => void;
+  addNewLabel?: string;
+  isLoading: boolean;
+  items: T[];
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  itemsPerPage: number;
+  renderCard: (item: T) => React.ReactNode;
+  emptyIcon: React.ComponentType<{ className?: string }>;
+  emptyTitle: string;
+  emptyDescription: string;
+}) {
+  const filteredItems = items.filter((item: any) => {
+    if (!searchTerm.trim()) return true;
+    const query = searchTerm.toLowerCase();
+    // Generic search across common properties
+    return (
+      (item.id && item.id.toLowerCase().includes(query)) ||
+      (item.name && item.name.toLowerCase().includes(query)) ||
+      (item.sku && item.sku.toLowerCase().includes(query)) ||
+      (item.barcode && item.barcode.toLowerCase().includes(query)) ||
+      (item.status && item.status.toLowerCase().includes(query))
+    );
+  });
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-white">{title}</h2>
+          <p className="text-gray-400 text-sm mt-1">{subtitle}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Search ${title.toLowerCase()}...`}
+              aria-label={`Search ${title}`}
+              value={searchTerm}
+              onChange={e => onSearchChange(e.target.value)}
+              className="pl-10 pr-4 py-2.5 w-full sm:w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+            />
+          </div>
+          {onAddNew && addNewLabel && (
+            <Button variant="primary" onClick={onAddNew}>
+              <PlusIcon className="h-5 w-5 mr-2" />
+              {addNewLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton variant="rounded" className="h-48" />
+          <Skeleton variant="rounded" className="h-48" />
+        </div>
+      ) : filteredItems.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" role="region" aria-live="polite">
+            {paginatedItems.map((item, index) => (
+              <div key={index}>{renderCard(item)}</div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredItems.length}
+                pageSize={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </>
+      ) : (
+        <Card variant="glass">
+          <CardContent className="p-12 text-center">
+            <EmptyIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">{emptyTitle}</h3>
+            <p className="text-gray-400">{emptyDescription}</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -200,9 +200,11 @@ router.post(
       'SUPERVISOR',
       'PRODUCTION',
       'INWARDS',
+      'DISPATCH',
       'SALES',
       'MAINTENANCE',
       'RMA',
+      'ACCOUNTING',
     ];
     if (!validRoles.includes(role)) {
       res.status(400).json({
@@ -255,9 +257,11 @@ router.post(
       'SUPERVISOR',
       'PRODUCTION',
       'INWARDS',
+      'DISPATCH',
       'SALES',
       'MAINTENANCE',
       'RMA',
+      'ACCOUNTING',
     ];
     if (!validRoles.includes(role)) {
       res.status(400).json({

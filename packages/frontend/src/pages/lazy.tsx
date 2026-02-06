@@ -102,6 +102,7 @@ export const LazyAdminSettingsPage = createLazyPage(() => import('./AdminSetting
 export const LazyUserRolesPage = createLazyPage(() => import('./UserRolesPage'));
 export const LazyRolesManagementPage = createLazyPage(() => import('./RolesManagementPage'));
 export const LazyExceptionsPage = createLazyPage(() => import('./ExceptionsPage'));
+export const LazyRoleSettingsPage = createLazyPage(() => import('./RoleSettingsPage'));
 
 // ============================================================================
 // BUSINESS RULES & REPORTS PAGES
@@ -110,6 +111,7 @@ export const LazyExceptionsPage = createLazyPage(() => import('./ExceptionsPage'
 export const LazyBusinessRulesPage = createLazyPage(() => import('./BusinessRulesPage'));
 export const LazyReportsPage = createLazyPage(() => import('./ReportsPage'));
 export const LazyIntegrationsPage = createLazyPage(() => import('./IntegrationsPage'));
+export const LazyAccountingPage = createLazyPage(() => import('./AccountingPage'));
 
 // ============================================================================
 // WAREHOUSE OPERATIONS PAGES

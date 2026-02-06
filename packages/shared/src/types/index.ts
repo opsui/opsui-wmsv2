@@ -45,12 +45,14 @@ export enum UserRole {
   PACKER = 'PACKER',
   STOCK_CONTROLLER = 'STOCK_CONTROLLER',
   INWARDS = 'INWARDS',
+  DISPATCH = 'DISPATCH',
   SUPERVISOR = 'SUPERVISOR',
   ADMIN = 'ADMIN',
   PRODUCTION = 'PRODUCTION',
   SALES = 'SALES',
   MAINTENANCE = 'MAINTENANCE',
   RMA = 'RMA',
+  ACCOUNTING = 'ACCOUNTING',
 }
 
 // String literal type for backward compatibility
@@ -59,12 +61,14 @@ export type UserRoleValue =
   | 'PACKER'
   | 'STOCK_CONTROLLER'
   | 'INWARDS'
+  | 'DISPATCH'
   | 'SUPERVISOR'
   | 'ADMIN'
   | 'PRODUCTION'
   | 'SALES'
   | 'MAINTENANCE'
-  | 'RMA';
+  | 'RMA'
+  | 'ACCOUNTING';
 
 /**
  * Permissions - Granular access control for custom roles
@@ -150,6 +154,17 @@ export enum Permission {
   VIEW_RMA_REQUESTS = 'view_rma_requests',
   PROCESS_RMA = 'process_rma',
 
+  // Dispatch/Shipping
+  VIEW_SHIPMENTS = 'view_shipments',
+  CREATE_SHIPMENTS = 'create_shipments',
+  CANCEL_SHIPMENTS = 'cancel_shipments',
+
+  // Accounting/Financials
+  VIEW_FINANCIALS = 'view_financials',
+  MANAGE_FINANCIALS = 'manage_financials',
+  EXPORT_FINANCIALS = 'export_financials',
+  MANAGE_TRANSACTIONS = 'manage_transactions',
+
   // Admin Full Access
   ADMIN_FULL_ACCESS = 'admin_full_access',
 }
@@ -208,6 +223,13 @@ export const PERMISSION_GROUPS = {
   SALES: [Permission.VIEW_SALES_ORDERS, Permission.MANAGE_SALES],
   MAINTENANCE: [Permission.VIEW_MAINTENANCE_TASKS, Permission.MANAGE_MAINTENANCE],
   RMA: [Permission.VIEW_RMA_REQUESTS, Permission.PROCESS_RMA],
+  DISPATCH: [Permission.VIEW_SHIPMENTS, Permission.CREATE_SHIPMENTS, Permission.CANCEL_SHIPMENTS],
+  ACCOUNTING: [
+    Permission.VIEW_FINANCIALS,
+    Permission.MANAGE_FINANCIALS,
+    Permission.EXPORT_FINANCIALS,
+    Permission.MANAGE_TRANSACTIONS,
+  ],
 } as const;
 
 /**
@@ -340,6 +362,22 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_RMA_REQUESTS,
     Permission.PROCESS_RMA,
     Permission.VIEW_ORDERS,
+    Permission.VIEW_INVENTORY,
+  ],
+  [UserRole.DISPATCH]: [
+    Permission.VIEW_SHIPMENTS,
+    Permission.CREATE_SHIPMENTS,
+    Permission.CANCEL_SHIPMENTS,
+    Permission.VIEW_ORDERS,
+    Permission.VIEW_PACK_TASKS,
+    Permission.VIEW_INVENTORY,
+  ],
+  [UserRole.ACCOUNTING]: [
+    Permission.VIEW_FINANCIALS,
+    Permission.MANAGE_FINANCIALS,
+    Permission.EXPORT_FINANCIALS,
+    Permission.MANAGE_TRANSACTIONS,
+    Permission.VIEW_REPORTS,
     Permission.VIEW_INVENTORY,
   ],
 };
@@ -1104,6 +1142,267 @@ export interface UpdatePutawayTaskDTO {
   quantityPutaway: number;
   userId: string;
   status?: PutawayStatus;
+}
+
+// ============================================================================
+// LICENSE PLATING TYPES
+// ============================================================================
+
+/**
+ * License Plate Status
+ */
+export enum LicensePlateStatus {
+  OPEN = 'OPEN',
+  SEALED = 'SEALED',
+  IN_QC = 'IN_QC',
+  QC_PASSED = 'QC_PASSED',
+  QC_FAILED = 'QC_FAILED',
+  IN_STAGING = 'IN_STAGING',
+  PUTAWAY_PARTIAL = 'PUTAWAY_PARTIAL',
+  PUTAWAY_COMPLETE = 'PUTAWAY_COMPLETE',
+  CLOSED = 'CLOSED',
+}
+
+/**
+ * License Plate - Container for grouping received items
+ * Used to track items through the receiving process
+ */
+export interface LicensePlate {
+  licensePlateId: string;
+  receiptId: string;
+  receiptLineId: string;
+  barcode: string; // Scannable barcode on the license plate
+  status: LicensePlateStatus;
+  sku: string;
+  quantity: number;
+  quantityPutaway: number;
+  lotNumber?: string;
+  expirationDate?: Date;
+  serialNumbers?: string[]; // For serialized items
+  stagingLocation?: string;
+  sealedAt?: Date;
+  sealedBy?: string;
+  qcCompletedAt?: Date;
+  qcCompletedBy?: string;
+  movedToStagingAt?: Date;
+  movedToStagingBy?: string;
+  putawayCompletedAt?: Date;
+  closedAt?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// STAGING LOCATION TYPES
+// ============================================================================
+
+/**
+ * Staging Location Status
+ */
+export enum StagingLocationStatus {
+  AVAILABLE = 'AVAILABLE',
+  OCCUPIED = 'OCCUPIED',
+  RESERVED = 'RESERVED',
+  BLOCKED = 'BLOCKED',
+}
+
+/**
+ * Staging Location - Temporary holding area for received goods
+ */
+export interface StagingLocation {
+  stagingLocationId: string;
+  locationCode: string; // e.g., "STAGE-A01", "STAGE-B12"
+  zone: string; // e.g., "RECEIVING", "QC", "PUTAWAY"
+  locationType: 'FLOOR' | 'RACK' | 'CART' | 'CONVEYOR';
+  status: StagingLocationStatus;
+  currentOccupancy: number; // Number of license plates currently occupying
+  capacity: number; // Maximum number of license plates
+  assignedTo?: string; // User or team this area is assigned to
+  lastUpdated: Date;
+}
+
+/**
+ * Staging Location Assignment - Links license plates to staging locations
+ */
+export interface StagingLocationAssignment {
+  assignmentId: string;
+  stagingLocationId: string;
+  licensePlateId: string;
+  assignedAt: Date;
+  assignedBy: string;
+  releasedAt?: Date;
+  releasedBy?: string;
+  notes?: string;
+}
+
+// ============================================================================
+// RECEIVING EXCEPTION TYPES
+// ============================================================================
+
+/**
+ * Receiving Exception Type - Categories of receiving discrepancies
+ */
+export enum ReceivingExceptionType {
+  SHORT_RECEIPT = 'SHORT_RECEIPT', // Received less than ordered
+  OVER_RECEIPT = 'OVER_RECEIPT', // Received more than ordered
+  DAMAGED = 'DAMAGED', // Items damaged on arrival
+  DEFECTIVE = 'DEFECTIVE', // Quality defects
+  WRONG_ITEM = 'WRONG_ITEM', // Wrong SKU received
+  NO_ASN = 'NO_ASN', // Shipment arrived without ASN
+  LABEL_MISMATCH = 'LABEL_MISMATCH', // Label doesn't match expected
+  EXPIRED = 'EXPIRED', // Items past expiration
+  NEAR_EXPIRY = 'NEAR_EXPIRY', // Items approaching expiration
+  MISSING_SERIAL = 'MISSING_SERIAL', // Expected serial numbers missing
+  DUPLICATE_SERIAL = 'DUPLICATE_SERIAL', // Duplicate serial numbers
+  WRONG_LOT = 'WRONG_LOT', // Wrong lot number received
+  OTHER = 'OTHER',
+}
+
+/**
+ * Receiving Exception Status
+ */
+export enum ReceivingExceptionStatus {
+  OPEN = 'OPEN',
+  INVESTIGATING = 'INVESTIGATING',
+  AWAITING_DECISION = 'AWAITING_DECISION',
+  RESOLVED = 'RESOLVED',
+  CANCELLED = 'CANCELLED',
+}
+
+/**
+ * Receiving Exception Resolution
+ */
+export enum ReceivingExceptionResolution {
+  ACCEPT_QUANTITY = 'ACCEPT_QUANTITY', // Accept actual received quantity
+  RETURN_TO_VENDOR = 'RETURN_TO_VENDOR',
+  WRITE_OFF = 'WRITE_OFF',
+  REQUEST_CREDIT = 'REQUEST_CREDIT',
+  KEEP_AT_DISCOUNT = 'KEEP_AT_DISCOUNT',
+  QUARANTINE = 'QUARANTINE',
+  REJECT_SHIPMENT = 'REJECT_SHIPMENT',
+  ADJUST_PO = 'ADJUST_PO',
+}
+
+/**
+ * Receiving Exception - Discrepancy during receiving
+ */
+export interface ReceivingException {
+  exceptionId: string;
+  receiptId: string;
+  receiptLineId: string;
+  asnId?: string;
+  exceptionType: ReceivingExceptionType;
+  status: ReceivingExceptionStatus;
+  resolution?: ReceivingExceptionResolution;
+  sku: string;
+  expectedQuantity: number;
+  actualQuantity: number;
+  variance: number;
+  lotNumber?: string;
+  expirationDate?: Date;
+  description: string;
+  reportedBy: string;
+  reportedAt: Date;
+  investigatedBy?: string;
+  investigatedAt?: Date;
+  resolvedBy?: string;
+  resolvedAt?: Date;
+  resolutionNotes?: string;
+  images?: string[]; // URLs to photos of damaged goods, etc.
+  vendorNotified: boolean;
+  vendorNotifiedAt?: Date;
+  creditRequested: number; // Credit amount requested
+  creditApproved: number; // Credit amount approved
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// ENHANCED RECEIPT DTOs WITH NEW FIELDS
+// ============================================================================
+
+/**
+ * Enhanced Create Receipt DTO with license plate and exception support
+ */
+export interface CreateReceiptEnhancedDTO {
+  asnId?: string;
+  receiptType: ReceiptType;
+  receivedBy: string;
+  lineItems: Array<{
+    asnLineItemId?: string;
+    sku: string;
+    quantityOrdered: number;
+    quantityReceived: number;
+    quantityDamaged: number;
+    unitCost?: number;
+    lotNumber?: string;
+    expirationDate?: Date;
+    serialNumbers?: string[]; // Captured serial numbers
+    notes?: string;
+    exceptions?: Array<{
+      exceptionType: ReceivingExceptionType;
+      description: string;
+      actualQuantity: number;
+    }>;
+  }>;
+  createLicensePlates?: boolean; // Auto-create license plates
+}
+
+/**
+ * Create License Plate DTO
+ */
+export interface CreateLicensePlateDTO {
+  receiptId: string;
+  receiptLineId: string;
+  barcode: string;
+  sku: string;
+  quantity: number;
+  lotNumber?: string;
+  expirationDate?: Date;
+  serialNumbers?: string[];
+  stagingLocation?: string;
+  sealedBy: string;
+  notes?: string;
+}
+
+/**
+ * Assign to Staging DTO
+ */
+export interface AssignToStagingDTO {
+  licensePlateId: string;
+  stagingLocationId: string;
+  assignedBy: string;
+  notes?: string;
+}
+
+/**
+ * Receiving Exception DTO
+ */
+export interface CreateReceivingExceptionDTO {
+  receiptId: string;
+  receiptLineId: string;
+  asnId?: string;
+  exceptionType: ReceivingExceptionType;
+  sku: string;
+  expectedQuantity: number;
+  actualQuantity: number;
+  lotNumber?: string;
+  expirationDate?: Date;
+  description: string;
+  reportedBy: string;
+  images?: string[];
+}
+
+/**
+ * Resolve Receiving Exception DTO
+ */
+export interface ResolveReceivingExceptionDTO {
+  exceptionId: string;
+  resolution: ReceivingExceptionResolution;
+  resolutionNotes?: string;
+  resolvedBy: string;
+  creditAmount?: number;
 }
 
 // ============================================================================
@@ -2531,8 +2830,378 @@ export type Filter<T> = {
 };
 
 // ============================================================================
+// ENHANCED INBOUND FEATURES EXPORTS
+// ============================================================================
+// Note: All new inbound types are already exported via their original declarations
+
+// ============================================================================
 // NOTIFICATION SYSTEM - EXPORTS
 // ============================================================================
 
 // Export notification types
 export * from './notifications';
+
+// ============================================================================
+// ACCOUNTING & FINANCIAL TYPES
+// ============================================================================
+
+/**
+ * Accounting Period
+ */
+export enum AccountingPeriod {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  YEARLY = 'YEARLY',
+}
+
+/**
+ * Cost Category
+ */
+export enum CostCategory {
+  LABOR = 'LABOR',
+  MATERIALS = 'MATERIALS',
+  SHIPPING = 'SHIPPING',
+  STORAGE = 'STORAGE',
+  OVERHEAD = 'OVERHEAD',
+  EXCEPTIONS = 'EXCEPTIONS',
+  QUALITY_CONTROL = 'QUALITY_CONTROL',
+  MAINTENANCE = 'MAINTENANCE',
+}
+
+/**
+ * Revenue Category
+ */
+export enum RevenueCategory {
+  SALES = 'SALES',
+  RESTOCKING_FEES = 'RESTOCKING_FEES',
+  SERVICE_FEES = 'SERVICE_FEES',
+  OTHER = 'OTHER',
+}
+
+/**
+ * Financial Metrics Summary
+ */
+export interface FinancialMetrics {
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+
+  // Revenue
+  totalRevenue: number;
+  revenueByCategory: Record<RevenueCategory, number>;
+  revenueByCustomer: Array<{ customerId: string; customerName: string; amount: number }>;
+
+  // Costs
+  totalCost: number;
+  costByCategory: Record<CostCategory, number>;
+  laborCosts: number;
+  materialCosts: number;
+  shippingCosts: number;
+  storageCosts: number;
+
+  // Inventory Valuation
+  inventoryValue: number;
+  inventoryValueByCategory: Record<string, number>;
+  inventoryValueByZone: Record<string, number>;
+
+  // Profitability
+  grossProfit: number;
+  netProfit: number;
+  profitMargin: number;
+
+  // Exception Costs
+  totalExceptionCost: number;
+  writeOffs: number;
+  vendorCredits: number;
+  customerRefunds: number;
+
+  // QC Metrics
+  qcFailureRate: number;
+  qcCost: number;
+  returnRate: number;
+  returnCost: number;
+
+  // Operating Metrics
+  ordersProcessed: number;
+  costPerOrder: number;
+  averageOrderValue: number;
+
+  // Receivables/Payables
+  outstandingReceivables: number;
+  outstandingPayables: number;
+  overdueReceivables: number;
+
+  previousPeriod?: {
+    revenue: number;
+    cost: number;
+    profit: number;
+  };
+}
+
+/**
+ * Inventory Valuation Detail
+ */
+export interface InventoryValuation {
+  sku: string;
+  description: string;
+  category: string;
+  quantityOnHand: number;
+  unitCost: number;
+  totalValue: number;
+  zone: string;
+  binLocation: string;
+  lastReceived: Date;
+  lastCostUpdate: Date;
+  valuationMethod: 'FIFO' | 'LIFO' | 'WEIGHTED_AVERAGE' | 'STANDARD_COST';
+}
+
+/**
+ * Labor Cost Detail
+ */
+export interface LaborCostDetail {
+  userId: string;
+  userName: string;
+  userRole: UserRole;
+  hoursWorked: number;
+  hourlyRate: number;
+  totalCost: number;
+  tasksCompleted: number;
+  costPerTask: number;
+  period: AccountingPeriod;
+  date: Date;
+}
+
+/**
+ * Transaction Log
+ */
+export enum TransactionType {
+  SALE = 'SALE',
+  REFUND = 'REFUND',
+  CREDIT_RECEIVED = 'CREDIT_RECEIVED',
+  CREDIT_ISSUED = 'CREDIT_ISSUED',
+  WRITE_OFF = 'WRITE_OFF',
+  PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
+  PAYMENT_MADE = 'PAYMENT_MADE',
+  JOURNAL_ENTRY = 'JOURNAL_ENTRY',
+}
+
+export interface FinancialTransaction {
+  transactionId: string;
+  transactionType: TransactionType;
+  amount: number;
+  currency: string;
+  referenceType: 'ORDER' | 'RETURN' | 'EXCEPTION' | 'GENERAL';
+  referenceId: string;
+  description: string;
+  customerId?: string;
+  vendorId?: string;
+  createdAt: Date;
+  createdBy: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  status: 'PENDING' | 'APPROVED' | 'RECONCILED' | 'CANCELLED';
+  account: string;
+  notes?: string;
+}
+
+/**
+ * Cost Analysis Report
+ */
+export interface CostAnalysisReport {
+  reportId: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  generatedAt: Date;
+
+  // Cost breakdown
+  totalCost: number;
+  costCategories: Array<{
+    category: CostCategory;
+    amount: number;
+    percentage: number;
+    previousPeriod: number;
+    change: number;
+    changePercent: number;
+  }>;
+
+  // Trends
+  costTrends: Array<{
+    period: string;
+    amount: number;
+  }>;
+
+  // Top cost drivers
+  topCostDrivers: Array<{
+    description: string;
+    amount: number;
+    percentage: number;
+    trend: 'UP' | 'DOWN' | 'STABLE';
+  }>;
+
+  // Recommendations
+  recommendations: string[];
+}
+
+/**
+ * Profit & Loss Statement
+ */
+export interface ProfitLossStatement {
+  statementId: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  generatedAt: Date;
+
+  // Revenue
+  grossRevenue: number;
+  returns: number;
+  netRevenue: number;
+
+  // Cost of Goods Sold
+  materialCosts: number;
+  laborCosts: number;
+  otherDirectCosts: number;
+  totalCOGS: number;
+
+  // Gross Profit
+  grossProfit: number;
+  grossProfitMargin: number;
+
+  // Operating Expenses
+  operatingExpenses: Record<string, number>;
+  totalOperatingExpenses: number;
+
+  // Operating Income
+  operatingIncome: number;
+  operatingMargin: number;
+
+  // Other Income/Expenses
+  otherIncome: number;
+  otherExpenses: number;
+
+  // Net Income
+  netIncome: number;
+  netMargin: number;
+
+  // Comparison with previous period
+  previousPeriod?: {
+    netRevenue: number;
+    grossProfit: number;
+    netIncome: number;
+  };
+}
+
+/**
+ * Vendor Performance Summary
+ */
+export interface VendorPerformanceFinancial {
+  vendorId: string;
+  vendorName: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+
+  // Purchases
+  totalPurchases: number;
+  orderCount: number;
+  averageOrderValue: number;
+
+  // Quality & Returns
+  returnRate: number;
+  returnCost: number;
+  defectRate: number;
+  creditRequested: number;
+  creditApproved: number;
+  creditPending: number;
+
+  // Payment Terms
+  paymentTerms: string;
+  outstandingBalance: number;
+  overdueAmount: number;
+  onTimePaymentRate: number;
+
+  // Performance Score
+  performanceScore: number;
+  rating: 'EXCELLENT' | 'GOOD' | 'AVERAGE' | 'POOR';
+}
+
+/**
+ * Customer Financial Summary
+ */
+export interface CustomerFinancialSummary {
+  customerId: string;
+  customerName: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+
+  // Sales
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+
+  // Returns & Credits
+  returnCount: number;
+  returnRate: number;
+  returnAmount: number;
+  creditIssued: number;
+
+  // Outstanding
+  outstandingBalance: number;
+  overdueAmount: number;
+  daysPaymentOutstanding: number;
+
+  // Profitability
+  grossProfit: number;
+  netProfit: number;
+  profitMargin: number;
+
+  // Status
+  creditStatus: 'GOOD' | 'WARNING' | 'RESTRICTED' | 'BLOCKED';
+  creditLimit?: number;
+  creditAvailable?: number;
+}
+
+// ============================================================================
+// ROLE PERMISSIONS MATRIX TYPES
+// ============================================================================
+
+/**
+ * Permission Category
+ */
+export enum PermissionCategory {
+  ORDERS = 'ORDERS',
+  INVENTORY = 'INVENTORY',
+  INBOUND = 'INBOUND',
+  OUTBOUND = 'OUTBOUND',
+  QC = 'QC',
+  SHIPPING = 'SHIPPING',
+  USERS = 'USERS',
+  ROLES = 'ROLES',
+  SETTINGS = 'SETTINGS',
+  REPORTS = 'REPORTS',
+  ACCOUNTING = 'ACCOUNTING',
+  INTEGRATIONS = 'INTEGRATIONS',
+}
+
+/**
+ * Role Permission Matrix Entry
+ */
+export interface RolePermissionEntry {
+  role: UserRole;
+  permissions: Permission[];
+  permissionCategories: Partial<Record<PermissionCategory, Permission[]>>;
+}
+
+/**
+ * Permission Definition
+ */
+export interface PermissionDefinition {
+  permission: Permission;
+  category: PermissionCategory;
+  description: string;
+  applicableRoles: UserRole[];
+}

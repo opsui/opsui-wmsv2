@@ -20,8 +20,17 @@ export const rateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  // Skip rate limiting for health check endpoint and in development
-  skip: req => req.path === '/health' || process.env.NODE_ENV !== 'production',
+  // Skip rate limiting for health check endpoint, development mode, local requests, or when explicitly disabled
+  skip: req => {
+    return (
+      req.path === '/health' ||
+      process.env.NODE_ENV !== 'production' ||
+      process.env.DISABLE_RATE_LIMIT === 'true' ||
+      req.ip === '127.0.0.1' ||
+      req.ip === '::1' ||
+      req.ip === 'localhost'
+    );
+  },
 });
 
 // ============================================================================
@@ -37,7 +46,16 @@ export const authRateLimiterSimple = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
+  // Skip in development or when explicitly disabled
+  skip: req => {
+    return (
+      process.env.NODE_ENV !== 'production' ||
+      process.env.DISABLE_RATE_LIMIT === 'true' ||
+      req.ip === '127.0.0.1' ||
+      req.ip === '::1' ||
+      req.ip === 'localhost'
+    );
+  },
 });
 
 // ============================================================================
@@ -53,5 +71,14 @@ export const pickingRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
+  // Skip in development or when explicitly disabled
+  skip: req => {
+    return (
+      process.env.NODE_ENV !== 'production' ||
+      process.env.DISABLE_RATE_LIMIT === 'true' ||
+      req.ip === '127.0.0.1' ||
+      req.ip === '::1' ||
+      req.ip === 'localhost'
+    );
+  },
 });

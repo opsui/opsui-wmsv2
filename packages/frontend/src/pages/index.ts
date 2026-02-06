@@ -40,4 +40,5 @@ export { default as NotificationsPage } from './NotificationsPage';
 export { default as MobileScanningPage } from './MobileScanningPage';
 export { default as ScheduleManagementPage } from './ScheduleManagementPage';
 export { default as RootCauseAnalysisPage } from './RootCauseAnalysisPage';
+export { default as AccountingPage } from './AccountingPage';
 export { default as NotFoundPage } from './NotFoundPage';

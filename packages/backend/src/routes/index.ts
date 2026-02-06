@@ -31,6 +31,7 @@ import maintenanceRoutes from './maintenance';
 import roleAssignmentRoutes from './roleAssignments';
 import customRolesRoutes from './customRoles';
 import userRoutes from './users';
+import accountingRoutes from './accounting';
 
 // New enhanced routes
 import barcodeRoutes from './barcode';
@@ -81,6 +82,7 @@ v1Router.use('/maintenance', maintenanceRoutes);
 v1Router.use('/role-assignments', roleAssignmentRoutes);
 v1Router.use('/custom-roles', customRolesRoutes);
 v1Router.use('/users', userRoutes);
+v1Router.use('/accounting', accountingRoutes);
 v1Router.use('/audit', auditRoutes);
 v1Router.use('/notifications', notificationRoutes);
 v1Router.use('/route-optimization', routeOptimizationRoutes);
@@ -126,6 +128,7 @@ router.use('/maintenance', maintenanceRoutes);
 router.use('/role-assignments', roleAssignmentRoutes);
 router.use('/custom-roles', customRolesRoutes);
 router.use('/users', userRoutes);
+router.use('/accounting', accountingRoutes);
 router.use('/barcode', barcodeRoutes);
 router.use('/waves', waveRoutes);
 router.use('/zones', zoneRoutes);
