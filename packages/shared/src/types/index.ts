@@ -3205,3 +3205,902 @@ export interface PermissionDefinition {
   description: string;
   applicableRoles: UserRole[];
 }
+
+// ============================================================================
+// FULL ERP ACCOUNTING TYPES (PHASE 1-3)
+// ============================================================================
+
+/**
+ * Account Type Enum - Standard accounting account types
+ */
+export enum AccountType {
+  ASSET = 'ASSET',
+  LIABILITY = 'LIABILITY',
+  EQUITY = 'EQUITY',
+  REVENUE = 'REVENUE',
+  EXPENSE = 'EXPENSE',
+}
+
+/**
+ * Journal Entry Status Enum
+ */
+export enum JournalEntryStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  POSTED = 'POSTED',
+  REVERSED = 'REVERSED',
+}
+
+/**
+ * Revenue Recognition Method Enum
+ */
+export enum RevenueRecognitionMethod {
+  INSTANT = 'INSTANT',
+  MILESTONE = 'MILESTONE',
+  RATABLE = 'RATABLE',
+  DEFERRED = 'DEFERRED',
+}
+
+/**
+ * Depreciation Method Enum
+ */
+export enum DepreciationMethod {
+  STRAIGHT_LINE = 'STRAIGHT_LINE',
+  DECLINING_BALANCE = 'DECLINING_BALANCE',
+  DOUBLE_DECLINING = 'DOUBLE_DECLINING',
+  UNITS_OF_PRODUCTION = 'UNITS_OF_PRODUCTION',
+}
+
+// ============================================================================
+// PHASE 1: FOUNDATION TYPES
+// ============================================================================
+
+/**
+ * Chart of Accounts
+ */
+export interface ChartOfAccounts {
+  accountId: string;
+  accountCode: string;
+  accountName: string;
+  accountType: AccountType;
+  parentAccountId?: string;
+  normalBalance: 'D' | 'C';
+  isActive: boolean;
+  isHeader: boolean;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Journal Entry
+ */
+export interface JournalEntry {
+  journalEntryId: string;
+  entryNumber: string;
+  entryDate: Date;
+  fiscalPeriod: string;
+  description: string;
+  status: JournalEntryStatus;
+  totalDebit: number;
+  totalCredit: number;
+  createdBy?: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  postedAt?: Date;
+  reversalEntryId?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Journal Entry Line
+ */
+export interface JournalEntryLine {
+  lineId: string;
+  journalEntryId: string;
+  lineNumber: number;
+  accountId: string;
+  description?: string;
+  debitAmount: number;
+  creditAmount: number;
+  costCenter?: string;
+  referenceType?: string;
+  referenceId?: string;
+}
+
+/**
+ * Trial Balance
+ */
+export interface TrialBalance {
+  trialBalanceId: string;
+  asOfDate: Date;
+  fiscalPeriod: string;
+  generatedAt: Date;
+  lines?: TrialBalanceLine[];
+}
+
+/**
+ * Trial Balance Line
+ */
+export interface TrialBalanceLine {
+  lineId: string;
+  trialBalanceId: string;
+  accountId: string;
+  debitBalance: number;
+  creditBalance: number;
+  netBalance: number;
+}
+
+/**
+ * Account Balance
+ */
+export interface AccountBalance {
+  accountId: string;
+  accountCode: string;
+  accountName: string;
+  accountType: AccountType;
+  normalBalance: 'D' | 'C';
+  debitBalance: number;
+  creditBalance: number;
+  netBalance: number;
+}
+
+/**
+ * Balance Sheet
+ */
+export interface BalanceSheet {
+  asOfDate: Date;
+  generatedAt: Date;
+  assets: BalanceSheetSection;
+  liabilities: BalanceSheetSection;
+  equity: BalanceSheetEquitySection;
+  totalAssetsLiabilitiesEquity: number;
+}
+
+/**
+ * Balance Sheet Section
+ */
+export interface BalanceSheetSection {
+  current: BalanceSheetItem[];
+  nonCurrent: BalanceSheetItem[];
+  total: number;
+}
+
+/**
+ * Balance Sheet Item
+ */
+export interface BalanceSheetItem {
+  accountId: string;
+  accountCode: string;
+  accountName: string;
+  amount: number;
+}
+
+/**
+ * Balance Sheet Equity Section
+ */
+export interface BalanceSheetEquitySection {
+  total: number;
+  breakdown: BalanceSheetItem[];
+}
+
+/**
+ * Cash Flow Statement
+ */
+export interface CashFlowStatement {
+  period: {
+    startDate: Date;
+    endDate: Date;
+  };
+  operating: CashFlowCategory;
+  investing: CashFlowCategory;
+  financing: CashFlowCategory;
+  netCashFlow: number;
+  beginningCash: number;
+  endingCash: number;
+}
+
+/**
+ * Cash Flow Category
+ */
+export interface CashFlowCategory {
+  total: number;
+  items: CashFlowItem[];
+}
+
+/**
+ * Cash Flow Item
+ */
+export interface CashFlowItem {
+  description: string;
+  amount: number;
+}
+
+// ============================================================================
+// PHASE 2: OPERATIONAL TYPES
+// ============================================================================
+
+/**
+ * AR Payment
+ */
+export interface ARPayment {
+  paymentId: string;
+  receivableId: string;
+  paymentDate: Date;
+  paymentMethod?: string;
+  amount: number;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Credit Memo
+ */
+export interface CreditMemo {
+  memoId: string;
+  receivableId?: string;
+  memoNumber: string;
+  memoDate: Date;
+  reason: string;
+  amount: number;
+  status: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Collection Activity
+ */
+export interface CollectionActivity {
+  activityId: string;
+  receivableId: string;
+  activityType: 'CALL' | 'EMAIL' | 'LETTER' | 'VISIT';
+  activityDate: Date;
+  notes?: string;
+  outcome?: string;
+  followUpDate?: Date;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * AP Payment
+ */
+export interface APPayment {
+  paymentId: string;
+  payableId: string;
+  paymentDate: Date;
+  paymentMethod?: string;
+  amount: number;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Vendor Credit Memo
+ */
+export interface VendorCreditMemo {
+  memoId: string;
+  payableId?: string;
+  memoNumber: string;
+  memoDate: Date;
+  reason: string;
+  amount: number;
+  status: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Payment Schedule
+ */
+export interface PaymentSchedule {
+  scheduleId: string;
+  payableId: string;
+  scheduledPaymentDate: Date;
+  amount: number;
+  status: string;
+  paidAmount: number;
+  paidDate?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Bank Account
+ */
+export interface BankAccount {
+  bankAccountId: string;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  routingNumber?: string;
+  accountType: string;
+  currency: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Bank Reconciliation
+ */
+export interface BankReconciliation {
+  reconciliationId: string;
+  bankAccountId: string;
+  statementDate: Date;
+  statementBalance: number;
+  bookBalance: number;
+  difference: number;
+  status: string;
+  reconciledBy?: string;
+  reconciledAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Reconciliation Item
+ */
+export interface ReconciliationItem {
+  itemId: string;
+  reconciliationId: string;
+  transactionType: string;
+  transactionDate: Date;
+  description: string;
+  amount: number;
+  isCleared: boolean;
+  referenceNumber?: string;
+  createdAt: Date;
+}
+
+/**
+ * Cash Position
+ */
+export interface CashPosition {
+  positionId: string;
+  asOfDate: Date;
+  cashOnHand: number;
+  cashInBank: number;
+  totalCash: number;
+  accountsReceivable: number;
+  accountsPayable: number;
+  netCash: number;
+  createdAt: Date;
+}
+
+/**
+ * Cash Flow Forecast
+ */
+export interface CashFlowForecast {
+  forecastId: string;
+  forecastDate: Date;
+  category: 'OPERATING' | 'INVESTING' | 'FINANCING';
+  forecastedInflow: number;
+  forecastedOutflow: number;
+  netFlow: number;
+  notes?: string;
+  createdAt: Date;
+}
+
+/**
+ * Revenue Contract
+ */
+export interface RevenueContract {
+  contractId: string;
+  contractNumber: string;
+  customerId: string;
+  contractName: string;
+  totalValue: number;
+  startDate: Date;
+  endDate: Date;
+  recognitionMethod: RevenueRecognitionMethod;
+  status: string;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Revenue Milestone
+ */
+export interface RevenueMilestone {
+  milestoneId: string;
+  contractId: string;
+  milestoneName: string;
+  description?: string;
+  targetAmount: number;
+  achievedAmount: number;
+  percentage: number;
+  targetDate?: Date;
+  achievedDate?: Date;
+  status: string;
+  createdAt: Date;
+}
+
+/**
+ * Revenue Schedule
+ */
+export interface RevenueSchedule {
+  scheduleId: string;
+  contractId: string;
+  revenueDate: Date;
+  amount: number;
+  recognizedAmount: number;
+  remainingAmount: number;
+  status: string;
+  recognizedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Deferred Revenue
+ */
+export interface DeferredRevenue {
+  deferralId: string;
+  contractId?: string;
+  originalAmount: number;
+  remainingAmount: number;
+  recognizedAmount: number;
+  recognitionStartDate: Date;
+  recognitionEndDate: Date;
+  monthlyRecognitionAmount?: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// PHASE 3: ADVANCED TYPES
+// ============================================================================
+
+/**
+ * Currency
+ */
+export interface Currency {
+  currencyCode: string;
+  currencyName: string;
+  symbol: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Exchange Rate
+ */
+export interface ExchangeRate {
+  rateId: string;
+  fromCurrency: string;
+  toCurrency: string;
+  rateDate: Date;
+  exchangeRate: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Currency Revaluation
+ */
+export interface CurrencyRevaluation {
+  revaluationId: string;
+  revaluationDate: Date;
+  accountId: string;
+  originalAmount: number;
+  originalCurrency: string;
+  baseCurrencyAmount: number;
+  exchangeRate: number;
+  gainLoss: number;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Budget
+ */
+export interface Budget {
+  budgetId: string;
+  budgetName: string;
+  fiscalYear: number;
+  budgetType: string;
+  status: string;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Budget Line
+ */
+export interface BudgetLine {
+  lineId: string;
+  budgetId: string;
+  accountId: string;
+  period: string;
+  budgetedAmount: number;
+  actualAmount: number;
+  variance: number;
+  variancePercent: number;
+  lastUpdated: Date;
+  createdAt: Date;
+}
+
+/**
+ * Forecast
+ */
+export interface Forecast {
+  forecastId: string;
+  forecastName: string;
+  forecastType: string;
+  startDate: Date;
+  endDate: Date;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Forecast Line
+ */
+export interface ForecastLine {
+  lineId: string;
+  forecastId: string;
+  accountId: string;
+  period: string;
+  forecastedAmount: number;
+  confidenceLevel: string;
+  notes?: string;
+  createdAt: Date;
+}
+
+/**
+ * Fixed Asset
+ */
+export interface FixedAsset {
+  assetId: string;
+  assetNumber: string;
+  assetName: string;
+  assetCategory?: string;
+  serialNumber?: string;
+  purchaseDate: Date;
+  purchaseCost: number;
+  salvageValue: number;
+  usefulLife: number;
+  depreciationMethod: DepreciationMethod;
+  currentBookValue?: number;
+  accumulatedDepreciation: number;
+  status: string;
+  location?: string;
+  assignedTo?: string;
+  disposalDate?: Date;
+  disposalValue?: number;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Depreciation Schedule
+ */
+export interface DepreciationSchedule {
+  scheduleId: string;
+  assetId: string;
+  fiscalYear: number;
+  fiscalPeriod: string;
+  depreciationAmount: number;
+  bookValueBeginning: number;
+  bookValueEnding: number;
+  accumulatedDepreciation: number;
+  isDepreciated: boolean;
+  calculatedAt: Date;
+  createdAt: Date;
+}
+
+/**
+ * Asset Disposal
+ */
+export interface AssetDisposal {
+  disposalId: string;
+  assetId: string;
+  disposalDate: Date;
+  disposalType: string;
+  disposalValue: number;
+  gainLoss: number;
+  soldTo?: string;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Audit Log
+ */
+export interface AuditLog {
+  auditId: string;
+  tableName: string;
+  recordId: string;
+  action: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  changedBy?: string;
+  changedAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * Document Attachment
+ */
+export interface DocumentAttachment {
+  attachmentId: string;
+  recordType: string;
+  recordId: string;
+  documentName: string;
+  documentType?: string;
+  filePath: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedBy?: string;
+  uploadedAt: Date;
+}
+
+/**
+ * Approval
+ */
+export interface Approval {
+  approvalId: string;
+  approvalType: string;
+  recordId: string;
+  status: string;
+  requestedBy?: string;
+  requestedAt: Date;
+  approvedBy?: string;
+  approvedAt?: Date;
+  rejectedBy?: string;
+  rejectedAt?: Date;
+  comments?: string;
+  createdAt: Date;
+}
+
+/**
+ * Signature
+ */
+export interface Signature {
+  signatureId: string;
+  recordType: string;
+  recordId: string;
+  signedBy?: string;
+  signatureData: string;
+  signedAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * Fiscal Period
+ */
+export interface FiscalPeriod {
+  periodId: string;
+  fiscalYear: number;
+  periodNumber: number;
+  periodName: string;
+  startDate: Date;
+  endDate: Date;
+  isClosed: boolean;
+  closedBy?: string;
+  closedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Closing Entry
+ */
+export interface ClosingEntry {
+  closingId: string;
+  periodId: string;
+  journalEntryId?: string;
+  entryType: 'OPENING' | 'CLOSING' | 'ADJUSTING';
+  createdAt: Date;
+}
+
+// ============================================================================
+// ERP ACCOUNTING DTOs
+// ============================================================================
+
+/**
+ * Create Account DTO
+ */
+export interface CreateAccountDTO {
+  accountCode: string;
+  accountName: string;
+  accountType: AccountType;
+  parentAccountId?: string;
+  normalBalance: 'D' | 'C';
+  isHeader: boolean;
+  description?: string;
+}
+
+/**
+ * Update Account DTO
+ */
+export interface UpdateAccountDTO {
+  accountName?: string;
+  parentAccountId?: string;
+  isActive?: boolean;
+  description?: string;
+}
+
+/**
+ * Create Journal Entry DTO
+ */
+export interface CreateJournalEntryDTO {
+  entryNumber: string;
+  entryDate: Date;
+  fiscalPeriod: string;
+  description: string;
+  lines: Array<{
+    lineNumber: number;
+    accountId: string;
+    description?: string;
+    debitAmount: number;
+    creditAmount: number;
+    costCenter?: string;
+    referenceType?: string;
+    referenceId?: string;
+  }>;
+  createdBy?: string;
+  notes?: string;
+}
+
+/**
+ * Approve Journal Entry DTO
+ */
+export interface ApproveJournalEntryDTO {
+  entryId: string;
+  approvedBy: string;
+}
+
+/**
+ * Post Journal Entry DTO
+ */
+export interface PostJournalEntryDTO {
+  entryId: string;
+}
+
+/**
+ * Reverse Journal Entry DTO
+ */
+export interface ReverseJournalEntryDTO {
+  entryId: string;
+  reason: string;
+  reversedBy: string;
+}
+
+/**
+ * Get Trial Balance DTO
+ */
+export interface GetTrialBalanceDTO {
+  asOfDate: Date;
+}
+
+/**
+ * Get Balance Sheet DTO
+ */
+export interface GetBalanceSheetDTO {
+  asOfDate: Date;
+}
+
+/**
+ * Get Cash Flow DTO
+ */
+export interface GetCashFlowDTO {
+  startDate: Date;
+  endDate: Date;
+}
+
+/**
+ * Apply Payment DTO
+ */
+export interface ApplyPaymentDTO {
+  receivableId: string;
+  paymentDate: Date;
+  paymentMethod?: string;
+  amount: number;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy: string;
+}
+
+/**
+ * Create Credit Memo DTO
+ */
+export interface CreateCreditMemoDTO {
+  receivableId?: string;
+  memoNumber: string;
+  memoDate: Date;
+  reason: string;
+  amount: number;
+  createdBy: string;
+}
+
+/**
+ * Create Bank Reconciliation DTO
+ */
+export interface CreateBankReconciliationDTO {
+  bankAccountId: string;
+  statementDate: Date;
+  statementBalance: number;
+  bookBalance: number;
+  createdBy: string;
+}
+
+/**
+ * Create Revenue Contract DTO
+ */
+export interface CreateRevenueContractDTO {
+  contractNumber: string;
+  customerId: string;
+  contractName: string;
+  totalValue: number;
+  startDate: Date;
+  endDate: Date;
+  recognitionMethod: RevenueRecognitionMethod;
+  createdBy: string;
+}
+
+/**
+ * Create Fixed Asset DTO
+ */
+export interface CreateFixedAssetDTO {
+  assetNumber: string;
+  assetName: string;
+  assetCategory?: string;
+  serialNumber?: string;
+  purchaseDate: Date;
+  purchaseCost: number;
+  salvageValue: number;
+  usefulLife: number;
+  depreciationMethod: DepreciationMethod;
+  location?: string;
+  assignedTo?: string;
+}
+
+/**
+ * Create Budget DTO
+ */
+export interface CreateBudgetDTO {
+  budgetName: string;
+  fiscalYear: number;
+  budgetType: string;
+  lines: Array<{
+    accountId: string;
+    period: string;
+    budgetedAmount: number;
+  }>;
+  createdBy: string;
+}
+
+/**
+ * Create Forecast DTO
+ */
+export interface CreateForecastDTO {
+  forecastName: string;
+  forecastType: string;
+  startDate: Date;
+  endDate: Date;
+  lines: Array<{
+    accountId: string;
+    period: string;
+    forecastedAmount: number;
+    confidenceLevel: string;
+    notes?: string;
+  }>;
+  createdBy: string;
+}

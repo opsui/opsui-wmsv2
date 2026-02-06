@@ -19,6 +19,18 @@ import {
   VendorPerformanceFinancial,
   CustomerFinancialSummary,
   UserRole,
+  AccountType,
+  JournalEntryStatus,
+  ChartOfAccounts,
+  JournalEntry,
+  JournalEntryLine,
+  TrialBalance,
+  AccountBalance,
+  BalanceSheet,
+  CashFlowStatement,
+  CreateAccountDTO,
+  UpdateAccountDTO,
+  CreateJournalEntryDTO,
 } from '@opsui/shared';
 
 export class AccountingService {
@@ -685,7 +697,7 @@ export class AccountingService {
   }
 
   private generateId(prefix: string): string {
-    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private async getPreviousPeriodMetrics(currentStart: Date, period: AccountingPeriod) {
@@ -1067,6 +1079,722 @@ export class AccountingService {
       }
       throw error;
     }
+  }
+
+  // ========================================================================
+  // PHASE 1: CHART OF ACCOUNTS
+  // ========================================================================
+
+  async getChartOfAccounts(filters?: {
+    accountType?: AccountType;
+    isActive?: boolean;
+  }): Promise<ChartOfAccounts[]> {
+    try {
+      let query = `
+        SELECT
+          account_id as "accountId",
+          account_code as "accountCode",
+          account_name as "accountName",
+          account_type as "accountType",
+          parent_account_id as "parentAccountId",
+          normal_balance as "normalBalance",
+          is_active as "isActive",
+          is_header as "isHeader",
+          description,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM acct_chart_of_accounts
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+
+      if (filters?.accountType) {
+        params.push(filters.accountType);
+        query += ` AND account_type = $${params.length}`;
+      }
+      if (filters?.isActive !== undefined) {
+        params.push(filters.isActive);
+        query += ` AND is_active = $${params.length}`;
+      }
+
+      query += ` ORDER BY account_code`;
+
+      const result = await dbQuery(query, params);
+      return result.rows as ChartOfAccounts[];
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        console.log('[AccountingService] acct_chart_of_accounts table does not exist, returning empty accounts');
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async getAccount(accountId: string): Promise<ChartOfAccounts | null> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          account_id as "accountId",
+          account_code as "accountCode",
+          account_name as "accountName",
+          account_type as "accountType",
+          parent_account_id as "parentAccountId",
+          normal_balance as "normalBalance",
+          is_active as "isActive",
+          is_header as "isHeader",
+          description,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM acct_chart_of_accounts
+        WHERE account_id = $1`,
+        [accountId]
+      );
+
+      return result.rows[0] as ChartOfAccounts || null;
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async createAccount(data: CreateAccountDTO): Promise<ChartOfAccounts> {
+    const accountId = this.generateId('ACT');
+
+    const result = await dbQuery(
+      `INSERT INTO acct_chart_of_accounts (
+        account_id, account_code, account_name, account_type,
+        parent_account_id, normal_balance, is_header, description,
+        created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      RETURNING *`,
+      [
+        accountId,
+        data.accountCode,
+        data.accountName,
+        data.accountType,
+        data.parentAccountId || null,
+        data.normalBalance,
+        data.isHeader,
+        data.description || null,
+      ]
+    );
+
+    return {
+      accountId: result.rows[0].account_id,
+      accountCode: result.rows[0].account_code,
+      accountName: result.rows[0].account_name,
+      accountType: result.rows[0].account_type,
+      parentAccountId: result.rows[0].parent_account_id,
+      normalBalance: result.rows[0].normal_balance,
+      isActive: result.rows[0].is_active,
+      isHeader: result.rows[0].is_header,
+      description: result.rows[0].description,
+      createdAt: result.rows[0].created_at,
+      updatedAt: result.rows[0].updated_at,
+    };
+  }
+
+  async updateAccount(accountId: string, data: UpdateAccountDTO): Promise<ChartOfAccounts> {
+    const updates: string[] = [];
+    const params: any[] = [];
+    let paramCount = 0;
+
+    if (data.accountName !== undefined) {
+      paramCount++;
+      updates.push(`account_name = $${paramCount}`);
+      params.push(data.accountName);
+    }
+    if (data.parentAccountId !== undefined) {
+      paramCount++;
+      updates.push(`parent_account_id = $${paramCount}`);
+      params.push(data.parentAccountId);
+    }
+    if (data.isActive !== undefined) {
+      paramCount++;
+      updates.push(`is_active = $${paramCount}`);
+      params.push(data.isActive);
+    }
+    if (data.description !== undefined) {
+      paramCount++;
+      updates.push(`description = $${paramCount}`);
+      params.push(data.description);
+    }
+
+    if (updates.length === 0) {
+      return this.getAccount(accountId) as Promise<ChartOfAccounts>;
+    }
+
+    updates.push(`updated_at = NOW()`);
+    params.push(accountId);
+
+    const result = await dbQuery(
+      `UPDATE acct_chart_of_accounts SET ${updates.join(', ')} WHERE account_id = $${params.length} RETURNING *`,
+      params
+    );
+
+    return {
+      accountId: result.rows[0].account_id,
+      accountCode: result.rows[0].account_code,
+      accountName: result.rows[0].account_name,
+      accountType: result.rows[0].account_type,
+      parentAccountId: result.rows[0].parent_account_id,
+      normalBalance: result.rows[0].normal_balance,
+      isActive: result.rows[0].is_active,
+      isHeader: result.rows[0].is_header,
+      description: result.rows[0].description,
+      createdAt: result.rows[0].created_at,
+      updatedAt: result.rows[0].updated_at,
+    };
+  }
+
+  async getAccountBalance(accountId: string, asOfDate: Date): Promise<AccountBalance> {
+    try {
+      const account = await this.getAccount(accountId);
+      if (!account) {
+        throw new Error(`Account ${accountId} not found`);
+      }
+
+      const result = await dbQuery(
+        `SELECT
+          COALESCE(SUM(
+            CASE WHEN coa.normal_balance = 'D' THEN jel.debit_amount - jel.credit_amount
+            ELSE jel.credit_amount - jel.debit_amount
+            END
+          ), 0) as net_balance,
+          COALESCE(SUM(jel.debit_amount), 0) as debit_balance,
+          COALESCE(SUM(jel.credit_amount), 0) as credit_balance
+        FROM acct_chart_of_accounts coa
+        LEFT JOIN acct_journal_entry_lines jel ON jel.account_id = coa.account_id
+        LEFT JOIN acct_journal_entries je ON je.journal_entry_id = jel.journal_entry_id
+        WHERE coa.account_id = $1
+          AND je.entry_date <= $2
+          AND je.status = 'POSTED'
+        GROUP BY coa.account_id, coa.account_code, coa.account_name, coa.account_type, coa.normal_balance`,
+        [accountId, asOfDate]
+      );
+
+      const row = result.rows[0] || { net_balance: 0, debit_balance: 0, credit_balance: 0 };
+
+      return {
+        accountId: account.accountId,
+        accountCode: account.accountCode,
+        accountName: account.accountName,
+        accountType: account.accountType,
+        normalBalance: account.normalBalance,
+        debitBalance: parseFloat(row.debit_balance) || 0,
+        creditBalance: parseFloat(row.credit_balance) || 0,
+        netBalance: parseFloat(row.net_balance) || 0,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        throw new Error('Accounting tables not yet available');
+      }
+      throw error;
+    }
+  }
+
+  // ========================================================================
+  // PHASE 1: JOURNAL ENTRIES
+  // ========================================================================
+
+  async getJournalEntries(filters?: {
+    status?: JournalEntryStatus;
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ entries: JournalEntry[]; total: number }> {
+    try {
+      let query = `
+        SELECT
+          journal_entry_id as "journalEntryId",
+          entry_number as "entryNumber",
+          entry_date as "entryDate",
+          fiscal_period as "fiscalPeriod",
+          description,
+          status,
+          total_debit as "totalDebit",
+          total_credit as "totalCredit",
+          created_by as "createdBy",
+          approved_by as "approvedBy",
+          approved_at as "approvedAt",
+          posted_at as "postedAt",
+          reversal_entry_id as "reversalEntryId",
+          notes,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM acct_journal_entries
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      let paramCount = 0;
+
+      if (filters?.status) {
+        paramCount++;
+        query += ` AND status = $${paramCount}`;
+        params.push(filters.status);
+      }
+      if (filters?.dateFrom) {
+        paramCount++;
+        query += ` AND entry_date >= $${paramCount}`;
+        params.push(filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        paramCount++;
+        query += ` AND entry_date <= $${paramCount}`;
+        params.push(filters.dateTo);
+      }
+
+      query += ` ORDER BY entry_date DESC, created_at DESC`;
+
+      // Get total count
+      const countResult = await dbQuery(query.replace('SELECT *', 'SELECT COUNT(*)'), params);
+      const total = parseInt(countResult.rows[0].count);
+
+      // Add pagination
+      if (filters?.limit) {
+        paramCount++;
+        query += ` LIMIT $${paramCount}`;
+        params.push(filters.limit);
+      }
+      if (filters?.offset) {
+        paramCount++;
+        query += ` OFFSET $${paramCount}`;
+        params.push(filters.offset);
+      }
+
+      const result = await dbQuery(query, params);
+
+      return {
+        entries: result.rows as JournalEntry[],
+        total,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        console.log('[AccountingService] acct_journal_entries table does not exist, returning empty entries');
+        return { entries: [], total: 0 };
+      }
+      throw error;
+    }
+  }
+
+  async getJournalEntry(entryId: string): Promise<JournalEntry | null> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          journal_entry_id as "journalEntryId",
+          entry_number as "entryNumber",
+          entry_date as "entryDate",
+          fiscal_period as "fiscalPeriod",
+          description,
+          status,
+          total_debit as "totalDebit",
+          total_credit as "totalCredit",
+          created_by as "createdBy",
+          approved_by as "approvedBy",
+          approved_at as "approvedAt",
+          posted_at as "postedAt",
+          reversal_entry_id as "reversalEntryId",
+          notes,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM acct_journal_entries
+        WHERE journal_entry_id = $1`,
+        [entryId]
+      );
+
+      return result.rows[0] as JournalEntry || null;
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async getJournalEntryLines(journalEntryId: string): Promise<JournalEntryLine[]> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          line_id as "lineId",
+          journal_entry_id as "journalEntryId",
+          line_number as "lineNumber",
+          account_id as "accountId",
+          description,
+          debit_amount as "debitAmount",
+          credit_amount as "creditAmount",
+          cost_center as "costCenter",
+          reference_type as "referenceType",
+          reference_id as "referenceId"
+        FROM acct_journal_entry_lines
+        WHERE journal_entry_id = $1
+        ORDER BY line_number`,
+        [journalEntryId]
+      );
+
+      return result.rows as JournalEntryLine[];
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async createJournalEntry(data: CreateJournalEntryDTO): Promise<JournalEntry> {
+    const journalEntryId = this.generateId('JE');
+
+    // Calculate totals
+    const totalDebit = data.lines.reduce((sum, line) => sum + line.debitAmount, 0);
+    const totalCredit = data.lines.reduce((sum, line) => sum + line.creditAmount, 0);
+
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      throw new Error('Debits and credits must be equal');
+    }
+
+    // Insert journal entry header
+    await dbQuery(
+      `INSERT INTO acct_journal_entries (
+        journal_entry_id, entry_number, entry_date, fiscal_period,
+        description, status, total_debit, total_credit,
+        created_by, notes, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, 'DRAFT', $6, $7, $8, $9, NOW(), NOW())`,
+      [
+        journalEntryId,
+        data.entryNumber,
+        data.entryDate,
+        data.fiscalPeriod,
+        data.description,
+        totalDebit,
+        totalCredit,
+        data.createdBy || null,
+        data.notes || null,
+      ]
+    );
+
+    // Insert journal entry lines
+    for (const line of data.lines) {
+      const lineId = this.generateId('JEL');
+      await dbQuery(
+        `INSERT INTO acct_journal_entry_lines (
+          line_id, journal_entry_id, line_number, account_id,
+          description, debit_amount, credit_amount, cost_center,
+          reference_type, reference_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [
+          lineId,
+          journalEntryId,
+          line.lineNumber,
+          line.accountId,
+          line.description || null,
+          line.debitAmount,
+          line.creditAmount,
+          line.costCenter || null,
+          line.referenceType || null,
+          line.referenceId || null,
+        ]
+      );
+    }
+
+    return this.getJournalEntry(journalEntryId) as Promise<JournalEntry>;
+  }
+
+  async approveJournalEntry(entryId: string, approvedBy: string): Promise<JournalEntry> {
+    const result = await dbQuery(
+      `UPDATE acct_journal_entries
+      SET status = 'APPROVED', approved_by = $1, approved_at = NOW(), updated_at = NOW()
+      WHERE journal_entry_id = $2 AND status = 'DRAFT'
+      RETURNING *`,
+      [approvedBy, entryId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Journal entry not found or not in DRAFT status');
+    }
+
+    return this.getJournalEntry(entryId) as Promise<JournalEntry>;
+  }
+
+  async postJournalEntry(entryId: string): Promise<JournalEntry> {
+    const result = await dbQuery(
+      `UPDATE acct_journal_entries
+      SET status = 'POSTED', posted_at = NOW(), updated_at = NOW()
+      WHERE journal_entry_id = $1 AND status = 'APPROVED'
+      RETURNING *`,
+      [entryId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Journal entry not found or not approved');
+    }
+
+    return this.getJournalEntry(entryId) as Promise<JournalEntry>;
+  }
+
+  async reverseJournalEntry(entryId: string, reason: string, reversedBy: string): Promise<JournalEntry> {
+    const originalEntry = await this.getJournalEntry(entryId);
+    if (!originalEntry) {
+      throw new Error('Journal entry not found');
+    }
+
+    if (originalEntry.status !== 'POSTED') {
+      throw new Error('Only posted entries can be reversed');
+    }
+
+    const lines = await this.getJournalEntryLines(entryId);
+
+    // Create reversal entry
+    const reversalEntryId = this.generateId('JE');
+    await dbQuery(
+      `INSERT INTO acct_journal_entries (
+        journal_entry_id, entry_number, entry_date, fiscal_period,
+        description, status, total_debit, total_credit,
+        reversal_entry_id, created_by, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, 'POSTED', $6, $7, $8, $9, NOW(), NOW())`,
+      [
+        reversalEntryId,
+        `${originalEntry.entryNumber}-REV`,
+        new Date(),
+        originalEntry.fiscalPeriod,
+        `REVERSAL: ${originalEntry.description} - ${reason}`,
+        originalEntry.totalCredit, // Swap debit/credit
+        originalEntry.totalDebit,
+        entryId,
+        reversedBy,
+      ]
+    );
+
+    // Create reversal lines (swapped debit/credit)
+    for (const line of lines) {
+      const lineId = this.generateId('JEL');
+      await dbQuery(
+        `INSERT INTO acct_journal_entry_lines (
+          line_id, journal_entry_id, line_number, account_id,
+          description, debit_amount, credit_amount
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          lineId,
+          reversalEntryId,
+          line.lineNumber,
+          line.accountId,
+          `REVERSAL: ${line.description || ''}`,
+          line.creditAmount, // Swap
+          line.debitAmount, // Swap
+        ]
+      );
+    }
+
+    // Update original entry status
+    await dbQuery(
+      `UPDATE acct_journal_entries
+      SET status = 'REVERSED', updated_at = NOW()
+      WHERE journal_entry_id = $1`,
+      [entryId]
+    );
+
+    return this.getJournalEntry(reversalEntryId) as Promise<JournalEntry>;
+  }
+
+  // ========================================================================
+  // PHASE 1: TRIAL BALANCE
+  // ========================================================================
+
+  async getTrialBalance(asOfDate: Date): Promise<TrialBalance> {
+    const fiscalPeriod = `${asOfDate.getFullYear()}-${String(asOfDate.getMonth() + 1).padStart(2, '0')}`;
+
+    const trialBalanceId = this.generateId('TB');
+
+    // Create trial balance snapshot
+    await dbQuery(
+      `INSERT INTO acct_trial_balance (trial_balance_id, as_of_date, fiscal_period, generated_at)
+      VALUES ($1, $2, $3, NOW())`,
+      [trialBalanceId, asOfDate, fiscalPeriod]
+    );
+
+    // Get all account balances
+    const accounts = await this.getChartOfAccounts({ isActive: true });
+
+    for (const account of accounts) {
+      const balance = await this.getAccountBalance(account.accountId, asOfDate);
+      if (balance.debitBalance > 0 || balance.creditBalance > 0) {
+        const lineId = this.generateId('TBL');
+        await dbQuery(
+          `INSERT INTO acct_trial_balance_lines (
+            line_id, trial_balance_id, account_id, debit_balance, credit_balance
+          ) VALUES ($1, $2, $3, $4, $5)`,
+          [lineId, trialBalanceId, account.accountId, balance.debitBalance, balance.creditBalance]
+        );
+      }
+    }
+
+    return {
+      trialBalanceId,
+      asOfDate,
+      fiscalPeriod,
+      generatedAt: new Date(),
+    };
+  }
+
+  async getTrialBalanceLines(trialBalanceId: string): Promise<any[]> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          tbl.line_id as "lineId",
+          tbl.trial_balance_id as "trialBalanceId",
+          tbl.account_id as "accountId",
+          coa.account_code as "accountCode",
+          coa.account_name as "accountName",
+          coa.account_type as "accountType",
+          tbl.debit_balance as "debitBalance",
+          tbl.credit_balance as "creditBalance",
+          tbl.net_balance as "netBalance"
+        FROM acct_trial_balance_lines tbl
+        JOIN acct_chart_of_accounts coa ON coa.account_id = tbl.account_id
+        WHERE tbl.trial_balance_id = $1
+        ORDER BY coa.account_code`,
+        [trialBalanceId]
+      );
+
+      return result.rows;
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  // ========================================================================
+  // PHASE 1: BALANCE SHEET
+  // ========================================================================
+
+  async getBalanceSheet(asOfDate: Date): Promise<BalanceSheet> {
+    const accounts = await this.getChartOfAccounts({ isActive: true });
+
+    const assetAccounts = accounts.filter(a => a.accountType === AccountType.ASSET);
+    const liabilityAccounts = accounts.filter(a => a.accountType === AccountType.LIABILITY);
+    const equityAccounts = accounts.filter(a => a.accountType === AccountType.EQUITY);
+
+    // Current assets (account codes 1000-1999, typically 1000-1199)
+    const currentAssets = await this.getBalanceSheetItems(assetAccounts, asOfDate, [1000, 1199]);
+    // Non-current assets (1200-1999)
+    const nonCurrentAssets = await this.getBalanceSheetItems(assetAccounts, asOfDate, [1200, 1999]);
+
+    // Current liabilities (2000-2999, typically 2000-2199)
+    const currentLiabilities = await this.getBalanceSheetItems(liabilityAccounts, asOfDate, [2000, 2199]);
+    // Non-current liabilities (2200-2999)
+    const nonCurrentLiabilities = await this.getBalanceSheetItems(liabilityAccounts, asOfDate, [2200, 2999]);
+
+    // Equity
+    const equityItems = await this.getBalanceSheetItems(equityAccounts, asOfDate, [3000, 3999]);
+
+    const totalAssets = currentAssets.reduce((sum, item) => sum + item.amount, 0) +
+                       nonCurrentAssets.reduce((sum, item) => sum + item.amount, 0);
+    const totalLiabilities = currentLiabilities.reduce((sum, item) => sum + item.amount, 0) +
+                           nonCurrentLiabilities.reduce((sum, item) => sum + item.amount, 0);
+    const totalEquity = equityItems.reduce((sum, item) => sum + item.amount, 0);
+
+    return {
+      asOfDate,
+      generatedAt: new Date(),
+      assets: {
+        current: currentAssets,
+        nonCurrent: nonCurrentAssets,
+        total: totalAssets,
+      },
+      liabilities: {
+        current: currentLiabilities,
+        nonCurrent: nonCurrentLiabilities,
+        total: totalLiabilities,
+      },
+      equity: {
+        total: totalEquity,
+        breakdown: equityItems,
+      },
+      totalAssetsLiabilitiesEquity: totalAssets,
+    };
+  }
+
+  private async getBalanceSheetItems(accounts: ChartOfAccounts[], asOfDate: Date, codeRange: [number, number]): Promise<any[]> {
+    const items: any[] = [];
+
+    for (const account of accounts) {
+      const code = parseInt(account.accountCode);
+      if (code < codeRange[0] || code > codeRange[1]) continue;
+
+      const balance = await this.getAccountBalance(account.accountId, asOfDate);
+      if (balance.netBalance !== 0) {
+        items.push({
+          accountId: account.accountId,
+          accountCode: account.accountCode,
+          accountName: account.accountName,
+          amount: Math.abs(balance.netBalance),
+        });
+      }
+    }
+
+    return items;
+  }
+
+  // ========================================================================
+  // PHASE 1: CASH FLOW STATEMENT
+  // ========================================================================
+
+  async getCashFlowStatement(startDate: Date, endDate: Date): Promise<CashFlowStatement> {
+    const operating = await this.getOperatingCashFlow(startDate, endDate);
+    const investing = await this.getInvestingCashFlow(startDate, endDate);
+    const financing = await this.getFinancingCashFlow(startDate, endDate);
+
+    return {
+      period: { startDate, endDate },
+      operating,
+      investing,
+      financing,
+      netCashFlow: operating.total + investing.total + financing.total,
+      beginningCash: 0, // Would need beginning balance calculation
+      endingCash: 0, // Would need ending balance calculation
+    };
+  }
+
+  private async getOperatingCashFlow(startDate: Date, endDate: Date): Promise<any> {
+    // Cash from operations = Revenue - COGS - Operating Expenses
+    const metrics = await this.getFinancialMetrics({
+      startDate,
+      endDate,
+      includePreviousPeriod: false,
+    });
+
+    const items = [
+      { description: 'Net Income', amount: metrics.netProfit },
+      { description: 'Depreciation', amount: 0 }, // Would need depreciation data
+      { description: 'Change in Accounts Receivable', amount: -metrics.outstandingReceivables },
+      { description: 'Change in Accounts Payable', amount: metrics.outstandingPayables },
+    ];
+
+    return {
+      total: items.reduce((sum, item) => sum + item.amount, 0),
+      items,
+    };
+  }
+
+  private async getInvestingCashFlow(_startDate: Date, _endDate: Date): Promise<any> {
+    // Placeholder for investing activities
+    // TODO: Implement actual cash flow from investing activities
+    return {
+      total: 0,
+      items: [],
+    };
+  }
+
+  private async getFinancingCashFlow(_startDate: Date, _endDate: Date): Promise<any> {
+    // Placeholder for financing activities
+    // TODO: Implement actual cash flow from financing activities
+    return {
+      total: 0,
+      items: [],
+    };
   }
 }
 
