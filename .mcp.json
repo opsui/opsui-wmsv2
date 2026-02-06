@@ -2,20 +2,35 @@
   "mcpServers": {
     "wms-dev-accelerator": {
       "command": "node",
-      "args": [
-        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server\\dist\\index.js"
-      ],
+      "args": ["C:\\Users\\joshu\\opsui-wmsv2\\tools\\mcp-server\\dist\\index.js"],
       "env": {
-        "WMS_WORKSPACE_ROOT": "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
+        "WMS_WORKSPACE_ROOT": "C:\\Users\\joshu\\opsui-wmsv2"
+      }
+    },
+    "glm-server": {
+      "command": "node",
+      "args": ["C:\\Users\\joshu\\opsui-wmsv2\\tools\\mcp-server-glm\\dist\\index.js"],
+      "env": {
+        "GLM_API_KEY": "YOUR_GLM_API_KEY_HERE"
       }
     },
     "filesystem": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\joshu\\opsui-wmsv2"]
+    },
+    "web-reader": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-web-reader"],
+      "env": {
+        "WEB_READER_HEADLESS": "true"
+      }
+    },
+    "4-5v-mcp": {
+      "command": "npx",
+      "args": ["-y", "@4-5v/mcp"],
+      "env": {
+        "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_HERE"
+      }
     },
     "github": {
       "command": "npx",

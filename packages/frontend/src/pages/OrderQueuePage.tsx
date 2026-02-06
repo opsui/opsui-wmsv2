@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { orderApi, useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
+import { useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
 import { Card, CardContent, Button, Header, Pagination, useToast } from '@/components/shared';
 import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
 import { formatDate } from '@/lib/utils';
@@ -209,7 +209,6 @@ export function OrderQueuePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
-  const [initialTabSet, setInitialTabSet] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -282,37 +281,12 @@ export function OrderQueuePage() {
   }, [orders]);
 
   // Auto-detect which tab to show based on whether picker has items in tote
+  // DISABLED: This feature was causing redirect loops and is now disabled
+  // Users can manually switch between PENDING and TOTE tabs using the dropdown
   useEffect(() => {
-    const setInitialTab = async () => {
-      if (!userId || initialTabSet) return; // Skip if not logged in or already set
-
-      try {
-        // Query for PICKING orders to check if picker has items in tote
-        const result = await orderApi.getOrderQueue({
-          status: OrderStatus.PICKING,
-          pickerId: userId,
-        });
-
-        // If picker has items in tote, switch to TOTE tab
-        // Otherwise stay on PENDING tab (default)
-        if (result.orders.length > 0) {
-          console.log('[OrderQueue] Picker has items in tote, switching to TOTE tab');
-          setStatusFilter(OrderStatus.PICKING);
-        } else {
-          console.log('[OrderQueue] Picker has no items in tote, staying on PENDING tab');
-          setStatusFilter(OrderStatus.PENDING);
-        }
-      } catch (error) {
-        console.error('[OrderQueue] Error checking for PICKING orders:', error);
-        // Default to PENDING on error
-        setStatusFilter(OrderStatus.PENDING);
-      } finally {
-        setInitialTabSet(true);
-      }
-    };
-
-    setInitialTab();
-  }, [userId, initialTabSet]);
+    // Always start on PENDING tab - users can manually switch to TOTE if needed
+    setStatusFilter(OrderStatus.PENDING);
+  }, [userId]);
 
   // Refetch orders when component mounts or filter changes to get fresh progress data
   useEffect(() => {

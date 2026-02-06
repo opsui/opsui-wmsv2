@@ -518,6 +518,10 @@ export class OrderService {
     return orderRepository.getOrderWithItems(orderId);
   }
 
+  // Simple in-memory deduplication for claim notifications (prevents React StrictMode duplicates)
+  private recentClaimNotifications = new Map<string, number>();
+  private readonly CLAIM_DEDUP_WINDOW_MS = 3000; // 3 second window
+
   // --------------------------------------------------------------------------
   // CLAIM ORDER
   // --------------------------------------------------------------------------
@@ -525,9 +529,25 @@ export class OrderService {
   async claimOrder(orderId: string, dto: ClaimOrderDTO): Promise<Order> {
     const order = await orderRepository.claimOrder(orderId, dto.pickerId);
 
-    // Send notification to all users about order being claimed
+    // Simple deduplication key using just orderId and pickerId
+    const dedupKey = `${dto.pickerId}:${orderId}`;
+    const now = Date.now();
+    const lastClaimTime = this.recentClaimNotifications.get(dedupKey) || 0;
+    const isNewNotification = now - lastClaimTime > this.CLAIM_DEDUP_WINDOW_MS;
+
+    if (isNewNotification) {
+      this.recentClaimNotifications.set(dedupKey, now);
+      // Clean up old entries periodically
+      setTimeout(() => {
+        if (this.recentClaimNotifications.get(dedupKey) === now) {
+          this.recentClaimNotifications.delete(dedupKey);
+        }
+      }, this.CLAIM_DEDUP_WINDOW_MS * 2);
+    }
+
+    // Send notification to all users about order being claimed (only once per dedup window)
     const broadcaster = wsServer.getBroadcaster();
-    if (broadcaster) {
+    if (broadcaster && isNewNotification) {
       broadcaster.broadcastOrderClaimed({
         orderId: order.orderId,
         pickerId: dto.pickerId,
@@ -536,16 +556,18 @@ export class OrderService {
       });
     }
 
-    // Send in-app notification
-    await notificationService.sendNotification({
-      userId: dto.pickerId,
-      type: 'ORDER_CLAIMED',
-      channel: 'IN_APP',
-      title: 'Order Claimed',
-      message: `You have claimed order ${order.orderId}`,
-      priority: 'NORMAL',
-      data: { orderId: order.orderId },
-    });
+    // Send in-app notification (only once per dedup window)
+    if (isNewNotification) {
+      await notificationService.sendNotification({
+        userId: dto.pickerId,
+        type: 'ORDER_CLAIMED',
+        channel: 'IN_APP',
+        title: 'Order Claimed',
+        message: `You have claimed order ${order.orderId}`,
+        priority: 'NORMAL',
+        data: { orderId: order.orderId },
+      });
+    }
 
     return order;
   }

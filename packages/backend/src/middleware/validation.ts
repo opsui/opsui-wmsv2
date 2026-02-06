@@ -100,12 +100,13 @@ export const commonSchemas = {
   // ID validation
   id: Joi.string().required().min(1).max(100),
 
-  // Order ID - accepts both SO{number} and ORD-YYYYMMDD-XXX formats
+  // Order ID - accepts SO{number}, ORD-YYYY-XXX, and ORD-YYYYMMDD-XXX formats
   orderId: Joi.string()
-    .pattern(/^(SO[1-9][0-9]{3,4}|ORD-[0-9]{8}-[0-9]{3})$/)
+    .pattern(/^(SO[1-9][0-9]{3,4}|ORD-[0-9]{4}-[0-9]{3}|ORD-[0-9]{8}-[0-9]{3})$/)
     .required()
     .messages({
-      'string.pattern.base': 'Order ID must match format SO{number} or ORD-YYYYMMDD-XXX',
+      'string.pattern.base':
+        'Order ID must match format SO{number}, ORD-YYYY-XXX, or ORD-YYYYMMDD-XXX',
     }),
 
   // SKU

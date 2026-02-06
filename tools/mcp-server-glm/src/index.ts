@@ -28,9 +28,10 @@ if (!GLM_API_KEY) {
  * GLM API key format: id.secret
  */
 function generateToken(): string {
-  const parts = GLM_API_KEY.split('.');
+  const apiKey = GLM_API_KEY as string;
+  const parts = apiKey.split('.');
   if (parts.length !== 2) {
-    return GLM_API_KEY;
+    return apiKey;
   }
 
   const [id, secret] = parts;
@@ -212,16 +213,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async request => {
   const { name, arguments: args } = request.params;
 
+  if (!args) {
+    return {
+      content: [{ type: 'text', text: 'Error: Missing arguments' }],
+      isError: true,
+    };
+  }
+
   try {
     if (name === 'glm_chat') {
       const messages: Array<{ role: string; content: string }> = [
         {
           role: 'system',
-          content: args.systemPrompt || 'You are a helpful AI assistant.',
+          content: (args.systemPrompt as string) || 'You are a helpful AI assistant.',
         },
         {
           role: 'user',
-          content: args.prompt,
+          content: args.prompt as string,
         },
       ];
 
@@ -236,15 +244,17 @@ server.setRequestHandler(CallToolRequestSchema, async request => {
         ],
       };
     } else if (name === 'glm_code') {
-      const systemPrompt = args.language
-        ? `You are an expert ${args.language} developer. Provide clear, well-documented code following best practices.`
+      const language = args.language as string | undefined;
+      const task = args.task as string;
+      const code = args.code as string | undefined;
+
+      const systemPrompt = language
+        ? `You are an expert ${language} developer. Provide clear, well-documented code following best practices.`
         : 'You are an expert software developer. Provide clear, well-documented code following best practices.';
 
-      const userPrompt = args.code
-        ? `${args.task}\n\nCode:\n\`\`\`\n${args.code}\n\`\`\``
-        : args.task;
+      const userPrompt = code ? `${task}\n\nCode:\n\`\`\`\n${code}\n\`\`\`` : task;
 
-      const messages = [
+      const messages: Array<{ role: string; content: string }> = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ];
@@ -260,13 +270,15 @@ server.setRequestHandler(CallToolRequestSchema, async request => {
         ],
       };
     } else if (name === 'glm_analyze') {
-      const systemPrompt = `You are an expert analyst. Perform ${args.analysisType || 'general'} analysis on the provided content.`;
+      const analysisType = (args.analysisType as string | undefined) || 'general';
+      const content = args.content as string;
+      const context = args.context as string | undefined;
 
-      const userPrompt = args.context
-        ? `${args.content}\n\nContext: ${args.context}`
-        : args.content;
+      const systemPrompt = `You are an expert analyst. Perform ${analysisType} analysis on the provided content.`;
 
-      const messages = [
+      const userPrompt = context ? `${content}\n\nContext: ${context}` : content;
+
+      const messages: Array<{ role: string; content: string }> = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ];

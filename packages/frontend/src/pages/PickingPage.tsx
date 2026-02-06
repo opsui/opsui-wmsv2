@@ -176,8 +176,19 @@ export function PickingPage() {
         `[PickingPage] hasClaimedRef: ${hasClaimedRef.current}, isClaiming: ${isClaimingRef.current}, isPending: ${claimMutation.isPending}`
       );
 
-      // Check if this is a view-only scenario (admin/supervisor viewing someone else's order OR viewing a PICKED order)
+      // Get current user ID
       const currentUserId = useAuthStore.getState().user?.userId;
+
+      // CRITICAL: If order is already in PICKING status and assigned to current user, skip claiming
+      // This prevents React StrictMode double-render from causing 409 errors
+      if (order.status === OrderStatus.PICKING && order.pickerId === currentUserId) {
+        console.log(`[PickingPage] Order already claimed by current user, skipping claim`);
+        hasClaimedRef.current = true;
+        isClaimingRef.current = false;
+        return;
+      }
+
+      // Check if this is a view-only scenario (admin/supervisor viewing someone else's order OR viewing a PICKED order)
       const isViewOnlyOrder =
         order.status === 'PICKED' ||
         order.status === 'SHIPPED' ||
