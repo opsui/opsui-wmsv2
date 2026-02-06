@@ -23,7 +23,7 @@ const mockPendingEntries: CycleCountEntry[] = [
     variance: 0,
     varianceStatus: 'PENDING' as any,
     countedAt: new Date(),
-    countedBy: '',
+    countedBy: 'user-123',
   },
   {
     entryId: 'entry-2',
@@ -35,7 +35,7 @@ const mockPendingEntries: CycleCountEntry[] = [
     variance: 0,
     varianceStatus: 'PENDING' as any,
     countedAt: new Date(),
-    countedBy: '',
+    countedBy: 'user-123',
   },
   {
     entryId: 'entry-3',
@@ -47,7 +47,7 @@ const mockPendingEntries: CycleCountEntry[] = [
     variance: 0,
     varianceStatus: 'PENDING' as any,
     countedAt: new Date(),
-    countedBy: '',
+    countedBy: 'user-123',
   },
 ];
 

@@ -5,19 +5,10 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { ErrorBoundary, withErrorBoundary } from './ErrorBoundary';
-
-// Component that throws an error
-const ThrowError = ({ shouldThrow = false }: { shouldThrow?: boolean }) => {
-  if (shouldThrow) {
-    throw new Error('Test error');
-  }
-  return <div>No error</div>;
-};
 
 // Component that throws on render
 const ThrowingComponent = () => {

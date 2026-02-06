@@ -101,7 +101,7 @@ describe('CountSheetPrint Component', () => {
       renderWithProviders(
         <CountSheetPrint plan={mockPlan} entries={mockEntries} onPrint={mockOnPrint} />
       );
-      expect(screen.getByText('FULL')).toBeInTheDocument();
+      expect(screen.getByText('BLANKET')).toBeInTheDocument();
     });
 
     it('displays scheduled date', () => {

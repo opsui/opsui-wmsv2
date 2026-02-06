@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { Tabs, TabPanel, VerticalTabs } from './Tabs';
@@ -137,19 +137,19 @@ describe('Tabs Component', () => {
 
   describe('Sizes', () => {
     it('applies small size styling', () => {
-      const { container } = renderWithProviders(<Tabs tabs={mockTabs} size="sm" />);
+      renderWithProviders(<Tabs tabs={mockTabs} size="sm" />);
       const tab1 = screen.getByText('Tab 1').closest('button');
       expect(tab1).toHaveClass('text-sm', 'px-3', 'py-1.5');
     });
 
     it('applies medium size styling by default', () => {
-      const { container } = renderWithProviders(<Tabs tabs={mockTabs} size="md" />);
+      renderWithProviders(<Tabs tabs={mockTabs} size="md" />);
       const tab1 = screen.getByText('Tab 1').closest('button');
       expect(tab1).toHaveClass('text-sm', 'px-4', 'py-2');
     });
 
     it('applies large size styling', () => {
-      const { container } = renderWithProviders(<Tabs tabs={mockTabs} size="lg" />);
+      renderWithProviders(<Tabs tabs={mockTabs} size="lg" />);
       const tab1 = screen.getByText('Tab 1').closest('button');
       expect(tab1).toHaveClass('text-base', 'px-5', 'py-2.5');
     });

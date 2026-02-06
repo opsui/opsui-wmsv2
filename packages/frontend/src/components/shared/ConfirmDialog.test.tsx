@@ -5,7 +5,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -74,31 +73,25 @@ describe('ConfirmDialog Component', () => {
 
   describe('Variants', () => {
     it('applies warning variant styles by default', () => {
-      const { container } = renderWithProviders(
-        <ConfirmDialog {...defaultProps} variant="warning" />
-      );
+      renderWithProviders(<ConfirmDialog {...defaultProps} variant="warning" />);
       const button = screen.getByText('Confirm');
       expect(button).toHaveClass('bg-warning-600');
     });
 
     it('applies danger variant styles', () => {
-      const { container } = renderWithProviders(
-        <ConfirmDialog {...defaultProps} variant="danger" />
-      );
+      renderWithProviders(<ConfirmDialog {...defaultProps} variant="danger" />);
       const button = screen.getByText('Confirm');
       expect(button).toHaveClass('bg-error-600');
     });
 
     it('applies info variant styles', () => {
-      const { container } = renderWithProviders(<ConfirmDialog {...defaultProps} variant="info" />);
+      renderWithProviders(<ConfirmDialog {...defaultProps} variant="info" />);
       const button = screen.getByText('Confirm');
       expect(button).toHaveClass('bg-info-600');
     });
 
     it('applies success variant styles', () => {
-      const { container } = renderWithProviders(
-        <ConfirmDialog {...defaultProps} variant="success" />
-      );
+      renderWithProviders(<ConfirmDialog {...defaultProps} variant="success" />);
       const button = screen.getByText('Confirm');
       expect(button).toHaveClass('bg-success-600');
     });
@@ -266,13 +259,13 @@ describe('ConfirmDialog Component', () => {
 
   describe('Button Styling', () => {
     it('confirm button has proper styling', () => {
-      const { container } = renderWithProviders(<ConfirmDialog {...defaultProps} />);
+      renderWithProviders(<ConfirmDialog {...defaultProps} />);
       const confirmBtn = screen.getByText('Confirm');
       expect(confirmBtn).toHaveClass('px-4', 'py-2.5', 'rounded-lg', 'text-sm', 'font-medium');
     });
 
     it('cancel button has proper styling', () => {
-      const { container } = renderWithProviders(<ConfirmDialog {...defaultProps} />);
+      renderWithProviders(<ConfirmDialog {...defaultProps} />);
       const cancelBtn = screen.getByText('Cancel');
       expect(cancelBtn).toHaveClass('px-4', 'py-2.5', 'rounded-lg', 'text-sm', 'font-medium');
     });
@@ -331,29 +324,25 @@ describe('AlertDialog Component', () => {
 
   describe('Variants', () => {
     it('applies warning variant styles', () => {
-      const { container } = renderWithProviders(
-        <AlertDialog {...defaultProps} variant="warning" />
-      );
+      renderWithProviders(<AlertDialog {...defaultProps} variant="warning" />);
       const button = screen.getByText('OK');
       expect(button).toHaveClass('bg-warning-600');
     });
 
     it('applies danger variant styles', () => {
-      const { container } = renderWithProviders(<AlertDialog {...defaultProps} variant="danger" />);
+      renderWithProviders(<AlertDialog {...defaultProps} variant="danger" />);
       const button = screen.getByText('OK');
       expect(button).toHaveClass('bg-error-600');
     });
 
     it('applies info variant styles by default', () => {
-      const { container } = renderWithProviders(<AlertDialog {...defaultProps} variant="info" />);
+      renderWithProviders(<AlertDialog {...defaultProps} variant="info" />);
       const button = screen.getByText('OK');
       expect(button).toHaveClass('bg-info-600');
     });
 
     it('applies success variant styles', () => {
-      const { container } = renderWithProviders(
-        <AlertDialog {...defaultProps} variant="success" />
-      );
+      renderWithProviders(<AlertDialog {...defaultProps} variant="success" />);
       const button = screen.getByText('OK');
       expect(button).toHaveClass('bg-success-600');
     });

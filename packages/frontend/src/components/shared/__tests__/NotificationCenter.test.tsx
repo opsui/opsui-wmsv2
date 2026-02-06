@@ -4,7 +4,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -28,8 +27,6 @@ vi.mock('@/stores', () => ({
     };
   }),
 }));
-
-import { useUIStore } from '@/stores';
 
 describe('NotificationCenter Component', () => {
   beforeEach(() => {
@@ -372,19 +369,19 @@ describe('NotificationCenter Component', () => {
     });
 
     it('applies font-semibold to message', () => {
-      const { container } = renderWithProviders(<NotificationCenter />);
+      renderWithProviders(<NotificationCenter />);
       const message = screen.getByText('Styled message');
       expect(message).toHaveClass('font-semibold');
     });
 
     it('applies text-white to message', () => {
-      const { container } = renderWithProviders(<NotificationCenter />);
+      renderWithProviders(<NotificationCenter />);
       const message = screen.getByText('Styled message');
       expect(message).toHaveClass('text-white');
     });
 
     it('applies text-sm to message', () => {
-      const { container } = renderWithProviders(<NotificationCenter />);
+      renderWithProviders(<NotificationCenter />);
       const message = screen.getByText('Styled message');
       expect(message).toHaveClass('text-sm');
     });

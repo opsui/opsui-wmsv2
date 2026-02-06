@@ -4,7 +4,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -352,7 +351,7 @@ describe('SearchInput Component', () => {
       vi.advanceTimersByTime(50);
 
       await waitFor(() => {
-        const { container } = renderWithProviders(<SearchInput onSelect={mockOnSelect} />);
+        renderWithProviders(<SearchInput onSelect={mockOnSelect} />);
         const input2 = screen.getByPlaceholderText('Search products...');
         fireEvent.change(input2, { target: { value: 'test' } });
         vi.advanceTimersByTime(300);
@@ -516,7 +515,7 @@ describe('SearchInput Component', () => {
 
   describe('Theme Classes', () => {
     it('applies dark mode classes', () => {
-      const { container } = renderWithProviders(<SearchInput onSelect={mockOnSelect} />);
+      renderWithProviders(<SearchInput onSelect={mockOnSelect} />);
       const input = screen.getByPlaceholderText('Search products...');
 
       expect(input).toHaveClass('dark:bg-white/5', 'dark:border-white/10', 'dark:text-white');

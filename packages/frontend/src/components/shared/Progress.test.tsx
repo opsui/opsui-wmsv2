@@ -6,8 +6,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import { renderWithProviders } from '@/test/utils';
 import { Progress } from './Progress';
 

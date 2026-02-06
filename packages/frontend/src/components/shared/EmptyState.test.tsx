@@ -5,7 +5,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -131,7 +130,7 @@ describe('EmptyState Component', () => {
     });
 
     it('applies primary variant styles by default', () => {
-      const { container } = renderWithProviders(
+      renderWithProviders(
         <EmptyState
           title="No items"
           action={{ label: 'Add Item', onClick: vi.fn(), variant: 'primary' }}
@@ -142,7 +141,7 @@ describe('EmptyState Component', () => {
     });
 
     it('applies secondary variant styles', () => {
-      const { container } = renderWithProviders(
+      renderWithProviders(
         <EmptyState
           title="No items"
           action={{ label: 'Add Item', onClick: vi.fn(), variant: 'secondary' }}

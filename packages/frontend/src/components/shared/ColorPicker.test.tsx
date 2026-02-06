@@ -5,7 +5,6 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
@@ -161,7 +160,7 @@ describe('ColorPicker Component', () => {
 
     it('has sr-only text for screen readers', () => {
       renderWithProviders(<ColorPicker selectedColor="#3b82f6" onColorChange={vi.fn()} />);
-      const srTexts = screen.getAllByText((content, element) => {
+      const srTexts = screen.getAllByText((_content, element) => {
         return element?.classList.contains('sr-only') === true;
       });
       expect(srTexts.length).toBeGreaterThan(0);

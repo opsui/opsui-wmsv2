@@ -99,7 +99,7 @@ describe('useAdminRoleAutoSwitch', () => {
     });
 
     const wrapper = createMemoryRouterWrapper(['/picking']);
-    const { result } = renderHook(() => useAdminRoleAutoSwitch(), { wrapper });
+    renderHook(() => useAdminRoleAutoSwitch(), { wrapper });
 
     expect(setActiveRoleMock).not.toHaveBeenCalled();
   });

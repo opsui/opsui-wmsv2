@@ -5,15 +5,14 @@
  * @tested yes
  */
 
-import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
-import { ToastProvider, useToast, Toast, ToastType } from './Toast';
+import { ToastProvider, useToast } from './Toast';
 
 // Test component that uses the toast hook
 function TestComponent() {
-  const { showToast, dismissToast, clearAll } = useToast();
+  const { showToast, clearAll } = useToast();
 
   return (
     <div>

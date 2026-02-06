@@ -5,9 +5,7 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import {
   Skeleton,

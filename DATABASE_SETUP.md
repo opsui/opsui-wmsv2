@@ -25,6 +25,7 @@ docker-compose up -d postgres redis
 ```
 
 This will:
+
 - Start PostgreSQL on port 5432
 - Start Redis on port 6379
 - Initialize the database with the schema from `packages/backend/src/db/schema.sql`
@@ -68,6 +69,7 @@ npm run db:seed
 ```
 
 This creates:
+
 - Sample SKUs (20 products)
 - Bin locations (17 locations across zones A-D)
 - Sample orders (15 orders with various priorities)
@@ -80,6 +82,7 @@ npm run dev
 ```
 
 The application will be available at:
+
 - Backend: http://localhost:3001
 - Frontend: http://localhost:5173
 
@@ -88,10 +91,12 @@ The application will be available at:
 After seeding, you can login with:
 
 **Admin User:**
+
 - Email: `admin@wms.local`
 - Password: `admin123`
 
 **Test Pickers** (created by seed):
+
 - `picker1@wms.local` / `password123`
 - `picker2@wms.local` / `password123`
 - `picker3@wms.local` / `password123`
@@ -148,10 +153,12 @@ docker-compose --profile tools up -d
 Access pgAdmin at: http://localhost:5050
 
 **Login:**
+
 - Email: `admin@wms.local`
 - Password: `admin`
 
 **Connection Details:**
+
 - Host: `postgres` (or `localhost` if outside Docker)
 - Port: `5432`
 - Database: `wms_db`
@@ -166,10 +173,11 @@ If port 5432 is already in use, edit `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "5433:5432"  # Use 5433 instead
+  - '5433:5432' # Use 5433 instead
 ```
 
 Then update your `.env` file:
+
 ```
 DB_PORT=5433
 ```

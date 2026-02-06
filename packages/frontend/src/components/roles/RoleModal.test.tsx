@@ -9,8 +9,8 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
-import RoleModal, { RoleFormData } from './RoleModal';
-import { Permission, PERMISSION_GROUPS } from '@opsui/shared';
+import RoleModal from './RoleModal';
+import { Permission } from '@opsui/shared';
 import * as useFormValidationModule from '@/hooks/useFormValidation';
 
 // Mock useFormValidation hook
@@ -20,21 +20,6 @@ const mockHandleSubmit = vi.fn(callback => (e: React.FormEvent) => {
 });
 const mockReset = vi.fn();
 const mockSetFieldValue = vi.fn();
-
-const mockUseFormValidation = vi.fn(() => ({
-  values: {
-    name: '',
-    description: '',
-    permissions: [],
-  },
-  errors: {},
-  handleChange: vi.fn(),
-  handleSubmit: mockHandleSubmit,
-  isSubmitting: false,
-  reset: mockReset,
-  setFieldValue: mockSetFieldValue,
-  validateOnChange: true,
-}));
 
 vi.mock('@/hooks/useFormValidation', () => ({
   useFormValidation: vi.fn(),
@@ -360,7 +345,6 @@ describe('RoleModal Component', () => {
         />
       );
 
-      const closeButton = screen.getByRole('button', { name: '' }); // X button has no text
       // There are multiple buttons, so let's find the one that closes
       const allButtons = screen.getAllByRole('button');
       const xButton = allButtons.find(btn => btn.querySelector('svg'))!;

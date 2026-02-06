@@ -5,9 +5,8 @@
  * @tested yes
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { UndoToast, useUndoToasts, UndoToastContainer, withUndo } from './UndoToast';
@@ -162,7 +161,7 @@ describe('UndoToast Component', () => {
     });
 
     it('updates progress bar width over time', () => {
-      const { container, rerender } = renderWithProviders(
+      const { container } = renderWithProviders(
         <UndoToast message="Item picked" onUndo={vi.fn()} onDismiss={vi.fn()} duration={5000} />
       );
 
