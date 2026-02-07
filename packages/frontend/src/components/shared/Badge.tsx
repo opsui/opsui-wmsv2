@@ -47,6 +47,8 @@ const DEFAULT_ROLE_COLORS: Record<UserRole, RoleColorSetting> = {
   [UserRole.PRODUCTION]: { role: 'PRODUCTION' as UserRole, color: '#f97316', variant: 'warning' }, // Orange
   [UserRole.MAINTENANCE]: { role: 'MAINTENANCE' as UserRole, color: '#6366f1', variant: 'primary' }, // Indigo
   [UserRole.RMA]: { role: 'RMA' as UserRole, color: '#84cc16', variant: 'success' }, // Lime
+  [UserRole.DISPATCH]: { role: 'DISPATCH' as UserRole, color: '#f43f5e', variant: 'error' }, // Rose
+  [UserRole.ACCOUNTING]: { role: 'ACCOUNTING' as UserRole, color: '#14b8a6', variant: 'info' }, // Teal
 };
 
 // Load role colors from localStorage

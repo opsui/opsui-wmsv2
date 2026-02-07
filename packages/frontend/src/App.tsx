@@ -49,6 +49,16 @@ import {
   ScheduleManagementPage,
   RootCauseAnalysisPage,
   AccountingPage,
+  ChartOfAccountsPage,
+  JournalEntriesPage,
+  TrialBalancePage,
+  BalanceSheetPage,
+  CashFlowPage,
+  ARAgingPage,
+  APAgingPage,
+  BankReconciliationPage,
+  FixedAssetsPage,
+  BudgetingPage,
   NotFoundPage,
 } from '@/pages';
 import { UserRole } from '@opsui/shared';
@@ -802,6 +812,110 @@ function AppInner() {
               requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
             >
               <AccountingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Accounting Sub-pages - Phase 1: Core Accounting */}
+        <Route
+          path="/accounting/chart-of-accounts"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <ChartOfAccountsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/journal-entries"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <JournalEntriesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/trial-balance"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <TrialBalancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/balance-sheet"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <BalanceSheetPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/cash-flow"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <CashFlowPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Accounting Sub-pages - Phase 2 & 3: Advanced Features */}
+        <Route
+          path="/accounting/ar-aging"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <ARAgingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/ap-aging"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <APAgingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/bank-reconciliation"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <BankReconciliationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/fixed-assets"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <FixedAssetsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounting/budgeting"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
+            >
+              <BudgetingPage />
             </ProtectedRoute>
           }
         />

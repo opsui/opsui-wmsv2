@@ -114,6 +114,32 @@ export const LazyIntegrationsPage = createLazyPage(() => import('./IntegrationsP
 export const LazyAccountingPage = createLazyPage(() => import('./AccountingPage'));
 
 // ============================================================================
+// ACCOUNTING SUB-PAGES (PHASE 1)
+// ============================================================================
+
+export const LazyChartOfAccountsPage = createLazyPage(
+  () => import('./accounting/ChartOfAccountsPage')
+);
+export const LazyJournalEntriesPage = createLazyPage(
+  () => import('./accounting/JournalEntriesPage')
+);
+export const LazyTrialBalancePage = createLazyPage(() => import('./accounting/TrialBalancePage'));
+export const LazyBalanceSheetPage = createLazyPage(() => import('./accounting/BalanceSheetPage'));
+export const LazyCashFlowPage = createLazyPage(() => import('./accounting/CashFlowPage'));
+
+// ============================================================================
+// ACCOUNTING SUB-PAGES (PHASE 2 & 3)
+// ============================================================================
+
+export const LazyARAgingPage = createLazyPage(() => import('./accounting/ARAgingPage'));
+export const LazyAPAgingPage = createLazyPage(() => import('./accounting/APAgingPage'));
+export const LazyBankReconciliationPage = createLazyPage(
+  () => import('./accounting/BankReconciliationPage')
+);
+export const LazyFixedAssetsPage = createLazyPage(() => import('./accounting/FixedAssetsPage'));
+export const LazyBudgetingPage = createLazyPage(() => import('./accounting/BudgetingPage'));
+
+// ============================================================================
 // WAREHOUSE OPERATIONS PAGES
 // ============================================================================
 

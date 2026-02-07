@@ -1323,6 +1323,8 @@ export const useRoleActivity = (
       [UserRole.RMA]: [],
       [UserRole.SUPERVISOR]: [],
       [UserRole.ADMIN]: [],
+      [UserRole.DISPATCH]: [],
+      [UserRole.ACCOUNTING]: [],
     };
     return {
       data: combinedData,
@@ -1345,6 +1347,8 @@ export const useRoleActivity = (
     [UserRole.RMA]: { data: [], isLoading: false, error: undefined } as any,
     [UserRole.SUPERVISOR]: { data: [], isLoading: false, error: undefined } as any,
     [UserRole.ADMIN]: { data: [], isLoading: false, error: undefined } as any,
+    [UserRole.DISPATCH]: { data: [], isLoading: false, error: undefined } as any,
+    [UserRole.ACCOUNTING]: { data: [], isLoading: false, error: undefined } as any,
   };
 
   return roleHooks[role] || { data: [], isLoading: false, error: undefined };
@@ -7599,5 +7603,324 @@ export const useRolePermissionsMatrix = () => {
   return useQuery({
     queryKey: ['roles', 'permissions-matrix'],
     queryFn: rolePermissionsApi.getPermissionsMatrix,
+  });
+};
+
+// ============================================================================
+// FULL ERP ACCOUNTING - PHASE 1 API
+// ============================================================================
+
+export const chartOfAccountsApi = {
+  /**
+   * Get chart of accounts
+   */
+  getChartOfAccounts: async (params?: { accountType?: string; isActive?: boolean }) => {
+    const response = await apiClient.get('/accounting/chart-of-accounts', { params });
+    return response.data;
+  },
+
+  /**
+   * Get a single account
+   */
+  getAccount: async (accountId: string) => {
+    const response = await apiClient.get(`/accounting/chart-of-accounts/${accountId}`);
+    return response.data;
+  },
+
+  /**
+   * Create a new account
+   */
+  createAccount: async (data: {
+    accountCode: string;
+    accountName: string;
+    accountType: string;
+    parentAccountId?: string;
+    normalBalance: string;
+    isHeader?: boolean;
+    description?: string;
+  }) => {
+    const response = await apiClient.post('/accounting/chart-of-accounts', data);
+    return response.data;
+  },
+
+  /**
+   * Update an account
+   */
+  updateAccount: async (
+    accountId: string,
+    data: {
+      accountName?: string;
+      parentAccountId?: string;
+      isActive?: boolean;
+      description?: string;
+    }
+  ) => {
+    const response = await apiClient.patch(`/accounting/chart-of-accounts/${accountId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Get account balance
+   */
+  getAccountBalance: async (accountId: string, asOfDate?: string) => {
+    const response = await apiClient.get(`/accounting/chart-of-accounts/${accountId}/balance`, {
+      params: { asOfDate },
+    });
+    return response.data;
+  },
+};
+
+export const useChartOfAccounts = (params?: {
+  accountType?: string;
+  isActive?: boolean;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'chart-of-accounts', params],
+    queryFn: () => chartOfAccountsApi.getChartOfAccounts(params),
+    enabled: params?.enabled ?? true,
+    staleTime: 300000,
+  });
+};
+
+export const useAccountBalance = (accountId: string, asOfDate?: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['accounting', 'account-balance', accountId, asOfDate],
+    queryFn: () => chartOfAccountsApi.getAccountBalance(accountId, asOfDate),
+    enabled: enabled && !!accountId,
+    staleTime: 60000,
+  });
+};
+
+export const useCreateAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: chartOfAccountsApi.createAccount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'chart-of-accounts'] });
+    },
+  });
+};
+
+export const useUpdateAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      accountId,
+      data,
+    }: {
+      accountId: string;
+      data: Parameters<typeof chartOfAccountsApi.updateAccount>[1];
+    }) => chartOfAccountsApi.updateAccount(accountId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'chart-of-accounts'] });
+    },
+  });
+};
+
+// Journal Entries API
+export const journalEntriesApi = {
+  /**
+   * Get journal entries
+   */
+  getJournalEntries: async (params?: {
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get('/accounting/journal-entries', { params });
+    return response.data;
+  },
+
+  /**
+   * Get a single journal entry
+   */
+  getJournalEntry: async (entryId: string) => {
+    const response = await apiClient.get(`/accounting/journal-entries/${entryId}`);
+    return response.data;
+  },
+
+  /**
+   * Create a new journal entry
+   */
+  createJournalEntry: async (data: {
+    entryNumber: string;
+    entryDate: string;
+    fiscalPeriod: string;
+    description: string;
+    lines: Array<{
+      accountId: string;
+      debitAmount?: number;
+      creditAmount?: number;
+      description?: string;
+    }>;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/accounting/journal-entries', data);
+    return response.data;
+  },
+
+  /**
+   * Approve a journal entry
+   */
+  approveJournalEntry: async (entryId: string) => {
+    const response = await apiClient.post(`/accounting/journal-entries/${entryId}/approve`);
+    return response.data;
+  },
+
+  /**
+   * Post a journal entry
+   */
+  postJournalEntry: async (entryId: string) => {
+    const response = await apiClient.post(`/accounting/journal-entries/${entryId}/post`);
+    return response.data;
+  },
+
+  /**
+   * Reverse a journal entry
+   */
+  reverseJournalEntry: async (entryId: string, reason: string) => {
+    const response = await apiClient.post(`/accounting/journal-entries/${entryId}/reverse`, {
+      reason,
+    });
+    return response.data;
+  },
+};
+
+export const useJournalEntries = (params?: {
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'journal-entries', params],
+    queryFn: () => journalEntriesApi.getJournalEntries(params),
+    enabled: params?.enabled ?? true,
+    staleTime: 120000,
+  });
+};
+
+export const useJournalEntry = (entryId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['accounting', 'journal-entry', entryId],
+    queryFn: () => journalEntriesApi.getJournalEntry(entryId),
+    enabled: enabled && !!entryId,
+    staleTime: 120000,
+  });
+};
+
+export const useCreateJournalEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: journalEntriesApi.createJournalEntry,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'journal-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'trial-balance'] });
+    },
+  });
+};
+
+export const useApproveJournalEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (entryId: string) => journalEntriesApi.approveJournalEntry(entryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'journal-entries'] });
+    },
+  });
+};
+
+export const usePostJournalEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (entryId: string) => journalEntriesApi.postJournalEntry(entryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'journal-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'trial-balance'] });
+    },
+  });
+};
+
+export const useReverseJournalEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ entryId, reason }: { entryId: string; reason: string }) =>
+      journalEntriesApi.reverseJournalEntry(entryId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounting', 'journal-entries'] });
+    },
+  });
+};
+
+// Trial Balance API
+export const trialBalanceApi = {
+  /**
+   * Get trial balance
+   */
+  getTrialBalance: async (asOfDate?: string) => {
+    const response = await apiClient.get('/accounting/trial-balance', {
+      params: { asOfDate },
+    });
+    return response.data;
+  },
+};
+
+export const useTrialBalance = (asOfDate?: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['accounting', 'trial-balance', asOfDate],
+    queryFn: () => trialBalanceApi.getTrialBalance(asOfDate),
+    enabled,
+    staleTime: 300000,
+  });
+};
+
+// Balance Sheet API
+export const balanceSheetApi = {
+  /**
+   * Get balance sheet
+   */
+  getBalanceSheet: async (asOfDate?: string) => {
+    const response = await apiClient.get('/accounting/balance-sheet', {
+      params: { asOfDate },
+    });
+    return response.data;
+  },
+};
+
+export const useBalanceSheet = (asOfDate?: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['accounting', 'balance-sheet', asOfDate],
+    queryFn: () => balanceSheetApi.getBalanceSheet(asOfDate),
+    enabled,
+    staleTime: 300000,
+  });
+};
+
+// Cash Flow Statement API
+export const cashFlowApi = {
+  /**
+   * Get cash flow statement
+   */
+  getCashFlowStatement: async (params?: { startDate?: string; endDate?: string }) => {
+    const response = await apiClient.get('/accounting/cash-flow', { params });
+    return response.data;
+  },
+};
+
+export const useCashFlowStatement = (params?: {
+  startDate?: string;
+  endDate?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['accounting', 'cash-flow', params],
+    queryFn: () => cashFlowApi.getCashFlowStatement(params),
+    enabled: params?.enabled ?? true,
+    staleTime: 300000,
   });
 };

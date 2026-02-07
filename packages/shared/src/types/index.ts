@@ -3291,6 +3291,7 @@ export interface JournalEntry {
   postedAt?: Date;
   reversalEntryId?: string;
   notes?: string;
+  lines?: JournalEntryLine[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -3329,6 +3330,9 @@ export interface TrialBalanceLine {
   lineId: string;
   trialBalanceId: string;
   accountId: string;
+  accountCode: string;
+  accountName: string;
+  accountType: AccountType;
   debitBalance: number;
   creditBalance: number;
   netBalance: number;

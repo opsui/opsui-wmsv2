@@ -482,6 +482,8 @@ export function DashboardPage() {
     [UserRole.RMA]: [],
     [UserRole.SUPERVISOR]: [],
     [UserRole.ADMIN]: [],
+    [UserRole.DISPATCH]: [],
+    [UserRole.ACCOUNTING]: [],
   };
 
   // Explicitly type roleActivities to ensure it satisfies Record<UserRole, any[]>

@@ -29,6 +29,7 @@ export * from './ConfirmDialog';
 export * from './ErrorBoundary';
 export * from './Skeleton';
 export * from './EmptyState';
+export * from './FormField';
 export { MicroCountModal } from '../MicroCountModal';
 
 // New developer panel components

@@ -1226,23 +1226,7 @@ export function Header() {
     }
 
     // Accounting Operations Group - for Accounting
-    if (effectiveRole === ('ACCOUNTING' as UserRole)) {
-      groups.push({
-        key: 'accounting-ops',
-        label: 'Accounting',
-        icon: CurrencyDollarIcon,
-        items: [
-          {
-            key: 'accounting',
-            label: 'Accounting Dashboard',
-            path: '/accounting',
-            icon: CurrencyDollarIcon,
-          },
-          { key: 'reports', label: 'Reports', path: '/reports', icon: DocumentChartBarIcon },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-        ],
-      });
-    }
+    // Note: Accounting pages are now in the Admin/Supervisor groups below
 
     // Admin Tools Group - for admins only
     // Only show when effective role is ADMIN
@@ -1260,7 +1244,153 @@ export function Header() {
             icon: CogIcon,
           },
           { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
-          { key: 'accounting', label: 'Accounting', path: '/accounting', icon: CurrencyDollarIcon },
+          // Accounting items
+          {
+            key: 'accounting',
+            label: 'Accounting Dashboard',
+            path: '/accounting',
+            icon: CurrencyDollarIcon,
+          },
+          {
+            key: 'chart-of-accounts',
+            label: 'Chart of Accounts',
+            path: '/accounting/chart-of-accounts',
+            icon: QueueListIcon,
+          },
+          {
+            key: 'journal-entries',
+            label: 'Journal Entries',
+            path: '/accounting/journal-entries',
+            icon: ClipboardDocumentListIcon,
+          },
+          {
+            key: 'trial-balance',
+            label: 'Trial Balance',
+            path: '/accounting/trial-balance',
+            icon: ScaleIcon,
+          },
+          {
+            key: 'balance-sheet',
+            label: 'Balance Sheet',
+            path: '/accounting/balance-sheet',
+            icon: BuildingOfficeIcon,
+          },
+          {
+            key: 'cash-flow',
+            label: 'Cash Flow Statement',
+            path: '/accounting/cash-flow',
+            icon: ArrowPathIcon,
+          },
+          {
+            key: 'ar-aging',
+            label: 'AR Aging Report',
+            path: '/accounting/ar-aging',
+            icon: TagIcon,
+          },
+          {
+            key: 'ap-aging',
+            label: 'AP Aging Report',
+            path: '/accounting/ap-aging',
+            icon: ExclamationCircleIcon,
+          },
+          {
+            key: 'bank-reconciliation',
+            label: 'Bank Reconciliation',
+            path: '/accounting/bank-reconciliation',
+            icon: AdjustmentsHorizontalIcon,
+          },
+          {
+            key: 'fixed-assets',
+            label: 'Fixed Assets',
+            path: '/accounting/fixed-assets',
+            icon: BuildingOfficeIcon,
+          },
+          {
+            key: 'budgeting',
+            label: 'Budgeting & Forecasting',
+            path: '/accounting/budgeting',
+            icon: DocumentChartBarIcon,
+          },
+        ],
+      });
+    }
+
+    // Accounting Group for Supervisors and Accounting role only
+    if (
+      (effectiveRole === UserRole.SUPERVISOR || effectiveRole === ('ACCOUNTING' as UserRole)) &&
+      effectiveRole !== UserRole.ADMIN
+    ) {
+      groups.push({
+        key: 'accounting',
+        label: 'Accounting',
+        icon: CurrencyDollarIcon,
+        items: [
+          {
+            key: 'accounting',
+            label: 'Accounting Dashboard',
+            path: '/accounting',
+            icon: ChartBarIcon,
+          },
+          {
+            key: 'chart-of-accounts',
+            label: 'Chart of Accounts',
+            path: '/accounting/chart-of-accounts',
+            icon: QueueListIcon,
+          },
+          {
+            key: 'journal-entries',
+            label: 'Journal Entries',
+            path: '/accounting/journal-entries',
+            icon: ClipboardDocumentListIcon,
+          },
+          {
+            key: 'trial-balance',
+            label: 'Trial Balance',
+            path: '/accounting/trial-balance',
+            icon: ScaleIcon,
+          },
+          {
+            key: 'balance-sheet',
+            label: 'Balance Sheet',
+            path: '/accounting/balance-sheet',
+            icon: BuildingOfficeIcon,
+          },
+          {
+            key: 'cash-flow',
+            label: 'Cash Flow Statement',
+            path: '/accounting/cash-flow',
+            icon: ArrowPathIcon,
+          },
+          {
+            key: 'ar-aging',
+            label: 'AR Aging Report',
+            path: '/accounting/ar-aging',
+            icon: TagIcon,
+          },
+          {
+            key: 'ap-aging',
+            label: 'AP Aging Report',
+            path: '/accounting/ap-aging',
+            icon: ExclamationCircleIcon,
+          },
+          {
+            key: 'bank-reconciliation',
+            label: 'Bank Reconciliation',
+            path: '/accounting/bank-reconciliation',
+            icon: AdjustmentsHorizontalIcon,
+          },
+          {
+            key: 'fixed-assets',
+            label: 'Fixed Assets',
+            path: '/accounting/fixed-assets',
+            icon: BuildingOfficeIcon,
+          },
+          {
+            key: 'budgeting',
+            label: 'Budgeting & Forecasting',
+            path: '/accounting/budgeting',
+            icon: DocumentChartBarIcon,
+          },
         ],
       });
     }
