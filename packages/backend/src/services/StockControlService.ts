@@ -1103,16 +1103,17 @@ export class StockControlService {
         paramCount++;
       }
 
+      query += `
+        GROUP BY iu.sku, s.name, iu.bin_location, iu.quantity, iu.lot_number, iu.expiration_date
+      `;
+
       if (filters.minDays !== undefined) {
-        query += ` AND EXTRACT(DAY FROM NOW() - MAX(it.timestamp)) >= $${paramCount}`;
+        query += ` HAVING EXTRACT(DAY FROM NOW() - MAX(it.timestamp)) >= $${paramCount}`;
         params.push(filters.minDays);
         paramCount++;
       }
 
-      query += `
-        GROUP BY iu.sku, s.name, iu.bin_location, iu.quantity, iu.lot_number, iu.expiration_date
-        ORDER BY "daysInWarehouse" DESC
-      `;
+      query += ` ORDER BY "daysInWarehouse" DESC`;
 
       const result = await getPool().query(query, params);
 
@@ -1251,7 +1252,7 @@ export class StockControlService {
         FROM inventory_units iu
         INNER JOIN skus s ON s.sku = iu.sku
         WHERE iu.expiration_date IS NOT NULL
-          AND iu.expiration_date <= NOW() + ($1 || ' days')::INTERVAL
+          AND iu.expiration_date <= NOW() + make_interval(days => $1)
           AND iu.quantity > 0
         ORDER BY iu.expiration_date ASC
         `,
@@ -1466,11 +1467,11 @@ export class StockControlService {
         SELECT
           sku,
           name,
-          receiptsQuantity,
-          deductionsQuantity,
-          averageInventory,
+          "receiptsQuantity",
+          "deductionsQuantity",
+          "averageInventory",
           CASE
-            WHEN averageInventory > 0 THEN ROUND((deductionsQuantity::NUMERIC / averageInventory), 2)
+            WHEN "averageInventory" > 0 THEN ROUND(("deductionsQuantity"::NUMERIC / "averageInventory"), 2)
             ELSE 0
           END as "turnoverCount"
         FROM inventory_movement
