@@ -7238,6 +7238,37 @@ export const useUpdateWorkOrder = () => {
   });
 };
 
+export const useStartWorkOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (workOrderId: string) => {
+      const response = await apiClient.post(`/maintenance/work-orders/${workOrderId}/start`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance', 'work-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['maintenance', 'dashboard'] });
+    },
+  });
+};
+
+export const useCompleteWorkOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ workOrderId, data }: { workOrderId: string; data: any }) => {
+      const response = await apiClient.post(
+        `/maintenance/work-orders/${workOrderId}/complete`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance', 'work-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['maintenance', 'dashboard'] });
+    },
+  });
+};
+
 export const useMaintenanceDashboard = () => {
   return useQuery({
     queryKey: ['maintenance', 'dashboard'],
@@ -7403,6 +7434,491 @@ export const useSalesDashboard = () => {
     queryFn: async () => {
       const response = await apiClient.get('/sales/dashboard');
       return response.data;
+    },
+  });
+};
+
+export const useUpdateCustomer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ customerId, data }: { customerId: string; data: any }) => {
+      const response = await apiClient.put(`/sales/customers/${customerId}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales', 'customers'] });
+    },
+  });
+};
+
+export const useUpdateLead = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ leadId, data }: { leadId: string; data: any }) => {
+      const response = await apiClient.put(`/sales/leads/${leadId}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales', 'leads'] });
+    },
+  });
+};
+
+export const useConvertLeadToCustomer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (leadId: string) => {
+      const response = await apiClient.post(`/sales/leads/${leadId}/convert`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales', 'leads'] });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'customers'] });
+    },
+  });
+};
+
+export const useUpdateOpportunityStage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ opportunityId, stage }: { opportunityId: string; stage: string }) => {
+      const response = await apiClient.put(`/sales/opportunities/${opportunityId}/stage`, {
+        stage,
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales', 'opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'dashboard'] });
+    },
+  });
+};
+
+export const useSendQuote = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const response = await apiClient.post(`/sales/quotes/${quoteId}/send`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales', 'quotes'] });
+    },
+  });
+};
+
+export const useAcceptQuote = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const response = await apiClient.post(`/sales/quotes/${quoteId}/accept`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales', 'quotes'] });
+    },
+  });
+};
+
+export const useLogInteraction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiClient.post('/sales/interactions', data);
+      return response.data;
+    },
+    onSuccess: (_data, variables) => {
+      if (variables.customerId) {
+        queryClient.invalidateQueries({
+          queryKey: ['sales', 'customer', variables.customerId, 'interactions'],
+        });
+      }
+    },
+  });
+};
+
+export const useCustomerInteractions = (customerId: string, limit: number = 50) => {
+  return useQuery({
+    queryKey: ['sales', 'customer', customerId, 'interactions', limit],
+    queryFn: async () => {
+      const response = await apiClient.get(
+        `/sales/customers/${customerId}/interactions?limit=${limit}`
+      );
+      return response.data;
+    },
+    enabled: !!customerId,
+  });
+};
+
+// ============================================================================
+// RMA (RETURN MERCHANDISE AUTHORIZATION) API
+// ============================================================================
+
+export const rmaApi = {
+  /**
+   * Get RMA dashboard statistics
+   */
+  getDashboard: async () => {
+    const response = await apiClient.get('/rma/dashboard');
+    return response.data;
+  },
+
+  /**
+   * Get all RMA requests with optional filters
+   */
+  getRMARequests: async (filters?: {
+    status?: string;
+    reason?: string;
+    priority?: string;
+    customerId?: string;
+    orderId?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const response = await apiClient.get('/rma/requests', { params: filters });
+    return response.data;
+  },
+
+  /**
+   * Get a specific RMA request by ID
+   */
+  getRMA: async (rmaId: string) => {
+    const response = await apiClient.get(`/rma/requests/${rmaId}`);
+    return response.data;
+  },
+
+  /**
+   * Create a new RMA request
+   */
+  createRMA: async (data: any) => {
+    const response = await apiClient.post('/rma/requests', data);
+    return response.data;
+  },
+
+  /**
+   * Update RMA status
+   */
+  updateRMAStatus: async (rmaId: string, data: { status: string; notes?: string }) => {
+    const response = await apiClient.put(`/rma/requests/${rmaId}/status`, data);
+    return response.data;
+  },
+
+  /**
+   * Approve an RMA request
+   */
+  approveRMA: async (rmaId: string) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/approve`);
+    return response.data;
+  },
+
+  /**
+   * Reject an RMA request
+   */
+  rejectRMA: async (rmaId: string, rejectionReason: string) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/reject`, { rejectionReason });
+    return response.data;
+  },
+
+  /**
+   * Mark RMA as received
+   */
+  receiveRMA: async (rmaId: string) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/receive`);
+    return response.data;
+  },
+
+  /**
+   * Start inspection for RMA
+   */
+  startInspection: async (rmaId: string) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/inspect`);
+    return response.data;
+  },
+
+  /**
+   * Close an RMA request
+   */
+  closeRMA: async (rmaId: string) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/close`);
+    return response.data;
+  },
+
+  /**
+   * Create an inspection record
+   */
+  createInspection: async (rmaId: string, data: any) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/inspections`, data);
+    return response.data;
+  },
+
+  /**
+   * Get inspection records for an RMA
+   */
+  getInspections: async (rmaId: string) => {
+    const response = await apiClient.get(`/rma/requests/${rmaId}/inspections`);
+    return response.data;
+  },
+
+  /**
+   * Process refund for RMA
+   */
+  processRefund: async (
+    rmaId: string,
+    data: {
+      refundMethod: string;
+      amount?: number;
+      notes?: string;
+    }
+  ) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/refund`, data);
+    return response.data;
+  },
+
+  /**
+   * Send replacement for RMA
+   */
+  sendReplacement: async (
+    rmaId: string,
+    data: {
+      shippingMethod: string;
+      shippingAddress: string;
+      trackingNumber?: string;
+    }
+  ) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/replacement`, data);
+    return response.data;
+  },
+
+  /**
+   * Add a communication record
+   */
+  addCommunication: async (
+    rmaId: string,
+    data: {
+      type: 'EMAIL' | 'PHONE' | 'SMS' | 'NOTE';
+      direction: 'INBOUND' | 'OUTBOUND';
+      content: string;
+      subject?: string;
+    }
+  ) => {
+    const response = await apiClient.post(`/rma/requests/${rmaId}/communications`, data);
+    return response.data;
+  },
+
+  /**
+   * Get communication history for an RMA
+   */
+  getCommunications: async (rmaId: string) => {
+    const response = await apiClient.get(`/rma/requests/${rmaId}/communications`);
+    return response.data;
+  },
+
+  /**
+   * Get activity log for an RMA
+   */
+  getActivity: async (rmaId: string, limit: number = 50) => {
+    const response = await apiClient.get(`/rma/requests/${rmaId}/activity?limit=${limit}`);
+    return response.data;
+  },
+};
+
+export const useRMADashboard = (enabled = true) => {
+  return useQuery({
+    queryKey: ['rma', 'dashboard'],
+    queryFn: rmaApi.getDashboard,
+    enabled,
+    staleTime: 60000,
+  });
+};
+
+export const useRMARequests = (filters?: {
+  status?: string;
+  reason?: string;
+  priority?: string;
+  customerId?: string;
+  orderId?: string;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ['rma', 'requests', filters],
+    queryFn: () => rmaApi.getRMARequests(filters),
+    enabled: filters?.enabled ?? true,
+    staleTime: 120000,
+  });
+};
+
+export const useRMA = (rmaId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['rma', 'request', rmaId],
+    queryFn: () => rmaApi.getRMA(rmaId),
+    enabled: enabled && !!rmaId,
+    staleTime: 120000,
+  });
+};
+
+export const useCreateRMA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: rmaApi.createRMA,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useUpdateRMAStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rmaId, data }: { rmaId: string; data: { status: string; notes?: string } }) =>
+      rmaApi.updateRMAStatus(rmaId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+      queryClient.invalidateQueries({ queryKey: ['rma', 'request', variables.rmaId] });
+    },
+  });
+};
+
+export const useApproveRMA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rmaId: string) => rmaApi.approveRMA(rmaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useRejectRMA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rmaId, rejectionReason }: { rmaId: string; rejectionReason: string }) =>
+      rmaApi.rejectRMA(rmaId, rejectionReason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useReceiveRMA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rmaId: string) => rmaApi.receiveRMA(rmaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useStartInspection = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rmaId: string) => rmaApi.startInspection(rmaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useProcessRMARefund = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      rmaId,
+      data,
+    }: {
+      rmaId: string;
+      data: { refundMethod: string; amount?: number; notes?: string };
+    }) => rmaApi.processRefund(rmaId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useSendRMAReplacement = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      rmaId,
+      data,
+    }: {
+      rmaId: string;
+      data: { shippingMethod: string; shippingAddress: string; trackingNumber?: string };
+    }) => rmaApi.sendReplacement(rmaId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useCloseRMA = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rmaId: string) => rmaApi.closeRMA(rmaId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+    },
+  });
+};
+
+export const useRMAInspections = (rmaId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['rma', 'inspections', rmaId],
+    queryFn: () => rmaApi.getInspections(rmaId),
+    enabled: enabled && !!rmaId,
+    staleTime: 120000,
+  });
+};
+
+export const useCreateRMAInspection = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rmaId, data }: { rmaId: string; data: any }) =>
+      rmaApi.createInspection(rmaId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['rma'] });
+      queryClient.invalidateQueries({ queryKey: ['rma', 'inspections', variables.rmaId] });
+    },
+  });
+};
+
+export const useRMAActivity = (rmaId: string, limit: number = 50, enabled = true) => {
+  return useQuery({
+    queryKey: ['rma', 'activity', rmaId, limit],
+    queryFn: () => rmaApi.getActivity(rmaId, limit),
+    enabled: enabled && !!rmaId,
+    staleTime: 60000,
+  });
+};
+
+export const useRMACommunications = (rmaId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['rma', 'communications', rmaId],
+    queryFn: () => rmaApi.getCommunications(rmaId),
+    enabled: enabled && !!rmaId,
+    staleTime: 120000,
+  });
+};
+
+export const useAddRMACommunication = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      rmaId,
+      data,
+    }: {
+      rmaId: string;
+      data: {
+        type: 'EMAIL' | 'PHONE' | 'SMS' | 'NOTE';
+        direction: 'INBOUND' | 'OUTBOUND';
+        content: string;
+        subject?: string;
+      };
+    }) => rmaApi.addCommunication(rmaId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['rma', 'communications', variables.rmaId] });
     },
   });
 };

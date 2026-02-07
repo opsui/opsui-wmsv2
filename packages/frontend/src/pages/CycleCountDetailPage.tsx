@@ -25,7 +25,7 @@ import {
   useBarcodeLookup,
   useAssignableUsers,
 } from '@/services/api';
-import { Header, Select } from '@/components/shared';
+import { Header, Select, Breadcrumb } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { QuickCountPanel, CountSheetPrint } from '@/components/cycle-count';
 import { useAuthStore } from '@/stores';
@@ -1104,14 +1104,8 @@ export default function CycleCountDetailPage() {
     <div className="min-h-screen">
       <Header />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back button */}
-        <button
-          onClick={() => navigate('/cycle-counting')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
-        >
-          <ArrowLeftIcon className="h-5 w-5" />
-          Back to Cycle Counts
-        </button>
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
 
         {/* Header */}
         <div className="flex justify-between items-start mb-6">

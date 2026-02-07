@@ -196,7 +196,7 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
 export function OrderQueuePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const canPick = useAuthStore(state => state.canPick);
   const userId = useAuthStore(state => state.user?.userId);
@@ -231,6 +231,16 @@ export function OrderQueuePage() {
     page,
     limit: pageSize,
   });
+
+  // Separate query to check if user has PICKING orders (for auto-detect)
+  // This fetches ALL orders (no status filter) to check for PICKING status
+  const allOrdersQuery = useOrderQueue({
+    status: undefined as OrderStatus | undefined, // No status filter - get all orders
+    pickerId: userId, // Only this picker's orders
+    page: 1,
+    limit: 1, // We only need to know if there's at least one
+  });
+  const allOrdersData = allOrdersQuery.data;
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -292,21 +302,68 @@ export function OrderQueuePage() {
     }
   }, [orders]);
 
+  // Track if we've done the initial auto-detect
+  const hasAutoDetectedRef = useRef(false);
+
+  // Handler to update status filter and sync with URL
+  const handleStatusFilterChange = (status: OrderStatus) => {
+    setStatusFilter(status);
+    // Update URL params to reflect the change
+    setSearchParams({ status });
+    // Mark as auto-detected since user manually changed it
+    hasAutoDetectedRef.current = true;
+  };
+
   // Auto-detect which tab to show based on whether picker has items in tote
-  // DISABLED: This feature was causing redirect loops and is now disabled
-  // Users can manually switch between PENDING and TOTE tabs using the dropdown
+  // Only on initial mount when there's no status in URL
   // Also sync with URL params to support direct navigation to specific status tabs
   useEffect(() => {
-    // Read status from URL params, default to PENDING
+    // Skip if we already auto-detected or user manually navigated
+    if (hasAutoDetectedRef.current) {
+      console.log('[OrderQueue] Skipping auto-detect - already done');
+      return;
+    }
+
     const urlStatus = searchParams.get('status') as OrderStatus | null;
+    console.log('[OrderQueue] Auto-detect check - URL status:', urlStatus);
+    console.log(
+      '[OrderQueue] allOrdersData:',
+      allOrdersData,
+      'isLoading:',
+      allOrdersQuery.isLoading
+    );
+
     if (urlStatus && Object.values(OrderStatus).includes(urlStatus)) {
+      // URL has explicit status - use it
       console.log('[OrderQueue] Setting status filter from URL:', urlStatus);
       setStatusFilter(urlStatus);
+      hasAutoDetectedRef.current = true;
+    } else if (allOrdersData?.orders) {
+      // No status in URL and all orders data is loaded - check for PICKING orders
+      const allOrders = allOrdersData.orders || [];
+      const pickingOrders = allOrders.filter(o => o.status === OrderStatus.PICKING);
+      console.log(
+        '[OrderQueue] Auto-detect: total orders:',
+        allOrders.length,
+        'PICKING orders:',
+        pickingOrders.length
+      );
+
+      if (pickingOrders.length > 0) {
+        console.log('[OrderQueue] Picker has items in tote, showing TOTE tab');
+        setStatusFilter(OrderStatus.PICKING);
+        // Update URL to show we're on TOTE tab (helps with back navigation)
+        setSearchParams({ status: OrderStatus.PICKING });
+      } else {
+        console.log('[OrderQueue] No items in tote, defaulting to PENDING');
+        setStatusFilter(OrderStatus.PENDING);
+      }
+      hasAutoDetectedRef.current = true;
     } else {
-      console.log('[OrderQueue] No valid status in URL, defaulting to PENDING');
-      setStatusFilter(OrderStatus.PENDING);
+      console.log('[OrderQueue] Waiting for data to load...');
     }
-  }, [location.search]); // Use location.search for reliable change detection
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allOrdersData, searchParams]);
 
   // Refetch orders when component mounts or filter changes to get fresh progress data
   useEffect(() => {
@@ -457,7 +514,7 @@ export function OrderQueuePage() {
 
         {/* Filter Bar - Status and Priority filters */}
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <StatusFilterDropdown value={statusFilter} onChange={setStatusFilter} />
+          <StatusFilterDropdown value={statusFilter} onChange={handleStatusFilterChange} />
           <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
         </div>
 

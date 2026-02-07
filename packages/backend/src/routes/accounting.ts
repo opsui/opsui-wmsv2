@@ -670,4 +670,620 @@ router.get(
   })
 );
 
+// ============================================================================
+// PHASE 2: ACCOUNTS RECEIVABLE
+// ============================================================================
+
+/**
+ * GET /api/accounting/ar/aging
+ * Get accounts receivable aging report
+ */
+router.get(
+  '/ar/aging',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : new Date();
+
+    const report = await accountingService.getARAgingReport(asOfDate);
+
+    res.json(report);
+  })
+);
+
+/**
+ * POST /api/accounting/ar/payments
+ * Apply a payment to accounts receivable
+ */
+router.post(
+  '/ar/payments',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { receivableId, paymentDate, paymentMethod, amount, referenceNumber, notes } = req.body;
+
+    if (!receivableId || !paymentDate || !amount) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const payment = await accountingService.applyARPayment({
+      receivableId,
+      paymentDate: new Date(paymentDate),
+      paymentMethod,
+      amount: parseFloat(amount),
+      referenceNumber,
+      notes,
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(payment);
+  })
+);
+
+/**
+ * POST /api/accounting/ar/credit-memos
+ * Create a credit memo
+ */
+router.post(
+  '/ar/credit-memos',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { receivableId, memoNumber, memoDate, reason, amount } = req.body;
+
+    if (!memoNumber || !memoDate || !reason || amount === undefined) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const memo = await accountingService.createCreditMemo({
+      receivableId,
+      memoNumber,
+      memoDate: new Date(memoDate),
+      reason,
+      amount: parseFloat(amount),
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(memo);
+  })
+);
+
+// ============================================================================
+// PHASE 2: ACCOUNTS PAYABLE
+// ============================================================================
+
+/**
+ * GET /api/accounting/ap/aging
+ * Get accounts payable aging report
+ */
+router.get(
+  '/ap/aging',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : new Date();
+
+    const report = await accountingService.getAPAgingReport(asOfDate);
+
+    res.json(report);
+  })
+);
+
+/**
+ * POST /api/accounting/ap/:payableId/approve
+ * Approve an invoice for payment
+ */
+router.post(
+  '/ap/:payableId/approve',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { payableId } = req.params;
+
+    const payable = await accountingService.approveAPInvoice(payableId, req.user!.userId);
+
+    res.json(payable);
+  })
+);
+
+/**
+ * POST /api/accounting/ap/:payableId/pay
+ * Process a payment to accounts payable
+ */
+router.post(
+  '/ap/:payableId/pay',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { payableId } = req.params;
+    const { paymentDate, paymentMethod, amount } = req.body;
+
+    if (!paymentDate || !paymentMethod || !amount) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const payment = await accountingService.processAPPayment(payableId, {
+      paymentDate: new Date(paymentDate),
+      paymentMethod,
+      amount: parseFloat(amount),
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(payment);
+  })
+);
+
+// ============================================================================
+// PHASE 2: CASH MANAGEMENT
+// ============================================================================
+
+/**
+ * GET /api/accounting/cash-position
+ * Get current cash position
+ */
+router.get(
+  '/cash-position',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : new Date();
+
+    const position = await accountingService.getCashPosition(asOfDate);
+
+    res.json(position);
+  })
+);
+
+/**
+ * POST /api/accounting/bank-reconciliations
+ * Create a bank reconciliation
+ */
+router.post(
+  '/bank-reconciliations',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { bankAccountId, statementDate, statementBalance, bookBalance } = req.body;
+
+    if (
+      !bankAccountId ||
+      !statementDate ||
+      statementBalance === undefined ||
+      bookBalance === undefined
+    ) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const reconciliation = await accountingService.createBankReconciliation({
+      bankAccountId,
+      statementDate: new Date(statementDate),
+      statementBalance: parseFloat(statementBalance),
+      bookBalance: parseFloat(bookBalance),
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(reconciliation);
+  })
+);
+
+// ============================================================================
+// PHASE 2: REVENUE RECOGNITION
+// ============================================================================
+
+/**
+ * POST /api/accounting/revenue-contracts
+ * Create a revenue contract
+ */
+router.post(
+  '/revenue-contracts',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const {
+      contractNumber,
+      customerId,
+      contractName,
+      totalValue,
+      startDate,
+      endDate,
+      recognitionMethod,
+    } = req.body;
+
+    if (
+      !contractNumber ||
+      !customerId ||
+      !totalValue ||
+      !startDate ||
+      !endDate ||
+      !recognitionMethod
+    ) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const contract = await accountingService.createRevenueContract({
+      contractNumber,
+      customerId,
+      contractName,
+      totalValue: parseFloat(totalValue),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      recognitionMethod,
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(contract);
+  })
+);
+
+/**
+ * POST /api/accounting/revenue-contracts/:contractId/recognize
+ * Recognize revenue for a contract
+ */
+router.post(
+  '/revenue-contracts/:contractId/recognize',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { contractId } = req.params;
+    const { milestoneId } = req.body;
+
+    const result = await accountingService.recognizeRevenue(contractId, milestoneId);
+
+    res.json(result);
+  })
+);
+
+// ============================================================================
+// PHASE 3: MULTI-CURRENCY
+// ============================================================================
+
+/**
+ * GET /api/accounting/currencies
+ * Get all supported currencies
+ */
+router.get(
+  '/currencies',
+  accountingAuth,
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const currencies = await accountingService.getCurrencies();
+
+    res.json(currencies);
+  })
+);
+
+/**
+ * GET /api/accounting/exchange-rates
+ * Get exchange rate
+ */
+router.get(
+  '/exchange-rates',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { from, to } = req.query;
+    const date = req.query.date ? new Date(req.query.date as string) : new Date();
+
+    if (!from || !to) {
+      res.status(400).json({ error: 'Missing from/to currencies', code: 'MISSING_CURRENCIES' });
+      return;
+    }
+
+    const rate = await accountingService.getExchangeRate(from as string, to as string, date);
+
+    res.json({ from, to, date, rate });
+  })
+);
+
+/**
+ * POST /api/accounting/exchange-rates
+ * Set exchange rate
+ */
+router.post(
+  '/exchange-rates',
+  authorize(UserRole.ADMIN, UserRole.ACCOUNTING),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { fromCurrency, toCurrency, rateDate, exchangeRate } = req.body;
+
+    if (!fromCurrency || !toCurrency || !rateDate || exchangeRate === undefined) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const rate = await accountingService.setExchangeRate({
+      fromCurrency,
+      toCurrency,
+      rateDate: new Date(rateDate),
+      exchangeRate: parseFloat(exchangeRate),
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(rate);
+  })
+);
+
+// ============================================================================
+// PHASE 3: BUDGETING & FORECASTING
+// ============================================================================
+
+/**
+ * POST /api/accounting/budgets
+ * Create a budget
+ */
+router.post(
+  '/budgets',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { budgetName, fiscalYear, budgetType, lines } = req.body;
+
+    if (!budgetName || !fiscalYear || !budgetType || !lines || !lines.length) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const budget = await accountingService.createBudget({
+      budgetName,
+      fiscalYear,
+      budgetType,
+      lines,
+      createdBy: req.user!.userId,
+    });
+
+    res.status(201).json(budget);
+  })
+);
+
+/**
+ * GET /api/accounting/budgets/:budgetId/vs-actual
+ * Get budget vs actual report
+ */
+router.get(
+  '/budgets/:budgetId/vs-actual',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { budgetId } = req.params;
+
+    const report = await accountingService.getBudgetVsActual(budgetId);
+
+    res.json(report);
+  })
+);
+
+/**
+ * POST /api/accounting/forecasts
+ * Create a forecast
+ */
+router.post(
+  '/forecasts',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { forecastName, forecastType, startDate, endDate, lines } = req.body;
+
+    if (!forecastName || !forecastType || !startDate || !endDate || !lines || !lines.length) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const forecast = await accountingService.createForecast({
+      forecastName,
+      forecastType,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      createdBy: req.user!.userId,
+      lines,
+    });
+
+    res.status(201).json(forecast);
+  })
+);
+
+// ============================================================================
+// PHASE 3: FIXED ASSETS
+// ============================================================================
+
+/**
+ * POST /api/accounting/fixed-assets
+ * Create a fixed asset
+ */
+router.post(
+  '/fixed-assets',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const {
+      assetNumber,
+      assetName,
+      assetCategory,
+      serialNumber,
+      purchaseDate,
+      purchaseCost,
+      salvageValue,
+      usefulLife,
+      depreciationMethod,
+      location,
+    } = req.body;
+
+    if (
+      !assetNumber ||
+      !assetName ||
+      !purchaseDate ||
+      purchaseCost === undefined ||
+      !usefulLife ||
+      !depreciationMethod
+    ) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const asset = await accountingService.createFixedAsset({
+      assetNumber,
+      assetName,
+      assetCategory,
+      serialNumber,
+      purchaseDate: new Date(purchaseDate),
+      purchaseCost: parseFloat(purchaseCost),
+      salvageValue: parseFloat(salvageValue || 0),
+      usefulLife: parseInt(usefulLife),
+      depreciationMethod,
+      location,
+    });
+
+    res.status(201).json(asset);
+  })
+);
+
+/**
+ * GET /api/accounting/fixed-assets/:assetId/depreciation
+ * Calculate depreciation schedule for an asset
+ */
+router.get(
+  '/fixed-assets/:assetId/depreciation',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { assetId } = req.params;
+    const throughDate = req.query.throughDate
+      ? new Date(req.query.throughDate as string)
+      : new Date();
+
+    const schedule = await accountingService.calculateDepreciation(assetId, throughDate);
+
+    res.json(schedule);
+  })
+);
+
+/**
+ * GET /api/accounting/asset-register
+ * Get asset register
+ */
+router.get(
+  '/asset-register',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : new Date();
+
+    const register = await accountingService.getAssetRegister(asOfDate);
+
+    res.json(register);
+  })
+);
+
+// ============================================================================
+// PHASE 3: COMPLIANCE & AUDIT TRAIL
+// ============================================================================
+
+/**
+ * GET /api/accounting/audit-log
+ * Get audit log
+ */
+router.get(
+  '/audit-log',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const tableName = req.query.tableName as string | undefined;
+    const recordId = req.query.recordId as string | undefined;
+    const action = req.query.action as string | undefined;
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+
+    const log = await accountingService.getAuditLog({
+      tableName,
+      recordId,
+      action,
+      startDate,
+      endDate,
+      limit,
+    });
+
+    res.json({ log, total: log.length });
+  })
+);
+
+/**
+ * GET /api/accounting/documents
+ * Get documents for a record
+ */
+router.get(
+  '/documents',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { recordType, recordId } = req.query;
+
+    if (!recordType || !recordId) {
+      res.status(400).json({ error: 'Missing recordType or recordId', code: 'MISSING_PARAMS' });
+      return;
+    }
+
+    const documents = await accountingService.getDocuments(
+      recordType as string,
+      recordId as string
+    );
+
+    res.json({ documents, total: documents.length });
+  })
+);
+
+/**
+ * POST /api/accounting/documents
+ * Attach a document to a record
+ */
+router.post(
+  '/documents',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { recordType, recordId, documentName, documentType, filePath, fileSize } = req.body;
+
+    if (!recordType || !recordId || !documentName || !documentType || !filePath || !fileSize) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const document = await accountingService.attachDocument({
+      recordType,
+      recordId,
+      documentName,
+      documentType,
+      filePath,
+      fileSize: parseInt(fileSize),
+      uploadedBy: req.user!.userId,
+    });
+
+    res.status(201).json(document);
+  })
+);
+
+/**
+ * POST /api/accounting/approvals
+ * Create an approval request
+ */
+router.post(
+  '/approvals',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { approvalType, recordId } = req.body;
+
+    if (!approvalType || !recordId) {
+      res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
+      return;
+    }
+
+    const approval = await accountingService.createApprovalRequest({
+      approvalType,
+      recordId,
+      requestedBy: req.user!.userId,
+    });
+
+    res.status(201).json(approval);
+  })
+);
+
+/**
+ * POST /api/accounting/approvals/:approvalId/approve
+ * Approve an approval request
+ */
+router.post(
+  '/approvals/:approvalId/approve',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { approvalId } = req.params;
+    const { comments } = req.body;
+
+    const approval = await accountingService.approveRequest(approvalId, req.user!.userId, comments);
+
+    res.json(approval);
+  })
+);
+
 export default router;

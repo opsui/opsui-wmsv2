@@ -121,13 +121,6 @@ const DEFAULT_ROLES: RoleConfig[] = [
     visible: true,
   },
   {
-    key: 'dispatch',
-    label: 'Dispatch View',
-    role: 'DISPATCH' as UserRole,
-    icon: TruckIcon,
-    visible: true,
-  },
-  {
     key: 'accounting',
     label: 'Accounting View',
     role: 'ACCOUNTING' as UserRole,
@@ -220,16 +213,29 @@ function getInitialRoles(): RoleConfig[] {
   }));
 
   const result = [...baseRoles, ...customRoles];
+  console.log('='.repeat(80));
+  console.log('[getInitialRoles] DEFAULT_ROLES count:', DEFAULT_ROLES.length);
   console.log(
-    '[getInitialRoles] Returning roles:',
+    '[getInitialRoles] DEFAULT_ROLES keys:',
+    DEFAULT_ROLES.map(r => r.key)
+  );
+  console.log('[getInitialRoles] BASE_ROLE_KEYS:', Array.from(BASE_ROLE_KEYS));
+  console.log(
+    '[getInitialRoles] filtered customRoles keys:',
+    customRoles.map(r => r.key)
+  );
+  console.log('[getInitialRoles] Returning roles:');
+  console.table(
     result.map(r => ({
       key: r.key,
+      label: r.label,
       role: r.role,
       visible: r.visible,
       isBase: isBaseRoleKey(r.key),
     }))
   );
-  console.log('[getInitialRoles] BASE_ROLE_KEYS:', Array.from(BASE_ROLE_KEYS));
+  console.log('[getInitialRoles] Total count:', result.length);
+  console.log('='.repeat(80));
   return result;
 }
 
@@ -375,6 +381,13 @@ function RoleSettingsPage() {
 
   const visibleCount = roles.filter(r => r.visible).length;
 
+  // Debug: Log roles state on every render
+  console.log('[RoleSettingsPage] Current roles state:', {
+    total: roles.length,
+    visible: visibleCount,
+    keys: roles.map(r => r.key),
+  });
+
   // Get all user roles (base role + additional roles)
   const getAllUserRoles = (): string[] => {
     if (!currentUser) return [];
@@ -398,6 +411,7 @@ function RoleSettingsPage() {
   }, [currentUser]);
 
   // CRITICAL: Clean localStorage on mount to ensure base roles are always visible
+  // AND ensure all DEFAULT_ROLES are present (migration for new roles like accounting)
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -406,6 +420,8 @@ function RoleSettingsPage() {
         const cleaned: Record<string, boolean> = { ...parsed };
 
         let needsSave = false;
+
+        // Ensure base roles are always visible
         for (const baseKey of BASE_ROLE_KEYS) {
           if (cleaned[baseKey] !== true) {
             console.log(
@@ -419,17 +435,60 @@ function RoleSettingsPage() {
           }
         }
 
+        // MIGRATION: Ensure all DEFAULT_ROLES are present in localStorage
+        // This handles newly added roles like accounting that weren't in old settings
+        for (const defaultRole of DEFAULT_ROLES) {
+          if (!(defaultRole.key in cleaned)) {
+            console.log(
+              '[RoleSettingsPage] Migrating new role to localStorage:',
+              defaultRole.key,
+              'with visibility:',
+              defaultRole.visible
+            );
+            cleaned[defaultRole.key] = defaultRole.visible;
+            needsSave = true;
+          }
+        }
+
         if (needsSave) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
           console.log('[RoleSettingsPage] Saved cleaned visibility settings:', cleaned);
           // Reload roles with cleaned data
           setRoles(getInitialRoles());
         }
+      } else {
+        // No localStorage exists - initialize with all DEFAULT_ROLES visible
+        const initialSettings: Record<string, boolean> = {};
+        for (const role of DEFAULT_ROLES) {
+          initialSettings[role.key] = role.visible;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSettings));
+        console.log('[RoleSettingsPage] Initialized localStorage with all roles:', initialSettings);
+        setRoles(getInitialRoles());
       }
     } catch (error) {
       console.error('[RoleSettingsPage] Failed to clean localStorage:', error);
     }
   }, []); // Run once on mount
+
+  // FORCE: Ensure accounting role is always present (fix for caching issues)
+  useEffect(() => {
+    setRoles(prev => {
+      const hasAccounting = prev.some(r => r.key === 'accounting');
+      if (!hasAccounting) {
+        console.log('[RoleSettingsPage] Accounting missing, adding it now!');
+        const accountingRole = {
+          key: 'accounting',
+          label: 'Accounting View',
+          role: 'ACCOUNTING' as UserRole,
+          icon: CurrencyDollarIcon,
+          visible: true,
+        };
+        return [...prev, accountingRole];
+      }
+      return prev;
+    });
+  }, []);
 
   // Listen for role visibility changes from other components
   // CRITICAL: Base roles are NEVER affected by events - only custom roles change

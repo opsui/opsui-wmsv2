@@ -16,6 +16,7 @@ import {
   Button,
   MetricCardSkeleton,
   Skeleton,
+  Breadcrumb,
 } from '@/components/shared';
 import {
   CurrencyDollarIcon,
@@ -311,6 +312,8 @@ function AccountingPage() {
       <Header />
 
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">

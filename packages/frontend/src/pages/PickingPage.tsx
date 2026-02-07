@@ -20,6 +20,7 @@ import {
   UndoPickModal,
   useToast,
   ConfirmDialog,
+  Breadcrumb,
 } from '@/components/shared';
 import { TaskStatusBadge } from '@/components/shared';
 import { formatBinLocation } from '@/lib/utils';
@@ -791,6 +792,8 @@ export function PickingPage() {
     <div className="min-h-screen">
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* View Mode Banner */}
         {isViewMode && (
           <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 sm:p-5 flex items-center gap-4 card-hover">

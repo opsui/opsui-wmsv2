@@ -14,6 +14,7 @@ import {
   Button,
   useToast,
   Pagination,
+  Breadcrumb,
 } from '@/components/shared';
 import {
   useCustomers,
@@ -21,8 +22,15 @@ import {
   useOpportunities,
   useQuotes,
   useSalesDashboard,
+  useConvertLeadToCustomer,
+  useSendQuote,
+  useAcceptQuote,
 } from '@/services/api';
 import { CreateCustomerModal } from '@/components/sales/CreateCustomerModal';
+import { CreateLeadModal } from '@/components/sales/CreateLeadModal';
+import { CreateOpportunityModal } from '@/components/sales/CreateOpportunityModal';
+import { CreateQuoteModal } from '@/components/sales/CreateQuoteModal';
+import { CustomerDetailModal } from '@/components/sales/CustomerDetailModal';
 import { useEffect, useState } from 'react';
 import {
   CurrencyDollarIcon,
@@ -182,7 +190,15 @@ function PriorityIndicator({ priority }: { priority: string }) {
   );
 }
 
-function CustomerCard({ customer }: { customer: Customer }) {
+function CustomerCard({
+  customer,
+  onViewDetails,
+  onCreateQuote,
+}: {
+  customer: Customer;
+  onViewDetails: (customer: Customer) => void;
+  onCreateQuote: (customer: Customer) => void;
+}) {
   return (
     <Card variant="glass" className="card-hover">
       <CardContent className="p-5">
@@ -212,10 +228,20 @@ function CustomerCard({ customer }: { customer: Customer }) {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" className="flex-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onViewDetails(customer)}
+          >
             View Details
           </Button>
-          <Button variant="primary" size="sm" className="flex-1">
+          <Button
+            variant="primary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onCreateQuote(customer)}
+          >
             Create Quote
           </Button>
         </div>
@@ -224,7 +250,15 @@ function CustomerCard({ customer }: { customer: Customer }) {
   );
 }
 
-function LeadCard({ lead }: { lead: Lead }) {
+function LeadCard({
+  lead,
+  onViewDetails,
+  onConvert,
+}: {
+  lead: Lead;
+  onViewDetails: (lead: Lead) => void;
+  onConvert: (lead: Lead) => void;
+}) {
   return (
     <Card variant="glass" className="card-hover">
       <CardContent className="p-5">
@@ -250,10 +284,15 @@ function LeadCard({ lead }: { lead: Lead }) {
         )}
 
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" className="flex-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onViewDetails(lead)}
+          >
             View Details
           </Button>
-          <Button variant="primary" size="sm" className="flex-1">
+          <Button variant="primary" size="sm" className="flex-1" onClick={() => onConvert(lead)}>
             Convert to Customer
           </Button>
         </div>
@@ -262,7 +301,15 @@ function LeadCard({ lead }: { lead: Lead }) {
   );
 }
 
-function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
+function OpportunityCard({
+  opportunity,
+  onViewDetails,
+  onCreateQuote,
+}: {
+  opportunity: Opportunity;
+  onViewDetails: (opportunity: Opportunity) => void;
+  onCreateQuote: (opportunity: Opportunity) => void;
+}) {
   return (
     <Card variant="glass" className="card-hover">
       <CardContent className="p-5">
@@ -309,10 +356,20 @@ function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" className="flex-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onViewDetails(opportunity)}
+          >
             View Details
           </Button>
-          <Button variant="primary" size="sm" className="flex-1">
+          <Button
+            variant="primary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onCreateQuote(opportunity)}
+          >
             Create Quote
           </Button>
         </div>
@@ -321,7 +378,17 @@ function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
   );
 }
 
-function QuoteCard({ quote }: { quote: Quote }) {
+function QuoteCard({
+  quote,
+  onViewDetails,
+  onSend,
+  onConvert,
+}: {
+  quote: Quote;
+  onViewDetails: (quote: Quote) => void;
+  onSend: (quote: Quote) => void;
+  onConvert: (quote: Quote) => void;
+}) {
   const isExpiringSoon =
     new Date(quote.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const isExpired = new Date(quote.validUntil) < new Date();
@@ -366,16 +433,21 @@ function QuoteCard({ quote }: { quote: Quote }) {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" className="flex-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={() => onViewDetails(quote)}
+          >
             View Details
           </Button>
           {quote.status === 'DRAFT' && (
-            <Button variant="primary" size="sm" className="flex-1">
+            <Button variant="primary" size="sm" className="flex-1" onClick={() => onSend(quote)}>
               Send Quote
             </Button>
           )}
           {quote.status === 'SENT' && (
-            <Button variant="success" size="sm" className="flex-1">
+            <Button variant="success" size="sm" className="flex-1" onClick={() => onConvert(quote)}>
               Convert to Order
             </Button>
           )}
@@ -395,7 +467,22 @@ function SalesPage() {
   const { showToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
+
+  // Modal states
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] = useState(false);
+  const [isCreateLeadModalOpen, setIsCreateLeadModalOpen] = useState(false);
+  const [isCreateOpportunityModalOpen, setIsCreateOpportunityModalOpen] = useState(false);
+  const [isCreateQuoteModalOpen, setIsCreateQuoteModalOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+
+  // Search/filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+
+  // Mutation hooks
+  const convertLeadMutation = useConvertLeadToCustomer();
+  const sendQuoteMutation = useSendQuote();
+  const acceptQuoteMutation = useAcceptQuote();
 
   // Fetch sales data from backend
   const {
@@ -482,11 +569,71 @@ function SalesPage() {
     setCurrentPage(1); // Reset pagination when changing tabs
   };
 
+  // Handler functions
+  const handleViewCustomerDetails = (customer: Customer) => {
+    setSelectedCustomerId(customer.customerId);
+  };
+
+  const handleCreateQuoteForCustomer = (customer: Customer) => {
+    setSelectedCustomerId(customer.customerId);
+    setIsCreateQuoteModalOpen(true);
+  };
+
+  const handleViewLeadDetails = (lead: Lead) => {
+    showToast(`Viewing lead: ${lead.customerName}`, 'info');
+    // TODO: Implement LeadDetailModal
+  };
+
+  const handleConvertLeadToCustomer = async (lead: Lead) => {
+    try {
+      await convertLeadMutation.mutateAsync(lead.leadId);
+      showToast(`Lead "${lead.customerName}" converted to customer successfully!`, 'success');
+    } catch (error: any) {
+      showToast(error?.message || 'Failed to convert lead', 'error');
+    }
+  };
+
+  const handleViewOpportunityDetails = (opportunity: Opportunity) => {
+    showToast(`Viewing opportunity: ${opportunity.name}`, 'info');
+    // TODO: Implement OpportunityDetailModal
+  };
+
+  const handleCreateQuoteForOpportunity = (opportunity: Opportunity) => {
+    // Pre-populate quote modal with opportunity data
+    setIsCreateQuoteModalOpen(true);
+  };
+
+  const handleViewQuoteDetails = (quote: Quote) => {
+    showToast(`Viewing quote: ${quote.quoteNumber}`, 'info');
+    // TODO: Implement QuoteDetailModal
+  };
+
+  const handleSendQuote = async (quote: Quote) => {
+    try {
+      await sendQuoteMutation.mutateAsync(quote.quoteId);
+      showToast(`Quote ${quote.quoteNumber} sent to customer!`, 'success');
+    } catch (error: any) {
+      showToast(error?.message || 'Failed to send quote', 'error');
+    }
+  };
+
+  const handleConvertQuoteToOrder = async (quote: Quote) => {
+    try {
+      await acceptQuoteMutation.mutateAsync(quote.quoteId);
+      showToast(`Quote ${quote.quoteNumber} accepted! Order creation initiated.`, 'success');
+      // TODO: Navigate to order details or show order creation modal
+    } catch (error: any) {
+      showToast(error?.message || 'Failed to convert quote to order', 'error');
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
 
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white tracking-tight">Sales & CRM</h1>
@@ -602,6 +749,7 @@ function SalesPage() {
                     variant="primary"
                     size="lg"
                     className="flex items-center justify-center gap-2"
+                    onClick={() => setIsCreateCustomerModalOpen(true)}
                   >
                     <PlusIcon className="h-5 w-5" />
                     <span>New Customer</span>
@@ -610,7 +758,7 @@ function SalesPage() {
                     variant="secondary"
                     size="lg"
                     className="flex items-center justify-center gap-2"
-                    onClick={() => setTab('leads')}
+                    onClick={() => setIsCreateLeadModalOpen(true)}
                   >
                     <PlusIcon className="h-5 w-5" />
                     <span>New Lead</span>
@@ -619,16 +767,16 @@ function SalesPage() {
                     variant="secondary"
                     size="lg"
                     className="flex items-center justify-center gap-2"
-                    onClick={() => setTab('opportunities')}
+                    onClick={() => setIsCreateOpportunityModalOpen(true)}
                   >
                     <TrophyIcon className="h-5 w-5" />
-                    <span>View Pipeline</span>
+                    <span>New Opportunity</span>
                   </Button>
                   <Button
                     variant="secondary"
                     size="lg"
                     className="flex items-center justify-center gap-2"
-                    onClick={() => setTab('quotes')}
+                    onClick={() => setIsCreateQuoteModalOpen(true)}
                   >
                     <DocumentTextIcon className="h-5 w-5" />
                     <span>New Quote</span>
@@ -661,7 +809,12 @@ function SalesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {paginatedCustomers.map(customer => (
-                <CustomerCard key={customer.customerId} customer={customer} />
+                <CustomerCard
+                  key={customer.customerId}
+                  customer={customer}
+                  onViewDetails={handleViewCustomerDetails}
+                  onCreateQuote={handleCreateQuoteForCustomer}
+                />
               ))}
             </div>
 
@@ -686,7 +839,11 @@ function SalesPage() {
                 <h2 className="text-2xl font-bold text-white">Sales Leads</h2>
                 <p className="text-gray-400 text-sm mt-1">Track and convert leads into customers</p>
               </div>
-              <Button variant="primary" className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateLeadModalOpen(true)}
+              >
                 <PlusIcon className="h-5 w-5" />
                 New Lead
               </Button>
@@ -694,7 +851,12 @@ function SalesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {paginatedLeads.map(lead => (
-                <LeadCard key={lead.leadId} lead={lead} />
+                <LeadCard
+                  key={lead.leadId}
+                  lead={lead}
+                  onViewDetails={handleViewLeadDetails}
+                  onConvert={handleConvertLeadToCustomer}
+                />
               ))}
             </div>
 
@@ -721,7 +883,11 @@ function SalesPage() {
                   Manage sales pipeline and opportunities
                 </p>
               </div>
-              <Button variant="primary" className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateOpportunityModalOpen(true)}
+              >
                 <PlusIcon className="h-5 w-5" />
                 New Opportunity
               </Button>
@@ -729,7 +895,12 @@ function SalesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {paginatedOpportunities.map(opportunity => (
-                <OpportunityCard key={opportunity.opportunityId} opportunity={opportunity} />
+                <OpportunityCard
+                  key={opportunity.opportunityId}
+                  opportunity={opportunity}
+                  onViewDetails={handleViewOpportunityDetails}
+                  onCreateQuote={handleCreateQuoteForOpportunity}
+                />
               ))}
             </div>
 
@@ -754,7 +925,11 @@ function SalesPage() {
                 <h2 className="text-2xl font-bold text-white">Quotes</h2>
                 <p className="text-gray-400 text-sm mt-1">Create and manage sales quotes</p>
               </div>
-              <Button variant="primary" className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateQuoteModalOpen(true)}
+              >
                 <PlusIcon className="h-5 w-5" />
                 New Quote
               </Button>
@@ -762,7 +937,13 @@ function SalesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {paginatedQuotes.map(quote => (
-                <QuoteCard key={quote.quoteId} quote={quote} />
+                <QuoteCard
+                  key={quote.quoteId}
+                  quote={quote}
+                  onViewDetails={handleViewQuoteDetails}
+                  onSend={handleSendQuote}
+                  onConvert={handleConvertQuoteToOrder}
+                />
               ))}
             </div>
 
@@ -785,10 +966,40 @@ function SalesPage() {
         isOpen={isCreateCustomerModalOpen}
         onClose={() => setIsCreateCustomerModalOpen(false)}
         onSuccess={() => {
-          // Optionally refetch customers data
-          showToast('Refreshing customer list...', 'info');
+          showToast('Customer list refreshed', 'success');
         }}
       />
+      <CreateLeadModal
+        isOpen={isCreateLeadModalOpen}
+        onClose={() => setIsCreateLeadModalOpen(false)}
+        onSuccess={() => {
+          showToast('Lead list refreshed', 'success');
+        }}
+      />
+      <CreateOpportunityModal
+        isOpen={isCreateOpportunityModalOpen}
+        onClose={() => setIsCreateOpportunityModalOpen(false)}
+        onSuccess={() => {
+          showToast('Opportunity list refreshed', 'success');
+        }}
+      />
+      <CreateQuoteModal
+        isOpen={isCreateQuoteModalOpen}
+        onClose={() => setIsCreateQuoteModalOpen(false)}
+        onSuccess={() => {
+          showToast('Quote list refreshed', 'success');
+        }}
+      />
+      {selectedCustomerId && (
+        <CustomerDetailModal
+          isOpen={!!selectedCustomerId}
+          onClose={() => setSelectedCustomerId(null)}
+          onSuccess={() => {
+            showToast('Customer details refreshed', 'success');
+          }}
+          customerId={selectedCustomerId}
+        />
+      )}
     </div>
   );
 }

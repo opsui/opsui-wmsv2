@@ -5,6 +5,7 @@
  */
 
 import { salesRepository } from '../repositories/SalesRepository';
+import { orderService } from './OrderService';
 import {
   Customer,
   Lead,
@@ -330,17 +331,34 @@ export class SalesService {
     return quote; // Return original since update doesn't return full quote
   }
 
-  async acceptQuote(quoteId: string, _userId: string): Promise<Quote> {
+  async acceptQuote(quoteId: string, userId: string): Promise<{ quote: Quote; order?: any }> {
     const quote = await this.getQuoteById(quoteId);
 
     if (quote.status !== QuoteStatus.SENT) {
       throw new Error('Only SENT quotes can be accepted');
     }
 
-    // In production, this would convert the quote to an order
-    // For now, just update the status
+    // Convert quote to order
+    const order = await orderService.createOrder({
+      customerId: quote.customerId,
+      items: quote.lineItems.map(item => ({
+        sku: item.sku,
+        quantity: item.quantity,
+      })),
+      notes: quote.notes,
+      createdBy: userId,
+    } as any);
 
-    return quote;
+    // Update quote status and link to order
+    await salesRepository.updateQuote(quoteId, {
+      status: QuoteStatus.ACCEPTED,
+      convertedToOrderId: order.orderId,
+      updatedBy: userId,
+    } as any);
+
+    // Return updated quote and created order
+    const updatedQuote = await this.getQuoteById(quoteId);
+    return { quote: updatedQuote, order };
   }
 
   // ========================================================================

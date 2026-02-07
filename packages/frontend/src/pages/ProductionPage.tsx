@@ -10,7 +10,15 @@
  */
 
 import { useSearchParams } from 'react-router-dom';
-import { Header, Button, Card, CardContent, CardHeader, CardTitle } from '@/components/shared';
+import {
+  Header,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Breadcrumb,
+} from '@/components/shared';
 import { useProductionOrders, useBOMs, useUpdateProductionOrder } from '@/services/api';
 import { useState, useMemo } from 'react';
 import { ProductionOrder as SharedProductionOrder, ProductionOrderStatus } from '@opsui/shared';
@@ -119,6 +127,8 @@ export function ProductionPage() {
       <Header />
 
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Page Header */}
         <div className="flex items-center justify-between mb-6">
           <div>

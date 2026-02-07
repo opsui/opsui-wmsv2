@@ -31,6 +31,36 @@ import {
   CreateAccountDTO,
   UpdateAccountDTO,
   CreateJournalEntryDTO,
+  // Phase 2 & 3 Types
+  ARPayment,
+  CreditMemo,
+  APPayment,
+  VendorCreditMemo,
+  BankReconciliation,
+  RevenueContract,
+  ExchangeRate,
+  Currency,
+  Budget,
+  BudgetLine,
+  Forecast,
+  FixedAsset,
+  DepreciationSchedule,
+  AuditLog,
+  DocumentAttachment,
+  Approval,
+  CashPosition,
+  RevenueMilestone,
+  RevenueSchedule,
+  DeferredRevenue,
+  DepreciationMethod,
+  RevenueRecognitionMethod,
+  ApplyPaymentDTO,
+  CreateCreditMemoDTO,
+  CreateBankReconciliationDTO,
+  CreateRevenueContractDTO,
+  CreateBudgetDTO,
+  CreateFixedAssetDTO,
+  CreateForecastDTO,
 } from '@opsui/shared';
 
 export class AccountingService {
@@ -1817,6 +1847,1113 @@ export class AccountingService {
       total: 0,
       items: [],
     };
+  }
+
+  // ========================================================================
+  // PHASE 2: ENHANCED ACCOUNTS RECEIVABLE
+  // ========================================================================
+
+  async getARAgingReport(asOfDate: Date): Promise<{
+    asOfDate: Date;
+    buckets: Array<{ days: number; label: string; amount: number; count: number }>;
+    totalOutstanding: number;
+  }> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          SUM(amount - COALESCE(paid_amount, 0)) as total_outstanding
+        FROM accounts_receivable
+        WHERE status = 'OPEN' AND invoice_date <= $1`,
+        [asOfDate]
+      );
+
+      const totalOutstanding = parseFloat(result.rows[0]?.total_outstanding) || 0;
+
+      return {
+        asOfDate,
+        buckets: [
+          { days: 30, label: 'Current (0-30)', amount: 0, count: 0 },
+          { days: 60, label: '31-60 Days', amount: 0, count: 0 },
+          { days: 90, label: '61-90 Days', amount: 0, count: 0 },
+          { days: 120, label: '91-120 Days', amount: 0, count: 0 },
+          { days: 999, label: 'Over 120 Days', amount: 0, count: 0 },
+        ],
+        totalOutstanding,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return {
+          asOfDate,
+          buckets: [],
+          totalOutstanding: 0,
+        };
+      }
+      throw error;
+    }
+  }
+
+  async applyARPayment(data: ApplyPaymentDTO): Promise<ARPayment> {
+    const paymentId = this.generateId('ARP');
+
+    await dbQuery(
+      `INSERT INTO acct_ar_payments (
+        payment_id, receivable_id, payment_date, payment_method,
+        amount, reference_number, notes, created_by, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      RETURNING *`,
+      [
+        paymentId,
+        data.receivableId,
+        data.paymentDate,
+        data.paymentMethod || 'CASH',
+        data.amount,
+        data.referenceNumber || null,
+        data.notes || null,
+        data.createdBy,
+      ]
+    );
+
+    // Update the receivable
+    await dbQuery(
+      `UPDATE accounts_receivable
+      SET paid_amount = COALESCE(paid_amount, 0) + $1,
+          last_payment_date = $2,
+          updated_at = NOW()
+      WHERE receivable_id = $3`,
+      [data.amount, data.paymentDate, data.receivableId]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        payment_id as "paymentId",
+        receivable_id as "receivableId",
+        payment_date as "paymentDate",
+        payment_method as "paymentMethod",
+        amount,
+        reference_number as "referenceNumber",
+        notes,
+        created_by as "createdBy",
+        created_at as "createdAt"
+      FROM acct_ar_payments
+      WHERE payment_id = $1`,
+      [paymentId]
+    );
+
+    return result.rows[0] as ARPayment;
+  }
+
+  async createCreditMemo(data: CreateCreditMemoDTO): Promise<CreditMemo> {
+    const memoId = this.generateId('CM');
+
+    await dbQuery(
+      `INSERT INTO acct_credit_memos (
+        memo_id, receivable_id, memo_number, memo_date,
+        reason, amount, status, approved_by, approved_at, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'APPROVED', NULL, NULL, NOW())
+      RETURNING *`,
+      [memoId, data.receivableId || null, data.memoNumber, data.memoDate, data.reason, data.amount]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        memo_id as "memoId",
+        receivable_id as "receivableId",
+        memo_number as "memoNumber",
+        memo_date as "memoDate",
+        reason,
+        amount,
+        status,
+        approved_by as "approvedBy",
+        approved_at as "approvedAt",
+        created_at as "createdAt"
+      FROM acct_credit_memos
+      WHERE memo_id = $1`,
+      [memoId]
+    );
+
+    return result.rows[0] as CreditMemo;
+  }
+
+  // ========================================================================
+  // PHASE 2: ENHANCED ACCOUNTS PAYABLE
+  // ========================================================================
+
+  async getAPAgingReport(asOfDate: Date): Promise<{
+    asOfDate: Date;
+    buckets: Array<{ days: number; label: string; amount: number; count: number }>;
+    totalOutstanding: number;
+  }> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          SUM(amount - COALESCE(paid_amount, 0)) as total_outstanding
+        FROM accounts_payable
+        WHERE status = 'OPEN' AND invoice_date <= $1`,
+        [asOfDate]
+      );
+
+      const totalOutstanding = parseFloat(result.rows[0]?.total_outstanding) || 0;
+
+      return {
+        asOfDate,
+        buckets: [
+          { days: 30, label: 'Current (0-30)', amount: 0, count: 0 },
+          { days: 60, label: '31-60 Days', amount: 0, count: 0 },
+          { days: 90, label: '61-90 Days', amount: 0, count: 0 },
+          { days: 120, label: '91-120 Days', amount: 0, count: 0 },
+          { days: 999, label: 'Over 120 Days', amount: 0, count: 0 },
+        ],
+        totalOutstanding,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return {
+          asOfDate,
+          buckets: [],
+          totalOutstanding: 0,
+        };
+      }
+      throw error;
+    }
+  }
+
+  async approveAPInvoice(payableId: string, approvedBy: string): Promise<any> {
+    const result = await dbQuery(
+      `UPDATE accounts_payable
+      SET approved_by = $1, approved_at = NOW(), updated_at = NOW()
+      WHERE payable_id = $2
+      RETURNING *`,
+      [approvedBy, payableId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Payable not found');
+    }
+
+    return result.rows[0];
+  }
+
+  async processAPPayment(
+    payableId: string,
+    paymentData: {
+      paymentDate: Date;
+      paymentMethod: string;
+      amount: number;
+      createdBy: string;
+    }
+  ): Promise<APPayment> {
+    const paymentId = this.generateId('APP');
+
+    await dbQuery(
+      `INSERT INTO acct_ap_payments (
+        payment_id, payable_id, payment_date, payment_method,
+        amount, reference_number, notes, created_by, created_at
+      ) VALUES ($1, $2, $3, $4, $5, NULL, NULL, $6, NOW())
+      RETURNING *`,
+      [
+        paymentId,
+        payableId,
+        paymentData.paymentDate,
+        paymentData.paymentMethod,
+        paymentData.amount,
+        paymentData.createdBy,
+      ]
+    );
+
+    // Update the payable
+    await dbQuery(
+      `UPDATE accounts_payable
+      SET paid_amount = COALESCE(paid_amount, 0) + $1,
+          status = CASE WHEN (amount - (paid_amount + $1)) <= 0.01 THEN 'PAID' ELSE status END,
+          updated_at = NOW()
+      WHERE payable_id = $2`,
+      [paymentData.amount, payableId]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        payment_id as "paymentId",
+        payable_id as "payableId",
+        payment_date as "paymentDate",
+        payment_method as "paymentMethod",
+        amount,
+        reference_number as "referenceNumber",
+        notes,
+        created_by as "createdBy",
+        created_at as "createdAt"
+      FROM acct_ap_payments
+      WHERE payment_id = $1`,
+      [paymentId]
+    );
+
+    return result.rows[0] as APPayment;
+  }
+
+  // ========================================================================
+  // PHASE 2: CASH MANAGEMENT
+  // ========================================================================
+
+  async getCashPosition(asOfDate: Date): Promise<CashPosition> {
+    try {
+      // Get cash from cash accounts
+      const cashResult = await dbQuery(
+        `SELECT
+          COALESCE(SUM(CASE WHEN normal_balance = 'D' THEN jel.debit_amount - jel.credit_amount
+            ELSE jel.credit_amount - jel.debit_amount END), 0) as cash_balance
+        FROM acct_chart_of_accounts coa
+        LEFT JOIN acct_journal_entry_lines jel ON jel.account_id = coa.account_id
+        LEFT JOIN acct_journal_entries je ON je.journal_entry_id = jel.journal_entry_id
+        WHERE coa.account_code LIKE '11%' AND je.status = 'POSTED' AND je.entry_date <= $1`,
+        [asOfDate]
+      );
+
+      const cashOnHand = parseFloat(cashResult.rows[0]?.cash_balance) || 0;
+
+      // Get AR
+      const arResult = await dbQuery(
+        `SELECT COALESCE(SUM(amount - COALESCE(paid_amount, 0)), 0) as ar_balance
+        FROM accounts_receivable
+        WHERE status = 'OPEN' AND invoice_date <= $1`,
+        [asOfDate]
+      );
+
+      const accountsReceivable = parseFloat(arResult.rows[0]?.ar_balance) || 0;
+
+      // Get AP
+      const apResult = await dbQuery(
+        `SELECT COALESCE(SUM(amount - COALESCE(paid_amount, 0)), 0) as ap_balance
+        FROM accounts_payable
+        WHERE status = 'OPEN' AND invoice_date <= $1`,
+        [asOfDate]
+      );
+
+      const accountsPayable = parseFloat(apResult.rows[0]?.ap_balance) || 0;
+      const totalCash = cashOnHand + cashOnHand;
+
+      return {
+        positionId: this.generateId('CP'),
+        asOfDate,
+        cashOnHand,
+        cashInBank: cashOnHand,
+        totalCash,
+        accountsReceivable,
+        accountsPayable,
+        netCash: totalCash + accountsReceivable - accountsPayable,
+        createdAt: new Date(),
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return {
+          positionId: this.generateId('CP'),
+          asOfDate,
+          cashOnHand: 0,
+          cashInBank: 0,
+          totalCash: 0,
+          accountsReceivable: 0,
+          accountsPayable: 0,
+          netCash: 0,
+          createdAt: new Date(),
+        };
+      }
+      throw error;
+    }
+  }
+
+  async createBankReconciliation(data: CreateBankReconciliationDTO): Promise<BankReconciliation> {
+    const reconciliationId = this.generateId('BR');
+
+    await dbQuery(
+      `INSERT INTO acct_bank_reconciliations (
+        reconciliation_id, bank_account_id, statement_date,
+        statement_balance, book_balance, difference,
+        status, reconciled_by, reconciled_at, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'IN_PROGRESS', NULL, NULL, NOW())
+      RETURNING *`,
+      [
+        reconciliationId,
+        data.bankAccountId,
+        data.statementDate,
+        data.statementBalance,
+        data.bookBalance,
+        Math.abs(data.statementBalance - data.bookBalance),
+      ]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        reconciliation_id as "reconciliationId",
+        bank_account_id as "bankAccountId",
+        statement_date as "statementDate",
+        statement_balance as "statementBalance",
+        book_balance as "bookBalance",
+        difference,
+        status,
+        reconciled_by as "reconciledBy",
+        reconciled_at as "reconciledAt",
+        created_at as "createdAt"
+      FROM acct_bank_reconciliations
+      WHERE reconciliation_id = $1`,
+      [reconciliationId]
+    );
+
+    return result.rows[0] as BankReconciliation;
+  }
+
+  // ========================================================================
+  // PHASE 2: REVENUE RECOGNITION
+  // ========================================================================
+
+  async createRevenueContract(data: CreateRevenueContractDTO): Promise<RevenueContract> {
+    const contractId = this.generateId('RC');
+
+    await dbQuery(
+      `INSERT INTO acct_revenue_contracts (
+        contract_id, contract_number, customer_id, contract_name,
+        total_value, start_date, end_date,
+        recognition_method, status, created_by, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ACTIVE', $9, NOW(), NOW())
+      RETURNING *`,
+      [
+        contractId,
+        data.contractNumber,
+        data.customerId,
+        data.contractName || data.contractNumber,
+        data.totalValue,
+        data.startDate,
+        data.endDate,
+        data.recognitionMethod,
+        data.createdBy,
+      ]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        contract_id as "contractId",
+        contract_number as "contractNumber",
+        customer_id as "customerId",
+        contract_name as "contractName",
+        total_value as "totalValue",
+        start_date as "startDate",
+        end_date as "endDate",
+        recognition_method as "recognitionMethod",
+        status,
+        created_by as "createdBy",
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM acct_revenue_contracts
+      WHERE contract_id = $1`,
+      [contractId]
+    );
+
+    return result.rows[0] as RevenueContract;
+  }
+
+  async recognizeRevenue(
+    contractId: string,
+    milestoneId?: string
+  ): Promise<{ recognized: boolean; amount: number; date: Date }> {
+    const contract = await dbQuery(`SELECT * FROM acct_revenue_contracts WHERE contract_id = $1`, [
+      contractId,
+    ]);
+
+    if (contract.rows.length === 0) {
+      throw new Error('Contract not found');
+    }
+
+    const contractData = contract.rows[0];
+
+    // For milestone-based recognition
+    if (milestoneId) {
+      const milestone = await dbQuery(
+        `UPDATE acct_revenue_milestones
+        SET achieved_amount = target_amount, achieved_date = NOW(), status = 'ACHIEVED'
+        WHERE milestone_id = $1 AND contract_id = $2
+        RETURNING *`,
+        [milestoneId, contractId]
+      );
+
+      if (milestone.rows.length === 0) {
+        throw new Error('Milestone not found');
+      }
+
+      return {
+        recognized: true,
+        amount: parseFloat(milestone.rows[0].target_amount),
+        date: milestone.rows[0].achieved_date,
+      };
+    }
+
+    // For instant recognition
+    if (contractData.recognition_method === 'INSTANT') {
+      return {
+        recognized: true,
+        amount: parseFloat(contractData.total_value),
+        date: new Date(),
+      };
+    }
+
+    return {
+      recognized: false,
+      amount: 0,
+      date: new Date(),
+    };
+  }
+
+  // ========================================================================
+  // PHASE 3: MULTI-CURRENCY
+  // ========================================================================
+
+  async getCurrencies(): Promise<Currency[]> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          currency_code as "currencyCode",
+          currency_name as "currencyName",
+          symbol,
+          is_active as "isActive",
+          created_at as "createdAt"
+        FROM acct_currencies
+        WHERE is_active = true
+        ORDER BY currency_code`
+      );
+
+      return result.rows as Currency[];
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async getExchangeRate(fromCurrency: string, toCurrency: string, date: Date): Promise<number> {
+    try {
+      const result = await dbQuery(
+        `SELECT exchange_rate
+        FROM acct_exchange_rates
+        WHERE from_currency = $1 AND to_currency = $2 AND rate_date = $3 AND is_active = true`,
+        [fromCurrency, toCurrency, date]
+      );
+
+      if (result.rows.length === 0) {
+        throw new Error('Exchange rate not found');
+      }
+
+      return parseFloat(result.rows[0].exchange_rate);
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return 1; // Default to 1:1
+      }
+      throw error;
+    }
+  }
+
+  async setExchangeRate(data: {
+    fromCurrency: string;
+    toCurrency: string;
+    rateDate: Date;
+    exchangeRate: number;
+    createdBy: string;
+  }): Promise<ExchangeRate> {
+    const rateId = this.generateId('XR');
+
+    await dbQuery(
+      `INSERT INTO acct_exchange_rates (
+        rate_id, from_currency, to_currency, rate_date,
+        exchange_rate, is_active, created_at
+      ) VALUES ($1, $2, $3, $4, $5, true, NOW())
+      ON CONFLICT (from_currency, to_currency, rate_date)
+      DO UPDATE SET exchange_rate = EXCLUDED.exchange_rate, is_active = true
+      RETURNING *`,
+      [rateId, data.fromCurrency, data.toCurrency, data.rateDate, data.exchangeRate]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        rate_id as "rateId",
+        from_currency as "fromCurrency",
+        to_currency as "toCurrency",
+        rate_date as "rateDate",
+        exchange_rate as "exchangeRate",
+        is_active as "isActive",
+        created_at as "createdAt"
+      FROM acct_exchange_rates
+      WHERE rate_id = $1`,
+      [rateId]
+    );
+
+    return result.rows[0] as ExchangeRate;
+  }
+
+  // ========================================================================
+  // PHASE 3: BUDGETING & FORECASTING
+  // ========================================================================
+
+  async createBudget(data: CreateBudgetDTO): Promise<Budget> {
+    const budgetId = this.generateId('BG');
+
+    await dbQuery(
+      `INSERT INTO acct_budgets (
+        budget_id, budget_name, fiscal_year, budget_type,
+        status, created_by, created_at
+      ) VALUES ($1, $2, $3, $4, 'ACTIVE', $5, NOW())
+      RETURNING *`,
+      [budgetId, data.budgetName, data.fiscalYear, data.budgetType, data.createdBy]
+    );
+
+    // Insert budget lines
+    for (const line of data.lines) {
+      const lineId = this.generateId('BGL');
+      await dbQuery(
+        `INSERT INTO acct_budget_lines (
+          line_id, budget_id, account_id, period, budgeted_amount
+        ) VALUES ($1, $2, $3, $4, $5)`,
+        [lineId, budgetId, line.accountId, line.period, line.budgetedAmount]
+      );
+    }
+
+    const result = await dbQuery(
+      `SELECT
+        budget_id as "budgetId",
+        budget_name as "budgetName",
+        fiscal_year as "fiscalYear",
+        budget_type as "budgetType",
+        status,
+        created_by as "createdBy",
+        created_at as "createdAt"
+      FROM acct_budgets
+      WHERE budget_id = $1`,
+      [budgetId]
+    );
+
+    return result.rows[0] as Budget;
+  }
+
+  async getBudgetVsActual(budgetId: string): Promise<{
+    budget: Budget;
+    lines: Array<{
+      accountId: string;
+      accountName: string;
+      period: string;
+      budgetedAmount: number;
+      actualAmount: number;
+      variance: number;
+      variancePercent: number;
+    }>;
+  }> {
+    try {
+      const budgetResult = await dbQuery(
+        `SELECT
+          budget_id as "budgetId",
+          budget_name as "budgetName",
+          fiscal_year as "fiscalYear",
+          budget_type as "budgetType",
+          status,
+          created_by as "createdBy",
+          created_at as "createdAt"
+        FROM acct_budgets
+        WHERE budget_id = $1`,
+        [budgetId]
+      );
+
+      if (budgetResult.rows.length === 0) {
+        throw new Error('Budget not found');
+      }
+
+      const linesResult = await dbQuery(
+        `SELECT
+          bl.account_id as "accountId",
+          COALESCE(coa.account_name, 'Unknown') as "accountName",
+          bl.period,
+          bl.budgeted_amount as "budgetedAmount",
+          COALESCE(bl.actual_amount, 0) as "actualAmount",
+          bl.budgeted_amount - COALESCE(bl.actual_amount, 0) as variance,
+          CASE WHEN bl.budgeted_amount > 0
+            THEN ((bl.budgeted_amount - COALESCE(bl.actual_amount, 0)) / bl.budgeted_amount * 100)
+            ELSE 0 END as "variancePercent"
+        FROM acct_budget_lines bl
+        LEFT JOIN acct_chart_of_accounts coa ON coa.account_id = bl.account_id
+        WHERE bl.budget_id = $1
+        ORDER BY bl.period, coa.account_code`,
+        [budgetId]
+      );
+
+      return {
+        budget: budgetResult.rows[0] as Budget,
+        lines: linesResult.rows.map((row: any) => ({
+          accountId: row.accountId,
+          accountName: row.accountName,
+          period: row.period,
+          budgetedAmount: parseFloat(row.budgetedAmount) || 0,
+          actualAmount: parseFloat(row.actualAmount) || 0,
+          variance: parseFloat(row.variance) || 0,
+          variancePercent: parseFloat(row.variancePercent) || 0,
+        })),
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        throw new Error('Budget tables not yet available');
+      }
+      throw error;
+    }
+  }
+
+  async createForecast(data: {
+    forecastName: string;
+    forecastType: string;
+    startDate: Date;
+    endDate: Date;
+    createdBy: string;
+    lines: Array<{ accountId: string; period: string; forecastedAmount: number }>;
+  }): Promise<Forecast> {
+    const forecastId = this.generateId('FC');
+
+    await dbQuery(
+      `INSERT INTO acct_forecasts (
+        forecast_id, forecast_name, forecast_type,
+        start_date, end_date, created_by, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      RETURNING *`,
+      [
+        forecastId,
+        data.forecastName,
+        data.forecastType,
+        data.startDate,
+        data.endDate,
+        data.createdBy,
+      ]
+    );
+
+    // Insert forecast lines
+    for (const line of data.lines) {
+      const lineId = this.generateId('FCL');
+      await dbQuery(
+        `INSERT INTO acct_forecast_lines (
+          line_id, forecast_id, account_id, period, forecasted_amount
+        ) VALUES ($1, $2, $3, $4, $5)`,
+        [lineId, forecastId, line.accountId, line.period, line.forecastedAmount]
+      );
+    }
+
+    const result = await dbQuery(
+      `SELECT
+        forecast_id as "forecastId",
+        forecast_name as "forecastName",
+        forecast_type as "forecastType",
+        start_date as "startDate",
+        end_date as "endDate",
+        created_by as "createdBy",
+        created_at as "createdAt"
+      FROM acct_forecasts
+      WHERE forecast_id = $1`,
+      [forecastId]
+    );
+
+    return result.rows[0] as Forecast;
+  }
+
+  // ========================================================================
+  // PHASE 3: FIXED ASSETS
+  // ========================================================================
+
+  async createFixedAsset(data: CreateFixedAssetDTO): Promise<FixedAsset> {
+    const assetId = this.generateId('FA');
+
+    await dbQuery(
+      `INSERT INTO acct_fixed_assets (
+        asset_id, asset_number, asset_name, asset_category,
+        serial_number, purchase_date, purchase_cost, salvage_value,
+        useful_life, depreciation_method, current_book_value,
+        accumulated_depreciation, status, location, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $7, 0, 'ACTIVE', $11, NOW(), NOW())
+      RETURNING *`,
+      [
+        assetId,
+        data.assetNumber,
+        data.assetName,
+        data.assetCategory || null,
+        data.serialNumber || null,
+        data.purchaseDate,
+        data.purchaseCost,
+        data.salvageValue,
+        data.usefulLife,
+        data.depreciationMethod,
+        data.location || null,
+      ]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        asset_id as "assetId",
+        asset_number as "assetNumber",
+        asset_name as "assetName",
+        asset_category as "assetCategory",
+        serial_number as "serialNumber",
+        purchase_date as "purchaseDate",
+        purchase_cost as "purchaseCost",
+        salvage_value as "salvageValue",
+        useful_life as "usefulLife",
+        depreciation_method as "depreciationMethod",
+        current_book_value as "currentBookValue",
+        accumulated_depreciation as "accumulatedDepreciation",
+        status,
+        location,
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM acct_fixed_assets
+      WHERE asset_id = $1`,
+      [assetId]
+    );
+
+    return result.rows[0] as FixedAsset;
+  }
+
+  async calculateDepreciation(assetId: string, throughDate: Date): Promise<DepreciationSchedule[]> {
+    try {
+      const asset = await dbQuery(`SELECT * FROM acct_fixed_assets WHERE asset_id = $1`, [assetId]);
+
+      if (asset.rows.length === 0) {
+        throw new Error('Asset not found');
+      }
+
+      const assetData = asset.rows[0];
+      const purchaseDate = new Date(assetData.purchase_date);
+      const purchaseCost = parseFloat(assetData.purchase_cost);
+      const salvageValue = parseFloat(assetData.salvage_value);
+      const usefulLife = parseInt(assetData.useful_life);
+      const method = assetData.depreciation_method;
+
+      const schedules: DepreciationSchedule[] = [];
+      let accumulatedDepreciation = parseFloat(assetData.accumulated_depreciation) || 0;
+      let bookValue = parseFloat(assetData.current_book_value) || purchaseCost;
+
+      // Calculate depreciation for each period
+      const currentDate = new Date(purchaseDate);
+      while (currentDate <= throughDate && bookValue > salvageValue) {
+        const year = currentDate.getFullYear();
+        const period = `${year}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+        let depreciationAmount = 0;
+
+        switch (method) {
+          case 'STRAIGHT_LINE':
+            depreciationAmount = (purchaseCost - salvageValue) / usefulLife / 12;
+            break;
+          case 'DOUBLE_DECLINING':
+            depreciationAmount = (bookValue * 2) / usefulLife / 12;
+            break;
+          default:
+            depreciationAmount = (purchaseCost - salvageValue) / usefulLife / 12;
+        }
+
+        // Don't depreciate below salvage value
+        if (bookValue - depreciationAmount < salvageValue) {
+          depreciationAmount = bookValue - salvageValue;
+        }
+
+        accumulatedDepreciation += depreciationAmount;
+        bookValue -= depreciationAmount;
+
+        schedules.push({
+          scheduleId: this.generateId('DS'),
+          assetId,
+          fiscalYear: year,
+          fiscalPeriod: period,
+          depreciationAmount,
+          bookValueBeginning: bookValue + depreciationAmount,
+          bookValueEnding: bookValue,
+          accumulatedDepreciation,
+          isDepreciated: currentDate <= throughDate,
+          calculatedAt: new Date(),
+          createdAt: new Date(),
+        } as DepreciationSchedule);
+
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+
+      return schedules;
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        throw new Error('Fixed assets tables not yet available');
+      }
+      throw error;
+    }
+  }
+
+  async getAssetRegister(asOfDate: Date): Promise<{
+    asOfDate: Date;
+    assets: FixedAsset[];
+    totalOriginalCost: number;
+    totalAccumulatedDepreciation: number;
+    totalNetBookValue: number;
+  }> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          asset_id as "assetId",
+          asset_number as "assetNumber",
+          asset_name as "assetName",
+          asset_category as "assetCategory",
+          serial_number as "serialNumber",
+          purchase_date as "purchaseDate",
+          purchase_cost as "purchaseCost",
+          salvage_value as "salvageValue",
+          useful_life as "usefulLife",
+          depreciation_method as "depreciationMethod",
+          current_book_value as "currentBookValue",
+          accumulated_depreciation as "accumulatedDepreciation",
+          status,
+          location,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM acct_fixed_assets
+        WHERE status = 'ACTIVE'
+        ORDER BY asset_number`
+      );
+
+      const assets = result.rows as FixedAsset[];
+      const totalOriginalCost = assets.reduce((sum, a) => sum + a.purchaseCost, 0);
+      const totalAccumulatedDepreciation = assets.reduce(
+        (sum, a) => sum + (a.accumulatedDepreciation || 0),
+        0
+      );
+      const totalNetBookValue = assets.reduce((sum, a) => sum + (a.currentBookValue || 0), 0);
+
+      return {
+        asOfDate,
+        assets,
+        totalOriginalCost,
+        totalAccumulatedDepreciation,
+        totalNetBookValue,
+      };
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return {
+          asOfDate,
+          assets: [],
+          totalOriginalCost: 0,
+          totalAccumulatedDepreciation: 0,
+          totalNetBookValue: 0,
+        };
+      }
+      throw error;
+    }
+  }
+
+  // ========================================================================
+  // PHASE 3: COMPLIANCE & AUDIT TRAIL
+  // ========================================================================
+
+  async getAuditLog(filters?: {
+    tableName?: string;
+    recordId?: string;
+    action?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<AuditLog[]> {
+    try {
+      let query = `
+        SELECT
+          audit_id as "auditId",
+          table_name as "tableName",
+          record_id as "recordId",
+          action,
+          old_values as "oldValues",
+          new_values as "newValues",
+          changed_by as "changedBy",
+          changed_at as "changedAt",
+          ip_address as "ipAddress",
+          user_agent as "userAgent"
+        FROM acct_audit_log
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      let paramCount = 0;
+
+      if (filters?.tableName) {
+        paramCount++;
+        query += ` AND table_name = $${paramCount}`;
+        params.push(filters.tableName);
+      }
+      if (filters?.recordId) {
+        paramCount++;
+        query += ` AND record_id = $${paramCount}`;
+        params.push(filters.recordId);
+      }
+      if (filters?.action) {
+        paramCount++;
+        query += ` AND action = $${paramCount}`;
+        params.push(filters.action);
+      }
+      if (filters?.startDate) {
+        paramCount++;
+        query += ` AND changed_at >= $${paramCount}`;
+        params.push(filters.startDate);
+      }
+      if (filters?.endDate) {
+        paramCount++;
+        query += ` AND changed_at <= $${paramCount}`;
+        params.push(filters.endDate);
+      }
+
+      query += ` ORDER BY changed_at DESC`;
+
+      if (filters?.limit) {
+        paramCount++;
+        query += ` LIMIT $${paramCount}`;
+        params.push(filters.limit);
+      }
+
+      const result = await dbQuery(query, params);
+      return result.rows as AuditLog[];
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async getDocuments(recordType: string, recordId: string): Promise<DocumentAttachment[]> {
+    try {
+      const result = await dbQuery(
+        `SELECT
+          attachment_id as "attachmentId",
+          record_type as "recordType",
+          record_id as "recordId",
+          document_name as "documentName",
+          document_type as "documentType",
+          file_path as "filePath",
+          file_size as "fileSize",
+          uploaded_by as "uploadedBy",
+          uploaded_at as "uploadedAt"
+        FROM acct_document_attachments
+        WHERE record_type = $1 AND record_id = $2
+        ORDER BY uploaded_at DESC`,
+        [recordType, recordId]
+      );
+
+      return result.rows as DocumentAttachment[];
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async attachDocument(data: {
+    recordType: string;
+    recordId: string;
+    documentName: string;
+    documentType: string;
+    filePath: string;
+    fileSize: number;
+    uploadedBy: string;
+  }): Promise<DocumentAttachment> {
+    const attachmentId = this.generateId('DOC');
+
+    await dbQuery(
+      `INSERT INTO acct_document_attachments (
+        attachment_id, record_type, record_id, document_name,
+        document_type, file_path, file_size, uploaded_by, uploaded_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      RETURNING *`,
+      [
+        attachmentId,
+        data.recordType,
+        data.recordId,
+        data.documentName,
+        data.documentType,
+        data.filePath,
+        data.fileSize,
+        data.uploadedBy,
+      ]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        attachment_id as "attachmentId",
+        record_type as "recordType",
+        record_id as "recordId",
+        document_name as "documentName",
+        document_type as "documentType",
+        file_path as "filePath",
+        file_size as "fileSize",
+        uploaded_by as "uploadedBy",
+        uploaded_at as "uploadedAt"
+      FROM acct_document_attachments
+      WHERE attachment_id = $1`,
+      [attachmentId]
+    );
+
+    return result.rows[0] as DocumentAttachment;
+  }
+
+  async createApprovalRequest(data: {
+    approvalType: string;
+    recordId: string;
+    requestedBy: string;
+  }): Promise<Approval> {
+    const approvalId = this.generateId('APR');
+
+    await dbQuery(
+      `INSERT INTO acct_approvals (
+        approval_id, approval_type, record_id, status,
+        requested_by, created_at
+      ) VALUES ($1, $2, $3, 'PENDING', $4, NOW())
+      RETURNING *`,
+      [approvalId, data.approvalType, data.recordId, data.requestedBy]
+    );
+
+    const result = await dbQuery(
+      `SELECT
+        approval_id as "approvalId",
+        approval_type as "approvalType",
+        record_id as "recordId",
+        status,
+        requested_by as "requestedBy",
+        approved_by as "approvedBy",
+        approved_at as "approvedAt",
+        comments,
+        created_at as "createdAt"
+      FROM acct_approvals
+      WHERE approval_id = $1`,
+      [approvalId]
+    );
+
+    return result.rows[0] as Approval;
+  }
+
+  async approveRequest(
+    approvalId: string,
+    approvedBy: string,
+    comments?: string
+  ): Promise<Approval> {
+    const result = await dbQuery(
+      `UPDATE acct_approvals
+      SET status = 'APPROVED', approved_by = $1, approved_at = NOW(), comments = $2
+      WHERE approval_id = $3 AND status = 'PENDING'
+      RETURNING *`,
+      [approvedBy, comments || null, approvalId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Approval request not found or already processed');
+    }
+
+    return {
+      approvalId: result.rows[0].approval_id,
+      approvalType: result.rows[0].approval_type,
+      recordId: result.rows[0].record_id,
+      status: result.rows[0].status,
+      requestedBy: result.rows[0].requested_by,
+      approvedBy: result.rows[0].approved_by,
+      approvedAt: result.rows[0].approved_at,
+      comments: result.rows[0].comments,
+      createdAt: result.rows[0].created_at,
+    } as Approval;
   }
 }
 

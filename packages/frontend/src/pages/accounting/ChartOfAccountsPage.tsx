@@ -17,6 +17,7 @@ import {
   Modal,
   Input,
   Skeleton,
+  Breadcrumb,
 } from '@/components/shared';
 import {
   ArrowLeftIcon,
@@ -440,20 +441,11 @@ function ChartOfAccountsPage() {
       <Header />
 
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
+
         {/* Page Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/accounting')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
-              Back to Accounting
-            </Button>
-          </div>
-
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight">Chart of Accounts</h1>

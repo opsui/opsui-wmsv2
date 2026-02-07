@@ -18,6 +18,7 @@ import {
   Header,
   UnclaimModal,
   ConfirmDialog,
+  Breadcrumb,
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
@@ -916,6 +917,8 @@ export function PackingPage() {
     <div className="min-h-screen">
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* View Mode Banner */}
         {isViewMode && (
           <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-5 flex items-center gap-4 card-hover">

@@ -319,7 +319,7 @@ router.post(
 
 /**
  * POST /api/sales/quotes/:quoteId/accept
- * Accept a quote (mark as accepted)
+ * Accept a quote (mark as accepted and convert to order)
  * Access: ADMIN, SUPERVISOR, SALES
  */
 router.post(
@@ -327,8 +327,8 @@ router.post(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.SALES),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const { quoteId } = req.params;
-    const quote = await salesService.acceptQuote(quoteId, req.user!.userId);
-    res.json(quote);
+    const result = await salesService.acceptQuote(quoteId, req.user!.userId);
+    res.json(result);
   })
 );
 
