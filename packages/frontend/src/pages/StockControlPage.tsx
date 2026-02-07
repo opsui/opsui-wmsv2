@@ -50,7 +50,12 @@ import {
   XMarkIcon,
   TagIcon,
 } from '@heroicons/react/24/outline';
-import { InventoryAgingChart, TurnoverChart, BinUtilizationHeatmap, LotExpirationChart } from '@/components/charts';
+import {
+  InventoryAgingChart,
+  TurnoverChart,
+  BinUtilizationHeatmap,
+  LotExpirationChart,
+} from '@/components/charts';
 
 // ============================================================================
 // TYPES
@@ -1332,7 +1337,9 @@ function LotsTab() {
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Search by Lot Number</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Search by Lot Number
+              </label>
               <input
                 type="text"
                 value={searchLot}
@@ -1342,7 +1349,9 @@ function LotsTab() {
               />
             </div>
             <div className="flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Expiring Within</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Expiring Within
+              </label>
               <select
                 value={expiringDays}
                 onChange={e => setExpiringDays(parseInt(e.target.value))}
@@ -1383,12 +1392,17 @@ function LotsTab() {
                   </thead>
                   <tbody>
                     {lotData.lots.map((lot: any) => (
-                      <tr key={lot.lotNumber} className="border-b border-white/5 hover:bg-white/[0.02]">
+                      <tr
+                        key={lot.lotNumber}
+                        className="border-b border-white/5 hover:bg-white/[0.02]"
+                      >
                         <td className="py-3 px-4 text-white font-medium font-mono text-sm">
                           {lot.lotNumber}
                         </td>
                         <td className="py-3 px-4 text-gray-300">
-                          {lot.expirationDate ? new Date(lot.expirationDate).toLocaleDateString() : 'N/A'}
+                          {lot.expirationDate
+                            ? new Date(lot.expirationDate).toLocaleDateString()
+                            : 'N/A'}
                         </td>
                         <td className="py-3 px-4 text-right text-white">{lot.quantity}</td>
                         <td className="py-3 px-4 text-right text-white">{lot.available}</td>
@@ -1418,9 +1432,7 @@ function LotsTab() {
                 </table>
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-400">
-                No lots found for this SKU
-              </div>
+              <div className="p-8 text-center text-gray-400">No lots found for this SKU</div>
             )}
           </CardContent>
         </Card>

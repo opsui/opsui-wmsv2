@@ -69,9 +69,9 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
   }
 
   // Ensure data is in the correct order
-  const chartData = AGING_COLOR_ORDER
-    .map(range => data.find(d => d.range === range))
-    .filter(Boolean) as AgingBucket[];
+  const chartData = AGING_COLOR_ORDER.map(range => data.find(d => d.range === range)).filter(
+    Boolean
+  ) as AgingBucket[];
 
   return (
     <Card variant="glass" className="card-hover">
@@ -113,15 +113,11 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
             />
             <Legend
               wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={(value) => (
+              formatter={value => (
                 <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
               )}
             />
-            <Bar
-              dataKey="itemCount"
-              name="Items"
-              radius={[0, 8, 8, 0]}
-            >
+            <Bar dataKey="itemCount" name="Items" radius={[0, 8, 8, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={AGING_COLORS[entry.range] || '#6b7280'} />
               ))}
@@ -131,7 +127,7 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
 
         {/* Summary below chart */}
         <div className="mt-4 grid grid-cols-5 gap-2 text-center">
-          {chartData.map((bucket) => (
+          {chartData.map(bucket => (
             <div
               key={bucket.range}
               className="p-2 rounded-lg"

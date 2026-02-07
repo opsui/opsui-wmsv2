@@ -1862,7 +1862,10 @@ export const stockControlApi = {
   /**
    * Get bin utilization report
    */
-  getBinUtilization: async (params?: { zone?: string; status?: 'OK' | 'WARNING' | 'OVER_CAPACITY' }) => {
+  getBinUtilization: async (params?: {
+    zone?: string;
+    status?: 'OK' | 'WARNING' | 'OVER_CAPACITY';
+  }) => {
     const response = await apiClient.get('/stock-control/analytics/bin-utilization', { params });
     return response.data;
   },

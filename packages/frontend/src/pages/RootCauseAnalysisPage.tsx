@@ -65,25 +65,122 @@ function useCounter(target: number, duration = 1000) {
 
 // Sample data for preview purposes
 const SAMPLE_PARETO_DATA: RootCauseParetoData[] = [
-  { category: 'Data Entry Error', categoryId: 'DATA_ENTRY', count: 45, cumulativePercent: 42.5, totalVariance: 156, averageVariancePercent: 3.2 },
-  { category: 'Product Damage', categoryId: 'DAMAGE', count: 28, cumulativePercent: 68.8, totalVariance: 89, averageVariancePercent: 2.8 },
-  { category: 'Theft/Loss', categoryId: 'THEFT', count: 18, cumulativePercent: 85.7, totalVariance: 67, averageVariancePercent: 4.1 },
-  { category: 'Receiving Error', categoryId: 'RECEIVING', count: 12, cumulativePercent: 97.0, totalVariance: 34, averageVariancePercent: 2.1 },
-  { category: 'Cycle Count Slip', categoryId: 'CYCLE_COUNT', count: 3, cumulativePercent: 100.0, totalVariance: 8, averageVariancePercent: 1.5 },
+  {
+    category: 'Data Entry Error',
+    categoryId: 'DATA_ENTRY',
+    count: 45,
+    cumulativePercent: 42.5,
+    totalVariance: 156,
+    averageVariancePercent: 3.2,
+  },
+  {
+    category: 'Product Damage',
+    categoryId: 'DAMAGE',
+    count: 28,
+    cumulativePercent: 68.8,
+    totalVariance: 89,
+    averageVariancePercent: 2.8,
+  },
+  {
+    category: 'Theft/Loss',
+    categoryId: 'THEFT',
+    count: 18,
+    cumulativePercent: 85.7,
+    totalVariance: 67,
+    averageVariancePercent: 4.1,
+  },
+  {
+    category: 'Receiving Error',
+    categoryId: 'RECEIVING',
+    count: 12,
+    cumulativePercent: 97.0,
+    totalVariance: 34,
+    averageVariancePercent: 2.1,
+  },
+  {
+    category: 'Cycle Count Slip',
+    categoryId: 'CYCLE_COUNT',
+    count: 3,
+    cumulativePercent: 100.0,
+    totalVariance: 8,
+    averageVariancePercent: 1.5,
+  },
 ];
 
 const SAMPLE_CATEGORY_BREAKDOWN: CategoryBreakdown[] = [
-  { category: 'Data Entry Error', categoryId: 'DATA_ENTRY', varianceCount: 45, averageVariancePercent: 3.2, totalVariance: 156, trend: 'INCREASING', trendPercent: 12.5 },
-  { category: 'Product Damage', categoryId: 'DAMAGE', varianceCount: 28, averageVariancePercent: 2.8, totalVariance: 89, trend: 'STABLE' },
-  { category: 'Theft/Loss', categoryId: 'THEFT', varianceCount: 18, averageVariancePercent: 4.1, totalVariance: 67, trend: 'DECREASING', trendPercent: 8.3 },
-  { category: 'Receiving Error', categoryId: 'RECEIVING', varianceCount: 12, averageVariancePercent: 2.1, totalVariance: 34, trend: 'STABLE' },
-  { category: 'Cycle Count Slip', categoryId: 'CYCLE_COUNT', varianceCount: 3, averageVariancePercent: 1.5, totalVariance: 8, trend: 'INCREASING', trendPercent: 5.2 },
+  {
+    category: 'Data Entry Error',
+    categoryId: 'DATA_ENTRY',
+    varianceCount: 45,
+    averageVariancePercent: 3.2,
+    totalVariance: 156,
+    trend: 'INCREASING',
+    trendPercent: 12.5,
+  },
+  {
+    category: 'Product Damage',
+    categoryId: 'DAMAGE',
+    varianceCount: 28,
+    averageVariancePercent: 2.8,
+    totalVariance: 89,
+    trend: 'STABLE',
+  },
+  {
+    category: 'Theft/Loss',
+    categoryId: 'THEFT',
+    varianceCount: 18,
+    averageVariancePercent: 4.1,
+    totalVariance: 67,
+    trend: 'DECREASING',
+    trendPercent: 8.3,
+  },
+  {
+    category: 'Receiving Error',
+    categoryId: 'RECEIVING',
+    varianceCount: 12,
+    averageVariancePercent: 2.1,
+    totalVariance: 34,
+    trend: 'STABLE',
+  },
+  {
+    category: 'Cycle Count Slip',
+    categoryId: 'CYCLE_COUNT',
+    varianceCount: 3,
+    averageVariancePercent: 1.5,
+    totalVariance: 8,
+    trend: 'INCREASING',
+    trendPercent: 5.2,
+  },
 ];
 
 const SAMPLE_TRENDING_DATA: TrendingRootCause[] = [
-  { category: 'Data Entry Error', categoryId: 'DATA_ENTRY', currentPeriodCount: 45, previousPeriodCount: 40, percentChange: 12.5, trendDirection: 'UP', averageVariancePercent: 3.2 },
-  { category: 'Theft/Loss', categoryId: 'THEFT', currentPeriodCount: 18, previousPeriodCount: 22, percentChange: -18.2, trendDirection: 'DOWN', averageVariancePercent: 4.1 },
-  { category: 'Cycle Count Slip', categoryId: 'CYCLE_COUNT', currentPeriodCount: 3, previousPeriodCount: 2, percentChange: 50.0, trendDirection: 'UP', averageVariancePercent: 1.5 },
+  {
+    category: 'Data Entry Error',
+    categoryId: 'DATA_ENTRY',
+    currentPeriodCount: 45,
+    previousPeriodCount: 40,
+    percentChange: 12.5,
+    trendDirection: 'UP',
+    averageVariancePercent: 3.2,
+  },
+  {
+    category: 'Theft/Loss',
+    categoryId: 'THEFT',
+    currentPeriodCount: 18,
+    previousPeriodCount: 22,
+    percentChange: -18.2,
+    trendDirection: 'DOWN',
+    averageVariancePercent: 4.1,
+  },
+  {
+    category: 'Cycle Count Slip',
+    categoryId: 'CYCLE_COUNT',
+    currentPeriodCount: 3,
+    previousPeriodCount: 2,
+    percentChange: 50.0,
+    trendDirection: 'UP',
+    averageVariancePercent: 1.5,
+  },
 ];
 
 export function RootCauseAnalysisPage() {
@@ -97,7 +194,9 @@ export function RootCauseAnalysisPage() {
   const [useSampleData, setUseSampleData] = useState(true); // Toggle for preview
 
   // Queries
-  const { data: paretoDataReal = [], isLoading: isLoadingPareto } = useRootCausePareto(filters.days);
+  const { data: paretoDataReal = [], isLoading: isLoadingPareto } = useRootCausePareto(
+    filters.days
+  );
   const { data: categoryBreakdownReal = [], isLoading: isLoadingBreakdown } =
     useRootCauseCategoryBreakdown(filters.days);
   const { data: trendingDataReal = [], isLoading: isLoadingTrending } = useRootCauseTrending(
@@ -105,9 +204,14 @@ export function RootCauseAnalysisPage() {
   );
 
   // Use sample data for preview if enabled or if real data is empty
-  const paretoData = useSampleData || paretoDataReal.length === 0 ? SAMPLE_PARETO_DATA : paretoDataReal;
-  const categoryBreakdown = useSampleData || categoryBreakdownReal.length === 0 ? SAMPLE_CATEGORY_BREAKDOWN : categoryBreakdownReal;
-  const trendingData = useSampleData || trendingDataReal.length === 0 ? SAMPLE_TRENDING_DATA : trendingDataReal;
+  const paretoData =
+    useSampleData || paretoDataReal.length === 0 ? SAMPLE_PARETO_DATA : paretoDataReal;
+  const categoryBreakdown =
+    useSampleData || categoryBreakdownReal.length === 0
+      ? SAMPLE_CATEGORY_BREAKDOWN
+      : categoryBreakdownReal;
+  const trendingData =
+    useSampleData || trendingDataReal.length === 0 ? SAMPLE_TRENDING_DATA : trendingDataReal;
 
   // Colors for charts
   const categoryColors: Record<string, string> = {
@@ -170,14 +274,18 @@ export function RootCauseAnalysisPage() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Pareto Analysis (80/20 Rule)</h3>
-            <p className="text-sm text-gray-400">Top root causes contributing to 80% of variances</p>
+            <p className="text-sm text-gray-400">
+              Top root causes contributing to 80% of variances
+            </p>
           </div>
         </div>
 
         {filteredData.length === 0 ? (
           <div className="text-center py-12">
             <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">{searchTerm ? 'No root causes match your search' : 'No data available'}</p>
+            <p className="text-gray-400">
+              {searchTerm ? 'No root causes match your search' : 'No data available'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -191,55 +299,59 @@ export function RootCauseAnalysisPage() {
                   }`}
                   style={{ transitionDelay: `${index * 50}ms` }}
                 >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: getCategoryColor(item.category) }}
+                      />
+                      <span className="font-medium text-white">{item.category}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="text-right">
+                        <p className="text-gray-400">Count</p>
+                        <p className="font-semibold text-white">{item.count}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-gray-400">Cumulative</p>
+                        <p className="font-semibold text-white">
+                          {formatPercent(item.cumulativePercent)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Variance bar */}
+                  <div className="relative h-8 bg-gray-800/50 rounded-lg overflow-hidden group">
                     <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: getCategoryColor(item.category) }}
+                      className="absolute top-0 left-0 h-full rounded-lg opacity-80 transition-all duration-1000 ease-out group-hover:opacity-100"
+                      style={{
+                        width: isVisible ? `${(item.count / maxCount) * 100}%` : '0%',
+                        backgroundColor: getCategoryColor(item.category),
+                      }}
                     />
-                    <span className="font-medium text-white">{item.category}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="text-right">
-                      <p className="text-gray-400">Count</p>
-                      <p className="font-semibold text-white">{item.count}</p>
+                    <div
+                      className="absolute top-0 left-0 h-full rounded-lg opacity-30 transition-all duration-1000 ease-out delay-100 group-hover:opacity-50"
+                      style={{
+                        width: isVisible ? `${(item.totalVariance / maxVariance) * 100}%` : '0%',
+                        backgroundColor: getCategoryColor(item.category),
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-between px-3">
+                      <span className="text-xs text-white/80">Variance: {item.totalVariance}</span>
+                      <span className="text-xs text-white/80">Count: {item.count}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-gray-400">Cumulative</p>
-                      <p className="font-semibold text-white">{formatPercent(item.cumulativePercent)}</p>
+                  </div>
+
+                  {index === 0 && (
+                    <div className="mt-2 flex items-center gap-1 text-xs text-amber-400 animate-glow">
+                      <LightBulbIcon className="h-3 w-3 animate-pulse" />
+                      <span className="font-medium">
+                        Top contributor - prioritize addressing this category
+                      </span>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Variance bar */}
-                <div className="relative h-8 bg-gray-800/50 rounded-lg overflow-hidden group">
-                  <div
-                    className="absolute top-0 left-0 h-full rounded-lg opacity-80 transition-all duration-1000 ease-out group-hover:opacity-100"
-                    style={{
-                      width: isVisible ? `${(item.count / maxCount) * 100}%` : '0%',
-                      backgroundColor: getCategoryColor(item.category),
-                    }}
-                  />
-                  <div
-                    className="absolute top-0 left-0 h-full rounded-lg opacity-30 transition-all duration-1000 ease-out delay-100 group-hover:opacity-50"
-                    style={{
-                      width: isVisible ? `${(item.totalVariance / maxVariance) * 100}%` : '0%',
-                      backgroundColor: getCategoryColor(item.category),
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-between px-3">
-                    <span className="text-xs text-white/80">Variance: {item.totalVariance}</span>
-                    <span className="text-xs text-white/80">Count: {item.count}</span>
-                  </div>
-                </div>
-
-                {index === 0 && (
-                  <div className="mt-2 flex items-center gap-1 text-xs text-amber-400 animate-glow">
-                    <LightBulbIcon className="h-3 w-3 animate-pulse" />
-                    <span className="font-medium">Top contributor - prioritize addressing this category</span>
-                  </div>
-                )}
-              </div>
               );
             })}
           </div>
@@ -322,14 +434,18 @@ export function RootCauseAnalysisPage() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Category Breakdown</h3>
-            <p className="text-sm text-gray-400">Detailed analysis by root cause with trend indicators</p>
+            <p className="text-sm text-gray-400">
+              Detailed analysis by root cause with trend indicators
+            </p>
           </div>
         </div>
 
         {filteredData.length === 0 ? (
           <div className="text-center py-12">
             <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">{searchTerm ? 'No categories match your search' : 'No data available'}</p>
+            <p className="text-gray-400">
+              {searchTerm ? 'No categories match your search' : 'No data available'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -353,9 +469,15 @@ export function RootCauseAnalysisPage() {
                       />
                       <h4 className="font-semibold text-white">{item.category}</h4>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all duration-300 hover:scale-105 ${getTrendColor(item.trend)}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all duration-300 hover:scale-105 ${getTrendColor(item.trend)}`}
+                    >
                       {getTrendIcon(item.trend)}
-                      {item.trend === 'INCREASING' ? 'Rising' : item.trend === 'DECREASING' ? 'Falling' : 'Stable'}
+                      {item.trend === 'INCREASING'
+                        ? 'Rising'
+                        : item.trend === 'DECREASING'
+                          ? 'Falling'
+                          : 'Stable'}
                     </span>
                   </div>
 
@@ -367,7 +489,9 @@ export function RootCauseAnalysisPage() {
                     </div>
                     <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
                       <p className="text-xs text-gray-500 mb-1">Avg Variance</p>
-                      <p className="text-lg font-bold text-white">{formatPercent(item.averageVariancePercent)}</p>
+                      <p className="text-lg font-bold text-white">
+                        {formatPercent(item.averageVariancePercent)}
+                      </p>
                     </div>
                     <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
                       <p className="text-xs text-gray-500 mb-1">Total Variance</p>
@@ -375,7 +499,9 @@ export function RootCauseAnalysisPage() {
                     </div>
                     <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
                       <p className="text-xs text-gray-500 mb-1">% of Total</p>
-                      <p className="text-lg font-bold text-white">{formatPercent(percentOfTotal)}</p>
+                      <p className="text-lg font-bold text-white">
+                        {formatPercent(percentOfTotal)}
+                      </p>
                     </div>
                   </div>
 
@@ -440,14 +566,18 @@ export function RootCauseAnalysisPage() {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Trending Analysis</h3>
-            <p className="text-sm text-gray-400">Categories showing significant changes over time</p>
+            <p className="text-sm text-gray-400">
+              Categories showing significant changes over time
+            </p>
           </div>
         </div>
 
         {filteredData.length === 0 ? (
           <div className="text-center py-12">
             <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">{searchTerm ? 'No trending causes match your search' : 'No data available'}</p>
+            <p className="text-gray-400">
+              {searchTerm ? 'No trending causes match your search' : 'No data available'}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -455,7 +585,9 @@ export function RootCauseAnalysisPage() {
               <div
                 key={item.categoryId}
                 className={`bg-white/[0.02] rounded-xl p-4 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-1 hover:bg-white/[0.04] ${
-                  visibleTrends.has(index) ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+                  visibleTrends.has(index)
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 -translate-x-4'
                 }`}
                 style={{ transitionDelay: `${index * 75}ms` }}
               >
@@ -488,9 +620,13 @@ export function RootCauseAnalysisPage() {
                     <p className="text-xs text-gray-500 mb-1">Current Period</p>
                     <p className="text-lg font-bold text-white">{item.currentPeriodCount}</p>
                   </div>
-                  <div className={`text-center p-3 rounded-lg transition-all duration-300 hover:scale-105 ${
-                    item.percentChange >= 0 ? 'bg-red-500/10 hover:bg-red-500/20' : 'bg-green-500/10 hover:bg-green-500/20'
-                  }`}>
+                  <div
+                    className={`text-center p-3 rounded-lg transition-all duration-300 hover:scale-105 ${
+                      item.percentChange >= 0
+                        ? 'bg-red-500/10 hover:bg-red-500/20'
+                        : 'bg-green-500/10 hover:bg-green-500/20'
+                    }`}
+                  >
                     <p className="text-xs text-gray-500 mb-1">Change</p>
                     <p
                       className={`text-lg font-bold ${
@@ -506,7 +642,9 @@ export function RootCauseAnalysisPage() {
                 {/* Average Variance */}
                 <div className="flex items-center justify-between pt-3 border-t border-white/5">
                   <span className="text-sm text-gray-400">Average Variance</span>
-                  <span className="font-semibold text-white">{formatPercent(item.averageVariancePercent)}</span>
+                  <span className="font-semibold text-white">
+                    {formatPercent(item.averageVariancePercent)}
+                  </span>
                 </div>
               </div>
             ))}
@@ -524,7 +662,9 @@ export function RootCauseAnalysisPage() {
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
             <div>
-              <h1 className="text-3xl font-bold text-white bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Root Cause Analysis</h1>
+              <h1 className="text-3xl font-bold text-white bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                Root Cause Analysis
+              </h1>
               <p className="text-gray-400 mt-1">
                 Identify and categorize the underlying causes of inventory variances
               </p>
@@ -609,29 +749,26 @@ export function RootCauseAnalysisPage() {
           {/* Tab Content */}
           <Card variant="glass" className="p-6 min-h-[500px]">
             <div className="animate-fade-in">
-              {activeTab === 'pareto' && (
-                isLoadingPareto ? (
+              {activeTab === 'pareto' &&
+                (isLoadingPareto ? (
                   <LoadingSkeleton />
                 ) : (
                   <ParetoChart data={paretoData} searchTerm={searchQuery} />
-                )
-              )}
+                ))}
 
-              {activeTab === 'breakdown' && (
-                isLoadingBreakdown ? (
+              {activeTab === 'breakdown' &&
+                (isLoadingBreakdown ? (
                   <LoadingSkeleton />
                 ) : (
                   <CategoryBreakdownChart data={categoryBreakdown} searchTerm={searchQuery} />
-                )
-              )}
+                ))}
 
-              {activeTab === 'trending' && (
-                isLoadingTrending ? (
+              {activeTab === 'trending' &&
+                (isLoadingTrending ? (
                   <LoadingSkeleton />
                 ) : (
                   <TrendingChart data={trendingData} searchTerm={searchQuery} />
-                )
-              )}
+                ))}
 
               {activeTab === 'sku' && (
                 <DrillDownView
@@ -685,7 +822,10 @@ export function RootCauseAnalysisPage() {
 
           {/* Insight Card */}
           {paretoData.length > 0 && (
-            <Card variant="glass" className="p-5 border-l-4 border-l-amber-500 animate-fade-in hover:bg-white/[0.03] hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 group">
+            <Card
+              variant="glass"
+              className="p-5 border-l-4 border-l-amber-500 animate-fade-in hover:bg-white/[0.03] hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 group"
+            >
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
                   <div className="p-3 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors duration-300">
@@ -695,13 +835,13 @@ export function RootCauseAnalysisPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-1">Key Insight</h3>
                   <p className="text-gray-400">
-                    <span className="font-semibold text-white">{paretoData[0]?.category}</span> is the
-                    leading cause of inventory variances, accounting for{' '}
+                    <span className="font-semibold text-white">{paretoData[0]?.category}</span> is
+                    the leading cause of inventory variances, accounting for{' '}
                     <span className="font-semibold text-amber-400">
                       {formatPercent(paretoData[0]?.cumulativePercent || 0)}
                     </span>{' '}
-                    of all incidents. Addressing this category first could have the greatest impact on
-                    reducing overall variance.
+                    of all incidents. Addressing this category first could have the greatest impact
+                    on reducing overall variance.
                   </p>
                 </div>
               </div>
@@ -736,12 +876,16 @@ function TabButton({
     >
       {/* Ripple effect container */}
       <span className="absolute inset-0 overflow-hidden rounded-lg">
-        <span className={`absolute inset-0 rounded-lg transition-transform duration-500 ${
-          active ? 'bg-blue-400/20 scale-100' : 'bg-white/5 scale-0 group-hover:scale-100'
-        }`} />
+        <span
+          className={`absolute inset-0 rounded-lg transition-transform duration-500 ${
+            active ? 'bg-blue-400/20 scale-100' : 'bg-white/5 scale-0 group-hover:scale-100'
+          }`}
+        />
       </span>
       <span className="relative flex items-center gap-2">
-        <span className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`}>
+        <span
+          className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`}
+        >
           {icon}
         </span>
         {label}
@@ -786,7 +930,10 @@ function LoadingSkeleton() {
               <Skeleton variant="text" className="w-16 h-5" />
             </div>
           </div>
-          <Skeleton variant="rectangular" className="w-full h-8 rounded-lg animate-shimmer bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 bg-[length:200%_100%]" />
+          <Skeleton
+            variant="rectangular"
+            className="w-full h-8 rounded-lg animate-shimmer bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 bg-[length:200%_100%]"
+          />
         </div>
       ))}
     </div>
@@ -849,8 +996,8 @@ function DrillDownView({
             </h4>
             <p className="text-gray-400">
               This feature requires additional data integration. Results will appear here once the
-              backend service is configured to provide detailed root cause analysis by {type.toLowerCase()}
-              .
+              backend service is configured to provide detailed root cause analysis by{' '}
+              {type.toLowerCase()}.
             </p>
           </div>
         </div>
@@ -901,7 +1048,9 @@ function SummaryCard({
       className={`p-5 border-l-4 ${colorClasses[color]} hover:bg-white/[0.03] transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${shadowClasses[color]} group cursor-default`}
     >
       <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">{label}</p>
-      <p className="text-2xl font-bold text-white mt-1 group-hover:scale-105 transition-transform duration-300">{displayValue}</p>
+      <p className="text-2xl font-bold text-white mt-1 group-hover:scale-105 transition-transform duration-300">
+        {displayValue}
+      </p>
       <p className="text-sm text-gray-400 mt-1">{sublabel}</p>
     </Card>
   );

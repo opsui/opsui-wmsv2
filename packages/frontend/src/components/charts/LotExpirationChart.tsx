@@ -89,9 +89,7 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
   }
 
   const filteredData =
-    selectedUrgency === 'ALL'
-      ? data
-      : data.filter(item => item.urgency === selectedUrgency);
+    selectedUrgency === 'ALL' ? data : data.filter(item => item.urgency === selectedUrgency);
 
   return (
     <Card variant="glass" className="card-hover">
@@ -131,7 +129,9 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
                 <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Name</th>
                 <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Lot</th>
                 <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Expires</th>
-                <th className="text-center py-3 px-4 text-gray-400 font-medium text-sm">Days Left</th>
+                <th className="text-center py-3 px-4 text-gray-400 font-medium text-sm">
+                  Days Left
+                </th>
                 <th className="text-right py-3 px-4 text-gray-400 font-medium text-sm">Qty</th>
                 <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Location</th>
               </tr>
@@ -165,17 +165,13 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
                         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold ${styles.text} ${styles.border} border`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
-                        {isExpired
-                          ? 'EXPIRED'
-                          : `${Math.abs(item.daysUntilExpiration)} days`}
+                        {isExpired ? 'EXPIRED' : `${Math.abs(item.daysUntilExpiration)} days`}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right text-white font-medium">
                       {item.available}
                     </td>
-                    <td className="py-3 px-4 text-gray-400 text-sm">
-                      {item.binLocation}
-                    </td>
+                    <td className="py-3 px-4 text-gray-400 text-sm">{item.binLocation}</td>
                   </tr>
                 );
               })}
@@ -190,9 +186,15 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
             {/* Critical zone (expired to 7 days) */}
             <div className="absolute left-0 top-0 h-full bg-red-500" style={{ width: '23%' }} />
             {/* Warning zone (7-14 days) */}
-            <div className="absolute left-[23%] top-0 h-full bg-amber-500" style={{ width: '23%' }} />
+            <div
+              className="absolute left-[23%] top-0 h-full bg-amber-500"
+              style={{ width: '23%' }}
+            />
             {/* Info zone (14-30 days) */}
-            <div className="absolute left-[46%] top-0 h-full bg-blue-500" style={{ width: '54%' }} />
+            <div
+              className="absolute left-[46%] top-0 h-full bg-blue-500"
+              style={{ width: '54%' }}
+            />
 
             {/* Markers for items */}
             {filteredData.slice(0, 10).map((item, index) => {

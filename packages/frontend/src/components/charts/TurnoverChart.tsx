@@ -121,7 +121,7 @@ export function TurnoverChart({ data, isLoading }: TurnoverChartProps) {
                 }
                 return [value ?? 0];
               }}
-              labelFormatter={(label) => {
+              labelFormatter={label => {
                 const item = chartData.find(d => d.sku === label);
                 return item ? `${item.sku} - ${item.name}` : label;
               }}

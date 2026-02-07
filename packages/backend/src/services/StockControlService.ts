@@ -1049,11 +1049,13 @@ export class StockControlService {
   /**
    * Get inventory aging report - items grouped by how long they've been in warehouse
    */
-  async getInventoryAgingReport(filters: {
-    sku?: string;
-    binLocation?: string;
-    minDays?: number;
-  } = {}): Promise<{
+  async getInventoryAgingReport(
+    filters: {
+      sku?: string;
+      binLocation?: string;
+      minDays?: number;
+    } = {}
+  ): Promise<{
     items: Array<{
       sku: string;
       name: string;
@@ -1190,7 +1192,9 @@ export class StockControlService {
         let status: 'OK' | 'EXPIRING_SOON' | 'EXPIRED' = 'OK';
 
         if (expirationDate) {
-          daysUntilExpiration = Math.floor((expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          daysUntilExpiration = Math.floor(
+            (expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          );
           if (daysUntilExpiration < 0) {
             status = 'EXPIRED';
           } else if (daysUntilExpiration <= 30) {
@@ -1433,9 +1437,9 @@ export class StockControlService {
     }>;
   }> {
     try {
-      let interval = "1 month";
-      if (period === 'quarter') interval = "3 months";
-      if (period === 'year') interval = "1 year";
+      let interval = '1 month';
+      if (period === 'quarter') interval = '3 months';
+      if (period === 'year') interval = '1 year';
 
       const query = `
         WITH period_range AS (

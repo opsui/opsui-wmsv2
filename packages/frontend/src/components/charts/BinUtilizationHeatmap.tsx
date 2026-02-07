@@ -97,16 +97,17 @@ export function BinUtilizationHeatmap({
 
   // Filter bins by zone
   const filteredBins =
-    selectedZone === 'ALL'
-      ? data
-      : data.filter(bin => bin.zone === selectedZone);
+    selectedZone === 'ALL' ? data : data.filter(bin => bin.zone === selectedZone);
 
   // Group bins by zone for display
-  const binsByZone = filteredBins.reduce((acc, bin) => {
-    if (!acc[bin.zone]) acc[bin.zone] = [];
-    acc[bin.zone].push(bin);
-    return acc;
-  }, {} as Record<string, BinUtilization[]>);
+  const binsByZone = filteredBins.reduce(
+    (acc, bin) => {
+      if (!acc[bin.zone]) acc[bin.zone] = [];
+      acc[bin.zone].push(bin);
+      return acc;
+    },
+    {} as Record<string, BinUtilization[]>
+  );
 
   const sortedZones = Object.keys(binsByZone).sort();
 
@@ -124,10 +125,7 @@ export function BinUtilizationHeatmap({
               .filter(z => selectedZone === 'ALL' || z.zone === selectedZone)
               .slice(0, 4)
               .map(zone => (
-                <div
-                  key={zone.zone}
-                  className="p-3 rounded-xl bg-white/5 border border-white/10"
-                >
+                <div key={zone.zone} className="p-3 rounded-xl bg-white/5 border border-white/10">
                   <div className="text-xs text-gray-400 mb-1">Zone {zone.zone}</div>
                   <div className="text-2xl font-bold text-white">
                     {Math.round(zone.averageUtilization)}%
@@ -135,9 +133,7 @@ export function BinUtilizationHeatmap({
                   <div className="text-xs text-gray-500 mt-1">
                     {zone.occupiedBins}/{zone.totalBins} bins
                     {zone.overCapacityBins > 0 && (
-                      <span className="ml-2 text-red-400">
-                        ({zone.overCapacityBins} over)
-                      </span>
+                      <span className="ml-2 text-red-400">({zone.overCapacityBins} over)</span>
                     )}
                   </div>
                 </div>
@@ -151,9 +147,7 @@ export function BinUtilizationHeatmap({
             <div key={zone}>
               <div className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
                 <span>Zone {zone}</span>
-                <span className="text-xs text-gray-500">
-                  ({binsByZone[zone].length} bins)
-                </span>
+                <span className="text-xs text-gray-500">({binsByZone[zone].length} bins)</span>
               </div>
               <div className="grid grid-cols-10 md:grid-cols-15 lg:grid-cols-20 gap-1">
                 {binsByZone[zone]
@@ -163,10 +157,7 @@ export function BinUtilizationHeatmap({
                       key={bin.binLocation}
                       className="relative aspect-square rounded cursor-pointer transition-transform hover:scale-110 hover:z-10"
                       style={{
-                        backgroundColor: getUtilizationColor(
-                          bin.utilizationPercent,
-                          bin.status
-                        ),
+                        backgroundColor: getUtilizationColor(bin.utilizationPercent, bin.status),
                       }}
                       onClick={() => setSelectedBin(bin)}
                       title={`${bin.binLocation}: ${bin.utilizationPercent.toFixed(1)}%`}
@@ -192,27 +183,45 @@ export function BinUtilizationHeatmap({
         {/* Legend */}
         <div className="mt-4 flex items-center justify-center gap-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(107, 114, 128, 0.8)' }} />
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: 'rgba(107, 114, 128, 0.8)' }}
+            />
             <span className="dark:text-gray-400 text-gray-600">Empty (&lt;40%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(59, 130, 246, 0.8)' }} />
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: 'rgba(59, 130, 246, 0.8)' }}
+            />
             <span className="dark:text-gray-400 text-gray-600">Low (40-60%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(16, 185, 129, 0.8)' }} />
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: 'rgba(16, 185, 129, 0.8)' }}
+            />
             <span className="dark:text-gray-400 text-gray-600">Good (60-80%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(251, 191, 36, 0.8)' }} />
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: 'rgba(251, 191, 36, 0.8)' }}
+            />
             <span className="dark:text-gray-400 text-gray-600">High (80-100%)</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(245, 158, 11, 0.8)' }} />
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: 'rgba(245, 158, 11, 0.8)' }}
+            />
             <span className="dark:text-gray-400 text-gray-600">Warning</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(239, 68, 68, 0.8)' }} />
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.8)' }}
+            />
             <span className="dark:text-gray-400 text-gray-600">Over Capacity</span>
           </div>
         </div>
@@ -254,17 +263,13 @@ export function BinUtilizationHeatmap({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Utilization:</span>
-                  <span
-                    className={`font-bold ${getStatusTextColor(selectedBin.status)}`}
-                  >
+                  <span className={`font-bold ${getStatusTextColor(selectedBin.status)}`}>
                     {selectedBin.utilizationPercent.toFixed(1)}%
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Available:</span>
-                  <span className="text-white font-medium">
-                    {selectedBin.availableCapacity}
-                  </span>
+                  <span className="text-white font-medium">{selectedBin.availableCapacity}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Items Stored:</span>
