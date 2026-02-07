@@ -1836,6 +1836,58 @@ export const stockControlApi = {
     const response = await apiClient.get('/stock-control/bins', { params });
     return response.data;
   },
+
+  // ==========================================================================
+  // ANALYTICS API METHODS
+  // ==========================================================================
+
+  /**
+   * Get inventory aging report
+   */
+  getInventoryAging: async (params?: { sku?: string; binLocation?: string; minDays?: number }) => {
+    const response = await apiClient.get('/stock-control/analytics/aging', { params });
+    return response.data;
+  },
+
+  /**
+   * Get inventory turnover metrics
+   */
+  getInventoryTurnover: async (period: 'month' | 'quarter' | 'year' = 'month') => {
+    const response = await apiClient.get('/stock-control/analytics/turnover', {
+      params: { period },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get bin utilization report
+   */
+  getBinUtilization: async (params?: { zone?: string; status?: 'OK' | 'WARNING' | 'OVER_CAPACITY' }) => {
+    const response = await apiClient.get('/stock-control/analytics/bin-utilization', { params });
+    return response.data;
+  },
+
+  // ==========================================================================
+  // LOT TRACKING API METHODS
+  // ==========================================================================
+
+  /**
+   * Get lot tracking information for an SKU
+   */
+  getLotTracking: async (sku: string) => {
+    const response = await apiClient.get(`/stock-control/lots/${sku}`);
+    return response.data;
+  },
+
+  /**
+   * Get expiring inventory report (FEFO)
+   */
+  getExpiringInventory: async (days: number = 30) => {
+    const response = await apiClient.get('/stock-control/expiring', {
+      params: { days },
+    });
+    return response.data;
+  },
 };
 
 // Stock control hooks
@@ -2007,6 +2059,72 @@ export const useBinLocations = (params?: { zone?: string; active?: boolean }) =>
   return useQuery({
     queryKey: ['stock-control', 'bins', params],
     queryFn: () => stockControlApi.getBinLocations(params),
+  });
+};
+
+// ============================================================================
+// STOCK CONTROL ANALYTICS HOOKS
+// ============================================================================
+
+/**
+ * Get inventory aging report - items grouped by how long they've been in warehouse
+ */
+export const useInventoryAging = (params?: {
+  sku?: string;
+  binLocation?: string;
+  minDays?: number;
+}) => {
+  return useQuery({
+    queryKey: ['stock-control', 'analytics', 'aging', params],
+    queryFn: () => stockControlApi.getInventoryAging(params),
+  });
+};
+
+/**
+ * Get inventory turnover metrics
+ */
+export const useInventoryTurnover = (period: 'month' | 'quarter' | 'year' = 'month') => {
+  return useQuery({
+    queryKey: ['stock-control', 'analytics', 'turnover', period],
+    queryFn: () => stockControlApi.getInventoryTurnover(period),
+  });
+};
+
+/**
+ * Get bin capacity utilization report
+ */
+export const useBinUtilization = (params?: {
+  zone?: string;
+  status?: 'OK' | 'WARNING' | 'OVER_CAPACITY';
+}) => {
+  return useQuery({
+    queryKey: ['stock-control', 'analytics', 'bin-utilization', params],
+    queryFn: () => stockControlApi.getBinUtilization(params),
+  });
+};
+
+// ============================================================================
+// LOT TRACKING HOOKS
+// ============================================================================
+
+/**
+ * Get lot tracking information for an SKU
+ */
+export const useLotTracking = (sku: string) => {
+  return useQuery({
+    queryKey: ['stock-control', 'lots', sku],
+    queryFn: () => stockControlApi.getLotTracking(sku),
+    enabled: !!sku,
+  });
+};
+
+/**
+ * Get expiring inventory report (FEFO - First Expired First Out)
+ */
+export const useExpiringInventory = (days: number = 30) => {
+  return useQuery({
+    queryKey: ['stock-control', 'expiring', days],
+    queryFn: () => stockControlApi.getExpiringInventory(days),
   });
 };
 

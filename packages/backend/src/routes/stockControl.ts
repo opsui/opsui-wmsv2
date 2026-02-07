@@ -340,4 +340,89 @@ router.get(
   })
 );
 
+// ============================================================================
+// ANALYTICS ROUTES
+// ============================================================================
+
+/**
+ * GET /api/stock-control/analytics/aging
+ * Get inventory aging report
+ */
+router.get(
+  '/analytics/aging',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      sku: req.query.sku as string | undefined,
+      binLocation: req.query.binLocation as string | undefined,
+      minDays: req.query.minDays ? parseInt(req.query.minDays as string) : undefined,
+    };
+
+    const report = await stockControlService.getInventoryAgingReport(filters);
+    res.json(report);
+  })
+);
+
+/**
+ * GET /api/stock-control/analytics/turnover
+ * Get inventory turnover metrics
+ */
+router.get(
+  '/analytics/turnover',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const period = (req.query.period as 'month' | 'quarter' | 'year') || 'month';
+
+    const turnover = await stockControlService.getInventoryTurnover(period);
+    res.json(turnover);
+  })
+);
+
+/**
+ * GET /api/stock-control/analytics/bin-utilization
+ * Get bin capacity utilization report
+ */
+router.get(
+  '/analytics/bin-utilization',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      zone: req.query.zone as string | undefined,
+      status: req.query.status as 'OK' | 'WARNING' | 'OVER_CAPACITY' | undefined,
+    };
+
+    const report = await stockControlService.getBinUtilizationReport(filters);
+    res.json(report);
+  })
+);
+
+// ============================================================================
+// LOT TRACKING ROUTES
+// ============================================================================
+
+/**
+ * GET /api/stock-control/lots/:sku
+ * Get lot tracking information for an SKU
+ */
+router.get(
+  '/lots/:sku',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    validateSKU(req.params.sku);
+
+    const lotInfo = await stockControlService.getLotTracking(req.params.sku);
+    res.json(lotInfo);
+  })
+);
+
+/**
+ * GET /api/stock-control/expiring
+ * Get expiring inventory report (FEFO)
+ */
+router.get(
+  '/expiring',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const days = req.query.days ? parseInt(req.query.days as string) : 30;
+
+    const report = await stockControlService.getExpiringInventory(days);
+    res.json(report);
+  })
+);
+
 export default router;

@@ -624,3 +624,23 @@
   );
   background-size: 1000px 100%;
 }
+
+/* Additional sleek animations for Root Cause Analysis page */
+@keyframes glow {
+  0%, 100% {
+    filter: brightness(1);
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    filter: brightness(1.1);
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}

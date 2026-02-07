@@ -273,16 +273,17 @@ function getAuditEventType(req: Request): AuditEventType {
     if (method === 'POST') return AuditEventType.PACK_COMPLETED;
   }
 
+  // Unclaim order - picker unclaims an order
+  // CRITICAL: Check BEFORE claim check because '/unclaim' contains '/claim' as substring
+  // Routes: POST /api/orders/:orderId/unclaim
+  if (cleanPath.includes('/orders') && cleanPath.includes('/unclaim')) {
+    if (method === 'POST') return AuditEventType.ORDER_UNCLAIMED;
+  }
+
   // Claim order - picker claims an order for picking
   // Routes: POST /api/orders/:orderId/claim
   if (cleanPath.includes('/orders') && cleanPath.includes('/claim')) {
     if (method === 'POST') return AuditEventType.ORDER_CLAIMED;
-  }
-
-  // Unclaim order - picker unclaims an order
-  // Routes: POST /api/orders/:orderId/unclaim
-  if (cleanPath.includes('/orders') && cleanPath.includes('/unclaim')) {
-    if (method === 'POST') return AuditEventType.ORDER_UNCLAIMED;
   }
 
   // Continue order - picker continues working on an already claimed order

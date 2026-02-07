@@ -1041,6 +1041,481 @@ export class StockControlService {
       throw error;
     }
   }
+
+  // --------------------------------------------------------------------------
+  // INVENTORY ANALYTICS - NEW METHODS
+  // --------------------------------------------------------------------------
+
+  /**
+   * Get inventory aging report - items grouped by how long they've been in warehouse
+   */
+  async getInventoryAgingReport(filters: {
+    sku?: string;
+    binLocation?: string;
+    minDays?: number;
+  } = {}): Promise<{
+    items: Array<{
+      sku: string;
+      name: string;
+      binLocation: string;
+      quantity: number;
+      daysInWarehouse: number;
+      lastReceivedDate: Date;
+      lotNumber?: string;
+      expirationDate?: Date;
+    }>;
+    agingBuckets: Array<{
+      range: string;
+      itemCount: number;
+      totalQuantity: number;
+    }>;
+  }> {
+    try {
+      const params: any[] = [];
+      let paramCount = 1;
+      let query = `
+        SELECT
+          iu.sku,
+          s.name,
+          iu.bin_location as "binLocation",
+          iu.quantity,
+          MAX(it.timestamp) as "lastReceivedDate",
+          EXTRACT(DAY FROM NOW() - MAX(it.timestamp)) as "daysInWarehouse",
+          iu.lot_number as "lotNumber",
+          iu.expiration_date as "expirationDate"
+        FROM inventory_units iu
+        INNER JOIN skus s ON s.sku = iu.sku
+        LEFT JOIN inventory_transactions it ON it.sku = iu.sku AND it.type = 'RECEIPT'
+        WHERE iu.quantity > 0
+      `;
+
+      if (filters.sku) {
+        query += ` AND iu.sku = $${paramCount}`;
+        params.push(filters.sku);
+        paramCount++;
+      }
+
+      if (filters.binLocation) {
+        query += ` AND iu.bin_location LIKE $${paramCount}`;
+        params.push(`${filters.binLocation}%`);
+        paramCount++;
+      }
+
+      if (filters.minDays !== undefined) {
+        query += ` AND EXTRACT(DAY FROM NOW() - MAX(it.timestamp)) >= $${paramCount}`;
+        params.push(filters.minDays);
+        paramCount++;
+      }
+
+      query += `
+        GROUP BY iu.sku, s.name, iu.bin_location, iu.quantity, iu.lot_number, iu.expiration_date
+        ORDER BY "daysInWarehouse" DESC
+      `;
+
+      const result = await getPool().query(query, params);
+
+      const items = result.rows.map((row: any) => ({
+        sku: row.sku,
+        name: row.name,
+        binLocation: row.binLocation,
+        quantity: parseInt(row.quantity),
+        daysInWarehouse: Math.floor(row.daysInWarehouse) || 0,
+        lastReceivedDate: row.lastReceivedDate,
+        lotNumber: row.lotNumber,
+        expirationDate: row.expirationDate,
+      }));
+
+      // Calculate aging buckets
+      const agingBuckets = [
+        { range: '0-30 days', min: 0, max: 30, itemCount: 0, totalQuantity: 0 },
+        { range: '31-60 days', min: 31, max: 60, itemCount: 0, totalQuantity: 0 },
+        { range: '61-90 days', min: 61, max: 90, itemCount: 0, totalQuantity: 0 },
+        { range: '91-180 days', min: 91, max: 180, itemCount: 0, totalQuantity: 0 },
+        { range: '180+ days', min: 181, max: 99999, itemCount: 0, totalQuantity: 0 },
+      ];
+
+      items.forEach(item => {
+        const bucket = agingBuckets.find(
+          b => item.daysInWarehouse >= b.min && item.daysInWarehouse <= b.max
+        );
+        if (bucket) {
+          bucket.itemCount++;
+          bucket.totalQuantity += item.quantity;
+        }
+      });
+
+      return { items, agingBuckets };
+    } catch (error) {
+      logger.error('Error generating inventory aging report', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get lot tracking information for an SKU
+   */
+  async getLotTracking(sku: string): Promise<{
+    lots: Array<{
+      lotNumber: string;
+      expirationDate?: Date;
+      quantity: number;
+      available: number;
+      binLocations: string[];
+      daysUntilExpiration?: number;
+      status: 'OK' | 'EXPIRING_SOON' | 'EXPIRED';
+    }>;
+  }> {
+    try {
+      const result = await getPool().query(
+        `
+        SELECT
+          lot_number as "lotNumber",
+          expiration_date as "expirationDate",
+          SUM(quantity) as quantity,
+          SUM(available) as available,
+          ARRAY_AGG(DISTINCT bin_location) as "binLocations"
+        FROM inventory_units
+        WHERE sku = $1 AND lot_number IS NOT NULL
+        GROUP BY lot_number, expiration_date
+        ORDER BY
+          CASE WHEN expiration_date IS NULL THEN 1 ELSE 0 END,
+          expiration_date ASC
+        `,
+        [sku]
+      );
+
+      const lots = result.rows.map((row: any) => {
+        const expirationDate = row.expirationDate ? new Date(row.expirationDate) : undefined;
+        let daysUntilExpiration: number | undefined;
+        let status: 'OK' | 'EXPIRING_SOON' | 'EXPIRED' = 'OK';
+
+        if (expirationDate) {
+          daysUntilExpiration = Math.floor((expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+          if (daysUntilExpiration < 0) {
+            status = 'EXPIRED';
+          } else if (daysUntilExpiration <= 30) {
+            status = 'EXPIRING_SOON';
+          }
+        }
+
+        return {
+          lotNumber: row.lotNumber,
+          expirationDate,
+          quantity: parseInt(row.quantity),
+          available: parseInt(row.available),
+          binLocations: row.binLocations || [],
+          daysUntilExpiration,
+          status,
+        };
+      });
+
+      return { lots };
+    } catch (error) {
+      logger.error('Error getting lot tracking', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get expiring inventory report (FEFO - First Expired First Out)
+   */
+  async getExpiringInventory(days: number = 30): Promise<{
+    items: Array<{
+      sku: string;
+      name: string;
+      lotNumber: string;
+      expirationDate: Date;
+      daysUntilExpiration: number;
+      quantity: number;
+      available: number;
+      binLocation: string;
+      urgency: 'CRITICAL' | 'WARNING' | 'INFO';
+    }>;
+  }> {
+    try {
+      const result = await getPool().query(
+        `
+        SELECT
+          iu.sku,
+          s.name,
+          iu.lot_number as "lotNumber",
+          iu.expiration_date as "expirationDate",
+          EXTRACT(DAY FROM iu.expiration_date - NOW()) as "daysUntilExpiration",
+          iu.quantity,
+          iu.available,
+          iu.bin_location as "binLocation"
+        FROM inventory_units iu
+        INNER JOIN skus s ON s.sku = iu.sku
+        WHERE iu.expiration_date IS NOT NULL
+          AND iu.expiration_date <= NOW() + ($1 || ' days')::INTERVAL
+          AND iu.quantity > 0
+        ORDER BY iu.expiration_date ASC
+        `,
+        [days]
+      );
+
+      const items = result.rows.map((row: any) => {
+        const daysUntilExpiration = Math.floor(row.daysUntilExpiration);
+        let urgency: 'CRITICAL' | 'WARNING' | 'INFO' = 'INFO';
+
+        if (daysUntilExpiration < 0) {
+          urgency = 'CRITICAL';
+        } else if (daysUntilExpiration <= 7) {
+          urgency = 'CRITICAL';
+        } else if (daysUntilExpiration <= 14) {
+          urgency = 'WARNING';
+        }
+
+        return {
+          sku: row.sku,
+          name: row.name,
+          lotNumber: row.lotNumber,
+          expirationDate: new Date(row.expirationDate),
+          daysUntilExpiration,
+          quantity: parseInt(row.quantity),
+          available: parseInt(row.available),
+          binLocation: row.binLocation,
+          urgency,
+        };
+      });
+
+      return { items };
+    } catch (error) {
+      logger.error('Error getting expiring inventory', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get bin utilization report from location_capacities table
+   */
+  async getBinUtilizationReport(filters?: {
+    zone?: string;
+    status?: 'OK' | 'WARNING' | 'OVER_CAPACITY';
+  }): Promise<{
+    bins: Array<{
+      binLocation: string;
+      zone: string;
+      capacityType: 'WEIGHT' | 'VOLUME' | 'QUANTITY';
+      maximumCapacity: number;
+      currentUtilization: number;
+      availableCapacity: number;
+      utilizationPercent: number;
+      status: 'OK' | 'WARNING' | 'OVER_CAPACITY';
+      itemsCount: number;
+    }>;
+    zoneSummary: Array<{
+      zone: string;
+      totalBins: number;
+      occupiedBins: number;
+      averageUtilization: number;
+      overCapacityBins: number;
+    }>;
+  }> {
+    try {
+      let query = `
+        SELECT
+          lc.bin_location as "binLocation",
+          bl.zone,
+          lc.capacity_type as "capacityType",
+          lc.maximum_capacity as "maximumCapacity",
+          lc.current_utilization as "currentUtilization",
+          lc.available_capacity as "availableCapacity",
+          lc.utilization_percent as "utilizationPercent",
+          COUNT(iu.sku) as "itemsCount"
+        FROM location_capacities lc
+        INNER JOIN bin_locations bl ON bl.bin_id = lc.bin_location
+        LEFT JOIN inventory_units iu ON iu.bin_location = lc.bin_location AND iu.quantity > 0
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      let paramCount = 1;
+
+      if (filters?.zone) {
+        query += ` AND bl.zone = $${paramCount}`;
+        params.push(filters.zone);
+        paramCount++;
+      }
+
+      if (filters?.status) {
+        if (filters.status === 'OVER_CAPACITY') {
+          query += ` AND lc.utilization_percent > 100`;
+        } else if (filters.status === 'WARNING') {
+          query += ` AND lc.utilization_percent >= 80 AND lc.utilization_percent <= 100`;
+        } else {
+          query += ` AND lc.utilization_percent < 80`;
+        }
+      }
+
+      query += ` GROUP BY lc.bin_location, bl.zone, lc.capacity_type, lc.maximum_capacity, lc.current_utilization, lc.available_capacity, lc.utilization_percent`;
+
+      const result = await getPool().query(query, params);
+
+      const bins = result.rows.map((row: any) => {
+        const utilizationPercent = parseFloat(row.utilizationPercent);
+        let status: 'OK' | 'WARNING' | 'OVER_CAPACITY' = 'OK';
+
+        if (utilizationPercent > 100) {
+          status = 'OVER_CAPACITY';
+        } else if (utilizationPercent >= 80) {
+          status = 'WARNING';
+        }
+
+        return {
+          binLocation: row.binLocation,
+          zone: row.zone,
+          capacityType: row.capacityType,
+          maximumCapacity: parseFloat(row.maximumCapacity),
+          currentUtilization: parseFloat(row.currentUtilization),
+          availableCapacity: parseFloat(row.availableCapacity),
+          utilizationPercent,
+          status,
+          itemsCount: parseInt(row.itemsCount),
+        };
+      });
+
+      // Get zone summary
+      let zoneQuery = `
+        SELECT
+          bl.zone,
+          COUNT(DISTINCT lc.bin_location) as "totalBins",
+          COUNT(DISTINCT CASE WHEN iu.sku IS NOT NULL THEN lc.bin_location END) as "occupiedBins",
+          AVG(lc.utilization_percent) as "averageUtilization",
+          COUNT(DISTINCT CASE WHEN lc.utilization_percent > 100 THEN lc.bin_location END) as "overCapacityBins"
+        FROM location_capacities lc
+        INNER JOIN bin_locations bl ON bl.bin_id = lc.bin_location
+        LEFT JOIN inventory_units iu ON iu.bin_location = lc.bin_location AND iu.quantity > 0
+        WHERE 1=1
+      `;
+      const zoneParams: any[] = [];
+      let zoneParamCount = 1;
+
+      if (filters?.zone) {
+        zoneQuery += ` AND bl.zone = $${zoneParamCount}`;
+        zoneParams.push(filters.zone);
+        zoneParamCount++;
+      }
+
+      zoneQuery += ` GROUP BY bl.zone ORDER BY bl.zone`;
+
+      const zoneResult = await getPool().query(zoneQuery, zoneParams);
+
+      const zoneSummary = zoneResult.rows.map((row: any) => ({
+        zone: row.zone,
+        totalBins: parseInt(row.totalBins),
+        occupiedBins: parseInt(row.occupiedBins),
+        averageUtilization: parseFloat(row.averageUtilization) || 0,
+        overCapacityBins: parseInt(row.overCapacityBins),
+      }));
+
+      return { bins, zoneSummary };
+    } catch (error) {
+      logger.error('Error getting bin utilization report', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get inventory turnover metrics
+   */
+  async getInventoryTurnover(period: 'month' | 'quarter' | 'year' = 'month'): Promise<{
+    period: string;
+    startDate: Date;
+    endDate: Date;
+    items: Array<{
+      sku: string;
+      name: string;
+      receiptsQuantity: number;
+      deductionsQuantity: number;
+      averageInventory: number;
+      turnoverCount: number;
+      turnoverRate: 'HIGH' | 'NORMAL' | 'LOW' | 'STAGNANT';
+    }>;
+  }> {
+    try {
+      let interval = "1 month";
+      if (period === 'quarter') interval = "3 months";
+      if (period === 'year') interval = "1 year";
+
+      const query = `
+        WITH period_range AS (
+          SELECT
+            NOW() - ($1::INTERVAL) as "startDate",
+            NOW() as "endDate"
+        ),
+        inventory_movement AS (
+          SELECT
+            iu.sku,
+            s.name,
+            SUM(CASE WHEN it.type = 'RECEIPT' THEN ABS(it.quantity) ELSE 0 END) as "receiptsQuantity",
+            SUM(CASE WHEN it.type = 'DEDUCTION' THEN ABS(it.quantity) ELSE 0 END) as "deductionsQuantity",
+            AVG(iu.quantity) as "averageInventory"
+          FROM inventory_units iu
+          INNER JOIN skus s ON s.sku = iu.sku
+          LEFT JOIN inventory_transactions it ON it.sku = iu.sku
+            AND it.timestamp >= (SELECT "startDate" FROM period_range)
+            AND it.timestamp <= (SELECT "endDate" FROM period_range)
+          WHERE iu.quantity > 0
+          GROUP BY iu.sku, s.name
+          HAVING SUM(CASE WHEN it.type IN ('RECEIPT', 'DEDUCTION') THEN 1 ELSE 0 END) > 0
+        )
+        SELECT
+          sku,
+          name,
+          receiptsQuantity,
+          deductionsQuantity,
+          averageInventory,
+          CASE
+            WHEN averageInventory > 0 THEN ROUND((deductionsQuantity::NUMERIC / averageInventory), 2)
+            ELSE 0
+          END as "turnoverCount"
+        FROM inventory_movement
+        ORDER BY "turnoverCount" DESC
+      `;
+
+      const result = await getPool().query(query, [interval]);
+
+      const startDate = new Date();
+      if (period === 'month') startDate.setMonth(startDate.getMonth() - 1);
+      if (period === 'quarter') startDate.setMonth(startDate.getMonth() - 3);
+      if (period === 'year') startDate.setFullYear(startDate.getFullYear() - 1);
+
+      const items = result.rows.map((row: any) => {
+        const turnoverCount = parseFloat(row.turnoverCount);
+        let turnoverRate: 'HIGH' | 'NORMAL' | 'LOW' | 'STAGNANT' = 'NORMAL';
+
+        if (turnoverCount >= 4) {
+          turnoverRate = 'HIGH';
+        } else if (turnoverCount >= 2) {
+          turnoverRate = 'NORMAL';
+        } else if (turnoverCount >= 0.5) {
+          turnoverRate = 'LOW';
+        } else {
+          turnoverRate = 'STAGNANT';
+        }
+
+        return {
+          sku: row.sku,
+          name: row.name,
+          receiptsQuantity: parseInt(row.receiptsQuantity) || 0,
+          deductionsQuantity: parseInt(row.deductionsQuantity) || 0,
+          averageInventory: Math.round(parseFloat(row.averageInventory)),
+          turnoverCount,
+          turnoverRate,
+        };
+      });
+
+      return {
+        period,
+        startDate,
+        endDate: new Date(),
+        items,
+      };
+    } catch (error) {
+      logger.error('Error getting inventory turnover', error);
+      throw error;
+    }
+  }
 }
 
 // Singleton instance

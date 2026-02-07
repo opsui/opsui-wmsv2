@@ -1009,8 +1009,14 @@ export function Header() {
         icon: ClipboardDocumentListIcon,
       });
 
-      // Location Capacity, Bin Locations, Quality Control - only for supervisors and admins
+      // Bin Locations, Location Capacity, Bin Utilization, Quality Control - only for supervisors and admins
       if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+        items.push({
+          key: 'bin-locations',
+          label: 'Bin Locations',
+          path: '/bin-locations',
+          icon: CubeIcon,
+        });
         items.push({
           key: 'location-capacity',
           label: 'Location Capacity',
@@ -1018,10 +1024,10 @@ export function Header() {
           icon: ScaleIcon,
         });
         items.push({
-          key: 'bin-locations',
-          label: 'Bin Locations',
-          path: '/bin-locations',
-          icon: CubeIcon,
+          key: 'bin-utilization',
+          label: 'Bin Utilization',
+          path: '/stock-control?tab=analytics',
+          icon: ChartBarIcon,
         });
         items.push({
           key: 'quality-control',

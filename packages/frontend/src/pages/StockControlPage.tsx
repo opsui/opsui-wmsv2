@@ -16,6 +16,11 @@ import {
   useTransferStock,
   useAdjustInventory,
   useCreateStockCount,
+  useInventoryAging,
+  useInventoryTurnover,
+  useBinUtilization,
+  useLotTracking,
+  useExpiringInventory,
 } from '@/services/api';
 import {
   Card,
@@ -43,13 +48,15 @@ import {
   MagnifyingGlassIcon,
   DocumentTextIcon,
   XMarkIcon,
+  TagIcon,
 } from '@heroicons/react/24/outline';
+import { InventoryAgingChart, TurnoverChart, BinUtilizationHeatmap, LotExpirationChart } from '@/components/charts';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type TabType = 'dashboard' | 'inventory' | 'transactions' | 'quick-actions';
+type TabType = 'dashboard' | 'inventory' | 'transactions' | 'quick-actions' | 'analytics' | 'lots';
 
 interface InventoryTabProps {
   initialSku?: string;
@@ -1270,6 +1277,162 @@ function QuickActionsTab() {
 }
 
 // ============================================================================
+// ANALYTICS TAB
+// ============================================================================
+
+function AnalyticsTab() {
+  const { data: agingData, isLoading: agingLoading } = useInventoryAging();
+  const { data: turnoverData, isLoading: turnoverLoading } = useInventoryTurnover('month');
+  const { data: binUtilizationData, isLoading: binLoading } = useBinUtilization();
+
+  return (
+    <div className="space-y-6">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InventoryAgingChart data={agingData?.agingBuckets} isLoading={agingLoading} />
+        <TurnoverChart data={turnoverData?.items} isLoading={turnoverLoading} />
+      </div>
+
+      {/* Bin Utilization Heatmap */}
+      <BinUtilizationHeatmap
+        data={binUtilizationData?.bins}
+        zoneSummary={binUtilizationData?.zoneSummary}
+        isLoading={binLoading}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// LOTS TAB
+// ============================================================================
+
+function LotsTab() {
+  const [searchSku, setSearchSku] = useState('');
+  const [searchLot, setSearchLot] = useState('');
+  const [expiringDays, setExpiringDays] = useState(30);
+
+  const { data: lotData, isLoading: lotLoading } = useLotTracking(searchSku);
+  const { data: expiringData, isLoading: expiringLoading } = useExpiringInventory(expiringDays);
+
+  return (
+    <div className="space-y-6">
+      {/* Search and Filter Card */}
+      <Card variant="glass">
+        <CardContent className="p-6">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Search by SKU</label>
+              <input
+                type="text"
+                value={searchSku}
+                onChange={e => setSearchSku(e.target.value.toUpperCase())}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Enter SKU to view lots..."
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Search by Lot Number</label>
+              <input
+                type="text"
+                value={searchLot}
+                onChange={e => setSearchLot(e.target.value.toUpperCase())}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Enter lot number..."
+              />
+            </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Expiring Within</label>
+              <select
+                value={expiringDays}
+                onChange={e => setExpiringDays(parseInt(e.target.value))}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value={7}>7 days</option>
+                <option value={14}>14 days</option>
+                <option value={30}>30 days</option>
+                <option value={60}>60 days</option>
+                <option value={90}>90 days</option>
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lot Tracking Table */}
+      {searchSku && lotData && (
+        <Card variant="glass">
+          <CardHeader>
+            <CardTitle>Lot Tracking for {searchSku}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lotLoading ? (
+              <TableSkeleton rows={5} columns={6} />
+            ) : lotData.lots && lotData.lots.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Lot Number</th>
+                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Expiration</th>
+                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Quantity</th>
+                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Available</th>
+                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Locations</th>
+                      <th className="text-center py-3 px-4 text-gray-400 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lotData.lots.map((lot: any) => (
+                      <tr key={lot.lotNumber} className="border-b border-white/5 hover:bg-white/[0.02]">
+                        <td className="py-3 px-4 text-white font-medium font-mono text-sm">
+                          {lot.lotNumber}
+                        </td>
+                        <td className="py-3 px-4 text-gray-300">
+                          {lot.expirationDate ? new Date(lot.expirationDate).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-right text-white">{lot.quantity}</td>
+                        <td className="py-3 px-4 text-right text-white">{lot.available}</td>
+                        <td className="py-3 px-4 text-gray-400 text-sm">
+                          {lot.binLocations.join(', ')}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              lot.status === 'EXPIRED'
+                                ? 'bg-red-500/20 text-red-400'
+                                : lot.status === 'EXPIRING_SOON'
+                                  ? 'bg-amber-500/20 text-amber-400'
+                                  : 'bg-emerald-500/20 text-emerald-400'
+                            }`}
+                          >
+                            {lot.status === 'EXPIRED'
+                              ? 'Expired'
+                              : lot.status === 'EXPIRING_SOON'
+                                ? `Expiring (${lot.daysUntilExpiration} days)`
+                                : 'OK'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-8 text-center text-gray-400">
+                No lots found for this SKU
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Expiring Inventory Chart */}
+      <LotExpirationChart data={expiringData?.items} isLoading={expiringLoading} />
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN PAGE
 // ============================================================================
 
@@ -1358,6 +1521,8 @@ export function StockControlPage() {
       { key: 'inventory', label: 'Inventory', icon: CubeIcon },
       { key: 'transactions', label: 'Transactions', icon: DocumentTextIcon },
       { key: 'quick-actions', label: 'Quick Actions', icon: ArrowPathIcon },
+      { key: 'analytics', label: 'Analytics', icon: ChartBarIcon },
+      { key: 'lots', label: 'Lots', icon: TagIcon },
     ];
 
   return (
@@ -1413,6 +1578,8 @@ export function StockControlPage() {
           {activeTab === 'inventory' && <InventoryTab initialSku={quickSearchSku} />}
           {activeTab === 'transactions' && <TransactionsTab />}
           {activeTab === 'quick-actions' && <QuickActionsTab />}
+          {activeTab === 'analytics' && <AnalyticsTab />}
+          {activeTab === 'lots' && <LotsTab />}
         </div>
       </main>
     </div>

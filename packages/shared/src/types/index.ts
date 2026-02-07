@@ -538,6 +538,10 @@ export interface InventoryUnit {
   reserved: number;
   available: number; // quantity - reserved
   lastUpdated: Date;
+  // Lot tracking fields
+  lotNumber?: string;
+  expirationDate?: Date;
+  serialNumbers?: string[];
 }
 
 /**
@@ -3163,6 +3167,103 @@ export interface CustomerFinancialSummary {
   creditStatus: 'GOOD' | 'WARNING' | 'RESTRICTED' | 'BLOCKED';
   creditLimit?: number;
   creditAvailable?: number;
+}
+
+// ============================================================================
+// INVENTORY ANALYTICS TYPES
+// ============================================================================
+
+/**
+ * Inventory Aging Item - Items grouped by how long they've been in warehouse
+ */
+export interface InventoryAgingItem {
+  sku: string;
+  name: string;
+  binLocation: string;
+  quantity: number;
+  daysInWarehouse: number;
+  lastReceivedDate: Date;
+  lotNumber?: string;
+  expirationDate?: Date;
+}
+
+/**
+ * Aging Bucket Summary - Aggregate counts by age range
+ */
+export interface AgingBucketSummary {
+  range: string; // e.g., "0-30 days", "31-60 days", etc.
+  itemCount: number;
+  totalQuantity: number;
+  totalValue: number;
+  percentageOfInventory: number;
+}
+
+/**
+ * Lot Information - Tracking for lot/batch numbers
+ */
+export interface LotInfo {
+  lotNumber: string;
+  expirationDate?: Date;
+  quantity: number;
+  available: number;
+  binLocations: string[];
+  daysUntilExpiration?: number;
+  status: 'OK' | 'EXPIRING_SOON' | 'EXPIRED';
+}
+
+/**
+ * Inventory Turnover Metrics
+ */
+export interface InventoryTurnover {
+  sku: string;
+  name: string;
+  period: string; // e.g., "2026-01", "Q1-2026"
+  receiptsQuantity: number;
+  deductionsQuantity: number;
+  averageInventory: number;
+  turnoverCount: number; // cost of goods sold / average inventory
+  turnoverRate: 'HIGH' | 'NORMAL' | 'LOW' | 'STAGNANT';
+}
+
+/**
+ * Bin Utilization - Capacity tracking per bin
+ */
+export interface BinUtilization {
+  binLocation: string;
+  zone: string;
+  capacityType: 'WEIGHT' | 'VOLUME' | 'QUANTITY';
+  maximumCapacity: number;
+  currentUtilization: number;
+  availableCapacity: number;
+  utilizationPercent: number;
+  status: 'OK' | 'WARNING' | 'OVER_CAPACITY';
+  itemsCount: number;
+}
+
+/**
+ * Zone Utilization Summary - Aggregate by warehouse zone
+ */
+export interface ZoneUtilizationSummary {
+  zone: string;
+  totalBins: number;
+  occupiedBins: number;
+  emptyBins: number;
+  averageUtilization: number;
+  overCapacityBins: number;
+}
+
+/**
+ * Expiring Inventory Report
+ */
+export interface ExpiringInventoryItem {
+  sku: string;
+  name: string;
+  lotNumber: string;
+  expirationDate: Date;
+  daysUntilExpiration: number;
+  quantity: number;
+  binLocation: string;
+  urgency: 'CRITICAL' | 'WARNING' | 'INFO';
 }
 
 // ============================================================================
