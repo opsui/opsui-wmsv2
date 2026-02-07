@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
 import { Card, CardContent, Button, Header, Pagination, useToast } from '@/components/shared';
@@ -196,6 +196,8 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
 export function OrderQueuePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const canPick = useAuthStore(state => state.canPick);
   const userId = useAuthStore(state => state.user?.userId);
   const { showToast } = useToast();
@@ -207,6 +209,16 @@ export function OrderQueuePage() {
   const [priorityFilter, setPriorityFilter] = useState<OrderPriority | undefined>();
   const [claimingOrderId, setClaimingOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Read status from URL params immediately on every render
+  const urlStatus = searchParams.get('status') as OrderStatus | null;
+  const effectiveStatusFilter =
+    urlStatus && Object.values(OrderStatus).includes(urlStatus) ? urlStatus : statusFilter;
+
+  // Ref to prevent multiple simultaneous claim attempts (synchronous check)
+  const isClaimingRef = useRef(false);
+  // Ref to track last claimed order to prevent duplicate WebSocket toasts
+  const lastClaimedOrderIdRef = useRef<string | null>(null);
   const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
 
@@ -283,10 +295,18 @@ export function OrderQueuePage() {
   // Auto-detect which tab to show based on whether picker has items in tote
   // DISABLED: This feature was causing redirect loops and is now disabled
   // Users can manually switch between PENDING and TOTE tabs using the dropdown
+  // Also sync with URL params to support direct navigation to specific status tabs
   useEffect(() => {
-    // Always start on PENDING tab - users can manually switch to TOTE if needed
-    setStatusFilter(OrderStatus.PENDING);
-  }, [userId]);
+    // Read status from URL params, default to PENDING
+    const urlStatus = searchParams.get('status') as OrderStatus | null;
+    if (urlStatus && Object.values(OrderStatus).includes(urlStatus)) {
+      console.log('[OrderQueue] Setting status filter from URL:', urlStatus);
+      setStatusFilter(urlStatus);
+    } else {
+      console.log('[OrderQueue] No valid status in URL, defaulting to PENDING');
+      setStatusFilter(OrderStatus.PENDING);
+    }
+  }, [location.search]); // Use location.search for reliable change detection
 
   // Refetch orders when component mounts or filter changes to get fresh progress data
   useEffect(() => {
@@ -303,9 +323,27 @@ export function OrderQueuePage() {
       // Refresh order queue for all events
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
 
-      // Show toast for specific events related to current user
-      if (data.pickerId === userId) {
-        showToast(`Order ${data.orderId} has been claimed`, 'success', 3000);
+      // CRITICAL: Only show toast for claim events NOT initiated by current user
+      // Don't show if we just claimed this order ourselves (prevents duplicate notifications)
+      if (data.orderId === lastClaimedOrderIdRef.current) {
+        // We just claimed this order, don't show WebSocket toast
+        // Clear the ref after a short delay to allow for future updates
+        setTimeout(() => {
+          if (lastClaimedOrderIdRef.current === data.orderId) {
+            lastClaimedOrderIdRef.current = null;
+          }
+        }, 2000);
+        return;
+      }
+
+      // Only show toast for claims by other users, not for unclaims
+      const isOtherUsersClaim = data.pickerId && data.pickerId !== userId;
+      if (isOtherUsersClaim) {
+        showToast(
+          `Order ${data.orderId} has been claimed by ${data.pickerName || data.pickerId}`,
+          'success',
+          3000
+        );
       }
     }
   );
@@ -333,19 +371,29 @@ export function OrderQueuePage() {
     }
 
     // For PENDING orders, claim the order
-    // Prevent multiple claims on the same order
+    // CRITICAL: Synchronous check to prevent multiple simultaneous claims
+    // Use ref for immediate check before async operations
+    if (isClaimingRef.current) {
+      console.log('[OrderQueue] Already claiming an order, ignoring click');
+      return;
+    }
+
+    // Also check the state-based lock (redundant but safe)
     if (claimingOrderId === orderId) {
       return;
     }
 
+    // Set both ref and state for maximum protection
+    isClaimingRef.current = true;
     setClaimingOrderId(orderId);
+    lastClaimedOrderIdRef.current = orderId; // Track this order as just claimed
 
     try {
       await claimMutation.mutateAsync({
         orderId,
         dto: { pickerId: userId },
       });
-      showToast('Order claimed successfully', 'success');
+      showToast(`Order ${orderId} claimed successfully`, 'success');
 
       // Navigate to picking page for the claimed order
       navigate(`/orders/${orderId}/pick`);
@@ -370,6 +418,7 @@ export function OrderQueuePage() {
         showToast(error instanceof Error ? error.message : 'Failed to claim order', 'error');
       }
     } finally {
+      isClaimingRef.current = false;
       setClaimingOrderId(null);
     }
   };

@@ -124,7 +124,10 @@ function FixedAssetsPage() {
   };
 
   const totalOriginalCost = mockAssets.reduce((sum, a) => sum + a.purchaseCost, 0);
-  const totalAccumulatedDepreciation = mockAssets.reduce((sum, a) => sum + a.accumulatedDepreciation, 0);
+  const totalAccumulatedDepreciation = mockAssets.reduce(
+    (sum, a) => sum + a.accumulatedDepreciation,
+    0
+  );
   const totalNetBookValue = mockAssets.reduce((sum, a) => sum + a.currentBookValue, 0);
 
   // Export to CSV
@@ -134,18 +137,22 @@ function FixedAssetsPage() {
     lines.push('FIXED ASSET REGISTER');
     lines.push(`Generated on ${new Date().toLocaleDateString()}`);
     lines.push('');
-    lines.push('Asset Number,Asset Name,Category,Purchase Date,Cost,Accum. Depreciation,Net Book Value');
+    lines.push(
+      'Asset Number,Asset Name,Category,Purchase Date,Cost,Accum. Depreciation,Net Book Value'
+    );
 
     mockAssets.forEach(asset => {
       lines.push(
         `${asset.assetNumber},${asset.assetName},${asset.assetCategory || ''},` +
-        `${new Date(asset.purchaseDate).toLocaleDateString()},${asset.purchaseCost},` +
-        `${asset.accumulatedDepreciation},${asset.currentBookValue}`
+          `${new Date(asset.purchaseDate).toLocaleDateString()},${asset.purchaseCost},` +
+          `${asset.accumulatedDepreciation},${asset.currentBookValue}`
       );
     });
 
     lines.push('');
-    lines.push(`TOTALS,,,$${totalOriginalCost},$${totalAccumulatedDepreciation},$${totalNetBookValue}`);
+    lines.push(
+      `TOTALS,,,$${totalOriginalCost},$${totalAccumulatedDepreciation},$${totalNetBookValue}`
+    );
 
     const csvContent = lines.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -190,9 +197,7 @@ function FixedAssetsPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white tracking-tight">Fixed Assets</h1>
-                <p className="mt-2 text-gray-400">
-                  Manage fixed assets and depreciation schedules
-                </p>
+                <p className="mt-2 text-gray-400">Manage fixed assets and depreciation schedules</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -222,7 +227,9 @@ function FixedAssetsPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Total Original Cost</p>
-                <p className="text-2xl font-bold text-blue-400">{formatCurrency(totalOriginalCost)}</p>
+                <p className="text-2xl font-bold text-blue-400">
+                  {formatCurrency(totalOriginalCost)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400 mb-1">Accumulated Depreciation</p>
@@ -255,23 +262,50 @@ function FixedAssetsPage() {
                 <table className="w-full" role="table">
                   <thead>
                     <tr className="border-b border-gray-700">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Asset #</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Name</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Category</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Purchase Date</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Cost</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Accum. Dep.</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Net Book Value</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Dep. Method</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        Asset #
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        Name
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        Category
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        Purchase Date
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        Cost
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        Accum. Dep.
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        Net Book Value
+                      </th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
+                        Dep. Method
+                      </th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {mockAssets.map(asset => (
-                      <tr key={asset.assetId} className="border-b border-gray-800 hover:bg-white/[0.02]">
-                        <td className="py-3 px-4 text-sm font-mono text-gray-300">{asset.assetNumber}</td>
-                        <td className="py-3 px-4 text-sm text-white font-medium">{asset.assetName}</td>
-                        <td className="py-3 px-4 text-sm text-gray-400">{asset.assetCategory || '-'}</td>
+                      <tr
+                        key={asset.assetId}
+                        className="border-b border-gray-800 hover:bg-white/[0.02]"
+                      >
+                        <td className="py-3 px-4 text-sm font-mono text-gray-300">
+                          {asset.assetNumber}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-white font-medium">
+                          {asset.assetName}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-400">
+                          {asset.assetCategory || '-'}
+                        </td>
                         <td className="py-3 px-4 text-sm text-gray-300">
                           {new Date(asset.purchaseDate).toLocaleDateString()}
                         </td>
@@ -302,7 +336,10 @@ function FixedAssetsPage() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-gray-700 bg-white/[0.02]">
-                      <td colSpan={4} className="py-3 px-4 text-sm font-bold text-gray-400 text-right">
+                      <td
+                        colSpan={4}
+                        className="py-3 px-4 text-sm font-bold text-gray-400 text-right"
+                      >
                         TOTALS:
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-bold text-blue-400">

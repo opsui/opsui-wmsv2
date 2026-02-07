@@ -589,7 +589,8 @@ function AccountingPage() {
                     <div className="space-y-4">
                       {Object.entries(profitLoss.operatingExpenses).map(
                         ([key, value]) =>
-                          (typeof value === 'number' && value > 0) && (
+                          typeof value === 'number' &&
+                          value > 0 && (
                             <div
                               key={key}
                               className="flex justify-between items-center py-3 border-b border-gray-700"

@@ -132,9 +132,7 @@ function APAgingPage() {
                 <h1 className="text-3xl font-bold text-white tracking-tight">
                   Accounts Payable Aging
                 </h1>
-                <p className="mt-2 text-gray-400">
-                  Track outstanding bills by aging period
-                </p>
+                <p className="mt-2 text-gray-400">Track outstanding bills by aging period</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -214,9 +212,10 @@ function APAgingPage() {
               <CardContent>
                 <div className="space-y-4">
                   {mockReport.buckets.map((bucket, index) => {
-                    const percent = mockReport.totalOutstanding > 0
-                      ? (bucket.amount / mockReport.totalOutstanding) * 100
-                      : 0;
+                    const percent =
+                      mockReport.totalOutstanding > 0
+                        ? (bucket.amount / mockReport.totalOutstanding) * 100
+                        : 0;
 
                     let colorClass = 'text-emerald-400';
                     let bgClass = 'bg-emerald-500/20';
@@ -233,7 +232,9 @@ function APAgingPage() {
                       <div key={index} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-300 min-w-[140px]">{bucket.label}</span>
+                            <span className="text-sm text-gray-300 min-w-[140px]">
+                              {bucket.label}
+                            </span>
                             <span className={`text-lg font-bold ${colorClass}`}>
                               {formatCurrency(bucket.amount)}
                             </span>
@@ -259,21 +260,34 @@ function APAgingPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl ${
-                      mockReport.buckets[2].amount + mockReport.buckets[3].amount + mockReport.buckets[4].amount === 0
-                        ? 'bg-emerald-500/20'
-                        : 'bg-rose-500/20'
-                    }`}>
-                      <ClockIcon className={`h-6 w-6 ${
-                        mockReport.buckets[2].amount + mockReport.buckets[3].amount + mockReport.buckets[4].amount === 0
-                          ? 'text-emerald-400'
-                          : 'text-rose-400'
-                      }`} />
+                    <div
+                      className={`p-3 rounded-xl ${
+                        mockReport.buckets[2].amount +
+                          mockReport.buckets[3].amount +
+                          mockReport.buckets[4].amount ===
+                        0
+                          ? 'bg-emerald-500/20'
+                          : 'bg-rose-500/20'
+                      }`}
+                    >
+                      <ClockIcon
+                        className={`h-6 w-6 ${
+                          mockReport.buckets[2].amount +
+                            mockReport.buckets[3].amount +
+                            mockReport.buckets[4].amount ===
+                          0
+                            ? 'text-emerald-400'
+                            : 'text-rose-400'
+                        }`}
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">Payment Urgency</p>
                       <p className="text-lg font-bold text-white">
-                        {mockReport.buckets[2].amount + mockReport.buckets[3].amount + mockReport.buckets[4].amount === 0
+                        {mockReport.buckets[2].amount +
+                          mockReport.buckets[3].amount +
+                          mockReport.buckets[4].amount ===
+                        0
                           ? 'No Overdue Payments'
                           : `${mockReport.buckets[2].amount + mockReport.buckets[3].amount + mockReport.buckets[4].amount > 10000 ? 'High' : 'Medium'} Priority`}
                       </p>
@@ -283,7 +297,9 @@ function APAgingPage() {
                     <p className="text-xs text-gray-500 mb-1">Overdue (60+ days)</p>
                     <p className="text-2xl font-bold text-rose-400">
                       {formatCurrency(
-                        mockReport.buckets[2].amount + mockReport.buckets[3].amount + mockReport.buckets[4].amount
+                        mockReport.buckets[2].amount +
+                          mockReport.buckets[3].amount +
+                          mockReport.buckets[4].amount
                       )}
                     </p>
                   </div>

@@ -118,6 +118,10 @@ export function PickingPage() {
   // Ref to prevent race conditions during claim
   const isClaimingRef = useRef(false);
 
+  // Ref to track if we've seen the initial order data load
+  // Prevents claim logic from running on first render with potentially stale data
+  const hasSeenInitialDataRef = useRef(false);
+
   // Claim order mutation
   const claimMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -163,6 +167,7 @@ export function PickingPage() {
   useEffect(() => {
     hasClaimedRef.current = false;
     isClaimingRef.current = false;
+    hasSeenInitialDataRef.current = false;
     setClaimError(null);
   }, [orderId]);
 
@@ -170,6 +175,23 @@ export function PickingPage() {
   // Use useLayoutEffect to ensure ref updates happen synchronously before React StrictMode's second invocation
   useLayoutEffect(() => {
     if (orderId && order) {
+      // CRITICAL: Validate that the order data matches the current orderId
+      // This prevents acting on stale cached data from a previous order
+      if (order.orderId !== orderId) {
+        console.log(`[PickingPage] Order ID mismatch - data is stale, skipping claim`);
+        console.log(`[PickingPage] Expected: ${orderId}, Got: ${order.orderId}`);
+        return;
+      }
+
+      // CRITICAL: Mark that we've seen initial data - prevents race condition with stale data
+      // The first render might have stale data (from previous order or cache)
+      // Skip claim logic on first render, only run on subsequent renders with fresh data
+      if (!hasSeenInitialDataRef.current) {
+        console.log(`[PickingPage] First render - marking initial data seen, skipping claim`);
+        hasSeenInitialDataRef.current = true;
+        return;
+      }
+
       console.log(`[PickingPage] Checking if order needs to be claimed: ${orderId}`);
       console.log(`[PickingPage] Order status: ${order.status}, pickerId: ${order.pickerId}`);
       console.log(
@@ -260,8 +282,19 @@ export function PickingPage() {
   }, [orderId, order, claimMutation.isPending, claimMutation.isError]);
 
   // Call getNextTask after order is loaded (and potentially claimed)
+  // Only call if order is already PICKING to avoid race condition with claim mutation
   useEffect(() => {
-    if (orderId && !claimError && !claimMutation.isPending) {
+    // Don't call getNextTask if we're about to claim or currently claiming
+    // Only call if order is already in PICKING status (already claimed)
+    const shouldCallGetNextTask =
+      orderId &&
+      order &&
+      !claimError &&
+      !claimMutation.isPending &&
+      !isClaimingRef.current &&
+      order.status === OrderStatus.PICKING;
+
+    if (shouldCallGetNextTask) {
       console.log(`[PickingPage] Calling getNextTask API for: ${orderId}`);
 
       const callGetNextTask = async () => {
@@ -278,7 +311,7 @@ export function PickingPage() {
 
       callGetNextTask();
     }
-  }, [orderId, claimError, claimMutation.isPending, queryClient]);
+  }, [orderId, order, claimError, claimMutation.isPending, queryClient]);
 
   // Track window visibility for ACTIVE/IDLE status
   useEffect(() => {
@@ -644,14 +677,20 @@ export function PickingPage() {
         reason: fullReason,
       });
 
-      showToast('Order unclaimed and reset to PENDING!', 'success');
+      showToast(`Order ${orderId} unclaimed and reset to PENDING!`, 'success');
       setShowUnclaimModal(false);
       hasClaimedRef.current = false; // Reset ref after unclaiming
       isClaimingRef.current = false; // Reset claiming ref to allow re-claiming if needed
       setClaimError(null); // Clear any previous claim errors
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-      navigate('/orders');
+
+      // Clear all order-related queries to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+      await queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+      await queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      await queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
+
+      // Force a full page reload to ensure fresh state and proper URL param reading
+      window.location.href = '/orders?status=PENDING';
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to unclaim order';
       showToast(errorMsg, 'error');

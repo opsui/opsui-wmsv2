@@ -132,9 +132,7 @@ function ARAgingPage() {
                 <h1 className="text-3xl font-bold text-white tracking-tight">
                   Accounts Receivable Aging
                 </h1>
-                <p className="mt-2 text-gray-400">
-                  Track outstanding invoices by aging period
-                </p>
+                <p className="mt-2 text-gray-400">Track outstanding invoices by aging period</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -214,9 +212,10 @@ function ARAgingPage() {
               <CardContent>
                 <div className="space-y-4">
                   {mockReport.buckets.map((bucket, index) => {
-                    const percent = mockReport.totalOutstanding > 0
-                      ? (bucket.amount / mockReport.totalOutstanding) * 100
-                      : 0;
+                    const percent =
+                      mockReport.totalOutstanding > 0
+                        ? (bucket.amount / mockReport.totalOutstanding) * 100
+                        : 0;
 
                     let colorClass = 'text-emerald-400';
                     let bgClass = 'bg-emerald-500/20';
@@ -233,7 +232,9 @@ function ARAgingPage() {
                       <div key={index} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-300 min-w-[140px]">{bucket.label}</span>
+                            <span className="text-sm text-gray-300 min-w-[140px]">
+                              {bucket.label}
+                            </span>
                             <span className={`text-lg font-bold ${colorClass}`}>
                               {formatCurrency(bucket.amount)}
                             </span>
@@ -259,20 +260,24 @@ function ARAgingPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-xl ${
-                      mockReport.buckets[0].amount / mockReport.totalOutstanding > 0.5
-                        ? 'bg-emerald-500/20'
-                        : mockReport.buckets[1].amount / mockReport.totalOutstanding > 0.3
-                        ? 'bg-amber-500/20'
-                        : 'bg-rose-500/20'
-                    }`}>
-                      <ClockIcon className={`h-6 w-6 ${
+                    <div
+                      className={`p-3 rounded-xl ${
                         mockReport.buckets[0].amount / mockReport.totalOutstanding > 0.5
-                          ? 'text-emerald-400'
+                          ? 'bg-emerald-500/20'
                           : mockReport.buckets[1].amount / mockReport.totalOutstanding > 0.3
-                          ? 'text-amber-400'
-                          : 'text-rose-400'
-                      }`} />
+                            ? 'bg-amber-500/20'
+                            : 'bg-rose-500/20'
+                      }`}
+                    >
+                      <ClockIcon
+                        className={`h-6 w-6 ${
+                          mockReport.buckets[0].amount / mockReport.totalOutstanding > 0.5
+                            ? 'text-emerald-400'
+                            : mockReport.buckets[1].amount / mockReport.totalOutstanding > 0.3
+                              ? 'text-amber-400'
+                              : 'text-rose-400'
+                        }`}
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-400">Collection Health</p>
@@ -280,15 +285,18 @@ function ARAgingPage() {
                         {mockReport.buckets[0].amount / mockReport.totalOutstanding > 0.5
                           ? 'Good'
                           : mockReport.buckets[1].amount / mockReport.totalOutstanding > 0.3
-                          ? 'Fair'
-                          : 'Poor'}
+                            ? 'Fair'
+                            : 'Poor'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-500 mb-1">Current Ratio</p>
                     <p className="text-2xl font-bold text-emerald-400">
-                      {((mockReport.buckets[0].amount / mockReport.totalOutstanding) * 100).toFixed(0)}%
+                      {((mockReport.buckets[0].amount / mockReport.totalOutstanding) * 100).toFixed(
+                        0
+                      )}
+                      %
                     </p>
                   </div>
                 </div>

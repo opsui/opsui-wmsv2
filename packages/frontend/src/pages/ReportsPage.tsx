@@ -107,7 +107,7 @@ export function ReportsPage() {
   const createExportJob = useCreateExportJob();
 
   const reports = reportsData?.reports || [];
-  const dashboards = dashboardsData || [];
+  const dashboards = dashboardsData?.dashboards || [];
   const exportJobs = exportsData?.jobs || [];
 
   // Filter reports by type

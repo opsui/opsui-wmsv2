@@ -305,9 +305,7 @@ function TrialBalancePage() {
                             <td className="py-3 px-4 text-sm text-right">
                               <span
                                 className={
-                                  account.debitBalance > 0
-                                    ? 'text-blue-400'
-                                    : 'text-gray-600'
+                                  account.debitBalance > 0 ? 'text-blue-400' : 'text-gray-600'
                                 }
                               >
                                 {account.debitBalance > 0
@@ -318,9 +316,7 @@ function TrialBalancePage() {
                             <td className="py-3 px-4 text-sm text-right">
                               <span
                                 className={
-                                  account.creditBalance > 0
-                                    ? 'text-rose-400'
-                                    : 'text-gray-600'
+                                  account.creditBalance > 0 ? 'text-rose-400' : 'text-gray-600'
                                 }
                               >
                                 {account.creditBalance > 0

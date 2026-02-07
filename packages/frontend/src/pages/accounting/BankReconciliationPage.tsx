@@ -57,7 +57,9 @@ function BankReconciliationPage() {
 
   // State
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
-  const [statementDate, setStatementDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [statementDate, setStatementDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
   const [statementBalance, setStatementBalance] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -170,9 +172,7 @@ function BankReconciliationPage() {
                 <h1 className="text-3xl font-bold text-white tracking-tight">
                   Bank Reconciliation
                 </h1>
-                <p className="mt-2 text-gray-400">
-                  Match bank statements with book records
-                </p>
+                <p className="mt-2 text-gray-400">Match bank statements with book records</p>
               </div>
             </div>
           </div>
@@ -263,17 +263,25 @@ function BankReconciliationPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Difference</p>
-                    <p className={`text-2xl font-bold ${
-                      Math.abs(mockReconciliation.difference) < 0.01 ? 'text-emerald-400' : 'text-rose-400'
-                    }`}>
+                    <p
+                      className={`text-2xl font-bold ${
+                        Math.abs(mockReconciliation.difference) < 0.01
+                          ? 'text-emerald-400'
+                          : 'text-rose-400'
+                      }`}
+                    >
                       {formatCurrency(mockReconciliation.difference)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Status</p>
-                    <p className={`text-lg font-bold ${
-                      Math.abs(mockReconciliation.difference) < 0.01 ? 'text-emerald-400' : 'text-amber-400'
-                    }`}>
+                    <p
+                      className={`text-lg font-bold ${
+                        Math.abs(mockReconciliation.difference) < 0.01
+                          ? 'text-emerald-400'
+                          : 'text-amber-400'
+                      }`}
+                    >
                       {Math.abs(mockReconciliation.difference) < 0.01 ? 'Balanced' : 'In Progress'}
                     </p>
                   </div>
@@ -331,18 +339,22 @@ function BankReconciliationPage() {
                             {new Date(item.transactionDate).toLocaleDateString()}
                           </td>
                           <td className="py-3 px-4 text-sm">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              item.transactionType === 'DEPOSIT'
-                                ? 'bg-emerald-500/20 text-emerald-400'
-                                : 'bg-rose-500/20 text-rose-400'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                item.transactionType === 'DEPOSIT'
+                                  ? 'bg-emerald-500/20 text-emerald-400'
+                                  : 'bg-rose-500/20 text-rose-400'
+                              }`}
+                            >
                               {item.transactionType}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-sm text-white">{item.description}</td>
-                          <td className={`py-3 px-4 text-sm text-right font-medium ${
-                            item.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}>
+                          <td
+                            className={`py-3 px-4 text-sm text-right font-medium ${
+                              item.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
                             {formatCurrency(item.amount)}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-500 font-mono">

@@ -370,7 +370,7 @@ function IntegrationsTab({
               onClick={() => setFilter(IntegrationStatus.DISCONNECTED)}
               className={`px-4 py-2 rounded-md font-medium ${
                 filter === IntegrationStatus.DISCONNECTED
-                  ? 'bg-gray-700 text-gray-300 border border-gray-600'
+                  ? 'bg-red-900/50 text-red-300 border border-red-700'
                   : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'
               }`}
             >
@@ -656,60 +656,14 @@ function SyncJobsTab() {
 // ============================================================================
 
 function WebhooksTab() {
-  const { data: webhookEventsData, isLoading } = useWebhookEvents();
-  const webhookEvents = webhookEventsData?.events || [];
-
-  if (isLoading) {
-    return (
-      <div className="glass-card rounded-lg p-6">
-        <div className="text-center py-12">
-          <ArrowPathIcon className="mx-auto h-12 w-12 text-gray-600 animate-spin" />
-          <p className="mt-2 text-gray-400">Loading webhook events...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Webhook events endpoint not implemented yet - showing placeholder
   return (
     <div className="glass-card rounded-lg p-6">
-      {webhookEvents.length === 0 ? (
-        <div className="text-center py-12">
-          <ServerIcon className="mx-auto h-12 w-12 text-gray-600" />
-          <p className="mt-2 text-gray-400">No webhook events found</p>
-          <p className="text-sm text-gray-500">Webhook events will appear here when received</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {webhookEvents.map(event => (
-            <div
-              key={event.eventId}
-              className="p-4 bg-black/20 rounded-lg border border-white/[0.08]"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-white">{event.eventType}</span>
-                <span
-                  className={cn(
-                    'px-2 py-1 rounded text-xs font-medium',
-                    event.status === 'PROCESSED'
-                      ? 'bg-green-900/30 text-green-400'
-                      : event.status === 'FAILED'
-                        ? 'bg-red-900/30 text-red-400'
-                        : 'bg-yellow-900/30 text-yellow-400'
-                  )}
-                >
-                  {event.status}
-                </span>
-              </div>
-              <p className="text-xs text-gray-400">
-                Received: {new Date(event.receivedAt).toLocaleString()}
-              </p>
-              {event.errorMessage && (
-                <p className="text-xs text-red-400 mt-1">{event.errorMessage}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="text-center py-12">
+        <ServerIcon className="mx-auto h-12 w-12 text-gray-600" />
+        <p className="mt-2 text-gray-400">Webhook events</p>
+        <p className="text-sm text-gray-500">Webhook events will appear here when received</p>
+      </div>
     </div>
   );
 }

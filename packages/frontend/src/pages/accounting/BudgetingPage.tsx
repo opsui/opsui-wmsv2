@@ -63,8 +63,20 @@ function BudgetingPage() {
 
   // Mock data
   const mockBudgets: Budget[] = [
-    { budgetId: 'BG-2024-001', budgetName: 'FY 2024 Operating Budget', fiscalYear: 2024, budgetType: 'ANNUAL', status: 'ACTIVE' },
-    { budgetId: 'BG-2024-002', budgetName: 'FY 2024 Q1 Forecast', fiscalYear: 2024, budgetType: 'QUARTERLY', status: 'ACTIVE' },
+    {
+      budgetId: 'BG-2024-001',
+      budgetName: 'FY 2024 Operating Budget',
+      fiscalYear: 2024,
+      budgetType: 'ANNUAL',
+      status: 'ACTIVE',
+    },
+    {
+      budgetId: 'BG-2024-002',
+      budgetName: 'FY 2024 Q1 Forecast',
+      fiscalYear: 2024,
+      budgetType: 'QUARTERLY',
+      status: 'ACTIVE',
+    },
   ];
 
   const mockBudgetLines: BudgetLine[] = [
@@ -142,7 +154,7 @@ function BudgetingPage() {
     mockBudgetLines.forEach(line => {
       lines.push(
         `${line.accountName},${line.accountCode},${line.budgetedAmount},` +
-        `${line.actualAmount},${line.variance},${line.variancePercent.toFixed(2)}%`
+          `${line.actualAmount},${line.variance},${line.variancePercent.toFixed(2)}%`
       );
     });
 
@@ -188,10 +200,10 @@ function BudgetingPage() {
                 <ChartBarIcon className="h-8 w-8 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">Budgeting & Forecasting</h1>
-                <p className="mt-2 text-gray-400">
-                  Manage budgets and analyze variances
-                </p>
+                <h1 className="text-3xl font-bold text-white tracking-tight">
+                  Budgeting & Forecasting
+                </h1>
+                <p className="mt-2 text-gray-400">Manage budgets and analyze variances</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -203,7 +215,10 @@ function BudgetingPage() {
                 <PrinterIcon className="h-4 w-4" />
                 Print
               </Button>
-              <Button onClick={() => setShowAddBudgetModal(true)} className="flex items-center gap-2">
+              <Button
+                onClick={() => setShowAddBudgetModal(true)}
+                className="flex items-center gap-2"
+              >
                 <PlusIcon className="h-4 w-4" />
                 New Budget
               </Button>
@@ -247,7 +262,9 @@ function BudgetingPage() {
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Total Budgeted</p>
                     <p className="text-2xl font-bold text-blue-400">
-                      {formatCurrency(mockBudgetLines.reduce((sum, l) => sum + l.budgetedAmount, 0))}
+                      {formatCurrency(
+                        mockBudgetLines.reduce((sum, l) => sum + l.budgetedAmount, 0)
+                      )}
                     </p>
                   </div>
                   <div>
@@ -258,22 +275,28 @@ function BudgetingPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Net Variance</p>
-                    <p className={`text-2xl font-bold ${
-                      mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
-                        ? 'text-emerald-400'
-                        : 'text-rose-400'
-                    }`}>
+                    <p
+                      className={`text-2xl font-bold ${
+                        mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
+                          ? 'text-emerald-400'
+                          : 'text-rose-400'
+                      }`}
+                    >
                       {formatCurrency(mockBudgetLines.reduce((sum, l) => sum + l.variance, 0))}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400 mb-1">Under/Over Budget</p>
-                    <p className={`text-2xl font-bold ${
-                      mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
-                        ? 'text-emerald-400'
-                        : 'text-rose-400'
-                    }`}>
-                      {mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0 ? 'Under' : 'Over'}
+                    <p
+                      className={`text-2xl font-bold ${
+                        mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
+                          ? 'text-emerald-400'
+                          : 'text-rose-400'
+                      }`}
+                    >
+                      {mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
+                        ? 'Under'
+                        : 'Over'}
                     </p>
                   </div>
                 </div>
@@ -290,35 +313,59 @@ function BudgetingPage() {
                   <table className="w-full" role="table">
                     <thead>
                       <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Account</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Account Code</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Budgeted</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Actual</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Variance</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Variance %</th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">Status</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                          Account
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                          Account Code
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                          Budgeted
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                          Actual
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                          Variance
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                          Variance %
+                        </th>
+                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {mockBudgetLines.map((line, index) => (
                         <tr key={index} className="border-b border-gray-800 hover:bg-white/[0.02]">
-                          <td className="py-3 px-4 text-sm text-white font-medium">{line.accountName}</td>
-                          <td className="py-3 px-4 text-sm font-mono text-gray-400">{line.accountCode}</td>
+                          <td className="py-3 px-4 text-sm text-white font-medium">
+                            {line.accountName}
+                          </td>
+                          <td className="py-3 px-4 text-sm font-mono text-gray-400">
+                            {line.accountCode}
+                          </td>
                           <td className="py-3 px-4 text-sm text-right text-blue-400">
                             {formatCurrency(line.budgetedAmount)}
                           </td>
                           <td className="py-3 px-4 text-sm text-right text-purple-400">
                             {formatCurrency(line.actualAmount)}
                           </td>
-                          <td className={`py-3 px-4 text-sm text-right font-medium ${
-                            line.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}>
-                            {line.variance >= 0 ? '+' : ''}{formatCurrency(line.variance)}
+                          <td
+                            className={`py-3 px-4 text-sm text-right font-medium ${
+                              line.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {line.variance >= 0 ? '+' : ''}
+                            {formatCurrency(line.variance)}
                           </td>
-                          <td className={`py-3 px-4 text-sm text-right ${
-                            line.variancePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}>
-                            {line.variancePercent >= 0 ? '+' : ''}{line.variancePercent.toFixed(2)}%
+                          <td
+                            className={`py-3 px-4 text-sm text-right ${
+                              line.variancePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {line.variancePercent >= 0 ? '+' : ''}
+                            {line.variancePercent.toFixed(2)}%
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-1">

@@ -39,11 +39,7 @@ import {
   usePostJournalEntry,
   useReverseJournalEntry,
 } from '@/services/api';
-import {
-  JournalEntryStatus,
-  type ChartOfAccounts,
-  type JournalEntry,
-} from '@opsui/shared';
+import { JournalEntryStatus, type ChartOfAccounts, type JournalEntry } from '@opsui/shared';
 
 // ============================================================================
 // TYPES

@@ -1123,7 +1123,9 @@ export class AccountingService {
       return result.rows as ChartOfAccounts[];
     } catch (error: any) {
       if (error.message?.includes('does not exist')) {
-        console.log('[AccountingService] acct_chart_of_accounts table does not exist, returning empty accounts');
+        console.log(
+          '[AccountingService] acct_chart_of_accounts table does not exist, returning empty accounts'
+        );
         return [];
       }
       throw error;
@@ -1150,7 +1152,7 @@ export class AccountingService {
         [accountId]
       );
 
-      return result.rows[0] as ChartOfAccounts || null;
+      return (result.rows[0] as ChartOfAccounts) || null;
     } catch (error: any) {
       if (error.message?.includes('does not exist')) {
         return null;
@@ -1373,7 +1375,9 @@ export class AccountingService {
       };
     } catch (error: any) {
       if (error.message?.includes('does not exist')) {
-        console.log('[AccountingService] acct_journal_entries table does not exist, returning empty entries');
+        console.log(
+          '[AccountingService] acct_journal_entries table does not exist, returning empty entries'
+        );
         return { entries: [], total: 0 };
       }
       throw error;
@@ -1405,7 +1409,7 @@ export class AccountingService {
         [entryId]
       );
 
-      return result.rows[0] as JournalEntry || null;
+      return (result.rows[0] as JournalEntry) || null;
     } catch (error: any) {
       if (error.message?.includes('does not exist')) {
         return null;
@@ -1533,7 +1537,11 @@ export class AccountingService {
     return this.getJournalEntry(entryId) as Promise<JournalEntry>;
   }
 
-  async reverseJournalEntry(entryId: string, reason: string, reversedBy: string): Promise<JournalEntry> {
+  async reverseJournalEntry(
+    entryId: string,
+    reason: string,
+    reversedBy: string
+  ): Promise<JournalEntry> {
     const originalEntry = await this.getJournalEntry(entryId);
     if (!originalEntry) {
       throw new Error('Journal entry not found');
@@ -1683,17 +1691,27 @@ export class AccountingService {
     const nonCurrentAssets = await this.getBalanceSheetItems(assetAccounts, asOfDate, [1200, 1999]);
 
     // Current liabilities (2000-2999, typically 2000-2199)
-    const currentLiabilities = await this.getBalanceSheetItems(liabilityAccounts, asOfDate, [2000, 2199]);
+    const currentLiabilities = await this.getBalanceSheetItems(
+      liabilityAccounts,
+      asOfDate,
+      [2000, 2199]
+    );
     // Non-current liabilities (2200-2999)
-    const nonCurrentLiabilities = await this.getBalanceSheetItems(liabilityAccounts, asOfDate, [2200, 2999]);
+    const nonCurrentLiabilities = await this.getBalanceSheetItems(
+      liabilityAccounts,
+      asOfDate,
+      [2200, 2999]
+    );
 
     // Equity
     const equityItems = await this.getBalanceSheetItems(equityAccounts, asOfDate, [3000, 3999]);
 
-    const totalAssets = currentAssets.reduce((sum, item) => sum + item.amount, 0) +
-                       nonCurrentAssets.reduce((sum, item) => sum + item.amount, 0);
-    const totalLiabilities = currentLiabilities.reduce((sum, item) => sum + item.amount, 0) +
-                           nonCurrentLiabilities.reduce((sum, item) => sum + item.amount, 0);
+    const totalAssets =
+      currentAssets.reduce((sum, item) => sum + item.amount, 0) +
+      nonCurrentAssets.reduce((sum, item) => sum + item.amount, 0);
+    const totalLiabilities =
+      currentLiabilities.reduce((sum, item) => sum + item.amount, 0) +
+      nonCurrentLiabilities.reduce((sum, item) => sum + item.amount, 0);
     const totalEquity = equityItems.reduce((sum, item) => sum + item.amount, 0);
 
     return {
@@ -1717,7 +1735,11 @@ export class AccountingService {
     };
   }
 
-  private async getBalanceSheetItems(accounts: ChartOfAccounts[], asOfDate: Date, codeRange: [number, number]): Promise<any[]> {
+  private async getBalanceSheetItems(
+    accounts: ChartOfAccounts[],
+    asOfDate: Date,
+    codeRange: [number, number]
+  ): Promise<any[]> {
     const items: any[] = [];
 
     for (const account of accounts) {

@@ -9,7 +9,13 @@ import { Router } from 'express';
 import { accountingService } from '../services/AccountingService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { UserRole, AccountingPeriod, TransactionType, AccountType, JournalEntryStatus } from '@opsui/shared';
+import {
+  UserRole,
+  AccountingPeriod,
+  TransactionType,
+  AccountType,
+  JournalEntryStatus,
+} from '@opsui/shared';
 
 const router = Router();
 
@@ -349,7 +355,8 @@ router.get(
   accountingAuth,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const accountType = req.query.accountType as AccountType | undefined;
-    const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+    const isActive =
+      req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
 
     const accounts = await accountingService.getChartOfAccounts({
       accountType,
@@ -388,7 +395,15 @@ router.post(
   '/chart-of-accounts',
   accountingAuth,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const { accountCode, accountName, accountType, parentAccountId, normalBalance, isHeader, description } = req.body;
+    const {
+      accountCode,
+      accountName,
+      accountType,
+      parentAccountId,
+      normalBalance,
+      isHeader,
+      description,
+    } = req.body;
 
     if (!accountCode || !accountName || !accountType || !normalBalance) {
       res.status(400).json({ error: 'Missing required fields', code: 'MISSING_FIELDS' });
@@ -644,7 +659,9 @@ router.get(
   '/cash-flow',
   accountingAuth,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
     const cashFlow = await accountingService.getCashFlowStatement(startDate, endDate);
