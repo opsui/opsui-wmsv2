@@ -1,3 +1,18 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "wms-dev-accelerator": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server\\dist\\index.js"
+      ],
+      "disabled": false
+    },
+    "glm-server": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\dist\\index.js"
+      ],
+      "disabled": false
+    }
+  }
 }
