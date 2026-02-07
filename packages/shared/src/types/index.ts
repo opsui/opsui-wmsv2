@@ -4209,3 +4209,9 @@ export interface CreateForecastDTO {
   }>;
   createdBy: string;
 }
+
+// ============================================================================
+// RMA TYPES - Re-export from dedicated RMA types module
+// ============================================================================
+
+export * from './rma';

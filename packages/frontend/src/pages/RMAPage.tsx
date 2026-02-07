@@ -26,41 +26,23 @@ import {
   CubeIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
+import { CreateRMAModal } from '@/components/rma/CreateRMAModal';
+import { RMADetailModal } from '@/components/rma/RMADetailModal';
+import {
+  useRMADashboard,
+  useRMARequests,
+  useApproveRMA,
+  useRejectRMA,
+  useReceiveRMA,
+  useStartInspection,
+} from '@/services/api';
+import { RMARequest, RMAStatus } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 type TabType = 'dashboard' | 'requests' | 'processing' | 'completed';
-
-interface RMARequest {
-  rmaId: string;
-  customerName: string;
-  orderId: string;
-  sku: string;
-  productName: string;
-  quantity: number;
-  reason:
-    | 'DEFECTIVE'
-    | 'DAMAGED_SHIPPING'
-    | 'WRONG_ITEM'
-    | 'NO_LONGER_NEEDED'
-    | 'WARRANTY'
-    | 'OTHER';
-  status:
-    | 'PENDING'
-    | 'APPROVED'
-    | 'RECEIVED'
-    | 'INSPECTING'
-    | 'REFUNDED'
-    | 'REPLACED'
-    | 'REJECTED'
-    | 'CLOSED';
-  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  createdAt: string;
-  resolvedAt?: string;
-  notes?: string;
-}
 
 // ============================================================================
 // SUBCOMPONENTS
@@ -174,54 +156,213 @@ function ReasonBadge({ reason }: { reason: string }) {
   );
 }
 
-function RMARequestCard({ request }: { request: RMARequest }) {
+function RMARequestCard({
+  request,
+  onViewDetails,
+  onApprove,
+  onReject,
+  onReceive,
+  onStartInspection,
+}: {
+  request: RMARequest;
+  onViewDetails: (rmaId: string) => void;
+  onApprove: (rmaId: string) => void;
+  onReject: (rmaId: string) => void;
+  onReceive: (rmaId: string) => void;
+  onStartInspection: (rmaId: string) => void;
+}) {
   const resolutionActions: Record<string, JSX.Element[]> = {
-    PENDING: [
-      <Button variant="secondary" size="sm" className="flex-1" key="details">
+    [RMAStatus.PENDING]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="flex-1"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
         View Details
       </Button>,
-      <Button variant="success" size="sm" className="flex-1" key="approve">
+      <Button
+        variant="success"
+        size="sm"
+        className="flex-1"
+        key="approve"
+        onClick={() => onApprove(request.rmaId)}
+      >
         Approve
       </Button>,
-      <Button variant="danger" size="sm" className="flex-1" key="reject">
+      <Button
+        variant="danger"
+        size="sm"
+        className="flex-1"
+        key="reject"
+        onClick={() => onReject(request.rmaId)}
+      >
         Reject
       </Button>,
     ],
-    APPROVED: [
-      <Button variant="primary" size="sm" className="flex-1" key="receive">
+    [RMAStatus.APPROVED]: [
+      <Button
+        variant="primary"
+        size="sm"
+        className="flex-1"
+        key="receive"
+        onClick={() => onReceive(request.rmaId)}
+      >
         Mark Received
       </Button>,
     ],
-    RECEIVED: [
-      <Button variant="primary" size="sm" className="flex-1" key="inspect">
+    [RMAStatus.RECEIVED]: [
+      <Button
+        variant="primary"
+        size="sm"
+        className="flex-1"
+        key="inspect"
+        onClick={() => onStartInspection(request.rmaId)}
+      >
         Start Inspection
       </Button>,
     ],
-    INSPECTING: [
-      <Button variant="secondary" size="sm" className="flex-1" key="refund">
-        Issue Refund
-      </Button>,
-      <Button variant="secondary" size="sm" className="flex-1" key="replace">
-        Send Replacement
-      </Button>,
-    ],
-    REFUNDED: [
-      <Button variant="secondary" size="sm" className="w-full" key="details">
+    [RMAStatus.INSPECTING]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="flex-1"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
         View Details
       </Button>,
     ],
-    REPLACED: [
-      <Button variant="secondary" size="sm" className="w-full" key="details">
+    [RMAStatus.REFUNDED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
         View Details
       </Button>,
     ],
-    REJECTED: [
-      <Button variant="secondary" size="sm" className="w-full" key="details">
+    [RMAStatus.REPLACED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
         View Details
       </Button>,
     ],
-    CLOSED: [
-      <Button variant="secondary" size="sm" className="w-full" key="details">
+    [RMAStatus.REPAIRED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REJECTED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.CLOSED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.AWAITING_DECISION]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REFUND_APPROVED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REFUND_PROCESSING]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REPLACEMENT_APPROVED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REPLACEMENT_PROCESSING]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REPAIR_APPROVED]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
+        View Details
+      </Button>,
+    ],
+    [RMAStatus.REPAIRING]: [
+      <Button
+        variant="secondary"
+        size="sm"
+        className="w-full"
+        key="details"
+        onClick={() => onViewDetails(request.rmaId)}
+      >
         View Details
       </Button>,
     ],
@@ -308,6 +449,12 @@ function RMAPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = (searchParams.get('tab') as TabType) || 'dashboard';
 
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedRMAId, setSelectedRMAId] = useState<string | null>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
   // Pagination state
   const [requestsCurrentPage, setRequestsCurrentPage] = useState(1);
   const [processingCurrentPage, setProcessingCurrentPage] = useState(1);
@@ -318,6 +465,18 @@ function RMAPage() {
   const [requestsSearchTerm, setRequestsSearchTerm] = useState('');
   const [processingSearchTerm, setProcessingSearchTerm] = useState('');
   const [completedSearchTerm, setCompletedSearchTerm] = useState('');
+
+  // API queries
+  const { data: dashboard } = useRMADashboard();
+  const { data: requestsData, refetch } = useRMARequests({ limit: 100 });
+
+  // Mutations
+  const approveMutation = useApproveRMA();
+  const rejectMutation = useRejectRMA();
+  const receiveMutation = useReceiveRMA();
+  const inspectMutation = useStartInspection();
+
+  const allRequests: RMARequest[] = requestsData?.requests || [];
 
   // Reset pagination when search changes
   useEffect(() => {
@@ -332,76 +491,105 @@ function RMAPage() {
     setCompletedCurrentPage(1);
   }, [completedSearchTerm]);
 
-  // Mock data for demonstration
-  const dashboard = {
-    pendingRequests: 5,
-    inProgress: 3,
-    completedToday: 8,
-    urgent: 2,
-  };
-
-  const requests: RMARequest[] = [
-    {
-      rmaId: 'RMA-001',
-      customerName: 'John Smith',
-      orderId: 'ORD-20260114-6060',
-      sku: 'WMS-001',
-      productName: 'Widget A',
-      quantity: 1,
-      reason: 'DEFECTIVE',
-      status: 'PENDING',
-      priority: 'HIGH',
-      createdAt: '2026-01-19',
-    },
-    {
-      rmaId: 'RMA-002',
-      customerName: 'Jane Doe',
-      orderId: 'ORD-20260114-6061',
-      sku: 'WMS-002',
-      productName: 'Widget B',
-      quantity: 2,
-      reason: 'DAMAGED_SHIPPING',
-      status: 'APPROVED',
-      priority: 'URGENT',
-      createdAt: '2026-01-18',
-    },
-    {
-      rmaId: 'RMA-003',
-      customerName: 'Bob Johnson',
-      orderId: 'ORD-20260114-6055',
-      sku: 'WMS-003',
-      productName: 'Widget C',
-      quantity: 1,
-      reason: 'WRONG_ITEM',
-      status: 'INSPECTING',
-      priority: 'NORMAL',
-      createdAt: '2026-01-17',
-    },
-    {
-      rmaId: 'RMA-004',
-      customerName: 'Alice Williams',
-      orderId: 'ORD-20260114-6050',
-      sku: 'WMS-001',
-      productName: 'Widget A',
-      quantity: 1,
-      reason: 'WARRANTY',
-      status: 'REFUNDED',
-      priority: 'NORMAL',
-      createdAt: '2026-01-15',
-      resolvedAt: '2026-01-19',
-    },
-  ];
+  // Refresh data when mutations complete
+  useEffect(() => {
+    if (
+      approveMutation.isSuccess ||
+      rejectMutation.isSuccess ||
+      receiveMutation.isSuccess ||
+      inspectMutation.isSuccess
+    ) {
+      refetch();
+    }
+  }, [
+    approveMutation.isSuccess,
+    rejectMutation.isSuccess,
+    receiveMutation.isSuccess,
+    inspectMutation.isSuccess,
+    refetch,
+  ]);
 
   const setTab = (tab: TabType) => {
     setSearchParams({ tab });
   };
 
+  // Handlers
+  const handleViewDetails = (rmaId: string) => {
+    setSelectedRMAId(rmaId);
+  };
+
+  const handleApprove = async (rmaId: string) => {
+    try {
+      await approveMutation.mutateAsync(rmaId);
+    } catch (error) {
+      console.error('Failed to approve RMA:', error);
+    }
+  };
+
+  const handleReject = async (rmaId: string) => {
+    if (!rejectReason.trim()) {
+      return;
+    }
+    try {
+      await rejectMutation.mutateAsync({ rmaId, rejectionReason: rejectReason });
+      setShowRejectModal(false);
+      setRejectReason('');
+    } catch (error) {
+      console.error('Failed to reject RMA:', error);
+    }
+  };
+
+  const handleReceive = async (rmaId: string) => {
+    try {
+      await receiveMutation.mutateAsync(rmaId);
+    } catch (error) {
+      console.error('Failed to mark RMA as received:', error);
+    }
+  };
+
+  const handleStartInspection = async (rmaId: string) => {
+    try {
+      await inspectMutation.mutateAsync(rmaId);
+    } catch (error) {
+      console.error('Failed to start inspection:', error);
+    }
+  };
+
   // Returns pipeline stages
   const pipelineStages = [
-    { step: 1, label: 'Requests', count: dashboard.pendingRequests, tab: 'requests' as TabType },
-    { step: 2, label: 'Approved', count: dashboard.inProgress, tab: 'processing' as TabType },
-    { step: 3, label: 'Processing', count: dashboard.inProgress, tab: 'processing' as TabType },
-    { step: 4, label: 'Completed', count: dashboard.completedToday, tab: 'completed' as TabType },
+    {
+      step: 1,
+      label: 'Requests',
+      count: allRequests.filter(r => r.status === RMAStatus.PENDING).length,
+      tab: 'requests' as TabType,
+    },
+    {
+      step: 2,
+      label: 'Approved',
+      count: allRequests.filter(r => r.status === RMAStatus.APPROVED).length,
+      tab: 'processing' as TabType,
+    },
+    {
+      step: 3,
+      label: 'Processing',
+      count: allRequests.filter(r => [RMAStatus.RECEIVED, RMAStatus.INSPECTING].includes(r.status))
+        .length,
+      tab: 'processing' as TabType,
+    },
+    {
+      step: 4,
+      label: 'Completed',
+      count: allRequests.filter(r =>
+        [
+          RMAStatus.REFUNDED,
+          RMAStatus.REPLACED,
+          RMAStatus.REPAIRED,
+          RMAStatus.CLOSED,
+          RMAStatus.REJECTED,
+        ].includes(r.status)
+      ).length,
+      tab: 'completed' as TabType,
+    },
   ];
 
   return (
@@ -420,7 +608,11 @@ function RMAPage() {
               Customer returns, warranty claims, and refurbishments
             </p>
           </div>
-          <Button variant="primary" className="flex items-center gap-2">
+          <Button
+            variant="primary"
+            className="flex items-center gap-2"
+            onClick={() => setShowCreateModal(true)}
+          >
             <PlusIcon className="h-5 w-5" />
             New RMA
           </Button>
@@ -451,7 +643,7 @@ function RMAPage() {
                   <div>
                     <p className="text-sm text-gray-400">Pending Review</p>
                     <p className="mt-2 text-3xl font-bold text-white">
-                      {dashboard.pendingRequests}
+                      {dashboard?.pendingRequests ?? 0}
                     </p>
                   </div>
                   <ClockIcon className="h-8 w-8 text-warning-400" />
@@ -461,7 +653,9 @@ function RMAPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">In Progress</p>
-                    <p className="mt-2 text-3xl font-bold text-white">{dashboard.inProgress}</p>
+                    <p className="mt-2 text-3xl font-bold text-white">
+                      {dashboard?.inProgress ?? 0}
+                    </p>
                   </div>
                   <CubeIcon className="h-8 w-8 text-primary-400" />
                 </div>
@@ -470,7 +664,9 @@ function RMAPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">Completed Today</p>
-                    <p className="mt-2 text-3xl font-bold text-white">{dashboard.completedToday}</p>
+                    <p className="mt-2 text-3xl font-bold text-white">
+                      {dashboard?.completedToday ?? 0}
+                    </p>
                   </div>
                   <CheckCircleIcon className="h-8 w-8 text-success-400" />
                 </div>
@@ -479,7 +675,7 @@ function RMAPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-400">Urgent</p>
-                    <p className="mt-2 text-3xl font-bold text-white">{dashboard.urgent}</p>
+                    <p className="mt-2 text-3xl font-bold text-white">{dashboard?.urgent ?? 0}</p>
                   </div>
                   <ExclamationTriangleIcon className="h-8 w-8 text-error-400 animate-pulse" />
                 </div>
@@ -497,6 +693,7 @@ function RMAPage() {
                     variant="primary"
                     size="lg"
                     className="flex items-center justify-center gap-2"
+                    onClick={() => setShowCreateModal(true)}
                   >
                     <PlusIcon className="h-5 w-5" />
                     <span>New RMA Request</span>
@@ -546,7 +743,11 @@ function RMAPage() {
                     className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
                   />
                 </div>
-                <Button variant="primary" className="flex items-center gap-2">
+                <Button
+                  variant="primary"
+                  className="flex items-center gap-2"
+                  onClick={() => setShowCreateModal(true)}
+                >
                   <PlusIcon className="h-5 w-5" />
                   New Request
                 </Button>
@@ -554,7 +755,7 @@ function RMAPage() {
             </div>
 
             {(() => {
-              const filteredRequests = requests.filter(r => {
+              const filteredRequests = allRequests.filter(r => {
                 if (r.status !== 'PENDING') return false;
                 if (!requestsSearchTerm.trim()) return true;
                 const query = requestsSearchTerm.toLowerCase();
@@ -583,7 +784,15 @@ function RMAPage() {
                       </Card>
                     ) : (
                       paginatedRequests.map(request => (
-                        <RMARequestCard key={request.rmaId} request={request} />
+                        <RMARequestCard
+                          key={request.rmaId}
+                          request={request}
+                          onViewDetails={handleViewDetails}
+                          onApprove={handleApprove}
+                          onReject={handleReject}
+                          onReceive={handleReceive}
+                          onStartInspection={handleStartInspection}
+                        />
                       ))
                     )}
                   </div>
@@ -628,7 +837,7 @@ function RMAPage() {
             </div>
 
             {(() => {
-              const filteredRequests = requests.filter(r => {
+              const filteredRequests = allRequests.filter(r => {
                 if (!['APPROVED', 'RECEIVED', 'INSPECTING'].includes(r.status)) return false;
                 if (!processingSearchTerm.trim()) return true;
                 const query = processingSearchTerm.toLowerCase();
@@ -657,7 +866,15 @@ function RMAPage() {
                       </Card>
                     ) : (
                       paginatedRequests.map(request => (
-                        <RMARequestCard key={request.rmaId} request={request} />
+                        <RMARequestCard
+                          key={request.rmaId}
+                          request={request}
+                          onViewDetails={handleViewDetails}
+                          onApprove={handleApprove}
+                          onReject={handleReject}
+                          onReceive={handleReceive}
+                          onStartInspection={handleStartInspection}
+                        />
                       ))
                     )}
                   </div>
@@ -700,7 +917,7 @@ function RMAPage() {
             </div>
 
             {(() => {
-              const filteredRequests = requests.filter(r => {
+              const filteredRequests = allRequests.filter(r => {
                 if (!['REFUNDED', 'REPLACED', 'REJECTED', 'CLOSED'].includes(r.status))
                   return false;
                 if (!completedSearchTerm.trim()) return true;
@@ -730,7 +947,15 @@ function RMAPage() {
                       </Card>
                     ) : (
                       paginatedRequests.map(request => (
-                        <RMARequestCard key={request.rmaId} request={request} />
+                        <RMARequestCard
+                          key={request.rmaId}
+                          request={request}
+                          onViewDetails={handleViewDetails}
+                          onApprove={handleApprove}
+                          onReject={handleReject}
+                          onReceive={handleReceive}
+                          onStartInspection={handleStartInspection}
+                        />
                       ))
                     )}
                   </div>
@@ -752,6 +977,21 @@ function RMAPage() {
           </div>
         )}
       </main>
+
+      {/* Modals */}
+      <CreateRMAModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => refetch()}
+      />
+
+      {selectedRMAId && (
+        <RMADetailModal
+          isOpen={!!selectedRMAId}
+          onClose={() => setSelectedRMAId(null)}
+          rmaId={selectedRMAId}
+        />
+      )}
     </div>
   );
 }
