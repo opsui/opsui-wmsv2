@@ -35,6 +35,7 @@ import {
   MetricCardSkeleton,
   Skeleton,
   ListSkeleton,
+  Breadcrumb,
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useAuthStore } from '@/stores';
@@ -565,6 +566,8 @@ export function DashboardPage() {
       <Header />
       <AdminOrdersModal isOpen={showAdminOrders} onClose={() => setShowAdminOrders(false)} />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Page Header */}
         <div className="animate-in">
           <h1 className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">

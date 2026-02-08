@@ -53,6 +53,8 @@ export enum UserRole {
   MAINTENANCE = 'MAINTENANCE',
   RMA = 'RMA',
   ACCOUNTING = 'ACCOUNTING',
+  HR_MANAGER = 'HR_MANAGER',
+  HR_ADMIN = 'HR_ADMIN',
 }
 
 // String literal type for backward compatibility
@@ -68,7 +70,9 @@ export type UserRoleValue =
   | 'SALES'
   | 'MAINTENANCE'
   | 'RMA'
-  | 'ACCOUNTING';
+  | 'ACCOUNTING'
+  | 'HR_MANAGER'
+  | 'HR_ADMIN';
 
 /**
  * Permissions - Granular access control for custom roles
@@ -165,6 +169,20 @@ export enum Permission {
   EXPORT_FINANCIALS = 'export_financials',
   MANAGE_TRANSACTIONS = 'manage_transactions',
 
+  // HR & Payroll
+  VIEW_EMPLOYEES = 'view_employees',
+  MANAGE_EMPLOYEES = 'manage_employees',
+  VIEW_TIMESHEETS = 'view_timesheets',
+  SUBMIT_TIMESHEETS = 'submit_timesheets',
+  APPROVE_TIMESHEETS = 'approve_timesheets',
+  VIEW_PAYROLL = 'view_payroll',
+  PROCESS_PAYROLL = 'process_payroll',
+  VIEW_LEAVE_REQUESTS = 'view_leave_requests',
+  MANAGE_LEAVE_REQUESTS = 'manage_leave_requests',
+  MANAGE_LEAVE_BALANCES = 'manage_leave_balances',
+  VIEW_HR_REPORTS = 'view_hr_reports',
+  MANAGE_HR_SETTINGS = 'manage_hr_settings',
+
   // Admin Full Access
   ADMIN_FULL_ACCESS = 'admin_full_access',
 }
@@ -229,6 +247,19 @@ export const PERMISSION_GROUPS = {
     Permission.MANAGE_FINANCIALS,
     Permission.EXPORT_FINANCIALS,
     Permission.MANAGE_TRANSACTIONS,
+  ],
+  HR: [
+    Permission.VIEW_EMPLOYEES,
+    Permission.MANAGE_EMPLOYEES,
+    Permission.VIEW_TIMESHEETS,
+    Permission.APPROVE_TIMESHEETS,
+    Permission.VIEW_PAYROLL,
+    Permission.PROCESS_PAYROLL,
+    Permission.VIEW_LEAVE_REQUESTS,
+    Permission.MANAGE_LEAVE_REQUESTS,
+    Permission.MANAGE_LEAVE_BALANCES,
+    Permission.VIEW_HR_REPORTS,
+    Permission.MANAGE_HR_SETTINGS,
   ],
 } as const;
 
@@ -379,6 +410,34 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.MANAGE_TRANSACTIONS,
     Permission.VIEW_REPORTS,
     Permission.VIEW_INVENTORY,
+  ],
+  [UserRole.HR_MANAGER]: [
+    Permission.VIEW_EMPLOYEES,
+    Permission.MANAGE_EMPLOYEES,
+    Permission.VIEW_TIMESHEETS,
+    Permission.APPROVE_TIMESHEETS,
+    Permission.VIEW_PAYROLL,
+    Permission.PROCESS_PAYROLL,
+    Permission.VIEW_LEAVE_REQUESTS,
+    Permission.MANAGE_LEAVE_REQUESTS,
+    Permission.MANAGE_LEAVE_BALANCES,
+    Permission.VIEW_HR_REPORTS,
+    Permission.VIEW_REPORTS,
+  ],
+  [UserRole.HR_ADMIN]: [
+    Permission.VIEW_EMPLOYEES,
+    Permission.MANAGE_EMPLOYEES,
+    Permission.VIEW_TIMESHEETS,
+    Permission.APPROVE_TIMESHEETS,
+    Permission.VIEW_PAYROLL,
+    Permission.PROCESS_PAYROLL,
+    Permission.VIEW_LEAVE_REQUESTS,
+    Permission.MANAGE_LEAVE_REQUESTS,
+    Permission.MANAGE_LEAVE_BALANCES,
+    Permission.VIEW_HR_REPORTS,
+    Permission.MANAGE_HR_SETTINGS,
+    Permission.VIEW_REPORTS,
+    Permission.EXPORT_DATA,
   ],
 };
 
@@ -4215,3 +4274,15 @@ export interface CreateForecastDTO {
 // ============================================================================
 
 export * from './rma';
+
+// ============================================================================
+// HR & PAYROLL TYPES - Re-export from dedicated HR types module
+// ============================================================================
+
+export * from './hr';
+
+// ============================================================================
+// MULTI-ENTITY TYPES - Re-export from dedicated multi-entity types module
+// ============================================================================
+
+export * from './multi-entity';

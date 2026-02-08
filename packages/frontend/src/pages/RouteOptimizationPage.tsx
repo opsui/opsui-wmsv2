@@ -17,7 +17,7 @@ import {
   XCircleIcon,
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Header, Button } from '@/components/shared';
+import { Header, Button, Breadcrumb } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -177,6 +177,8 @@ export function RouteOptimizationPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

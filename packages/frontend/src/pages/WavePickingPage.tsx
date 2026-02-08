@@ -15,10 +15,11 @@ import {
   Select,
   Input,
   Progress,
-  Header,
   Pagination,
+  Breadcrumb,
+  useToast,
+  Header,
 } from '@/components/shared';
-import { useToast } from '@/components/shared';
 import {
   useWaveStrategies,
   useCreateWave,
@@ -170,6 +171,8 @@ export function WavePickingPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}

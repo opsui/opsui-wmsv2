@@ -43,6 +43,9 @@ import {
   ExclamationCircleIcon,
   MapIcon,
   TruckIcon,
+  UserIcon,
+  CalendarDaysIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
 import { useState, useRef, useEffect } from 'react';
@@ -315,7 +318,7 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
           hasActiveItem
             ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
             : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
@@ -1234,98 +1237,9 @@ export function Header() {
     // Accounting Operations Group - for Accounting
     // Note: Accounting pages are now in the Admin/Supervisor groups below
 
-    // Admin Tools Group - for admins only
-    // Only show when effective role is ADMIN
-    if (effectiveRole === UserRole.ADMIN) {
-      groups.push({
-        key: 'admin',
-        label: 'Admin',
-        icon: CogIcon,
-        items: [
-          { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
-          {
-            key: 'business-rules',
-            label: 'Business Rules',
-            path: '/business-rules',
-            icon: CogIcon,
-          },
-          { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
-          // Accounting items
-          {
-            key: 'accounting',
-            label: 'Accounting Dashboard',
-            path: '/accounting',
-            icon: CurrencyDollarIcon,
-          },
-          {
-            key: 'chart-of-accounts',
-            label: 'Chart of Accounts',
-            path: '/accounting/chart-of-accounts',
-            icon: QueueListIcon,
-          },
-          {
-            key: 'journal-entries',
-            label: 'Journal Entries',
-            path: '/accounting/journal-entries',
-            icon: ClipboardDocumentListIcon,
-          },
-          {
-            key: 'trial-balance',
-            label: 'Trial Balance',
-            path: '/accounting/trial-balance',
-            icon: ScaleIcon,
-          },
-          {
-            key: 'balance-sheet',
-            label: 'Balance Sheet',
-            path: '/accounting/balance-sheet',
-            icon: BuildingOfficeIcon,
-          },
-          {
-            key: 'cash-flow',
-            label: 'Cash Flow Statement',
-            path: '/accounting/cash-flow',
-            icon: ArrowPathIcon,
-          },
-          {
-            key: 'ar-aging',
-            label: 'AR Aging Report',
-            path: '/accounting/ar-aging',
-            icon: TagIcon,
-          },
-          {
-            key: 'ap-aging',
-            label: 'AP Aging Report',
-            path: '/accounting/ap-aging',
-            icon: ExclamationCircleIcon,
-          },
-          {
-            key: 'bank-reconciliation',
-            label: 'Bank Reconciliation',
-            path: '/accounting/bank-reconciliation',
-            icon: AdjustmentsHorizontalIcon,
-          },
-          {
-            key: 'fixed-assets',
-            label: 'Fixed Assets',
-            path: '/accounting/fixed-assets',
-            icon: BuildingOfficeIcon,
-          },
-          {
-            key: 'budgeting',
-            label: 'Budgeting & Forecasting',
-            path: '/accounting/budgeting',
-            icon: DocumentChartBarIcon,
-          },
-        ],
-      });
-    }
-
-    // Accounting Group for Supervisors and Accounting role only
-    if (
-      (effectiveRole === UserRole.SUPERVISOR || effectiveRole === ('ACCOUNTING' as UserRole)) &&
-      effectiveRole !== UserRole.ADMIN
-    ) {
+    // Accounting Group - for admins and accounting role
+    // Core accounting functions (not reports)
+    if (effectiveRole === UserRole.ADMIN || effectiveRole === ('ACCOUNTING' as UserRole)) {
       groups.push({
         key: 'accounting',
         label: 'Accounting',
@@ -1349,6 +1263,23 @@ export function Header() {
             path: '/accounting/journal-entries',
             icon: ClipboardDocumentListIcon,
           },
+        ],
+      });
+    }
+
+    // Reports Group - for supervisors, admins, and accounting role
+    // All accounting reports and general reports
+    if (
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === UserRole.SUPERVISOR ||
+      effectiveRole === ('ACCOUNTING' as UserRole)
+    ) {
+      groups.push({
+        key: 'reports',
+        label: 'Reports',
+        icon: DocumentChartBarIcon,
+        items: [
+          { key: 'reports', label: 'All Reports', path: '/reports', icon: DocumentChartBarIcon },
           {
             key: 'trial-balance',
             label: 'Trial Balance',
@@ -1401,6 +1332,69 @@ export function Header() {
       });
     }
 
+    // Admin Tools Group - for admins, HR Manager, HR Admin
+    // HR and Payroll items are included here since they're admin functions
+    if (
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === ('HR_MANAGER' as UserRole) ||
+      effectiveRole === ('HR_ADMIN' as UserRole)
+    ) {
+      const adminItems = [
+        { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
+        {
+          key: 'business-rules',
+          label: 'Business Rules',
+          path: '/business-rules',
+          icon: CogIcon,
+        },
+        { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
+      ];
+
+      // Add HR & Payroll items for HR roles and Admin
+      if (
+        effectiveRole === UserRole.ADMIN ||
+        effectiveRole === ('HR_MANAGER' as UserRole) ||
+        effectiveRole === ('HR_ADMIN' as UserRole)
+      ) {
+        adminItems.push(
+          { key: 'employees', label: 'Employees', path: '/hr/employees', icon: UserGroupIcon },
+          {
+            key: 'timesheets',
+            label: 'Timesheets',
+            path: '/hr/timesheets',
+            icon: ClipboardDocumentListIcon,
+          },
+          { key: 'payroll', label: 'Payroll Dashboard', path: '/hr/payroll', icon: BanknotesIcon },
+          {
+            key: 'payroll-process',
+            label: 'Process Payroll',
+            path: '/hr/payroll/process',
+            icon: AdjustmentsHorizontalIcon,
+          },
+          {
+            key: 'payroll-runs',
+            label: 'Payroll History',
+            path: '/hr/payroll/runs',
+            icon: DocumentChartBarIcon,
+          },
+          { key: 'leave', label: 'Leave Management', path: '/hr/leave', icon: CalendarDaysIcon },
+          {
+            key: 'hr-settings',
+            label: 'HR Settings',
+            path: '/hr/settings',
+            icon: CogIcon,
+          }
+        );
+      }
+
+      groups.push({
+        key: 'admin',
+        label: 'Admin',
+        icon: CogIcon,
+        items: adminItems,
+      });
+    }
+
     // Production Management - also available to ADMIN and SUPERVISOR
     if (effectiveRole === UserRole.ADMIN || effectiveRole === UserRole.SUPERVISOR) {
       groups.push({
@@ -1415,17 +1409,6 @@ export function Header() {
             icon: ChartBarIcon,
           },
         ],
-      });
-    }
-
-    // Reports Group - for supervisors and admins
-    // Only show when effective role is ADMIN or SUPERVISOR
-    if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-      groups.push({
-        key: 'reports',
-        label: 'Reports',
-        icon: DocumentChartBarIcon,
-        items: [{ key: 'reports', label: 'Reports', path: '/reports', icon: DocumentChartBarIcon }],
       });
     }
 
@@ -1494,6 +1477,13 @@ export function Header() {
       icon: CurrencyDollarIcon,
       role: 'ACCOUNTING' as UserRole,
     },
+    {
+      key: 'hr',
+      label: 'HR View',
+      path: '/hr/employees',
+      icon: UserIcon,
+      role: 'HR_MANAGER' as UserRole,
+    },
   ];
 
   // Filter role views to only include user's base role + granted additional roles
@@ -1526,7 +1516,7 @@ export function Header() {
         <div className="w-full">
           <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
             {/* Left side - User info */}
-            <div className="flex items-center space-x-4 flex-shrink-0">
+            <div className="flex items-center flex-shrink-0">
               {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -1537,7 +1527,7 @@ export function Header() {
               </button>
 
               {/* User info - Desktop */}
-              <div className="hidden md:flex items-center space-x-3">
+              <div className="hidden md:flex items-center -ml-2">
                 {hasRoleSwitcher ? (
                   <>
                     <RoleViewDropdown
@@ -1545,10 +1535,12 @@ export function Header() {
                       userEmail={user.email}
                       availableViews={allRoleViews}
                     />
-                    <UserRoleBadge
-                      role={(getEffectiveRole() || user.role) as UserRole}
-                      userId={user.userId}
-                    />
+                    <div className="ml-1">
+                      <UserRoleBadge
+                        role={(getEffectiveRole() || user.role) as UserRole}
+                        userId={user.userId}
+                      />
+                    </div>
                   </>
                 ) : (
                   <>
@@ -1566,7 +1558,7 @@ export function Header() {
 
             {/* Center - Navigation dropdowns - Absolutely centered */}
             {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <nav className="hidden md:flex items-center space-x-0.5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                 {navGroups.map(group => (
                   <NavDropdown
                     key={group.key}

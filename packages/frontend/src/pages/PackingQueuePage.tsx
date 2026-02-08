@@ -7,7 +7,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useClaimOrderForPacking } from '@/services/api';
-import { Card, CardContent, Button, Header, Pagination, useToast } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  Button,
+  Header,
+  Pagination,
+  useToast,
+  Breadcrumb,
+} from '@/components/shared';
 import { TaskStatusBadge } from '@/components/shared';
 import { OrderStatus, OrderPriority, type Order } from '@opsui/shared';
 import {
@@ -241,6 +249,8 @@ export function PackingQueuePage() {
     <div className="min-h-screen">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

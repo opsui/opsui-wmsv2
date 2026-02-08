@@ -10,11 +10,12 @@ import {
   Card,
   CardHeader,
   CardContent,
-  Header,
   Button,
   UserRoleBadge,
   Pagination,
   ConfirmDialog,
+  Breadcrumb,
+  Header,
 } from '@/components/shared';
 import {
   UserGroupIcon,
@@ -217,6 +218,8 @@ function UserRolesPage() {
     return (
       <div className="min-h-screen">
         <Header />
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card variant="glass">
             <CardContent className="p-8">
@@ -233,6 +236,8 @@ function UserRolesPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}

@@ -129,6 +129,20 @@ const ROLE_CONFIG: Record<
     idField: 'accountingId',
     nameField: 'accountingName',
   },
+  [UserRole.HR_MANAGER]: {
+    label: 'HR Managers',
+    icon: UsersIcon,
+    color: 'primary',
+    idField: 'hrManagerId',
+    nameField: 'hrManagerName',
+  },
+  [UserRole.HR_ADMIN]: {
+    label: 'HR Admins',
+    icon: UsersIcon,
+    color: 'info',
+    idField: 'hrAdminId',
+    nameField: 'hrAdminName',
+  },
 };
 
 // Get all available role keys

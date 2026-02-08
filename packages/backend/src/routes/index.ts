@@ -33,6 +33,8 @@ import customRolesRoutes from './customRoles';
 import userRoutes from './users';
 import accountingRoutes from './accounting';
 import rmaRoutes from './rma';
+import hrRoutes from './hr';
+import multiEntityRoutes from './multi-entity';
 
 // New enhanced routes
 import barcodeRoutes from './barcode';
@@ -85,6 +87,8 @@ v1Router.use('/custom-roles', customRolesRoutes);
 v1Router.use('/users', userRoutes);
 v1Router.use('/accounting', accountingRoutes);
 v1Router.use('/rma', rmaRoutes);
+v1Router.use('/hr', hrRoutes);
+v1Router.use('/multi-entity', multiEntityRoutes);
 v1Router.use('/audit', auditRoutes);
 v1Router.use('/notifications', notificationRoutes);
 v1Router.use('/route-optimization', routeOptimizationRoutes);
@@ -132,6 +136,8 @@ router.use('/custom-roles', customRolesRoutes);
 router.use('/users', userRoutes);
 router.use('/accounting', accountingRoutes);
 router.use('/rma', rmaRoutes);
+router.use('/hr', hrRoutes);
+router.use('/multi-entity', multiEntityRoutes);
 router.use('/barcode', barcodeRoutes);
 router.use('/waves', waveRoutes);
 router.use('/zones', zoneRoutes);

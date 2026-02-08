@@ -5,7 +5,10 @@
  * a singleton connection pool for the application.
  */
 
-import { Pool, PoolClient, QueryResult, types } from 'pg';
+import { Pool, PoolClient as PoolClientType, QueryResult, types } from 'pg';
+
+// Re-export PoolClient for use in repositories
+export type PoolClient = PoolClientType;
 import { logger } from '../config/logger';
 
 // ============================================================================

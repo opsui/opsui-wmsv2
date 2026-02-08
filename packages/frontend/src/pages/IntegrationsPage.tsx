@@ -32,7 +32,7 @@ import {
   SyncFrequency,
   WebhookEventType,
 } from '@opsui/shared';
-import { Header, Pagination, ConfirmDialog, Button } from '@/components/shared';
+import { Header, Pagination, ConfirmDialog, Button, Breadcrumb } from '@/components/shared';
 import { useNavigate } from 'react-router-dom';
 import {
   useIntegrations,
@@ -151,6 +151,8 @@ export function IntegrationsPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

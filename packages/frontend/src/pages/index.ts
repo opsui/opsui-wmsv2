@@ -53,3 +53,13 @@ export { default as BankReconciliationPage } from './accounting/BankReconciliati
 export { default as FixedAssetsPage } from './accounting/FixedAssetsPage';
 export { default as BudgetingPage } from './accounting/BudgetingPage';
 export { default as NotFoundPage } from './NotFoundPage';
+// HR & Payroll Pages
+export { default as EmployeesPage } from './hr/EmployeesPage';
+export { default as TimesheetsPage } from './hr/TimesheetsPage';
+export { default as PayrollDashboardPage } from './hr/PayrollDashboardPage';
+export { default as PayrollProcessingPage } from './hr/PayrollProcessingPage';
+export { default as PayrollRunsPage } from './hr/PayrollRunsPage';
+export { default as LeaveRequestsPage } from './hr/LeaveRequestsPage';
+export { default as HRSettingsPage } from './hr/HRSettingsPage';
+// Multi-Entity Pages
+export { default as MultiEntitySetupPage } from './admin/MultiEntitySetupPage';

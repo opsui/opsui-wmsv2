@@ -29,7 +29,6 @@ import {
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import {
-  Header,
   useToast,
   Pagination,
   Modal,
@@ -38,6 +37,8 @@ import {
   FormTextarea,
   ConfirmDialog,
   Button,
+  Breadcrumb,
+  Header,
 } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { useNavigate } from 'react-router-dom';
@@ -524,6 +525,8 @@ export function LocationCapacityPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}

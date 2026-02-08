@@ -49,6 +49,8 @@ const DEFAULT_ROLE_COLORS: Record<UserRole, RoleColorSetting> = {
   [UserRole.RMA]: { role: 'RMA' as UserRole, color: '#84cc16', variant: 'success' }, // Lime
   [UserRole.DISPATCH]: { role: 'DISPATCH' as UserRole, color: '#f43f5e', variant: 'error' }, // Rose
   [UserRole.ACCOUNTING]: { role: 'ACCOUNTING' as UserRole, color: '#14b8a6', variant: 'info' }, // Teal
+  [UserRole.HR_MANAGER]: { role: 'HR_MANAGER' as UserRole, color: '#0ea5e9', variant: 'primary' }, // Sky
+  [UserRole.HR_ADMIN]: { role: 'HR_ADMIN' as UserRole, color: '#64748b', variant: 'info' }, // Slate
 };
 
 // Load role colors from localStorage

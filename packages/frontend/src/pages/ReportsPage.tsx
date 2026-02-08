@@ -30,7 +30,14 @@ import {
   ExportJob,
   ChartType,
 } from '@opsui/shared';
-import { Header, Pagination, useToast, ConfirmDialog, Button } from '@/components/shared';
+import {
+  Header,
+  Pagination,
+  useToast,
+  ConfirmDialog,
+  Button,
+  Breadcrumb,
+} from '@/components/shared';
 import { ReportExecutionModal, DashboardBuilder } from '@/components/reports';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -220,6 +227,8 @@ export function ReportsPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

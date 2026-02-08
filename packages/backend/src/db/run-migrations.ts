@@ -69,6 +69,17 @@ const REQUIRED_MIGRATIONS = [
     filename: '015_fix_cycle_count_column_length.sql',
     description: 'Fix cycle_count_plans.count_type VARCHAR(20) to VARCHAR(50)',
   },
+  // HR & Payroll Module
+  {
+    name: '048_add_hr_payroll_tables',
+    filename: '048_add_hr_payroll_tables.sql',
+    description: 'HR & Payroll module - employees, timesheets, payroll, leave',
+  },
+  {
+    name: '049_seed_nz_tax_tables',
+    filename: '049_seed_nz_tax_tables.sql',
+    description: 'NZ tax configuration - PAYE, KiwiSaver, ACC rates',
+  },
 ];
 
 // ============================================================================
@@ -245,6 +256,25 @@ export class MigrationRunner {
       'location_capacities',
       'capacity_rules',
       'capacity_alerts',
+      // HR & Payroll
+      'hr_employees',
+      'hr_employee_tax_details',
+      'hr_employments',
+      'hr_bank_accounts',
+      'hr_timesheets',
+      'hr_timesheet_entries',
+      'hr_payroll_periods',
+      'hr_payroll_runs',
+      'hr_pay_items',
+      'hr_deduction_types',
+      'hr_employee_deductions',
+      'hr_pay_stubs',
+      'hr_leave_types',
+      'hr_leave_balances',
+      'hr_leave_requests',
+      'hr_tax_tables',
+      'hr_kiwisaver_rates',
+      'hr_acc_rates',
     ];
 
     const exists: string[] = [];

@@ -6,7 +6,9 @@
  */
 
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { HomeIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, ChevronRightIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { useAuthStore } from '@/stores';
+import { UserRole } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
@@ -43,6 +45,7 @@ const TAB_PAGE_CONFIG: Record<
     homePath: string;
     homeLabel: string;
     tabLabels: Record<string, string>;
+    hideBreadcrumb?: boolean;
   }
 > = {
   '/inwards': {
@@ -149,6 +152,86 @@ const TAB_PAGE_CONFIG: Record<
       mobile: 'Mobile Counting',
     },
   },
+  // Admin/Operations pages
+  '/dashboard': {
+    homePath: '/dashboard',
+    homeLabel: 'Dashboard',
+    tabLabels: {},
+    hideBreadcrumb: true,
+  },
+  '/exceptions': {
+    homePath: '/dashboard',
+    homeLabel: 'Dashboard',
+    tabLabels: {},
+  },
+  // Inventory pages
+  '/bin-locations': {
+    homePath: '/bin-locations',
+    homeLabel: 'Bin Locations',
+    tabLabels: {},
+  },
+  '/location-capacity': {
+    homePath: '/location-capacity',
+    homeLabel: 'Location Capacity',
+    tabLabels: {},
+  },
+  '/quality-control': {
+    homePath: '/quality-control',
+    homeLabel: 'Quality Control',
+    tabLabels: {},
+  },
+  // Warehouse Operations pages
+  '/search': {
+    homePath: '/search',
+    homeLabel: 'Product Search',
+    tabLabels: {},
+  },
+  '/waves': {
+    homePath: '/waves',
+    homeLabel: 'Wave Picking',
+    tabLabels: {},
+  },
+  '/zones': {
+    homePath: '/zones',
+    homeLabel: 'Zone Picking',
+    tabLabels: {},
+  },
+  '/slotting': {
+    homePath: '/slotting',
+    homeLabel: 'Slotting',
+    tabLabels: {},
+  },
+  '/route-optimization': {
+    homePath: '/route-optimization',
+    homeLabel: 'Route Optimization',
+    tabLabels: {},
+  },
+  '/shipped-orders': {
+    homePath: '/shipped-orders',
+    homeLabel: 'Shipped Orders',
+    tabLabels: {},
+  },
+  // Admin pages
+  '/user-roles': {
+    homePath: '/user-roles',
+    homeLabel: 'User Roles',
+    tabLabels: {},
+  },
+  '/business-rules': {
+    homePath: '/business-rules',
+    homeLabel: 'Business Rules',
+    tabLabels: {},
+  },
+  '/integrations': {
+    homePath: '/integrations',
+    homeLabel: 'Integrations',
+    tabLabels: {},
+  },
+  '/reports': {
+    homePath: '/reports',
+    homeLabel: 'Reports',
+    tabLabels: {},
+  },
 };
 
 // ============================================================================
@@ -167,10 +250,29 @@ export function Breadcrumb({
   const location = useLocation();
   const params = useParams();
 
+  // Get auth state to detect admin users in role-switching mode
+  const user = useAuthStore(state => state.user);
+  const activeRole = useAuthStore(state => state.activeRole);
+
+  // Check if user is an admin in role-switching mode
+  const isAdminInRoleView = user?.role === UserRole.ADMIN && activeRole !== null;
+
   // If items are provided, use them directly
   if (items) {
     return (
       <nav className={`flex items-center gap-2 text-sm ${className}`}>
+        {isAdminInRoleView && (
+          <>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <UserCircleIcon className="h-4 w-4" />
+              <span>Admin Dashboard</span>
+            </button>
+            <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+          </>
+        )}
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-600" />}
@@ -243,6 +345,18 @@ export function Breadcrumb({
     if (accountingConfig.tabLabels[subPath]) {
       return (
         <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+          {isAdminInRoleView && (
+            <>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+              >
+                <UserCircleIcon className="h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </button>
+              <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+            </>
+          )}
           <button
             onClick={() => navigate('/accounting')}
             className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
@@ -264,6 +378,18 @@ export function Breadcrumb({
     const config = TAB_PAGE_CONFIG[nestedRouteMatch.basePath];
     return (
       <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+        {isAdminInRoleView && (
+          <>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <UserCircleIcon className="h-4 w-4" />
+              <span>Admin Dashboard</span>
+            </button>
+            <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+          </>
+        )}
         <button
           onClick={() => navigate(nestedRouteMatch!.basePath)}
           className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
@@ -286,16 +412,48 @@ export function Breadcrumb({
   // Find matching base path
   for (const [path, config] of Object.entries(TAB_PAGE_CONFIG)) {
     if (pathname === path || pathname === path + '/') {
+      // Don't show breadcrumb for pages with hideBreadcrumb flag
+      if (config.hideBreadcrumb) {
+        return null;
+      }
+
       basePath = path;
       currentTab = tabParam;
 
-      // If on dashboard/overview tab, don't show breadcrumb
+      // If on dashboard/overview tab, show Admin Dashboard link if admin in role view
       if (!currentTab || currentTab === 'dashboard' || currentTab === 'overview') {
+        if (isAdminInRoleView) {
+          return (
+            <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+              >
+                <UserCircleIcon className="h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </button>
+              <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+              <span className="text-gray-400">{config.homeLabel}</span>
+            </nav>
+          );
+        }
         return null;
       }
 
       return (
         <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+          {isAdminInRoleView && (
+            <>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+              >
+                <UserCircleIcon className="h-4 w-4" />
+                <span>Admin Dashboard</span>
+              </button>
+              <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+            </>
+          )}
           <button
             onClick={() => {
               // Clear tab parameter to return to overview/dashboard

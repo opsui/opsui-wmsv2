@@ -19,6 +19,7 @@ import {
   Header,
   Button,
   Pagination,
+  Breadcrumb,
 } from '@/components/shared';
 import { useAuthStore } from '@/stores';
 import {
@@ -479,6 +480,8 @@ export function ExceptionsPage() {
     <div className="min-h-screen">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Exception Management Interface */}
         {canSupervise() && (
           <>

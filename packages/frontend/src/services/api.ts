@@ -1325,6 +1325,8 @@ export const useRoleActivity = (
       [UserRole.ADMIN]: [],
       [UserRole.DISPATCH]: [],
       [UserRole.ACCOUNTING]: [],
+      [UserRole.HR_MANAGER]: [],
+      [UserRole.HR_ADMIN]: [],
     };
     return {
       data: combinedData,
@@ -8559,5 +8561,381 @@ export const useCashFlowStatement = (params?: {
     queryFn: () => cashFlowApi.getCashFlowStatement(params),
     enabled: params?.enabled ?? true,
     staleTime: 300000,
+  });
+};
+
+// ============================================================================
+// HR & PAYROLL API
+// ============================================================================
+
+export const hrApi = {
+  /**
+   * Get all employees
+   */
+  getEmployees: async (params?: { status?: string; department?: string; search?: string }) => {
+    const response = await apiClient.get('/hr/employees', { params });
+    return response.data;
+  },
+
+  /**
+   * Get employee by ID
+   */
+  getEmployee: async (employeeId: string) => {
+    const response = await apiClient.get(`/hr/employees/${employeeId}`);
+    return response.data;
+  },
+
+  /**
+   * Create new employee
+   */
+  createEmployee: async (data: any) => {
+    const response = await apiClient.post('/hr/employees', data);
+    return response.data;
+  },
+
+  /**
+   * Update employee
+   */
+  updateEmployee: async (employeeId: string, data: any) => {
+    const response = await apiClient.put(`/hr/employees/${employeeId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete employee
+   */
+  deleteEmployee: async (employeeId: string) => {
+    const response = await apiClient.delete(`/hr/employees/${employeeId}`);
+    return response.data;
+  },
+
+  /**
+   * Get timesheets
+   */
+  getTimesheets: async (params?: { status?: string; employeeId?: string }) => {
+    const response = await apiClient.get('/hr/timesheets', { params });
+    return response.data;
+  },
+
+  /**
+   * Get timesheet by ID
+   */
+  getTimesheet: async (timesheetId: string) => {
+    const response = await apiClient.get(`/hr/timesheets/${timesheetId}`);
+    return response.data;
+  },
+
+  /**
+   * Get current user's timesheets
+   */
+  getMyTimesheets: async () => {
+    const response = await apiClient.get('/hr/my-timesheets');
+    return response.data;
+  },
+
+  /**
+   * Submit timesheet
+   */
+  submitTimesheet: async (data: any) => {
+    const response = await apiClient.post('/hr/timesheets', data);
+    return response.data;
+  },
+
+  /**
+   * Approve timesheet
+   */
+  approveTimesheet: async (timesheetId: string) => {
+    const response = await apiClient.put(`/hr/timesheets/${timesheetId}/approve`);
+    return response.data;
+  },
+
+  /**
+   * Reject timesheet
+   */
+  rejectTimesheet: async (timesheetId: string, reason: string) => {
+    const response = await apiClient.put(`/hr/timesheets/${timesheetId}/reject`, { reason });
+    return response.data;
+  },
+
+  /**
+   * Get payroll periods
+   */
+  getPayrollPeriods: async () => {
+    const response = await apiClient.get('/hr/payroll/periods');
+    return response.data;
+  },
+
+  /**
+   * Get current payroll period
+   */
+  getCurrentPayrollPeriod: async () => {
+    const response = await apiClient.get('/hr/payroll/current-period');
+    return response.data;
+  },
+
+  /**
+   * Calculate payroll (preview)
+   */
+  calculatePayroll: async (periodId: string, employeeIds?: string[]) => {
+    const response = await apiClient.post('/hr/payroll/calculate', { periodId, employeeIds });
+    return response.data;
+  },
+
+  /**
+   * Process payroll run
+   */
+  processPayroll: async (periodId: string, employeeIds?: string[]) => {
+    const response = await apiClient.post('/hr/payroll/process', { periodId, employeeIds });
+    return response.data;
+  },
+
+  /**
+   * Get payroll runs
+   */
+  getPayrollRuns: async (limit = 20) => {
+    const response = await apiClient.get('/hr/payroll/runs', { params: { limit } });
+    return response.data;
+  },
+
+  /**
+   * Get payroll run details
+   */
+  getPayrollRun: async (payrollRunId: string) => {
+    const response = await apiClient.get(`/hr/payroll/runs/${payrollRunId}`);
+    return response.data;
+  },
+
+  /**
+   * Get leave requests
+   */
+  getLeaveRequests: async (params?: { status?: string; employeeId?: string }) => {
+    const response = await apiClient.get('/hr/leave/requests', { params });
+    return response.data;
+  },
+
+  /**
+   * Get current user's leave requests
+   */
+  getMyLeaveRequests: async () => {
+    const response = await apiClient.get('/hr/leave/my-requests');
+    return response.data;
+  },
+
+  /**
+   * Get leave balances
+   */
+  getLeaveBalances: async (employeeId?: string) => {
+    const response = await apiClient.get('/hr/leave/balances', { params: { employeeId } });
+    return response.data;
+  },
+
+  /**
+   * Create leave request
+   */
+  createLeaveRequest: async (data: any) => {
+    const response = await apiClient.post('/hr/leave/requests', data);
+    return response.data;
+  },
+
+  /**
+   * Approve leave request
+   */
+  approveLeaveRequest: async (requestId: string) => {
+    const response = await apiClient.put(`/hr/leave/requests/${requestId}/approve`);
+    return response.data;
+  },
+
+  /**
+   * Get deduction types
+   */
+  getDeductionTypes: async () => {
+    const response = await apiClient.get('/hr/deduction-types');
+    return response.data;
+  },
+
+  /**
+   * Get leave types
+   */
+  getLeaveTypes: async () => {
+    const response = await apiClient.get('/hr/leave-types');
+    return response.data;
+  },
+};
+
+// HR React Query hooks
+export const useEmployees = (params?: {
+  status?: string;
+  department?: string;
+  search?: string;
+}) => {
+  return useQuery({
+    queryKey: ['hr', 'employees', params],
+    queryFn: () => hrApi.getEmployees(params),
+    staleTime: 60000,
+  });
+};
+
+export const useEmployee = (employeeId: string) => {
+  return useQuery({
+    queryKey: ['hr', 'employees', employeeId],
+    queryFn: () => hrApi.getEmployee(employeeId),
+    enabled: !!employeeId,
+  });
+};
+
+export const useCreateEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: hrApi.createEmployee,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'employees'] });
+    },
+  });
+};
+
+export const useUpdateEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: any) => {
+      // Handle both formats: { employeeId, data } and { employeeId, firstName, lastName, ... }
+      const { employeeId, data, ...rest } = params;
+      const employeeData = data || rest;
+      return hrApi.updateEmployee(employeeId, employeeData);
+    },
+    onSuccess: (_, variables) => {
+      const employeeId =
+        typeof variables === 'object' && variables.employeeId ? variables.employeeId : null;
+      if (employeeId) {
+        queryClient.invalidateQueries({ queryKey: ['hr', 'employees', employeeId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['hr', 'employees'] });
+    },
+  });
+};
+
+export const useDeleteEmployee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: hrApi.deleteEmployee,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'employees'] });
+    },
+  });
+};
+
+export const useTimesheets = (params?: { status?: string; employeeId?: string }) => {
+  return useQuery({
+    queryKey: ['hr', 'timesheets', params],
+    queryFn: () => hrApi.getTimesheets(params),
+    staleTime: 30000,
+  });
+};
+
+export const useMyTimesheets = () => {
+  return useQuery({
+    queryKey: ['hr', 'my-timesheets'],
+    queryFn: hrApi.getMyTimesheets,
+    staleTime: 30000,
+  });
+};
+
+export const useSubmitTimesheet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: hrApi.submitTimesheet,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'timesheets'] });
+      queryClient.invalidateQueries({ queryKey: ['hr', 'my-timesheets'] });
+    },
+  });
+};
+
+export const usePayrollPeriods = () => {
+  return useQuery({
+    queryKey: ['hr', 'payroll-periods'],
+    queryFn: hrApi.getPayrollPeriods,
+    staleTime: 300000,
+  });
+};
+
+export const usePayrollRuns = (limit = 20) => {
+  return useQuery({
+    queryKey: ['hr', 'payroll-runs', limit],
+    queryFn: () => hrApi.getPayrollRuns(limit),
+    staleTime: 60000,
+  });
+};
+
+export const useProcessPayroll = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ periodId, employeeIds }: { periodId: string; employeeIds?: string[] }) =>
+      hrApi.processPayroll(periodId, employeeIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'payroll-runs'] });
+      queryClient.invalidateQueries({ queryKey: ['hr', 'payroll-periods'] });
+    },
+  });
+};
+
+export const useLeaveRequests = (params?: { status?: string; employeeId?: string }) => {
+  return useQuery({
+    queryKey: ['hr', 'leave-requests', params],
+    queryFn: () => hrApi.getLeaveRequests(params),
+    staleTime: 30000,
+  });
+};
+
+export const useMyLeaveRequests = () => {
+  return useQuery({
+    queryKey: ['hr', 'my-leave-requests'],
+    queryFn: hrApi.getMyLeaveRequests,
+    staleTime: 30000,
+  });
+};
+
+export const useLeaveBalances = (employeeId?: string) => {
+  return useQuery({
+    queryKey: ['hr', 'leave-balances', employeeId],
+    queryFn: () => hrApi.getLeaveBalances(employeeId),
+    staleTime: 120000,
+  });
+};
+
+export const useCreateLeaveRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: hrApi.createLeaveRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'leave-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['hr', 'my-leave-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['hr', 'leave-balances'] });
+    },
+  });
+};
+
+export const useApproveLeaveRequest = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: hrApi.approveLeaveRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'leave-requests'] });
+    },
+  });
+};
+
+export const useDeductionTypes = () => {
+  return useQuery({
+    queryKey: ['hr', 'deduction-types'],
+    queryFn: hrApi.getDeductionTypes,
+    staleTime: 300000, // 5 minutes
+  });
+};
+
+export const useLeaveTypes = () => {
+  return useQuery({
+    queryKey: ['hr', 'leave-types'],
+    queryFn: hrApi.getLeaveTypes,
+    staleTime: 300000, // 5 minutes
   });
 };

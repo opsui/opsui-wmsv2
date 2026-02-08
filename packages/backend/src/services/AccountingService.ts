@@ -2955,6 +2955,122 @@ export class AccountingService {
       createdAt: result.rows[0].created_at,
     } as Approval;
   }
+
+  // ========================================================================
+  // PAYROLL INTEGRATION
+  // ========================================================================
+
+  /**
+   * Create journal entries for a processed payroll run
+   * Called by HRService after payroll is processed
+   *
+   * Journal Entry Structure:
+   * Debit: Wages Expense (gross pay + employer contributions)
+   * Credit: Wages Payable (net pay)
+   * Credit: PAYE Payable (PAYE tax)
+   * Credit: KiwiSaver Payable (employee + employer KS)
+   * Credit: ACC Payable (ACC levy)
+   * Credit: Student Loan Payable (if applicable)
+   */
+  async createPayrollJournalEntry(payrollRun: {
+    payrollRunId: string;
+    periodStartDate: string;
+    periodEndDate: string;
+    totalGrossPay: number;
+    totalNetPay: number;
+    totalTax: number;
+    totalKiwiSaver: number;
+    totalACC: number;
+    totalEmployerContributions: number;
+    employeeCount: number;
+  }): Promise<string> {
+    // Generate journal entry ID
+    const entryId = `JE-PAY-${new Date().getFullYear()}-${Date.now()}`;
+
+    // Create journal entry lines
+    const lines = [
+      // Debit: Wages Expense - Gross pay + Employer contributions
+      {
+        accountId: 'WAGES_EXPENSE',
+        description: `Payroll for ${payrollRun.periodStartDate} to ${payrollRun.periodEndDate}`,
+        debitAmount: payrollRun.totalGrossPay + payrollRun.totalEmployerContributions,
+        creditAmount: 0,
+      },
+      // Credit: Wages Payable - Net pay to employees
+      {
+        accountId: 'WAGES_PAYABLE',
+        description: 'Net wages payable to employees',
+        debitAmount: 0,
+        creditAmount: payrollRun.totalNetPay,
+      },
+      // Credit: PAYE Payable - Income tax deducted
+      {
+        accountId: 'PAYE_PAYABLE',
+        description: 'PAYE income tax deducted',
+        debitAmount: 0,
+        creditAmount: payrollRun.totalTax,
+      },
+      // Credit: KiwiSaver Payable - Employee + Employer contributions
+      {
+        accountId: 'KIWISAVER_PAYABLE',
+        description: 'KiwiSaver contributions',
+        debitAmount: 0,
+        creditAmount: payrollRun.totalKiwiSaver,
+      },
+      // Credit: ACC Payable - ACC earners levy
+      {
+        accountId: 'ACC_PAYABLE',
+        description: 'ACC earners levy',
+        debitAmount: 0,
+        creditAmount: payrollRun.totalACC,
+      },
+    ];
+
+    // Calculate total debits and credits
+    const totalDebit = lines.reduce((sum, line) => sum + line.debitAmount, 0);
+    const totalCredit = lines.reduce((sum, line) => sum + line.creditAmount, 0);
+
+    // Create the journal entry
+    await dbQuery(
+      `INSERT INTO acct_journal_entries (
+        entry_id, entry_number, entry_date, description,
+        total_debit, total_credit, status, created_by, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      RETURNING *`,
+      [
+        entryId,
+        `PAY-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
+        payrollRun.periodEndDate,
+        `Payroll: ${payrollRun.employeeCount} employees for ${payrollRun.periodStartDate} to ${payrollRun.periodEndDate}`,
+        totalDebit,
+        totalCredit,
+        'POSTED',
+        'SYSTEM',
+      ]
+    );
+
+    // Insert journal entry lines
+    for (const line of lines) {
+      if (line.debitAmount > 0 || line.creditAmount > 0) {
+        await dbQuery(
+          `INSERT INTO acct_journal_entry_lines (
+            line_id, entry_id, account_id, description,
+            debit_amount, credit_amount
+          ) VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            `JEL-${entryId}-${Math.random().toString(36).substring(2, 11)}`,
+            entryId,
+            line.accountId,
+            line.description,
+            line.debitAmount,
+            line.creditAmount,
+          ]
+        );
+      }
+    }
+
+    return entryId;
+  }
 }
 
 export const accountingService = new AccountingService();

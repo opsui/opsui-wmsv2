@@ -26,7 +26,14 @@ import {
   ActionType,
   RuleEventType,
 } from '@opsui/shared';
-import { Header, Pagination, useToast, ConfirmDialog, Button } from '@/components/shared';
+import {
+  Header,
+  Pagination,
+  useToast,
+  ConfirmDialog,
+  Button,
+  Breadcrumb,
+} from '@/components/shared';
 import { RuleBuilder, ActionBuilder, RuleTester } from '@/components/rules';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
@@ -130,6 +137,8 @@ export function BusinessRulesPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

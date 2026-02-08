@@ -13,10 +13,11 @@ import {
   Button,
   Badge,
   Select,
-  Header,
   Pagination,
+  Breadcrumb,
+  useToast,
+  Header,
 } from '@/components/shared';
-import { useToast } from '@/components/shared';
 import { useZones, useAllZoneStats, useZonePickTasks, useRebalancePickers } from '@/services/api';
 import { useAuthStore } from '@/stores';
 
@@ -87,6 +88,8 @@ export function ZonePickingPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}

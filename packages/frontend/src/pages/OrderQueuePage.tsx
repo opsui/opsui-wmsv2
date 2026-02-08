@@ -8,7 +8,15 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
-import { Card, CardContent, Button, Header, Pagination, useToast } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  Button,
+  Header,
+  Pagination,
+  useToast,
+  Breadcrumb,
+} from '@/components/shared';
 import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
 import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
@@ -238,7 +246,7 @@ export function OrderQueuePage() {
     status: undefined as OrderStatus | undefined, // No status filter - get all orders
     pickerId: userId, // Only this picker's orders
     page: 1,
-    limit: 1, // We only need to know if there's at least one
+    limit: 100, // Fetch enough orders to detect PICKING status
   });
   const allOrdersData = allOrdersQuery.data;
 
@@ -315,8 +323,7 @@ export function OrderQueuePage() {
   };
 
   // Auto-detect which tab to show based on whether picker has items in tote
-  // Only on initial mount when there's no status in URL
-  // Also sync with URL params to support direct navigation to specific status tabs
+  // Priority: 1) PICKING orders (tote), 2) URL status, 3) default to PENDING
   useEffect(() => {
     // Skip if we already auto-detected or user manually navigated
     if (hasAutoDetectedRef.current) {
@@ -333,13 +340,8 @@ export function OrderQueuePage() {
       allOrdersQuery.isLoading
     );
 
-    if (urlStatus && Object.values(OrderStatus).includes(urlStatus)) {
-      // URL has explicit status - use it
-      console.log('[OrderQueue] Setting status filter from URL:', urlStatus);
-      setStatusFilter(urlStatus);
-      hasAutoDetectedRef.current = true;
-    } else if (allOrdersData?.orders) {
-      // No status in URL and all orders data is loaded - check for PICKING orders
+    if (allOrdersData?.orders) {
+      // Data loaded - first check for PICKING orders (highest priority)
       const allOrders = allOrdersData.orders || [];
       const pickingOrders = allOrders.filter(o => o.status === OrderStatus.PICKING);
       console.log(
@@ -354,8 +356,16 @@ export function OrderQueuePage() {
         setStatusFilter(OrderStatus.PICKING);
         // Update URL to show we're on TOTE tab (helps with back navigation)
         setSearchParams({ status: OrderStatus.PICKING });
+        hasAutoDetectedRef.current = true;
+        return;
+      }
+
+      // No PICKING orders - check URL or default to PENDING
+      if (urlStatus && Object.values(OrderStatus).includes(urlStatus)) {
+        console.log('[OrderQueue] No PICKING orders, using URL status:', urlStatus);
+        setStatusFilter(urlStatus);
       } else {
-        console.log('[OrderQueue] No items in tote, defaulting to PENDING');
+        console.log('[OrderQueue] No items in tote and no URL status, defaulting to PENDING');
         setStatusFilter(OrderStatus.PENDING);
       }
       hasAutoDetectedRef.current = true;
@@ -504,6 +514,8 @@ export function OrderQueuePage() {
     <div className="min-h-screen overflow-x-hidden">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         {/* Page Header - Centered */}
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Order Queue</h1>

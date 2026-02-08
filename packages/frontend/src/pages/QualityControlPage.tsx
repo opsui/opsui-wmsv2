@@ -14,7 +14,14 @@ import {
   MagnifyingGlassIcon,
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { Pagination, Header, useToast, ConfirmDialog, Button } from '@/components/shared';
+import {
+  Pagination,
+  Header,
+  useToast,
+  ConfirmDialog,
+  Button,
+  Breadcrumb,
+} from '@/components/shared';
 import { useNavigate } from 'react-router-dom';
 import {
   InspectionType,
@@ -745,6 +752,8 @@ export function QualityControlPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}

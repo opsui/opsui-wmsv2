@@ -15,6 +15,7 @@ import {
   Input,
   Button,
   Badge,
+  Breadcrumb,
   Header,
 } from '@/components/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -173,6 +174,8 @@ export function ProductSearchPage() {
   return (
     <div className="min-h-screen">
       <Header />
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}

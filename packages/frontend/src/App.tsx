@@ -60,6 +60,14 @@ import {
   FixedAssetsPage,
   BudgetingPage,
   NotFoundPage,
+  // HR & Payroll pages
+  EmployeesPage,
+  TimesheetsPage,
+  PayrollDashboardPage,
+  PayrollProcessingPage,
+  PayrollRunsPage,
+  LeaveRequestsPage,
+  HRSettingsPage,
 } from '@/pages';
 import { UserRole } from '@opsui/shared';
 
@@ -916,6 +924,88 @@ function AppInner() {
               requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, 'ACCOUNTING' as UserRole]}
             >
               <BudgetingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* HR & Payroll routes */}
+        <Route
+          path="/hr/employees"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
+            >
+              <EmployeesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/timesheets"
+          element={
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                'HR_MANAGER' as UserRole,
+                'HR_ADMIN' as UserRole,
+                UserRole.PICKER,
+                UserRole.PACKER,
+              ]}
+            >
+              <TimesheetsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/payroll"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
+            >
+              <PayrollDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/payroll/process"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
+            >
+              <PayrollProcessingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/payroll/runs"
+          element={
+            <ProtectedRoute
+              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
+            >
+              <PayrollRunsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/leave"
+          element={
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                'HR_MANAGER' as UserRole,
+                'HR_ADMIN' as UserRole,
+                UserRole.PICKER,
+                UserRole.PACKER,
+              ]}
+            >
+              <LeaveRequestsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/settings"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, 'HR_ADMIN' as UserRole]}>
+              <HRSettingsPage />
             </ProtectedRoute>
           }
         />

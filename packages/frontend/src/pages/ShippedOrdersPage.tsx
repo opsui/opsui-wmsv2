@@ -18,7 +18,7 @@ import {
   ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import { OrderStatus } from '@opsui/shared';
-import { Pagination, Card, Badge, Button, useToast } from '@/components/shared';
+import { Pagination, Card, Badge, Button, useToast, Breadcrumb } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import {
   useShippedOrders,
