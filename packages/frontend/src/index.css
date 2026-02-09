@@ -45,6 +45,22 @@
     animation: none;
   }
 
+  /* Light mode - enhanced text hierarchy */
+  html.light body,
+  html.light .text-white {
+    color: #1e293b;
+  }
+
+  html.light .text-gray-100,
+  html.light .text-gray-200,
+  html.light .text-gray-300 {
+    color: #64748b;
+  }
+
+  html.light .text-gray-400 {
+    color: #94a3b8;
+  }
+
   /* Premium animated background - dark mode */
   body::before {
     content: '';
@@ -151,9 +167,14 @@
   }
 
   html.light .glass-card {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  html.light .glass-card:hover {
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(59, 130, 246, 0.1);
   }
 
   /* Premium input field */
@@ -335,6 +356,11 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
   }
 
+  html.light .card-hover:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.15);
+  }
+
   /* Status badges - premium style */
   .badge {
     display: inline-flex;
@@ -401,6 +427,37 @@
   html:not(.light) .badge-info {
     background: rgba(148, 163, 184, 0.15);
     color: #cbd5e1;
+  }
+
+  /* Light mode badge enhancements */
+  html.light .badge-success {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+    border-color: rgba(34, 197, 94, 0.25);
+  }
+
+  html.light .badge-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+
+  html.light .badge-error {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+
+  html.light .badge-primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.25);
+  }
+
+  html.light .badge-info {
+    background: rgba(100, 116, 139, 0.12);
+    color: #64748b;
+    border-color: rgba(100, 116, 139, 0.25);
   }
 }
 
@@ -643,4 +700,150 @@
 
 .animate-fade-in {
   animation: fade-in 0.5s ease-out;
+}
+
+/* ============================================
+   LIGHT MODE ENHANCEMENTS
+   ============================================ */
+
+/* Light mode scrollbar */
+html.light ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Light mode Firefox scrollbar */
+html.light * {
+  scrollbar-color: rgba(59, 130, 246, 0.3) rgba(0, 0, 0, 0.03);
+}
+
+/* Light mode link and interactive element hover states */
+html.light a:hover,
+html.light button:hover {
+  filter: brightness(0.95);
+}
+
+/* Light mode text gradients */
+html.light .text-gradient {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Light mode card hover effects */
+html.light .hover-lift {
+  transition: all 0.2s ease;
+}
+
+html.light .hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Light mode border focus states */
+html.light *:focus-visible {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4), 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Light mode secondary button */
+html.light .btn-secondary {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #334155;
+}
+
+html.light .btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Light mode table styles */
+html.light table {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html.light th {
+  background: rgba(0, 0, 0, 0.02);
+  color: #1e293b;
+}
+
+html.light tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Light mode input focus enhancements */
+html.light .input-field:focus {
+  background: #ffffff;
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Light mode icon colors */
+html.light .icon-muted {
+  color: #94a3b8;
+}
+
+html.light .icon-default {
+  color: #64748b;
+}
+
+html.light .icon-accent {
+  color: #3b82f6;
+}
+
+/* Light mode divider/border colors */
+html.light .border-subtle {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+html.light .border-default {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Light mode background variations */
+html.light .bg-subtle {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+html.light .bg-card {
+  background: #ffffff;
+}
+
+html.light .bg-surface {
+  background: #f8fafc;
+}
+
+/* Light mode hover backgrounds */
+html.light .hover-bg-default:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+html.light .hover-bg-accent:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* Light mode disabled states */
+html.light button:disabled,
+html.light input:disabled,
+html.light select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Light mode selection color */
+html.light ::selection {
+  background: rgba(59, 130, 246, 0.2);
+  color: #1e293b;
 }

@@ -78,10 +78,14 @@ function MetricCard({
   onClick?: () => void;
 }) {
   const colorStyles = {
-    primary: 'bg-primary-500/10 text-primary-400 border border-primary-500/20',
-    success: 'bg-success-500/10 text-success-400 border border-success-500/20',
-    warning: 'bg-warning-500/10 text-warning-400 border border-warning-500/20',
-    error: 'bg-error-500/10 text-error-400 border border-error-500/20',
+    primary:
+      'dark:bg-primary-500/10 bg-primary-500/10 dark:text-primary-400 text-primary-600 dark:border-primary-500/20 border-primary-500/30',
+    success:
+      'dark:bg-success-500/10 bg-success-500/10 dark:text-success-400 text-success-600 dark:border-success-500/20 border-success-500/30',
+    warning:
+      'dark:bg-warning-500/10 bg-warning-500/10 dark:text-warning-400 text-warning-600 dark:border-warning-500/20 border-warning-500/30',
+    error:
+      'dark:bg-error-500/10 bg-error-500/10 dark:text-error-400 text-error-600 dark:border-error-500/20 border-error-500/30',
   };
 
   return (
@@ -90,14 +94,16 @@ function MetricCard({
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-sm font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">
+              <p className="text-sm font-medium dark:text-gray-400 text-gray-600 uppercase tracking-wider">
                 {title}
               </p>
               <p className="mt-3 text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
                 {value}
               </p>
             </div>
-            <div className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300`}>
+            <div
+              className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110`}
+            >
               <Icon className="h-7 w-7" />
             </div>
           </div>
@@ -648,8 +654,8 @@ export function DashboardPage() {
                   onClick={() => setActivityView('role-activity')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activityView === 'role-activity'
-                      ? 'dark:bg-blue-600 bg-blue-500 text-white'
-                      : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200'
+                      ? 'dark:bg-blue-600 bg-blue-600 text-white shadow-lg dark:shadow-blue-500/30 shadow-blue-500/20'
+                      : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200 dark:hover:text-gray-300 hover:text-gray-900'
                   }`}
                 >
                   <UserGroupIcon className="h-4 w-4 inline mr-2" />
@@ -659,8 +665,8 @@ export function DashboardPage() {
                   onClick={() => setActivityView('audit-logs')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activityView === 'audit-logs'
-                      ? 'dark:bg-blue-600 bg-blue-500 text-white'
-                      : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200'
+                      ? 'dark:bg-blue-600 bg-blue-600 text-white shadow-lg dark:shadow-blue-500/30 shadow-blue-500/20'
+                      : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200 dark:hover:text-gray-300 hover:text-gray-900'
                   }`}
                 >
                   <DocumentTextIcon className="h-4 w-4 inline mr-2" />

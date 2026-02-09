@@ -5,7 +5,7 @@
  */
 
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/stores';
+import { useAuthStore, useUIStore } from '@/stores';
 import {
   useLogout,
   useSetActiveRole,
@@ -46,6 +46,8 @@ import {
   UserIcon,
   CalendarDaysIcon,
   BanknotesIcon,
+  SunIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
 import { useState, useRef, useEffect } from 'react';
@@ -155,11 +157,11 @@ function MobileMenu({
               <h2 className="text-lg font-semibold dark:text-white text-gray-900 truncate">
                 {userName}
               </h2>
-              <p className="text-sm dark:text-gray-400 text-gray-600 truncate">{userEmail}</p>
+              <p className="text-sm dark:text-gray-400 text-gray-500 truncate">{userEmail}</p>
             </div>
             <button
               onClick={onClose}
-              className="ml-4 p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 touch-target"
+              className="ml-4 p-2 dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 touch-target"
               aria-label="Close menu"
             >
               <XMarkIcon className="h-6 w-6" />
@@ -220,7 +222,7 @@ function MobileMenu({
               const GroupIcon = group.icon;
               return (
                 <div key={group.key}>
-                  <h3 className="flex items-center gap-2 text-xs font-semibold dark:text-gray-500 text-gray-700 uppercase tracking-wider mb-3 px-2">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold dark:text-gray-500 text-gray-600 uppercase tracking-wider mb-3 px-2">
                     <GroupIcon className="h-4 w-4" />
                     {group.label}
                   </h3>
@@ -231,9 +233,9 @@ function MobileMenu({
                         <button
                           key={item.key}
                           onClick={() => handleNavigate(item.path)}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-gray-300 text-gray-800 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 transition-all duration-200 touch-target"
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 transition-all duration-200 touch-target"
                         >
-                          <ItemIcon className="h-5 w-5 flex-shrink-0 dark:text-gray-500 text-gray-600" />
+                          <ItemIcon className="h-5 w-5 flex-shrink-0 dark:text-gray-500 text-gray-500" />
                           <span className="font-medium">{item.label}</span>
                         </button>
                       );
@@ -256,7 +258,7 @@ function MobileMenu({
                 setShowRoleSwitcher(false);
                 handleNavigate('/role-settings?section=role-switcher');
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 transition-all duration-200 touch-target"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-gray-400 text-gray-600 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 transition-all duration-200 touch-target"
             >
               <CogIcon className="h-5 w-5" />
               <span className="font-medium text-sm">Settings</span>
@@ -320,8 +322,8 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
           hasActiveItem
-            ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
-            : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
+            ? 'dark:text-white text-blue-600 dark:bg-white/[0.08] bg-blue-100 dark:border-white/[0.12] border-blue-300 shadow-md dark:shadow-blue-500/10 shadow-blue-200'
+            : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-blue-600 dark:hover:bg-white/[0.05] hover:bg-blue-50 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-blue-200'
         }`}
       >
         <Icon className="h-4 w-4" />
@@ -332,7 +334,7 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-60 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-60 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl dark:border-gray-700 border-blue-200 shadow-xl animate-fade-in">
           <div className="py-2">
             {items.map(item => {
               const ItemIcon = item.icon;
@@ -347,20 +349,20 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
                     isActive
-                      ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
-                      : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
+                      ? 'dark:text-white text-blue-800 dark:bg-blue-600 bg-blue-100'
+                      : 'dark:text-gray-200 text-gray-700 dark:hover:text-white hover:text-blue-800 dark:hover:bg-gray-800 hover:bg-blue-100/70'
                   }`}
                 >
                   <ItemIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
                       isActive
-                        ? 'dark:text-white text-black'
-                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700'
+                        ? 'dark:text-white text-blue-800'
+                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-blue-700'
                     }`}
                   />
                   {item.label}
                   {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(0,0,0,0.3)] animate-pulse"></span>
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-blue-700 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(29,78,216,0.6)] animate-pulse"></span>
                   )}
                 </button>
               );
@@ -479,8 +481,8 @@ function NotificationPreview({
       {notifications.map((notification: Notification) => (
         <div
           key={notification.notificationId}
-          className={`px-5 py-3 dark:hover:bg-gray-800 hover:bg-gray-50 transition-all duration-200 cursor-pointer ${
-            notification.status !== 'READ' ? 'dark:bg-primary-500/5 bg-primary-50' : ''
+          className={`px-5 py-3 dark:hover:bg-gray-800 hover:bg-blue-100/80 transition-all duration-200 cursor-pointer ${
+            notification.status !== 'READ' ? 'dark:bg-primary-500/5 bg-blue-100' : ''
           }`}
           onClick={() => handleNotificationClick(notification)}
         >
@@ -506,6 +508,48 @@ function NotificationPreview({
         </div>
       ))}
     </div>
+  );
+}
+
+// ============================================================================
+// THEME TOGGLE COMPONENT
+// ============================================================================
+
+function ThemeToggle() {
+  const theme = useUIStore(state => state.theme);
+  const setTheme = useUIStore(state => state.setTheme);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    // Immediately update DOM for instant feedback
+    const html = document.documentElement;
+    if (newTheme === 'light') {
+      html.classList.add('light');
+      html.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      html.classList.remove('light');
+      html.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  };
+
+  const isDark = theme !== 'light';
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-xl transition-all duration-200 group"
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {isDark ? (
+        <SunIcon className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+      ) : (
+        <MoonIcon className="h-5 w-5 group-hover:-rotate-12 transition-transform duration-300" />
+      )}
+    </button>
   );
 }
 
@@ -555,7 +599,7 @@ function NotificationPanel() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`relative p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-xl transition-all duration-200 group ${
-          isOpen ? 'dark:bg-white/[0.05] bg-gray-100' : ''
+          isOpen ? 'dark:bg-white/[0.05] bg-gray-200' : ''
         }`}
         aria-label={`Notifications: ${unreadCount} unread`}
       >
@@ -568,9 +612,9 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-96 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+        <div className="absolute top-full right-0 mt-2 w-96 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl dark:border-gray-700 border-blue-200 shadow-xl animate-fade-in">
           {/* Header */}
-          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-gray-200 flex items-center justify-between">
+          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-blue-200 flex items-center justify-between">
             <p className="text-sm font-semibold dark:text-white text-gray-900">Notifications</p>
             <span className="text-xs dark:text-gray-400 text-gray-600">
               {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
@@ -587,13 +631,13 @@ function NotificationPanel() {
           </div>
 
           {/* Footer */}
-          <div className="dark:border-t border-t dark:border-gray-700 border-gray-200 px-5 py-3 flex gap-3">
+          <div className="dark:border-t border-t dark:border-gray-700 border-blue-200 px-5 py-3 flex gap-3">
             <button
               onClick={() => {
                 navigate('/notifications');
                 setIsOpen(false);
               }}
-              className="flex-1 text-xs font-medium dark:text-primary-400 text-primary-600 dark:hover:text-primary-300 hover:text-primary-700 transition-colors"
+              className="flex-1 text-xs font-medium dark:text-primary-400 text-blue-700 dark:hover:text-primary-300 hover:text-blue-800 transition-colors"
             >
               View All Notifications
             </button>
@@ -603,7 +647,7 @@ function NotificationPanel() {
                   navigate('/dashboard');
                   setIsOpen(false);
                 }}
-                className="flex-1 text-xs font-medium dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-gray-700 transition-colors"
+                className="flex-1 text-xs font-medium dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-gray-800 transition-colors"
               >
                 Dashboard
               </button>
@@ -810,22 +854,22 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
         className="flex items-center space-x-3 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-xl px-4 py-2.5 transition-all duration-300 group dark:border border border-transparent dark:border-transparent dark:hover:border-white/[0.08] hover:border-gray-300"
       >
         <div className="text-left">
-          <h2 className="text-sm font-semibold dark:text-white text-black tracking-tight dark:group-hover:text-white group-hover:text-black transition-colors">
+          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-gray-900 transition-colors">
             {userName}
           </h2>
-          <p className="text-xs dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700 transition-colors">
+          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-gray-600 transition-colors">
             {userEmail}
           </p>
         </div>
         <ChevronDownIcon
-          className={`h-4 w-4 dark:text-gray-400 text-gray-600 dark:group-hover:text-white group-hover:text-gray-800 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 dark:text-gray-400 text-gray-500 dark:group-hover:text-white group-hover:text-gray-700 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-72 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
-          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-gray-200">
-            <p className="text-xs font-semibold dark:text-blue-400 text-blue-600 uppercase tracking-wider">
+        <div className="absolute top-full left-0 mt-2 w-72 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl dark:border-gray-700 border-blue-200 shadow-xl animate-fade-in">
+          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-blue-200">
+            <p className="text-xs font-semibold dark:text-blue-400 text-blue-700 uppercase tracking-wider">
               Role Views
             </p>
           </div>
@@ -840,15 +884,15 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
                   disabled={setActiveRoleMutation.isPending}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all duration-200 group ${
                     isActive
-                      ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
-                      : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
+                      ? 'dark:text-white text-blue-800 dark:bg-blue-600 bg-blue-100'
+                      : 'dark:text-gray-200 text-gray-700 dark:hover:text-white hover:text-blue-800 dark:hover:bg-gray-800 hover:bg-blue-100/70'
                   }`}
                 >
                   <ViewIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
                       isActive
-                        ? 'dark:text-white text-black'
-                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700'
+                        ? 'dark:text-white text-blue-800'
+                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-blue-700'
                     }`}
                   />
                   <div className="text-left flex-1">
@@ -858,7 +902,7 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
                         <span className="text-xs dark:text-blue-200 text-blue-700">
                           Current View
                         </span>
-                        <span className="w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(0,0,0,0.3)] animate-pulse"></span>
+                        <span className="w-1.5 h-1.5 rounded-full dark:bg-white bg-blue-700 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(29,78,216,0.5)] animate-pulse"></span>
                       </div>
                     )}
                   </div>
@@ -868,14 +912,14 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
           </div>
 
           {/* Settings Button */}
-          <div className="dark:border-t border-t dark:border-gray-700 border-gray-200">
+          <div className="dark:border-t border-t dark:border-gray-700 border-blue-200">
             <button
               onClick={handleSettingsClick}
-              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100 transition-all duration-200 group"
+              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-gray-800 hover:bg-blue-100/50 transition-all duration-200 group"
             >
-              <CogIcon className="h-4 w-4 flex-shrink-0 transition-colors duration-200 dark:text-gray-500 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-800" />
+              <CogIcon className="h-4 w-4 flex-shrink-0 transition-colors duration-200 dark:text-gray-500 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700" />
               <span className="flex-1 text-left">Role Settings</span>
-              <span className="text-xs dark:text-gray-500 text-gray-600 dark:group-hover:text-gray-400 group-hover:text-gray-700">
+              <span className="text-xs dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-gray-600">
                 {roleViews.length} / {dropdownRoleViews.length} visible
               </span>
             </button>
@@ -1512,7 +1556,7 @@ export function Header() {
 
   return (
     <>
-      <header className="dark:glass-card backdrop-blur-xl dark:bg-white/[0.02] bg-white/90 dark:border-b border-b dark:border-white/[0.08] border-gray-200 relative z-50">
+      <header className="backdrop-blur-xl dark:bg-white/[0.02] bg-white border-b dark:border-white/[0.08] border-gray-200 relative z-50">
         <div className="w-full">
           <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
             {/* Left side - User info */}
@@ -1574,6 +1618,9 @@ export function Header() {
 
             {/* Right side - Actions */}
             <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
               {/* Notification Panel - for supervisors and admins */}
               <NotificationPanel />
 
