@@ -1,11 +1,11 @@
 {
-  "name": "@wms/mcp-dev-accelerator",
-  "version": "2.0.0",
-  "description": "Production-ready WMS MCP Dev Accelerator with performance optimizations and enterprise features",
+  "name": "@erp/mcp-dev-accelerator",
+  "version": "3.0.0",
+  "description": "Production-ready ERP MCP Dev Accelerator with performance optimizations and enterprise features (Accounting, HR, Sales, Purchasing, Manufacturing, Projects, Inventory, E-commerce)",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "wms-mcp-server": "./dist/index.js"
+    "erp-mcp-server": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -19,13 +19,20 @@
   },
   "keywords": [
     "mcp",
-    "wms",
-    "warehouse",
+    "erp",
+    "accounting",
+    "hr",
+    "sales",
+    "purchasing",
+    "manufacturing",
+    "projects",
+    "inventory",
+    "ecommerce",
     "code-generation",
     "development-tools",
     "accelerator"
   ],
-  "author": "WMS Development Team",
+  "author": "ERP Development Team",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",

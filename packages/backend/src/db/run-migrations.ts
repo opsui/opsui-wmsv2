@@ -80,6 +80,12 @@ const REQUIRED_MIGRATIONS = [
     filename: '049_seed_nz_tax_tables.sql',
     description: 'NZ tax configuration - PAYE, KiwiSaver, ACC rates',
   },
+  // Order state changes tracking
+  {
+    name: '052_add_order_state_changes_table',
+    filename: '052_add_order_state_changes_table.sql',
+    description: 'Order state changes tracking table and trigger',
+  },
 ];
 
 // ============================================================================

@@ -111,7 +111,7 @@ const mockLeads = [
   },
 ];
 
-vi.mock('@/services/api', async (importOriginal) => {
+vi.mock('@/services/api', async importOriginal => {
   const actual = await importOriginal<typeof import('@/services/api')>();
   return {
     ...actual,
@@ -161,7 +161,9 @@ describe('SalesPage', () => {
     it('displays the page title', () => {
       renderWithProviders(<SalesPage />);
       expect(screen.getByText('Sales & CRM')).toBeInTheDocument();
-      expect(screen.getByText('Customer relationships, leads, opportunities, and quotes')).toBeInTheDocument();
+      expect(
+        screen.getByText('Customer relationships, leads, opportunities, and quotes')
+      ).toBeInTheDocument();
     });
   });
 

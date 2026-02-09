@@ -1664,3 +1664,1381 @@ export interface CreateBOMDTO {
   effectiveDate?: Date;
   expiryDate?: Date;
 }
+
+// ============================================================================
+// E-COMMERCE TYPES
+// ============================================================================
+
+export enum PlatformType {
+  SHOPIFY = 'SHOPIFY',
+  WOOCOMMERCE = 'WOOCOMMERCE',
+  MAGENTO = 'MAGENTO',
+  BIGCOMMERCE = 'BIGCOMMERCE',
+  CUSTOM = 'CUSTOM',
+}
+
+export enum EcommerceSyncStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
+export enum InventorySyncType {
+  PUSH = 'PUSH',
+  PULL = 'PULL',
+  BIDIRECTIONAL = 'BIDIRECTIONAL',
+}
+
+export enum OrderSyncType {
+  IMPORT = 'IMPORT',
+  EXPORT = 'EXPORT',
+}
+
+export enum ProductMappingStatus {
+  ACTIVE = 'ACTIVE',
+  UNSYNCED = 'UNSYNCED',
+  DISABLED = 'DISABLED',
+}
+
+export enum WebhookProcessingStatus {
+  PENDING = 'PENDING',
+  PROCESSED = 'PROCESSED',
+  FAILED = 'FAILED',
+  IGNORED = 'IGNORED',
+}
+
+export interface EcommerceConnection {
+  connectionId: string;
+  connectionName: string;
+  platformType: PlatformType;
+  apiEndpoint: string;
+  apiKey: string;
+  apiSecret?: string;
+  accessToken?: string;
+  storeUrl: string;
+  apiVersion: string;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  isActive: boolean;
+  syncCustomers: boolean;
+  syncProducts: boolean;
+  syncInventory: boolean;
+  syncOrders: boolean;
+  autoImportOrders: boolean;
+  lastSyncAt?: Date;
+  syncFrequencyMinutes: number;
+  connectionSettings?: Record<string, unknown>;
+  rateLimitRemaining?: number;
+  rateLimitResetAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: string;
+}
+
+export interface EcommerceProductMapping {
+  mappingId: string;
+  connectionId: string;
+  internalSku: string;
+  externalProductId: string;
+  externalVariantId?: string;
+  externalProductTitle?: string;
+  syncStatus: ProductMappingStatus;
+  lastSyncedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PlatformProductData {
+  externalProductId: string;
+  externalVariantId?: string;
+  title: string;
+  description?: string;
+  sku?: string;
+  price?: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  quantity?: number;
+  weight?: number;
+  weightUnit?: string;
+  images?: string[];
+  tags?: string[];
+  status?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface PlatformOrderData {
+  externalOrderId: string;
+  orderNumber?: string;
+  orderDate: Date;
+  orderStatus: string;
+  financialStatus: string;
+  currency: string;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  discount: number;
+  customer: {
+    externalCustomerId?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
+  shippingAddress?: {
+    firstName?: string;
+    lastName?: string;
+    company?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    province?: string;
+    country?: string;
+    postalCode?: string;
+    phone?: string;
+  };
+  billingAddress?: {
+    firstName?: string;
+    lastName?: string;
+    company?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    province?: string;
+    country?: string;
+    postalCode?: string;
+    phone?: string;
+  };
+  lineItems: Array<{
+    externalLineItemId?: string;
+    sku?: string;
+    title: string;
+    quantity: number;
+    price: number;
+    total: number;
+    productId?: string;
+    variantId?: string;
+  }>;
+  shippingMethod?: string;
+  trackingNumbers?: string[];
+  notes?: string;
+}
+
+export interface TestConnectionResult {
+  success: boolean;
+  message: string;
+  responseTimeMs: number;
+  platformInfo?: Record<string, unknown>;
+  rateLimitRemaining?: number;
+  rateLimitResetAt?: Date;
+}
+
+export interface CreateEcommerceConnectionDTO {
+  connectionName: string;
+  platformType: PlatformType;
+  apiEndpoint: string;
+  apiKey: string;
+  apiSecret?: string;
+  accessToken?: string;
+  storeUrl: string;
+  apiVersion?: string;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  syncCustomers?: boolean;
+  syncProducts?: boolean;
+  syncInventory?: boolean;
+  syncOrders?: boolean;
+  autoImportOrders?: boolean;
+  syncFrequencyMinutes?: number;
+  connectionSettings?: Record<string, unknown>;
+  platformSettings?: Record<string, unknown>;
+  createdBy: string;
+}
+
+export interface UpdateEcommerceConnectionDTO {
+  connectionName?: string;
+  apiEndpoint?: string;
+  apiKey?: string;
+  apiSecret?: string;
+  accessToken?: string;
+  storeUrl?: string;
+  apiVersion?: string;
+  webhookUrl?: string;
+  webhookSecret?: string;
+  isActive?: boolean;
+  syncCustomers?: boolean;
+  syncProducts?: boolean;
+  syncInventory?: boolean;
+  syncOrders?: boolean;
+  autoImportOrders?: boolean;
+  syncFrequencyMinutes?: number;
+  connectionSettings?: Record<string, unknown>;
+}
+
+export interface CreateProductMappingDTO {
+  connectionId: string;
+  internalSku: string;
+  externalProductId: string;
+  externalVariantId?: string;
+  externalProductTitle?: string;
+}
+
+export interface UpdateProductMappingDTO {
+  syncStatus?: ProductMappingStatus;
+  externalProductId?: string;
+  externalVariantId?: string;
+  externalProductTitle?: string;
+}
+
+export interface SyncInventoryRequestDTO {
+  connectionId: string;
+  skus: string[];
+  syncType?: InventorySyncType;
+  forceSync?: boolean;
+}
+
+export interface SyncProductsRequestDTO {
+  connectionId: string;
+  skus?: string[];
+  includeUnmapped?: boolean;
+}
+
+export interface SyncOrdersRequestDTO {
+  connectionId: string;
+  orderIds?: string[];
+  daysToLookBack?: number;
+}
+
+// ============================================================================
+// MANUFACTURING TYPES
+// ============================================================================
+
+export enum ManufacturingOrderStatus {
+  DRAFT = 'DRAFT',
+  PLANNED = 'PLANNED',
+  RELEASED = 'RELEASED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum RoutingStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum OperationType {
+  SETUP = 'SETUP',
+  PROCESSING = 'PROCESSING',
+  INSPECTION = 'INSPECTION',
+  PACKAGING = 'PACKAGING',
+}
+
+export enum MPSStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  FROZEN = 'FROZEN',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum MRPPlanStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum MRPActionType {
+  ORDER = 'ORDER',
+  CANCEL = 'CANCEL',
+  RESCHEDULE = 'RESCHEDULE',
+  EXPEDITE = 'EXPEDITE',
+  DEFER = 'DEFER',
+}
+
+export enum ShopFloorTransactionType {
+  CLOCK_ON = 'CLOCK_ON',
+  CLOCK_OFF = 'CLOCK_ON',
+  REPORT_OUTPUT = 'REPORT_OUTPUT',
+  REPORT_SCRAP = 'REPORT_SCRAP',
+  REPORT_DOWNTIME = 'REPORT_DOWNTIME',
+}
+
+export enum DefectSeverity {
+  MINOR = 'MINOR',
+  MAJOR = 'MAJOR',
+  CRITICAL = 'CRITICAL',
+}
+
+export enum DefectDisposition {
+  REWORK = 'REWORK',
+  SCRAP = 'SCRAP',
+  QUARANTINE = 'QUARANTINE',
+  USE_AS_IS = 'USE_AS_IS',
+  RETURN_TO_VENDOR = 'RETURN_TO_VENDOR',
+}
+
+export enum CapacityPlanStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export interface ManufacturingOrder {
+  orderId: string;
+  orderNumber: string;
+  productId: string;
+  productName: string;
+  bomId: string;
+  status: ManufacturingOrderStatus;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  quantityToProduce: number;
+  quantityCompleted: number;
+  quantityRejected: number;
+  unitOfMeasure: string;
+  scheduledStartDate: Date;
+  scheduledEndDate: Date;
+  actualStartDate?: Date;
+  actualEndDate?: Date;
+  assignedTo?: string;
+  workCenter?: string;
+  notes?: string;
+  materialsReserved: boolean;
+  components: ProductionOrderComponent[];
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+}
+
+export interface ManufacturingOrderWithDetails extends ManufacturingOrder {
+  routing?: Routing;
+  shopFloorTransactions?: ShopFloorTransaction[];
+  inspections?: ProductionInspection[];
+}
+
+export interface ProductionOrderComponent {
+  componentId: string;
+  orderId: string;
+  sku: string;
+  description?: string;
+  quantityRequired: number;
+  quantityIssued: number;
+  quantityReturned: number;
+  unitOfMeasure: string;
+  binLocation?: string;
+  lotNumber?: string;
+}
+
+export interface ProductionOrderOperation {
+  operationId: string;
+  orderId: string;
+  operationNumber: number;
+  operationType: OperationType;
+  workCenter: string;
+  description: string;
+  estimatedDurationMinutes: number;
+  actualDurationMinutes?: number;
+  laborCost?: number;
+  overheadCost?: number;
+  setupMinutes?: number;
+  status: ManufacturingOrderStatus;
+  startedAt?: Date;
+  completedAt?: Date;
+}
+
+export interface CreateManufacturingOrderDTO {
+  productId: string;
+  bomId: string;
+  quantityToProduce: number;
+  scheduledStartDate: Date;
+  scheduledEndDate: Date;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  assignedTo?: string;
+  workCenter?: string;
+  notes?: string;
+}
+
+export interface ReleaseProductionOrderDTO {
+  releaseDate?: Date;
+  materialsToReserve?: Array<{
+    sku: string;
+    quantity: number;
+    binLocation?: string;
+  }>;
+}
+
+export interface ShopFloorTransaction {
+  transactionId: string;
+  orderId: string;
+  operationId?: string;
+  transactionType: ShopFloorTransactionType;
+  userId: string;
+  quantity?: number;
+  transactionDate: Date;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface CreateShopFloorTransactionDTO {
+  orderId: string;
+  operationId?: string;
+  transactionType: ShopFloorTransactionType;
+  quantity?: number;
+  notes?: string;
+}
+
+export interface ProductionInspection {
+  inspectionId: string;
+  orderId: string;
+  productId: string;
+  inspectionDate: Date;
+  inspectedBy: string;
+  quantityInspected: number;
+  quantityPassed: number;
+  quantityFailed: number;
+  defects?: ProductionDefect[];
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface ProductionDefect {
+  defectId: string;
+  inspectionId: string;
+  defectType: string;
+  severity: DefectSeverity;
+  disposition: DefectDisposition;
+  quantity: number;
+  description: string;
+}
+
+export interface CreateProductionInspectionDTO {
+  orderId: string;
+  quantityInspected: number;
+  quantityPassed: number;
+  quantityFailed: number;
+  defects?: Array<{
+    defectType: string;
+    severity: DefectSeverity;
+    disposition: DefectDisposition;
+    quantity: number;
+    description: string;
+  }>;
+  notes?: string;
+}
+
+export interface CapacityPlan {
+  planId: string;
+  planName: string;
+  workCenter: string;
+  startDate: Date;
+  endDate: Date;
+  status: CapacityPlanStatus;
+  capacityPercent: number;
+  details: CapacityPlanDetail[];
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface CapacityPlanDetail {
+  detailId: string;
+  planId: string;
+  date: Date;
+  plannedHours: number;
+  actualHours?: number;
+  ordersScheduled: number;
+}
+
+export interface CreateCapacityPlanDTO {
+  planName: string;
+  workCenter: string;
+  startDate: Date;
+  endDate: Date;
+  details: Array<{
+    date: Date;
+    plannedHours: number;
+  }>;
+}
+
+export interface WorkCenter {
+  workCenterId: string;
+  code: string;
+  name: string;
+  description?: string;
+  capacityPerHour: number;
+  efficiencyPercent: number;
+  isActive: boolean;
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface WorkCenterQueue {
+  workCenterId: string;
+  queuedOrders: Array<{
+    orderId: string;
+    orderNumber: string;
+    scheduledDate: Date;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+    estimatedHours: number;
+  }>;
+}
+
+export interface CreateWorkCenterDTO {
+  code: string;
+  name: string;
+  description?: string;
+  capacityPerHour: number;
+  efficiencyPercent: number;
+}
+
+export interface Routing {
+  routingId: string;
+  code: string;
+  name: string;
+  productId: string;
+  status: RoutingStatus;
+  operations: RoutingOperation[];
+  version: string;
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface RoutingWithDetails extends Routing {
+  totalEstimatedMinutes: number;
+  bomComponents?: BOMComponent[];
+}
+
+export interface RoutingOperation {
+  operationId: string;
+  routingId: string;
+  operationNumber: number;
+  operationType: OperationType;
+  workCenter: string;
+  description: string;
+  estimatedDurationMinutes: number;
+  laborCost?: number;
+  overheadCost?: number;
+  setupMinutes?: number;
+}
+
+export interface RoutingBOMComponent {
+  componentId: string;
+  routingId: string;
+  operationNumber: number;
+  sku: string;
+  quantity: number;
+}
+
+export interface CreateRoutingDTO {
+  code: string;
+  name: string;
+  productId: string;
+  operations: Array<{
+    operationNumber: number;
+    operationType: OperationType;
+    workCenter: string;
+    description: string;
+    estimatedDurationMinutes: number;
+    laborCost?: number;
+    overheadCost?: number;
+    setupMinutes?: number;
+  }>;
+}
+
+export interface MSPPeriod {
+  periodId: string;
+  planId: string;
+  startDate: Date;
+  endDate: Date;
+  status: MPSStatus;
+  items: MSPItem[];
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface MSPItem {
+  itemId: string;
+  planId: string;
+  periodId: string;
+  sku: string;
+  forecastQuantity: number;
+  actualOrders?: number;
+  productionQuantity?: number;
+  availableInventory: number;
+}
+
+export interface MRPParameters {
+  planningHorizonDays: number;
+  lotSizeRule: 'FIXED' | 'PERIODIC' | 'LFL';
+  safetyStockDays: number;
+  leadTimeDays: number;
+}
+
+export interface MRPPlan {
+  planId: string;
+  planName: string;
+  planDate: Date;
+  status: MRPPlanStatus;
+  parameters: MRPParameters;
+  details: MRPPlanDetail[];
+  actionMessages: MRPActionMessage[];
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface MRPPlanDetail {
+  detailId: string;
+  planId: string;
+  sku: string;
+  grossRequirement: number;
+  scheduledReceipts: number;
+  availableInventory: number;
+  plannedOrderRelease?: number;
+  plannedOrderReceipt?: number;
+}
+
+export interface MRPActionMessage {
+  messageId: string;
+  planId: string;
+  sku: string;
+  actionType: MRPActionType;
+  quantity: number;
+  dueDate: Date;
+  notes?: string;
+}
+
+export interface CreateMRPPlanDTO {
+  planName: string;
+  planningHorizonDays?: number;
+  lotSizeRule?: 'FIXED' | 'PERIODIC' | 'LFL';
+  safetyStockDays?: number;
+  skus?: string[];
+}
+
+export interface ManufacturingDashboardMetrics {
+  ordersInProgress: number;
+  ordersCompletedToday: number;
+  ordersPastDue: number;
+  capacityUtilization: number;
+  qualityPassRate: number;
+  averageCycleTime: number;
+}
+
+export interface WorkCenterPerformanceReport {
+  workCenterId: string;
+  code: string;
+  name: string;
+  totalOrders: number;
+  onTimeDeliveryRate: number;
+  averageCycleTime: number;
+  utilizationPercent: number;
+  downtimeMinutes: number;
+}
+
+export interface ProductionOrderCostAnalysis {
+  orderId: string;
+  orderNumber: string;
+  materialCost: number;
+  laborCost: number;
+  overheadCost: number;
+  totalCost: number;
+  costPerUnit: number;
+}
+
+export interface MRPAnalysisSummary {
+  planId: string;
+  planName: string;
+  totalItems: number;
+  actionsRequired: number;
+  ExpediteCount: number;
+  deferCount: number;
+  cancelCount: number;
+}
+
+export interface BatchReleaseProductionOrdersDTO {
+  orderIds: string[];
+  releaseDate?: Date;
+}
+
+export interface BatchCompleteProductionOrdersDTO {
+  orderIds: string[];
+  completionData: Array<{
+    orderId: string;
+    quantityCompleted: number;
+    quantityRejected: number;
+    binLocation?: string;
+    lotNumber?: string;
+  }>;
+}
+
+export interface ImplementMRPActionsDTO {
+  planId: string;
+  actionIds: string[];
+}
+
+// ============================================================================
+// PURCHASING TYPES
+// ============================================================================
+
+export enum RequisitionStatus {
+  DRAFT = 'DRAFT',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  CONVERTED = 'CONVERTED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum RFQStatus {
+  DRAFT = 'DRAFT',
+  SENT = 'SENT',
+  RESPONSE_PENDING = 'RESPONSE_PENDING',
+  RESPONSE_RECEIVED = 'RESPONSE_RECEIVED',
+  AWARDED = 'AWARDED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum PurchaseOrderStatus {
+  DRAFT = 'DRAFT',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
+  SENT = 'SENT',
+  ACKNOWLEDGED = 'ACKNOWLEDGED',
+  PARTIALLY_RECEIVED = 'PARTIALLY_RECEIVED',
+  RECEIVED = 'RECEIVED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum VendorPerformanceRank {
+  EXCELLENT = 'EXCELLENT',
+  GOOD = 'GOOD',
+  AVERAGE = 'AVERAGE',
+  POOR = 'POOR',
+}
+
+export interface PurchaseRequisition {
+  requisitionId: string;
+  requisitionNumber: string;
+  requestedBy: string;
+  department?: string;
+  entityId?: string;
+  approvalStatus: RequisitionStatus;
+  approvedBy?: string;
+  approvedAt?: Date;
+  rejectionReason?: string;
+  requiredByDate?: Date;
+  jobNumber?: string;
+  notes?: string;
+  lines: PurchaseRequisitionLine[];
+  createdAt: Date;
+  updatedAt: Date;
+  convertedToPoId?: string;
+}
+
+export interface PurchaseRequisitionLine {
+  lineId: string;
+  requisitionId: string;
+  lineNumber: number;
+  sku?: string;
+  description: string;
+  quantity: number;
+  unitOfMeasure: string;
+  estimatedUnitPrice?: number;
+  estimatedTotal?: number;
+  requestedDeliveryDate?: Date;
+  vendorId?: string;
+  notes?: string;
+}
+
+export interface RFQ {
+  rfqId: string;
+  rfqNumber: string;
+  title: string;
+  sourceType: string;
+  sourceId: string;
+  status: RFQStatus;
+  createdBy: string;
+  createdById?: string;
+  dueDate: Date;
+  sentAt?: Date;
+  awardedAt?: Date;
+  notes?: string;
+  vendors: RFQVendor[];
+  lines: RFQLine[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface RFQVendor {
+  rfqVendorId: string;
+  rfqId: string;
+  vendorId: string;
+  vendorContactId?: string;
+  sentAt?: Date;
+  responseReceivedAt?: boolean;
+  quotedTotal?: number;
+  notes?: string;
+}
+
+export interface RFQLine {
+  lineId: string;
+  rfqId: string;
+  lineNumber: number;
+  sku?: string;
+  description: string;
+  quantity: number;
+  unitOfMeasure: string;
+  requiredDate?: Date;
+  notes?: string;
+}
+
+export interface VendorQuote {
+  quoteId: string;
+  rfqVendorId: string;
+  quoteNumber?: string;
+  validUntil?: Date;
+  quotedAt: Date;
+  lines: VendorQuoteLine[];
+  terms?: string;
+  notes?: string;
+}
+
+export interface VendorQuoteLine {
+  lineId: string;
+  quoteId: string;
+  rfqLineId: string;
+  unitPrice: number;
+  quotedQuantity: number;
+  totalAmount: number;
+  promisedDate?: Date;
+  notes?: string;
+}
+
+export interface VendorCatalogItem {
+  catalogItemId: string;
+  vendorId: string;
+  sku: string;
+  vendorSku?: string;
+  description: string;
+  unitOfMeasure: string;
+  unitPrice: number;
+  currency: string;
+  leadTimeDays: number;
+  minOrderQuantity: number;
+  quantityBreaks?: VendorQuantityBreak[];
+  isActive: boolean;
+  vendorPartNumber?: string;
+  discontinuedDate?: Date;
+  replacementSku?: string;
+  updatedAt: Date;
+}
+
+export interface VendorQuantityBreak {
+  breakId: string;
+  catalogItemId: string;
+  minQuantity: number;
+  unitPrice: number;
+}
+
+export interface PurchaseOrder {
+  poId: string;
+  poNumber: string;
+  vendorId: string;
+  vendor?: Vendor;
+  sourceType: string;
+  sourceId: string;
+  entityId?: string;
+  poStatus: PurchaseOrderStatus;
+  threeWayMatchStatus?: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  currency: string;
+  exchangeRate?: number;
+  subtotal: number;
+  taxAmount: number;
+  shippingAmount: number;
+  otherCharges: number;
+  totalAmount: number;
+  notes?: string;
+  internalNotes?: string;
+  vendorNotes?: string;
+  requestedBy: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lines: PurchaseOrderLine[];
+}
+
+export interface Vendor {
+  vendorId: string;
+  vendorNumber: string;
+  name: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  billingAddress?: Address;
+  shippingAddress?: Address;
+  paymentTerms?: string;
+  currency: string;
+  taxId?: string;
+  isActive: boolean;
+  onHoldFromDate?: Date;
+  onHoldToDate?: Date;
+  onHoldReason?: string;
+  notes?: string;
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+}
+
+export interface PurchaseOrderLine {
+  lineId: string;
+  poId: string;
+  lineNumber: number;
+  sku?: string;
+  description: string;
+  quantity: number;
+  unitOfMeasure: string;
+  unitPrice: number;
+  taxRate?: number;
+  taxAmount?: number;
+  discountPercent?: number;
+  discountAmount?: number;
+  totalAmount: number;
+  requestedDate?: Date;
+  promisedDate?: Date;
+  binLocation?: string;
+  assetId?: string;
+  projectId?: string;
+  vendorSku?: string;
+  notes?: string;
+}
+
+export interface PurchaseReceipt {
+  receiptId: string;
+  receiptNumber: string;
+  poId: string;
+  purchaseOrder?: PurchaseOrder;
+  vendorId: string;
+  entityId?: string;
+  receivedBy: string;
+  receivedDate: Date;
+  deliveryDate?: Date;
+  shipmentNumber?: string;
+  carrier?: string;
+  trackingNumber?: string;
+  notes?: string;
+  status: string;
+  lines: PurchaseReceiptLine[];
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface PurchaseReceiptLine {
+  lineId: string;
+  receiptId: string;
+  poLineId: string;
+  lineNumber: number;
+  sku?: string;
+  description: string;
+  quantityOrdered: number;
+  quantityReceived: number;
+  quantityRejected: number;
+  quantityAccepted: number;
+  binLocation?: string;
+  lotNumber?: string;
+  expiryDate?: Date;
+  unitOfMeasure: string;
+  qualityStatus?: QualityStatus;
+  rejectionReason?: string;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface ThreeWayMatch {
+  matchId: string;
+  poId: string;
+  poLineId?: string;
+  receiptId?: string;
+  invoiceId?: string;
+  matchStatus: string;
+  poQuantity: number;
+  poUnitPrice: number;
+  poAmount: number;
+  receivedQuantity?: number;
+  receivedUnitPrice?: number;
+  receivedAmount?: number;
+  invoicedQuantity?: number;
+  invoicedUnitPrice?: number;
+  invoicedAmount?: number;
+  quantityVariance?: number;
+  priceVariance?: number;
+  totalVariance?: number;
+  varianceTolerance?: number;
+  requiresApproval: boolean;
+  approvedBy?: string;
+  approvedAt?: Date;
+  resolvedAt?: Date;
+  resolutionNotes?: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface VendorPerformance {
+  performanceId: string;
+  vendorId: string;
+  reviewPeriod: string;
+  onTimeDeliveryRate: number;
+  qualityAcceptanceRate: number;
+  priceCompetitivenessScore: number;
+  responsivenessRating: number;
+  overallScore: number;
+  totalOrders: number;
+  onTimeOrders: number;
+  totalReceipts: number;
+  acceptedReceipts: number;
+  totalQuotes: number;
+  avgResponseTimeHours?: number;
+  reviewedBy: string;
+  reviewedAt: Date;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface VendorPerformanceEvent {
+  eventId: string;
+  vendorId: string;
+  eventType: 'DELIVERY' | 'QUALITY' | 'RESPONSIVENESS' | 'COMMUNICATION' | 'OTHER';
+  eventDate: Date;
+  severity: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+  description: string;
+  poId?: string;
+  receiptId?: string;
+  reportedBy: string;
+  createdAt: Date;
+}
+
+export interface VendorScorecard {
+  scorecardId: string;
+  vendorId: string;
+  scorecardPeriod: string;
+  onTimeDeliveryScore: number;
+  qualityScore: number;
+  priceScore: number;
+  responsivenessScore: number;
+  technicalCapabilityScore?: number;
+  financialStabilityScore?: number;
+  overallScore: number;
+  rank: VendorPerformanceRank;
+  strengths: string[];
+  areasForImprovement: string[];
+  reviewedBy: string;
+  reviewDate: Date;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface SpendAnalysisReport {
+  reportId: string;
+  entityType?: string;
+  entityId?: string;
+  vendorId?: string;
+  category?: string;
+  reportPeriod: string;
+  totalSpend: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  spendByCategory: Array<{
+    category: string;
+    amount: number;
+    percentage: number;
+  }>;
+  spendByVendor: Array<{
+    vendorId: string;
+    vendorName: string;
+    amount: number;
+    percentage: number;
+  }>;
+  topSkus: Array<{
+    sku: string;
+    description: string;
+    amount: number;
+    quantity: number;
+  }>;
+  trends: Array<{
+    period: string;
+    amount: number;
+  }>;
+  generatedAt: Date;
+  generatedBy: string;
+}
+
+export interface PurchasingDashboardMetrics {
+  pendingRequisitions: number;
+  pendingApprovals: number;
+  openPurchaseOrders: number;
+  ordersPastDue: number;
+  pendingReceipts: number;
+  pendingThreeWayMatches: number;
+  totalSpendMonth: number;
+  totalSendYear: number;
+  activeVendors: number;
+}
+
+// ============================================================================
+// PROJECTS TYPES
+// ============================================================================
+
+export interface Project {
+  projectId: string;
+  projectNumber: string;
+  name: string;
+  description?: string;
+  customerId?: string;
+  customerName?: string;
+  typeId?: string;
+  status: 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  startDate: Date;
+  endDate?: Date;
+  estimatedCompletionDate?: Date;
+  actualCompletionDate?: Date;
+  estimatedBudget: number;
+  actualCost?: number;
+  progressPercent: number;
+  entityId?: string;
+  projectManagerId: string;
+  projectManagerName?: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedBy?: string;
+  updatedAt?: Date;
+}
+
+export interface ProjectTask {
+  taskId: string;
+  projectId: string;
+  taskNumber: string;
+  title: string;
+  description?: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  startDate?: Date;
+  dueDate?: Date;
+  completedAt?: Date;
+  estimatedHours: number;
+  actualHours?: number;
+  progressPercent: number;
+  assignedTo?: string;
+  assignedToName?: string;
+  dependsOnTasks?: string[];
+  parentTaskId?: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedBy?: string;
+  updatedAt?: Date;
+}
+
+export interface ProjectMilestone {
+  milestoneId: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  dueDate: Date;
+  completedAt?: Date;
+  status: 'PENDING' | 'COMPLETED' | 'OVERDUE';
+  notes?: string;
+}
+
+export interface ProjectBudgetItem {
+  itemId: string;
+  projectId: string;
+  category: string;
+  description: string;
+  budgetedAmount: number;
+  actualAmount?: number;
+  variance?: number;
+}
+
+export interface ProjectTimeEntry {
+  entryId: string;
+  projectId: string;
+  taskId?: string;
+  userId: string;
+  userName?: string;
+  date: Date;
+  hours: number;
+  description?: string;
+  billable: boolean;
+  hourlyRate?: number;
+  createdAt: Date;
+  approvedAt?: Date;
+  approvedBy?: string;
+}
+
+export interface ProjectIssue {
+  issueId: string;
+  projectId: string;
+  title: string;
+  description: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  assignedTo?: string;
+  dueDate?: Date;
+  resolvedAt?: Date;
+  createdAt: Date;
+  createdBy: string;
+}
+
+export interface ProjectResourceAllocation {
+  allocationId: string;
+  projectId: string;
+  userId: string;
+  role?: string;
+  allocatedPercent: number;
+  startDate: Date;
+  endDate: Date;
+}
+
+export interface ProjectDocument {
+  documentId: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  fileUrl: string;
+  fileType: string;
+  fileSizeBytes: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+}
+
+export interface ProjectsDashboardMetrics {
+  activeProjects: number;
+  completedProjectsMonth: number;
+  totalHoursThisMonth: number;
+  projectsOverBudget: number;
+  projectsBehindSchedule: number;
+  totalBudgetAllProjects: number;
+  totalActualCostAllProjects: number;
+}
+
+export interface CreateProjectDTO {
+  name: string;
+  description?: string;
+  customerId?: string;
+  typeId?: string;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  startDate: Date;
+  endDate?: Date;
+  estimatedBudget: number;
+  projectManagerId: string;
+  notes?: string;
+}
+
+export interface UpdateProjectDTO {
+  name?: string;
+  description?: string;
+  customerId?: string;
+  typeId?: string;
+  status?: 'PLANNING' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  startDate?: Date;
+  endDate?: Date;
+  estimatedCompletionDate?: Date;
+  estimatedBudget?: number;
+  projectManagerId?: string;
+  notes?: string;
+}
+
+export interface CreateProjectTaskDTO {
+  title: string;
+  description?: string;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  startDate?: Date;
+  dueDate?: Date;
+  estimatedHours: number;
+  assignedTo?: string;
+  dependsOnTasks?: string[];
+  parentTaskId?: string;
+  notes?: string;
+}
+
+export interface UpdateProjectTaskDTO {
+  title?: string;
+  description?: string;
+  status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  startDate?: Date;
+  dueDate?: Date;
+  estimatedHours?: number;
+  actualHours?: number;
+  assignedTo?: string;
+  dependsOnTasks?: string[];
+  notes?: string;
+}
+
+export interface CreateProjectMilestoneDTO {
+  name: string;
+  description?: string;
+  dueDate: Date;
+  notes?: string;
+}
+
+export interface CreateProjectTimeEntryDTO {
+  taskId?: string;
+  date: Date;
+  hours: number;
+  description?: string;
+  billable?: boolean;
+}
+
+export interface CreateProjectIssueDTO {
+  title: string;
+  description: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  assignedTo?: string;
+  dueDate?: Date;
+}
+
+export interface ProjectWithDetails extends Project {
+  tasks: ProjectTask[];
+  milestones: ProjectMilestone[];
+  team: Array<{
+    userId: string;
+    userName: string;
+    role?: string;
+  }>;
+  budget: ProjectBudgetItem[];
+}
+
+// ============================================================================
+// ADVANCED INVENTORY TYPES
+// ============================================================================
+
+export enum VelocityCategory {
+  FAST = 'FAST',
+  MEDIUM = 'MEDIUM',
+  SLOW = 'SLOW',
+  DEAD = 'DEAD',
+}
+
+export enum LandedCostComponentType {
+  FREIGHT = 'FREIGHT',
+  INSURANCE = 'INSURANCE',
+  DUTIES = 'DUTIES',
+  CUSTOMS_BROKERAGE = 'CUSTOMS_BROKERAGE',
+  OTHER = 'OTHER',
+}
+
+export enum ForecastMethod {
+  MOVING_AVERAGE = 'MOVING_AVERAGE',
+  EXPONENTIAL_SMOOTHING = 'EXPONENTIAL_SMOOTHING',
+  LINEAR_REGRESSION = 'LINEAR_REGRESSION',
+  SEASONAL = 'SEASONAL',
+}

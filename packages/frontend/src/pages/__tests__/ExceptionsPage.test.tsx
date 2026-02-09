@@ -15,7 +15,7 @@ import { ExceptionsPage } from '../ExceptionsPage';
 
 // Mock the auth store
 vi.mock('@/stores', () => ({
-  useAuthStore: vi.fn((selector) => {
+  useAuthStore: vi.fn(selector => {
     const state = {
       user: { userId: 'test-user', name: 'Test User', role: 'SUPERVISOR' },
       canSupervise: () => true,
@@ -80,7 +80,7 @@ const mockExceptions = [
   },
 ];
 
-vi.mock('@/services/api', async (importOriginal) => {
+vi.mock('@/services/api', async importOriginal => {
   const actual = await importOriginal<typeof import('@/services/api')>();
   return {
     ...actual,

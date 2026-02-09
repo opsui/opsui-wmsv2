@@ -1,0 +1,94 @@
+# Prometheus Configuration for WMS
+# Scrapes metrics from backend, frontend, and infrastructure
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+
+# Rule files
+rule_files:
+  - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Backend application metrics
+  - job_name: 'wms-backend'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - production
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: backend
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Frontend application metrics (if exposed)
+  - job_name: 'wms-frontend'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - production
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: frontend
+        action: keep
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # PostgreSQL exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets:
+        - postgres-exporter:9187
+    scrape_interval: 30s
+
+  # Redis exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets:
+        - redis-exporter:9121
+    scrape_interval: 30s
+
+  # Node exporter (infrastructure metrics)
+  - job_name: 'node'
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):10250'
+        target_label: __address__
+        replacement: '${1}:9100'
+    scrape_interval: 30s
+
+  # Kubelet metrics
+  - job_name: 'kubelet'
+    kubernetes_sd_configs:
+      - role: node
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      insecure_skip_verify: true
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.*):10250'
+        target_label: __address__
+        replacement: '${1}:10250'
+    scrape_interval: 30s

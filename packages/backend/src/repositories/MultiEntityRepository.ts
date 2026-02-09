@@ -436,7 +436,7 @@ export class EntitySettingsRepository extends BaseRepository<EntitySetting> {
     entityId: string,
     key: string,
     value: string,
-    type = 'STRING',
+    type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'JSON' = 'STRING',
     updatedBy?: string
   ): Promise<EntitySetting> {
     const existing = await this.findByEntityAndKey(entityId, key);
@@ -537,26 +537,26 @@ export class EntityUsersRepository extends BaseRepository<EntityUser> {
 
   // Set default entity for user
   async setDefaultEntity(userId: string, entityId: string): Promise<boolean> {
-    const client = await transaction();
-    try {
-      // Unset previous default
-      await client.query(
-        `UPDATE ${this.tableName} SET is_default_entity = false WHERE user_id = $1`,
-        [userId]
-      );
+    return await transaction(async client => {
+      try {
+        // Unset previous default
+        await client.query(
+          `UPDATE ${this.tableName} SET is_default_entity = false WHERE user_id = $1`,
+          [userId]
+        );
 
-      // Set new default
-      const result = await client.query(
-        `UPDATE ${this.tableName} SET is_default_entity = true WHERE entity_id = $2 AND user_id = $1`,
-        [userId, entityId]
-      );
+        // Set new default
+        const result = await client.query(
+          `UPDATE ${this.tableName} SET is_default_entity = true WHERE entity_id = $2 AND user_id = $1`,
+          [userId, entityId]
+        );
 
-      await client.query('COMMIT');
-      return (result.rowCount || 0) > 0;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    }
+        return (result.rowCount || 0) > 0;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
+    });
   }
 
   // Check if user has permission on entity
@@ -713,9 +713,7 @@ export class EntityExchangeRateRepository extends BaseRepository<EntityExchangeR
       return (await this.update(existing.rate_id, {
         exchange_rate: exchangeRate,
         is_override: isOverride,
-        updated_at: new Date(),
-        updated_by: createdBy,
-      } as EntityExchangeRate)) as EntityExchangeRate;
+      })) as EntityExchangeRate;
     } else {
       return await this.insert({
         entity_id: entityId,

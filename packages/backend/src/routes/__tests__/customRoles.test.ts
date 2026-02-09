@@ -146,6 +146,13 @@ jest.mock('@opsui/shared', () => ({
     SUPERVISOR: 'SUPERVISOR',
     PICKER: 'PICKER',
   },
+  PlatformType: {
+    SHOPIFY: 'SHOPIFY',
+    WOOCOMMERCE: 'WOOCOMMERCE',
+    MAGENTO: 'MAGENTO',
+    BIGCOMMERCE: 'BIGCOMMERCE',
+    CUSTOM: 'CUSTOM',
+  },
 }));
 
 describe('Custom Roles Routes', () => {

@@ -1,6 +1,6 @@
-# Warehouse Management System
+# Enterprise Resource Planning System
 
-A production-ready WMS built with clean architecture principles, featuring real-time order fulfillment, inventory tracking, and picker workflow optimization.
+A production-ready ERP system built with clean architecture principles, featuring comprehensive business operations including Accounting, HR/Payroll, Sales/CRM, Purchasing, Manufacturing, Projects, Inventory/Warehouse, and E-commerce integration.
 
 **🤖 AI-First Development**: This project is designed for AI-assisted development with comprehensive guardrails, team protocols, and advanced cognitive enhancements.
 
@@ -29,7 +29,7 @@ A production-ready WMS built with clean architecture principles, featuring real-
 ## Architecture
 
 ```
-warehouse-management-system/
+erp-system/
 ├── packages/
 │   ├── backend/          # Node.js/Express API + PostgreSQL
 │   ├── frontend/         # React + TypeScript
@@ -340,7 +340,7 @@ npm run test:e2e
 
 ## Team Repository
 
-**Repository**: https://github.com/opsui/opsui-wmsv2
+**Repository**: https://github.com/opsui/opsui-erp
 
 This is a team repository with automatic synchronization. See [TEAM_COLLABORATION.md](TEAM_COLLABORATION.md) for working safely with multiple team members.
 

@@ -721,6 +721,56 @@ export class SalesRepository {
     return { quotes, total };
   }
 
+  async updateQuote(quoteId: string, updates: Partial<Quote>): Promise<Quote | null> {
+    const client = await getPool();
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    const allowedFields = [
+      'customerId',
+      'status',
+      'validUntil',
+      'subtotal',
+      'taxAmount',
+      'totalAmount',
+      'notes',
+      'internalNotes',
+      'convertedToOrderId',
+      'updatedBy',
+    ];
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (allowedFields.includes(key) && value !== undefined) {
+        fields.push(`${this.camelToSnake(key)} = $${paramCount}`);
+        values.push(value);
+        paramCount++;
+      }
+    }
+
+    if (fields.length === 0) {
+      return await this.findQuoteById(quoteId);
+    }
+
+    values.push(quoteId);
+
+    const query = `
+      UPDATE quotes
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE quote_id = $${paramCount}
+      RETURNING *
+    `;
+
+    const result = await client.query(query, values);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    return await this.findQuoteById(quoteId);
+  }
+
   // ========================================================================
   // CUSTOMER INTERACTIONS
   // ========================================================================
@@ -784,6 +834,732 @@ export class SalesRepository {
       createdAt: row.created_at,
       createdBy: row.created_by,
     }));
+  }
+
+  // ========================================================================
+  // SALES ORDERS (Phase 6: Sales Order Management)
+  // ========================================================================
+
+  async createSalesOrder(order: any): Promise<any> {
+    const client = await getPool();
+    const orderId = `SO-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const result = await client.query(
+      `INSERT INTO sales_orders
+        (order_id, entity_id, customer_id, order_number, order_date, order_status,
+         warehouse_id, shipping_method_id, payment_terms, currency, exchange_rate,
+         subtotal, discount_amount, discount_percent, tax_amount, shipping_amount, total_amount,
+         customer_po_number, requested_date, promised_date, notes, internal_notes,
+         sales_person_id, territory_id, commission_rate, commission_amount, commission_paid,
+         requires_approval, approval_status, source_channel, ecommerce_order_id,
+         original_order_id, is_backorder, created_by, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+               $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, NOW())
+       RETURNING *`,
+      [
+        orderId,
+        order.entityId || null,
+        order.customerId,
+        order.orderNumber,
+        order.orderDate,
+        order.orderStatus,
+        order.warehouseId || null,
+        order.shippingMethodId || null,
+        order.paymentTerms,
+        order.currency,
+        order.exchangeRate,
+        order.subtotal,
+        order.discountAmount,
+        order.discountPercent,
+        order.taxAmount,
+        order.shippingAmount,
+        order.totalAmount,
+        order.customerPoNumber || null,
+        order.requestedDate || null,
+        order.promisedDate || null,
+        order.notes || null,
+        order.internalNotes || null,
+        order.salesPersonId || null,
+        order.territoryId || null,
+        order.commissionRate,
+        order.commissionAmount,
+        order.commissionPaid,
+        order.requiresApproval,
+        order.approvalStatus,
+        order.sourceChannel || null,
+        order.ecommerceOrderId || null,
+        order.originalOrderId || null,
+        order.isBackorder,
+        order.createdBy || null,
+      ]
+    );
+
+    logger.info('Sales order created', { orderId, orderNumber: order.orderNumber });
+    return { ...result.rows[0], orderId };
+  }
+
+  async createSalesOrderLine(line: any): Promise<any> {
+    const client = await getPool();
+    const lineId = `SOL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const result = await client.query(
+      `INSERT INTO sales_order_lines
+        (line_id, order_id, line_number, sku, description, quantity, unit_price,
+         discount_percent, discount_amount, tax_code, tax_rate, tax_amount, line_total,
+         quantity_picked, quantity_shipped, quantity_invoiced, quantity_backordered,
+         status, notes, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW())
+       RETURNING *`,
+      [
+        lineId,
+        line.orderId,
+        line.lineNumber,
+        line.sku,
+        line.description || null,
+        line.quantity,
+        line.unitPrice,
+        line.discountPercent,
+        line.discountAmount,
+        line.taxCode || null,
+        line.taxRate,
+        line.taxAmount,
+        line.lineTotal,
+        line.quantityPicked,
+        line.quantityShipped,
+        line.quantityInvoiced,
+        line.quantityBackordered,
+        line.status,
+        line.notes || null,
+      ]
+    );
+
+    return { ...result.rows[0], lineId };
+  }
+
+  async findSalesOrderById(orderId: string): Promise<any | null> {
+    const client = await getPool();
+
+    const result = await client.query(`SELECT * FROM sales_orders WHERE order_id = $1`, [orderId]);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const orderRow = result.rows[0];
+
+    // Get line items
+    const linesResult = await client.query(
+      `SELECT * FROM sales_order_lines WHERE order_id = $1 ORDER BY line_number`,
+      [orderId]
+    );
+
+    const lines = linesResult.rows.map(row => ({
+      lineId: row.line_id,
+      orderId: row.order_id,
+      lineNumber: row.line_number,
+      sku: row.sku,
+      description: row.description,
+      quantity: parseFloat(row.quantity),
+      unitPrice: parseFloat(row.unit_price),
+      discountPercent: parseFloat(row.discount_percent),
+      discountAmount: parseFloat(row.discount_amount),
+      taxCode: row.tax_code,
+      taxRate: parseFloat(row.tax_rate),
+      taxAmount: parseFloat(row.tax_amount),
+      lineTotal: parseFloat(row.line_total),
+      quantityPicked: parseFloat(row.quantity_picked),
+      quantityShipped: parseFloat(row.quantity_shipped),
+      quantityInvoiced: parseFloat(row.quantity_invoiced),
+      quantityBackordered: parseFloat(row.quantity_backordered),
+      status: row.status,
+      notes: row.notes,
+      createdAt: row.created_at,
+    }));
+
+    return this.mapRowToSalesOrder(orderRow, lines);
+  }
+
+  async findAllSalesOrders(filters?: any): Promise<{ orders: any[]; total: number }> {
+    const client = await getPool();
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramCount = 1;
+
+    if (filters?.customerId) {
+      conditions.push(`customer_id = $${paramCount}`);
+      params.push(filters.customerId);
+      paramCount++;
+    }
+
+    if (filters?.orderStatus) {
+      conditions.push(`order_status = $${paramCount}`);
+      params.push(filters.orderStatus);
+      paramCount++;
+    }
+
+    if (filters?.salesPersonId) {
+      conditions.push(`sales_person_id = $${paramCount}`);
+      params.push(filters.salesPersonId);
+      paramCount++;
+    }
+
+    if (filters?.territoryId) {
+      conditions.push(`territory_id = $${paramCount}`);
+      params.push(filters.territoryId);
+      paramCount++;
+    }
+
+    if (filters?.isBackorder !== undefined) {
+      conditions.push(`is_backorder = $${paramCount}`);
+      params.push(filters.isBackorder);
+      paramCount++;
+    }
+
+    if (filters?.search) {
+      conditions.push(
+        `(order_number ILIKE $${paramCount} OR customer_po_number ILIKE $${paramCount})`
+      );
+      params.push(`%${filters.search}%`);
+      paramCount++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const countResult = await client.query(
+      `SELECT COUNT(*) as count FROM sales_orders ${whereClause}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    const limit = filters?.limit || 50;
+    const offset = filters?.offset || 0;
+
+    const result = await client.query(
+      `SELECT * FROM sales_orders ${whereClause} ORDER BY order_date DESC, created_at DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
+      [...params, limit, offset]
+    );
+
+    const orders: any[] = [];
+
+    for (const orderRow of result.rows) {
+      const order = await this.findSalesOrderById(orderRow.order_id);
+      if (order) {
+        orders.push(order);
+      }
+    }
+
+    return { orders, total };
+  }
+
+  async updateSalesOrder(orderId: string, updates: any): Promise<any | null> {
+    const client = await getPool();
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    const updatableFields = [
+      'orderStatus',
+      'promisedDate',
+      'shippingMethodId',
+      'notes',
+      'internalNotes',
+      'salesPersonId',
+      'territoryId',
+      'shipDate',
+      'trackingNumber',
+      'requiresApproval',
+      'approvalStatus',
+      'approvedBy',
+      'approvedDate',
+      'approvalNotes',
+      'updatedBy',
+    ];
+
+    const dbFieldMap: Record<string, string> = {
+      orderStatus: 'order_status',
+      promisedDate: 'promised_date',
+      shippingMethodId: 'shipping_method_id',
+      internalNotes: 'internal_notes',
+      salesPersonId: 'sales_person_id',
+      territoryId: 'territory_id',
+      shipDate: 'ship_date',
+      trackingNumber: 'tracking_number',
+      requiresApproval: 'requires_approval',
+      approvalStatus: 'approval_status',
+      approvedBy: 'approved_by',
+      approvedDate: 'approved_date',
+      approvalNotes: 'approval_notes',
+      updatedBy: 'updated_by',
+    };
+
+    for (const field of updatableFields) {
+      if (updates[field] !== undefined) {
+        const dbField = dbFieldMap[field] || field;
+        fields.push(`${dbField} = $${paramCount}`);
+        values.push(updates[field]);
+        paramCount++;
+      }
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(orderId);
+    paramCount++;
+
+    const result = await client.query(
+      `UPDATE sales_orders SET ${fields.join(', ')} WHERE order_id = $${paramCount} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    logger.info('Sales order updated', { orderId });
+    return await this.findSalesOrderById(orderId);
+  }
+
+  async deleteSalesOrder(orderId: string): Promise<void> {
+    const client = await getPool();
+    await client.query(`DELETE FROM sales_orders WHERE order_id = $1`, [orderId]);
+    logger.info('Sales order deleted', { orderId });
+  }
+
+  async get_next_sales_order_number(): Promise<string> {
+    const client = await getPool();
+    const result = await client.query(`SELECT get_next_sales_order_number() as order_number`);
+    return result.rows[0].order_number;
+  }
+
+  async update_sales_order_totals(orderId: string): Promise<void> {
+    const client = await getPool();
+    await client.query(`SELECT update_sales_order_totals($1)`, [orderId]);
+  }
+
+  async calculate_sales_commission(orderId: string): Promise<number> {
+    const client = await getPool();
+    const result = await client.query(
+      `SELECT calculate_sales_commission($1) as commission_amount`,
+      [orderId]
+    );
+    return parseFloat(result.rows[0].commission_amount);
+  }
+
+  async create_backorder_from_line(lineId: string, quantity: number): Promise<string> {
+    const client = await getPool();
+    const result = await client.query(`SELECT create_backorder_from_line($1, $2) as backorder_id`, [
+      lineId,
+      quantity,
+    ]);
+    return result.rows[0].backorder_id;
+  }
+
+  // ========================================================================
+  // BACKORDERS (Phase 6)
+  // ========================================================================
+
+  async findBackorderById(backorderId: string): Promise<any | null> {
+    const client = await getPool();
+    const result = await client.query(`SELECT * FROM backorders WHERE backorder_id = $1`, [
+      backorderId,
+    ]);
+    return result.rows.length > 0 ? this.mapRowToBackorder(result.rows[0]) : null;
+  }
+
+  async findAllBackorders(filters?: any): Promise<any[]> {
+    const client = await getPool();
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramCount = 1;
+
+    if (filters?.customerId) {
+      conditions.push(`customer_id = $${paramCount}`);
+      params.push(filters.customerId);
+      paramCount++;
+    }
+
+    if (filters?.status) {
+      conditions.push(`status = $${paramCount}`);
+      params.push(filters.status);
+      paramCount++;
+    }
+
+    if (filters?.sku) {
+      conditions.push(`sku = $${paramCount}`);
+      params.push(filters.sku);
+      paramCount++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const result = await client.query(
+      `SELECT * FROM backorders ${whereClause} ORDER BY promised_date ASC, created_at ASC`,
+      params
+    );
+
+    return result.rows.map(row => this.mapRowToBackorder(row));
+  }
+
+  async fulfillBackorder(backorderId: string, quantity: number, userId: string): Promise<void> {
+    const client = await getPool();
+
+    await client.query(
+      `UPDATE backorders
+       SET quantity_fulfilled = quantity_fulfilled + $1,
+           quantity_outstanding = GREATEST(0, quantity_outstanding - $1),
+           status = CASE WHEN quantity_outstanding - $1 <= 0 THEN 'FULFILLED' ELSE status END,
+           fulfilled_date = CASE WHEN quantity_outstanding - $1 <= 0 THEN NOW() ELSE fulfilled_date END,
+           updated_at = NOW()
+       WHERE backorder_id = $2`,
+      [quantity, backorderId]
+    );
+
+    logger.info('Backorder fulfilled', { backorderId, quantity });
+  }
+
+  // ========================================================================
+  // COMMISSIONS (Phase 6)
+  // ========================================================================
+
+  async findAllCommissions(filters?: any): Promise<any[]> {
+    const client = await getPool();
+
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramCount = 1;
+
+    if (filters?.salesPersonId) {
+      conditions.push(`sales_person_id = $${paramCount}`);
+      params.push(filters.salesPersonId);
+      paramCount++;
+    }
+
+    if (filters?.status) {
+      conditions.push(`status = $${paramCount}`);
+      params.push(filters.status);
+      paramCount++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const result = await client.query(
+      `SELECT * FROM sales_commissions ${whereClause} ORDER BY commission_date DESC`,
+      params
+    );
+
+    return result.rows.map(row => this.mapRowToCommission(row));
+  }
+
+  async payCommission(commissionId: string, paymentDate: Date, userId: string): Promise<void> {
+    const client = await getPool();
+
+    const paymentId = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    await client.query(
+      `UPDATE sales_commissions
+       SET status = 'PAID', paid_date = $1, payment_id = $2
+       WHERE commission_id = $3`,
+      [paymentDate, paymentId, commissionId]
+    );
+
+    logger.info('Commission paid', { commissionId, paymentId });
+  }
+
+  // ========================================================================
+  // TERRITORIES (Phase 6)
+  // ========================================================================
+
+  async createTerritory(territory: any): Promise<any> {
+    const client = await getPool();
+    const territoryId = `TERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const result = await client.query(
+      `INSERT INTO sales_territories
+        (territory_id, territory_code, territory_name, description, manager_id,
+         territory_type, parent_territory_id, is_active, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+       RETURNING *`,
+      [
+        territoryId,
+        territory.territoryCode,
+        territory.territoryName,
+        territory.description || null,
+        territory.managerId || null,
+        territory.territoryType,
+        territory.parentTerritoryId || null,
+        territory.isActive,
+      ]
+    );
+
+    logger.info('Territory created', { territoryId, territoryCode: territory.territoryCode });
+    return this.mapRowToTerritory(result.rows[0]);
+  }
+
+  async findTerritoryById(territoryId: string): Promise<any | null> {
+    const client = await getPool();
+    const result = await client.query(`SELECT * FROM sales_territories WHERE territory_id = $1`, [
+      territoryId,
+    ]);
+    return result.rows.length > 0 ? this.mapRowToTerritory(result.rows[0]) : null;
+  }
+
+  async findTerritoryByCode(territoryCode: string): Promise<any | null> {
+    const client = await getPool();
+    const result = await client.query(`SELECT * FROM sales_territories WHERE territory_code = $1`, [
+      territoryCode,
+    ]);
+    return result.rows.length > 0 ? this.mapRowToTerritory(result.rows[0]) : null;
+  }
+
+  async findAllTerritories(): Promise<any[]> {
+    const client = await getPool();
+    const result = await client.query(
+      `SELECT * FROM sales_territories WHERE is_active = true ORDER BY territory_code`
+    );
+    return result.rows.map(row => this.mapRowToTerritory(row));
+  }
+
+  async getTerritoryMetrics(territoryId: string): Promise<any> {
+    const client = await getPool();
+    const result = await client.query(
+      `SELECT * FROM v_territory_performance WHERE territory_id = $1`,
+      [territoryId]
+    );
+    return result.rows.length > 0 ? result.rows[0] : null;
+  }
+
+  async assignTerritoryCustomer(assignment: any): Promise<any> {
+    const client = await getPool();
+    const territoryCustomerId = `TCUST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    await client.query(
+      `INSERT INTO sales_territory_customers
+        (territory_customer_id, territory_id, customer_id, assigned_date, assigned_by, is_primary, notes, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+       ON CONFLICT (territory_id, customer_id) DO UPDATE SET
+         is_primary = EXCLUDED.is_primary,
+         assigned_by = EXCLUDED.assigned_by`,
+      [
+        territoryCustomerId,
+        assignment.territoryId,
+        assignment.customerId,
+        assignment.assignedDate,
+        assignment.assignedBy,
+        assignment.isPrimary,
+        assignment.notes || null,
+      ]
+    );
+
+    logger.info('Customer assigned to territory', {
+      territoryCustomerId,
+      territoryId: assignment.territoryId,
+    });
+    return { ...assignment, territoryCustomerId };
+  }
+
+  async createTerritoryQuota(quota: any): Promise<any> {
+    const client = await getPool();
+    const quotaId = `QUOTA-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const result = await client.query(
+      `INSERT INTO sales_territory_quotas
+        (quota_id, territory_id, quota_year, quota_month, quota_amount, quota_type,
+         actual_amount, variance_percent, status, notes, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+       RETURNING *`,
+      [
+        quotaId,
+        quota.territoryId,
+        quota.quotaYear,
+        quota.quotaMonth || null,
+        quota.quotaAmount,
+        quota.quotaType,
+        quota.actualAmount,
+        quota.variancePercent || null,
+        quota.status,
+        quota.notes || null,
+      ]
+    );
+
+    logger.info('Territory quota created', { quotaId, territoryId: quota.territoryId });
+    return this.mapRowToTerritoryQuota(result.rows[0]);
+  }
+
+  // ========================================================================
+  // SALES ORDER METRICS (Phase 6)
+  // ========================================================================
+
+  async getSalesOrderMetrics(): Promise<any> {
+    const client = await getPool();
+
+    const result = await client.query(`
+      SELECT
+        COUNT(*) as total_orders,
+        COUNT(*) FILTER (WHERE order_status = 'PENDING') as pending_orders,
+        COUNT(*) FILTER (WHERE order_status IN ('PENDING', 'CONFIRMED', 'PICKING', 'PICKED', 'PARTIAL')) as open_orders,
+        COUNT(*) FILTER (WHERE order_status = 'SHIPPED' AND ship_date = CURRENT_DATE) as shipped_today,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(SUM(total_amount) FILTER (WHERE order_date >= DATE_TRUNC('month', CURRENT_DATE)), 0) as revenue_this_month,
+        COALESCE(AVG(total_amount), 0) as average_order_value,
+        COUNT(*) FILTER (WHERE is_backorder = true) as backorder_count
+      FROM sales_orders
+    `);
+
+    return {
+      totalOrders: parseInt(result.rows[0].total_orders),
+      pendingOrders: parseInt(result.rows[0].pending_orders),
+      openOrders: parseInt(result.rows[0].open_orders),
+      shippedToday: parseInt(result.rows[0].shipped_today),
+      totalRevenue: parseFloat(result.rows[0].total_revenue),
+      revenueThisMonth: parseFloat(result.rows[0].revenue_this_month),
+      averageOrderValue: parseFloat(result.rows[0].average_order_value),
+      backorderCount: parseInt(result.rows[0].backorder_count),
+    };
+  }
+
+  async findOrderActivity(orderId: string, limit: number = 50): Promise<any[]> {
+    const client = await getPool();
+    const result = await client.query(
+      `SELECT * FROM sales_order_activity WHERE order_id = $1 ORDER BY activity_date DESC LIMIT $2`,
+      [orderId, limit]
+    );
+
+    return result.rows.map(row => ({
+      activityId: row.activity_id,
+      orderId: row.order_id,
+      activityType: row.activity_type,
+      activityDate: row.activity_date,
+      userId: row.user_id,
+      fieldName: row.field_name,
+      oldValue: row.old_value,
+      newValue: row.new_value,
+      notes: row.notes,
+    }));
+  }
+
+  // ========================================================================
+  // HELPER METHODS (Phase 6)
+  // ========================================================================
+
+  private mapRowToSalesOrder(row: any, lines: any[]): any {
+    return {
+      orderId: row.order_id,
+      entityId: row.entity_id,
+      customerId: row.customer_id,
+      orderNumber: row.order_number,
+      orderDate: row.order_date,
+      orderStatus: row.order_status,
+      warehouseId: row.warehouse_id,
+      shippingMethodId: row.shipping_method_id,
+      paymentTerms: row.payment_terms,
+      currency: row.currency,
+      exchangeRate: parseFloat(row.exchange_rate),
+      subtotal: parseFloat(row.subtotal),
+      discountAmount: parseFloat(row.discount_amount),
+      discountPercent: parseFloat(row.discount_percent),
+      taxAmount: parseFloat(row.tax_amount),
+      shippingAmount: parseFloat(row.shipping_amount),
+      totalAmount: parseFloat(row.total_amount),
+      customerPoNumber: row.customer_po_number,
+      requestedDate: row.requested_date,
+      promisedDate: row.promised_date,
+      shipDate: row.ship_date,
+      trackingNumber: row.tracking_number,
+      notes: row.notes,
+      internalNotes: row.internal_notes,
+      salesPersonId: row.sales_person_id,
+      territoryId: row.territory_id,
+      commissionRate: parseFloat(row.commission_rate),
+      commissionAmount: parseFloat(row.commission_amount),
+      commissionPaid: row.commission_paid,
+      requiresApproval: row.requires_approval,
+      approvalStatus: row.approval_status,
+      approvedBy: row.approved_by,
+      approvedDate: row.approved_date,
+      approvalNotes: row.approval_notes,
+      sourceChannel: row.source_channel,
+      ecommerceOrderId: row.ecommerce_order_id,
+      originalOrderId: row.original_order_id,
+      isBackorder: row.is_backorder,
+      createdAt: row.created_at,
+      createdBy: row.created_by,
+      updatedAt: row.updated_at,
+      updatedBy: row.updated_by,
+      lines,
+    };
+  }
+
+  private mapRowToBackorder(row: any): any {
+    return {
+      backorderId: row.backorder_id,
+      originalOrderId: row.original_order_id,
+      originalLineId: row.original_line_id,
+      orderId: row.order_id,
+      sku: row.sku,
+      description: row.description,
+      quantityOriginal: parseFloat(row.quantity_original),
+      quantityOutstanding: parseFloat(row.quantity_outstanding),
+      quantityFulfilled: parseFloat(row.quantity_fulfilled),
+      promisedDate: row.promised_date,
+      customerId: row.customer_id,
+      status: row.status,
+      priority: row.priority,
+      notes: row.notes,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      fulfilledDate: row.fulfilled_date,
+    };
+  }
+
+  private mapRowToCommission(row: any): any {
+    return {
+      commissionId: row.commission_id,
+      orderId: row.order_id,
+      lineId: row.line_id,
+      salesPersonId: row.sales_person_id,
+      commissionDate: row.commission_date,
+      transactionType: row.transaction_type,
+      baseAmount: parseFloat(row.base_amount),
+      commissionRate: parseFloat(row.commission_rate),
+      commissionAmount: parseFloat(row.commission_amount),
+      status: row.status,
+      paidDate: row.paid_date,
+      paymentId: row.payment_id,
+      notes: row.notes,
+      createdAt: row.created_at,
+    };
+  }
+
+  private mapRowToTerritory(row: any): any {
+    return {
+      territoryId: row.territory_id,
+      territoryCode: row.territory_code,
+      territoryName: row.territory_name,
+      description: row.description,
+      managerId: row.manager_id,
+      territoryType: row.territory_type,
+      parentTerritoryId: row.parent_territory_id,
+      isActive: row.is_active,
+      createdAt: row.created_at,
+    };
+  }
+
+  private mapRowToTerritoryQuota(row: any): any {
+    return {
+      quotaId: row.quota_id,
+      territoryId: row.territory_id,
+      quotaYear: row.quota_year,
+      quotaMonth: row.quota_month,
+      quotaAmount: parseFloat(row.quota_amount),
+      quotaType: row.quota_type,
+      actualAmount: parseFloat(row.actual_amount),
+      variancePercent: row.variance_percent ? parseFloat(row.variance_percent) : undefined,
+      status: row.status,
+      notes: row.notes,
+      createdAt: row.created_at,
+    };
   }
 
   // ========================================================================
@@ -894,6 +1670,10 @@ export class SalesRepository {
       rejectedAt: row.rejected_at,
       convertedToOrderId: row.converted_to_order_id,
     };
+  }
+
+  private camelToSnake(str: string): string {
+    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
   }
 }
 

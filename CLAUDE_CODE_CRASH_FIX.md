@@ -26,7 +26,7 @@ The crashes were caused by multiple factors overwhelming Claude Code's initializ
 - **Problem**: 6 MCP servers configured, all using `npx` commands
 - **Impact**: Slow startup, resource contention, timeout issues
 - **Servers configured**:
-  - wms-dev-accelerator (custom)
+  - erp-dev-accelerator (custom)
   - filesystem (via npx)
   - github (via npx)
   - postgres (via npx)
@@ -69,7 +69,7 @@ The crashes were caused by multiple factors overwhelming Claude Code's initializ
 **Changes:**
 
 - Reduced from **6 servers to 1 server** (83% reduction)
-- Kept only the essential `wms-dev-accelerator` server
+- Kept only the essential `erp-dev-accelerator` server
 - Removed all `npx`-based servers (filesystem, github, postgres, etc.)
 - Added timeout configuration (30s) to prevent hangs
 

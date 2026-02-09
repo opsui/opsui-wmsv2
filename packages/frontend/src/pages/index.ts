@@ -51,15 +51,38 @@ export { default as ARAgingPage } from './accounting/ARAgingPage';
 export { default as APAgingPage } from './accounting/APAgingPage';
 export { default as BankReconciliationPage } from './accounting/BankReconciliationPage';
 export { default as FixedAssetsPage } from './accounting/FixedAssetsPage';
+export { default as AssetRegisterPage } from './accounting/AssetRegisterPage';
+export { default as AssetTransfersPage } from './accounting/AssetTransfersPage';
+export { default as AssetMaintenancePage } from './accounting/AssetMaintenancePage';
 export { default as BudgetingPage } from './accounting/BudgetingPage';
 export { default as NotFoundPage } from './NotFoundPage';
 // HR & Payroll Pages
 export { default as EmployeesPage } from './hr/EmployeesPage';
+export { default as EmployeeDetailPage } from './hr/EmployeeDetailPage';
 export { default as TimesheetsPage } from './hr/TimesheetsPage';
+export { default as TimesheetEntryPage } from './hr/TimesheetEntryPage';
+export { default as LeaveBalancesPage } from './hr/LeaveBalancesPage';
 export { default as PayrollDashboardPage } from './hr/PayrollDashboardPage';
 export { default as PayrollProcessingPage } from './hr/PayrollProcessingPage';
 export { default as PayrollRunsPage } from './hr/PayrollRunsPage';
 export { default as LeaveRequestsPage } from './hr/LeaveRequestsPage';
 export { default as HRSettingsPage } from './hr/HRSettingsPage';
+export { default as HRReportsPage } from './hr/HRReportsPage';
 // Multi-Entity Pages
 export { default as MultiEntitySetupPage } from './admin/MultiEntitySetupPage';
+// Projects Pages
+export { default as ProjectsDashboardPage } from './projects/ProjectsDashboardPage';
+export { default as ProjectDetailPage } from './projects/ProjectDetailPage';
+// Purchasing Pages
+export { default as PurchasingDashboardPage } from './purchasing/PurchasingDashboardPage';
+// Manufacturing Pages
+export { default as ManufacturingDashboardPage } from './manufacturing/ManufacturingDashboardPage';
+// Sales Order Management Pages (Phase 6)
+export { default as SalesOrdersPage } from './sales/SalesOrdersPage';
+export { default as BackordersPage } from './sales/BackordersPage';
+export { default as CommissionReportPage } from './sales/CommissionReportPage';
+export { default as TerritoryManagementPage } from './sales/TerritoryManagementPage';
+// E-commerce Integration Pages (Phase 8)
+export { default as EcommerceConnectionsPage } from './ecommerce/EcommerceConnectionsPage';
+export { default as OrderSyncStatusPage } from './ecommerce/OrderSyncStatusPage';
+export { default as InventoryMappingPage } from './ecommerce/InventoryMappingPage';

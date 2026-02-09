@@ -14,7 +14,7 @@ import { ProductSearchPage } from '../ProductSearchPage';
 
 // Mock the auth store
 vi.mock('@/stores', () => ({
-  useAuthStore: vi.fn((selector) => {
+  useAuthStore: vi.fn(selector => {
     const state = {
       user: { userId: 'test-user', name: 'Test User', role: 'PICKER' },
       getEffectiveRole: () => 'PICKER',

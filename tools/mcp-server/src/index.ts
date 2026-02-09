@@ -1,5 +1,5 @@
 /**
- * WMS MCP Dev Accelerator Server - v2.0
+ * ERP MCP Dev Accelerator Server - v3.0
  *
  * Production-ready MCP server with:
  * - TypeScript for type safety
@@ -8,8 +8,9 @@
  * - Response caching
  * - Comprehensive error handling
  * - Security hardening
+ * - Full ERP domain support (Accounting, HR, Sales, Purchasing, Manufacturing, Projects, Inventory, E-commerce)
  *
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -24,8 +25,8 @@ import type { ToolArgs, ToolContext } from './types/index.js';
 // Create MCP server instance
 const server = new Server(
   {
-    name: 'wms-dev-accelerator',
-    version: '2.0.0',
+    name: 'erp-dev-accelerator',
+    version: '3.0.0',
   },
   {
     capabilities: {
@@ -38,7 +39,7 @@ const server = new Server(
  * Extract workspace root from environment or current directory
  */
 function getWorkspaceRoot(): string {
-  return process.env.WMS_WORKSPACE_ROOT || process.cwd();
+  return process.env.ERP_WORKSPACE_ROOT || process.cwd();
 }
 
 /**
@@ -172,7 +173,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
  * Graceful shutdown handler
  */
 async function shutdown(signal: string): Promise<void> {
-  console.error(`[WMS-MCP] Received ${signal}, shutting down gracefully...`);
+  console.error(`[ERP-MCP] Received ${signal}, shutting down gracefully...`);
 
   // Clear heartbeat interval
   if (heartbeatInterval) {
@@ -182,7 +183,7 @@ async function shutdown(signal: string): Promise<void> {
   // Print performance metrics
   const stats = perfMonitor.getAllStats();
   if (Object.keys(stats).length > 0) {
-    console.error('[WMS-MCP] Performance Metrics:');
+    console.error('[ERP-MCP] Performance Metrics:');
     for (const [tool, toolStats] of Object.entries(stats)) {
       if (toolStats) {
         console.error(
@@ -197,7 +198,7 @@ async function shutdown(signal: string): Promise<void> {
   // Print cache metrics
   const cacheMetrics = cache.getMetrics();
   console.error(
-    `[WMS-MCP] Cache Metrics: ` +
+    `[ERP-MCP] Cache Metrics: ` +
       `hits=${cacheMetrics.hits}, ` +
       `misses=${cacheMetrics.misses}, ` +
       `hitRate=${cacheMetrics.hitRate}%, ` +
@@ -212,16 +213,16 @@ async function shutdown(signal: string): Promise<void> {
  */
 async function main() {
   try {
-    console.error('[WMS-MCP] Starting WMS MCP Dev Accelerator v2.0.0...');
-    console.error(`[WMS-MCP] Workspace: ${getWorkspaceRoot()}`);
-    console.error(`[WMS-MCP] Tools registered: ${allTools.length}`);
-    console.error('[WMS-MCP] Build timestamp:', new Date().toISOString());
+    console.error('[ERP-MCP] Starting ERP MCP Dev Accelerator v3.0.0...');
+    console.error(`[ERP-MCP] Workspace: ${getWorkspaceRoot()}`);
+    console.error(`[ERP-MCP] Tools registered: ${allTools.length}`);
+    console.error('[ERP-MCP] Build timestamp:', new Date().toISOString());
 
     const transport = new StdioServerTransport();
     await server.connect(transport);
 
-    console.error('[WMS-MCP] Server running on stdio');
-    console.error('[WMS-MCP] Ready to accept requests');
+    console.error('[ERP-MCP] Server running on stdio');
+    console.error('[ERP-MCP] Ready to accept requests');
 
     // Graceful shutdown handlers
     process.on('SIGTERM', () => shutdown('SIGTERM'));
@@ -229,33 +230,33 @@ async function main() {
 
     // Handle stdio close events (disconnection detection)
     process.stdin.on('close', () => {
-      console.error('[WMS-MCP] Stdio closed, connection lost - exiting for restart...');
+      console.error('[ERP-MCP] Stdio closed, connection lost - exiting for restart...');
       process.exit(1); // Exit with error code to trigger auto-restart
     });
 
     // Send heartbeat every 5 seconds to show we're alive
     heartbeatInterval = setInterval(() => {
-      console.error(`[WMS-MCP] Heartbeat: ${new Date().toISOString()} - PID:${process.pid}`);
+      console.error(`[ERP-MCP] Heartbeat: ${new Date().toISOString()} - PID:${process.pid}`);
     }, 5000);
 
     process.on('exit', code => {
-      console.error(`[WMS-MCP] Exiting with code ${code}`);
+      console.error(`[ERP-MCP] Exiting with code ${code}`);
     });
 
     // Handle uncaught errors
     process.on('uncaughtException', error => {
-      console.error('[WMS-MCP] Uncaught exception, restarting...');
+      console.error('[ERP-MCP] Uncaught exception, restarting...');
       console.error(error);
       process.exit(1);
     });
 
     process.on('unhandledRejection', reason => {
-      console.error('[WMS-MCP] Unhandled rejection, restarting...');
+      console.error('[ERP-MCP] Unhandled rejection, restarting...');
       console.error(reason);
       process.exit(1);
     });
   } catch (error) {
-    console.error('[WMS-MCP] Fatal error:', error);
+    console.error('[ERP-MCP] Fatal error:', error);
     process.exit(1); // Exit with error code to trigger auto-restart
   }
 }

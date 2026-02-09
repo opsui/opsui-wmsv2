@@ -1,0 +1,55 @@
+{
+  "name": "erp-entity-generator",
+  "description": "Generate TypeORM entities with services, controllers, and DTOs for ERP",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "entityName": {
+        "type": "string",
+        "description": "Name of the entity (e.g., Product, Customer, Invoice, Employee)"
+      },
+      "fields": {
+        "type": "array",
+        "description": "Field definitions",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "type": { "type": "string", "enum": ["string", "number", "boolean", "date", "enum"] },
+            "required": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "required": ["entityName", "fields"]
+  },
+  "steps": [
+    {
+      "name": "generate_entity",
+      "tool": "mcp://erp-dev-accelerator/generate_entity",
+      "arguments": {
+        "entityName": "{{entityName}}",
+        "fields": "{{fields}}"
+      }
+    },
+    {
+      "name": "generate_service",
+      "tool": "mcp://erp-dev-accelerator/generate_service",
+      "arguments": {
+        "entityName": "{{entityName}}"
+      }
+    },
+    {
+      "name": "generate_controller",
+      "tool": "mcp://erp-dev-accelerator/generate_controller",
+      "arguments": {
+        "entityName": "{{entityName}}"
+      }
+    },
+    {
+      "name": "run_typescript_check",
+      "tool": "mcp://erp-dev-accelerator/analyze_typescript_errors",
+      "arguments": {}
+    }
+  ]
+}

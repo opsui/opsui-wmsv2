@@ -3983,6 +3983,239 @@ export interface AssetDisposal {
   createdAt: Date;
 }
 
+// ============================================================================
+// FIXED ASSETS LIFECYCLE TYPES (Phase 7)
+// ============================================================================
+
+/**
+ * Asset Maintenance
+ */
+export interface AssetMaintenance {
+  maintenanceId: string;
+  assetId: string;
+  maintenanceType: 'PREVENTIVE' | 'CORRECTIVE' | 'EMERGENCY' | 'UPGRADE';
+  description: string;
+  scheduledDate?: Date;
+  performedDate?: Date;
+  performedBy?: string;
+  cost?: number;
+  vendorId?: string;
+  workOrderNumber?: string;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  notes?: string;
+  createdAt: Date;
+  createdBy?: string;
+}
+
+/**
+ * Asset Transfer
+ */
+export interface AssetTransfer {
+  transferId: string;
+  assetId: string;
+  transferType: 'LOCATION' | 'CUSTODIAN' | 'DEPARTMENT' | 'ENTITY';
+  fromLocationId?: string;
+  toLocationId?: string;
+  fromCustodianId?: string;
+  toCustodianId?: string;
+  fromDepartment?: string;
+  toDepartment?: string;
+  fromEntityId?: string;
+  toEntityId?: string;
+  transferDate: Date;
+  reason?: string;
+  status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'CANCELLED';
+  requestedBy?: string;
+  approvedBy?: string;
+  approvedDate?: Date;
+  notes?: string;
+  createdAt: Date;
+}
+
+/**
+ * Enhanced Asset Disposal (Phase 7)
+ */
+export interface AssetDisposalEnhanced {
+  disposalId: string;
+  assetId: string;
+  disposalType: 'SOLD' | 'SCRAPPED' | 'DONATED' | 'LOST' | 'STOLEN' | 'TRADED_IN';
+  disposalDate: Date;
+  disposalReason: string;
+  salePrice?: number;
+  saleBuyer?: string;
+  saleDate?: Date;
+  scrapValue?: number;
+  donationRecipient?: string;
+  lossReportNumber?: string;
+  policeReportNumber?: string;
+  tradeInForAssetId?: string;
+  netBookValueAtDisposal: number;
+  gainLossAmount: number;
+  status: 'PENDING' | 'APPROVED' | 'COMPLETED';
+  approvedBy?: string;
+  approvedDate?: Date;
+  notes?: string;
+  createdAt: Date;
+  createdBy?: string;
+}
+
+/**
+ * Asset Insurance
+ */
+export interface AssetInsurance {
+  insuranceId: string;
+  assetId: string;
+  policyNumber: string;
+  insuranceProvider: string;
+  policyType: 'PROPERTY' | 'LIABILITY' | 'COMPREHENSIVE';
+  coverageAmount: number;
+  premiumAmount?: number;
+  premiumFrequency?: 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
+  policyStartDate: Date;
+  policyEndDate: Date;
+  isRenewable: boolean;
+  deductibleAmount?: number;
+  contactPerson?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'CLAIM_PENDING';
+  notes?: string;
+  createdAt: Date;
+}
+
+/**
+ * Depreciation Run
+ */
+export interface DepreciationRun {
+  runId: string;
+  runDate: Date;
+  runType: 'SCHEDULED' | 'MANUAL' | 'CATCH_UP' | 'REVALUATION';
+  fiscalYear: number;
+  fiscalPeriod?: number;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+  totalAssetsProcessed: number;
+  totalDepreciationExpense: number;
+  startedAt?: Date;
+  completedAt?: Date;
+  errorMessage?: string;
+  createdBy: string;
+  createdAt: Date;
+}
+
+/**
+ * Depreciation Run Detail
+ */
+export interface DepreciationRunDetail {
+  detailId: string;
+  runId: string;
+  assetId: string;
+  depreciationAmount: number;
+  accumulatedDepreciationBefore: number;
+  accumulatedDepreciationAfter: number;
+  netBookValueBefore: number;
+  netBookValueAfter: number;
+  depreciationMethod: string;
+  usefulLifeRemaining: number;
+  createdAt: Date;
+}
+
+/**
+ * Asset Audit
+ */
+export interface AssetAudit {
+  auditId: string;
+  auditName: string;
+  auditType: 'PHYSICAL' | 'CYCLE_COUNT' | 'FULL' | 'SPOT_CHECK';
+  scheduledDate: Date;
+  completedDate?: Date;
+  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  auditedBy?: string;
+  totalAssetsToAudit: number;
+  totalAssetsVerified: number;
+  assetsFound: number;
+  assetsNotFound: number;
+  assetsConditionGood: number;
+  assetsConditionFair: number;
+  assetsConditionPoor: number;
+  discrepanciesFound: number;
+  notes?: string;
+  createdAt: Date;
+  createdBy?: string;
+}
+
+/**
+ * Asset Audit Detail
+ */
+export interface AssetAuditDetail {
+  auditDetailId: string;
+  auditId: string;
+  assetId: string;
+  expectedLocationId?: string;
+  expectedCustodianId?: string;
+  actualLocationId?: string;
+  actualCustodianId?: string;
+  found: boolean;
+  physicalCondition?: 'GOOD' | 'FAIR' | 'POOR';
+  notes?: string;
+  verifiedBy?: string;
+  verifiedAt?: Date;
+  photoUrls?: string[];
+}
+
+/**
+ * Fixed Asset DTOs (Phase 7)
+ */
+export interface CreateAssetMaintenanceDTO {
+  assetId: string;
+  maintenanceType: string;
+  description: string;
+  scheduledDate?: string;
+  cost?: number;
+  notes?: string;
+}
+
+export interface CreateAssetTransferDTO {
+  assetId: string;
+  transferType: string;
+  toLocationId?: string;
+  toCustodianId?: string;
+  toDepartment?: string;
+  reason?: string;
+}
+
+export interface CreateAssetDisposalDTO {
+  assetId: string;
+  disposalType: string;
+  disposalReason: string;
+  disposalDate: string;
+  salePrice?: number;
+  saleBuyer?: string;
+  donationRecipient?: string;
+  lossReportNumber?: string;
+  notes?: string;
+}
+
+export interface CreateAssetInsuranceDTO {
+  assetId: string;
+  policyNumber: string;
+  insuranceProvider: string;
+  policyType: string;
+  coverageAmount: number;
+  premiumAmount?: number;
+  premiumFrequency?: string;
+  policyStartDate: string;
+  policyEndDate: string;
+  deductibleAmount?: number;
+}
+
+export interface CreateAssetAuditDTO {
+  auditName: string;
+  auditType: string;
+  scheduledDate: string;
+  assetIds: string[];
+  notes?: string;
+}
+
 /**
  * Audit Log
  */
@@ -4286,3 +4519,125 @@ export * from './hr';
 // ============================================================================
 
 export * from './multi-entity';
+
+// ============================================================================
+// PROJECTS TYPES - Re-export from dedicated projects types module
+// ============================================================================
+
+export * from './projects';
+
+// ============================================================================
+// PURCHASING TYPES - Re-export from dedicated purchasing types module
+// ============================================================================
+
+export * from './purchasing';
+
+// ============================================================================
+// MANUFACTURING TYPES - Re-export from dedicated manufacturing types module
+// Note: Some types renamed to avoid conflicts with production.ts
+// ============================================================================
+
+export {
+  WorkCenterStatus,
+  RoutingStatus,
+  OperationType,
+  ProductionOrderStatus as ManufacturingOrderStatus,
+  MPSStatus,
+  MRPPlanStatus,
+  MRPActionType,
+  ShopFloorTransactionType,
+  // DefectType excluded - already defined in main index.ts for quality inspections
+  DefectSeverity,
+  DefectDisposition,
+  CapacityPlanStatus,
+  WorkCenter,
+  WorkCenterQueue,
+  CreateWorkCenterDTO,
+  Routing,
+  RoutingWithDetails,
+  RoutingOperation,
+  RoutingBOMComponent,
+  CreateRoutingDTO,
+  MSPPeriod,
+  MPSItem,
+  MRPParameters,
+  MRPPlan,
+  MRPPlanDetail,
+  MRPActionMessage,
+  CreateMRPPlanDTO,
+  ProductionOrder as ManufacturingOrder,
+  ProductionOrderWithDetails as ManufacturingOrderWithDetails,
+  ProductionOrderOperation,
+  CreateProductionOrderDTO as CreateManufacturingOrderDTO,
+  ReleaseProductionOrderDTO,
+  ShopFloorTransaction,
+  CreateShopFloorTransactionDTO,
+  ProductionInspection,
+  ProductionDefect,
+  CreateProductionInspectionDTO,
+  CapacityPlan,
+  CapacityPlanDetail,
+  CreateCapacityPlanDTO,
+  WorkCenterQueryFilters,
+  RoutingQueryFilters,
+  ProductionOrderQueryFilters,
+  MRPPlanQueryFilters,
+  CapacityPlanQueryFilters,
+  ManufacturingDashboardMetrics,
+  WorkCenterPerformanceReport,
+  ProductionOrderCostAnalysis,
+  MRPAnalysisSummary,
+  BatchReleaseProductionOrdersDTO,
+  BatchCompleteProductionOrdersDTO,
+  ImplementMRPActionsDTO,
+} from './manufacturing';
+
+// ============================================================================
+// E-COMMERCE TYPES - Re-export from dedicated e-commerce types module
+// ============================================================================
+
+export * from './ecommerce';
+
+// ============================================================================
+// ADVANCED INVENTORY TYPES - Re-export from dedicated advanced inventory types module
+// ============================================================================
+
+export * from './advanced-inventory';
+
+// ============================================================================
+// ADVANCED FINANCIALS TYPES - Re-export from dedicated advanced financials types module
+// Note: Some types renamed to avoid conflicts with multi-entity and advanced-inventory
+// ============================================================================
+
+export {
+  StatementType,
+  PeriodType as FinancialPeriodType,
+  ConsolidationMethod as FinancialConsolidationMethod,
+  IntercompanyTransactionType as FinancialIntercompanyTransactionType,
+  IntercompanyStatus,
+  TaxType,
+  TaxStatus,
+  RatioCategory,
+  FinancialStatementTemplate,
+  GeneratedFinancialStatement,
+  ConsolidatedStatement,
+  BudgetActualAnalysis,
+  BudgetActualDetail,
+  // CurrencyRevaluation excluded - already defined in main index.ts
+  IntercompanyTransaction as FinancialIntercompanyTransaction,
+  IntercompanyTransactionLine,
+  TaxCompliancePeriod,
+  TaxPayment,
+  FinancialRatio,
+  BalanceSheetView,
+  IncomeStatementView,
+  CashFlowView,
+  CreateFinancialStatementDTO,
+  GenerateBalanceSheetDTO,
+  CreateConsolidationDTO,
+  CreateBudgetActualAnalysisDTO,
+  // CurrencyRevaluationDTO excluded - already defined in main index.ts
+  CreateIntercompanyTransactionDTO as CreateFinancialIntercompanyTransactionDTO,
+  RecordTaxPaymentDTO,
+  CalculateFinancialRatiosDTO,
+} from './advanced-financials';

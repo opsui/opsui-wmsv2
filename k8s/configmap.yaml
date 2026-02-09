@@ -1,0 +1,57 @@
+# ConfigMap for WMS Application
+# Non-sensitive configuration values
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wms-config
+  namespace: production
+  labels:
+    app: wms
+data:
+  # Database Configuration
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_NAME: "wms_db"
+  DB_SSL: "true"
+  DB_POOL_MIN: "2"
+  DB_POOL_MAX: "20"
+
+  # Redis Configuration
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_TTL: "3600"
+
+  # JWT Configuration
+  JWT_EXPIRES_IN: "8h"
+  JWT_REFRESH_EXPIRES_IN: "7d"
+
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+
+  # CORS Configuration
+  CORS_ORIGIN: "https://wms.example.com"
+
+  # Application Configuration
+  DEFAULT_PICKER_CAPACITY: "5"
+  MAX_ORDERS_PER_PICKER: "10"
+  PICK_TIMEOUT_MINUTES: "30"
+
+  # Feature Flags
+  ENABLE_WEBSOCKET: "true"
+  ENABLE_REDIS_CACHE: "true"
+  ENABLE_AUDIT_LOG: "true"
+  ENABLE_OPENTELEMETRY: "true"
+  ENABLE_PROMETHEUS: "true"
+
+  # OpenTelemetry Configuration
+  OTEL_SERVICE_NAME: "wms-backend"
+  OTEL_COLLECTOR_URL: "http://opentelemetry-collector:4317"
+
+  # Frontend Configuration
+  API_URL: "https://api.wms.example.com"
+
+  # Health Check
+  HEALTH_CHECK_INTERVAL: "30000"

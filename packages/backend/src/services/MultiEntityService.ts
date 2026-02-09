@@ -6,7 +6,7 @@
  */
 
 import { multiEntityRepository } from '../repositories/MultiEntityRepository';
-import { NotFoundError } from '@opsui/shared';
+import { NotFoundError, EntityStatus, IntercompanyTransactionStatus } from '@opsui/shared';
 import type {
   Entity,
   EntityWithParent,
@@ -155,7 +155,7 @@ class MultiEntityService {
       entity_name: dto.entity_name,
       parent_entity_id: dto.parent_entity_id || null,
       entity_type: dto.entity_type,
-      entity_status: 'ACTIVE',
+      entity_status: EntityStatus.ACTIVE,
       legal_name: dto.legal_name || null,
       tax_id: dto.tax_id || null,
       registration_number: dto.registration_number || null,
@@ -341,10 +341,10 @@ class MultiEntityService {
       to_entity_id: dto.to_entity_id,
       transaction_date: dto.transaction_date,
       transaction_type: dto.transaction_type,
-      transaction_status: 'PENDING',
+      transaction_status: IntercompanyTransactionStatus.PENDING,
       amount: dto.amount,
       currency: dto.currency || fromEntity.base_currency,
-      exchange_rate,
+      exchange_rate: exchangeRate,
       base_currency_amount: baseCurrencyAmount,
       description: dto.description || null,
       reference_number: dto.reference_number || null,
@@ -374,7 +374,7 @@ class MultiEntityService {
       await multiEntityRepository.intercompanyTransactions.findByIdOrThrow(transactionId);
 
     // Check if transaction can be updated (only pending transactions)
-    if (existing.transaction_status !== 'PENDING') {
+    if (existing.transaction_status !== IntercompanyTransactionStatus.PENDING) {
       throw new Error('Can only update pending transactions');
     }
 
@@ -394,13 +394,13 @@ class MultiEntityService {
     const transaction =
       await multiEntityRepository.intercompanyTransactions.findByIdOrThrow(transactionId);
 
-    if (transaction.transaction_status !== 'PENDING') {
+    if (transaction.transaction_status !== IntercompanyTransactionStatus.PENDING) {
       throw new Error('Transaction is not in pending status');
     }
 
     await multiEntityRepository.intercompanyTransactions.updateStatus(
       transactionId,
-      'POSTED',
+      IntercompanyTransactionStatus.POSTED,
       approvedBy
     );
 
@@ -544,13 +544,8 @@ class MultiEntityService {
     updatedBy: string
   ): Promise<Entity> {
     await multiEntityRepository.entities.findByIdOrThrow(entityId);
-    return await multiEntityRepository.settings.upsertSetting(
-      entityId,
-      key,
-      value,
-      type,
-      updatedBy
-    );
+    await multiEntityRepository.settings.upsertSetting(entityId, key, value, type, updatedBy);
+    return await multiEntityRepository.entities.findByIdOrThrow(entityId);
   }
 
   // ==========================================================================
@@ -642,10 +637,7 @@ class MultiEntityService {
   ): Promise<EntityUser> {
     const existing = await multiEntityRepository.users.findByIdOrThrow(entityUserId);
 
-    return (await multiEntityRepository.users.update(entityUserId, {
-      ...dto,
-      updated_at: new Date(),
-    })) as EntityUser;
+    return (await multiEntityRepository.users.update(entityUserId, dto)) as EntityUser;
   }
 
   /**

@@ -1,0 +1,50 @@
+{
+  "name": "erp-prisma-workflow",
+  "description": "Complete Prisma workflow: validate schema, generate client, create migration, run seed",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "schemaPath": {
+        "type": "string",
+        "description": "Path to Prisma schema file",
+        "default": "./packages/backend/prisma/schema.prisma"
+      },
+      "migrationName": {
+        "type": "string",
+        "description": "Name for the migration"
+      }
+    },
+    "required": ["migrationName"]
+  },
+  "steps": [
+    {
+      "name": "validate_schema",
+      "tool": "mcp://erp-dev-accelerator/prisma_validate",
+      "arguments": {
+        "projectPath": "{{schemaPath}}"
+      }
+    },
+    {
+      "name": "create_migration",
+      "tool": "mcp://erp-dev-accelerator/prisma_migrate",
+      "arguments": {
+        "name": "{{migrationName}}"
+      }
+    },
+    {
+      "name": "generate_client",
+      "tool": "mcp://erp-dev-accelerator/prisma_generate",
+      "arguments": {}
+    },
+    {
+      "name": "run_seed",
+      "tool": "mcp://erp-dev-accelerator/prisma_seed",
+      "arguments": {}
+    },
+    {
+      "name": "check_types",
+      "tool": "mcp://erp-dev-accelerator/analyze_typescript_errors",
+      "arguments": {}
+    }
+  ]
+}

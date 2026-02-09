@@ -1,0 +1,111 @@
+{
+  "name": "erp-full-feature-workflow",
+  "description": "End-to-end feature creation: entity, API, tests, documentation, type sync",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "featureName": {
+        "type": "string",
+        "description": "Name of the feature (e.g., invoice-tracking, order-management, payroll)"
+      },
+      "entities": {
+        "type": "array",
+        "description": "Entities to create for this feature",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string" },
+                  "required": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "generateTests": {
+        "type": "boolean",
+        "default": true
+      },
+      "generateDocs": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "required": ["featureName", "entities"]
+  },
+  "steps": [
+    {
+      "name": "analyze_project",
+      "tool": "mcp://erp-dev-accelerator/analyze_project_structure",
+      "arguments": {}
+    },
+    {
+      "foreach": "entities",
+      "steps": [
+        {
+          "name": "generate_entity",
+          "tool": "mcp://erp-dev-accelerator/generate_entity",
+          "arguments": {
+            "entityName": "{{item.name}}",
+            "fields": "{{item.fields}}"
+          }
+        },
+        {
+          "name": "generate_service",
+          "tool": "mcp://erp-dev-accelerator/generate_service",
+          "arguments": {
+            "entityName": "{{item.name}}"
+          }
+        },
+        {
+          "name": "generate_controller",
+          "tool": "mcp://erp-dev-accelerator/generate_controller",
+          "arguments": {
+            "entityName": "{{item.name}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "generate_tests",
+      "tool": "mcp://erp-dev-accelerator/generate_tests",
+      "arguments": {
+        "featureName": "{{featureName}}",
+        "entities": "{{entities}}"
+      },
+      "condition": "{{generateTests}}"
+    },
+    {
+      "name": "validate_api",
+      "tool": "mcp://erp-dev-accelerator/validate_api_contract",
+      "arguments": {}
+    },
+    {
+      "name": "sync_types",
+      "tool": "mcp://erp-dev-accelerator/sync_frontend_types",
+      "arguments": {}
+    },
+    {
+      "name": "generate_openapi",
+      "tool": "mcp://erp-dev-accelerator/generate_openapi_spec",
+      "arguments": {}
+    },
+    {
+      "name": "security_audit",
+      "tool": "mcp://erp-dev-accelerator/security_audit",
+      "arguments": {}
+    },
+    {
+      "name": "final_type_check",
+      "tool": "mcp://erp-dev-accelerator/analyze_typescript_errors",
+      "arguments": {}
+    }
+  ]
+}

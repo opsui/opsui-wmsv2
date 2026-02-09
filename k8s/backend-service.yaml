@@ -1,0 +1,42 @@
+# Backend Service
+# Exposes the backend API and WebSocket server
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: production
+  labels:
+    app: backend
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: websocket
+    port: 8080
+    targetPort: websocket
+    protocol: TCP
+  selector:
+    app: backend
+---
+# Headless service for WebSocket connections (optional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-ws
+  namespace: production
+  labels:
+    app: backend
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: websocket
+    port: 3002
+    targetPort: websocket
+    protocol: TCP
+  selector:
+    app: backend

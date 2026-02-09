@@ -1,0 +1,116 @@
+# Ingress Configuration
+# Routes external traffic to backend and frontend services
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wms-ingress
+  namespace: production
+  labels:
+    app: wms
+  annotations:
+    # SSL/TLS Configuration
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+    # Security Headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "DENY" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Backend API Configuration
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+
+    # WebSocket Configuration
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/enable-modsecurity: "false"
+
+    # Rate Limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://wms.example.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-Requested-With"
+
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - wms.example.com
+    - api.wms.example.com
+    secretName: wms-tls
+  rules:
+  # Frontend
+  - host: wms.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+
+  # Backend API
+  - host: api.wms.example.com
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
+            port:
+              number: 80
+
+  # Health Endpoint (from any host)
+  - host: api.wms.example.com
+    http:
+      paths:
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: backend
+            port:
+              number: 80
+
+  # WebSocket
+  - host: api.wms.example.com
+    http:
+      paths:
+      - path: /socket.io
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-ws
+            port:
+              number: 3002
+---
+# TLS Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wms-tls
+  namespace: production
+spec:
+  secretName: wms-tls
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days before expiration
+  dnsNames:
+  - wms.example.com
+  - api.wms.example.com
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

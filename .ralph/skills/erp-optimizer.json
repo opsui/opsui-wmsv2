@@ -1,0 +1,49 @@
+{
+  "name": "erp-optimizer",
+  "description": "Analyze and optimize ERP operations: pick paths, bin locations, inventory, payroll, accounting",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "locations": {
+        "type": "array",
+        "description": "Warehouse bin locations to optimize",
+        "items": { "type": "string" }
+      },
+      "sku": {
+        "type": "string",
+        "description": "SKU to analyze for bin placement"
+      },
+      "pickFrequency": {
+        "type": "number",
+        "description": "Pick frequency per day for the SKU"
+      }
+    }
+  },
+  "steps": [
+    {
+      "name": "calculate_optimal_pick_path",
+      "tool": "mcp://erp-dev-accelerator/erp_calculate_pick_path",
+      "arguments": {
+        "locations": "{{locations}}",
+        "startPoint": "A-01-01"
+      }
+    },
+    {
+      "name": "optimize_bin_location",
+      "tool": "mcp://erp-dev-accelerator/erp_optimize_bin_locations",
+      "arguments": {
+        "sku": "{{sku}}",
+        "pickFrequency": "{{pickFrequency}}"
+      }
+    },
+    {
+      "name": "analyze_picking_performance",
+      "tool": "mcp://erp-dev-accelerator/erp_analyze_picking_performance",
+      "arguments": {
+        "pickerId": "system",
+        "startDate": "{{startDate}}",
+        "endDate": "{{endDate}}"
+      }
+    }
+  ]
+}

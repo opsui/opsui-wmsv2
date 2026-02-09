@@ -6,7 +6,7 @@
 import { codeAnalysisTools } from './code-analysis.js';
 import { codeGenerationTools } from './code-generation.js';
 import { projectTools } from './project.js';
-import { wmsDomainTools } from './wms-domain.js';
+import { erpDomainTools } from './erp-domain.js';
 import { mlPredictionTools } from './ml-predictions.js';
 import { patternExtractionTools } from './pattern-extraction.js';
 import { testGenerationTools } from './test-generation.js';
@@ -43,8 +43,8 @@ export const allTools = [
   // Project management tools
   ...projectTools,
 
-  // WMS domain-specific tools
-  ...wmsDomainTools,
+  // ERP domain-specific tools (Accounting, HR, Sales, Purchasing, Manufacturing, Projects, Inventory, E-commerce)
+  ...erpDomainTools,
 
   // ML prediction tools
   ...mlPredictionTools,

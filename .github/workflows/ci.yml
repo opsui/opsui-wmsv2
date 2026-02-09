@@ -1,0 +1,420 @@
+# CI Pipeline for ERP System
+# Runs on all pull requests and pushes to main branch
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Lint Job - Check code quality
+  # ============================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint (Backend)
+        run: npm run lint --workspace=packages/backend
+
+      - name: Run ESLint (Frontend)
+        run: npm run lint --workspace=packages/frontend
+
+      - name: Run TypeScript type check (Backend)
+        run: npm run typecheck --workspace=packages/backend
+
+      - name: Run TypeScript type check (Frontend)
+        run: npm run typecheck --workspace=packages/frontend
+
+  # ============================================================================
+  # Unit Tests Job
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: test_db
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --workspace=packages/shared
+
+      - name: Run backend unit tests
+        run: npm run test --workspace=packages/backend
+
+      - name: Run frontend unit tests
+        run: npm run test --workspace=packages/frontend
+
+      - name: Generate coverage report
+        run: npm run test:coverage --workspace=packages/backend
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./packages/backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+
+  # ============================================================================
+  # Integration Tests Job
+  # ============================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: test_db
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: |
+          npm run build --workspace=packages/shared
+          npm run build --workspace=packages/backend
+
+      - name: Run database migrations
+        run: npm run db:migrate:all
+        working-directory: packages/backend
+
+      - name: Run integration tests
+        run: npm run test:integration --workspace=packages/backend
+
+  # ============================================================================
+  # E2E Tests Job
+  # ============================================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: test_db
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      NODE_ENV: test
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/playwright-cache
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build all packages
+        run: |
+          npm run build --workspace=packages/shared
+          npm run build --workspace=packages/backend
+          npm run build --workspace=packages/frontend
+
+      - name: Run database migrations
+        run: npm run db:migrate:all
+        working-directory: packages/backend
+
+      - name: Start backend server
+        run: npm run start --workspace=packages/backend &
+        working-directory: packages/backend
+
+      - name: Start frontend server
+        run: npm run preview --workspace=packages/frontend &
+        working-directory: packages/frontend
+
+      - name: Wait for servers to be ready
+        run: |
+          npx wait-on http://localhost:3001/health -t 30000
+          npx wait-on http://localhost:4173 -t 30000
+
+      - name: Run Playwright E2E tests
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright screenshots
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-screenshots
+          path: test-results/
+          retention-days: 7
+
+  # ============================================================================
+  # Security Scan Job
+  # ============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: javascript, typescript
+
+  # ============================================================================
+  # Build Verification Job
+  # ============================================================================
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --workspace=packages/shared
+
+      - name: Build backend
+        run: npm run build --workspace=packages/backend
+
+      - name: Build frontend
+        run: npm run build --workspace=packages/frontend
+
+      - name: Verify backend build output exists
+        run: test -f packages/backend/dist/index.js
+
+      - name: Verify frontend build output exists
+        run: test -d packages/frontend/dist
+
+  # ============================================================================
+  # Code Quality Checks Job
+  # ============================================================================
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for large files
+        run: |
+          find packages/backend/src -type f -name "*.ts" -exec wc -l {} + | \
+          awk '$1 > 1000 { print FILENAME " has " $1 " lines (limit: 1000)" }' | \
+          grep . && exit 1 || echo "No files exceed 1000 lines"
+
+      - name: Check for duplicate code
+        run: |
+          npx jscpd packages/backend/src --min-lines 10 --min-tokens 50 \
+            --format typescript --threshold 10 || true
+
+      - name: Check import order
+        run: |
+          npm run lint --workspace=packages/backend -- --rule 'import/order: error'
+
+  # ============================================================================
+  # Summary Job
+  # ============================================================================
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, integration-tests, e2e-tests, security-scan, build, code-quality]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.integration-tests.result }}" != "success" ] || \
+             [ "${{ needs.e2e-tests.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "::error::One or more CI jobs failed"
+            exit 1
+          fi
+          echo "::notice::All CI jobs passed successfully"

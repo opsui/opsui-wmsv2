@@ -13,10 +13,7 @@ import { useState, useEffect } from 'react';
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useCreateEmployee, useUpdateEmployee, useDeductionTypes } from '@/services/api';
 import { useToast } from '@/components/shared';
-import type {
-  HREmployeeWithDetails,
-  HRBankAccount,
-} from '@opsui/shared';
+import type { HREmployeeWithDetails, HRBankAccount } from '@opsui/shared';
 
 interface EmployeeFormModalProps {
   employee: HREmployeeWithDetails | null;

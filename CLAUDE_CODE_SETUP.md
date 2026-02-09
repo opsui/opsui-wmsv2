@@ -7,7 +7,7 @@ This guide explains how to configure Claude Code to work with the same powerful 
 Claude Code now has the same enhanced capabilities as Cline:
 
 - ✅ All Cline Supreme rules and cognitive frameworks
-- ✅ MCP server integration (WMS Dev Accelerator)
+- ✅ MCP server integration (ERP Dev Accelerator)
 - ✅ GLM 4.7 API integration
 - ✅ Enhanced permissions for development workflows
 
@@ -18,7 +18,7 @@ Claude Code now has the same enhanced capabilities as Cline:
 The main configuration is in `.claude/settings.json` at the project root. This file includes:
 
 - **Cline Supreme Rules**: All cognitive frameworks and behavioral protocols
-- **MCP Servers**: WMS Dev Accelerator integration
+- **MCP Servers**: ERP Dev Accelerator integration
 - **GLM API**: Configuration for GLM 4.7 model
 - **Permissions**: Enhanced bash and git permissions
 
@@ -78,7 +78,7 @@ After updating the configuration, restart Claude Code to pick up the changes.
 1. Open Claude Code
 2. Start a new conversation
 3. Ask: "What MCP servers are available?"
-4. You should see `wms-dev-accelerator` listed
+4. You should see `erp-dev-accelerator` listed
 
 ### Check GLM API Connection
 
@@ -90,7 +90,7 @@ After updating the configuration, restart Claude Code to pick up the changes.
 Try asking Claude Code to:
 
 - Analyze code using the six thinking hats
-- Use the WMS Dev Accelerator tools
+- Use the ERP Dev Accelerator tools
 - Apply Cline Supreme rules to a problem
 
 ## Available Features
@@ -135,7 +135,7 @@ Claude Code enforces:
 
 ### MCP Tools Available
 
-The WMS Dev Accelerator provides:
+The ERP Dev Accelerator provides:
 
 - `code-analysis`: Analyze code structure
 - `code-generation`: Generate code following patterns
@@ -146,7 +146,7 @@ The WMS Dev Accelerator provides:
 - `project`: Query project structure
 - `telemetry`: Track development metrics
 - `test-generation`: Generate tests
-- `wms-domain`: WMS-specific tools
+- `wms-domain`: ERP-specific tools
 
 ## Differences from Cline
 
@@ -260,7 +260,7 @@ For additional configuration, you can set environment variables in your system:
 GLM_API_KEY=your-api-key-here
 
 # Workspace Root (auto-detected, but can override)
-WMS_WORKSPACE_ROOT=/path/to/project
+ERP_WORKSPACE_ROOT=/path/to/project
 
 # Log Level (for debugging)
 LOG_LEVEL=debug

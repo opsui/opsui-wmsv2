@@ -56,6 +56,12 @@ jest.mock('../../repositories/SalesRepository', () => ({
   },
 }));
 
+jest.mock('../OrderService', () => ({
+  orderService: {
+    createOrder: jest.fn(),
+  },
+}));
+
 describe('SalesService', () => {
   let salesService: SalesService;
 
@@ -1117,11 +1123,20 @@ describe('SalesService', () => {
     it('should accept a SENT quote', async () => {
       const mockQuote = createMockQuote({ status: QuoteStatus.SENT });
       const { salesRepository } = require('../../repositories/SalesRepository');
+      const { orderService } = require('../OrderService');
+
       salesRepository.findQuoteById.mockResolvedValue(mockQuote);
+      salesRepository.updateQuote.mockResolvedValue(mockQuote);
+      orderService.createOrder.mockResolvedValue({
+        orderId: 'ORD-001',
+        status: 'pending',
+      });
 
       const result = await salesService.acceptQuote('QUOTE-001', 'user-123');
 
-      expect(result.status).toBe(QuoteStatus.SENT);
+      expect(result.quote).toBeDefined();
+      expect(result.order).toBeDefined();
+      expect(result.order.orderId).toBe('ORD-001');
     });
 
     it('should throw error when quote is not in SENT status', async () => {

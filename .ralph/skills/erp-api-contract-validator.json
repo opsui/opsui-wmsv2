@@ -1,0 +1,41 @@
+{
+  "name": "erp-api-contract-validator",
+  "description": "Validate API contracts between frontend and backend, sync types",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "backendPath": {
+        "type": "string",
+        "default": "./packages/backend/src"
+      },
+      "frontendPath": {
+        "type": "string",
+        "default": "./packages/frontend/src"
+      }
+    }
+  },
+  "steps": [
+    {
+      "name": "validate_backend_api",
+      "tool": "mcp://erp-dev-accelerator/validate_api_contract",
+      "arguments": {
+        "projectPath": "{{backendPath}}"
+      }
+    },
+    {
+      "name": "sync_frontend_types",
+      "tool": "mcp://erp-dev-accelerator/sync_frontend_types",
+      "arguments": {
+        "backendPath": "{{backendPath}}",
+        "frontendPath": "{{frontendPath}}"
+      }
+    },
+    {
+      "name": "generate_openapi_spec",
+      "tool": "mcp://erp-dev-accelerator/generate_openapi_spec",
+      "arguments": {
+        "outputPath": "./docs/openapi.json"
+      }
+    }
+  ]
+}

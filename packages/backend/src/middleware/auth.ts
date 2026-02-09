@@ -25,8 +25,9 @@ export interface JWTPayload {
   exp?: number;
 }
 
-// AuthenticatedRequest extends Request with typed user property
+// AuthenticatedRequest extends Request with typed user property and request ID
 export interface AuthenticatedRequest extends Request {
+  id?: string;
   user?: JWTPayload;
 }
 

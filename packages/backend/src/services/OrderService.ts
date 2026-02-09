@@ -717,18 +717,7 @@ export class OrderService {
         [orderId]
       );
 
-      // Log state change for audit
-      const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-      const randomNum = Math.floor(Math.random() * 100000000000);
-      const changeId = `OSC-${dateStr}-${randomNum}`;
-
-      await client.query(
-        `INSERT INTO order_state_changes (change_id, order_id, from_status, to_status, user_id)
-         VALUES ($1, $2, 'PICKING', 'PENDING', $3)`,
-        [changeId, orderId, userId]
-      );
-
+      // Note: State change is logged by audit middleware via the route handler
       logger.info('Order unclaimed and reverted to base state', {
         orderId,
         userId,
@@ -989,18 +978,7 @@ export class OrderService {
         [orderId]
       );
 
-      // Log state change for audit
-      const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-      const randomNum = Math.floor(Math.random() * 100000000000);
-      const changeId = `OSC-${dateStr}-${randomNum}`;
-
-      await client.query(
-        `INSERT INTO order_state_changes (change_id, order_id, from_status, to_status, user_id)
-         VALUES ($1, $2, 'PACKING', 'PICKED', $3)`,
-        [changeId, orderId, packerId]
-      );
-
+      // Note: State change is logged by audit middleware via the route handler
       logger.info('Packing order unclaimed and reverted to PICKED status', {
         orderId,
         packerId,

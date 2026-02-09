@@ -9,7 +9,13 @@ import { Router } from 'express';
 import { multiEntityService } from '../services/MultiEntityService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
-import { UserRole } from '@opsui/shared';
+import {
+  UserRole,
+  EntityType,
+  EntityStatus,
+  IntercompanyTransactionType,
+  IntercompanyTransactionStatus,
+} from '@opsui/shared';
 
 const router = Router();
 
@@ -45,8 +51,8 @@ router.get(
   viewerAuth,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const filters = {
-      entity_type: req.query.entity_type as string | undefined,
-      entity_status: req.query.entity_status as string | undefined,
+      entity_type: req.query.entity_type as EntityType | undefined,
+      entity_status: req.query.entity_status as EntityStatus | undefined,
       parent_entity_id: req.query.parent_entity_id as string | undefined,
       base_currency: req.query.base_currency as string | undefined,
       country_code: req.query.country_code as string | undefined,
@@ -224,8 +230,8 @@ router.get(
       from_entity_id: req.query.from_entity_id as string | undefined,
       to_entity_id: req.query.to_entity_id as string | undefined,
       entity_id: req.query.entity_id as string | undefined,
-      transaction_type: req.query.transaction_type as string | undefined,
-      transaction_status: req.query.transaction_status as string | undefined,
+      transaction_type: req.query.transaction_type as IntercompanyTransactionType | undefined,
+      transaction_status: req.query.transaction_status as IntercompanyTransactionStatus | undefined,
       date_from: req.query.date_from ? new Date(req.query.date_from as string) : undefined,
       date_to: req.query.date_to ? new Date(req.query.date_to as string) : undefined,
       search: req.query.search as string | undefined,
@@ -249,8 +255,8 @@ router.get(
       from_entity_id: req.query.from_entity_id as string | undefined,
       to_entity_id: req.query.to_entity_id as string | undefined,
       entity_id: req.query.entity_id as string | undefined,
-      transaction_type: req.query.transaction_type as string | undefined,
-      transaction_status: req.query.transaction_status as string | undefined,
+      transaction_type: req.query.transaction_type as IntercompanyTransactionType | undefined,
+      transaction_status: req.query.transaction_status as IntercompanyTransactionStatus | undefined,
       date_from: req.query.date_from ? new Date(req.query.date_from as string) : undefined,
       date_to: req.query.date_to ? new Date(req.query.date_to as string) : undefined,
     };

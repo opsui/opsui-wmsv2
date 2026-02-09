@@ -1,7 +1,7 @@
 {
   "name": "opsui",
   "version": "1.0.0",
-  "description": "OpsUI - Production-ready Warehouse Operations Management System with real-time fulfillment",
+  "description": "OpsUI - Production-ready Enterprise Resource Planning (ERP) System with real-time operations management (Accounting, HR, Sales, Purchasing, Manufacturing, Projects, Inventory, E-commerce)",
   "private": true,
   "type": "module",
   "workspaces": [

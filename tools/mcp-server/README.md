@@ -1,10 +1,12 @@
-# WMS MCP Dev Accelerator v2.0
+# ERP MCP Dev Accelerator v3.0
 
-**Production-ready MCP server for Warehouse Management System development with performance optimizations, comprehensive error handling, and enterprise-grade security.**
+**Production-ready MCP server for Enterprise Resource Planning (ERP) development with performance optimizations, comprehensive error handling, and enterprise-grade security.**
+
+Supports all ERP modules: Accounting, HR/Payroll, Sales/CRM, Purchasing, Manufacturing, Projects, Inventory/Warehouse, and E-commerce.
 
 ## 🚀 Features
 
-### v2.0 Improvements
+### v3.0 Improvements
 
 - **TypeScript**: Full type safety throughout the codebase
 - **Input Validation**: Zod schemas for all tool inputs
@@ -35,13 +37,15 @@
 - `validate_project_structure` - Validate conventions
 - `find_related_files` - Find imports and dependencies
 
-#### WMS Domain Tools
+#### ERP Domain Tools
 
-- `wms_generate_pick_list` - Generate optimized pick lists
-- `wms_validate_inventory` - Check inventory levels
-- `wms_optimize_bin_locations` - Suggest optimal bin placement
-- `wms_calculate_pick_path` - Optimize pick routes
-- `wms_analyze_picking_performance` - Analyze picker metrics
+- `erp_calculate_pick_path` - Optimize pick routes for warehouse operations
+- `erp_validate_inventory` - Check inventory levels
+- `erp_optimize_bin_locations` - Suggest optimal bin placement
+- `erp_calculate_labor_cost` - Calculate manufacturing labor costs
+- `erp_calculate_payroll` - Process payroll calculations
+- `erp_calculate_tax` - Calculate sales tax, VAT, GST
+- `erp_generate_financial_statement` - Generate balance sheets, income statements
 
 ## 📦 Installation
 
@@ -60,7 +64,7 @@ Update your Claude Desktop config at `~/AppData/Roaming/Claude/claude_desktop_co
 ```json
 {
   "mcpServers": {
-    "wms-dev-accelerator": {
+    "erp-dev-accelerator": {
       "command": "node",
       "args": [
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server\\dist\\index.js"
@@ -90,11 +94,11 @@ Update your Claude Desktop config at `~/AppData/Roaming/Claude/claude_desktop_co
 Performance metrics are logged on shutdown:
 
 ```bash
-[WMS-MCP] Performance Metrics:
+[ERP-MCP] Performance Metrics:
   analyze_typescript_errors: avg=1234.56ms, cache=85.3%, calls=150
   find_unused_exports: avg=567.89ms, cache=92.1%, calls=75
 
-[WMS-MCP] Cache Metrics:
+[ERP-MCP] Cache Metrics:
   hits=1250, misses=180, hitRate=87.4%, size=45
 ```
 
@@ -108,7 +112,7 @@ npm test
 npm run test:coverage
 ```
 
-## 🐛 Bug Fixes from v1.0
+## 🐛 Bug Fixes from v2.0
 
 ### Critical
 
@@ -119,7 +123,7 @@ npm run test:coverage
 
 ### High Priority
 
-- ✅ Updated to latest MCP SDK (v0.5.0 → v1.0.4)
+- ✅ Updated to latest MCP SDK (v1.0.4)
 - ✅ Converted to TypeScript for type safety
 - ✅ Added comprehensive error handling
 - ✅ Fixed N+1 query patterns
@@ -146,22 +150,31 @@ npm run test:coverage
 {
   "name": "generate_entity",
   "arguments": {
-    "entityName": "Product",
+    "entityName": "Invoice",
     "fields": [
-      { "name": "sku", "type": "string", "required": true },
-      { "name": "quantity", "type": "number", "required": true },
-      { "name": "price", "type": "number", "required": true }
+      { "name": "invoiceNumber", "type": "string", "required": true },
+      { "name": "amount", "type": "number", "required": true },
+      { "name": "dueDate", "type": "date", "required": true }
     ]
   }
 }
 
-// Generate optimized pick list
+// Calculate payroll
 {
-  "name": "wms_generate_pick_list",
+  "name": "erp_calculate_payroll",
   "arguments": {
-    "orderId": "ORD-20250113-123456",
-    "optimizePath": true,
-    "groupByZone": true
+    "grossPay": 5000,
+    "payFrequency": "monthly",
+    "federalAllowances": 2
+  }
+}
+
+// Optimize warehouse pick path
+{
+  "name": "erp_calculate_pick_path",
+  "arguments": {
+    "locations": ["A-01-01", "B-05-12", "C-03-08"],
+    "startPoint": "A-01-01"
   }
 }
 ```

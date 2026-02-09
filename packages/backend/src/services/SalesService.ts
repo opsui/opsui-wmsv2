@@ -21,6 +21,33 @@ import {
   OpportunityStage,
   QuoteStatus,
   NotFoundError,
+  // Phase 6: Sales Order Management
+  SalesOrder,
+  SalesOrderLine,
+  Backorder,
+  SalesCommission,
+  SalesTerritory,
+  SalesTerritoryCustomer,
+  SalesTerritoryQuota,
+  SalesOrderApproval,
+  SalesOrderActivity,
+  CreateSalesOrderDTO,
+  CreateSalesOrderLineDTO,
+  UpdateSalesOrderDTO,
+  UpdateSalesOrderLineDTO,
+  CreateBackorderDTO,
+  CreateSalesTerritoryDTO,
+  CreateTerritoryQuotaDTO,
+  AssignTerritoryCustomerDTO,
+  SalesOrderFilters,
+  BackorderFilters,
+  CommissionFilters,
+  SalesOrderMetrics,
+  TerritoryMetrics,
+  SalesOrderStatus,
+  BackorderStatus,
+  CommissionStatus,
+  ApprovalStatus,
 } from '@opsui/shared';
 
 export class SalesService {
@@ -451,6 +478,355 @@ export class SalesService {
       pendingQuotes: quotesResult.total,
       totalPipeline,
     };
+  }
+
+  // ========================================================================
+  // SALES ORDERS (Phase 6)
+  // ========================================================================
+
+  async createSalesOrder(dto: CreateSalesOrderDTO, createdBy: string): Promise<SalesOrder> {
+    // Validate sales order
+    if (!dto.customerId || dto.customerId.trim() === '') {
+      throw new Error('Customer ID is required');
+    }
+
+    if (!dto.lines || dto.lines.length === 0) {
+      throw new Error('Sales order must have at least one line item');
+    }
+
+    // Validate customer exists
+    const customer = await salesRepository.findCustomerById(dto.customerId);
+    if (!customer) {
+      throw new NotFoundError('Customer', dto.customerId);
+    }
+
+    // Validate line items
+    for (const item of dto.lines) {
+      if (item.quantity <= 0) {
+        throw new Error('Line item quantity must be greater than 0');
+      }
+      if (item.unitPrice < 0) {
+        throw new Error('Line item unit price cannot be negative');
+      }
+    }
+
+    // Generate order number
+    const orderNumber = await salesRepository.get_next_sales_order_number();
+
+    // Create sales order
+    const order = await salesRepository.createSalesOrder({
+      ...dto,
+      orderNumber,
+      orderDate: new Date(),
+      orderStatus: SalesOrderStatus.PENDING,
+      paymentTerms: dto.paymentTerms || 'NET30',
+      currency: dto.currency || 'NZD',
+      exchangeRate: 1.0,
+      subtotal: 0,
+      discountAmount: 0,
+      discountPercent: 0,
+      taxAmount: 0,
+      shippingAmount: 0,
+      totalAmount: 0,
+      commissionRate: dto.commissionRate || 0,
+      commissionAmount: 0,
+      commissionPaid: false,
+      requiresApproval: false,
+      approvalStatus: ApprovalStatus.PENDING,
+      isBackorder: false,
+      createdBy,
+    } as any);
+
+    // Create line items
+    let lineNumber = 1;
+    for (const lineDto of dto.lines) {
+      await salesRepository.createSalesOrderLine({
+        orderId: order.orderId,
+        lineNumber: lineNumber++,
+        sku: lineDto.sku,
+        description: lineDto.description,
+        quantity: lineDto.quantity,
+        unitPrice: lineDto.unitPrice,
+        discountPercent: lineDto.discountPercent || 0,
+        discountAmount: 0,
+        taxCode: lineDto.taxCode,
+        taxRate: 0,
+        taxAmount: 0,
+        lineTotal: 0,
+        quantityPicked: 0,
+        quantityShipped: 0,
+        quantityInvoiced: 0,
+        quantityBackordered: 0,
+        status: 'PENDING' as any,
+        notes: lineDto.notes,
+        createdAt: new Date(),
+      } as any);
+    }
+
+    // Calculate and update order totals
+    await salesRepository.update_sales_order_totals(order.orderId);
+
+    // Calculate commission if sales person assigned
+    if (dto.salesPersonId && dto.commissionRate && dto.commissionRate > 0) {
+      await salesRepository.calculate_sales_commission(order.orderId);
+    }
+
+    // Get full order with lines
+    return (await salesRepository.findSalesOrderById(order.orderId)) as any;
+  }
+
+  async getSalesOrderById(orderId: string): Promise<SalesOrder> {
+    const order = await salesRepository.findSalesOrderById(orderId);
+    if (!order) {
+      throw new NotFoundError('Sales Order', orderId);
+    }
+    return order as any;
+  }
+
+  async getAllSalesOrders(
+    filters?: SalesOrderFilters
+  ): Promise<{ orders: SalesOrder[]; total: number }> {
+    return await salesRepository.findAllSalesOrders(filters);
+  }
+
+  async updateSalesOrder(
+    orderId: string,
+    dto: UpdateSalesOrderDTO,
+    userId: string
+  ): Promise<SalesOrder> {
+    const order = await this.getSalesOrderById(orderId);
+
+    // Validate status transition if changing status
+    if (dto.orderStatus && dto.orderStatus !== order.orderStatus) {
+      // Define valid status transitions
+      const validTransitions: Record<SalesOrderStatus, SalesOrderStatus[]> = {
+        [SalesOrderStatus.DRAFT]: [SalesOrderStatus.PENDING, SalesOrderStatus.CANCELLED],
+        [SalesOrderStatus.PENDING]: [SalesOrderStatus.CONFIRMED, SalesOrderStatus.CANCELLED],
+        [SalesOrderStatus.CONFIRMED]: [SalesOrderStatus.PICKING, SalesOrderStatus.CANCELLED],
+        [SalesOrderStatus.PICKING]: [SalesOrderStatus.PICKED, SalesOrderStatus.PARTIAL],
+        [SalesOrderStatus.PICKED]: [SalesOrderStatus.SHIPPED],
+        [SalesOrderStatus.PARTIAL]: [SalesOrderStatus.PICKING, SalesOrderStatus.SHIPPED],
+        [SalesOrderStatus.SHIPPED]: [SalesOrderStatus.INVOICED],
+        [SalesOrderStatus.INVOICED]: [SalesOrderStatus.CLOSED],
+        [SalesOrderStatus.CLOSED]: [],
+        [SalesOrderStatus.CANCELLED]: [],
+      };
+
+      const allowedStates = validTransitions[order.orderStatus] || [];
+      if (!allowedStates.includes(dto.orderStatus)) {
+        throw new Error(`Cannot transition from ${order.orderStatus} to ${dto.orderStatus}`);
+      }
+    }
+
+    await salesRepository.updateSalesOrder(orderId, {
+      ...dto,
+      updatedBy: userId,
+    } as any);
+
+    return await this.getSalesOrderById(orderId);
+  }
+
+  async deleteSalesOrder(orderId: string): Promise<void> {
+    const order = await this.getSalesOrderById(orderId);
+
+    // Only allow deletion of draft or pending orders
+    if (
+      order.orderStatus !== SalesOrderStatus.DRAFT &&
+      order.orderStatus !== SalesOrderStatus.PENDING
+    ) {
+      throw new Error('Can only delete draft or pending orders');
+    }
+
+    await salesRepository.deleteSalesOrder(orderId);
+  }
+
+  // ========================================================================
+  // BACKORDERS (Phase 6)
+  // ========================================================================
+
+  async createBackorder(dto: CreateBackorderDTO, createdBy: string): Promise<Backorder> {
+    // Validate backorder
+    if (!dto.originalLineId || dto.originalLineId.trim() === '') {
+      throw new Error('Original line ID is required');
+    }
+
+    if (dto.backorderQuantity <= 0) {
+      throw new Error('Backorder quantity must be greater than 0');
+    }
+
+    // Create backorder using database function
+    const backorderId = await salesRepository.create_backorder_from_line(
+      dto.originalLineId,
+      dto.backorderQuantity
+    );
+
+    const backorder = await salesRepository.findBackorderById(backorderId);
+    return backorder as any;
+  }
+
+  async getBackorderById(backorderId: string): Promise<Backorder> {
+    const backorder = await salesRepository.findBackorderById(backorderId);
+    if (!backorder) {
+      throw new NotFoundError('Backorder', backorderId);
+    }
+    return backorder as any;
+  }
+
+  async getAllBackorders(filters?: BackorderFilters): Promise<Backorder[]> {
+    return await salesRepository.findAllBackorders(filters);
+  }
+
+  async fulfillBackorder(
+    backorderId: string,
+    quantity: number,
+    userId: string
+  ): Promise<Backorder> {
+    const backorder = await this.getBackorderById(backorderId);
+
+    if (backorder.status !== BackorderStatus.OPEN) {
+      throw new Error('Can only fulfill open backorders');
+    }
+
+    if (quantity > backorder.quantityOutstanding) {
+      throw new Error('Cannot fulfill more than outstanding quantity');
+    }
+
+    await salesRepository.fulfillBackorder(backorderId, quantity, userId);
+
+    return await this.getBackorderById(backorderId);
+  }
+
+  // ========================================================================
+  // COMMISSIONS (Phase 6)
+  // ========================================================================
+
+  async getAllCommissions(filters?: CommissionFilters): Promise<SalesCommission[]> {
+    return await salesRepository.findAllCommissions(filters);
+  }
+
+  async getCommissionSummary(
+    salesPersonId: string,
+    year?: number
+  ): Promise<{
+    totalEarned: number;
+    totalPaid: number;
+    pendingPayment: number;
+    transactionCount: number;
+  }> {
+    const commissions = await salesRepository.findAllCommissions({
+      salesPersonId,
+    });
+
+    const filtered = year
+      ? commissions.filter(c => c.commissionDate.getFullYear() === year)
+      : commissions;
+
+    return {
+      totalEarned: filtered
+        .filter(c => c.status !== CommissionStatus.VOIDED)
+        .reduce((sum, c) => sum + c.commissionAmount, 0),
+      totalPaid: filtered
+        .filter(c => c.status === CommissionStatus.PAID)
+        .reduce((sum, c) => sum + c.commissionAmount, 0),
+      pendingPayment: filtered
+        .filter(c => c.status === CommissionStatus.EARNED)
+        .reduce((sum, c) => sum + c.commissionAmount, 0),
+      transactionCount: filtered.length,
+    };
+  }
+
+  async payCommissions(commissionIds: string[], paymentDate: Date, userId: string): Promise<void> {
+    for (const commissionId of commissionIds) {
+      await salesRepository.payCommission(commissionId, paymentDate, userId);
+    }
+  }
+
+  // ========================================================================
+  // TERRITORIES (Phase 6)
+  // ========================================================================
+
+  async createTerritory(dto: CreateSalesTerritoryDTO): Promise<SalesTerritory> {
+    // Validate territory
+    if (!dto.territoryCode || dto.territoryCode.trim() === '') {
+      throw new Error('Territory code is required');
+    }
+
+    if (!dto.territoryName || dto.territoryName.trim() === '') {
+      throw new Error('Territory name is required');
+    }
+
+    // Check if code already exists
+    const existing = await salesRepository.findTerritoryByCode(dto.territoryCode);
+    if (existing) {
+      throw new Error('Territory code already exists');
+    }
+
+    return await salesRepository.createTerritory({
+      ...dto,
+      isActive: true,
+      createdAt: new Date(),
+    } as any);
+  }
+
+  async getAllTerritories(): Promise<SalesTerritory[]> {
+    return await salesRepository.findAllTerritories();
+  }
+
+  async getTerritoryById(territoryId: string): Promise<SalesTerritory> {
+    const territory = await salesRepository.findTerritoryById(territoryId);
+    if (!territory) {
+      throw new NotFoundError('Territory', territoryId);
+    }
+    return territory as any;
+  }
+
+  async getTerritoryMetrics(territoryId: string): Promise<TerritoryMetrics> {
+    return await salesRepository.getTerritoryMetrics(territoryId);
+  }
+
+  async assignCustomerToTerritory(
+    dto: AssignTerritoryCustomerDTO,
+    userId: string
+  ): Promise<SalesTerritoryCustomer> {
+    // Validate territory exists
+    const territory = await this.getTerritoryById(dto.territoryId);
+
+    // Validate customer exists
+    const customer = await salesRepository.findCustomerById(dto.customerId);
+    if (!customer) {
+      throw new NotFoundError('Customer', dto.customerId);
+    }
+
+    return await salesRepository.assignTerritoryCustomer({
+      ...dto,
+      assignedDate: new Date(),
+      assignedBy: userId,
+      createdAt: new Date(),
+    } as any);
+  }
+
+  async createTerritoryQuota(dto: CreateTerritoryQuotaDTO): Promise<SalesTerritoryQuota> {
+    // Validate territory exists
+    await this.getTerritoryById(dto.territoryId);
+
+    return await salesRepository.createTerritoryQuota({
+      ...dto,
+      actualAmount: 0,
+      status: 'ACTIVE',
+      createdAt: new Date(),
+    } as any);
+  }
+
+  // ========================================================================
+  // SALES ORDER METRICS (Phase 6)
+  // ========================================================================
+
+  async getSalesOrderMetrics(): Promise<SalesOrderMetrics> {
+    return await salesRepository.getSalesOrderMetrics();
+  }
+
+  async getOrderActivity(orderId: string, limit: number = 50): Promise<SalesOrderActivity[]> {
+    return await salesRepository.findOrderActivity(orderId, limit);
   }
 }
 
