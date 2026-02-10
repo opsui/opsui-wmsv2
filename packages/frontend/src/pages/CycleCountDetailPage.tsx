@@ -1079,7 +1079,7 @@ export default function CycleCountDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-400">Loading cycle count details...</div>
       </div>
     );
@@ -1087,7 +1087,7 @@ export default function CycleCountDetailPage() {
 
   if (error || !plan) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md bg-gray-800 border border-gray-700">
           <CardContent className="p-6 text-center">
             <ExclamationTriangleIcon className="h-12 w-12 text-warning-400 mx-auto mb-4" />

@@ -80,7 +80,7 @@ export default function DeveloperPage() {
 
   if (process.env.NODE_ENV !== 'development') {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md">
           <div className="text-center p-6">
             <ExclamationTriangleIcon className="h-16 w-16 text-amber-500 mx-auto mb-4" />
@@ -96,7 +96,7 @@ export default function DeveloperPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       {/* Messages */}
       <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
         {messages.map((msg, i) => (

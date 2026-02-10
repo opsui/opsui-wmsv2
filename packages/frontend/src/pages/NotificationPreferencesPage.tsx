@@ -229,7 +229,7 @@ export function NotificationPreferencesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="min-h-screen">
         <Header />
         <main className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-white text-center py-12">Loading preferences...</div>
@@ -239,7 +239,7 @@ export function NotificationPreferencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen">
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-8">

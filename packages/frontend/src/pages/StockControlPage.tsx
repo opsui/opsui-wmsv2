@@ -1691,7 +1691,7 @@ export function StockControlPage() {
 
   if (!hasAccess) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen">
         <Card className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <CardContent className="p-6 text-center">
             <ExclamationTriangleIcon className="h-12 w-12 text-amber-500 dark:text-warning-400 mx-auto mb-4" />
@@ -1718,7 +1718,7 @@ export function StockControlPage() {
     ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Breadcrumb Navigation */}
