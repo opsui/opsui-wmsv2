@@ -268,13 +268,13 @@ export function RootCauseAnalysisPage() {
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3 pb-4 border-b border-white/10 animate-fade-in">
-          <div className="p-2 rounded-lg bg-blue-500/10 animate-pulse-slow">
-            <ChartBarIcon className="h-5 w-5 text-blue-400" />
+        <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-white/10 animate-fade-in">
+          <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/10 animate-pulse-slow">
+            <ChartBarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Pareto Analysis (80/20 Rule)</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pareto Analysis (80/20 Rule)</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Top root causes contributing to 80% of variances
             </p>
           </div>
@@ -282,8 +282,8 @@ export function RootCauseAnalysisPage() {
 
         {filteredData.length === 0 ? (
           <div className="text-center py-12">
-            <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">
+            <BeakerIcon className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">
               {searchTerm ? 'No root causes match your search' : 'No data available'}
             </p>
           </div>
@@ -294,7 +294,7 @@ export function RootCauseAnalysisPage() {
               return (
                 <div
                   key={item.categoryId}
-                  className={`bg-white/[0.02] rounded-xl p-4 border border-white/5 hover:border-white/10 hover:shadow-lg hover:shadow-blue-500/5 hover:scale-[1.01] hover:bg-white/[0.03] transition-all duration-300 ${
+                  className={`bg-gray-50 dark:bg-white/[0.02] rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-blue-200 dark:hover:border-white/10 hover:shadow-lg hover:shadow-blue-500/5 hover:scale-[1.01] hover:bg-gray-100 dark:hover:bg-white/[0.03] transition-all duration-300 ${
                     isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
                   style={{ transitionDelay: `${index * 50}ms` }}
@@ -305,16 +305,16 @@ export function RootCauseAnalysisPage() {
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: getCategoryColor(item.category) }}
                       />
-                      <span className="font-medium text-white">{item.category}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{item.category}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="text-right">
-                        <p className="text-gray-400">Count</p>
-                        <p className="font-semibold text-white">{item.count}</p>
+                        <p className="text-gray-500 dark:text-gray-400">Count</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{item.count}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-gray-400">Cumulative</p>
-                        <p className="font-semibold text-white">
+                        <p className="text-gray-500 dark:text-gray-400">Cumulative</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">
                           {formatPercent(item.cumulativePercent)}
                         </p>
                       </div>
@@ -322,7 +322,7 @@ export function RootCauseAnalysisPage() {
                   </div>
 
                   {/* Variance bar */}
-                  <div className="relative h-8 bg-gray-800/50 rounded-lg overflow-hidden group">
+                  <div className="relative h-8 bg-gray-200 dark:bg-gray-800/50 rounded-lg overflow-hidden group">
                     <div
                       className="absolute top-0 left-0 h-full rounded-lg opacity-80 transition-all duration-1000 ease-out group-hover:opacity-100"
                       style={{
@@ -338,13 +338,13 @@ export function RootCauseAnalysisPage() {
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-between px-3">
-                      <span className="text-xs text-white/80">Variance: {item.totalVariance}</span>
-                      <span className="text-xs text-white/80">Count: {item.count}</span>
+                      <span className="text-xs text-gray-600 dark:text-white/80">Variance: {item.totalVariance}</span>
+                      <span className="text-xs text-gray-600 dark:text-white/80">Count: {item.count}</span>
                     </div>
                   </div>
 
                   {index === 0 && (
-                    <div className="mt-2 flex items-center gap-1 text-xs text-amber-400 animate-glow">
+                    <div className="mt-2 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 animate-glow">
                       <LightBulbIcon className="h-3 w-3 animate-pulse" />
                       <span className="font-medium">
                         Top contributor - prioritize addressing this category
@@ -358,14 +358,14 @@ export function RootCauseAnalysisPage() {
         )}
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-6 pt-4 border-t border-white/10 text-sm">
+        <div className="flex items-center justify-center gap-6 pt-4 border-t border-gray-200 dark:border-white/10 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded opacity-80 bg-blue-500" />
-            <span className="text-gray-400">Incident Count</span>
+            <span className="text-gray-500 dark:text-gray-400">Incident Count</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded opacity-30 bg-blue-500" />
-            <span className="text-gray-400">Total Variance</span>
+            <span className="text-gray-500 dark:text-gray-400">Total Variance</span>
           </div>
         </div>
       </div>
@@ -418,23 +418,23 @@ export function RootCauseAnalysisPage() {
     const getTrendColor = (trend: string) => {
       switch (trend) {
         case 'INCREASING':
-          return 'text-red-400 bg-red-500/10';
+          return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-500/10';
         case 'DECREASING':
-          return 'text-green-400 bg-green-500/10';
+          return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-500/10';
         default:
-          return 'text-gray-400 bg-gray-500/10';
+          return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-500/10';
       }
     };
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3 pb-4 border-b border-white/10 animate-fade-in">
-          <div className="p-2 rounded-lg bg-purple-500/10 animate-pulse-slow">
-            <FunnelIcon className="h-5 w-5 text-purple-400" />
+        <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-white/10 animate-fade-in">
+          <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/10 animate-pulse-slow">
+            <FunnelIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Category Breakdown</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Category Breakdown</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Detailed analysis by root cause with trend indicators
             </p>
           </div>
@@ -442,8 +442,8 @@ export function RootCauseAnalysisPage() {
 
         {filteredData.length === 0 ? (
           <div className="text-center py-12">
-            <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">
+            <BeakerIcon className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">
               {searchTerm ? 'No categories match your search' : 'No data available'}
             </p>
           </div>
@@ -455,7 +455,7 @@ export function RootCauseAnalysisPage() {
               return (
                 <div
                   key={item.categoryId}
-                  className={`bg-white/[0.02] rounded-xl p-4 border border-white/5 hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-1 hover:bg-white/[0.04] ${
+                  className={`bg-gray-50 dark:bg-white/[0.02] rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-purple-200 dark:hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-1 hover:bg-gray-100 dark:hover:bg-white/[0.04] ${
                     isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                   }`}
                   style={{ transitionDelay: `${index * 50}ms` }}
@@ -467,7 +467,7 @@ export function RootCauseAnalysisPage() {
                         className="w-3 h-3 rounded-full animate-pulse-slow"
                         style={{ backgroundColor: getCategoryColor(item.category) }}
                       />
-                      <h4 className="font-semibold text-white">{item.category}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">{item.category}</h4>
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all duration-300 hover:scale-105 ${getTrendColor(item.trend)}`}
@@ -483,30 +483,30 @@ export function RootCauseAnalysisPage() {
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
-                      <p className="text-xs text-gray-500 mb-1">Incidents</p>
-                      <p className="text-lg font-bold text-white">{item.varianceCount}</p>
+                    <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Incidents</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">{item.varianceCount}</p>
                     </div>
-                    <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
-                      <p className="text-xs text-gray-500 mb-1">Avg Variance</p>
-                      <p className="text-lg font-bold text-white">
+                    <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Avg Variance</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {formatPercent(item.averageVariancePercent)}
                       </p>
                     </div>
-                    <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
-                      <p className="text-xs text-gray-500 mb-1">Total Variance</p>
-                      <p className="text-lg font-bold text-white">{item.totalVariance}</p>
+                    <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Total Variance</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">{item.totalVariance}</p>
                     </div>
-                    <div className="bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-black/30 hover:scale-105">
-                      <p className="text-xs text-gray-500 mb-1">% of Total</p>
-                      <p className="text-lg font-bold text-white">
+                    <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">% of Total</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {formatPercent(percentOfTotal)}
                       </p>
                     </div>
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
                       style={{
@@ -560,13 +560,13 @@ export function RootCauseAnalysisPage() {
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3 pb-4 border-b border-white/10 animate-fade-in">
-          <div className="p-2 rounded-lg bg-amber-500/10 animate-pulse-slow">
-            <ArrowTrendingUpIcon className="h-5 w-5 text-amber-400" />
+        <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-white/10 animate-fade-in">
+          <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-500/10 animate-pulse-slow">
+            <ArrowTrendingUpIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Trending Analysis</h3>
-            <p className="text-sm text-gray-400">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trending Analysis</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Categories showing significant changes over time
             </p>
           </div>
@@ -574,8 +574,8 @@ export function RootCauseAnalysisPage() {
 
         {filteredData.length === 0 ? (
           <div className="text-center py-12">
-            <BeakerIcon className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400">
+            <BeakerIcon className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">
               {searchTerm ? 'No trending causes match your search' : 'No data available'}
             </p>
           </div>
@@ -584,7 +584,7 @@ export function RootCauseAnalysisPage() {
             {filteredData.map((item, index) => (
               <div
                 key={item.categoryId}
-                className={`bg-white/[0.02] rounded-xl p-4 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-1 hover:bg-white/[0.04] ${
+                className={`bg-gray-50 dark:bg-white/[0.02] rounded-xl p-4 border border-gray-200 dark:border-white/5 hover:border-amber-200 dark:hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-1 hover:bg-gray-100 dark:hover:bg-white/[0.04] ${
                   visibleTrends.has(index)
                     ? 'opacity-100 translate-x-0'
                     : 'opacity-0 -translate-x-4'
@@ -597,13 +597,13 @@ export function RootCauseAnalysisPage() {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: getCategoryColor(item.category) }}
                     />
-                    <span className="font-medium text-white">{item.category}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{item.category}</span>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       item.trendDirection === 'UP'
-                        ? 'bg-red-500/20 text-red-400'
-                        : 'bg-green-500/20 text-green-400'
+                        ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+                        : 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400'
                     }`}
                   >
                     {item.trendDirection === 'UP' ? '↑ Increasing' : '↓ Decreasing'}
@@ -612,25 +612,25 @@ export function RootCauseAnalysisPage() {
 
                 {/* Period Comparison */}
                 <div className="grid grid-cols-3 gap-4 mb-3">
-                  <div className="text-center p-3 bg-black/20 rounded-lg transition-all duration-300 hover:bg-black/30 hover:scale-105">
-                    <p className="text-xs text-gray-500 mb-1">Previous Period</p>
-                    <p className="text-lg font-bold text-white">{item.previousPeriodCount}</p>
+                  <div className="text-center p-3 bg-white dark:bg-black/20 rounded-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Previous Period</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{item.previousPeriodCount}</p>
                   </div>
-                  <div className="text-center p-3 bg-black/20 rounded-lg transition-all duration-300 hover:bg-black/30 hover:scale-105">
-                    <p className="text-xs text-gray-500 mb-1">Current Period</p>
-                    <p className="text-lg font-bold text-white">{item.currentPeriodCount}</p>
+                  <div className="text-center p-3 bg-white dark:bg-black/20 rounded-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Current Period</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{item.currentPeriodCount}</p>
                   </div>
                   <div
                     className={`text-center p-3 rounded-lg transition-all duration-300 hover:scale-105 ${
                       item.percentChange >= 0
-                        ? 'bg-red-500/10 hover:bg-red-500/20'
-                        : 'bg-green-500/10 hover:bg-green-500/20'
+                        ? 'bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20'
+                        : 'bg-green-50 dark:bg-green-500/10 hover:bg-green-100 dark:hover:bg-green-500/20'
                     }`}
                   >
-                    <p className="text-xs text-gray-500 mb-1">Change</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Change</p>
                     <p
                       className={`text-lg font-bold ${
-                        item.percentChange >= 0 ? 'text-red-400' : 'text-green-400'
+                        item.percentChange >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
                       }`}
                     >
                       {item.percentChange >= 0 ? '+' : ''}
@@ -640,9 +640,9 @@ export function RootCauseAnalysisPage() {
                 </div>
 
                 {/* Average Variance */}
-                <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                  <span className="text-sm text-gray-400">Average Variance</span>
-                  <span className="font-semibold text-white">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-white/5">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Average Variance</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
                     {formatPercent(item.averageVariancePercent)}
                   </span>
                 </div>
@@ -655,17 +655,17 @@ export function RootCauseAnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
             <div>
-              <h1 className="text-3xl font-bold text-white bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Root Cause Analysis
               </h1>
-              <p className="text-gray-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Identify and categorize the underlying causes of inventory variances
               </p>
             </div>
@@ -673,16 +673,16 @@ export function RootCauseAnalysisPage() {
           </div>
 
           {/* Filters Bar */}
-          <Card variant="glass" className="p-4 animate-fade-in">
+          <Card variant="glass" className="p-4 animate-fade-in bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <FunnelIcon className="h-4 w-4" />
                 <span>Time Period:</span>
               </div>
               <select
                 value={filters.days}
                 onChange={e => handleDaysChange(parseInt(e.target.value))}
-                className="px-4 py-2 bg-white/[0.05] border border-white/10 rounded-lg text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 focus:scale-[1.02]"
+                className="px-4 py-2 bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:border-gray-300 dark:hover:border-white/20 focus:scale-[1.02]"
               >
                 <option value={7}>Last 7 days</option>
                 <option value={30}>Last 30 days</option>
@@ -690,21 +690,21 @@ export function RootCauseAnalysisPage() {
                 <option value={365}>Last year</option>
               </select>
               <div className="flex-1 min-w-[200px] relative group">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400 transition-colors" />
                 <input
                   type="text"
                   placeholder="Search categories..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white/[0.05] border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 focus:scale-[1.01] focus:shadow-lg focus:shadow-blue-500/10"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:border-gray-300 dark:hover:border-white/20 focus:scale-[1.01] focus:shadow-lg focus:shadow-blue-500/10"
                 />
               </div>
               <button
                 onClick={() => setUseSampleData(!useSampleData)}
                 className={`px-3 py-2 text-xs font-medium rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                   useSampleData
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 hover:border-amber-500/50 shadow-lg shadow-amber-500/10'
-                    : 'bg-gray-700/50 text-gray-400 border border-gray-600/30 hover:bg-gray-700 hover:border-gray-500'
+                    ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 hover:bg-amber-200 dark:hover:bg-amber-500/30 hover:border-amber-300 dark:hover:border-amber-500/50 shadow-lg shadow-amber-500/10'
+                    : 'bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600/30 hover:bg-gray-200 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                 }`}
               >
                 {useSampleData ? '📊 Sample Data' : '🔄 Live Data'}
@@ -713,7 +713,7 @@ export function RootCauseAnalysisPage() {
           </Card>
 
           {/* Tab Navigation */}
-          <div className="flex items-center gap-2 bg-white/[0.02] backdrop-blur rounded-xl p-1.5 border border-white/5 overflow-x-auto animate-fade-in hover:bg-white/[0.03] hover:border-white/10 transition-all duration-300">
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/[0.02] backdrop-blur rounded-xl p-1.5 border border-gray-200 dark:border-white/5 overflow-x-auto animate-fade-in hover:bg-gray-150 dark:hover:bg-white/[0.03] hover:border-gray-300 dark:hover:border-white/10 transition-all duration-300">
             <TabButton
               active={activeTab === 'pareto'}
               icon={<ChartBarIcon className="h-4 w-4" />}
@@ -747,7 +747,7 @@ export function RootCauseAnalysisPage() {
           </div>
 
           {/* Tab Content */}
-          <Card variant="glass" className="p-6 min-h-[500px]">
+          <Card variant="glass" className="p-6 min-h-[500px] bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
             <div className="animate-fade-in">
               {activeTab === 'pareto' &&
                 (isLoadingPareto ? (
@@ -824,20 +824,20 @@ export function RootCauseAnalysisPage() {
           {paretoData.length > 0 && (
             <Card
               variant="glass"
-              className="p-5 border-l-4 border-l-amber-500 animate-fade-in hover:bg-white/[0.03] hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 group"
+              className="p-5 border-l-4 border-l-amber-500 animate-fade-in hover:bg-gray-50 dark:hover:bg-white/[0.03] hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
             >
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="p-3 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors duration-300">
-                    <LightBulbIcon className="h-6 w-6 text-amber-400 animate-pulse-slow" />
+                  <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-500/10 group-hover:bg-amber-200 dark:group-hover:bg-amber-500/20 transition-colors duration-300">
+                    <LightBulbIcon className="h-6 w-6 text-amber-500 dark:text-amber-400 animate-pulse-slow" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-1">Key Insight</h3>
-                  <p className="text-gray-400">
-                    <span className="font-semibold text-white">{paretoData[0]?.category}</span> is
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Key Insight</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    <span className="font-semibold text-gray-900 dark:text-white">{paretoData[0]?.category}</span> is
                     the leading cause of inventory variances, accounting for{' '}
-                    <span className="font-semibold text-amber-400">
+                    <span className="font-semibold text-amber-600 dark:text-amber-400">
                       {formatPercent(paretoData[0]?.cumulativePercent || 0)}
                     </span>{' '}
                     of all incidents. Addressing this category first could have the greatest impact
@@ -871,7 +871,7 @@ function TabButton({
       className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap overflow-hidden group ${
         active
           ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-          : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.05]'
       }`}
     >
       {/* Ripple effect container */}
@@ -902,7 +902,7 @@ function TabButton({
 function LoadingSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 pb-4 border-b border-white/10 animate-fade-in">
+      <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-white/10 animate-fade-in">
         <Skeleton variant="rectangular" className="w-10 h-10 rounded-lg animate-pulse" />
         <div>
           <Skeleton variant="text" className="w-48 h-6" />
@@ -912,7 +912,7 @@ function LoadingSkeleton() {
       {[1, 2, 3].map((i, index) => (
         <div
           key={i}
-          className={`bg-white/[0.02] rounded-xl p-4 border border-white/5 transition-all duration-500 ${
+          className={`bg-gray-50 dark:bg-white/[0.02] rounded-xl p-4 border border-gray-200 dark:border-white/5 transition-all duration-500 ${
             index === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
           }`}
           style={{
@@ -932,7 +932,7 @@ function LoadingSkeleton() {
           </div>
           <Skeleton
             variant="rectangular"
-            className="w-full h-8 rounded-lg animate-shimmer bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 bg-[length:200%_100%]"
+            className="w-full h-8 rounded-lg animate-shimmer bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%]"
           />
         </div>
       ))}
@@ -963,9 +963,9 @@ function DrillDownView({
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center max-w-md mx-auto">
-        <div className="inline-flex p-4 rounded-2xl bg-white/[0.02] mb-4 animate-float">{icon}</div>
-        <h3 className="text-xl font-semibold text-white mb-2">Drill Down by {type}</h3>
-        <p className="text-gray-400">{description}</p>
+        <div className="inline-flex p-4 rounded-2xl bg-gray-100 dark:bg-white/[0.02] mb-4 animate-float">{icon}</div>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Drill Down by {type}</h3>
+        <p className="text-gray-500 dark:text-gray-400">{description}</p>
       </div>
 
       <div className="max-w-md mx-auto">
@@ -975,7 +975,7 @@ function DrillDownView({
             value={inputValue}
             onChange={e => onInputChange(e.target.value)}
             placeholder={placeholder}
-            className="flex-1 px-4 py-3 bg-white/[0.05] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 focus:scale-[1.02] focus:shadow-lg focus:shadow-blue-500/10"
+            className="flex-1 px-4 py-3 bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 focus:scale-[1.02] focus:shadow-lg focus:shadow-blue-500/10"
           />
           <button
             onClick={onAnalyze}
@@ -989,12 +989,12 @@ function DrillDownView({
 
       {currentValue ? (
         <div className="max-w-2xl mx-auto animate-scale-in">
-          <div className="bg-white/[0.02] rounded-xl p-6 border border-white/5 text-center hover:bg-white/[0.03] hover:border-amber-500/20 transition-all duration-300">
-            <ExclamationTriangleIcon className="h-12 w-12 text-amber-400 mx-auto mb-3 animate-pulse-slow" />
-            <h4 className="text-lg font-semibold text-white mb-2">
+          <div className="bg-gray-50 dark:bg-white/[0.02] rounded-xl p-6 border border-gray-200 dark:border-white/5 text-center hover:bg-gray-100 dark:hover:bg-white/[0.03] hover:border-amber-200 dark:hover:border-amber-500/20 transition-all duration-300">
+            <ExclamationTriangleIcon className="h-12 w-12 text-amber-500 dark:text-amber-400 mx-auto mb-3 animate-pulse-slow" />
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Analysis Results for {type}: {currentValue}
             </h4>
-            <p className="text-gray-400">
+            <p className="text-gray-500 dark:text-gray-400">
               This feature requires additional data integration. Results will appear here once the
               backend service is configured to provide detailed root cause analysis by{' '}
               {type.toLowerCase()}.
@@ -1003,8 +1003,8 @@ function DrillDownView({
         </div>
       ) : (
         <div className="text-center py-12 animate-fade-in">
-          <BeakerIcon className="h-16 w-16 text-gray-700 mx-auto mb-4 animate-bounce-slow" />
-          <p className="text-gray-500 max-w-md mx-auto">
+          <BeakerIcon className="h-16 w-16 text-gray-300 dark:text-gray-700 mx-auto mb-4 animate-bounce-slow" />
+          <p className="text-gray-400 dark:text-gray-500 max-w-md mx-auto">
             Enter a {type.toLowerCase()} above to view detailed root cause analysis for that
             specific category.
           </p>
@@ -1045,13 +1045,13 @@ function SummaryCard({
   return (
     <Card
       variant="glass"
-      className={`p-5 border-l-4 ${colorClasses[color]} hover:bg-white/[0.03] transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${shadowClasses[color]} group cursor-default`}
+      className={`p-5 border-l-4 ${colorClasses[color]} hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${shadowClasses[color]} group cursor-default bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700`}
     >
-      <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">{label}</p>
-      <p className="text-2xl font-bold text-white mt-1 group-hover:scale-105 transition-transform duration-300">
+      <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider font-medium">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1 group-hover:scale-105 transition-transform duration-300">
         {displayValue}
       </p>
-      <p className="text-sm text-gray-400 mt-1">{sublabel}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{sublabel}</p>
     </Card>
   );
 }
