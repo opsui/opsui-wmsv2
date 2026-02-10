@@ -1068,8 +1068,8 @@ function App() {
       const shouldBeDark = theme === 'dark' || (theme === 'auto' && prefersDark);
 
       if (shouldBeDark) {
-        document.documentElement.classList.remove('light');
         document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
       } else {
         document.documentElement.classList.remove('dark');
         document.documentElement.classList.add('light');
