@@ -123,7 +123,7 @@ const DEFAULT_RULES: CompressionRule[] = [
 // ============================================================================
 
 const getCacheDir = (workspaceRoot: string) =>
-  path.join(workspaceRoot, '.wms-cache', 'compression');
+  path.join(workspaceRoot, '.erp-cache', 'compression');
 const getRulesPath = (workspaceRoot: string) => path.join(getCacheDir(workspaceRoot), 'rules.json');
 const getStatsPath = (workspaceRoot: string) => path.join(getCacheDir(workspaceRoot), 'stats.json');
 

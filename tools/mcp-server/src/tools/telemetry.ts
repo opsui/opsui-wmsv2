@@ -87,7 +87,7 @@ interface TelemetryInsights {
 // ============================================================================
 
 const getTelemetryDir = (workspaceRoot: string) =>
-  path.join(workspaceRoot, '.wms-cache', 'telemetry');
+  path.join(workspaceRoot, '.erp-cache', 'telemetry');
 const getLogsPath = (workspaceRoot: string) =>
   path.join(getTelemetryDir(workspaceRoot), 'logs.jsonl');
 const getSessionPath = (workspaceRoot: string, session: string) =>

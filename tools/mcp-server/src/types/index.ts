@@ -1,5 +1,5 @@
 /**
- * Type definitions for WMS MCP Dev Accelerator
+ * Type definitions for ERP MCP Dev Accelerator
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';

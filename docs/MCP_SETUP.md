@@ -1,14 +1,14 @@
 # MCP Server Setup Guide
 
-This guide explains how to configure and use the custom MCP (Model Context Protocol) servers with this Warehouse Management System project.
+This guide explains how to configure and use the custom MCP (Model Context Protocol) servers with this Enterprise Resource Planning (ERP) System project.
 
 ## Overview
 
-This project includes a custom MCP server called **WMS Dev Accelerator** that provides specialized tools for accelerating development tasks specific to this WMS codebase.
+This project includes a custom MCP server called **ERP Dev Accelerator** that provides specialized tools for accelerating development tasks specific to this ERP codebase.
 
 ## Available MCP Servers
 
-### 1. WMS Dev Accelerator (Local)
+### 1. ERP Dev Accelerator (Local)
 
 The custom MCP server included in this repository provides the following tools:
 
@@ -21,7 +21,7 @@ The custom MCP server included in this repository provides the following tools:
 - **project**: Query project structure and metadata
 - **telemetry**: Track development metrics
 - **test-generation**: Generate tests based on code
-- **wms-domain**: WMS-specific domain tools
+- **erp-domain**: ERP-specific domain tools (Accounting, HR, Sales, Purchasing, Manufacturing, Projects, Inventory, E-commerce)
 
 ### 2. Recommended Online MCP Servers
 
@@ -61,13 +61,13 @@ Create or edit the `claude_desktop_config.json` file with the following content:
 ```json
 {
   "mcpServers": {
-    "wms-dev-accelerator": {
+    "erp-dev-accelerator": {
       "command": "node",
       "args": [
         "C:\\Users\\YOUR_USERNAME\\Documents\\Warehouse Management System\\tools\\mcp-server\\dist\\index.js"
       ],
       "env": {
-        "WMS_WORKSPACE_ROOT": "C:\\Users\\YOUR_USERNAME\\Documents\\Warehouse Management System"
+        "ERP_WORKSPACE_ROOT": "C:\\Users\\YOUR_USERNAME\\Documents\\Warehouse Management System"
       }
     },
     "filesystem": {
@@ -122,7 +122,7 @@ To verify that the MCP servers are working:
 1. Open Claude Desktop
 2. Start a new conversation
 3. Ask: "What MCP servers are available?"
-4. You should see the wms-dev-accelerator and any other configured servers listed
+4. You should see the erp-dev-accelerator and any other configured servers listed
 
 ## Using the MCP Server
 
@@ -131,19 +131,19 @@ Once configured, you can use the MCP server tools in your conversations with Cla
 ### Example Usage
 
 ```
-User: Can you analyze the order processing code using the WMS domain tools?
+User: Can you analyze the order processing code using the ERP domain tools?
 
-Claude: [Uses the wms-domain tool from the MCP server to analyze the code]
+Claude: [Uses the erp-domain tool from the MCP server to analyze the code]
 ```
 
 ### Available Tools
 
-The WMS Dev Accelerator provides these specialized tools:
+The ERP Dev Accelerator provides these specialized tools:
 
 | Tool                  | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
 | `code-analysis`       | Analyze code structure, find dependencies, identify patterns |
-| `code-generation`     | Generate code following WMS patterns                         |
+| `code-generation`     | Generate code following ERP patterns                         |
 | `context-compression` | Compress large context for better AI understanding           |
 | `ml-predictions`      | Get predictions for order duration, picker performance       |
 | `multi-agent`         | Coordinate multiple AI agents for complex tasks              |
@@ -151,7 +151,7 @@ The WMS Dev Accelerator provides these specialized tools:
 | `project`             | Query project structure, file ownership, module info         |
 | `telemetry`           | Track and analyze development metrics                        |
 | `test-generation`     | Generate tests based on existing code                        |
-| `wms-domain`          | Access WMS-specific business logic and rules                 |
+| `erp-domain`          | Access ERP-specific business logic and rules                 |
 
 ## Troubleshooting
 
@@ -187,11 +187,11 @@ You can add environment variables to the MCP server configuration:
 ```json
 {
   "mcpServers": {
-    "wms-dev-accelerator": {
+    "erp-dev-accelerator": {
       "command": "node",
       "args": ["path/to/index.js"],
       "env": {
-        "WMS_WORKSPACE_ROOT": "path/to/project",
+        "ERP_WORKSPACE_ROOT": "path/to/project",
         "NODE_ENV": "development",
         "LOG_LEVEL": "debug"
       }
@@ -207,18 +207,18 @@ If you work with multiple workspaces, you can configure multiple instances:
 ```json
 {
   "mcpServers": {
-    "wms-dev-accelerator-main": {
+    "erp-dev-accelerator-main": {
       "command": "node",
       "args": ["path/to/main/project/tools/mcp-server/dist/index.js"],
       "env": {
-        "WMS_WORKSPACE_ROOT": "path/to/main/project"
+        "ERP_WORKSPACE_ROOT": "path/to/main/project"
       }
     },
-    "wms-dev-accelerator-dev": {
+    "erp-dev-accelerator-dev": {
       "command": "node",
       "args": ["path/to/dev/project/tools/mcp-server/dist/index.js"],
       "env": {
-        "WMS_WORKSPACE_ROOT": "path/to/dev/project"
+        "ERP_WORKSPACE_ROOT": "path/to/dev/project"
       }
     }
   }

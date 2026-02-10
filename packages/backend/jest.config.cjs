@@ -15,15 +15,29 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(?:.pnpm/)?@opsui/shared)',
   ],
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/index.ts', '!src/db/**'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/index.ts',
+    '!src/db/**',
+    '!src/test/**',
+    '!src/platforms/**',
+  ],
   coverageThreshold: {
     global: {
-      branches: 15,
-      functions: 20,
-      lines: 25,
-      statements: 25,
+      branches: 50,
+      functions: 60,
+      lines: 65,
+      statements: 65,
+    },
+    './src/services/': {
+      branches: 60,
+      functions: 70,
+      lines: 75,
+      statements: 75,
     },
   },
+  coverageReporters: ['text', 'text-summary', 'lcov', 'html'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Mock the entire @opsui/shared package for Jest

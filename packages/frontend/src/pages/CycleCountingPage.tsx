@@ -737,7 +737,10 @@ export function CycleCountingPage() {
                             ).length || 0;
 
                           return (
-                            <tr key={plan.planId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                            <tr
+                              key={plan.planId}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                            >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
                                   {plan.planName}
@@ -1004,13 +1007,19 @@ export function CycleCountingPage() {
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                               {topDiscrepancies.length === 0 ? (
                                 <tr>
-                                  <td colSpan={4} className="py-8 text-center text-gray-500 dark:text-gray-500">
+                                  <td
+                                    colSpan={4}
+                                    className="py-8 text-center text-gray-500 dark:text-gray-500"
+                                  >
                                     No discrepancies found
                                   </td>
                                 </tr>
                               ) : (
                                 topDiscrepancies.map((item: any, index: number) => (
-                                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                  <tr
+                                    key={index}
+                                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                  >
                                     <td className="py-3 font-medium text-gray-900 dark:text-white">
                                       {item.sku}
                                     </td>
@@ -1094,13 +1103,19 @@ export function CycleCountingPage() {
                           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                             {userPerformance.length === 0 ? (
                               <tr>
-                                <td colSpan={4} className="py-8 text-center text-gray-500 dark:text-gray-500">
+                                <td
+                                  colSpan={4}
+                                  className="py-8 text-center text-gray-500 dark:text-gray-500"
+                                >
                                   No performance data available
                                 </td>
                               </tr>
                             ) : (
                               userPerformance.map((user: any, index: number) => (
-                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                <tr
+                                  key={index}
+                                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                >
                                   <td className="py-3 font-medium text-gray-900 dark:text-white">
                                     {user.name}
                                   </td>
@@ -1156,7 +1171,10 @@ export function CycleCountingPage() {
                                 return `${hours.toFixed(1)}h`;
                               };
                               return (
-                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                <tr
+                                  key={index}
+                                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                >
                                   <td className="py-3 font-medium text-gray-900 dark:text-white">
                                     {type.countType
                                       .replace(/_/g, ' ')

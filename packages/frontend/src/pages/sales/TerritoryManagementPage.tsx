@@ -178,8 +178,12 @@ export default function TerritoryManagementPage() {
               <ArrowLeftIcon className="h-5 w-5 text-gray-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Territories</h1>
-              <p className="text-gray-600 dark:text-slate-400 text-sm">Manage territories and track performance</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Sales Territories
+              </h1>
+              <p className="text-gray-600 dark:text-slate-400 text-sm">
+                Manage territories and track performance
+              </p>
             </div>
           </div>
 
@@ -195,8 +199,12 @@ export default function TerritoryManagementPage() {
             <div className="flex items-center gap-4">
               <TrophyIcon className="h-8 w-8 text-emerald-500 dark:text-emerald-400" />
               <div className="flex-1">
-                <p className="text-emerald-600 dark:text-emerald-400 font-semibold">Top Performing Territory</p>
-                <p className="text-gray-900 dark:text-white text-lg font-bold">{topPerformer.territoryName}</p>
+                <p className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Top Performing Territory
+                </p>
+                <p className="text-gray-900 dark:text-white text-lg font-bold">
+                  {topPerformer.territoryName}
+                </p>
                 <p className="text-gray-600 dark:text-slate-400 text-sm">
                   {topPerformer.quotaPercentAchieved.toFixed(1)}% of quota achieved
                 </p>
@@ -222,7 +230,9 @@ export default function TerritoryManagementPage() {
               </Card>
             ) : territories.length === 0 ? (
               <Card className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
-                <div className="text-center py-8 text-gray-500 dark:text-slate-400">No territories found</div>
+                <div className="text-center py-8 text-gray-500 dark:text-slate-400">
+                  No territories found
+                </div>
               </Card>
             ) : (
               territories.map(territory => (
@@ -243,7 +253,9 @@ export default function TerritoryManagementPage() {
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {territory.territoryName}
                           </h3>
-                          <span className="text-gray-400 dark:text-slate-500 text-xs">{territory.territoryCode}</span>
+                          <span className="text-gray-400 dark:text-slate-500 text-xs">
+                            {territory.territoryCode}
+                          </span>
                         </div>
                         {territory.managerName && (
                           <p className="text-gray-600 dark:text-slate-400 text-sm flex items-center gap-1">
@@ -267,12 +279,16 @@ export default function TerritoryManagementPage() {
                   <div className="mt-4 grid grid-cols-4 gap-4">
                     <div className="text-center">
                       <UsersIcon className="h-5 w-5 text-gray-400 dark:text-slate-400 mx-auto mb-1" />
-                      <p className="text-gray-900 dark:text-white font-semibold">{territory.customerCount}</p>
+                      <p className="text-gray-900 dark:text-white font-semibold">
+                        {territory.customerCount}
+                      </p>
                       <p className="text-gray-500 dark:text-slate-500 text-xs">Customers</p>
                     </div>
                     <div className="text-center">
                       <ChartBarIcon className="h-5 w-5 text-gray-400 dark:text-slate-400 mx-auto mb-1" />
-                      <p className="text-gray-900 dark:text-white font-semibold">{territory.orderCount}</p>
+                      <p className="text-gray-900 dark:text-white font-semibold">
+                        {territory.orderCount}
+                      </p>
                       <p className="text-gray-500 dark:text-slate-500 text-xs">Orders</p>
                     </div>
                     <div className="text-center">
@@ -327,16 +343,23 @@ export default function TerritoryManagementPage() {
             {selectedTerritory ? (
               <div className="space-y-6">
                 {/* Territory Info */}
-                <Card title={selectedTerritory.territoryName} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                <Card
+                  title={selectedTerritory.territoryName}
+                  className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+                >
                   <div className="space-y-3">
                     <div>
                       <p className="text-gray-500 dark:text-slate-400 text-xs">Territory Code</p>
-                      <p className="text-gray-900 dark:text-white">{selectedTerritory.territoryCode}</p>
+                      <p className="text-gray-900 dark:text-white">
+                        {selectedTerritory.territoryCode}
+                      </p>
                     </div>
                     {selectedTerritory.managerName && (
                       <div>
                         <p className="text-gray-500 dark:text-slate-400 text-xs">Manager</p>
-                        <p className="text-gray-900 dark:text-white">{selectedTerritory.managerName}</p>
+                        <p className="text-gray-900 dark:text-white">
+                          {selectedTerritory.managerName}
+                        </p>
                       </div>
                     )}
                     <div>
@@ -355,9 +378,14 @@ export default function TerritoryManagementPage() {
                 </Card>
 
                 {/* Customers */}
-                <Card title={`Assigned Customers (${territoryCustomers.length})`} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                <Card
+                  title={`Assigned Customers (${territoryCustomers.length})`}
+                  className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+                >
                   {territoryCustomers.length === 0 ? (
-                    <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-4">No customers assigned</p>
+                    <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-4">
+                      No customers assigned
+                    </p>
                   ) : (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {territoryCustomers.map(tc => (
@@ -367,7 +395,9 @@ export default function TerritoryManagementPage() {
                         >
                           <div className="flex items-center gap-2">
                             <UsersIcon className="h-4 w-4 text-gray-400 dark:text-slate-400" />
-                            <span className="text-gray-900 dark:text-white text-sm">{tc.customerName}</span>
+                            <span className="text-gray-900 dark:text-white text-sm">
+                              {tc.customerName}
+                            </span>
                           </div>
                           {tc.isPrimary && (
                             <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs rounded">
@@ -381,13 +411,21 @@ export default function TerritoryManagementPage() {
                 </Card>
 
                 {/* Quotas */}
-                <Card title="Quotas" className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                <Card
+                  title="Quotas"
+                  className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+                >
                   {territoryQuotas.length === 0 ? (
-                    <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-4">No quotas set</p>
+                    <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-4">
+                      No quotas set
+                    </p>
                   ) : (
                     <div className="space-y-3 max-h-48 overflow-y-auto">
                       {territoryQuotas.map(quota => (
-                        <div key={quota.quotaId} className="p-3 bg-gray-50 dark:bg-slate-800 rounded">
+                        <div
+                          key={quota.quotaId}
+                          className="p-3 bg-gray-50 dark:bg-slate-800 rounded"
+                        >
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-gray-900 dark:text-white text-sm font-medium">
                               {quota.quotaMonth
@@ -411,7 +449,9 @@ export default function TerritoryManagementPage() {
                             {quota.variancePercent !== undefined && (
                               <span
                                 className={`font-semibold ${
-                                  quota.variancePercent >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
+                                  quota.variancePercent >= 0
+                                    ? 'text-emerald-500 dark:text-emerald-400'
+                                    : 'text-red-500 dark:text-red-400'
                                 }`}
                               >
                                 {quota.variancePercent >= 0 ? '+' : ''}
@@ -456,7 +496,9 @@ export default function TerritoryManagementPage() {
             ) : (
               <Card className="text-center py-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                 <MapPinIcon className="h-12 w-12 text-gray-400 dark:text-slate-600 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-slate-400">Select a territory to view details</p>
+                <p className="text-gray-500 dark:text-slate-400">
+                  Select a territory to view details
+                </p>
               </Card>
             )}
           </div>

@@ -161,7 +161,9 @@ export function RouteOptimizationPage() {
       C: 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-300 dark:border-yellow-500/30',
       D: 'bg-purple-100 dark:bg-purple-500/20 border-purple-300 dark:border-purple-500/30',
     };
-    return colors[zone] || 'bg-gray-100 dark:bg-gray-500/20 border-gray-300 dark:border-gray-500/30';
+    return (
+      colors[zone] || 'bg-gray-100 dark:bg-gray-500/20 border-gray-300 dark:border-gray-500/30'
+    );
   };
 
   const parseLocation = (loc: string): { zone: string; aisle: number; shelf: number } | null => {
@@ -249,14 +251,18 @@ export function RouteOptimizationPage() {
                     const filteredLocations = locations;
 
                     return filteredLocations.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500 dark:text-gray-400">No locations</div>
+                      <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                        No locations
+                      </div>
                     ) : (
                       filteredLocations.map(location => {
                         const actualIndex = locations.indexOf(location);
                         const parsed = parseLocation(location);
                         return (
                           <div key={actualIndex} className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 dark:text-gray-500 w-6">{actualIndex + 1}.</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 w-6">
+                              {actualIndex + 1}.
+                            </span>
                             <input
                               type="text"
                               value={location}
@@ -264,7 +270,9 @@ export function RouteOptimizationPage() {
                               placeholder="A-01-01"
                               className={cn(
                                 'flex-1 px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono',
-                                parsed ? getZoneColor(parsed.zone) : 'border-gray-200 dark:border-white/[0.08]'
+                                parsed
+                                  ? getZoneColor(parsed.zone)
+                                  : 'border-gray-200 dark:border-white/[0.08]'
                               )}
                             />
                             <button
@@ -290,11 +298,15 @@ export function RouteOptimizationPage() {
 
               {/* Options */}
               <div className="glass-card rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Options</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Options
+                </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Start Point</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Start Point
+                    </label>
                     <input
                       type="text"
                       value={startPoint}
@@ -305,7 +317,9 @@ export function RouteOptimizationPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Algorithm</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Algorithm
+                    </label>
                     <select
                       value={algorithm}
                       onChange={e => setAlgorithm(e.target.value as typeof algorithm)}
@@ -362,7 +376,9 @@ export function RouteOptimizationPage() {
           <div className="space-y-6">
             <div className="glass-card rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Compare Strategies</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Compare Strategies
+                </h2>
                 <button
                   onClick={handleCompare}
                   disabled={comparing || locations.filter(l => l.trim()).length < 2}
@@ -449,15 +465,21 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
       <div className="mt-6 grid grid-cols-3 gap-4">
         <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Locations</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{result.locations.length}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            {result.locations.length}
+          </div>
         </div>
         <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Distance</div>
-          <div className="text-2xl font-bold text-green-500 dark:text-green-400">{result.total_distance_meters}m</div>
+          <div className="text-2xl font-bold text-green-500 dark:text-green-400">
+            {result.total_distance_meters}m
+          </div>
         </div>
         <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Est. Time</div>
-          <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">{result.estimated_time_minutes}m</div>
+          <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">
+            {result.estimated_time_minutes}m
+          </div>
         </div>
       </div>
     </div>
@@ -485,11 +507,15 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-500 dark:text-gray-400">Distance: </span>
-              <span className="ml-2 font-medium text-gray-900 dark:text-white">{comparison.best_distance}m</span>
+              <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                {comparison.best_distance}m
+              </span>
             </div>
             <div>
               <span className="text-gray-500 dark:text-gray-400">Time: </span>
-              <span className="ml-2 font-medium text-gray-900 dark:text-white">{comparison.best_time}m</span>
+              <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                {comparison.best_time}m
+              </span>
             </div>
           </div>
         </div>
@@ -535,8 +561,12 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
-                  <div className="text-green-500 dark:text-green-400">{result.total_distance_meters}m</div>
-                  <div className="text-blue-500 dark:text-blue-400">{result.estimated_time_minutes}m</div>
+                  <div className="text-green-500 dark:text-green-400">
+                    {result.total_distance_meters}m
+                  </div>
+                  <div className="text-blue-500 dark:text-blue-400">
+                    {result.estimated_time_minutes}m
+                  </div>
                 </div>
               </div>
             </div>

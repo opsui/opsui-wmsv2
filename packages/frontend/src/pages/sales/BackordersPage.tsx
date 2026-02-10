@@ -168,22 +168,42 @@ export default function BackordersPage() {
           </button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Backorders</h1>
-            <p className="text-gray-600 dark:text-slate-400 text-sm">Manage pending backorders and fulfillment</p>
+            <p className="text-gray-600 dark:text-slate-400 text-sm">
+              Manage pending backorders and fulfillment
+            </p>
           </div>
         </div>
 
         {/* Metrics */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card title="Total Backorders" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-blue-500 dark:text-blue-400">{metrics.totalBackorders}</p>
+          <Card
+            title="Total Backorders"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-blue-500 dark:text-blue-400">
+              {metrics.totalBackorders}
+            </p>
           </Card>
-          <Card title="Urgent (< 7 days)" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-red-500 dark:text-red-400">{metrics.urgentCount}</p>
+          <Card
+            title="Urgent (< 7 days)"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-red-500 dark:text-red-400">
+              {metrics.urgentCount}
+            </p>
           </Card>
-          <Card title="Items Outstanding" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-amber-500 dark:text-amber-400">{metrics.totalItemsOutstanding}</p>
+          <Card
+            title="Items Outstanding"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-amber-500 dark:text-amber-400">
+              {metrics.totalItemsOutstanding}
+            </p>
           </Card>
-          <Card title="Fulfillment Rate" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+          <Card
+            title="Fulfillment Rate"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
             <p className="text-3xl font-bold text-emerald-500 dark:text-emerald-400">
               {metrics.fulfillmentRate.toFixed(1)}%
             </p>
@@ -269,10 +289,14 @@ export default function BackordersPage() {
                           {backorder.originalOrderNumber}
                         </Link>
                       </td>
-                      <td className="py-3 text-gray-900 dark:text-white">{backorder.customerName}</td>
+                      <td className="py-3 text-gray-900 dark:text-white">
+                        {backorder.customerName}
+                      </td>
                       <td className="py-3">
                         <div>
-                          <p className="text-gray-900 dark:text-white text-sm font-medium">{backorder.sku}</p>
+                          <p className="text-gray-900 dark:text-white text-sm font-medium">
+                            {backorder.sku}
+                          </p>
                           <p className="text-gray-400 dark:text-slate-500 text-xs truncate max-w-xs">
                             {backorder.description}
                           </p>
@@ -379,7 +403,9 @@ export default function BackordersPage() {
             <div className="flex items-start gap-3">
               <ExclamationTriangleIcon className="h-6 w-6 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-red-600 dark:text-red-400 font-semibold mb-1">Overdue Backorders Detected</h3>
+                <h3 className="text-red-600 dark:text-red-400 font-semibold mb-1">
+                  Overdue Backorders Detected
+                </h3>
                 <p className="text-red-500 dark:text-red-300 text-sm">
                   {backorders.filter(b => isOverdue(b.promisedDate)).length} backorder(s) are past
                   their promised date. Contact customers and prioritize fulfillment.

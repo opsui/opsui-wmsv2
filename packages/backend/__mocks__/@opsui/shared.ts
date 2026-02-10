@@ -34,10 +34,26 @@ export enum OrderItemStatus {
 }
 
 export enum TaskStatus {
-  PENDING = 'PENDING',
+  NOT_STARTED = 'NOT_STARTED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
-  SKIPPED = 'SKIPPED',
+  CANCELLED = 'CANCELLED',
+  ON_HOLD = 'ON_HOLD',
+}
+
+export enum TaskPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
+}
+
+export enum WorkType {
+  REGULAR = 'REGULAR',
+  OVERTIME_1_5 = 'OVERTIME_1_5',
+  OVERTIME_2_0 = 'OVERTIME_2_0',
+  TRAVEL = 'TRAVEL',
+  TRAINING = 'TRAINING',
 }
 
 export enum UserRole {
@@ -1915,6 +1931,13 @@ export interface SyncOrdersRequestDTO {
 // MANUFACTURING TYPES
 // ============================================================================
 
+export enum WorkCenterStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  MAINTENANCE = 'MAINTENANCE',
+  DOWN = 'DOWN',
+}
+
 export enum ManufacturingOrderStatus {
   DRAFT = 'DRAFT',
   PLANNED = 'PLANNED',
@@ -2385,11 +2408,12 @@ export interface ImplementMRPActionsDTO {
 
 export enum RequisitionStatus {
   DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
   PENDING_APPROVAL = 'PENDING_APPROVAL',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
-  CONVERTED = 'CONVERTED',
   CANCELLED = 'CANCELLED',
+  CONVERTED_TO_PO = 'CONVERTED_TO_PO',
 }
 
 export enum RFQStatus {
@@ -2410,6 +2434,13 @@ export enum PurchaseOrderStatus {
   PARTIALLY_RECEIVED = 'PARTIALLY_RECEIVED',
   RECEIVED = 'RECEIVED',
   CANCELLED = 'CANCELLED',
+}
+
+export enum ThreeWayMatchStatus {
+  PENDING_RECEIPT = 'PENDING_RECEIPT',
+  PARTIALLY_MATCHED = 'PARTIALLY_MATCHED',
+  MATCHED = 'MATCHED',
+  DISCREPANCY = 'DISCREPANCY',
 }
 
 export enum VendorPerformanceRank {
@@ -2790,6 +2821,118 @@ export interface PurchasingDashboardMetrics {
 }
 
 // ============================================================================
+// MULTI-ENTITY TYPES
+// ============================================================================
+
+export enum EntityType {
+  HEAD_OFFICE = 'HEAD_OFFICE',
+  SUBSIDIARY = 'SUBSIDIARY',
+  BRANCH = 'BRANCH',
+  DIVISION = 'DIVISION',
+}
+
+export enum EntityStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  PENDING_SETUP = 'PENDING_SETUP',
+  CLOSED = 'CLOSED',
+}
+
+export enum IntercompanyTransactionType {
+  TRANSFER_OF_GOODS = 'TRANSFER_OF_GOODS',
+  TRANSFER_OF_FUNDS = 'TRANSFER_OF_FUNDS',
+  INTERCOMPANY_LOAN = 'INTERCOMPANY_LOAN',
+  COST_ALLOCATION = 'COST_ALLOCATION',
+  REVENUE_ALLOCATION = 'REVENUE_ALLOCATION',
+  MANAGEMENT_FEE = 'MANAGEMENT_FEE',
+  ROYALTY_PAYMENT = 'ROYALTY_PAYMENT',
+  DIVIDEND_PAYMENT = 'DIVIDEND_PAYMENT',
+}
+
+export enum IntercompanyTransactionStatus {
+  PENDING = 'PENDING',
+  POSTED = 'POSTED',
+  ELIMINATED = 'ELIMINATED',
+  REVERSED = 'REVERSED',
+}
+
+export enum EntityRelationshipType {
+  PARENT_SUBSIDIARY = 'PARENT_SUBSIDIARY',
+  JOINT_VENTURE = 'JOINT_VENTURE',
+  AFFILIATE = 'AFFILIATE',
+  PARTNERSHIP = 'PARTNERSHIP',
+  STRATEGIC_ALLIANCE = 'STRATEGIC_ALLIANCE',
+}
+
+export enum EntityUserRole {
+  ENTITY_ADMIN = 'ENTITY_ADMIN',
+  ENTITY_USER = 'ENTITY_USER',
+  ENTITY_VIEWER = 'ENTITY_VIEWER',
+  ENTITY_ACCOUNTANT = 'ENTITY_ACCOUNTANT',
+  ENTITY_MANAGER = 'ENTITY_MANAGER',
+}
+
+export enum ConsolidationMethod {
+  FULL_CONSOLIDATION = 'FULL_CONSOLIDATION',
+  PROPORTIONAL_CONSOLIDATION = 'PROPORTIONAL_CONSOLIDATION',
+  EQUITY_METHOD = 'EQUITY_METHOD',
+  COST_METHOD = 'COST_METHOD',
+}
+
+export enum ProjectType {
+  FIXED_BID = 'FIXED_BID',
+  TIME_MATERIALS = 'TIME_MATERIALS',
+  COST_PLUS = 'COST_PLUS',
+  RETAINER = 'RETAINER',
+  INTERNAL = 'INTERNAL',
+}
+
+export enum ProjectStatus {
+  DRAFT = 'DRAFT',
+  PLANNING = 'PLANNING',
+  ACTIVE = 'ACTIVE',
+  ON_HOLD = 'ON_HOLD',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum BillingType {
+  MILESTONE = 'MILESTONE',
+  PROGRESS = 'PROGRESS',
+  TIME_MATERIAL = 'TIME_MATERIAL',
+  FIXED_INTERVAL = 'FIXED_INTERVAL',
+  COMPLETION = 'COMPLETION',
+}
+
+export enum BillingScheduleStatus {
+  PENDING = 'PENDING',
+  BILLED = 'BILLED',
+  PAID = 'PAID',
+  OVERDUE = 'OVERDUE',
+}
+
+export enum IssueType {
+  ISSUE = 'ISSUE',
+  RISK = 'RISK',
+  DEFECT = 'DEFECT',
+  CHANGE_REQUEST = 'CHANGE_REQUEST',
+}
+
+export enum IssueSeverity {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+export enum IssueStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED',
+}
+
+// ============================================================================
 // PROJECTS TYPES
 // ============================================================================
 
@@ -3028,6 +3171,37 @@ export enum VelocityCategory {
   DEAD = 'DEAD',
 }
 
+export enum ABCClass {
+  A = 'A',
+  B = 'B',
+  C = 'C',
+}
+
+export enum CountPriority {
+  HIGH = 'HIGH',
+  MEDIUM = 'MEDIUM',
+  LOW = 'LOW',
+}
+
+export enum SafetyStockMethod {
+  SERVICE_LEVEL = 'SERVICE_LEVEL',
+  STANDARD_DEVIATION = 'STANDARD_DEVIATION',
+  MANUAL = 'MANUAL',
+}
+
+export enum CycleCountStrategy {
+  ABC_BASED = 'ABC_BASED',
+  RANDOM = 'RANDOM',
+  ITEM_SPECIFIC = 'ITEM_SPECIFIC',
+}
+
+export enum PeriodType {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+}
+
 export enum LandedCostComponentType {
   FREIGHT = 'FREIGHT',
   INSURANCE = 'INSURANCE',
@@ -3036,9 +3210,1212 @@ export enum LandedCostComponentType {
   OTHER = 'OTHER',
 }
 
+export enum AllocationMethod {
+  PROPORTIONAL = 'PROPORTIONAL',
+  EQUAL = 'EQUAL',
+  WEIGHTED = 'WEIGHTED',
+  MANUAL = 'MANUAL',
+}
+
 export enum ForecastMethod {
   MOVING_AVERAGE = 'MOVING_AVERAGE',
   EXPONENTIAL_SMOOTHING = 'EXPONENTIAL_SMOOTHING',
   LINEAR_REGRESSION = 'LINEAR_REGRESSION',
   SEASONAL = 'SEASONAL',
+}
+
+// ============================================================================
+// ACCOUNTING TYPES
+// ============================================================================
+
+/**
+ * Accounting Period
+ */
+export enum AccountingPeriod {
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  YEARLY = 'YEARLY',
+}
+
+/**
+ * Cost Category
+ */
+export enum CostCategory {
+  LABOR = 'LABOR',
+  MATERIALS = 'MATERIALS',
+  SHIPPING = 'SHIPPING',
+  STORAGE = 'STORAGE',
+  OVERHEAD = 'OVERHEAD',
+  EXCEPTIONS = 'EXCEPTIONS',
+  QUALITY_CONTROL = 'QUALITY_CONTROL',
+  MAINTENANCE = 'MAINTENANCE',
+}
+
+/**
+ * Revenue Category
+ */
+export enum RevenueCategory {
+  SALES = 'SALES',
+  RESTOCKING_FEES = 'RESTOCKING_FEES',
+  SERVICE_FEES = 'SERVICE_FEES',
+  OTHER = 'OTHER',
+}
+
+/**
+ * Financial Metrics Summary
+ */
+export interface FinancialMetrics {
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  totalRevenue: number;
+  revenueByCategory: Record<RevenueCategory, number>;
+  revenueByCustomer: Array<{ customerId: string; customerName: string; amount: number }>;
+  totalCost: number;
+  costByCategory: Record<CostCategory, number>;
+  laborCosts: number;
+  materialCosts: number;
+  shippingCosts: number;
+  storageCosts: number;
+  inventoryValue: number;
+  inventoryValueByCategory: Record<string, number>;
+  grossProfit: number;
+  netProfit: number;
+  profitMargin: number;
+  ordersProcessed: number;
+  averageOrderValue: number;
+  previousPeriodRevenue?: number;
+  revenueGrowthRate?: number;
+  includePreviousPeriod: boolean;
+}
+
+/**
+ * Inventory Valuation
+ */
+export interface InventoryValuation {
+  valuationDate: Date;
+  totalValue: number;
+  valuationByMethod: Record<string, number>;
+  categoryBreakdown: Array<{ category: string; value: number; percentage: number }>;
+  zoneBreakdown: Array<{ zone: string; value: number; percentage: number }>;
+  skuCount: number;
+  totalUnits: number;
+  averageCostPerUnit: number;
+  valuationMethod: 'FIFO' | 'LIFO' | 'WEIGHTED_AVERAGE' | 'STANDARD_COST';
+}
+
+/**
+ * Labor Cost Detail
+ */
+export interface LaborCostDetail {
+  userId: string;
+  userName: string;
+  role: string;
+  hoursWorked: number;
+  hourlyRate: number;
+  totalCost: number;
+  tasksCompleted: number;
+  costPerTask: number;
+  period: AccountingPeriod;
+  date: Date;
+}
+
+/**
+ * Cost Analysis Report
+ */
+export interface CostAnalysisReport {
+  reportId: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  generatedAt: Date;
+  generatedBy: string;
+  totalCosts: number;
+  costBreakdown: Record<CostCategory, number>;
+  costTrends: Array<{
+    category: CostCategory;
+    currentPeriod: number;
+    previousPeriod: number;
+    variance: number;
+    variancePercent: number;
+  }>;
+  topCostDrivers: Array<{
+    category: CostCategory;
+    amount: number;
+    percentage: number;
+  }>;
+  recommendations: string[];
+}
+
+/**
+ * Transaction Type for financial transactions
+ * This redefines the earlier TransactionType enum for financial contexts
+ * (matching the behavior in the actual shared package)
+ */
+export enum TransactionType {
+  SALE = 'SALE',
+  REFUND = 'REFUND',
+  CREDIT_RECEIVED = 'CREDIT_RECEIVED',
+  CREDIT_ISSUED = 'CREDIT_ISSUED',
+  WRITE_OFF = 'WRITE_OFF',
+  PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
+  PAYMENT_MADE = 'PAYMENT_MADE',
+  JOURNAL_ENTRY = 'JOURNAL_ENTRY',
+}
+
+/**
+ * Financial Transaction
+ */
+export interface FinancialTransaction {
+  transactionId: string;
+  transactionType: TransactionType;
+  amount: number;
+  currency: string;
+  referenceType: 'ORDER' | 'RETURN' | 'EXCEPTION' | 'GENERAL';
+  referenceId?: string;
+  description?: string;
+  accountId?: string;
+  userId?: string;
+  createdAt: Date;
+  createdBy?: string;
+  fiscalYear?: number;
+  fiscalPeriod?: number;
+  reconciled: boolean;
+  attachments?: string[];
+}
+
+/**
+ * Profit Loss Statement
+ */
+export interface ProfitLossStatement {
+  statementId: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  generatedAt: Date;
+  generatedBy: string;
+  revenue: {
+    totalRevenue: number;
+    sales: number;
+    restockingFees: number;
+    serviceFees: number;
+    otherRevenue: number;
+  };
+  costOfGoodsSold: {
+    materials: number;
+    labor: number;
+    overhead: number;
+    totalCOGS: number;
+  };
+  grossProfit: number;
+  grossProfitMargin: number;
+  operatingExpenses: {
+    shipping: number;
+    storage: number;
+    exceptions: number;
+    qualityControl: number;
+    maintenance: number;
+    otherOverhead: number;
+    totalOperatingExpenses: number;
+  };
+  operatingIncome: number;
+  operatingMargin: number;
+  otherIncome: number;
+  otherExpenses: number;
+  netIncome: number;
+  netProfitMargin: number;
+  previousPeriodRevenue?: number;
+  revenueGrowthPercent?: number;
+}
+
+/**
+ * Vendor Performance Financial
+ */
+export interface VendorPerformanceFinancial {
+  vendorId: string;
+  vendorName: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  totalPurchases: number;
+  orderCount: number;
+  averageOrderValue: number;
+  onTimeDeliveryRate: number;
+  qualityAcceptanceRate: number;
+  returnRate: number;
+  totalCredits: number;
+  creditsAsPercentageOfPurchases: number;
+  paymentTerms: string;
+  averagePaymentDays: number;
+  earlyPaymentDiscounts: number;
+  performanceScore: number;
+  lastReviewDate?: Date;
+  reviewedBy?: string;
+}
+
+/**
+ * Customer Financial Summary
+ */
+export interface CustomerFinancialSummary {
+  customerId: string;
+  customerName: string;
+  period: AccountingPeriod;
+  startDate: Date;
+  endDate: Date;
+  totalPurchases: number;
+  orderCount: number;
+  averageOrderValue: number;
+  paymentHistory: {
+    onTimePayments: number;
+    latePayments: number;
+    totalPayments: number;
+    onTimePaymentRate: number;
+  };
+  outstandingBalance: number;
+  creditLimit: number;
+  creditUtilization: number;
+  creditStatus: 'GOOD' | 'WARNING' | 'BLOCKED';
+  totalReturns: number;
+  returnRate: number;
+  averagePaymentDays: number;
+  daysSalesOutstanding: number;
+}
+
+/**
+ * Account Type
+ */
+export enum AccountType {
+  ASSET = 'ASSET',
+  LIABILITY = 'LIABILITY',
+  EQUITY = 'EQUITY',
+  REVENUE = 'REVENUE',
+  EXPENSE = 'EXPENSE',
+}
+
+/**
+ * Journal Entry Status
+ */
+export enum JournalEntryStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  POSTED = 'POSTED',
+  REVERSED = 'REVERSED',
+}
+
+/**
+ * Chart of Accounts
+ */
+export interface ChartOfAccounts {
+  accountId: string;
+  accountNumber: string;
+  accountName: string;
+  accountType: AccountType;
+  parentId?: string;
+  normalBalance: 'DEBIT' | 'CREDIT';
+  currency: string;
+  isActive: boolean;
+  isControlAccount: boolean;
+  reconciliationAccountId?: string;
+  description?: string;
+  createdAt: Date;
+  createdBy: string;
+  updatedAt?: Date;
+  updatedBy?: string;
+  currentBalance?: number;
+  children?: ChartOfAccounts[];
+}
+
+/**
+ * Journal Entry
+ */
+export interface JournalEntry {
+  entryId: string;
+  entryNumber: string;
+  entryDate: Date;
+  status: JournalEntryStatus;
+  description: string;
+  lines: JournalEntryLine[];
+  totalDebit: number;
+  totalCredit: number;
+  currency: string;
+  createdAt: Date;
+  createdBy: string;
+  submittedAt?: Date;
+  submittedBy?: string;
+  approvedAt?: Date;
+  approvedBy?: string;
+  postedAt?: Date;
+  postedBy?: string;
+  reversedEntryId?: string;
+  reversalReason?: string;
+  attachments?: string[];
+  notes?: string;
+}
+
+/**
+ * Journal Entry Line
+ */
+export interface JournalEntryLine {
+  lineId: string;
+  entryId: string;
+  lineNumber: number;
+  accountId: string;
+  accountName?: string;
+  description?: string;
+  debitAmount: number;
+  creditAmount: number;
+  entityType?: string;
+  entityId?: string;
+  referenceType?: string;
+  referenceId?: string;
+  taxCode?: string;
+  taxAmount?: number;
+}
+
+/**
+ * Trial Balance
+ */
+export interface TrialBalance {
+  reportId: string;
+  reportDate: Date;
+  periodStart: Date;
+  periodEnd: Date;
+  generatedAt: Date;
+  generatedBy: string;
+  currency: string;
+  accounts: AccountBalance[];
+  totalDebits: number;
+  totalCredits: number;
+  isInBalance: boolean;
+  difference: number;
+  fiscalYear: number;
+  fiscalPeriod: number;
+}
+
+/**
+ * Account Balance
+ */
+export interface AccountBalance {
+  accountId: string;
+  accountNumber: string;
+  accountName: string;
+  accountType: AccountType;
+  debitBalance: number;
+  creditBalance: number;
+  netBalance: number;
+  normalBalance: 'DEBIT' | 'CREDIT';
+}
+
+/**
+ * Balance Sheet
+ */
+export interface BalanceSheet {
+  statementId: string;
+  statementDate: Date;
+  asOfDate: Date;
+  generatedAt: Date;
+  generatedBy: string;
+  currency: string;
+  fiscalYear: number;
+  fiscalPeriod?: number;
+  assets: {
+    currentAssets: {
+      cash: number;
+      accountsReceivable: number;
+      inventory: number;
+      prepaidExpenses: number;
+      otherCurrentAssets: number;
+      totalCurrentAssets: number;
+    };
+    nonCurrentAssets: {
+      propertyPlantEquipment: number;
+      accumulatedDepreciation: number;
+      netPropertyPlantEquipment: number;
+      intangibleAssets: number;
+      otherNonCurrentAssets: number;
+      totalNonCurrentAssets: number;
+    };
+    totalAssets: number;
+  };
+  liabilities: {
+    currentLiabilities: {
+      accountsPayable: number;
+      accruedExpenses: number;
+      shortTermDebt: number;
+      currentPortionLongTermDebt: number;
+      otherCurrentLiabilities: number;
+      totalCurrentLiabilities: number;
+    };
+    nonCurrentLiabilities: {
+      longTermDebt: number;
+      deferredTaxLiabilities: number;
+      otherNonCurrentLiabilities: number;
+      totalNonCurrentLiabilities: number;
+    };
+    totalLiabilities: number;
+  };
+  equity: {
+    shareCapital: number;
+    retainedEarnings: number;
+    currentEarnings: number;
+    otherEquity: number;
+    totalEquity: number;
+  };
+  totalLiabilitiesAndEquity: number;
+  previousPeriodAssets?: number;
+  previousPeriodLiabilities?: number;
+  previousPeriodEquity?: number;
+}
+
+/**
+ * Cash Flow Statement
+ */
+export interface CashFlowStatement {
+  statementId: string;
+  statementDate: Date;
+  periodStart: Date;
+  periodEnd: Date;
+  generatedAt: Date;
+  generatedBy: string;
+  currency: string;
+  fiscalYear: number;
+  fiscalPeriod?: number;
+  operatingActivities: {
+    netIncome: number;
+    adjustments: {
+      depreciation: number;
+      amortization: number;
+      accountsReceivableChange: number;
+      inventoryChange: number;
+      accountsPayableChange: number;
+      otherAdjustments: number;
+    };
+    netCashFromOperations: number;
+  };
+  investingActivities: {
+    capitalExpenditures: number;
+    assetSales: number;
+    otherInvestingActivities: number;
+    netCashFromInvesting: number;
+  };
+  financingActivities: {
+    debtProceeds: number;
+    debtRepayments: number;
+    equityIssuance: number;
+    dividendsPaid: number;
+    otherFinancingActivities: number;
+    netCashFromFinancing: number;
+  };
+  netChangeInCash: number;
+  cashAtBeginning: number;
+  cashAtEnd: number;
+}
+
+/**
+ * Create Account DTO
+ */
+export interface CreateAccountDTO {
+  accountNumber: string;
+  accountName: string;
+  accountType: AccountType;
+  parentId?: string;
+  normalBalance: 'DEBIT' | 'CREDIT';
+  currency?: string;
+  isControlAccount?: boolean;
+  reconciliationAccountId?: string;
+  description?: string;
+  createdBy: string;
+}
+
+/**
+ * Revenue Recognition Method
+ */
+export enum RevenueRecognitionMethod {
+  INSTANT = 'INSTANT',
+  MILESTONE = 'MILESTONE',
+  RATABLE = 'RATABLE',
+  DEFERRED = 'DEFERRED',
+}
+
+/**
+ * Depreciation Method
+ */
+export enum DepreciationMethod {
+  STRAIGHT_LINE = 'STRAIGHT_LINE',
+  DECLINING_BALANCE = 'DECLINING_BALANCE',
+  DOUBLE_DECLINING = 'DOUBLE_DECLINING',
+  UNITS_OF_PRODUCTION = 'UNITS_OF_PRODUCTION',
+}
+
+/**
+ * Update Account DTO
+ */
+export interface UpdateAccountDTO {
+  accountName?: string;
+  accountType?: AccountType;
+  parentId?: string;
+  normalBalance?: 'DEBIT' | 'CREDIT';
+  isActive?: boolean;
+  isControlAccount?: boolean;
+  reconciliationAccountId?: string;
+  description?: string;
+  updatedBy: string;
+}
+
+/**
+ * Create Journal Entry DTO
+ */
+export interface CreateJournalEntryDTO {
+  entryDate: Date;
+  description: string;
+  lines: Array<{
+    accountId: string;
+    description?: string;
+    debitAmount: number;
+    creditAmount: number;
+    entityType?: string;
+    entityId?: string;
+    referenceType?: string;
+    referenceId?: string;
+    taxCode?: string;
+    taxAmount?: number;
+  }>;
+  currency?: string;
+  createdBy: string;
+}
+
+// ============================================================================
+// PHASE 2: INTERMEDIATE TYPES
+// ============================================================================
+
+/**
+ * AR Payment
+ */
+export interface ARPayment {
+  paymentId: string;
+  receivableId: string;
+  paymentDate: Date;
+  paymentMethod?: string;
+  amount: number;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Credit Memo
+ */
+export interface CreditMemo {
+  memoId: string;
+  receivableId?: string;
+  memoNumber: string;
+  memoDate: Date;
+  reason: string;
+  amount: number;
+  status: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * AP Payment
+ */
+export interface APPayment {
+  paymentId: string;
+  payableId: string;
+  paymentDate: Date;
+  paymentMethod?: string;
+  amount: number;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Vendor Credit Memo
+ */
+export interface VendorCreditMemo {
+  memoId: string;
+  payableId?: string;
+  memoNumber: string;
+  memoDate: Date;
+  reason: string;
+  amount: number;
+  status: string;
+  approvedBy?: string;
+  approvedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Bank Reconciliation
+ */
+export interface BankReconciliation {
+  reconciliationId: string;
+  bankAccountId: string;
+  statementDate: Date;
+  statementBalance: number;
+  bookBalance: number;
+  difference: number;
+  status: string;
+  reconciledBy?: string;
+  reconciledAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Cash Position
+ */
+export interface CashPosition {
+  positionId: string;
+  asOfDate: Date;
+  cashOnHand: number;
+  cashInBank: number;
+  totalCash: number;
+  accountsReceivable: number;
+  accountsPayable: number;
+  netCash: number;
+  createdAt: Date;
+}
+
+/**
+ * Revenue Contract
+ */
+export interface RevenueContract {
+  contractId: string;
+  contractNumber: string;
+  customerId: string;
+  contractName: string;
+  totalValue: number;
+  startDate: Date;
+  endDate: Date;
+  recognitionMethod: RevenueRecognitionMethod;
+  status: string;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Revenue Milestone
+ */
+export interface RevenueMilestone {
+  milestoneId: string;
+  contractId: string;
+  milestoneName: string;
+  description?: string;
+  targetAmount: number;
+  achievedAmount: number;
+  percentage: number;
+  targetDate?: Date;
+  achievedDate?: Date;
+  status: string;
+  createdAt: Date;
+}
+
+/**
+ * Revenue Schedule
+ */
+export interface RevenueSchedule {
+  scheduleId: string;
+  contractId: string;
+  revenueDate: Date;
+  amount: number;
+  recognizedAmount: number;
+  remainingAmount: number;
+  status: string;
+  recognizedAt?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Deferred Revenue
+ */
+export interface DeferredRevenue {
+  deferralId: string;
+  contractId?: string;
+  originalAmount: number;
+  remainingAmount: number;
+  recognizedAmount: number;
+  recognitionStartDate: Date;
+  recognitionEndDate: Date;
+  monthlyRecognitionAmount?: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// PHASE 3: ADVANCED TYPES
+// ============================================================================
+
+/**
+ * Currency
+ */
+export interface Currency {
+  currencyCode: string;
+  currencyName: string;
+  symbol: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Exchange Rate
+ */
+export interface ExchangeRate {
+  rateId: string;
+  fromCurrency: string;
+  toCurrency: string;
+  rateDate: Date;
+  exchangeRate: number;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
+ * Budget
+ */
+export interface Budget {
+  budgetId: string;
+  budgetName: string;
+  fiscalYear: number;
+  budgetType: string;
+  status: string;
+  createdBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Budget Line
+ */
+export interface BudgetLine {
+  lineId: string;
+  budgetId: string;
+  accountId: string;
+  period: string;
+  budgetedAmount: number;
+  actualAmount: number;
+  variance: number;
+  variancePercent: number;
+  lastUpdated: Date;
+  createdAt: Date;
+}
+
+/**
+ * Forecast
+ */
+export interface Forecast {
+  forecastId: string;
+  forecastName: string;
+  forecastType: string;
+  startDate: Date;
+  endDate: Date;
+  createdBy?: string;
+  createdAt: Date;
+}
+
+/**
+ * Fixed Asset
+ */
+export interface FixedAsset {
+  assetId: string;
+  assetNumber: string;
+  assetName: string;
+  assetCategory?: string;
+  serialNumber?: string;
+  purchaseDate: Date;
+  purchaseCost: number;
+  salvageValue: number;
+  usefulLife: number;
+  depreciationMethod: DepreciationMethod;
+  currentBookValue?: number;
+  accumulatedDepreciation: number;
+  status: string;
+  location?: string;
+  assignedTo?: string;
+  createdAt: Date;
+  createdBy?: string;
+  updatedAt?: Date;
+}
+
+/**
+ * Depreciation Schedule
+ */
+export interface DepreciationSchedule {
+  scheduleId: string;
+  assetId: string;
+  fiscalYear: number;
+  fiscalPeriod: string;
+  depreciationAmount: number;
+  bookValueBeginning: number;
+  bookValueEnding: number;
+  accumulatedDepreciation: number;
+  isDepreciated: boolean;
+  calculatedAt: Date;
+  createdAt: Date;
+}
+
+/**
+ * Audit Log
+ */
+export interface AuditLog {
+  auditId: string;
+  tableName: string;
+  recordId: string;
+  action: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  changedBy?: string;
+  changedAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * Document Attachment
+ */
+export interface DocumentAttachment {
+  attachmentId: string;
+  recordType: string;
+  recordId: string;
+  documentName: string;
+  documentType?: string;
+  filePath: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedBy?: string;
+  uploadedAt: Date;
+}
+
+/**
+ * Approval
+ */
+export interface Approval {
+  approvalId: string;
+  approvalType: string;
+  recordId: string;
+  status: string;
+  requestedBy?: string;
+  requestedAt: Date;
+  approvedBy?: string;
+  approvedAt?: Date;
+  rejectedBy?: string;
+  rejectedAt?: Date;
+  comments?: string;
+  createdAt: Date;
+}
+
+/**
+ * Apply Payment DTO
+ */
+export interface ApplyPaymentDTO {
+  paymentDate: Date;
+  paymentMethod?: string;
+  amount: number;
+  referenceNumber?: string;
+  notes?: string;
+  createdBy: string;
+}
+
+/**
+ * Create Credit Memo DTO
+ */
+export interface CreateCreditMemoDTO {
+  memoDate: Date;
+  reason: string;
+  amount: number;
+  createdBy: string;
+}
+
+/**
+ * Create Bank Reconciliation DTO
+ */
+export interface CreateBankReconciliationDTO {
+  bankAccountId: string;
+  statementDate: Date;
+  statementBalance: number;
+  reconciledBy?: string;
+}
+
+/**
+ * Create Revenue Contract DTO
+ */
+export interface CreateRevenueContractDTO {
+  contractNumber: string;
+  customerId: string;
+  contractName: string;
+  totalValue: number;
+  startDate: Date;
+  endDate: Date;
+  recognitionMethod: RevenueRecognitionMethod;
+  createdBy: string;
+}
+
+/**
+ * Create Budget DTO
+ */
+export interface CreateBudgetDTO {
+  budgetName: string;
+  fiscalYear: number;
+  budgetType: string;
+  createdBy: string;
+}
+
+/**
+ * Create Fixed Asset DTO
+ */
+export interface CreateFixedAssetDTO {
+  assetNumber: string;
+  assetName: string;
+  assetCategory?: string;
+  serialNumber?: string;
+  purchaseDate: Date;
+  purchaseCost: number;
+  salvageValue: number;
+  usefulLife: number;
+  depreciationMethod: DepreciationMethod;
+  location?: string;
+  createdBy: string;
+}
+
+/**
+ * Create Forecast DTO
+ */
+export interface CreateForecastDTO {
+  forecastName: string;
+  forecastType: string;
+  startDate: Date;
+  endDate: Date;
+  createdBy: string;
+}
+
+// ============================================================================
+// RMA (RETURN MERCHANDISE AUTHORIZATION) TYPES
+// ============================================================================
+
+/**
+ * RMA Status
+ */
+export enum RMAStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  RECEIVED = 'RECEIVED',
+  INSPECTING = 'INSPECTING',
+  AWAITING_DECISION = 'AWAITING_DECISION',
+  REFUND_APPROVED = 'REFUND_APPROVED',
+  REFUND_PROCESSING = 'REFUND_PROCESSING',
+  REFUNDED = 'REFUNDED',
+  REPLACEMENT_APPROVED = 'REPLACEMENT_APPROVED',
+  REPLACEMENT_PROCESSING = 'REPLACEMENT_PROCESSING',
+  REPLACED = 'REPLACED',
+  REPAIR_APPROVED = 'REPAIR_APPROVED',
+  REPAIRING = 'REPAIRING',
+  REPAIRED = 'REPAIRED',
+  CLOSED = 'CLOSED',
+}
+
+/**
+ * RMA Reason
+ */
+export enum RMAReason {
+  DEFECTIVE = 'DEFECTIVE',
+  DAMAGED_SHIPPING = 'DAMAGED_SHIPPING',
+  WRONG_ITEM = 'WRONG_ITEM',
+  NO_LONGER_NEEDED = 'NO_LONGER_NEEDED',
+  WARRANTY = 'WARRANTY',
+  QUALITY_ISSUE = 'QUALITY_ISSUE',
+  MISSING_PARTS = 'MISSING_PARTS',
+  ARRIVED_LATE = 'ARRIVED_LATE',
+  ORDER_ERROR = 'ORDER_ERROR',
+  OTHER = 'OTHER',
+}
+
+/**
+ * RMA Priority
+ */
+export enum RMAPriority {
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
+}
+
+/**
+ * RMA Resolution Type
+ */
+export enum RMAResolutionType {
+  REFUND = 'REFUND',
+  REPLACEMENT = 'REPLACEMENT',
+  REPAIR = 'REPAIR',
+  CREDIT = 'CREDIT',
+  EXCHANGE = 'EXCHANGE',
+  RESTOCK = 'RESTOCK',
+  DISPOSE = 'DISPOSE',
+}
+
+/**
+ * RMA Condition
+ */
+export enum RMACondition {
+  NEW = 'NEW',
+  USED = 'USED',
+  OPENED = 'OPENED',
+  DAMAGED = 'DAMAGED',
+  DEFECTIVE = 'DEFECTIVE',
+}
+
+/**
+ * RMA Disposition
+ */
+export enum RMADisposition {
+  RESALE = 'RESALE',
+  REFURBISH = 'REFURBISH',
+  REPAIR = 'REPAIR',
+  RETURN_TO_VENDOR = 'RETURN_TO_VENDOR',
+  DISPOSE = 'DISPOSE',
+  DONATE = 'DONATE',
+  QUARANTINE = 'QUARANTINE',
+}
+
+/**
+ * RMA Request
+ */
+export interface RMARequest {
+  rmaId: string;
+  rmaNumber: string;
+  orderId: string;
+  orderItemId: string;
+  customerId?: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  sku: string;
+  productName: string;
+  quantity: number;
+  reason: RMAReason;
+  reasonDescription?: string;
+  status: RMAStatus;
+  priority: RMAPriority;
+  condition?: RMACondition;
+  resolutionType?: RMAResolutionType;
+  disposition?: RMADisposition;
+  refundAmount?: number;
+  replacementOrderId?: string;
+  requestedDate: Date;
+  approvedAt?: Date;
+  approvedBy?: string;
+  receivedAt?: Date;
+  receivedBy?: string;
+  inspectedAt?: Date;
+  inspectedBy?: string;
+  resolvedAt?: Date;
+  resolvedBy?: string;
+  closedAt?: Date;
+  closedBy?: string;
+  trackingNumber?: string;
+  carrier?: string;
+  returnLabelUrl?: string;
+  customerNotes?: string;
+  internalNotes?: string;
+  resolutionNotes?: string;
+  rejectionReason?: string;
+  refundMethod?: 'ORIGINAL' | 'STORE_CREDIT' | 'BANK_TRANSFER' | 'CHECK';
+  refundProcessedAt?: Date;
+  replacementShippedAt?: Date;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt?: Date;
+  updatedBy?: string;
+  images?: string[];
+  attachments?: string[];
+}
+
+/**
+ * RMA Inspection
+ */
+export interface RMAInspection {
+  inspectionId: string;
+  rmaId: string;
+  inspectedBy: string;
+  inspectionDate: Date;
+  condition: RMACondition;
+  findings: string;
+  disposition?: RMADisposition;
+  recommendedResolution?: RMAResolutionType;
+  estimatedRefundAmount?: number;
+  repairable: boolean;
+  images?: string[];
+  createdAt: Date;
+}
+
+/**
+ * RMA Activity
+ */
+export interface RMAActivity {
+  activityId: string;
+  rmaId: string;
+  activityType:
+    | 'CREATED'
+    | 'APPROVED'
+    | 'REJECTED'
+    | 'RECEIVED'
+    | 'INSPECTED'
+    | 'RESOLVED'
+    | 'REFUNDED'
+    | 'REPLACED'
+    | 'REPAIRED'
+    | 'CLOSED'
+    | 'NOTE_ADDED'
+    | 'STATUS_CHANGED';
+  description: string;
+  oldStatus?: RMAStatus;
+  newStatus?: RMAStatus;
+  performedBy: string;
+  performedAt: Date;
+}
+
+/**
+ * Create RMA DTO
+ */
+export interface CreateRMADTO {
+  orderId: string;
+  orderItemId: string;
+  sku: string;
+  quantity: number;
+  reason: RMAReason;
+  reasonDescription?: string;
+  priority?: RMAPriority;
+  condition?: RMACondition;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerNotes?: string;
+  createdBy: string;
+}
+
+/**
+ * Update RMA Status DTO
+ */
+export interface UpdateRMAStatusDTO {
+  status: RMAStatus;
+  notes?: string;
+}
+
+/**
+ * Process Refund DTO
+ */
+export interface ProcessRefundDTO {
+  refundMethod: 'ORIGINAL' | 'STORE_CREDIT' | 'BANK_TRANSFER' | 'CHECK';
+  refundAmount: number;
+  notes?: string;
 }

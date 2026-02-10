@@ -95,7 +95,7 @@ export interface SlottingConfig {
 // SLOTTING OPTIMIZATION SERVICE
 // ============================================================================
 
-class SlottingOptimizationService {
+export class SlottingOptimizationService {
   private pool: Pool;
   private config: SlottingConfig;
 

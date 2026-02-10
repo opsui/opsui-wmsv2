@@ -56,6 +56,24 @@ global.WebSocket = vi.fn().mockImplementation(() => ({
 (global.WebSocket as any).CLOSING = 2;
 (global.WebSocket as any).CLOSED = 3;
 
+// Mock stores module globally
+vi.mock('@/stores', async () => {
+  const actual = await vi.importActual<any>('@/stores');
+  return {
+    ...actual,
+    useAuthStore: vi.fn((selector: any) => {
+      const state = {
+        user: { userId: 'test-user', name: 'Test User', role: 'ADMIN', active: true },
+        canSupervise: () => true,
+        getEffectiveRole: () => 'ADMIN',
+        isAuthenticated: true,
+      };
+      return selector ? selector(state) : state;
+    }),
+    playSound: vi.fn(),
+  };
+});
+
 // Suppress console errors in tests (optional)
 const originalError = console.error;
 beforeAll(() => {

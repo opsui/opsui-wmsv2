@@ -225,8 +225,12 @@ export default function CommissionReportPage() {
               <ArrowLeftIcon className="h-5 w-5 text-gray-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Commission Reports</h1>
-              <p className="text-gray-600 dark:text-slate-400 text-sm">View and manage sales commissions</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Commission Reports
+              </h1>
+              <p className="text-gray-600 dark:text-slate-400 text-sm">
+                View and manage sales commissions
+              </p>
             </div>
           </div>
 
@@ -254,29 +258,46 @@ export default function CommissionReportPage() {
 
         {/* Summary Metrics */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card title="Total Earned" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+          <Card
+            title="Total Earned"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
             <p className="text-3xl font-bold text-blue-500 dark:text-blue-400">
               ${totals.totalEarned.toLocaleString()}
             </p>
           </Card>
-          <Card title="Total Paid" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+          <Card
+            title="Total Paid"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
             <p className="text-3xl font-bold text-emerald-500 dark:text-emerald-400">
               ${totals.totalPaid.toLocaleString()}
             </p>
           </Card>
-          <Card title="Pending Payment" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+          <Card
+            title="Pending Payment"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
             <p className="text-3xl font-bold text-amber-500 dark:text-amber-400">
               ${totals.pendingPayment.toLocaleString()}
             </p>
           </Card>
-          <Card title="Transactions" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-purple-500 dark:text-purple-400">{totals.transactionCount}</p>
+          <Card
+            title="Transactions"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-purple-500 dark:text-purple-400">
+              {totals.transactionCount}
+            </p>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Commission Summary by Sales Person */}
-          <Card title="Commission Summary by Sales Person" className="lg:col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+          <Card
+            title="Commission Summary by Sales Person"
+            className="lg:col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+          >
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -302,7 +323,9 @@ export default function CommissionReportPage() {
                       <tr
                         key={summary.salesPersonId}
                         className={`border-b border-gray-100 dark:border-slate-700/30 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/30 ${
-                          selectedSalesPerson === summary.salesPersonId ? 'bg-blue-50 dark:bg-blue-500/10' : ''
+                          selectedSalesPerson === summary.salesPersonId
+                            ? 'bg-blue-50 dark:bg-blue-500/10'
+                            : ''
                         }`}
                         onClick={() => setSelectedSalesPerson(summary.salesPersonId)}
                       >
@@ -336,7 +359,10 @@ export default function CommissionReportPage() {
 
           {/* Commission Details */}
           {showDetails && (
-            <Card title="Commission Details" className="lg:col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+            <Card
+              title="Commission Details"
+              className="lg:col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-gray-900 dark:text-white font-semibold">
                   {summaries.find(s => s.salesPersonId === selectedSalesPerson)?.salesPersonName}
@@ -366,7 +392,10 @@ export default function CommissionReportPage() {
                   </thead>
                   <tbody>
                     {details.map(detail => (
-                      <tr key={detail.commissionId} className="border-b border-gray-100 dark:border-slate-700/30">
+                      <tr
+                        key={detail.commissionId}
+                        className="border-b border-gray-100 dark:border-slate-700/30"
+                      >
                         <td className="py-2">
                           <Link
                             to={`/sales/orders/${detail.orderId}`}
@@ -414,7 +443,10 @@ export default function CommissionReportPage() {
         {/* Visual Charts */}
         {summaries.length > 0 && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card title="Commission Distribution" className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+            <Card
+              title="Commission Distribution"
+              className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+            >
               <div className="space-y-3">
                 {summaries.slice(0, 5).map((summary, index) => {
                   const percent =
@@ -422,7 +454,9 @@ export default function CommissionReportPage() {
                   return (
                     <div key={summary.salesPersonId}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-gray-900 dark:text-white text-sm">{summary.salesPersonName}</span>
+                        <span className="text-gray-900 dark:text-white text-sm">
+                          {summary.salesPersonName}
+                        </span>
                         <span className="text-gray-500 dark:text-slate-400 text-xs">
                           ${summary.totalEarned.toLocaleString()} ({percent.toFixed(1)}%)
                         </span>
@@ -439,11 +473,22 @@ export default function CommissionReportPage() {
               </div>
             </Card>
 
-            <Card title="Payment Status" className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+            <Card
+              title="Payment Status"
+              className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700"
+            >
               <div className="flex items-center justify-center h-48">
                 <div className="relative w-40 h-40">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" className="dark:[stroke:#334155]" strokeWidth="12" />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      className="dark:[stroke:#334155]"
+                      strokeWidth="12"
+                    />
                     <circle
                       cx="50"
                       cy="50"

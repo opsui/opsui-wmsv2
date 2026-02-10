@@ -3,10 +3,10 @@ REM MCP Server Auto-Reload Watcher
 REM This script monitors the MCP server and restarts it if it crashes
 
 SET "SERVER_PATH=C:\Users\Heinricht\Documents\Warehouse Management System\tools\mcp-server\dist\index.js"
-SET "LOG_PATH=%TEMP%\wms-mcp-reload.log"
+SET "LOG_PATH=%TEMP%\erp-mcp-reload.log"
 
 :LOOP
-echo [%DATE% %TIME%] Starting WMS MCP Server... >> "%LOG_PATH%"
+echo [%DATE% %TIME%] Starting ERP MCP Server... >> "%LOG_PATH%"
 node "%SERVER_PATH%"
 
 REM Server exited - check exit code

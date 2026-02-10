@@ -474,7 +474,7 @@ function calculateExecutionOrder(subTasks: SubTask[]): string[][] {
 // ============================================================================
 
 const getOrchestrationDir = (workspaceRoot: string) =>
-  path.join(workspaceRoot, '.wms-cache', 'orchestration');
+  path.join(workspaceRoot, '.erp-cache', 'orchestration');
 
 async function ensureOrchestrationDir(workspaceRoot: string): Promise<void> {
   await fs.mkdir(getOrchestrationDir(workspaceRoot), { recursive: true });

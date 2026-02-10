@@ -1,15 +1,15 @@
-# AI Rules for Warehouse Management System
+# AI Rules for ERP System
 
 **Purpose**: This file defines boundaries and guardrails for AI agents working on this codebase.
 
-**Version**: 1.1.0
-**Last Updated**: 2026-01-30
+**Version**: 2.0.0
+**Last Updated**: 2026-02-10
 
 ---
 
 ## Project Overview
 
-This is a **Warehouse Management System (WMS)** built as a TypeScript/Node.js monorepo with PostgreSQL and React frontend. The system manages order fulfillment workflow: `PENDING → PICKING → PACKING → SHIPPED`.
+This is an **Enterprise Resource Planning (ERP) System** built as a TypeScript/Node.js monorepo with PostgreSQL and React frontend. The system includes comprehensive business modules: Accounting, HR/Payroll, Sales/CRM, Purchasing, Manufacturing, Projects, Inventory/Warehouse, and E-commerce integration.
 
 **Architecture**:
 

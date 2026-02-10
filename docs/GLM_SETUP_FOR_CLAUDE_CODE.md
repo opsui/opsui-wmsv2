@@ -273,7 +273,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 
 GLM 4.7 works alongside your existing MCP servers:
 
-- **wms-dev-accelerator**: Project-specific tools
+- **erp-dev-accelerator**: Project-specific tools
 - **github**: GitHub integration
 - **postgres**: Database queries
 - **filesystem**: File system operations

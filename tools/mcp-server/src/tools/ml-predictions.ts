@@ -1,6 +1,6 @@
 /**
  * ML Prediction Tools
- * Machine learning prediction tools for WMS using heuristic algorithms
+ * Machine learning prediction tools for ERP using heuristic algorithms
  * These provide ML-like predictions without requiring Python/external dependencies
  */
 

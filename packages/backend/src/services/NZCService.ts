@@ -118,7 +118,7 @@ export enum NZCLabelFormat {
 // NZC SERVICE
 // ============================================================================
 
-class NZCService {
+export class NZCService {
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly siteId: string;

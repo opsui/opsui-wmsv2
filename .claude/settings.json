@@ -44,7 +44,7 @@
       "Bash(git pull:*)",
       "Bash(git status:*)",
       "Bash(docker start:*)",
-      "mcp__wms-dev-accelerator__*",
+      "mcp__erp-dev-accelerator__*",
       "mcp__postgres__*",
       "mcp__filesystem__*",
       "mcp__github__*",
@@ -52,13 +52,13 @@
     ]
   },
   "mcpServers": {
-    "wms-dev-accelerator": {
+    "erp-dev-accelerator": {
       "command": "node",
       "args": [
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server\\dist\\index.js"
       ],
       "env": {
-        "WMS_WORKSPACE_ROOT": "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
+        "ERP_WORKSPACE_ROOT": "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
       }
     },
     "github": {
@@ -73,7 +73,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://wms_user:wms_password@localhost:5432/wms_db"
+        "postgresql://erp_user:erp_password@localhost:5432/erp_db"
       ]
     },
     "filesystem": {

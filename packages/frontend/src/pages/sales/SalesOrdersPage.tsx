@@ -262,7 +262,9 @@ export default function SalesOrdersPage() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Orders</h1>
-            <p className="text-gray-600 dark:text-slate-400 text-sm">Manage customer orders and fulfillment</p>
+            <p className="text-gray-600 dark:text-slate-400 text-sm">
+              Manage customer orders and fulfillment
+            </p>
           </div>
           <Link
             to="/sales/orders/new"
@@ -275,19 +277,42 @@ export default function SalesOrdersPage() {
 
         {/* Metrics */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card title="Total Orders" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-blue-500 dark:text-blue-400">{metrics.totalOrders}</p>
+          <Card
+            title="Total Orders"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-blue-500 dark:text-blue-400">
+              {metrics.totalOrders}
+            </p>
           </Card>
-          <Card title="Pending" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-amber-500 dark:text-amber-400">{metrics.pendingOrders}</p>
+          <Card
+            title="Pending"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-amber-500 dark:text-amber-400">
+              {metrics.pendingOrders}
+            </p>
           </Card>
-          <Card title="Open" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-purple-500 dark:text-purple-400">{metrics.openOrders}</p>
+          <Card
+            title="Open"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-purple-500 dark:text-purple-400">
+              {metrics.openOrders}
+            </p>
           </Card>
-          <Card title="Shipped Today" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
-            <p className="text-3xl font-bold text-cyan-500 dark:text-cyan-400">{metrics.shippedToday}</p>
+          <Card
+            title="Shipped Today"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
+            <p className="text-3xl font-bold text-cyan-500 dark:text-cyan-400">
+              {metrics.shippedToday}
+            </p>
           </Card>
-          <Card title="Revenue" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+          <Card
+            title="Revenue"
+            className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0"
+          >
             <p className="text-3xl font-bold text-emerald-500 dark:text-emerald-400">
               ${metrics.totalRevenue.toLocaleString()}
             </p>
@@ -327,7 +352,9 @@ export default function SalesOrdersPage() {
           {showFilters && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Status</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">
+                  Status
+                </label>
                 <select
                   value={selectedStatus}
                   onChange={e => setSelectedStatus(e.target.value)}
@@ -347,7 +374,9 @@ export default function SalesOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Customer</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">
+                  Customer
+                </label>
                 <select
                   value={selectedCustomer}
                   onChange={e => setSelectedCustomer(e.target.value)}
@@ -363,7 +392,9 @@ export default function SalesOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Sales Person</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">
+                  Sales Person
+                </label>
                 <select
                   value={selectedSalesPerson}
                   onChange={e => setSelectedSalesPerson(e.target.value)}
@@ -379,7 +410,9 @@ export default function SalesOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Territory</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">
+                  Territory
+                </label>
                 <select
                   value={selectedTerritory}
                   onChange={e => setSelectedTerritory(e.target.value)}
@@ -469,7 +502,9 @@ export default function SalesOrdersPage() {
                       <td className="py-3 text-right text-gray-900 dark:text-white font-medium">
                         ${order.totalAmount.toLocaleString()}
                       </td>
-                      <td className="py-3 text-gray-500 dark:text-slate-400 text-sm">{order.salesPerson || '-'}</td>
+                      <td className="py-3 text-gray-500 dark:text-slate-400 text-sm">
+                        {order.salesPerson || '-'}
+                      </td>
                       <td className="py-3">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-gray-200 dark:bg-slate-700 rounded-full h-2 w-20">

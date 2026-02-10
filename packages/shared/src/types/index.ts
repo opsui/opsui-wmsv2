@@ -34,10 +34,21 @@ export enum OrderItemStatus {
 }
 
 export enum TaskStatus {
+  NOT_STARTED = 'NOT_STARTED',
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
+  ON_HOLD = 'ON_HOLD',
+  CANCELLED = 'CANCELLED',
   SKIPPED = 'SKIPPED',
+}
+
+export enum WorkType {
+  REGULAR = 'REGULAR',
+  OVERTIME_1_5 = 'OVERTIME_1_5',
+  OVERTIME_2_0 = 'OVERTIME_2_0',
+  TRAVEL = 'TRAVEL',
+  TRAINING = 'TRAINING',
 }
 
 export enum UserRole {

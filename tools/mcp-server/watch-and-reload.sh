@@ -3,10 +3,10 @@
 # This script monitors the MCP server and restarts it if it crashes
 
 SERVER_PATH="C:/Users/Heinricht/Documents/Warehouse Management System/tools/mcp-server/dist/index.js"
-LOG_PATH="$TEMP/wms-mcp-reload.log"
+LOG_PATH="$TEMP/erp-mcp-reload.log"
 
 while true; do
-    echo "[$(date)] Starting WMS MCP Server..." >> "$LOG_PATH"
+    echo "[$(date)] Starting ERP MCP Server..." >> "$LOG_PATH"
     node "$SERVER_PATH"
     EXIT_CODE=$?
 

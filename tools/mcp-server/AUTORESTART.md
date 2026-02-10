@@ -4,13 +4,13 @@ All MCP servers are now configured with automatic restart capabilities. If any s
 
 ## What Was Implemented
 
-### 1. WMS Dev Accelerator (Custom Server)
+### 1. ERP Dev Accelerator (Custom Server)
 
 - **File**: `tools/mcp-server/watch-and-reload.bat`
 - **Features**:
-  - Monitors the WMS MCP server process
+  - Monitors the ERP MCP server process
   - Auto-restart on crash (exit code != 0)
-  - Logs all restarts to `%TEMP%\wms-mcp-reload.log`
+  - Logs all restarts to `%TEMP%\erp-mcp-reload.log`
   - Built-in connection loss detection via stdin close events
 
 ### 2. Universal Auto-Restart Wrapper
@@ -23,7 +23,7 @@ All MCP servers are now configured with automatic restart capabilities. If any s
   - Per-server log files in `%TEMP%`
   - 3-second delay between restart attempts
 
-### 3. Server-Side Improvements (WMS MCP v2.0)
+### 3. Server-Side Improvements (ERP MCP v2.0)
 
 Updated `tools/mcp-server/src/index.ts` with:
 
@@ -61,7 +61,7 @@ Updated `tools/mcp-server/src/index.ts` with:
 
 ### Disconnection Detection
 
-The WMS MCP server monitors:
+The ERP MCP server monitors:
 
 - `process.stdin.on('close')` → Stdio pipe closed (Cline disconnected)
 - `uncaughtException` → Unexpected errors
@@ -73,7 +73,7 @@ All trigger exit code 1 → Auto-restart
 
 | Server              | Wrapper                | Status                  |
 | ------------------- | ---------------------- | ----------------------- |
-| WMS Dev Accelerator | `watch-and-reload.bat` | ✅ Auto-restart enabled |
+| ERP Dev Accelerator | `watch-and-reload.bat` | ✅ Auto-restart enabled |
 | Upstash Context7    | `mcp-autorestart.bat`  | ✅ Auto-restart enabled |
 | Firecrawl           | `mcp-autorestart.bat`  | ✅ Auto-restart enabled |
 | Sequential Thinking | `mcp-autorestart.bat`  | ✅ Auto-restart enabled |
@@ -86,8 +86,8 @@ All trigger exit code 1 → Auto-restart
 View restart logs:
 
 ```bash
-# WMS MCP server
-type %TEMP%\wms-mcp-reload.log
+# ERP MCP server
+type %TEMP%\erp-mcp-reload.log
 
 # Other servers
 dir %TEMP%\mcp-autorestart-*.log
@@ -120,4 +120,4 @@ dir %TEMP%\mcp-autorestart-*.log
 - **No manual intervention**: No need to manually restart disconnected servers
 - **Production-ready**: Handles edge cases and unexpected errors
 - **Logging**: All restarts logged for debugging
-- **Universal**: Works with any MCP server, not just WMS
+- **Universal**: Works with any MCP server, not just ERP

@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "wms-dev-accelerator": {
+    "erp-dev-accelerator": {
       "command": "node",
       "args": ["REPLACE_WITH_FULL_PATH_TO\\tools\\mcp-server\\dist\\index.js"],
       "env": {
-        "WMS_WORKSPACE_ROOT": "REPLACE_WITH_FULL_PATH_TO_PROJECT"
+        "ERP_WORKSPACE_ROOT": "REPLACE_WITH_FULL_PATH_TO_PROJECT"
       }
     },
     "filesystem": {
@@ -23,7 +23,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://user:password@localhost:5432/wms"
+        "postgresql://user:password@localhost:5432/erp"
       ]
     },
     "brave-search": {

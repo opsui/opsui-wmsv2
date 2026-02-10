@@ -101,7 +101,7 @@ export const toolSchemas = {
     includeDependencies: z.boolean().optional().default(true),
   }),
 
-  // WMS-specific schemas
+  // ERP-specific schemas
   createOrder: z.object({
     customerId: z.string().min(1),
     customerName: z.string().min(1).max(200),

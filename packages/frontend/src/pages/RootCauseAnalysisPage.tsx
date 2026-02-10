@@ -273,7 +273,9 @@ export function RootCauseAnalysisPage() {
             <ChartBarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Pareto Analysis (80/20 Rule)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Pareto Analysis (80/20 Rule)
+            </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Top root causes contributing to 80% of variances
             </p>
@@ -305,7 +307,9 @@ export function RootCauseAnalysisPage() {
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: getCategoryColor(item.category) }}
                       />
-                      <span className="font-medium text-gray-900 dark:text-white">{item.category}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {item.category}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4 text-sm">
                       <div className="text-right">
@@ -338,8 +342,12 @@ export function RootCauseAnalysisPage() {
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-between px-3">
-                      <span className="text-xs text-gray-600 dark:text-white/80">Variance: {item.totalVariance}</span>
-                      <span className="text-xs text-gray-600 dark:text-white/80">Count: {item.count}</span>
+                      <span className="text-xs text-gray-600 dark:text-white/80">
+                        Variance: {item.totalVariance}
+                      </span>
+                      <span className="text-xs text-gray-600 dark:text-white/80">
+                        Count: {item.count}
+                      </span>
                     </div>
                   </div>
 
@@ -433,7 +441,9 @@ export function RootCauseAnalysisPage() {
             <FunnelIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Category Breakdown</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Category Breakdown
+            </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Detailed analysis by root cause with trend indicators
             </p>
@@ -467,7 +477,9 @@ export function RootCauseAnalysisPage() {
                         className="w-3 h-3 rounded-full animate-pulse-slow"
                         style={{ backgroundColor: getCategoryColor(item.category) }}
                       />
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{item.category}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        {item.category}
+                      </h4>
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all duration-300 hover:scale-105 ${getTrendColor(item.trend)}`}
@@ -485,7 +497,9 @@ export function RootCauseAnalysisPage() {
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
                       <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Incidents</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">{item.varianceCount}</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {item.varianceCount}
+                      </p>
                     </div>
                     <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
                       <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Avg Variance</p>
@@ -494,8 +508,12 @@ export function RootCauseAnalysisPage() {
                       </p>
                     </div>
                     <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Total Variance</p>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">{item.totalVariance}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                        Total Variance
+                      </p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        {item.totalVariance}
+                      </p>
                     </div>
                     <div className="bg-white dark:bg-black/20 rounded-lg p-3 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
                       <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">% of Total</p>
@@ -565,7 +583,9 @@ export function RootCauseAnalysisPage() {
             <ArrowTrendingUpIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trending Analysis</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Trending Analysis
+            </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Categories showing significant changes over time
             </p>
@@ -597,7 +617,9 @@ export function RootCauseAnalysisPage() {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: getCategoryColor(item.category) }}
                     />
-                    <span className="font-medium text-gray-900 dark:text-white">{item.category}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {item.category}
+                    </span>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -614,11 +636,15 @@ export function RootCauseAnalysisPage() {
                 <div className="grid grid-cols-3 gap-4 mb-3">
                   <div className="text-center p-3 bg-white dark:bg-black/20 rounded-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
                     <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Previous Period</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{item.previousPeriodCount}</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {item.previousPeriodCount}
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-white dark:bg-black/20 rounded-lg transition-all duration-300 hover:bg-gray-50 dark:hover:bg-black/30 hover:scale-105">
                     <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Current Period</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{item.currentPeriodCount}</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {item.currentPeriodCount}
+                    </p>
                   </div>
                   <div
                     className={`text-center p-3 rounded-lg transition-all duration-300 hover:scale-105 ${
@@ -630,7 +656,9 @@ export function RootCauseAnalysisPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Change</p>
                     <p
                       className={`text-lg font-bold ${
-                        item.percentChange >= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                        item.percentChange >= 0
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-green-600 dark:text-green-400'
                       }`}
                     >
                       {item.percentChange >= 0 ? '+' : ''}
@@ -673,7 +701,10 @@ export function RootCauseAnalysisPage() {
           </div>
 
           {/* Filters Bar */}
-          <Card variant="glass" className="p-4 animate-fade-in bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+          <Card
+            variant="glass"
+            className="p-4 animate-fade-in bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+          >
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <FunnelIcon className="h-4 w-4" />
@@ -747,7 +778,10 @@ export function RootCauseAnalysisPage() {
           </div>
 
           {/* Tab Content */}
-          <Card variant="glass" className="p-6 min-h-[500px] bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+          <Card
+            variant="glass"
+            className="p-6 min-h-[500px] bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+          >
             <div className="animate-fade-in">
               {activeTab === 'pareto' &&
                 (isLoadingPareto ? (
@@ -833,10 +867,14 @@ export function RootCauseAnalysisPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Key Insight</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                    Key Insight
+                  </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    <span className="font-semibold text-gray-900 dark:text-white">{paretoData[0]?.category}</span> is
-                    the leading cause of inventory variances, accounting for{' '}
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {paretoData[0]?.category}
+                    </span>{' '}
+                    is the leading cause of inventory variances, accounting for{' '}
                     <span className="font-semibold text-amber-600 dark:text-amber-400">
                       {formatPercent(paretoData[0]?.cumulativePercent || 0)}
                     </span>{' '}
@@ -963,8 +1001,12 @@ function DrillDownView({
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center max-w-md mx-auto">
-        <div className="inline-flex p-4 rounded-2xl bg-gray-100 dark:bg-white/[0.02] mb-4 animate-float">{icon}</div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Drill Down by {type}</h3>
+        <div className="inline-flex p-4 rounded-2xl bg-gray-100 dark:bg-white/[0.02] mb-4 animate-float">
+          {icon}
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          Drill Down by {type}
+        </h3>
         <p className="text-gray-500 dark:text-gray-400">{description}</p>
       </div>
 
@@ -1047,7 +1089,9 @@ function SummaryCard({
       variant="glass"
       className={`p-5 border-l-4 ${colorClasses[color]} hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${shadowClasses[color]} group cursor-default bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700`}
     >
-      <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider font-medium">{label}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider font-medium">
+        {label}
+      </p>
       <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1 group-hover:scale-105 transition-transform duration-300">
         {displayValue}
       </p>
