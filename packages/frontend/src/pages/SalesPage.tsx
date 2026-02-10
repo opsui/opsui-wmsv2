@@ -99,10 +99,10 @@ interface Quote {
 
 function CustomerStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    PROSPECT: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-    ACTIVE: 'bg-success-500/20 text-success-300 border border-success-500/30',
-    INACTIVE: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
-    BLOCKED: 'bg-danger-500/20 text-danger-300 border border-danger-500/30',
+    PROSPECT: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
+    ACTIVE: 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
+    INACTIVE: 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-500/30',
+    BLOCKED: 'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
   };
 
   return (
@@ -116,13 +116,13 @@ function CustomerStatusBadge({ status }: { status: string }) {
 
 function LeadStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    NEW: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-    CONTACTED: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
-    QUALIFIED: 'bg-green-500/20 text-green-300 border border-green-500/30',
-    PROPOSAL: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-    NEGOTIATION: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
-    WON: 'bg-success-500/20 text-success-300 border border-success-500/30',
-    LOST: 'bg-danger-500/20 text-danger-300 border border-danger-500/30',
+    NEW: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+    CONTACTED: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-500/30',
+    QUALIFIED: 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 border border-green-200 dark:border-green-500/30',
+    PROPOSAL: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
+    NEGOTIATION: 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30',
+    WON: 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
+    LOST: 'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
   };
 
   return (
@@ -136,12 +136,12 @@ function LeadStatusBadge({ status }: { status: string }) {
 
 function OpportunityStageBadge({ stage, probability }: { stage: string; probability: number }) {
   const styles: Record<string, string> = {
-    PROSPECTING: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-    QUALIFICATION: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
-    PROPOSAL: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-    NEGOTIATION: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
-    CLOSED_WON: 'bg-success-500/20 text-success-300 border border-success-500/30',
-    CLOSED_LOST: 'bg-danger-500/20 text-danger-300 border border-danger-500/30',
+    PROSPECTING: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+    QUALIFICATION: 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-500/30',
+    PROPOSAL: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
+    NEGOTIATION: 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30',
+    CLOSED_WON: 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
+    CLOSED_LOST: 'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
   };
 
   return (
@@ -151,18 +151,18 @@ function OpportunityStageBadge({ stage, probability }: { stage: string; probabil
       >
         {stage.replace('_', ' ')}
       </span>
-      <span className="text-xs text-gray-400">{probability}%</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400">{probability}%</span>
     </div>
   );
 }
 
 function QuoteStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    DRAFT: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
-    SENT: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-    ACCEPTED: 'bg-success-500/20 text-success-300 border border-success-500/30',
-    REJECTED: 'bg-danger-500/20 text-danger-300 border border-danger-500/30',
-    EXPIRED: 'bg-warning-500/20 text-warning-300 border border-warning-500/30',
+    DRAFT: 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-500/30',
+    SENT: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+    ACCEPTED: 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
+    REJECTED: 'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
+    EXPIRED: 'bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-300 border border-amber-200 dark:border-warning-500/30',
   };
 
   return (
@@ -185,7 +185,7 @@ function PriorityIndicator({ priority }: { priority: string }) {
   return (
     <div className="flex items-center gap-2">
       <div className={`w-2 h-2 rounded-full ${colors[priority] || colors.MEDIUM}`} />
-      <span className="text-xs text-gray-400">{priority}</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400">{priority}</span>
     </div>
   );
 }
@@ -200,30 +200,30 @@ function CustomerCard({
   onCreateQuote: (customer: Customer) => void;
 }) {
   return (
-    <Card variant="glass" className="card-hover">
+    <Card variant="glass" className="card-hover bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-white">{customer.companyName}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{customer.companyName}</h3>
               <CustomerStatusBadge status={customer.status} />
             </div>
-            <p className="text-sm text-gray-400">{customer.customerNumber}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{customer.customerNumber}</p>
             {customer.contactName && (
-              <p className="text-sm text-gray-300 mt-1">Contact: {customer.contactName}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Contact: {customer.contactName}</p>
             )}
-            {customer.email && <p className="text-sm text-gray-400">{customer.email}</p>}
+            {customer.email && <p className="text-sm text-gray-500 dark:text-gray-400">{customer.email}</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-          <div className="bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-400 text-xs mb-1">Account Balance</p>
-            <p className="text-lg font-bold text-white">${customer.accountBalance.toFixed(2)}</p>
+          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Account Balance</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">${customer.accountBalance.toFixed(2)}</p>
           </div>
-          <div className="bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-400 text-xs mb-1">Status</p>
-            <p className="text-sm text-white">{customer.status}</p>
+          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</p>
+            <p className="text-sm text-gray-900 dark:text-white">{customer.status}</p>
           </div>
         </div>
 
@@ -260,24 +260,24 @@ function LeadCard({
   onConvert: (lead: Lead) => void;
 }) {
   return (
-    <Card variant="glass" className="card-hover">
+    <Card variant="glass" className="card-hover bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-white">{lead.customerName}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{lead.customerName}</h3>
               <LeadStatusBadge status={lead.status} />
             </div>
-            {lead.company && <p className="text-sm text-gray-300">{lead.company}</p>}
-            <p className="text-xs text-gray-400 mt-1">Source: {lead.source}</p>
+            {lead.company && <p className="text-sm text-gray-600 dark:text-gray-300">{lead.company}</p>}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Source: {lead.source}</p>
           </div>
           <PriorityIndicator priority={lead.priority} />
         </div>
 
         {lead.estimatedValue && (
-          <div className="bg-primary-500/10 p-3 rounded-lg mb-4">
-            <p className="text-xs text-gray-400 mb-1">Estimated Value</p>
-            <p className="text-xl font-bold text-primary-400">
+          <div className="bg-blue-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Estimated Value</p>
+            <p className="text-xl font-bold text-blue-600 dark:text-primary-400">
               ${lead.estimatedValue.toLocaleString()}
             </p>
           </div>
@@ -311,31 +311,31 @@ function OpportunityCard({
   onCreateQuote: (opportunity: Opportunity) => void;
 }) {
   return (
-    <Card variant="glass" className="card-hover">
+    <Card variant="glass" className="card-hover bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-white">{opportunity.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{opportunity.name}</h3>
             </div>
-            <p className="text-sm text-gray-400">{opportunity.opportunityNumber}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{opportunity.opportunityNumber}</p>
           </div>
           <OpportunityStageBadge stage={opportunity.stage} probability={opportunity.probability} />
         </div>
 
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-400">Pipeline Progress</span>
-            <span className="text-white font-medium">{opportunity.probability}%</span>
+            <span className="text-gray-500 dark:text-gray-400">Pipeline Progress</span>
+            <span className="text-gray-900 dark:text-white font-medium">{opportunity.probability}%</span>
           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
               className={`h-2 rounded-full transition-all duration-300 ${
                 opportunity.stage === 'CLOSED_WON'
-                  ? 'bg-success-500'
+                  ? 'bg-green-500 dark:bg-success-500'
                   : opportunity.stage === 'CLOSED_LOST'
-                    ? 'bg-danger-500'
-                    : 'bg-primary-500'
+                    ? 'bg-red-500 dark:bg-danger-500'
+                    : 'bg-blue-500 dark:bg-primary-500'
               }`}
               style={{ width: `${opportunity.probability}%` }}
             />
@@ -343,13 +343,13 @@ function OpportunityCard({
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-          <div className="bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-400 text-xs mb-1">Amount</p>
-            <p className="text-lg font-bold text-white">${opportunity.amount.toLocaleString()}</p>
+          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Amount</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">${opportunity.amount.toLocaleString()}</p>
           </div>
-          <div className="bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-400 text-xs mb-1">Expected Close</p>
-            <p className="text-sm text-white">
+          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Expected Close</p>
+            <p className="text-sm text-gray-900 dark:text-white">
               {new Date(opportunity.expectedCloseDate).toLocaleDateString()}
             </p>
           </div>
@@ -394,41 +394,41 @@ function QuoteCard({
   const isExpired = new Date(quote.validUntil) < new Date();
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card variant="glass" className="card-hover bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-white">{quote.quoteNumber}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{quote.quoteNumber}</h3>
               <QuoteStatusBadge status={quote.status} />
             </div>
-            <p className="text-sm text-gray-300">{quote.customerName}</p>
-            {isExpired && <p className="text-xs text-danger-400 mt-1">Expired</p>}
+            <p className="text-sm text-gray-600 dark:text-gray-300">{quote.customerName}</p>
+            {isExpired && <p className="text-xs text-red-500 dark:text-danger-400 mt-1">Expired</p>}
             {isExpiringSoon && !isExpired && (
-              <p className="text-xs text-warning-400 mt-1">Expiring Soon</p>
+              <p className="text-xs text-amber-500 dark:text-warning-400 mt-1">Expiring Soon</p>
             )}
           </div>
         </div>
 
-        <div className="bg-primary-500/10 p-3 rounded-lg mb-4">
-          <p className="text-xs text-gray-400 mb-1">Total Amount</p>
-          <p className="text-2xl font-bold text-primary-400">
+        <div className="bg-blue-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Amount</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-primary-400">
             ${quote.totalAmount.toLocaleString()}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-          <div className="bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-400 text-xs mb-1">Valid Until</p>
+          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Valid Until</p>
             <p
-              className={`text-sm ${isExpired ? 'text-danger-400' : isExpiringSoon ? 'text-warning-400' : 'text-white'}`}
+              className={`text-sm ${isExpired ? 'text-red-500 dark:text-danger-400' : isExpiringSoon ? 'text-amber-500 dark:text-warning-400' : 'text-gray-900 dark:text-white'}`}
             >
               {new Date(quote.validUntil).toLocaleDateString()}
             </p>
           </div>
-          <div className="bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-400 text-xs mb-1">Status</p>
-            <p className="text-sm text-white">{quote.status}</p>
+          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</p>
+            <p className="text-sm text-gray-900 dark:text-white">{quote.status}</p>
           </div>
         </div>
 
@@ -628,7 +628,7 @@ function SalesPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -636,8 +636,8 @@ function SalesPage() {
         <Breadcrumb />
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Sales & CRM</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Sales & CRM</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Customer relationships, leads, opportunities, and quotes
           </p>
         </div>
@@ -646,15 +646,15 @@ function SalesPage() {
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-              <p className="text-gray-400 text-sm">Loading sales data...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 dark:border-primary-500"></div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Loading sales data...</p>
             </div>
           </div>
         )}
 
         {/* Tab Navigation */}
         {!isLoading && (
-          <div className="flex gap-2 mb-8 border-b border-white/10 pb-4">
+          <div className="flex gap-2 mb-8 border-b border-gray-200 dark:border-white/10 pb-4">
             {[
               { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
               { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
@@ -670,8 +670,8 @@ function SalesPage() {
                   onClick={() => setTab(tab.key)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-300 border border-blue-200 dark:border-primary-500/30'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -687,59 +687,59 @@ function SalesPage() {
           <div className="space-y-8">
             {/* Overview Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <Card variant="glass" className="p-6 border-l-4 border-l-purple-500">
+              <Card variant="glass" className="p-6 border-l-4 border-l-purple-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Total Customers</p>
-                    <p className="mt-2 text-3xl font-bold text-white">{dashboard.totalCustomers}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Customers</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{dashboard.totalCustomers}</p>
                   </div>
-                  <UserGroupIcon className="h-8 w-8 text-purple-400" />
+                  <UserGroupIcon className="h-8 w-8 text-purple-500 dark:text-purple-400" />
                 </div>
               </Card>
-              <Card variant="glass" className="p-6 border-l-4 border-l-yellow-500">
+              <Card variant="glass" className="p-6 border-l-4 border-l-yellow-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Active Leads</p>
-                    <p className="mt-2 text-3xl font-bold text-white">{dashboard.activeLeads}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Active Leads</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{dashboard.activeLeads}</p>
                   </div>
-                  <UserPlusIcon className="h-8 w-8 text-yellow-400" />
+                  <UserPlusIcon className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
                 </div>
               </Card>
-              <Card variant="glass" className="p-6 border-l-4 border-l-orange-500">
+              <Card variant="glass" className="p-6 border-l-4 border-l-orange-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Open Opportunities</p>
-                    <p className="mt-2 text-3xl font-bold text-white">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Open Opportunities</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
                       {dashboard.openOpportunities}
                     </p>
                   </div>
-                  <TrophyIcon className="h-8 w-8 text-orange-400" />
+                  <TrophyIcon className="h-8 w-8 text-orange-500 dark:text-orange-400" />
                 </div>
               </Card>
-              <Card variant="glass" className="p-6 border-l-4 border-l-blue-500">
+              <Card variant="glass" className="p-6 border-l-4 border-l-blue-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Pending Quotes</p>
-                    <p className="mt-2 text-3xl font-bold text-white">{dashboard.pendingQuotes}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Pending Quotes</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{dashboard.pendingQuotes}</p>
                   </div>
-                  <DocumentTextIcon className="h-8 w-8 text-blue-400" />
+                  <DocumentTextIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />
                 </div>
               </Card>
-              <Card variant="glass" className="p-6 border-l-4 border-l-green-500">
+              <Card variant="glass" className="p-6 border-l-4 border-l-green-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-400">Total Pipeline</p>
-                    <p className="mt-2 text-xl font-bold text-white">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Pipeline</p>
+                    <p className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
                       ${dashboard.totalPipeline.toLocaleString()}
                     </p>
                   </div>
-                  <CurrencyDollarIcon className="h-8 w-8 text-green-400" />
+                  <CurrencyDollarIcon className="h-8 w-8 text-green-500 dark:text-green-400" />
                 </div>
               </Card>
             </div>
 
             {/* Quick Actions */}
-            <Card variant="glass">
+            <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
@@ -792,8 +792,8 @@ function SalesPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white">Customers</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                   Manage customer accounts and relationships
                 </p>
               </div>
@@ -836,8 +836,8 @@ function SalesPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white">Sales Leads</h2>
-                <p className="text-gray-400 text-sm mt-1">Track and convert leads into customers</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Leads</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Track and convert leads into customers</p>
               </div>
               <Button
                 variant="primary"
@@ -878,8 +878,8 @@ function SalesPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white">Opportunities</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Opportunities</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                   Manage sales pipeline and opportunities
                 </p>
               </div>
@@ -922,8 +922,8 @@ function SalesPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-white">Quotes</h2>
-                <p className="text-gray-400 text-sm mt-1">Create and manage sales quotes</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quotes</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Create and manage sales quotes</p>
               </div>
               <Button
                 variant="primary"

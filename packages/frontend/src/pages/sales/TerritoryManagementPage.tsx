@@ -140,21 +140,21 @@ export default function TerritoryManagementPage() {
   const getQuotaStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-emerald-500/20 text-emerald-400';
+        return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400';
       case 'ACHIEVED':
-        return 'bg-blue-500/20 text-blue-400';
+        return 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400';
       case 'MISSED':
-        return 'bg-red-500/20 text-red-400';
+        return 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400';
       default:
-        return 'bg-slate-500/20 text-slate-400';
+        return 'bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400';
     }
   };
 
   const getPerformanceColor = (percent: number) => {
-    if (percent >= 100) return 'text-emerald-400';
-    if (percent >= 80) return 'text-blue-400';
-    if (percent >= 60) return 'text-amber-400';
-    return 'text-red-400';
+    if (percent >= 100) return 'text-emerald-500 dark:text-emerald-400';
+    if (percent >= 80) return 'text-blue-500 dark:text-blue-400';
+    if (percent >= 60) return 'text-amber-500 dark:text-amber-400';
+    return 'text-red-500 dark:text-red-400';
   };
 
   const topPerformer =
@@ -165,7 +165,7 @@ export default function TerritoryManagementPage() {
       : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
@@ -173,13 +173,13 @@ export default function TerritoryManagementPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/sales')}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             >
-              <ArrowLeftIcon className="h-5 w-5 text-slate-400" />
+              <ArrowLeftIcon className="h-5 w-5 text-gray-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Sales Territories</h1>
-              <p className="text-slate-400 text-sm">Manage territories and track performance</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Territories</h1>
+              <p className="text-gray-600 dark:text-slate-400 text-sm">Manage territories and track performance</p>
             </div>
           </div>
 
@@ -191,19 +191,19 @@ export default function TerritoryManagementPage() {
 
         {/* Top Performer Banner */}
         {topPerformer && (
-          <Card className="mb-6 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border-emerald-500/30">
+          <Card className="mb-6 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-500/10 dark:to-blue-500/10 border border-emerald-200 dark:border-emerald-500/30">
             <div className="flex items-center gap-4">
-              <TrophyIcon className="h-8 w-8 text-emerald-400" />
+              <TrophyIcon className="h-8 w-8 text-emerald-500 dark:text-emerald-400" />
               <div className="flex-1">
-                <p className="text-emerald-400 font-semibold">Top Performing Territory</p>
-                <p className="text-white text-lg font-bold">{topPerformer.territoryName}</p>
-                <p className="text-slate-400 text-sm">
+                <p className="text-emerald-600 dark:text-emerald-400 font-semibold">Top Performing Territory</p>
+                <p className="text-gray-900 dark:text-white text-lg font-bold">{topPerformer.territoryName}</p>
+                <p className="text-gray-600 dark:text-slate-400 text-sm">
                   {topPerformer.quotaPercentAchieved.toFixed(1)}% of quota achieved
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-slate-400 text-xs">YTD Sales</p>
-                <p className="text-emerald-400 text-2xl font-bold">
+                <p className="text-gray-500 dark:text-slate-400 text-xs">YTD Sales</p>
+                <p className="text-emerald-500 dark:text-emerald-400 text-2xl font-bold">
                   ${topPerformer.salesYTD.toLocaleString()}
                 </p>
               </div>
@@ -215,38 +215,38 @@ export default function TerritoryManagementPage() {
           {/* Territories List */}
           <div className="lg:col-span-2 space-y-6">
             {loading ? (
-              <Card>
+              <Card className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
               </Card>
             ) : territories.length === 0 ? (
-              <Card>
-                <div className="text-center py-8 text-slate-400">No territories found</div>
+              <Card className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                <div className="text-center py-8 text-gray-500 dark:text-slate-400">No territories found</div>
               </Card>
             ) : (
               territories.map(territory => (
                 <Card
                   key={territory.territoryId}
-                  className={`cursor-pointer transition-colors ${
+                  className={`cursor-pointer transition-colors bg-white dark:bg-slate-800 border ${
                     selectedTerritory?.territoryId === territory.territoryId
-                      ? 'bg-blue-500/10 border-blue-500/30'
-                      : 'hover:bg-slate-800/30'
+                      ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-300 dark:border-blue-500/30'
+                      : 'border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800/30'
                   }`}
                   onClick={() => setSelectedTerritory(territory)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <MapPinIcon className="h-6 w-6 text-blue-400" />
+                      <MapPinIcon className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-white">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {territory.territoryName}
                           </h3>
-                          <span className="text-slate-500 text-xs">{territory.territoryCode}</span>
+                          <span className="text-gray-400 dark:text-slate-500 text-xs">{territory.territoryCode}</span>
                         </div>
                         {territory.managerName && (
-                          <p className="text-slate-400 text-sm flex items-center gap-1">
+                          <p className="text-gray-600 dark:text-slate-400 text-sm flex items-center gap-1">
                             <UserIcon className="h-3 w-3" />
                             {territory.managerName}
                           </p>
@@ -260,48 +260,48 @@ export default function TerritoryManagementPage() {
                       >
                         {territory.quotaPercentAchieved.toFixed(1)}%
                       </p>
-                      <p className="text-slate-400 text-xs">of quota</p>
+                      <p className="text-gray-500 dark:text-slate-400 text-xs">of quota</p>
                     </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-4 gap-4">
                     <div className="text-center">
-                      <UsersIcon className="h-5 w-5 text-slate-400 mx-auto mb-1" />
-                      <p className="text-white font-semibold">{territory.customerCount}</p>
-                      <p className="text-slate-500 text-xs">Customers</p>
+                      <UsersIcon className="h-5 w-5 text-gray-400 dark:text-slate-400 mx-auto mb-1" />
+                      <p className="text-gray-900 dark:text-white font-semibold">{territory.customerCount}</p>
+                      <p className="text-gray-500 dark:text-slate-500 text-xs">Customers</p>
                     </div>
                     <div className="text-center">
-                      <ChartBarIcon className="h-5 w-5 text-slate-400 mx-auto mb-1" />
-                      <p className="text-white font-semibold">{territory.orderCount}</p>
-                      <p className="text-slate-500 text-xs">Orders</p>
+                      <ChartBarIcon className="h-5 w-5 text-gray-400 dark:text-slate-400 mx-auto mb-1" />
+                      <p className="text-gray-900 dark:text-white font-semibold">{territory.orderCount}</p>
+                      <p className="text-gray-500 dark:text-slate-500 text-xs">Orders</p>
                     </div>
                     <div className="text-center">
-                      <CurrencyDollarIcon className="h-5 w-5 text-slate-400 mx-auto mb-1" />
-                      <p className="text-white font-semibold">
+                      <CurrencyDollarIcon className="h-5 w-5 text-gray-400 dark:text-slate-400 mx-auto mb-1" />
+                      <p className="text-gray-900 dark:text-white font-semibold">
                         ${territory.sales30Days.toLocaleString()}
                       </p>
-                      <p className="text-slate-500 text-xs">30 Days</p>
+                      <p className="text-gray-500 dark:text-slate-500 text-xs">30 Days</p>
                     </div>
                     <div className="text-center">
-                      <CurrencyDollarIcon className="h-5 w-5 text-slate-400 mx-auto mb-1" />
-                      <p className="text-white font-semibold">
+                      <CurrencyDollarIcon className="h-5 w-5 text-gray-400 dark:text-slate-400 mx-auto mb-1" />
+                      <p className="text-gray-900 dark:text-white font-semibold">
                         ${territory.salesYTD.toLocaleString()}
                       </p>
-                      <p className="text-slate-500 text-xs">YTD</p>
+                      <p className="text-gray-500 dark:text-slate-500 text-xs">YTD</p>
                     </div>
                   </div>
 
                   {/* Progress bar to quota */}
                   {territory.currentQuota > 0 && (
                     <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mb-1">
                         <span>Progress to quota</span>
                         <span>
                           ${territory.salesYTD.toLocaleString()} / $
                           {territory.currentQuota.toLocaleString()}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${
                             territory.quotaPercentAchieved >= 100
@@ -327,27 +327,27 @@ export default function TerritoryManagementPage() {
             {selectedTerritory ? (
               <div className="space-y-6">
                 {/* Territory Info */}
-                <Card title={selectedTerritory.territoryName}>
+                <Card title={selectedTerritory.territoryName} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                   <div className="space-y-3">
                     <div>
-                      <p className="text-slate-400 text-xs">Territory Code</p>
-                      <p className="text-white">{selectedTerritory.territoryCode}</p>
+                      <p className="text-gray-500 dark:text-slate-400 text-xs">Territory Code</p>
+                      <p className="text-gray-900 dark:text-white">{selectedTerritory.territoryCode}</p>
                     </div>
                     {selectedTerritory.managerName && (
                       <div>
-                        <p className="text-slate-400 text-xs">Manager</p>
-                        <p className="text-white">{selectedTerritory.managerName}</p>
+                        <p className="text-gray-500 dark:text-slate-400 text-xs">Manager</p>
+                        <p className="text-gray-900 dark:text-white">{selectedTerritory.managerName}</p>
                       </div>
                     )}
                     <div>
-                      <p className="text-slate-400 text-xs">YTD Sales</p>
-                      <p className="text-emerald-400 font-semibold text-lg">
+                      <p className="text-gray-500 dark:text-slate-400 text-xs">YTD Sales</p>
+                      <p className="text-emerald-500 dark:text-emerald-400 font-semibold text-lg">
                         ${selectedTerritory.salesYTD.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-slate-400 text-xs">Quota</p>
-                      <p className="text-white">
+                      <p className="text-gray-500 dark:text-slate-400 text-xs">Quota</p>
+                      <p className="text-gray-900 dark:text-white">
                         ${selectedTerritory.currentQuota.toLocaleString()}
                       </p>
                     </div>
@@ -355,22 +355,22 @@ export default function TerritoryManagementPage() {
                 </Card>
 
                 {/* Customers */}
-                <Card title={`Assigned Customers (${territoryCustomers.length})`}>
+                <Card title={`Assigned Customers (${territoryCustomers.length})`} className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                   {territoryCustomers.length === 0 ? (
-                    <p className="text-slate-400 text-sm text-center py-4">No customers assigned</p>
+                    <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-4">No customers assigned</p>
                   ) : (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {territoryCustomers.map(tc => (
                         <div
                           key={tc.territoryCustomerId}
-                          className="flex items-center justify-between p-2 bg-slate-800 rounded"
+                          className="flex items-center justify-between p-2 bg-gray-50 dark:bg-slate-800 rounded"
                         >
                           <div className="flex items-center gap-2">
-                            <UsersIcon className="h-4 w-4 text-slate-400" />
-                            <span className="text-white text-sm">{tc.customerName}</span>
+                            <UsersIcon className="h-4 w-4 text-gray-400 dark:text-slate-400" />
+                            <span className="text-gray-900 dark:text-white text-sm">{tc.customerName}</span>
                           </div>
                           {tc.isPrimary && (
-                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded">
+                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs rounded">
                               Primary
                             </span>
                           )}
@@ -381,15 +381,15 @@ export default function TerritoryManagementPage() {
                 </Card>
 
                 {/* Quotas */}
-                <Card title="Quotas">
+                <Card title="Quotas" className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                   {territoryQuotas.length === 0 ? (
-                    <p className="text-slate-400 text-sm text-center py-4">No quotas set</p>
+                    <p className="text-gray-500 dark:text-slate-400 text-sm text-center py-4">No quotas set</p>
                   ) : (
                     <div className="space-y-3 max-h-48 overflow-y-auto">
                       {territoryQuotas.map(quota => (
-                        <div key={quota.quotaId} className="p-3 bg-slate-800 rounded">
+                        <div key={quota.quotaId} className="p-3 bg-gray-50 dark:bg-slate-800 rounded">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-white text-sm font-medium">
+                            <span className="text-gray-900 dark:text-white text-sm font-medium">
                               {quota.quotaMonth
                                 ? new Date(0, quota.quotaMonth - 1).toLocaleString('default', {
                                     month: 'long',
@@ -404,14 +404,14 @@ export default function TerritoryManagementPage() {
                             </span>
                           </div>
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-400">
+                            <span className="text-gray-500 dark:text-slate-400">
                               ${quota.actualAmount.toLocaleString()} / $
                               {quota.quotaAmount.toLocaleString()}
                             </span>
                             {quota.variancePercent !== undefined && (
                               <span
                                 className={`font-semibold ${
-                                  quota.variancePercent >= 0 ? 'text-emerald-400' : 'text-red-400'
+                                  quota.variancePercent >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
                                 }`}
                               >
                                 {quota.variancePercent >= 0 ? '+' : ''}
@@ -419,7 +419,7 @@ export default function TerritoryManagementPage() {
                               </span>
                             )}
                           </div>
-                          <div className="mt-2 w-full bg-slate-700 rounded-full h-1.5">
+                          <div className="mt-2 w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5">
                             <div
                               className={`h-1.5 rounded-full ${
                                 quota.actualAmount / quota.quotaAmount >= 1
@@ -439,24 +439,24 @@ export default function TerritoryManagementPage() {
 
                 {/* Actions */}
                 <div className="space-y-2">
-                  <button className="w-full px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                  <button className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     <PlusIcon className="h-4 w-4" />
                     Assign Customer
                   </button>
-                  <button className="w-full px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                  <button className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     <PlusIcon className="h-4 w-4" />
                     Set Quota
                   </button>
-                  <button className="w-full px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                  <button className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     <PencilIcon className="h-4 w-4" />
                     Edit Territory
                   </button>
                 </div>
               </div>
             ) : (
-              <Card className="text-center py-12">
-                <MapPinIcon className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">Select a territory to view details</p>
+              <Card className="text-center py-12 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
+                <MapPinIcon className="h-12 w-12 text-gray-400 dark:text-slate-600 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-slate-400">Select a territory to view details</p>
               </Card>
             )}
           </div>

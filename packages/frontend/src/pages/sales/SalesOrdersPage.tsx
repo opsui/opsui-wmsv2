@@ -215,27 +215,27 @@ export default function SalesOrdersPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DRAFT':
-        return 'bg-slate-500/20 text-slate-400';
+        return 'bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400';
       case 'PENDING':
-        return 'bg-amber-500/20 text-amber-400';
+        return 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400';
       case 'CONFIRMED':
-        return 'bg-blue-500/20 text-blue-400';
+        return 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400';
       case 'PICKING':
-        return 'bg-purple-500/20 text-purple-400';
+        return 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400';
       case 'PICKED':
-        return 'bg-indigo-500/20 text-indigo-400';
+        return 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400';
       case 'PARTIAL':
-        return 'bg-orange-500/20 text-orange-400';
+        return 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400';
       case 'SHIPPED':
-        return 'bg-cyan-500/20 text-cyan-400';
+        return 'bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400';
       case 'INVOICED':
-        return 'bg-emerald-500/20 text-emerald-400';
+        return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400';
       case 'CLOSED':
-        return 'bg-green-500/20 text-green-400';
+        return 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400';
       case 'CANCELLED':
-        return 'bg-red-500/20 text-red-400';
+        return 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400';
       default:
-        return 'bg-slate-500/20 text-slate-400';
+        return 'bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400';
     }
   };
 
@@ -255,14 +255,14 @@ export default function SalesOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Sales Orders</h1>
-            <p className="text-slate-400 text-sm">Manage customer orders and fulfillment</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Orders</h1>
+            <p className="text-gray-600 dark:text-slate-400 text-sm">Manage customer orders and fulfillment</p>
           </div>
           <Link
             to="/sales/orders/new"
@@ -275,36 +275,36 @@ export default function SalesOrdersPage() {
 
         {/* Metrics */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card title="Total Orders" className="bg-slate-800/50">
-            <p className="text-3xl font-bold text-blue-400">{metrics.totalOrders}</p>
+          <Card title="Total Orders" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+            <p className="text-3xl font-bold text-blue-500 dark:text-blue-400">{metrics.totalOrders}</p>
           </Card>
-          <Card title="Pending" className="bg-slate-800/50">
-            <p className="text-3xl font-bold text-amber-400">{metrics.pendingOrders}</p>
+          <Card title="Pending" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+            <p className="text-3xl font-bold text-amber-500 dark:text-amber-400">{metrics.pendingOrders}</p>
           </Card>
-          <Card title="Open" className="bg-slate-800/50">
-            <p className="text-3xl font-bold text-purple-400">{metrics.openOrders}</p>
+          <Card title="Open" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+            <p className="text-3xl font-bold text-purple-500 dark:text-purple-400">{metrics.openOrders}</p>
           </Card>
-          <Card title="Shipped Today" className="bg-slate-800/50">
-            <p className="text-3xl font-bold text-cyan-400">{metrics.shippedToday}</p>
+          <Card title="Shipped Today" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+            <p className="text-3xl font-bold text-cyan-500 dark:text-cyan-400">{metrics.shippedToday}</p>
           </Card>
-          <Card title="Revenue" className="bg-slate-800/50">
-            <p className="text-3xl font-bold text-emerald-400">
+          <Card title="Revenue" className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-0">
+            <p className="text-3xl font-bold text-emerald-500 dark:text-emerald-400">
               ${metrics.totalRevenue.toLocaleString()}
             </p>
           </Card>
         </div>
 
         {/* Search and Filters */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-400" />
               <input
                 type="text"
                 placeholder="Search orders..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-white placeholder-slate-400"
+                className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400"
               />
             </div>
             <button
@@ -316,7 +316,7 @@ export default function SalesOrdersPage() {
                 selectedSalesPerson ||
                 selectedTerritory
                   ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
               }`}
             >
               <FunnelIcon className="h-4 w-4" />
@@ -327,11 +327,11 @@ export default function SalesOrdersPage() {
           {showFilters && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-slate-400 text-xs mb-2">Status</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Status</label>
                 <select
                   value={selectedStatus}
                   onChange={e => setSelectedStatus(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
                 >
                   <option value="">All Statuses</option>
                   <option value="DRAFT">Draft</option>
@@ -347,11 +347,11 @@ export default function SalesOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-slate-400 text-xs mb-2">Customer</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Customer</label>
                 <select
                   value={selectedCustomer}
                   onChange={e => setSelectedCustomer(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
                 >
                   <option value="">All Customers</option>
                   {customers.map(cust => (
@@ -363,11 +363,11 @@ export default function SalesOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-slate-400 text-xs mb-2">Sales Person</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Sales Person</label>
                 <select
                   value={selectedSalesPerson}
                   onChange={e => setSelectedSalesPerson(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
                 >
                   <option value="">All Sales People</option>
                   {salesPeople.map(sp => (
@@ -379,11 +379,11 @@ export default function SalesOrdersPage() {
               </div>
 
               <div>
-                <label className="block text-slate-400 text-xs mb-2">Territory</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-xs mb-2">Territory</label>
                 <select
                   value={selectedTerritory}
                   onChange={e => setSelectedTerritory(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white"
                 >
                   <option value="">All Territories</option>
                   {territories.map(terr => (
@@ -398,21 +398,21 @@ export default function SalesOrdersPage() {
         </Card>
 
         {/* Orders List */}
-        <Card>
+        <Card className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : orders.length === 0 ? (
             <div className="text-center py-8">
-              <DocumentTextIcon className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400">No sales orders found</p>
+              <DocumentTextIcon className="h-12 w-12 text-gray-400 dark:text-slate-600 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-slate-400">No sales orders found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-slate-400 text-xs border-b border-slate-700/50">
+                  <tr className="text-left text-gray-500 dark:text-slate-400 text-xs border-b border-gray-200 dark:border-slate-700/50">
                     <th className="pb-3 font-medium">Order</th>
                     <th className="pb-3 font-medium">Customer</th>
                     <th className="pb-3 font-medium">Date</th>
@@ -427,35 +427,35 @@ export default function SalesOrdersPage() {
                   {orders.map(order => (
                     <tr
                       key={order.orderId}
-                      className="border-b border-slate-700/30 hover:bg-slate-800/30"
+                      className="border-b border-gray-100 dark:border-slate-700/30 hover:bg-gray-50 dark:hover:bg-slate-800/30"
                     >
                       <td className="py-3">
                         <div className="flex items-center gap-2">
                           {order.isBackorder && (
-                            <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded">
+                            <span className="px-1.5 py-0.5 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs rounded">
                               BO
                             </span>
                           )}
                           <Link
                             to={`/sales/orders/${order.orderId}`}
-                            className="text-blue-400 hover:text-blue-300 font-medium"
+                            className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 font-medium"
                           >
                             {order.orderNumber}
                           </Link>
                           {order.customerPoNumber && (
-                            <span className="text-slate-500 text-xs">
+                            <span className="text-gray-400 dark:text-slate-500 text-xs">
                               PO: {order.customerPoNumber}
                             </span>
                           )}
                         </div>
                         {order.promisedDate && (
-                          <p className="text-slate-500 text-xs">
+                          <p className="text-gray-400 dark:text-slate-500 text-xs">
                             Due: {new Date(order.promisedDate).toLocaleDateString()}
                           </p>
                         )}
                       </td>
-                      <td className="py-3 text-white">{order.customerName}</td>
-                      <td className="py-3 text-slate-400 text-sm">
+                      <td className="py-3 text-gray-900 dark:text-white">{order.customerName}</td>
+                      <td className="py-3 text-gray-500 dark:text-slate-400 text-sm">
                         {new Date(order.orderDate).toLocaleDateString()}
                       </td>
                       <td className="py-3">
@@ -466,13 +466,13 @@ export default function SalesOrdersPage() {
                           {order.orderStatus}
                         </span>
                       </td>
-                      <td className="py-3 text-right text-white font-medium">
+                      <td className="py-3 text-right text-gray-900 dark:text-white font-medium">
                         ${order.totalAmount.toLocaleString()}
                       </td>
-                      <td className="py-3 text-slate-400 text-sm">{order.salesPerson || '-'}</td>
+                      <td className="py-3 text-gray-500 dark:text-slate-400 text-sm">{order.salesPerson || '-'}</td>
                       <td className="py-3">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-slate-700 rounded-full h-2 w-20">
+                          <div className="flex-1 bg-gray-200 dark:bg-slate-700 rounded-full h-2 w-20">
                             <div
                               className="h-2 rounded-full bg-blue-500"
                               style={{
@@ -480,7 +480,7 @@ export default function SalesOrdersPage() {
                               }}
                             />
                           </div>
-                          <span className="text-slate-400 text-xs">
+                          <span className="text-gray-400 dark:text-slate-400 text-xs">
                             {order.itemsShipped}/{order.itemsTotal}
                           </span>
                         </div>
@@ -489,29 +489,29 @@ export default function SalesOrdersPage() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             to={`/sales/orders/${order.orderId}`}
-                            className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                            className="p-1.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
                             title="View"
                           >
-                            <EyeIcon className="h-4 w-4 text-slate-400" />
+                            <EyeIcon className="h-4 w-4 text-gray-400 dark:text-slate-400" />
                           </Link>
                           {['DRAFT', 'PENDING'].includes(order.orderStatus) && (
                             <>
                               <button
                                 onClick={() => updateOrderStatus(order.orderId, 'CONFIRMED')}
-                                className="p-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 rounded-lg transition-colors"
+                                className="p-1.5 bg-emerald-100 dark:bg-emerald-600/20 hover:bg-emerald-200 dark:hover:bg-emerald-600/30 rounded-lg transition-colors"
                                 title="Confirm"
                               >
-                                <CheckIcon className="h-4 w-4 text-emerald-400" />
+                                <CheckIcon className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                               </button>
                             </>
                           )}
                           {order.orderStatus === 'PICKED' && (
                             <button
                               onClick={() => updateOrderStatus(order.orderId, 'SHIPPED')}
-                              className="p-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 rounded-lg transition-colors"
+                              className="p-1.5 bg-cyan-100 dark:bg-cyan-600/20 hover:bg-cyan-200 dark:hover:bg-cyan-600/30 rounded-lg transition-colors"
                               title="Mark Shipped"
                             >
-                              <TruckIcon className="h-4 w-4 text-cyan-400" />
+                              <TruckIcon className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
                             </button>
                           )}
                         </div>
