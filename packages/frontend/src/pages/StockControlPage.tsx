@@ -86,24 +86,24 @@ function MetricCard({
   trend?: { value: number; isPositive: boolean };
 }) {
   const colorStyles = {
-    primary: 'bg-primary-500/10 text-primary-400 border border-primary-500/20',
-    success: 'bg-success-500/10 text-success-400 border border-success-500/20',
-    warning: 'bg-warning-500/10 text-warning-400 border border-warning-500/20',
-    error: 'bg-error-500/10 text-error-400 border border-error-500/20',
+    primary: 'bg-blue-100 dark:bg-primary-500/10 text-blue-600 dark:text-primary-400 border border-blue-200 dark:border-primary-500/20',
+    success: 'bg-green-100 dark:bg-success-500/10 text-green-600 dark:text-success-400 border border-green-200 dark:border-success-500/20',
+    warning: 'bg-amber-100 dark:bg-warning-500/10 text-amber-600 dark:text-warning-400 border border-amber-200 dark:border-warning-500/20',
+    error: 'bg-red-100 dark:bg-error-500/10 text-red-600 dark:text-error-400 border border-red-200 dark:border-error-500/20',
   };
 
   return (
-    <Card variant="glass" className="card-hover group">
+    <Card variant="glass" className="card-hover group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">{title}</p>
-            <p className="mt-3 text-4xl font-bold text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{title}</p>
+            <p className="mt-3 text-4xl font-bold text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
               {value}
             </p>
             {trend && (
               <p
-                className={`mt-2 text-sm ${trend.isPositive ? 'text-success-400' : 'text-error-400'}`}
+                className={`mt-2 text-sm ${trend.isPositive ? 'text-green-600 dark:text-success-400' : 'text-red-600 dark:text-error-400'}`}
               >
                 {trend.isPositive ? '+' : ''}
                 {trend.value}% from last week
@@ -196,28 +196,28 @@ function TransferModal({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full dark:bg-gray-900 bg-white border border-primary-500/30 shadow-2xl">
-        <CardHeader className="px-6 py-4 dark:bg-primary-500/10 bg-primary-50 border-b dark:border-primary-500/20 border-primary-200">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full bg-white dark:bg-gray-900 border border-blue-200 dark:border-primary-500/30 shadow-2xl">
+        <CardHeader className="px-6 py-4 bg-blue-50 dark:bg-primary-500/10 border-b border-blue-200 dark:border-primary-500/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary-500/20">
-                <ArrowPathIcon className="h-6 w-6 text-primary-500" />
+              <div className="p-2 rounded-xl bg-blue-100 dark:bg-primary-500/20">
+                <ArrowPathIcon className="h-6 w-6 text-blue-600 dark:text-primary-500" />
               </div>
-              <CardTitle className="text-white">Transfer Stock</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Transfer Stock</CardTitle>
             </div>
             <button
               onClick={onClose}
-              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors"
+              className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
-        <CardContent className="p-6 dark:bg-gray-900 bg-white">
+        <CardContent className="p-6 bg-white dark:bg-gray-900">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 SKU
               </label>
               <input
@@ -225,15 +225,15 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 name="sku"
                 value={formData.sku}
                 onChange={e => setFieldValue('sku', e.target.value.toUpperCase())}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
-                  errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.sku ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Enter SKU"
               />
               {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 From Bin
               </label>
               <input
@@ -241,15 +241,15 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 name="fromBin"
                 value={formData.fromBin}
                 onChange={e => setFieldValue('fromBin', e.target.value.toUpperCase())}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
-                  errors.fromBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.fromBin ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="e.g., A-01-01"
               />
               {errors.fromBin && <p className="mt-1 text-sm text-red-500">{errors.fromBin}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 To Bin
               </label>
               <input
@@ -257,15 +257,15 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 name="toBin"
                 value={formData.toBin}
                 onChange={e => setFieldValue('toBin', e.target.value.toUpperCase())}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
-                  errors.toBin ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.toBin ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="e.g., B-02-03"
               />
               {errors.toBin && <p className="mt-1 text-sm text-red-500">{errors.toBin}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Quantity
               </label>
               <input
@@ -273,23 +273,23 @@ function TransferModal({ onClose }: { onClose: () => void }) {
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
-                  errors.quantity ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500 focus:border-transparent transition-all ${
+                  errors.quantity ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Enter quantity"
               />
               {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Reason
               </label>
               <textarea
                 name="reason"
                 value={formData.reason}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none ${
-                  errors.reason ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500 focus:border-transparent transition-all resize-none ${
+                  errors.reason ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Enter reason for transfer"
                 rows={3}
@@ -377,28 +377,28 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full dark:bg-gray-900 bg-white border border-warning-500/30 shadow-2xl">
-        <CardHeader className="px-6 py-4 dark:bg-warning-500/10 bg-warning-50 border-b dark:border-warning-500/20 border-warning-200">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full bg-white dark:bg-gray-900 border border-amber-200 dark:border-warning-500/30 shadow-2xl">
+        <CardHeader className="px-6 py-4 bg-amber-50 dark:bg-warning-500/10 border-b border-amber-200 dark:border-warning-500/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-warning-500/20">
-                <PlusIcon className="h-6 w-6 text-warning-500" />
+              <div className="p-2 rounded-xl bg-amber-100 dark:bg-warning-500/20">
+                <PlusIcon className="h-6 w-6 text-amber-600 dark:text-warning-500" />
               </div>
-              <CardTitle className="text-white">Adjust Inventory</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Adjust Inventory</CardTitle>
             </div>
             <button
               onClick={onClose}
-              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors"
+              className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
-        <CardContent className="p-6 dark:bg-gray-900 bg-white">
+        <CardContent className="p-6 bg-white dark:bg-gray-900">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 SKU
               </label>
               <input
@@ -406,15 +406,15 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
                 name="sku"
                 value={formData.sku}
                 onChange={e => setFieldValue('sku', e.target.value.toUpperCase())}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
-                  errors.sku ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-warning-500 focus:border-transparent transition-all ${
+                  errors.sku ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Enter SKU"
               />
               {errors.sku && <p className="mt-1 text-sm text-red-500">{errors.sku}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Bin Location
               </label>
               <input
@@ -422,8 +422,8 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
                 name="binLocation"
                 value={formData.binLocation}
                 onChange={e => setFieldValue('binLocation', e.target.value.toUpperCase())}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
-                  errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-warning-500 focus:border-transparent transition-all ${
+                  errors.binLocation ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="e.g., A-01-01"
               />
@@ -432,7 +432,7 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
               )}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Quantity (+ to add, - to remove)
               </label>
               <input
@@ -440,23 +440,23 @@ function AdjustmentModal({ onClose }: { onClose: () => void }) {
                 name="quantity"
                 value={formData.quantity}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all ${
-                  errors.quantity ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-warning-500 focus:border-transparent transition-all ${
+                  errors.quantity ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="e.g., 5 or -5"
               />
               {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Reason
               </label>
               <textarea
                 name="reason"
                 value={formData.reason}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:border-transparent transition-all resize-none ${
-                  errors.reason ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:focus:ring-warning-500 focus:border-transparent transition-all resize-none ${
+                  errors.reason ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="Enter reason for adjustment"
                 rows={3}
@@ -523,28 +523,28 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="max-w-md w-full dark:bg-gray-900 bg-white border border-success-500/30 shadow-2xl">
-        <CardHeader className="px-6 py-4 dark:bg-success-500/10 bg-success-50 border-b dark:border-success-500/20 border-success-200">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="max-w-md w-full bg-white dark:bg-gray-900 border border-green-200 dark:border-success-500/30 shadow-2xl">
+        <CardHeader className="px-6 py-4 bg-green-50 dark:bg-success-500/10 border-b border-green-200 dark:border-success-500/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-success-500/20">
-                <ClipboardDocumentListIcon className="h-6 w-6 text-success-500" />
+              <div className="p-2 rounded-xl bg-green-100 dark:bg-success-500/20">
+                <ClipboardDocumentListIcon className="h-6 w-6 text-green-600 dark:text-success-500" />
               </div>
-              <CardTitle className="text-white">Create Stock Count</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Create Stock Count</CardTitle>
             </div>
             <button
               onClick={onClose}
-              className="dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 transition-colors"
+              className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
-        <CardContent className="p-6 dark:bg-gray-900 bg-white">
+        <CardContent className="p-6 bg-white dark:bg-gray-900">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Bin Location
               </label>
               <input
@@ -552,8 +552,8 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
                 name="binLocation"
                 value={formData.binLocation}
                 onChange={e => setFieldValue('binLocation', e.target.value.toUpperCase())}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all ${
-                  errors.binLocation ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-success-500 focus:border-transparent transition-all ${
+                  errors.binLocation ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="e.g., A-01-01"
               />
@@ -562,15 +562,15 @@ function StockCountModal({ onClose }: { onClose: () => void }) {
               )}
             </div>
             <div>
-              <label className="block text-sm font-semibold dark:text-gray-200 text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Count Type
               </label>
               <select
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 dark:bg-gray-800 bg-gray-50 border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all ${
-                  errors.type ? 'border-red-500' : 'dark:border-gray-600 border-gray-300'
+                className={`w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-success-500 focus:border-transparent transition-all ${
+                  errors.type ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
               >
                 <option value="SPOT">Spot Count</option>
@@ -611,7 +611,7 @@ function DashboardTab() {
           <MetricCardSkeleton />
           <MetricCardSkeleton />
         </div>
-        <Card variant="glass">
+        <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
           <CardContent className="p-6">
             <Skeleton variant="text" className="w-48 h-6 mb-4" />
             <TableSkeleton rows={5} columns={6} />
@@ -623,10 +623,10 @@ function DashboardTab() {
 
   if (isError || error || !dashboard) {
     return (
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardContent className="p-8 text-center">
-          <ExclamationTriangleIcon className="h-12 w-12 text-warning-400 mx-auto mb-4" />
-          <p className="text-gray-300">
+          <ExclamationTriangleIcon className="h-12 w-12 text-amber-500 dark:text-warning-400 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">
             {isError || error
               ? 'Failed to load dashboard data. Please try again.'
               : 'No dashboard data available.'}
@@ -667,7 +667,7 @@ function DashboardTab() {
       </div>
 
       {/* Recent Transactions */}
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
@@ -675,13 +675,13 @@ function DashboardTab() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Time</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Type</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">SKU</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Quantity</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Location</th>
-                  <th className="text-left py-3 px-4 text-gray-400 font-medium">Reason</th>
+                <tr className="border-b border-gray-200 dark:border-white/10">
+                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Time</th>
+                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Type</th>
+                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">SKU</th>
+                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Quantity</th>
+                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Location</th>
+                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Reason</th>
                 </tr>
               </thead>
               <tbody>
@@ -697,37 +697,37 @@ function DashboardTab() {
                   }) => (
                     <tr
                       key={txn.transactionId}
-                      className="border-b border-white/5 hover:bg-white/[0.02]"
+                      className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                     >
-                      <td className="py-3 px-4 text-gray-300">
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
                         {new Date(txn.timestamp).toLocaleString()}
                       </td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             txn.type === 'RECEIPT'
-                              ? 'bg-success-500/20 text-success-400'
+                              ? 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-400'
                               : txn.type === 'DEDUCTION'
-                                ? 'bg-error-500/20 text-error-400'
+                                ? 'bg-red-100 dark:bg-error-500/20 text-red-600 dark:text-error-400'
                                 : txn.type === 'ADJUSTMENT'
-                                  ? 'bg-warning-500/20 text-warning-400'
-                                  : 'bg-primary-500/20 text-primary-400'
+                                  ? 'bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-400'
+                                  : 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
                           }`}
                         >
                           {txn.type}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-white font-medium">{txn.sku}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{txn.sku}</td>
                       <td
                         className={`py-3 px-4 font-medium ${
-                          txn.quantity > 0 ? 'text-success-400' : 'text-error-400'
+                          txn.quantity > 0 ? 'text-green-600 dark:text-success-400' : 'text-red-600 dark:text-error-400'
                         }`}
                       >
                         {txn.quantity > 0 ? '+' : ''}
                         {txn.quantity}
                       </td>
-                      <td className="py-3 px-4 text-gray-300">{txn.binLocation || '-'}</td>
-                      <td className="py-3 px-4 text-gray-400 text-sm">{txn.reason}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{txn.binLocation || '-'}</td>
+                      <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">{txn.reason}</td>
                     </tr>
                   )
                 )}
@@ -739,10 +739,10 @@ function DashboardTab() {
 
       {/* Low Stock Alert */}
       {lowStock && lowStock.items.length > 0 && (
-        <Card variant="glass" className="border border-warning-500/20">
+        <Card variant="glass" className="border border-amber-200 dark:border-warning-500/20 bg-white dark:bg-gray-800/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ExclamationTriangleIcon className="h-5 w-5 text-warning-400" />
+              <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 dark:text-warning-400" />
               Low Stock Alert
             </CardTitle>
           </CardHeader>
@@ -750,11 +750,11 @@ function DashboardTab() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">SKU</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Location</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Available</th>
+                  <tr className="border-b border-gray-200 dark:border-white/10">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">SKU</th>
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Name</th>
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Location</th>
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Available</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -765,11 +765,11 @@ function DashboardTab() {
                         item: { sku: string; name: string; binLocation: string; available: number },
                         index: number
                       ) => (
-                        <tr key={index} className="border-b border-white/5 hover:bg-white/[0.02]">
-                          <td className="py-3 px-4 text-white font-medium">{item.sku}</td>
-                          <td className="py-3 px-4 text-gray-300">{item.name}</td>
-                          <td className="py-3 px-4 text-gray-300">{item.binLocation}</td>
-                          <td className="py-3 px-4 text-warning-400 font-medium">
+                        <tr key={index} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                          <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{item.sku}</td>
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{item.name}</td>
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{item.binLocation}</td>
+                          <td className="py-3 px-4 text-amber-600 dark:text-warning-400 font-medium">
                             {item.available}
                           </td>
                         </tr>
@@ -804,13 +804,13 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Product Name</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Product Name</label>
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={searchName}
@@ -818,15 +818,15 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                     setSearchName(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                   placeholder="Search by name..."
                 />
               </div>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">SKU</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">SKU</label>
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={searchSku}
@@ -834,15 +834,15 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                     setSearchSku(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                   placeholder="Enter SKU..."
                 />
               </div>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Bin Location</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Bin Location</label>
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={searchBin}
@@ -850,7 +850,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                     setSearchBin(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                   placeholder="e.g., A-01"
                 />
               </div>
@@ -864,9 +864,9 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                   setFilterLowStock(e.target.checked);
                   setPage(1);
                 }}
-                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary-500 focus:ring-primary-500"
+                className="w-4 h-4 rounded border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-blue-500 dark:text-primary-500 focus:ring-blue-500 dark:focus:ring-primary-500"
               />
-              <label htmlFor="lowStock" className="text-sm text-gray-300">
+              <label htmlFor="lowStock" className="text-sm text-gray-600 dark:text-gray-300">
                 Low Stock Only
               </label>
             </div>
@@ -890,7 +890,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
       </Card>
 
       {/* Inventory Table */}
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardContent className="p-0">
           {isLoading ? (
             <TableSkeleton rows={8} columns={8} />
@@ -899,17 +899,17 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">SKU</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Category</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">
+                    <tr className="border-b border-gray-200 dark:border-white/10">
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">SKU</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Name</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Category</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
                         Bin Location
                       </th>
-                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Quantity</th>
-                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Reserved</th>
-                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Available</th>
-                      <th className="text-center py-3 px-4 text-gray-400 font-medium">Status</th>
+                      <th className="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Quantity</th>
+                      <th className="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Reserved</th>
+                      <th className="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Available</th>
+                      <th className="text-center py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -926,35 +926,35 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                         },
                         index: number
                       ) => (
-                        <tr key={index} className="border-b border-white/5 hover:bg-white/[0.02]">
-                          <td className="py-3 px-4 text-white font-medium">{item.sku}</td>
-                          <td className="py-3 px-4 text-gray-300">{item.name}</td>
-                          <td className="py-3 px-4 text-gray-400">{item.category}</td>
-                          <td className="py-3 px-4 text-gray-300">{item.binLocation}</td>
-                          <td className="py-3 px-4 text-right text-white">{item.quantity}</td>
-                          <td className="py-3 px-4 text-right text-warning-400">{item.reserved}</td>
+                        <tr key={index} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                          <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{item.sku}</td>
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{item.name}</td>
+                          <td className="py-3 px-4 text-gray-500 dark:text-gray-400">{item.category}</td>
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{item.binLocation}</td>
+                          <td className="py-3 px-4 text-right text-gray-900 dark:text-white">{item.quantity}</td>
+                          <td className="py-3 px-4 text-right text-amber-600 dark:text-warning-400">{item.reserved}</td>
                           <td
                             className={`py-3 px-4 text-right font-medium ${
                               item.available === 0
-                                ? 'text-error-400'
+                                ? 'text-red-600 dark:text-error-400'
                                 : item.available <= 10
-                                  ? 'text-warning-400'
-                                  : 'text-success-400'
+                                  ? 'text-amber-600 dark:text-warning-400'
+                                  : 'text-green-600 dark:text-success-400'
                             }`}
                           >
                             {item.available}
                           </td>
                           <td className="py-3 px-4 text-center">
                             {item.available === 0 ? (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-error-500/20 text-error-400">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-error-500/20 text-red-600 dark:text-error-400">
                                 Out of Stock
                               </span>
                             ) : item.available <= 10 ? (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-warning-500/20 text-warning-400">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-400">
                                 Low Stock
                               </span>
                             ) : (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-success-500/20 text-success-400">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-400">
                                 In Stock
                               </span>
                             )}
@@ -968,8 +968,8 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
 
               {/* Pagination */}
               {data.total > 50 && (
-                <div className="flex items-center justify-between p-4 border-t border-white/10">
-                  <div className="text-sm text-gray-400">
+                <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-white/10">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     Showing {(page - 1) * 50 + 1} to {Math.min(page * 50, data.total)} of{' '}
                     {data.total} items
                   </div>
@@ -995,7 +995,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
               )}
             </>
           ) : (
-            <div className="p-8 text-center text-gray-400">No inventory items found</div>
+            <div className="p-8 text-center text-gray-500 dark:text-gray-400">No inventory items found</div>
           )}
         </CardContent>
       </Card>
@@ -1022,11 +1022,11 @@ function TransactionsTab() {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">SKU</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">SKU</label>
               <input
                 type="text"
                 value={filters.sku}
@@ -1034,12 +1034,12 @@ function TransactionsTab() {
                   setFilters({ ...filters, sku: e.target.value });
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                 placeholder="Enter SKU..."
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Bin Location</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Bin Location</label>
               <input
                 type="text"
                 value={filters.binLocation}
@@ -1047,19 +1047,19 @@ function TransactionsTab() {
                   setFilters({ ...filters, binLocation: e.target.value });
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                 placeholder="e.g., A-01"
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Type</label>
               <select
                 value={filters.type}
                 onChange={e => {
                   setFilters({ ...filters, type: e.target.value });
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
               >
                 <option value="">All Types</option>
                 <option value="RECEIPT">Receipt</option>
@@ -1086,7 +1086,7 @@ function TransactionsTab() {
       </Card>
 
       {/* Transactions Table */}
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardContent className="p-0">
           {isLoading ? (
             <TableSkeleton rows={8} columns={7} />
@@ -1095,14 +1095,14 @@ function TransactionsTab() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Time</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Type</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">SKU</th>
-                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Quantity</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Location</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">User ID</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Reason</th>
+                    <tr className="border-b border-gray-200 dark:border-white/10">
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Time</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Type</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">SKU</th>
+                      <th className="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Quantity</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Location</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">User ID</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Reason</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1119,40 +1119,40 @@ function TransactionsTab() {
                       }) => (
                         <tr
                           key={txn.transactionId}
-                          className="border-b border-white/5 hover:bg-white/[0.02]"
+                          className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                         >
-                          <td className="py-3 px-4 text-gray-300 whitespace-nowrap">
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
                             {new Date(txn.timestamp).toLocaleString()}
                           </td>
                           <td className="py-3 px-4">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 txn.type === 'RECEIPT'
-                                  ? 'bg-success-500/20 text-success-400'
+                                  ? 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-400'
                                   : txn.type === 'DEDUCTION'
-                                    ? 'bg-error-500/20 text-error-400'
+                                    ? 'bg-red-100 dark:bg-error-500/20 text-red-600 dark:text-error-400'
                                     : txn.type === 'ADJUSTMENT'
-                                      ? 'bg-warning-500/20 text-warning-400'
+                                      ? 'bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-400'
                                       : txn.type === 'RESERVATION'
-                                        ? 'bg-primary-500/20 text-primary-400'
-                                        : 'bg-gray-500/20 text-gray-400'
+                                        ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
+                                        : 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400'
                               }`}
                             >
                               {txn.type}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-white font-medium">{txn.sku}</td>
+                          <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{txn.sku}</td>
                           <td
                             className={`py-3 px-4 text-right font-medium ${
-                              txn.quantity > 0 ? 'text-success-400' : 'text-error-400'
+                              txn.quantity > 0 ? 'text-green-600 dark:text-success-400' : 'text-red-600 dark:text-error-400'
                             }`}
                           >
                             {txn.quantity > 0 ? '+' : ''}
                             {txn.quantity}
                           </td>
-                          <td className="py-3 px-4 text-gray-300">{txn.binLocation || '-'}</td>
-                          <td className="py-3 px-4 text-gray-400">{txn.userId}</td>
-                          <td className="py-3 px-4 text-gray-400 text-sm max-w-xs truncate">
+                          <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{txn.binLocation || '-'}</td>
+                          <td className="py-3 px-4 text-gray-500 dark:text-gray-400">{txn.userId}</td>
+                          <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm max-w-xs truncate">
                             {txn.reason}
                           </td>
                         </tr>
@@ -1164,8 +1164,8 @@ function TransactionsTab() {
 
               {/* Pagination */}
               {data.total > 50 && (
-                <div className="flex items-center justify-between p-4 border-t border-white/10">
-                  <div className="text-sm text-gray-400">
+                <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-white/10">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     Showing {(page - 1) * 50 + 1} to {Math.min(page * 50, data.total)} of{' '}
                     {data.total} transactions
                   </div>
@@ -1191,7 +1191,7 @@ function TransactionsTab() {
               )}
             </>
           ) : (
-            <div className="p-8 text-center text-gray-400">No transactions found</div>
+            <div className="p-8 text-center text-gray-500 dark:text-gray-400">No transactions found</div>
           )}
         </CardContent>
       </Card>
@@ -1207,22 +1207,22 @@ function QuickActionsTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card
           variant="glass"
-          className="card-hover cursor-pointer border-primary-500/30 hover:border-primary-500/50 transition-all"
+          className="card-hover cursor-pointer border-blue-200 dark:border-primary-500/30 hover:border-blue-300 dark:hover:border-primary-500/50 transition-all bg-white dark:bg-gray-800/50"
           onClick={() => setActiveModal('transfer')}
         >
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-500/20 to-primary-500/10 border border-primary-500/30 shadow-lg">
-                <ArrowPathIcon className="h-10 w-10 text-primary-400" />
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 dark:from-primary-500/20 dark:to-primary-500/10 border border-blue-200 dark:border-primary-500/30 shadow-lg">
+                <ArrowPathIcon className="h-10 w-10 text-blue-600 dark:text-primary-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-2">Transfer Stock</h3>
-                <p className="text-base text-gray-300 leading-relaxed">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Transfer Stock</h3>
+                <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                   Move inventory between bin locations
                 </p>
               </div>
-              <div className="w-full pt-4 border-t border-white/10">
-                <span className="text-sm text-primary-400 font-medium">Click to transfer →</span>
+              <div className="w-full pt-4 border-t border-gray-200 dark:border-white/10">
+                <span className="text-sm text-blue-600 dark:text-primary-400 font-medium">Click to transfer →</span>
               </div>
             </div>
           </CardContent>
@@ -1230,22 +1230,22 @@ function QuickActionsTab() {
 
         <Card
           variant="glass"
-          className="card-hover cursor-pointer border-warning-500/30 hover:border-warning-500/50 transition-all"
+          className="card-hover cursor-pointer border-amber-200 dark:border-warning-500/30 hover:border-amber-300 dark:hover:border-warning-500/50 transition-all bg-white dark:bg-gray-800/50"
           onClick={() => setActiveModal('adjust')}
         >
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-warning-500/20 to-warning-500/10 border border-warning-500/30 shadow-lg">
-                <PlusIcon className="h-10 w-10 text-warning-400" />
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 dark:from-warning-500/20 dark:to-warning-500/10 border border-amber-200 dark:border-warning-500/30 shadow-lg">
+                <PlusIcon className="h-10 w-10 text-amber-600 dark:text-warning-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-2">Adjust Inventory</h3>
-                <p className="text-base text-gray-300 leading-relaxed">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Adjust Inventory</h3>
+                <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                   Add or remove stock with reason
                 </p>
               </div>
-              <div className="w-full pt-4 border-t border-white/10">
-                <span className="text-sm text-warning-400 font-medium">Click to adjust →</span>
+              <div className="w-full pt-4 border-t border-gray-200 dark:border-white/10">
+                <span className="text-sm text-amber-600 dark:text-warning-400 font-medium">Click to adjust →</span>
               </div>
             </div>
           </CardContent>
@@ -1253,22 +1253,22 @@ function QuickActionsTab() {
 
         <Card
           variant="glass"
-          className="card-hover cursor-pointer border-success-500/30 hover:border-success-500/50 transition-all"
+          className="card-hover cursor-pointer border-green-200 dark:border-success-500/30 hover:border-green-300 dark:hover:border-success-500/50 transition-all bg-white dark:bg-gray-800/50"
           onClick={() => setActiveModal('count')}
         >
           <CardContent className="p-8">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-success-500/20 to-success-500/10 border border-success-500/30 shadow-lg">
-                <ClipboardDocumentListIcon className="h-10 w-10 text-success-400" />
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-green-100 to-green-50 dark:from-success-500/20 dark:to-success-500/10 border border-green-200 dark:border-success-500/30 shadow-lg">
+                <ClipboardDocumentListIcon className="h-10 w-10 text-green-600 dark:text-success-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white mb-2">Stock Count</h3>
-                <p className="text-base text-gray-300 leading-relaxed">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Stock Count</h3>
+                <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed">
                   Create a new stock count session
                 </p>
               </div>
-              <div className="w-full pt-4 border-t border-white/10">
-                <span className="text-sm text-success-400 font-medium">Click to count →</span>
+              <div className="w-full pt-4 border-t border-gray-200 dark:border-white/10">
+                <span className="text-sm text-green-600 dark:text-success-400 font-medium">Click to count →</span>
               </div>
             </div>
           </CardContent>
@@ -1324,39 +1324,39 @@ function LotsTab() {
   return (
     <div className="space-y-6">
       {/* Search and Filter Card */}
-      <Card variant="glass">
+      <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Search by SKU</label>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Search by SKU</label>
               <input
                 type="text"
                 value={searchSku}
                 onChange={e => setSearchSku(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                 placeholder="Enter SKU to view lots..."
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Search by Lot Number
               </label>
               <input
                 type="text"
                 value={searchLot}
                 onChange={e => setSearchLot(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
                 placeholder="Enter lot number..."
               />
             </div>
             <div className="flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Expiring Within
               </label>
               <select
                 value={expiringDays}
                 onChange={e => setExpiringDays(parseInt(e.target.value))}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-primary-500"
               >
                 <option value={7}>7 days</option>
                 <option value={14}>14 days</option>
@@ -1371,7 +1371,7 @@ function LotsTab() {
 
       {/* Lot Tracking Table */}
       {searchSku && lotData && (
-        <Card variant="glass">
+        <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
           <CardHeader>
             <CardTitle>Lot Tracking for {searchSku}</CardTitle>
           </CardHeader>
@@ -1382,42 +1382,42 @@ function LotsTab() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Lot Number</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Expiration</th>
-                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Quantity</th>
-                      <th className="text-right py-3 px-4 text-gray-400 font-medium">Available</th>
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Locations</th>
-                      <th className="text-center py-3 px-4 text-gray-400 font-medium">Status</th>
+                    <tr className="border-b border-gray-200 dark:border-white/10">
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Lot Number</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Expiration</th>
+                      <th className="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Quantity</th>
+                      <th className="text-right py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Available</th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Locations</th>
+                      <th className="text-center py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lotData.lots.map((lot: any) => (
                       <tr
                         key={lot.lotNumber}
-                        className="border-b border-white/5 hover:bg-white/[0.02]"
+                        className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                       >
-                        <td className="py-3 px-4 text-white font-medium font-mono text-sm">
+                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium font-mono text-sm">
                           {lot.lotNumber}
                         </td>
-                        <td className="py-3 px-4 text-gray-300">
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
                           {lot.expirationDate
                             ? new Date(lot.expirationDate).toLocaleDateString()
                             : 'N/A'}
                         </td>
-                        <td className="py-3 px-4 text-right text-white">{lot.quantity}</td>
-                        <td className="py-3 px-4 text-right text-white">{lot.available}</td>
-                        <td className="py-3 px-4 text-gray-400 text-sm">
+                        <td className="py-3 px-4 text-right text-gray-900 dark:text-white">{lot.quantity}</td>
+                        <td className="py-3 px-4 text-right text-gray-900 dark:text-white">{lot.available}</td>
+                        <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">
                           {lot.binLocations.join(', ')}
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               lot.status === 'EXPIRED'
-                                ? 'bg-red-500/20 text-red-400'
+                                ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
                                 : lot.status === 'EXPIRING_SOON'
-                                  ? 'bg-amber-500/20 text-amber-400'
-                                  : 'bg-emerald-500/20 text-emerald-400'
+                                  ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                  : 'bg-green-100 dark:bg-emerald-500/20 text-green-600 dark:text-emerald-400'
                             }`}
                           >
                             {lot.status === 'EXPIRED'
@@ -1433,7 +1433,7 @@ function LotsTab() {
                 </table>
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-400">No lots found for this SKU</div>
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">No lots found for this SKU</div>
             )}
           </CardContent>
         </Card>
@@ -1489,7 +1489,7 @@ export function StockControlPage() {
   // Show loading while user is being fetched
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="w-full max-w-md">
           <Skeleton variant="rectangular" height={200} className="rounded-lg" />
         </div>
@@ -1516,12 +1516,12 @@ export function StockControlPage() {
 
   if (!hasAccess) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <Card className="max-w-md bg-gray-800 border border-gray-700">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Card className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <CardContent className="p-6 text-center">
-            <ExclamationTriangleIcon className="h-12 w-12 text-warning-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
-            <p className="text-gray-400">You need stock controller privileges to view this page.</p>
+            <ExclamationTriangleIcon className="h-12 w-12 text-amber-500 dark:text-warning-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+            <p className="text-gray-600 dark:text-gray-400">You need stock controller privileges to view this page.</p>
           </CardContent>
         </Card>
       </div>
@@ -1539,21 +1539,21 @@ export function StockControlPage() {
     ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         {/* Page Header */}
         <div className="animate-in">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Stock Control</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Stock Control</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Manage inventory, stock counts, transfers, and adjustments
           </p>
         </div>
 
         {/* Quick Search */}
-        <Card variant="glass">
+        <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
           <CardContent className="p-4">
             <SearchInput
               onSelect={sku => {
@@ -1566,7 +1566,7 @@ export function StockControlPage() {
         </Card>
 
         {/* Tabs */}
-        <Card variant="glass">
+        <Card variant="glass" className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
           <CardContent className="p-2">
             <div className="flex gap-2 overflow-x-auto">
               {tabs.map(tab => (
@@ -1575,8 +1575,8 @@ export function StockControlPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
                     activeTab === tab.key
-                      ? 'bg-primary-500/20 text-primary-400'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                   }`}
                 >
                   <tab.icon className="h-5 w-5" />
