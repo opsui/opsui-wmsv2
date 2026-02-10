@@ -387,7 +387,7 @@ export function WavePickingPage() {
                     placeholder="Search strategies..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="pl-9 pr-3 py-1.5 w-48 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="pl-9 pr-3 py-1.5 w-48 bg-gray-50 dark:bg-white/[0.05] border border-gray-200 dark:border-white/[0.08] rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   />
                 </div>
               </CardTitle>

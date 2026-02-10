@@ -247,7 +247,7 @@ export function ZonePickingPage() {
                           placeholder="Search tasks..."
                           value={tasksSearchTerm}
                           onChange={e => setTasksSearchTerm(e.target.value)}
-                          className="pl-9 pr-3 py-1.5 w-48 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                          className="pl-9 pr-3 py-1.5 w-48 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
                         />
                       </div>
                       <Select
@@ -393,7 +393,7 @@ export function ZonePickingPage() {
                       placeholder="Search zones..."
                       value={statsSearchTerm}
                       onChange={e => setStatsSearchTerm(e.target.value)}
-                      className="pl-9 pr-3 py-1.5 w-48 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                      className="pl-9 pr-3 py-1.5 w-48 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </CardTitle>

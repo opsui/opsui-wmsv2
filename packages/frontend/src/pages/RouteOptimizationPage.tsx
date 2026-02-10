@@ -156,12 +156,12 @@ export function RouteOptimizationPage() {
 
   const getZoneColor = (zone: string) => {
     const colors: Record<string, string> = {
-      A: 'bg-blue-500/20 border-blue-500/30',
-      B: 'bg-green-500/20 border-green-500/30',
-      C: 'bg-yellow-500/20 border-yellow-500/30',
-      D: 'bg-purple-500/20 border-purple-500/30',
+      A: 'bg-blue-100 dark:bg-blue-500/20 border-blue-300 dark:border-blue-500/30',
+      B: 'bg-green-100 dark:bg-green-500/20 border-green-300 dark:border-green-500/30',
+      C: 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-300 dark:border-yellow-500/30',
+      D: 'bg-purple-100 dark:bg-purple-500/20 border-purple-300 dark:border-purple-500/30',
     };
-    return colors[zone] || 'bg-gray-500/20 border-gray-500/30';
+    return colors[zone] || 'bg-gray-100 dark:bg-gray-500/20 border-gray-300 dark:border-gray-500/30';
   };
 
   const parseLocation = (loc: string): { zone: string; aisle: number; shelf: number } | null => {
@@ -192,21 +192,21 @@ export function RouteOptimizationPage() {
               Back to Dashboard
             </Button>
           </div>
-          <h1 className="text-3xl font-bold text-white">Route Optimization</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Route Optimization</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Calculate optimal picking routes through warehouse locations
           </p>
         </div>
 
         {/* View Toggle */}
-        <div className="mb-6 border-b border-gray-800">
+        <div className="mb-6 border-b border-gray-200 dark:border-gray-800">
           <nav className="flex space-x-8">
             <button
               onClick={() => setView('optimize')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 view === 'optimize'
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
+                  ? 'border-blue-500 text-blue-500 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-700'
               }`}
             >
               Optimize Route
@@ -215,8 +215,8 @@ export function RouteOptimizationPage() {
               onClick={() => setView('compare')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 view === 'compare'
-                  ? 'border-blue-500 text-blue-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
+                  ? 'border-blue-500 text-blue-500 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-700'
               }`}
             >
               Compare Strategies
@@ -232,13 +232,13 @@ export function RouteOptimizationPage() {
               {/* Location Input */}
               <div className="lg:col-span-2 glass-card rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <MapIcon className="h-5 w-5 text-blue-400" />
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <MapIcon className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                     Locations to Visit
                   </h2>
                   <button
                     onClick={generateSampleLocations}
-                    className="text-sm text-blue-400 hover:text-blue-300"
+                    className="text-sm text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
                   >
                     Generate Sample
                   </button>
@@ -249,27 +249,27 @@ export function RouteOptimizationPage() {
                     const filteredLocations = locations;
 
                     return filteredLocations.length === 0 ? (
-                      <div className="text-center py-4 text-gray-400">No locations</div>
+                      <div className="text-center py-4 text-gray-500 dark:text-gray-400">No locations</div>
                     ) : (
                       filteredLocations.map(location => {
                         const actualIndex = locations.indexOf(location);
                         const parsed = parseLocation(location);
                         return (
                           <div key={actualIndex} className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500 w-6">{actualIndex + 1}.</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 w-6">{actualIndex + 1}.</span>
                             <input
                               type="text"
                               value={location}
                               onChange={e => handleLocationChange(actualIndex, e.target.value)}
                               placeholder="A-01-01"
                               className={cn(
-                                'flex-1 px-3 py-2 rounded-md bg-black/20 border text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono',
-                                parsed ? getZoneColor(parsed.zone) : 'border-white/[0.08]'
+                                'flex-1 px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono',
+                                parsed ? getZoneColor(parsed.zone) : 'border-gray-200 dark:border-white/[0.08]'
                               )}
                             />
                             <button
                               onClick={() => handleRemoveLocation(actualIndex)}
-                              className="p-2 text-red-400 hover:text-red-300 rounded hover:bg-red-900/30"
+                              className="p-2 text-red-400 hover:text-red-300 rounded hover:bg-red-100 dark:hover:bg-red-900/30"
                             >
                               <XCircleIcon className="h-5 w-5" />
                             </button>
@@ -282,7 +282,7 @@ export function RouteOptimizationPage() {
 
                 <button
                   onClick={handleAddLocation}
-                  className="w-full px-4 py-2 border border-dashed border-gray-700 rounded-md text-gray-400 hover:text-white hover:border-gray-600 text-sm"
+                  className="w-full px-4 py-2 border border-dashed border-gray-300 dark:border-gray-700 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600 text-sm"
                 >
                   + Add Location
                 </button>
@@ -290,26 +290,26 @@ export function RouteOptimizationPage() {
 
               {/* Options */}
               <div className="glass-card rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">Options</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Options</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Start Point</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Start Point</label>
                     <input
                       type="text"
                       value={startPoint}
                       onChange={e => setStartPoint(e.target.value)}
                       placeholder="A-01-01"
-                      className="w-full px-3 py-2 rounded-md bg-black/20 border border-white/[0.08] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                      className="w-full px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Algorithm</label>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Algorithm</label>
                     <select
                       value={algorithm}
                       onChange={e => setAlgorithm(e.target.value as typeof algorithm)}
-                      className="w-full px-3 py-2 rounded-md bg-black/20 border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     >
                       <option value="nearest">Nearest Neighbor (Fast)</option>
                       <option value="tsp">Traveling Salesman (Optimal)</option>
@@ -318,7 +318,7 @@ export function RouteOptimizationPage() {
                     </select>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-800">
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
                     <button
                       onClick={handleOptimize}
                       disabled={optimizing || locations.filter(l => l.trim()).length < 2}
@@ -326,7 +326,7 @@ export function RouteOptimizationPage() {
                         'w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
                         !optimizing && locations.filter(l => l.trim()).length >= 2
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
                       )}
                     >
                       {optimizing ? (
@@ -362,7 +362,7 @@ export function RouteOptimizationPage() {
           <div className="space-y-6">
             <div className="glass-card rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">Compare Strategies</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Compare Strategies</h2>
                 <button
                   onClick={handleCompare}
                   disabled={comparing || locations.filter(l => l.trim()).length < 2}
@@ -370,7 +370,7 @@ export function RouteOptimizationPage() {
                     'flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
                     !comparing && locations.filter(l => l.trim()).length >= 2
                       ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
                   )}
                 >
                   {comparing ? (
@@ -410,13 +410,13 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
   return (
     <div className="glass-card rounded-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-white">Optimization Result</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Optimization Result</h2>
         <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1 text-green-400">
+          <div className="flex items-center gap-1 text-green-500 dark:text-green-400">
             <ArrowsRightLeftIcon className="h-4 w-4" />
             <span>{result.total_distance_meters}m</span>
           </div>
-          <div className="flex items-center gap-1 text-blue-400">
+          <div className="flex items-center gap-1 text-blue-500 dark:text-blue-400">
             <ClockIcon className="h-4 w-4" />
             <span>{result.estimated_time_minutes}min</span>
           </div>
@@ -425,7 +425,7 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
 
       {/* Optimized Path */}
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-400">Optimized Path:</h3>
+        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Optimized Path:</h3>
         <div className="flex flex-wrap gap-2">
           {result.optimized_path.map((location, index) => {
             const parsed = parseLocation(location);
@@ -434,10 +434,10 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
                 key={location}
                 className={cn(
                   'px-3 py-1.5 rounded-md border text-sm font-mono',
-                  parsed ? getZoneColor(parsed.zone) : 'border-gray-700'
+                  parsed ? getZoneColor(parsed.zone) : 'border-gray-300 dark:border-gray-700'
                 )}
               >
-                <span className="text-gray-400 mr-1">{index + 1}.</span>
+                <span className="text-gray-400 dark:text-gray-400 mr-1">{index + 1}.</span>
                 {location}
               </div>
             );
@@ -447,17 +447,17 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
 
       {/* Statistics */}
       <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-black/20 border border-white/[0.08]">
-          <div className="text-xs text-gray-400 mb-1">Total Locations</div>
-          <div className="text-2xl font-bold text-white">{result.locations.length}</div>
+        <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Locations</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{result.locations.length}</div>
         </div>
-        <div className="p-4 rounded-lg bg-black/20 border border-white/[0.08]">
-          <div className="text-xs text-gray-400 mb-1">Total Distance</div>
-          <div className="text-2xl font-bold text-green-400">{result.total_distance_meters}m</div>
+        <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Distance</div>
+          <div className="text-2xl font-bold text-green-500 dark:text-green-400">{result.total_distance_meters}m</div>
         </div>
-        <div className="p-4 rounded-lg bg-black/20 border border-white/[0.08]">
-          <div className="text-xs text-gray-400 mb-1">Est. Time</div>
-          <div className="text-2xl font-bold text-blue-400">{result.estimated_time_minutes}m</div>
+        <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Est. Time</div>
+          <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">{result.estimated_time_minutes}m</div>
         </div>
       </div>
     </div>
@@ -477,19 +477,19 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
     <div className="space-y-6">
       {/* Best Result Summary */}
       {comparison.best && (
-        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-          <div className="flex items-center gap-2 text-green-400 mb-2">
+        <div className="p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30">
+          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
             <CheckCircleIcon className="h-5 w-5" />
             <span className="font-semibold">Best Strategy: {comparison.best}</span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-400">Distance: </span>
-              <span className="ml-2 font-medium text-white">{comparison.best_distance}m</span>
+              <span className="text-gray-500 dark:text-gray-400">Distance: </span>
+              <span className="ml-2 font-medium text-gray-900 dark:text-white">{comparison.best_distance}m</span>
             </div>
             <div>
-              <span className="text-gray-400">Time: </span>
-              <span className="ml-2 font-medium text-white">{comparison.best_time}m</span>
+              <span className="text-gray-500 dark:text-gray-400">Time: </span>
+              <span className="ml-2 font-medium text-gray-900 dark:text-white">{comparison.best_time}m</span>
             </div>
           </div>
         </div>
@@ -506,8 +506,8 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
               className={cn(
                 'p-4 rounded-lg border transition-all',
                 result.algorithm === comparison.best
-                  ? 'bg-green-500/10 border-green-500/30'
-                  : 'bg-white/5 border-white/[0.08]'
+                  ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
+                  : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/[0.08]'
               )}
             >
               <div className="flex items-center justify-between">
@@ -517,16 +517,16 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
                       'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
                       result.algorithm === comparison.best
                         ? 'bg-green-500 text-white'
-                        : 'bg-gray-700 text-gray-300'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                     )}
                   >
                     {index + 1}
                   </div>
                   <div>
-                    <h3 className="font-medium text-white capitalize">
+                    <h3 className="font-medium text-gray-900 dark:text-white capitalize">
                       {result.algorithm} Algorithm
                     </h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {result.algorithm === 'tsp' && 'Optimal for small sets'}
                       {result.algorithm === 'nearest' && 'Fast, good approximation'}
                       {result.algorithm === 'aisle' && 'Best for high-density picking'}
@@ -535,8 +535,8 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-sm">
-                  <div className="text-green-400">{result.total_distance_meters}m</div>
-                  <div className="text-blue-400">{result.estimated_time_minutes}m</div>
+                  <div className="text-green-500 dark:text-green-400">{result.total_distance_meters}m</div>
+                  <div className="text-blue-500 dark:text-blue-400">{result.estimated_time_minutes}m</div>
                 </div>
               </div>
             </div>
