@@ -277,14 +277,16 @@ function UserRolesPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary-500/20 rounded-xl">
-              <UserGroupIcon className="h-8 w-8 text-primary-400" />
+            <div className="p-3 bg-primary-100 dark:bg-primary-500/20 rounded-xl">
+              <UserGroupIcon className="h-8 w-8 text-primary-500 dark:text-primary-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                 User Roles Management
               </h1>
-              <p className="mt-2 text-gray-400">Create users and manage role assignments</p>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Create users and manage role assignments
+              </p>
             </div>
           </div>
         </div>
@@ -294,18 +296,18 @@ function UserRolesPage() {
           <CardContent className="p-5">
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <UserGroupIcon className="h-6 w-6 text-blue-400" />
+                <UserGroupIcon className="h-6 w-6 text-blue-500 dark:text-blue-400" />
               </div>
               <div>
-                <h4 className="text-white font-semibold mb-2">How it works</h4>
-                <ul className="text-sm text-gray-400 space-y-1">
+                <h4 className="text-gray-900 dark:text-white font-semibold mb-2">How it works</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>
-                    • <strong className="text-gray-300">Base role</strong> is the user's primary
-                    role (marked with key icon)
+                    • <strong className="text-gray-700 dark:text-gray-300">Base role</strong> is the
+                    user's primary role (marked with key icon)
                   </li>
                   <li>
-                    • <strong className="text-gray-300">Additional roles</strong> can be granted to
-                    allow role switching
+                    • <strong className="text-gray-700 dark:text-gray-300">Additional roles</strong>{' '}
+                    can be granted to allow role switching
                   </li>
                   <li>
                     • Users can switch between their base role and any granted roles via the role
@@ -328,7 +330,7 @@ function UserRolesPage() {
                 placeholder="Search users by name, email, or ID..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </CardContent>
@@ -350,16 +352,16 @@ function UserRolesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div
-                        className={`p-3 rounded-xl ${isDeleted ? 'bg-warning-500/20' : 'bg-primary-500/20'}`}
+                        className={`p-3 rounded-xl ${isDeleted ? 'bg-warning-100 dark:bg-warning-500/20' : 'bg-primary-100 dark:bg-primary-500/20'}`}
                       >
                         <UserIcon
-                          className={`h-6 w-6 ${isDeleted ? 'text-warning-400' : 'text-primary-400'}`}
+                          className={`h-6 w-6 ${isDeleted ? 'text-warning-500 dark:text-warning-400' : 'text-primary-500 dark:text-primary-400'}`}
                         />
                       </div>
                       <div>
                         <div className="flex items-center gap-3">
                           <h3
-                            className={`text-xl font-semibold ${isDeleted ? 'text-gray-400 line-through' : 'text-white'}`}
+                            className={`text-xl font-semibold ${isDeleted ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white'}`}
                           >
                             {user.name}
                           </h3>
@@ -372,7 +374,9 @@ function UserRolesPage() {
                             </span>
                           )}
                         </div>
-                        <p className={`text-sm ${isDeleted ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <p
+                          className={`text-sm ${isDeleted ? 'text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}
+                        >
                           {user.email}
                         </p>
                         <div className="flex items-center gap-3 mt-2">
@@ -391,7 +395,7 @@ function UserRolesPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleRestoreUser(user)}
-                          className="flex items-center gap-2 text-warning-400 hover:text-warning-300"
+                          className="flex items-center gap-2 text-warning-500 dark:text-warning-400 hover:text-warning-600 dark:hover:text-warning-300"
                         >
                           <ArrowPathIcon className="h-4 w-4" />
                           Restore
@@ -424,7 +428,9 @@ function UserRolesPage() {
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-gray-300">Additional Roles</h4>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Additional Roles
+                        </h4>
                         <span className="text-xs text-gray-500">
                           {getUserGrantedRoles(user.userId).length} role
                           {getUserGrantedRoles(user.userId).length !== 1 ? 's' : ''} granted
@@ -453,12 +459,12 @@ function UserRolesPage() {
                               disabled={isDisabled}
                               className={`p-4 rounded-xl border transition-all duration-200 ${
                                 isBaseRole
-                                  ? 'bg-primary-500/10 border-primary-500/30 cursor-not-allowed opacity-50'
+                                  ? 'bg-primary-100 dark:bg-primary-500/10 border-primary-300 dark:border-primary-500/30 cursor-not-allowed opacity-50'
                                   : isAdminUser
-                                    ? 'bg-gray-700/30 border-gray-600/30 cursor-not-allowed opacity-40'
+                                    ? 'bg-gray-100 dark:bg-gray-700/30 border-gray-300 dark:border-gray-600/30 cursor-not-allowed opacity-40'
                                     : hasRole
-                                      ? 'bg-success-500/20 border-success-500/30 hover:bg-success-500/30'
-                                      : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                                      ? 'bg-success-100 dark:bg-success-500/20 border-success-300 dark:border-success-500/30 hover:bg-success-200 dark:hover:bg-success-500/30'
+                                      : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                               }`}
                               title={
                                 isBaseRole
@@ -474,22 +480,24 @@ function UserRolesPage() {
                                 <span
                                   className={`text-sm font-medium ${
                                     isBaseRole
-                                      ? 'text-primary-400'
+                                      ? 'text-primary-600 dark:text-primary-400'
                                       : isAdminUser
-                                        ? 'text-gray-500'
+                                        ? 'text-gray-400 dark:text-gray-500'
                                         : hasRole
-                                          ? 'text-success-400'
-                                          : 'text-gray-400'
+                                          ? 'text-success-600 dark:text-success-400'
+                                          : 'text-gray-600 dark:text-gray-400'
                                   }`}
                                 >
                                   {role}
                                 </span>
-                                {isBaseRole && <KeyIcon className="h-5 w-5 text-primary-400" />}
+                                {isBaseRole && (
+                                  <KeyIcon className="h-5 w-5 text-primary-500 dark:text-primary-400" />
+                                )}
                                 {isAdminUser && !isBaseRole && (
-                                  <LockClosedIcon className="h-5 w-5 text-gray-500" />
+                                  <LockClosedIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                                 )}
                                 {hasRole && !isBaseRole && !isAdminUser && (
-                                  <CheckIcon className="h-5 w-5 text-success-400" />
+                                  <CheckIcon className="h-5 w-5 text-success-500 dark:text-success-400" />
                                 )}
                               </div>
                             </button>
@@ -523,8 +531,10 @@ function UserRolesPage() {
           {filteredUsers.length === 0 && (
             <Card variant="glass">
               <CardContent className="p-12 text-center">
-                <UserIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-400 mb-2">No users found</h3>
+                <UserIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  No users found
+                </h3>
                 <p className="text-sm text-gray-500">
                   Try adjusting your search query or create a new user
                 </p>

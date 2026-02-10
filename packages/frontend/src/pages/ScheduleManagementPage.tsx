@@ -268,7 +268,9 @@ export function ScheduleManagementPage() {
 
   // Get status badge styling
   const getStatusBadgeClass = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+    return isActive
+      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
   };
 
   if (isLoading) {
@@ -278,7 +280,7 @@ export function ScheduleManagementPage() {
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-t-blue-500 border-solid rounded-full animate-spin" />
-            <p className="text-gray-400">Loading schedules...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading schedules...</p>
           </div>
         </div>
       </div>
@@ -294,11 +296,11 @@ export function ScheduleManagementPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                  <CalendarDaysIcon className="h-6 w-6 text-blue-400" />
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                  <CalendarDaysIcon className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                   Recurring Count Schedules
                 </h1>
-                <p className="text-gray-400 mt-1">
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Automate your cycle counts by creating recurring schedules
                 </p>
               </div>
@@ -321,13 +323,15 @@ export function ScheduleManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-gray-400 uppercase tracking-wide">Total Schedules</p>
-                    <p className="text-3xl font-bold mt-2 text-blue-400 group-hover:scale-105 transition-transform duration-300">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                      Total Schedules
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-blue-500 dark:text-blue-400 group-hover:scale-105 transition-transform duration-300">
                       {schedules.length}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-blue-500/20 border border-blue-500/30 shadow-lg shadow-blue-500/10 transition-all duration-300 group-hover:shadow-blue-500/20">
-                    <CalendarDaysIcon className="h-8 w-8 text-blue-400" />
+                  <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 shadow-lg shadow-blue-500/10 transition-all duration-300 group-hover:shadow-blue-500/20">
+                    <CalendarDaysIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />
                   </div>
                 </div>
               </CardContent>
@@ -336,13 +340,15 @@ export function ScheduleManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-gray-400 uppercase tracking-wide">Active</p>
-                    <p className="text-3xl font-bold mt-2 text-green-400 group-hover:scale-105 transition-transform duration-300">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                      Active
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-green-500 dark:text-green-400 group-hover:scale-105 transition-transform duration-300">
                       {schedules.filter(s => s.isActive).length}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30 shadow-lg shadow-green-500/10 transition-all duration-300 group-hover:shadow-green-500/20">
-                    <PlayIcon className="h-8 w-8 text-green-400" />
+                  <div className="p-3 rounded-lg bg-green-100 dark:bg-green-500/20 border border-green-200 dark:border-green-500/30 shadow-lg shadow-green-500/10 transition-all duration-300 group-hover:shadow-green-500/20">
+                    <PlayIcon className="h-8 w-8 text-green-500 dark:text-green-400" />
                   </div>
                 </div>
               </CardContent>
@@ -351,13 +357,15 @@ export function ScheduleManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="text-sm text-gray-400 uppercase tracking-wide">Inactive</p>
-                    <p className="text-3xl font-bold mt-2 text-gray-400 group-hover:scale-105 transition-transform duration-300">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                      Inactive
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-gray-500 dark:text-gray-400 group-hover:scale-105 transition-transform duration-300">
                       {schedules.filter(s => !s.isActive).length}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-gray-500/20 border border-gray-500/30 shadow-lg shadow-gray-500/10 transition-all duration-300 group-hover:shadow-gray-500/20">
-                    <PauseIcon className="h-8 w-8 text-gray-400" />
+                  <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-500/20 border border-gray-200 dark:border-gray-500/30 shadow-lg shadow-gray-500/10 transition-all duration-300 group-hover:shadow-gray-500/20">
+                    <PauseIcon className="h-8 w-8 text-gray-500 dark:text-gray-400" />
                   </div>
                 </div>
               </CardContent>
@@ -373,7 +381,7 @@ export function ScheduleManagementPage() {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === 'all'
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                   onClick={() => setFilterStatus('all')}
                 >
@@ -383,7 +391,7 @@ export function ScheduleManagementPage() {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === 'active'
                       ? 'bg-green-600 text-white shadow-lg shadow-green-500/20'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                   onClick={() => setFilterStatus('active')}
                 >
@@ -393,7 +401,7 @@ export function ScheduleManagementPage() {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     filterStatus === 'inactive'
                       ? 'bg-gray-600 text-white shadow-lg shadow-gray-500/20'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                   onClick={() => setFilterStatus('inactive')}
                 >
@@ -409,7 +417,7 @@ export function ScheduleManagementPage() {
                   placeholder="Search schedules..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -420,9 +428,11 @@ export function ScheduleManagementPage() {
             {filteredSchedules.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                 <div className="glass-card rounded-lg p-8">
-                  <CalendarDaysIcon className="h-16 w-16 mx-auto mb-4 text-gray-600" />
-                  <h3 className="text-xl font-semibold text-white mb-3">No schedules found</h3>
-                  <p className="text-gray-400 mb-6 max-w-md">
+                  <CalendarDaysIcon className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                    No schedules found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
                     {filterStatus === 'all' && searchTerm === ''
                       ? 'Get started by creating your first automated recurring count schedule.'
                       : filterStatus === 'active'
@@ -447,11 +457,11 @@ export function ScheduleManagementPage() {
                   className="glass-card rounded-lg overflow-hidden hover:border-blue-500/30 transition-all"
                 >
                   {/* Card Header */}
-                  <div className="bg-gray-900/50 px-4 py-3 border-b border-gray-800">
+                  <div className="bg-gray-50 dark:bg-gray-900/50 px-4 py-3 border-b border-gray-200 dark:border-gray-800">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-base font-semibold text-white truncate pr-2">
+                          <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate pr-2">
                             {schedule.scheduleName}
                           </h3>
                           <span
@@ -467,7 +477,7 @@ export function ScheduleManagementPage() {
                             {schedule.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-400">
+                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                           <span className="inline-flex items-center gap-1">
                             <TagIcon className="h-4 w-4" />
                             {getCountTypeDisplayName(schedule.countType)}
@@ -485,7 +495,7 @@ export function ScheduleManagementPage() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => handleToggleActive(schedule.scheduleId, schedule.isActive)}
-                          className="p-1.5 rounded hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                          className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
                           title={schedule.isActive ? 'Disable schedule' : 'Enable schedule'}
                         >
                           {schedule.isActive ? (
@@ -496,14 +506,14 @@ export function ScheduleManagementPage() {
                         </button>
                         <button
                           onClick={() => handleEdit(schedule.scheduleId)}
-                          className="p-1.5 rounded hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                          className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
                           title="Edit schedule"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(schedule.scheduleId, schedule.scheduleName)}
-                          className="p-1.5 rounded hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
+                          className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-500/10 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                           title="Delete schedule"
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -516,10 +526,10 @@ export function ScheduleManagementPage() {
                   <div className="p-4 space-y-3">
                     {/* Next Run */}
                     <div className="flex items-start gap-2">
-                      <CalendarDaysIcon className="h-5 w-5 text-blue-400 mt-0.5" />
+                      <CalendarDaysIcon className="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-xs text-gray-400 mb-1">Next Run</p>
-                        <p className="text-sm text-white font-medium">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Next Run</p>
+                        <p className="text-sm text-gray-900 dark:text-white font-medium">
                           {formatDate(schedule.nextRunDate)}
                         </p>
                       </div>
@@ -529,27 +539,33 @@ export function ScheduleManagementPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                       {schedule.location && (
                         <div className="flex items-start gap-2">
-                          <MapPinIcon className="h-5 w-5 text-purple-400 mt-0.5" />
+                          <MapPinIcon className="h-5 w-5 text-purple-500 dark:text-purple-400 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-xs text-gray-400 mb-1">Location</p>
-                            <p className="text-white">{schedule.location}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              Location
+                            </p>
+                            <p className="text-gray-900 dark:text-white">{schedule.location}</p>
                           </div>
                         </div>
                       )}
                       {schedule.sku && (
                         <div className="flex items-start gap-2">
-                          <TagIcon className="h-5 w-5 text-orange-400 mt-0.5" />
+                          <TagIcon className="h-5 w-5 text-orange-500 dark:text-orange-400 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-xs text-gray-400 mb-1">SKU</p>
-                            <p className="text-white font-mono">{schedule.sku}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">SKU</p>
+                            <p className="text-gray-900 dark:text-white font-mono">
+                              {schedule.sku}
+                            </p>
                           </div>
                         </div>
                       )}
                       <div className="flex items-start gap-2 sm:col-span-2">
-                        <UserIcon className="h-5 w-5 text-cyan-400 mt-0.5" />
+                        <UserIcon className="h-5 w-5 text-cyan-500 dark:text-cyan-400 mt-0.5" />
                         <div className="flex-1">
-                          <p className="text-xs text-gray-400 mb-1">Assigned To</p>
-                          <p className="text-white">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                            Assigned To
+                          </p>
+                          <p className="text-gray-900 dark:text-white">
                             {users.find((u: any) => u.userId === schedule.assignedTo)?.name ||
                               schedule.assignedTo}
                           </p>
@@ -559,8 +575,10 @@ export function ScheduleManagementPage() {
                         <div className="flex items-start gap-2">
                           <ClockIcon className="h-5 w-5 text-gray-400 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-xs text-gray-400 mb-1">Last Run</p>
-                            <p className="text-sm text-gray-300">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              Last Run
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
                               {formatDate(schedule.lastRunDate)}
                             </p>
                           </div>
@@ -570,8 +588,10 @@ export function ScheduleManagementPage() {
                         <div className="flex items-start gap-2 col-span-1 sm:col-span-2">
                           <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-0.5" />
                           <div className="flex-1">
-                            <p className="text-xs text-gray-400 mb-1">Notes</p>
-                            <p className="text-sm text-gray-300">{schedule.notes}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Notes</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              {schedule.notes}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -590,16 +610,16 @@ export function ScheduleManagementPage() {
             onClick={() => setShowModal(false)}
           >
             <div
-              className="bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 border border-gray-800 max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 border border-gray-200 dark:border-gray-800 max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+              <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
                   </h2>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {editingSchedule
                       ? 'Update the schedule configuration below.'
                       : 'Configure a new automated recurring count schedule.'}
@@ -607,7 +627,7 @@ export function ScheduleManagementPage() {
                 </div>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>
@@ -619,7 +639,7 @@ export function ScheduleManagementPage() {
                 <div>
                   <label
                     htmlFor="scheduleName"
-                    className="block text-sm font-medium text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Schedule Name <span className="text-red-400">*</span>
                   </label>
@@ -629,8 +649,10 @@ export function ScheduleManagementPage() {
                     type="text"
                     value={values.scheduleName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 ${
-                      errors.scheduleName ? 'border-red-500' : 'border-gray-700'
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 ${
+                      errors.scheduleName
+                        ? 'border-red-500'
+                        : 'border-gray-300 dark:border-gray-700'
                     }`}
                     placeholder="e.g., Weekly A-Items Count Zone A"
                   />
@@ -644,7 +666,7 @@ export function ScheduleManagementPage() {
                   <div>
                     <label
                       htmlFor="countType"
-                      className="block text-sm font-medium text-gray-300 mb-1"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                     >
                       Count Type <span className="text-red-400">*</span>
                     </label>
@@ -653,8 +675,8 @@ export function ScheduleManagementPage() {
                       name="countType"
                       value={values.countType}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
-                        errors.countType ? 'border-red-500' : 'border-gray-700'
+                      className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white ${
+                        errors.countType ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
                       }`}
                     >
                       <option value={CycleCountType.ABC}>ABC Analysis</option>
@@ -673,7 +695,7 @@ export function ScheduleManagementPage() {
                   <div>
                     <label
                       htmlFor="frequencyType"
-                      className="block text-sm font-medium text-gray-300 mb-1"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                     >
                       Frequency <span className="text-red-400">*</span>
                     </label>
@@ -682,8 +704,10 @@ export function ScheduleManagementPage() {
                       name="frequencyType"
                       value={values.frequencyType}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
-                        errors.frequencyType ? 'border-red-500' : 'border-gray-700'
+                      className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white ${
+                        errors.frequencyType
+                          ? 'border-red-500'
+                          : 'border-gray-300 dark:border-gray-700'
                       }`}
                     >
                       <option value="DAILY">Daily</option>
@@ -701,7 +725,7 @@ export function ScheduleManagementPage() {
                 <div>
                   <label
                     htmlFor="frequencyInterval"
-                    className="block text-sm font-medium text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Interval <span className="text-red-400">*</span>
                   </label>
@@ -713,8 +737,10 @@ export function ScheduleManagementPage() {
                     max="52"
                     value={values.frequencyInterval}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 ${
-                      errors.frequencyInterval ? 'border-red-500' : 'border-gray-700'
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 ${
+                      errors.frequencyInterval
+                        ? 'border-red-500'
+                        : 'border-gray-300 dark:border-gray-700'
                     }`}
                     placeholder="1"
                   />
@@ -731,7 +757,7 @@ export function ScheduleManagementPage() {
                   <div>
                     <label
                       htmlFor="location"
-                      className="block text-sm font-medium text-gray-300 mb-1"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                     >
                       Location <span className="text-gray-500">(optional)</span>
                     </label>
@@ -741,14 +767,17 @@ export function ScheduleManagementPage() {
                       type="text"
                       value={values.location}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500"
                       placeholder="e.g., A-01-01 or leave blank"
                     />
                   </div>
 
                   {/* SKU */}
                   <div>
-                    <label htmlFor="sku" className="block text-sm font-medium text-gray-300 mb-1">
+                    <label
+                      htmlFor="sku"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    >
                       SKU <span className="text-gray-500">(optional)</span>
                     </label>
                     <input
@@ -757,7 +786,7 @@ export function ScheduleManagementPage() {
                       type="text"
                       value={values.sku}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500"
                       placeholder="e.g., SKU-12345 or leave blank"
                     />
                   </div>
@@ -767,7 +796,7 @@ export function ScheduleManagementPage() {
                 <div>
                   <label
                     htmlFor="assignedTo"
-                    className="block text-sm font-medium text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Assigned To <span className="text-red-400">*</span>
                   </label>
@@ -776,8 +805,8 @@ export function ScheduleManagementPage() {
                     name="assignedTo"
                     value={values.assignedTo}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
-                      errors.assignedTo ? 'border-red-500' : 'border-gray-700'
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white ${
+                      errors.assignedTo ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
                     }`}
                   >
                     <option value="">Select a user...</option>
@@ -796,7 +825,7 @@ export function ScheduleManagementPage() {
                 <div>
                   <label
                     htmlFor="nextRunDate"
-                    className="block text-sm font-medium text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Next Run Date <span className="text-red-400">*</span>
                   </label>
@@ -807,8 +836,8 @@ export function ScheduleManagementPage() {
                     value={values.nextRunDate}
                     onChange={handleChange}
                     min={new Date().toISOString().slice(0, 16)}
-                    className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white ${
-                      errors.nextRunDate ? 'border-red-500' : 'border-gray-700'
+                    className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white ${
+                      errors.nextRunDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
                     }`}
                   />
                   <p className="mt-1 text-xs text-gray-500">First time this schedule will run</p>
@@ -819,7 +848,10 @@ export function ScheduleManagementPage() {
 
                 {/* Notes */}
                 <div>
-                  <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-1">
+                  <label
+                    htmlFor="notes"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Notes <span className="text-gray-500">(optional)</span>
                   </label>
                   <textarea
@@ -827,18 +859,18 @@ export function ScheduleManagementPage() {
                     name="notes"
                     value={values.notes}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 resize-none"
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 resize-none"
                     rows={3}
                     placeholder="Add any additional notes or instructions..."
                   />
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-800">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     Cancel
                   </button>
