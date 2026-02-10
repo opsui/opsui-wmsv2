@@ -322,8 +322,8 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
           hasActiveItem
-            ? 'dark:text-white text-blue-600 dark:bg-white/[0.08] bg-blue-100 dark:border-white/[0.12] border-blue-300 shadow-md dark:shadow-blue-500/10 shadow-blue-200'
-            : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-blue-600 dark:hover:bg-white/[0.05] hover:bg-blue-50 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-blue-200'
+            ? 'dark:text-white text-violet-600 dark:bg-white/[0.08] bg-gradient-to-r from-violet-100 to-indigo-100 dark:border-white/[0.12] border-violet-300 shadow-md dark:shadow-violet-500/10 shadow-violet-200'
+            : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-violet-600 dark:hover:bg-white/[0.05] hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-violet-200'
         }`}
       >
         <Icon className="h-4 w-4" />
@@ -334,7 +334,7 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-60 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl dark:border-gray-700 border-blue-200 shadow-xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-60 dark:bg-gray-900 bg-gradient-to-br from-white via-violet-50 to-indigo-50 rounded-xl dark:border-gray-700 border-violet-200 shadow-xl animate-fade-in">
           <div className="py-2">
             {items.map(item => {
               const ItemIcon = item.icon;
@@ -349,20 +349,18 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
                     isActive
-                      ? 'dark:text-white text-blue-800 dark:bg-blue-600 bg-blue-100'
-                      : 'dark:text-gray-200 text-gray-700 dark:hover:text-white hover:text-blue-800 dark:hover:bg-gray-800 hover:bg-blue-100/70'
+                      ? 'text-violet-700 bg-gradient-to-r from-violet-100 to-indigo-100'
+                      : 'text-gray-700 hover:text-violet-700 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50'
                   }`}
                 >
                   <ItemIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? 'dark:text-white text-blue-800'
-                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-blue-700'
+                      isActive ? 'text-violet-600' : 'text-gray-500 group-hover:text-violet-500'
                     }`}
                   />
                   {item.label}
                   {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-blue-700 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(29,78,216,0.6)] animate-pulse"></span>
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-violet-600 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-pulse"></span>
                   )}
                 </button>
               );
@@ -481,8 +479,8 @@ function NotificationPreview({
       {notifications.map((notification: Notification) => (
         <div
           key={notification.notificationId}
-          className={`px-5 py-3 dark:hover:bg-gray-800 hover:bg-blue-100/80 transition-all duration-200 cursor-pointer ${
-            notification.status !== 'READ' ? 'dark:bg-primary-500/5 bg-blue-100' : ''
+          className={`px-5 py-3 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 transition-all duration-200 cursor-pointer ${
+            notification.status !== 'READ' ? 'bg-gradient-to-r from-violet-100 to-indigo-100' : ''
           }`}
           onClick={() => handleNotificationClick(notification)}
         >
@@ -540,7 +538,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-xl transition-all duration-200 group"
+      className="p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-violet-700 dark:hover:bg-white/[0.05] hover:bg-violet-50 rounded-xl transition-all duration-200 group"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
@@ -598,8 +596,8 @@ function NotificationPanel() {
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-xl transition-all duration-200 group ${
-          isOpen ? 'dark:bg-white/[0.05] bg-gray-200' : ''
+        className={`relative p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-violet-700 dark:hover:bg-white/[0.05] hover:bg-violet-50 rounded-xl transition-all duration-200 group ${
+          isOpen ? 'dark:bg-white/[0.05] bg-violet-100' : ''
         }`}
         aria-label={`Notifications: ${unreadCount} unread`}
       >
@@ -612,11 +610,11 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-96 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl dark:border-gray-700 border-blue-200 shadow-xl animate-fade-in">
+        <div className="absolute top-full right-0 mt-2 w-96 dark:bg-gray-900 bg-gradient-to-br from-white via-violet-50 to-indigo-50 rounded-xl dark:border-gray-700 border-violet-200 shadow-xl animate-fade-in">
           {/* Header */}
-          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-blue-200 flex items-center justify-between">
+          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-violet-200 flex items-center justify-between">
             <p className="text-sm font-semibold dark:text-white text-gray-900">Notifications</p>
-            <span className="text-xs dark:text-gray-400 text-gray-600">
+            <span className="text-xs dark:text-gray-400 text-violet-600">
               {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
             </span>
           </div>
@@ -631,13 +629,13 @@ function NotificationPanel() {
           </div>
 
           {/* Footer */}
-          <div className="dark:border-t border-t dark:border-gray-700 border-blue-200 px-5 py-3 flex gap-3">
+          <div className="dark:border-t border-t dark:border-gray-700 border-violet-200 px-5 py-3 flex gap-3">
             <button
               onClick={() => {
                 navigate('/notifications');
                 setIsOpen(false);
               }}
-              className="flex-1 text-xs font-medium dark:text-primary-400 text-blue-700 dark:hover:text-primary-300 hover:text-blue-800 transition-colors"
+              className="flex-1 text-xs font-medium dark:text-primary-400 text-violet-600 dark:hover:text-primary-300 hover:text-violet-800 transition-colors"
             >
               View All Notifications
             </button>
@@ -647,7 +645,7 @@ function NotificationPanel() {
                   navigate('/dashboard');
                   setIsOpen(false);
                 }}
-                className="flex-1 text-xs font-medium dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-gray-800 transition-colors"
+                className="flex-1 text-xs font-medium dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-violet-700 transition-colors"
               >
                 Dashboard
               </button>
@@ -851,25 +849,25 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-xl px-4 py-2.5 transition-all duration-300 group dark:border border border-transparent dark:border-transparent dark:hover:border-white/[0.08] hover:border-gray-300"
+        className="flex items-center space-x-3 dark:hover:bg-white/[0.05] hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 rounded-xl px-4 py-2.5 transition-all duration-300 group dark:border border border-transparent dark:border-transparent dark:hover:border-white/[0.08] hover:border-violet-200"
       >
         <div className="text-left">
-          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-gray-900 transition-colors">
+          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-violet-800 transition-colors">
             {userName}
           </h2>
-          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-gray-600 transition-colors">
+          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-violet-600 transition-colors">
             {userEmail}
           </p>
         </div>
         <ChevronDownIcon
-          className={`h-4 w-4 dark:text-gray-400 text-gray-500 dark:group-hover:text-white group-hover:text-gray-700 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 dark:text-gray-400 text-gray-500 dark:group-hover:text-white group-hover:text-violet-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-72 dark:bg-gray-900 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl dark:border-gray-700 border-blue-200 shadow-xl animate-fade-in">
-          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-blue-200">
-            <p className="text-xs font-semibold dark:text-blue-400 text-blue-700 uppercase tracking-wider">
+        <div className="absolute top-full left-0 mt-2 w-72 dark:bg-gray-900 bg-gradient-to-br from-white via-violet-50 to-indigo-50 rounded-xl dark:border-gray-700 border-violet-200 shadow-xl animate-fade-in">
+          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-violet-200">
+            <p className="text-xs font-semibold dark:text-violet-400 text-violet-600 uppercase tracking-wider">
               Role Views
             </p>
           </div>
@@ -884,25 +882,23 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
                   disabled={setActiveRoleMutation.isPending}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all duration-200 group ${
                     isActive
-                      ? 'dark:text-white text-blue-800 dark:bg-blue-600 bg-blue-100'
-                      : 'dark:text-gray-200 text-gray-700 dark:hover:text-white hover:text-blue-800 dark:hover:bg-gray-800 hover:bg-blue-100/70'
+                      ? 'text-violet-700 bg-gradient-to-r from-violet-100 to-indigo-100'
+                      : 'text-gray-700 hover:text-violet-700 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50'
                   }`}
                 >
                   <ViewIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? 'dark:text-white text-blue-800'
-                        : 'dark:text-gray-400 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-blue-700'
+                      isActive ? 'text-violet-600' : 'text-gray-500 group-hover:text-violet-500'
                     }`}
                   />
                   <div className="text-left flex-1">
                     <div className={isActive ? 'font-semibold' : 'font-normal'}>{view.label}</div>
                     {isActive && (
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs dark:text-blue-200 text-blue-700">
+                        <span className="text-xs dark:text-violet-200 text-violet-600">
                           Current View
                         </span>
-                        <span className="w-1.5 h-1.5 rounded-full dark:bg-white bg-blue-700 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(29,78,216,0.5)] animate-pulse"></span>
+                        <span className="w-1.5 h-1.5 rounded-full dark:bg-white bg-violet-600 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(139,92,246,0.5)] animate-pulse"></span>
                       </div>
                     )}
                   </div>
@@ -912,14 +908,14 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
           </div>
 
           {/* Settings Button */}
-          <div className="dark:border-t border-t dark:border-gray-700 border-blue-200">
+          <div className="dark:border-t border-t dark:border-gray-700 border-violet-200">
             <button
               onClick={handleSettingsClick}
-              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-gray-800 hover:bg-blue-100/50 transition-all duration-200 group"
+              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-gray-700 hover:text-violet-700 hover:bg-gradient-to-r hover:from-violet-50 hover:to-indigo-50 transition-all duration-200 group"
             >
-              <CogIcon className="h-4 w-4 flex-shrink-0 transition-colors duration-200 dark:text-gray-500 text-gray-600 dark:group-hover:text-gray-300 group-hover:text-gray-700" />
+              <CogIcon className="h-4 w-4 flex-shrink-0 transition-colors duration-200 text-gray-500 group-hover:text-violet-500" />
               <span className="flex-1 text-left">Role Settings</span>
-              <span className="text-xs dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-gray-600">
+              <span className="text-xs dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-violet-500">
                 {roleViews.length} / {dropdownRoleViews.length} visible
               </span>
             </button>
@@ -1556,7 +1552,7 @@ export function Header() {
 
   return (
     <>
-      <header className="backdrop-blur-xl dark:bg-white/[0.02] bg-white border-b dark:border-white/[0.08] border-gray-200 relative z-50">
+      <header className="dark:bg-white/[0.02] bg-white border-b-3 dark:border-white/[0.08] border-violet-400 shadow-md dark:shadow-none shadow-violet-200/60 relative z-50">
         <div className="w-full">
           <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
             {/* Left side - User info */}

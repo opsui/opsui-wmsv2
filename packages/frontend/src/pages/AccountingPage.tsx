@@ -5,7 +5,7 @@
  * vendor performance, and customer financial summaries
  */
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -29,6 +29,7 @@ import {
   DocumentTextIcon,
   FunnelIcon,
   TruckIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { useFinancialMetrics, useProfitLossStatement, useInventoryValuation } from '@/services/api';
 import { AccountingPeriod, CostCategory } from '@opsui/shared';
@@ -162,6 +163,82 @@ function CostBreakdown({ costByCategory, isLoading }: CostBreakdownProps) {
 }
 
 // ============================================================================
+// PERIOD DROPDOWN COMPONENT
+// ============================================================================
+
+interface PeriodDropdownProps {
+  selectedPeriod: AccountingPeriod;
+  onSelectPeriod: (period: AccountingPeriod) => void;
+}
+
+const PERIOD_OPTIONS = [
+  { value: AccountingPeriod.DAILY, label: 'Daily' },
+  { value: AccountingPeriod.WEEKLY, label: 'Weekly' },
+  { value: AccountingPeriod.MONTHLY, label: 'Monthly' },
+  { value: AccountingPeriod.QUARTERLY, label: 'Quarterly' },
+  { value: AccountingPeriod.YEARLY, label: 'Yearly' },
+];
+
+function PeriodDropdown({ selectedPeriod, onSelectPeriod }: PeriodDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const selectedLabel =
+    PERIOD_OPTIONS.find(opt => opt.value === selectedPeriod)?.label || 'Monthly';
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 min-w-[140px] justify-between"
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDownIcon
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </Button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 min-w-[140px] dark:bg-gray-900 bg-white dark:border-white/[0.1] border-gray-200 rounded-xl shadow-lg overflow-hidden z-50">
+          {PERIOD_OPTIONS.map(option => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onSelectPeriod(option.value);
+                setIsOpen(false);
+              }}
+              className={`w-full px-4 py-2 text-sm text-left transition-colors ${
+                option.value === selectedPeriod
+                  ? 'dark:bg-white/[0.1] bg-gray-300 dark:text-white text-gray-900 font-medium'
+                  : 'dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-200'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // MAIN PAGE
 // ============================================================================
 
@@ -186,63 +263,236 @@ function AccountingPage() {
   });
   const { data: inventoryData, isLoading: isLoadingInventory } = useInventoryValuation();
 
-  // Sample mock data for demonstration when no real data exists
-  const sampleMetrics =
-    metrics?.totalRevenue === 0
-      ? {
-          ...metrics,
-          totalRevenue: 45280.5,
-          totalCost: 28150.25,
-          grossProfit: 17130.25,
-          netProfit: 14105.4,
-          profitMargin: 31.1,
-          inventoryValue: 125780.0,
-          ordersProcessed: 147,
-          averageOrderValue: 308.16,
-          totalExceptionCost: 425.0,
-          outstandingReceivables: 12350.0,
-          outstandingPayables: 8720.0,
-          overdueReceivables: 2150.0,
-          costByCategory: {
-            LABOR: 8500.0,
-            MATERIALS: 15250.25,
-            SHIPPING: 3200.0,
-            STORAGE: 1200.0,
-            OVERHEAD: 0,
-            EXCEPTIONS: 425.0,
-            QUALITY_CONTROL: 275.0,
-            MAINTENANCE: 300.0,
-          },
-        }
-      : metrics;
+  // Sample mock data for demonstration - varies by period
+  const getSampleMetrics = (period: AccountingPeriod) => {
+    const periodData = {
+      [AccountingPeriod.DAILY]: {
+        totalRevenue: 2850.0,
+        totalCost: 1920.5,
+        grossProfit: 929.5,
+        netProfit: 720.8,
+        profitMargin: 25.3,
+        ordersProcessed: 12,
+        averageOrderValue: 237.5,
+        previousPeriod: { revenue: 2450.0, cost: 1750.0, profit: 700.0 },
+      },
+      [AccountingPeriod.WEEKLY]: {
+        totalRevenue: 18540.0,
+        totalCost: 12050.25,
+        grossProfit: 6489.75,
+        netProfit: 5320.5,
+        profitMargin: 28.7,
+        ordersProcessed: 78,
+        averageOrderValue: 237.7,
+        previousPeriod: { revenue: 16800.0, cost: 11200.0, profit: 5600.0 },
+      },
+      [AccountingPeriod.MONTHLY]: {
+        totalRevenue: 45280.5,
+        totalCost: 28150.25,
+        grossProfit: 17130.25,
+        netProfit: 14105.4,
+        profitMargin: 31.1,
+        ordersProcessed: 147,
+        averageOrderValue: 308.16,
+        previousPeriod: { revenue: 38500.0, cost: 26200.0, profit: 12300.0 },
+      },
+      [AccountingPeriod.QUARTERLY]: {
+        totalRevenue: 148750.0,
+        totalCost: 92450.0,
+        grossProfit: 56300.0,
+        netProfit: 46350.0,
+        profitMargin: 31.2,
+        ordersProcessed: 512,
+        averageOrderValue: 290.5,
+        previousPeriod: { revenue: 125800.0, cost: 84200.0, profit: 41600.0 },
+      },
+      [AccountingPeriod.YEARLY]: {
+        totalRevenue: 589200.0,
+        totalCost: 365800.0,
+        grossProfit: 223400.0,
+        netProfit: 183400.0,
+        profitMargin: 31.1,
+        ordersProcessed: 2150,
+        averageOrderValue: 274.0,
+        previousPeriod: { revenue: 495000.0, cost: 332000.0, profit: 163000.0 },
+      },
+    };
+
+    const data = periodData[period];
+    return {
+      ...metrics,
+      totalRevenue: data.totalRevenue,
+      totalCost: data.totalCost,
+      grossProfit: data.grossProfit,
+      netProfit: data.netProfit,
+      profitMargin: data.profitMargin,
+      inventoryValue: 125780.0,
+      ordersProcessed: data.ordersProcessed,
+      averageOrderValue: data.averageOrderValue,
+      totalExceptionCost: 425.0,
+      outstandingReceivables: 12350.0,
+      outstandingPayables: 8720.0,
+      overdueReceivables: 2150.0,
+      costByCategory: {
+        LABOR: data.totalCost * 0.3,
+        MATERIALS: data.totalCost * 0.54,
+        SHIPPING: data.totalCost * 0.11,
+        STORAGE: data.totalCost * 0.04,
+        OVERHEAD: 0,
+        EXCEPTIONS: 425.0,
+        QUALITY_CONTROL: 275.0,
+        MAINTENANCE: 300.0,
+      },
+      previousPeriod: data.previousPeriod,
+    };
+  };
+
+  const sampleMetrics = metrics?.totalRevenue === 0 ? getSampleMetrics(selectedPeriod) : metrics;
+
+  // Sample P&L data - varies by period
+  const getSampleProfitLoss = (period: AccountingPeriod) => {
+    const periodData = {
+      [AccountingPeriod.DAILY]: {
+        grossRevenue: 2875.0,
+        returns: 25.0,
+        netRevenue: 2850.0,
+        materialCosts: 960.25,
+        laborCosts: 576.15,
+        totalCOGS: 1536.4,
+        grossProfit: 1313.6,
+        grossProfitMargin: 46.1,
+        operatingExpenses: {
+          STORAGE: 38.4,
+          OVERHEAD: 0,
+          EXCEPTIONS: 25.0,
+          QUALITY_CONTROL: 18.5,
+        },
+        totalOperatingExpenses: 81.9,
+        operatingIncome: 1231.7,
+        operatingMargin: 43.2,
+        otherIncome: 0,
+        otherExpenses: 35.0,
+        netIncome: 1196.7,
+        netMargin: 42.0,
+      },
+      [AccountingPeriod.WEEKLY]: {
+        grossRevenue: 18725.0,
+        returns: 185.0,
+        netRevenue: 18540.0,
+        materialCosts: 6235.0,
+        laborCosts: 3741.0,
+        totalCOGS: 9976.0,
+        grossProfit: 8564.0,
+        grossProfitMargin: 45.7,
+        operatingExpenses: {
+          STORAGE: 270.0,
+          OVERHEAD: 0,
+          EXCEPTIONS: 180.0,
+          QUALITY_CONTROL: 130.0,
+        },
+        totalOperatingExpenses: 580.0,
+        operatingIncome: 7984.0,
+        operatingMargin: 43.1,
+        otherIncome: 0,
+        otherExpenses: 250.0,
+        netIncome: 7734.0,
+        netMargin: 41.7,
+      },
+      [AccountingPeriod.MONTHLY]: {
+        grossRevenue: 45705.5,
+        returns: 425.0,
+        netRevenue: 45280.5,
+        materialCosts: 15250.25,
+        laborCosts: 8500.0,
+        totalCOGS: 23750.25,
+        grossProfit: 21530.25,
+        grossProfitMargin: 47.5,
+        operatingExpenses: {
+          STORAGE: 1200.0,
+          OVERHEAD: 0,
+          EXCEPTIONS: 425.0,
+          QUALITY_CONTROL: 275.0,
+        },
+        totalOperatingExpenses: 1900.0,
+        operatingIncome: 19630.25,
+        operatingMargin: 43.3,
+        otherIncome: 0,
+        otherExpenses: 800.0,
+        netIncome: 18830.25,
+        netMargin: 41.6,
+      },
+      [AccountingPeriod.QUARTERLY]: {
+        grossRevenue: 150050.0,
+        returns: 1300.0,
+        netRevenue: 148750.0,
+        materialCosts: 49920.0,
+        laborCosts: 27756.0,
+        totalCOGS: 77676.0,
+        grossProfit: 71074.0,
+        grossProfitMargin: 47.8,
+        operatingExpenses: {
+          STORAGE: 3600.0,
+          OVERHEAD: 0,
+          EXCEPTIONS: 1275.0,
+          QUALITY_CONTROL: 825.0,
+        },
+        totalOperatingExpenses: 5700.0,
+        operatingIncome: 65374.0,
+        operatingMargin: 43.9,
+        otherIncome: 0,
+        otherExpenses: 2400.0,
+        netIncome: 62974.0,
+        netMargin: 42.3,
+      },
+      [AccountingPeriod.YEARLY]: {
+        grossRevenue: 594600.0,
+        returns: 5400.0,
+        netRevenue: 589200.0,
+        materialCosts: 197352.0,
+        laborCosts: 109624.0,
+        totalCOGS: 306976.0,
+        grossProfit: 282224.0,
+        grossProfitMargin: 47.9,
+        operatingExpenses: {
+          STORAGE: 14400.0,
+          OVERHEAD: 0,
+          EXCEPTIONS: 5100.0,
+          QUALITY_CONTROL: 3300.0,
+        },
+        totalOperatingExpenses: 22800.0,
+        operatingIncome: 259424.0,
+        operatingMargin: 44.0,
+        otherIncome: 0,
+        otherExpenses: 9600.0,
+        netIncome: 249824.0,
+        netMargin: 42.4,
+      },
+    };
+
+    const data = periodData[period];
+    return {
+      ...profitLoss,
+      grossRevenue: data.grossRevenue,
+      returns: data.returns,
+      netRevenue: data.netRevenue,
+      materialCosts: data.materialCosts,
+      laborCosts: data.laborCosts,
+      totalCOGS: data.totalCOGS,
+      grossProfit: data.grossProfit,
+      grossProfitMargin: data.grossProfitMargin,
+      operatingExpenses: data.operatingExpenses,
+      totalOperatingExpenses: data.totalOperatingExpenses,
+      operatingIncome: data.operatingIncome,
+      operatingMargin: data.operatingMargin,
+      otherIncome: data.otherIncome,
+      otherExpenses: data.otherExpenses,
+      netIncome: data.netIncome,
+      netMargin: data.netMargin,
+    };
+  };
 
   const sampleProfitLoss =
-    profitLoss?.grossRevenue === 0
-      ? {
-          ...profitLoss,
-          grossRevenue: 45705.5,
-          returns: 425.0,
-          netRevenue: 45280.5,
-          materialCosts: 15250.25,
-          laborCosts: 8500.0,
-          totalCOGS: 23750.25,
-          grossProfit: 21530.25,
-          grossProfitMargin: 47.5,
-          operatingExpenses: {
-            STORAGE: 1200.0,
-            OVERHEAD: 0,
-            EXCEPTIONS: 425.0,
-            QUALITY_CONTROL: 275.0,
-          },
-          totalOperatingExpenses: 1900.0,
-          operatingIncome: 19630.25,
-          operatingMargin: 43.3,
-          otherIncome: 0,
-          otherExpenses: 800.0,
-          netIncome: 18830.25,
-          netMargin: 41.6,
-        }
-      : profitLoss;
+    profitLoss?.grossRevenue === 0 ? getSampleProfitLoss(selectedPeriod) : profitLoss;
 
   const sampleInventoryData =
     inventoryData?.totalValue === 0
@@ -265,19 +515,6 @@ function AccountingPage() {
         }
       : inventoryData;
 
-  // Add previous period data to sample metrics for trend calculation
-  const displayMetrics =
-    sampleMetrics?.totalRevenue === 45280.5
-      ? {
-          ...sampleMetrics,
-          previousPeriod: {
-            revenue: 38500.0,
-            cost: 26200.0,
-            profit: 12300.0,
-          },
-        }
-      : sampleMetrics;
-
   // Format currency
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -293,11 +530,11 @@ function AccountingPage() {
     return { value: Math.abs(change), isPositive: change >= 0 };
   };
 
-  const revenueTrend = displayMetrics?.previousPeriod
-    ? getTrend(displayMetrics.totalRevenue, displayMetrics.previousPeriod.revenue)
+  const revenueTrend = sampleMetrics?.previousPeriod
+    ? getTrend(sampleMetrics.totalRevenue, sampleMetrics.previousPeriod.revenue)
     : undefined;
-  const profitTrend = displayMetrics?.previousPeriod
-    ? getTrend(displayMetrics.netProfit, displayMetrics.previousPeriod.profit)
+  const profitTrend = sampleMetrics?.previousPeriod
+    ? getTrend(sampleMetrics.netProfit, sampleMetrics.previousPeriod.profit)
     : undefined;
 
   const tabs = [
@@ -343,29 +580,20 @@ function AccountingPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <label htmlFor="accounting-period-select" className="sr-only">
-                Select Accounting Period
-              </label>
-              <select
-                id="accounting-period-select"
-                value={selectedPeriod}
-                onChange={e => setSelectedPeriod(e.target.value as AccountingPeriod)}
-                className="px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                aria-label="Select accounting period"
-              >
-                <option value={AccountingPeriod.DAILY}>Daily</option>
-                <option value={AccountingPeriod.WEEKLY}>Weekly</option>
-                <option value={AccountingPeriod.MONTHLY}>Monthly</option>
-                <option value={AccountingPeriod.QUARTERLY}>Quarterly</option>
-                <option value={AccountingPeriod.YEARLY}>Yearly</option>
-              </select>
+              <PeriodDropdown
+                selectedPeriod={selectedPeriod}
+                onSelectPeriod={period => {
+                  setSelectedPeriod(period);
+                }}
+              />
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => refetchMetrics()}
+                disabled={isLoadingMetrics}
                 className="flex items-center gap-2"
               >
-                <FunnelIcon className="h-4 w-4" />
+                <FunnelIcon className={`h-4 w-4 ${isLoadingMetrics ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
             </div>
@@ -387,8 +615,8 @@ function AccountingPage() {
                   id={`tab-${tab.id}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     activeTab === tab.id
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      ? 'dark:bg-primary-500 bg-stone-100 text-stone-700 dark:text-white'
+                      : 'dark:bg-white/5 bg-stone-50 text-stone-600 dark:text-gray-400 hover:bg-stone-100 dark:hover:bg-white/10'
                   }`}
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />

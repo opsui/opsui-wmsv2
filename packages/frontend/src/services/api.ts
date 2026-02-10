@@ -8112,7 +8112,7 @@ export const useFinancialMetrics = (params?: {
   enabled?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['accounting', 'metrics', params],
+    queryKey: ['accounting', 'metrics', params?.period, params?.startDate, params?.endDate],
     queryFn: () => accountingApi.getFinancialMetrics(params),
     enabled: params?.enabled ?? true,
     retry: 1,
@@ -8127,7 +8127,7 @@ export const useProfitLossStatement = (params?: {
   enabled?: boolean;
 }) => {
   return useQuery({
-    queryKey: ['accounting', 'profit-loss', params],
+    queryKey: ['accounting', 'profit-loss', params?.period, params?.startDate, params?.endDate],
     queryFn: () => accountingApi.getProfitLoss(params),
     enabled: params?.enabled ?? true,
     retry: 1,

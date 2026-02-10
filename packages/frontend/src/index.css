@@ -41,8 +41,10 @@
   /* Light mode body - Industry standard SaaS colors */
   html.light body {
     @apply text-gray-800;
-    background: #f8fafc;
-    animation: none;
+    background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 25%, #ede9fe 50%, #f5f3ff 75%, #faf5ff 100%);
+    background-size: 400% 400%;
+    background-attachment: fixed;
+    animation: gradientShift 15s ease infinite;
   }
 
   /* Light mode - enhanced text hierarchy */
@@ -79,11 +81,30 @@
     animation: backgroundShift 20s ease-in-out infinite;
   }
 
-  /* Light mode background - clean subtle gradient */
+  /* Light mode background - detailed spinning effect like dark mode */
   html.light body::before {
-    background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.015) 0%, transparent 50%);
+    background: radial-gradient(circle at 20% 50%, rgba(147, 197, 253, 0.10) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.07) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(125, 211, 252, 0.05) 0%, transparent 50%);
+    animation: backgroundShift 20s ease-in-out infinite;
+  }
+
+  /* Light mode floating orbs - behind the spin */
+  html.light body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-height: 100vh;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(186, 230, 253, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 10% 90%, rgba(147, 197, 253, 0.045) 0%, transparent 50%),
+                radial-gradient(circle at 90% 10%, rgba(125, 211, 252, 0.04) 0%, transparent 50%);
+    z-index: -2;
+    pointer-events: none;
+    animation: lightOrbFloat 20s ease-in-out infinite;
   }
 
   @keyframes backgroundShift {
@@ -104,12 +125,12 @@
     }
   }
 
-  @keyframes gradientShiftLight {
+  @keyframes lightOrbFloat {
     0%, 100% {
-      background-position: 0% 50%;
+      transform: rotate(0deg) scale(1);
     }
     50% {
-      background-position: 100% 50%;
+      transform: rotate(180deg) scale(1.1);
     }
   }
 
@@ -167,14 +188,17 @@
   }
 
   html.light .glass-card {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    box-shadow: 0 4px 24px rgba(139, 92, 246, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5);
   }
 
   html.light .glass-card:hover {
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(59, 130, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.25);
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.12), 0 0 0 1px rgba(139, 92, 246, 0.15);
+    background: rgba(255, 255, 255, 0.85);
   }
 
   /* Premium input field */
