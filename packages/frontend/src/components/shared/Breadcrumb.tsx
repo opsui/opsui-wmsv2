@@ -265,27 +265,27 @@ export function Breadcrumb({
           <>
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+              className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
             >
               <UserCircleIcon className="h-4 w-4" />
               <span>Admin Dashboard</span>
             </button>
-            <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+            <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
           </>
         )}
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-600" />}
+            {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />}
             {item.path ? (
               <button
                 onClick={() => navigate(item.path!)}
-                className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
+                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 {item.icon && <item.icon className="h-4 w-4" />}
                 <span>{item.label}</span>
               </button>
             ) : (
-              <span className="text-white font-medium">{item.label}</span>
+              <span className="text-gray-900 dark:text-white font-medium">{item.label}</span>
             )}
           </div>
         ))}
@@ -349,23 +349,23 @@ export function Breadcrumb({
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
               >
                 <UserCircleIcon className="h-4 w-4" />
                 <span>Admin Dashboard</span>
               </button>
-              <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+              <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
             </>
           )}
           <button
             onClick={() => navigate('/accounting')}
-            className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             {showHomeIcon && <HomeIcon className="h-4 w-4" />}
             <span>{homeLabel || accountingConfig.homeLabel}</span>
           </button>
-          <ChevronRightIcon className="h-4 w-4 text-gray-600" />
-          <span className="text-white font-medium">
+          <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+          <span className="text-gray-900 dark:text-white font-medium">
             {currentLabel || accountingConfig.tabLabels[subPath]}
           </span>
         </nav>
@@ -382,23 +382,23 @@ export function Breadcrumb({
           <>
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+              className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
             >
               <UserCircleIcon className="h-4 w-4" />
               <span>Admin Dashboard</span>
             </button>
-            <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+            <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
           </>
         )}
         <button
           onClick={() => navigate(nestedRouteMatch!.basePath)}
-          className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           {showHomeIcon && <HomeIcon className="h-4 w-4" />}
           <span>{homeLabel || config?.homeLabel || 'Overview'}</span>
         </button>
-        <ChevronRightIcon className="h-4 w-4 text-gray-600" />
-        <span className="text-white font-medium">
+        <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+        <span className="text-gray-900 dark:text-white font-medium">
           {currentLabel || nestedRouteMatch.currentLabel}
         </span>
       </nav>
@@ -427,13 +427,13 @@ export function Breadcrumb({
             <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
               >
                 <UserCircleIcon className="h-4 w-4" />
                 <span>Admin Dashboard</span>
               </button>
-              <ChevronRightIcon className="h-4 w-4 text-gray-600" />
-              <span className="text-gray-400">{config.homeLabel}</span>
+              <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+              <span className="text-gray-500 dark:text-gray-400">{config.homeLabel}</span>
             </nav>
           );
         }
@@ -446,12 +446,12 @@ export function Breadcrumb({
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-purple-400 hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
               >
                 <UserCircleIcon className="h-4 w-4" />
                 <span>Admin Dashboard</span>
               </button>
-              <ChevronRightIcon className="h-4 w-4 text-gray-600" />
+              <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
             </>
           )}
           <button
@@ -459,13 +459,13 @@ export function Breadcrumb({
               // Clear tab parameter to return to overview/dashboard
               navigate(path);
             }}
-            className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             {showHomeIcon && <HomeIcon className="h-4 w-4" />}
             <span>{homeLabel || config.homeLabel}</span>
           </button>
-          <ChevronRightIcon className="h-4 w-4 text-gray-600" />
-          <span className="text-white font-medium">
+          <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+          <span className="text-gray-900 dark:text-white font-medium">
             {currentLabel || (currentTab && config.tabLabels[currentTab]) || currentTab}
           </span>
         </nav>
