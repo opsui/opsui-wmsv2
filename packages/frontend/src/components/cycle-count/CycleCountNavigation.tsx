@@ -3,6 +3,7 @@
  *
  * Shared navigation bar for all cycle counting pages.
  * Ensures consistent positioning and styling across Counts, Analytics, Root Cause, and Schedules pages.
+ * Theme-aware: Supports both light and dark modes.
  */
 
 import { useNavigate } from 'react-router-dom';
@@ -29,8 +30,8 @@ function TabButton({ active, onClick, children, icon: Icon }: TabButtonProps) {
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-300 ${
         active
-          ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20'
-          : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+          ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20 dark:shadow-blue-500/20'
+          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50'
       }`}
     >
       <Icon className="h-5 w-5" />
@@ -81,7 +82,7 @@ export function CycleCountNavigation({ activePage, onLocalTabChange }: CycleCoun
   };
 
   return (
-    <div className="flex items-center gap-2 bg-gray-800/50 backdrop-blur rounded-xl p-1.5 border border-gray-700/50 shadow-lg">
+    <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800/50 backdrop-blur rounded-xl p-1.5 border border-gray-200 dark:border-gray-700/50 shadow-sm dark:shadow-lg">
       <TabButton
         active={activePage === 'counts'}
         onClick={() => handleNavigate('counts')}
