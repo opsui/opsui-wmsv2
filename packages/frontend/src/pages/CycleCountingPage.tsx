@@ -2,6 +2,7 @@
  * Cycle Counting Page
  *
  * Interface for scheduling and performing cycle counts
+ * Theme-aware: Supports both light and dark modes
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -78,8 +79,8 @@ function StatusFilterDropdown({
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
           value
-            ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
-            : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
+            ? 'text-gray-900 dark:text-white dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border border-gray-300 dark:shadow-blue-500/10 shadow-sm'
+            : 'text-gray-700 dark:text-gray-300 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
         }`}
       >
         {selectedOption?.label || 'All Statuses'}
@@ -89,7 +90,7 @@ function StatusFilterDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-56 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl animate-fade-in">
           <div className="py-2">
             {options.map((option, index) => {
               const isActive = option.value === value;
@@ -102,12 +103,12 @@ function StatusFilterDropdown({
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
                     isActive
-                      ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
-                      : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
+                      ? 'text-gray-900 dark:text-white dark:bg-blue-600 bg-blue-50'
+                      : 'text-gray-700 dark:text-gray-200 dark:hover:text-white hover:text-gray-900 dark:hover:bg-gray-800 hover:bg-gray-100'
                   }`}
                 >
                   {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(0,0,0,0.3)] animate-pulse"></span>
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gray-900 dark:bg-white shadow-[0_0_8px_rgba(0,0,0,0.3)] dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] animate-pulse"></span>
                   )}
                   {option.label}
                 </button>
@@ -122,11 +123,16 @@ function StatusFilterDropdown({
 
 function StatusBadge({ status }: { status: CycleCountStatus }) {
   const styles = {
-    [CycleCountStatus.SCHEDULED]: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
-    [CycleCountStatus.IN_PROGRESS]: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-    [CycleCountStatus.COMPLETED]: 'bg-green-500/20 text-green-300 border border-green-500/30',
-    [CycleCountStatus.RECONCILED]: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
-    [CycleCountStatus.CANCELLED]: 'bg-red-500/20 text-red-300 border border-red-500/30',
+    [CycleCountStatus.SCHEDULED]:
+      'bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500/30',
+    [CycleCountStatus.IN_PROGRESS]:
+      'bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+    [CycleCountStatus.COMPLETED]:
+      'bg-green-50 dark:bg-green-500/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-500/30',
+    [CycleCountStatus.RECONCILED]:
+      'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
+    [CycleCountStatus.CANCELLED]:
+      'bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/30',
   };
 
   const icons = {
@@ -297,30 +303,36 @@ function CreateCycleCountModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg shadow-xl max-w-lg w-full mx-4 border border-gray-800">
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">Create Cycle Count Plan</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-lg w-full mx-4 border border-gray-200 dark:border-gray-800">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Create Cycle Count Plan
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Plan Name *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Plan Name *
+            </label>
             <input
               type="text"
               name="planName"
               required
               value={formData.planName}
               onChange={handleChange}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500 ${
-                errors.planName ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 ${
+                errors.planName ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               placeholder="e.g., Zone A Weekly Count"
             />
-            {errors.planName && <p className="mt-1 text-sm text-red-400">{errors.planName}</p>}
+            {errors.planName && <p className="mt-1 text-sm text-red-500">{errors.planName}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Count Type *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Count Type *
+            </label>
             <Select
               required
               name="countType"
@@ -340,11 +352,13 @@ function CreateCycleCountModal({
                 { value: CycleCountType.SHIPPING, label: 'Shipping Count - Before dispatch' },
               ]}
             />
-            {errors.countType && <p className="mt-1 text-sm text-red-400">{errors.countType}</p>}
+            {errors.countType && <p className="mt-1 text-sm text-red-500">{errors.countType}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Assigned To *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Assigned To *
+            </label>
             <Select
               required
               name="assignedTo"
@@ -357,12 +371,16 @@ function CreateCycleCountModal({
                 })),
               ]}
             />
-            {errors.assignedTo && <p className="mt-1 text-sm text-red-400">{errors.assignedTo}</p>}
+            {errors.assignedTo && <p className="mt-1 text-sm text-red-500">{errors.assignedTo}</p>}
           </div>
 
           <div>
             <label
-              className={`block text-sm font-medium text-gray-300 mb-1 ${typeConfig.locationRequired ? 'text-yellow-400' : ''}`}
+              className={`block text-sm font-medium mb-1 ${
+                typeConfig.locationRequired
+                  ? 'text-amber-600 dark:text-yellow-400'
+                  : 'text-gray-700 dark:text-gray-300'
+              }`}
             >
               {typeConfig.locationLabel}
             </label>
@@ -381,16 +399,20 @@ function CreateCycleCountModal({
                 })),
               ]}
             />
-            {errors.location && <p className="mt-1 text-sm text-red-400">{errors.location}</p>}
+            {errors.location && <p className="mt-1 text-sm text-red-500">{errors.location}</p>}
             {typeConfig.locationHint && (
-              <p className="text-xs text-blue-400 mt-1">{typeConfig.locationHint}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                {typeConfig.locationHint}
+              </p>
             )}
-            {loadingBins && <p className="text-xs text-gray-500 mt-1">Loading locations...</p>}
+            {loadingBins && (
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Loading locations...</p>
+            )}
           </div>
 
           {typeConfig.showSku ? (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 SKUs (Optional - separate multiple SKUs with commas)
               </label>
               <div className="relative">
@@ -419,12 +441,12 @@ function CreateCycleCountModal({
                         : formData.sku;
                     setSkuSearch(searchValue);
                   }}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Search SKUs (comma-separated)..."
                   autoComplete="off"
                 />
                 {skuSearch && uniqueSkus.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto">
                     {uniqueSkus.slice(0, 20).map((item: any, index: number) => (
                       <div
                         key={`${item.sku}-${index}`}
@@ -442,16 +464,18 @@ function CreateCycleCountModal({
                           }
                           setSkuSearch('');
                         }}
-                        className="px-3 py-2 text-gray-300 hover:bg-gray-700 cursor-pointer text-sm"
+                        className="px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
                       >
                         <div className="font-medium">{item.sku}</div>
-                        <div className="text-xs text-gray-500">{item.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">{item.name}</div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              {loadingInventory && <p className="text-xs text-gray-500 mt-1">Loading SKUs...</p>}
+              {loadingInventory && (
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Loading SKUs...</p>
+              )}
               {formData.sku && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {formData.sku.split(',').map((s, i) => {
@@ -459,7 +483,7 @@ function CreateCycleCountModal({
                     return trimmedSku ? (
                       <span
                         key={i}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-sm text-blue-400"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/30 rounded text-sm text-blue-700 dark:text-blue-400"
                       >
                         {trimmedSku}
                         <button
@@ -472,7 +496,7 @@ function CreateCycleCountModal({
                             const newSkus = currentSkus.filter((_, idx) => idx !== i).join(', ');
                             setFieldValue('sku', newSkus);
                           }}
-                          className="hover:text-blue-300"
+                          className="hover:text-blue-500 dark:hover:text-blue-300"
                         >
                           ×
                         </button>
@@ -483,8 +507,8 @@ function CreateCycleCountModal({
               )}
             </div>
           ) : (
-            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <p className="text-sm text-blue-400">
+            <div className="p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-400">
                 <strong>Blanket Count:</strong> All SKUs in the selected location will be counted.
                 Individual SKU selection is not available for this type.
               </p>
@@ -492,22 +516,24 @@ function CreateCycleCountModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Notes
+            </label>
             <textarea
               name="notes"
               value={formData.notes}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-500"
+              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder={typeConfig.notesPlaceholder}
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -548,9 +574,6 @@ export function CycleCountingPage() {
     status: filterStatus || undefined,
   });
 
-  // Debug logging (can be removed after verification)
-  // console.log('[CycleCountingPage] filterStatus:', filterStatus, 'plans:', plansData?.plans?.length, 'user:', user?.userId, user?.role);
-
   // Fetch assignable users for the dropdown
   const { data: assignableUsers = [] } = useAssignableUsers();
 
@@ -583,11 +606,6 @@ export function CycleCountingPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  // Debug: Log full plans data (can be removed after verification)
-  // if (plans.length > 0) {
-  //   console.log('[CycleCountingPage] Plans data:', JSON.stringify(plans, null, 2));
-  // }
-
   const overallKPIs = dashboard?.overallKPIs;
   const accuracyTrend = dashboard?.accuracyTrend || [];
   const topDiscrepancies = dashboard?.topDiscrepancies || [];
@@ -617,8 +635,8 @@ export function CycleCountingPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-white">Cycle Counting</h1>
-                <p className="text-gray-400 mt-1">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cycle Counting</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Manage scheduled and ad-hoc inventory cycle counts
                 </p>
               </div>
@@ -654,7 +672,7 @@ export function CycleCountingPage() {
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       placeholder="Search plans..."
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
                   <StatusFilterDropdown value={filterStatus} onChange={setFilterStatus} />
@@ -664,15 +682,17 @@ export function CycleCountingPage() {
               {/* Plans List */}
               <div className="glass-card rounded-lg overflow-hidden">
                 {isLoading ? (
-                  <div className="p-8 text-center text-gray-400">Loading cycle count plans...</div>
+                  <div className="p-8 text-center text-gray-600 dark:text-gray-400">
+                    Loading cycle count plans...
+                  </div>
                 ) : plans.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400">
-                    <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-4 text-gray-600" />
+                  <div className="p-8 text-center text-gray-600 dark:text-gray-400">
+                    <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
                     <p>No cycle count plans found</p>
                     {canCreatePlan && (
                       <button
                         onClick={() => setShowCreateModal(true)}
-                        className="mt-4 text-blue-400 hover:text-blue-300"
+                        className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                       >
                         Create your first cycle count plan
                       </button>
@@ -680,36 +700,36 @@ export function CycleCountingPage() {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-800">
-                      <thead className="bg-gray-900/50">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                      <thead className="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Plan Name
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Type
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Scheduled Date
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Location/SKU
                           </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Status
                           </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Entries
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Assigned To
                           </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                      <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                         {paginatedPlans.map((plan: any) => {
                           const pendingVariances =
                             plan.countEntries?.filter(
@@ -717,22 +737,24 @@ export function CycleCountingPage() {
                             ).length || 0;
 
                           return (
-                            <tr key={plan.planId} className="hover:bg-gray-800/50">
+                            <tr key={plan.planId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-white">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
                                   {plan.planName}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-white">{plan.countType}</div>
+                                <div className="text-sm text-gray-900 dark:text-white">
+                                  {plan.countType}
+                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-white">
+                                <div className="text-sm text-gray-900 dark:text-white">
                                   {new Date(plan.scheduledDate).toLocaleDateString()}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-white">
+                                <div className="text-sm text-gray-900 dark:text-white">
                                   {plan.location || plan.sku || 'All Locations/SKUs'}
                                 </div>
                               </td>
@@ -740,24 +762,24 @@ export function CycleCountingPage() {
                                 <StatusBadge status={plan.status} />
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center">
-                                <div className="text-sm text-white">
+                                <div className="text-sm text-gray-900 dark:text-white">
                                   {plan.countEntries?.length || 0}
                                   {pendingVariances > 0 && (
-                                    <span className="ml-2 text-yellow-400">
+                                    <span className="ml-2 text-amber-600 dark:text-yellow-400">
                                       ({pendingVariances} pending)
                                     </span>
                                   )}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-white">
+                                <div className="text-sm text-gray-900 dark:text-white">
                                   {plan.assignedToName || getUserName(plan.countBy)}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right">
                                 <button
                                   onClick={() => navigate(`/cycle-counting/${plan.planId}`)}
-                                  className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
                                 >
                                   Edit
                                 </button>
@@ -792,7 +814,7 @@ export function CycleCountingPage() {
             <div className="space-y-6">
               {dashboardLoading ? (
                 <Card variant="glass" className="p-12 text-center">
-                  <p className="text-gray-400">Loading analytics...</p>
+                  <p className="text-gray-600 dark:text-gray-400">Loading analytics...</p>
                 </Card>
               ) : (
                 <>
@@ -803,20 +825,20 @@ export function CycleCountingPage() {
                         <CardContent className="p-6">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                 Total Counts
                               </p>
-                              <p className="text-4xl font-bold mt-3 text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+                              <p className="text-4xl font-bold mt-3 text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
                                 {overallKPIs.totalCounts}
                               </p>
                               <div className="mt-2 flex items-center gap-2">
-                                <span className="text-sm text-blue-400 font-medium">
+                                <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
                                   {overallKPIs.completedCounts} completed
                                 </span>
                               </div>
                             </div>
                             <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/20 shadow-lg shadow-blue-500/10 transition-all duration-300 group-hover:shadow-blue-500/20">
-                              <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-400" />
+                              <ClipboardDocumentCheckIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />
                             </div>
                           </div>
                         </CardContent>
@@ -825,18 +847,20 @@ export function CycleCountingPage() {
                         <CardContent className="p-6">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                 Completion Rate
                               </p>
-                              <p className="text-4xl font-bold mt-3 text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+                              <p className="text-4xl font-bold mt-3 text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
                                 {overallKPIs.completionRate.toFixed(1)}%
                               </p>
                               <div className="mt-2 flex items-center gap-2">
-                                <span className="text-sm text-green-400 font-medium">On track</span>
+                                <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                  On track
+                                </span>
                               </div>
                             </div>
                             <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/20 shadow-lg shadow-green-500/10 transition-all duration-300 group-hover:shadow-green-500/20">
-                              <ChartBarIcon className="h-8 w-8 text-green-400" />
+                              <ChartBarIcon className="h-8 w-8 text-green-500 dark:text-green-400" />
                             </div>
                           </div>
                         </CardContent>
@@ -845,20 +869,20 @@ export function CycleCountingPage() {
                         <CardContent className="p-6">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                 Average Accuracy
                               </p>
-                              <p className="text-4xl font-bold mt-3 text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+                              <p className="text-4xl font-bold mt-3 text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
                                 {overallKPIs.averageAccuracy.toFixed(1)}%
                               </p>
                               <div className="mt-2 flex items-center gap-2">
                                 <span
                                   className={`text-sm font-medium ${
                                     overallKPIs.averageAccuracy >= 98
-                                      ? 'text-green-400'
+                                      ? 'text-green-600 dark:text-green-400'
                                       : overallKPIs.averageAccuracy >= 95
-                                        ? 'text-yellow-400'
-                                        : 'text-red-400'
+                                        ? 'text-amber-600 dark:text-yellow-400'
+                                        : 'text-red-600 dark:text-red-400'
                                   }`}
                                 >
                                   {overallKPIs.averageAccuracy >= 98
@@ -870,7 +894,7 @@ export function CycleCountingPage() {
                               </div>
                             </div>
                             <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20 shadow-lg shadow-purple-500/10 transition-all duration-300 group-hover:shadow-purple-500/20">
-                              <ClipboardDocumentCheckIcon className="h-8 w-8 text-purple-400" />
+                              <ClipboardDocumentCheckIcon className="h-8 w-8 text-purple-500 dark:text-purple-400" />
                             </div>
                           </div>
                         </CardContent>
@@ -878,32 +902,32 @@ export function CycleCountingPage() {
                       <Card
                         variant="glass"
                         hover
-                        className={`group border-l-4 ${overallKPIs.pendingVariances > 0 ? 'border-l-yellow-500' : 'border-l-green-500'}`}
+                        className={`group border-l-4 ${overallKPIs.pendingVariances > 0 ? 'border-l-amber-500 dark:border-l-yellow-500' : 'border-l-green-500'}`}
                       >
                         <CardContent className="p-6">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
                                 Pending Variances
                               </p>
                               <p
-                                className={`text-4xl font-bold mt-3 tracking-tight group-hover:scale-105 transition-transform duration-300 ${overallKPIs.pendingVariances > 0 ? 'text-white' : 'text-green-400'}`}
+                                className={`text-4xl font-bold mt-3 tracking-tight group-hover:scale-105 transition-transform duration-300 ${overallKPIs.pendingVariances > 0 ? 'text-gray-900 dark:text-white' : 'text-green-600 dark:text-green-400'}`}
                               >
                                 {overallKPIs.pendingVariances}
                               </p>
                               {overallKPIs.highValueVarianceCount > 0 && (
                                 <div className="mt-2 flex items-center gap-2">
-                                  <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 rounded text-xs font-medium border border-orange-500/30">
+                                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-orange-500/20 text-amber-700 dark:text-orange-400 rounded text-xs font-medium border border-amber-200 dark:border-orange-500/30">
                                     {overallKPIs.highValueVarianceCount} high severity
                                   </span>
                                 </div>
                               )}
                             </div>
                             <div
-                              className={`p-3 rounded-xl bg-gradient-to-br ${overallKPIs.pendingVariances > 0 ? 'from-yellow-500/20 to-yellow-600/10 border border-yellow-500/20 shadow-lg shadow-yellow-500/10' : 'from-green-500/20 to-green-600/10 border border-green-500/20 shadow-lg shadow-green-500/10'} transition-all duration-300 group-hover:shadow-yellow-500/20`}
+                              className={`p-3 rounded-xl bg-gradient-to-br ${overallKPIs.pendingVariances > 0 ? 'from-amber-500/20 to-amber-600/10 dark:from-yellow-500/20 dark:to-yellow-600/10 border border-amber-500/20 dark:border-yellow-500/20 shadow-lg shadow-amber-500/10 dark:shadow-yellow-500/10' : 'from-green-500/20 to-green-600/10 border border-green-500/20 shadow-lg shadow-green-500/10'} transition-all duration-300 group-hover:shadow-amber-500/20 dark:group-hover:shadow-yellow-500/20`}
                             >
                               <ChartBarIcon
-                                className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-yellow-400' : 'text-green-400'}`}
+                                className={`h-8 w-8 ${overallKPIs.pendingVariances > 0 ? 'text-amber-500 dark:text-yellow-400' : 'text-green-500 dark:text-green-400'}`}
                               />
                             </div>
                           </div>
@@ -915,7 +939,7 @@ export function CycleCountingPage() {
                   {/* Accuracy Trend Chart */}
                   <Card variant="glass" className="p-6">
                     <CardHeader>
-                      <CardTitle className="text-white">Accuracy Trend (Last 30 Days)</CardTitle>
+                      <CardTitle>Accuracy Trend (Last 30 Days)</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="relative h-48">
@@ -938,13 +962,13 @@ export function CycleCountingPage() {
                               >
                                 <div className="relative w-full flex items-end justify-center">
                                   <div
-                                    className="w-full bg-blue-500 hover:bg-blue-400 transition-all rounded-t"
+                                    className="w-full bg-blue-400 dark:bg-blue-500 hover:bg-blue-500 dark:hover:bg-blue-400 transition-all rounded-t"
                                     style={{ height: `${Math.max(height, 5)}%` }}
                                     title={`${point.period}: ${point.accuracy.toFixed(1)}%`}
                                   />
                                 </div>
                                 {accuracyTrend.length <= 10 && (
-                                  <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
+                                  <span className="text-xs text-gray-500 dark:text-gray-500 transform -rotate-45 origin-top-left truncate w-16 text-center">
                                     {new Date(point.period).toLocaleDateString(undefined, {
                                       month: 'short',
                                       day: 'numeric',
@@ -964,35 +988,39 @@ export function CycleCountingPage() {
                     {/* Top Discrepancies */}
                     <Card variant="glass" className="p-6">
                       <CardHeader className="pb-4">
-                        <CardTitle className="text-white">Top Discrepancy SKUs</CardTitle>
+                        <CardTitle>Top Discrepancy SKUs</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="overflow-x-auto">
                           <table className="min-w-full">
                             <thead>
-                              <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                              <tr className="text-left text-sm text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                                 <th className="pb-3">SKU</th>
                                 <th className="pb-3">Name</th>
                                 <th className="pb-3 text-right">Variance Count</th>
                                 <th className="pb-3 text-right">Avg Variance %</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                               {topDiscrepancies.length === 0 ? (
                                 <tr>
-                                  <td colSpan={4} className="py-8 text-center text-gray-500">
+                                  <td colSpan={4} className="py-8 text-center text-gray-500 dark:text-gray-500">
                                     No discrepancies found
                                   </td>
                                 </tr>
                               ) : (
                                 topDiscrepancies.map((item: any, index: number) => (
-                                  <tr key={index} className="hover:bg-gray-800/50">
-                                    <td className="py-3 font-medium text-white">{item.sku}</td>
-                                    <td className="py-3 text-gray-300">{item.name}</td>
-                                    <td className="py-3 text-right text-yellow-400">
+                                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                    <td className="py-3 font-medium text-gray-900 dark:text-white">
+                                      {item.sku}
+                                    </td>
+                                    <td className="py-3 text-gray-700 dark:text-gray-300">
+                                      {item.name}
+                                    </td>
+                                    <td className="py-3 text-right text-amber-600 dark:text-yellow-400">
                                       {item.varianceCount}
                                     </td>
-                                    <td className="py-3 text-right text-orange-400">
+                                    <td className="py-3 text-right text-orange-600 dark:text-orange-400">
                                       {item.averageVariancePercent.toFixed(1)}%
                                     </td>
                                   </tr>
@@ -1007,29 +1035,33 @@ export function CycleCountingPage() {
                     {/* Zone Performance */}
                     <Card variant="glass" className="p-6">
                       <CardHeader className="pb-4">
-                        <CardTitle className="text-white">Zone Performance</CardTitle>
+                        <CardTitle>Zone Performance</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
                           {zonePerformance.length === 0 ? (
-                            <p className="text-gray-500 text-center py-8">No zone data available</p>
+                            <p className="text-gray-500 dark:text-gray-500 text-center py-8">
+                              No zone data available
+                            </p>
                           ) : (
                             zonePerformance.map((zone: any, index: number) => (
                               <div key={index} className="space-y-2">
                                 <div className="flex justify-between items-center">
-                                  <span className="font-medium text-white">Zone {zone.zone}</span>
-                                  <span className="text-sm text-gray-400">
+                                  <span className="font-medium text-gray-900 dark:text-white">
+                                    Zone {zone.zone}
+                                  </span>
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">
                                     {zone.countsCompleted} counts •{' '}
                                     {zone.averageAccuracy.toFixed(1)}% accuracy
                                   </span>
                                 </div>
-                                <div className="h-3 bg-gray-800 rounded-full overflow-hidden">
+                                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                                   <div
                                     className={`h-full transition-all ${
                                       zone.averageAccuracy >= 98
                                         ? 'bg-green-500'
                                         : zone.averageAccuracy >= 95
-                                          ? 'bg-yellow-500'
+                                          ? 'bg-amber-500 dark:bg-yellow-500'
                                           : 'bg-red-500'
                                     }`}
                                     style={{ width: `${zone.averageAccuracy}%` }}
@@ -1046,44 +1078,46 @@ export function CycleCountingPage() {
                   {/* User Performance */}
                   <Card variant="glass" className="p-6">
                     <CardHeader className="pb-4">
-                      <CardTitle className="text-white">User Performance (Last 30 Days)</CardTitle>
+                      <CardTitle>User Performance (Last 30 Days)</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="overflow-x-auto">
                         <table className="min-w-full">
                           <thead>
-                            <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                            <tr className="text-left text-sm text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                               <th className="pb-3">User</th>
                               <th className="pb-3 text-right">Counts Completed</th>
                               <th className="pb-3 text-right">Items Counted</th>
                               <th className="pb-3 text-right">Accuracy</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-800">
+                          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                             {userPerformance.length === 0 ? (
                               <tr>
-                                <td colSpan={4} className="py-8 text-center text-gray-500">
+                                <td colSpan={4} className="py-8 text-center text-gray-500 dark:text-gray-500">
                                   No performance data available
                                 </td>
                               </tr>
                             ) : (
                               userPerformance.map((user: any, index: number) => (
-                                <tr key={index} className="hover:bg-gray-800/50">
-                                  <td className="py-3 font-medium text-white">{user.name}</td>
-                                  <td className="py-3 text-right text-blue-400">
+                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                  <td className="py-3 font-medium text-gray-900 dark:text-white">
+                                    {user.name}
+                                  </td>
+                                  <td className="py-3 text-right text-blue-600 dark:text-blue-400">
                                     {user.countsCompleted}
                                   </td>
-                                  <td className="py-3 text-right text-gray-300">
+                                  <td className="py-3 text-right text-gray-700 dark:text-gray-300">
                                     {user.itemsCounted}
                                   </td>
                                   <td className="py-3 text-right">
                                     <span
                                       className={`px-2 py-1 rounded text-sm ${
                                         user.averageAccuracy >= 98
-                                          ? 'bg-green-500/20 text-green-400'
+                                          ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
                                           : user.averageAccuracy >= 95
-                                            ? 'bg-yellow-500/20 text-yellow-400'
-                                            : 'bg-red-500/20 text-red-400'
+                                            ? 'bg-amber-100 dark:bg-yellow-500/20 text-amber-700 dark:text-yellow-400'
+                                            : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
                                       }`}
                                     >
                                       {user.averageAccuracy.toFixed(1)}%
@@ -1101,15 +1135,13 @@ export function CycleCountingPage() {
                   {/* Count Type Effectiveness */}
                   <Card variant="glass" className="p-6">
                     <CardHeader className="pb-4">
-                      <CardTitle className="text-white">
-                        Count Type Effectiveness (Last 90 Days)
-                      </CardTitle>
+                      <CardTitle>Count Type Effectiveness (Last 90 Days)</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="overflow-x-auto">
                         <table className="min-w-full">
                           <thead>
-                            <tr className="text-left text-sm text-gray-400 border-b border-gray-700">
+                            <tr className="text-left text-sm text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                               <th className="pb-3">Count Type</th>
                               <th className="pb-3 text-right">Completed</th>
                               <th className="pb-3 text-right">Accuracy</th>
@@ -1117,40 +1149,40 @@ export function CycleCountingPage() {
                               <th className="pb-3 text-right">Variance Detection</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-800">
+                          <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                             {countTypeEffectiveness.map((type: any, index: number) => {
                               const formatDuration = (hours: number) => {
                                 if (hours < 1) return `${Math.round(hours * 60)}m`;
                                 return `${hours.toFixed(1)}h`;
                               };
                               return (
-                                <tr key={index} className="hover:bg-gray-800/50">
-                                  <td className="py-3 font-medium text-white">
+                                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                  <td className="py-3 font-medium text-gray-900 dark:text-white">
                                     {type.countType
                                       .replace(/_/g, ' ')
                                       .toLowerCase()
                                       .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                                   </td>
-                                  <td className="py-3 text-right text-blue-400">
+                                  <td className="py-3 text-right text-blue-600 dark:text-blue-400">
                                     {type.countsCompleted}
                                   </td>
                                   <td className="py-3 text-right">
                                     <span
                                       className={`px-2 py-1 rounded text-sm ${
                                         type.averageAccuracy >= 98
-                                          ? 'bg-green-500/20 text-green-400'
+                                          ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
                                           : type.averageAccuracy >= 95
-                                            ? 'bg-yellow-500/20 text-yellow-400'
-                                            : 'bg-red-500/20 text-red-400'
+                                            ? 'bg-amber-100 dark:bg-yellow-500/20 text-amber-700 dark:text-yellow-400'
+                                            : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
                                       }`}
                                     >
                                       {type.averageAccuracy.toFixed(1)}%
                                     </span>
                                   </td>
-                                  <td className="py-3 text-right text-gray-300">
+                                  <td className="py-3 text-right text-gray-700 dark:text-gray-300">
                                     {formatDuration(type.averageDuration)}
                                   </td>
-                                  <td className="py-3 text-right text-purple-400">
+                                  <td className="py-3 text-right text-purple-600 dark:text-purple-400">
                                     {type.varianceDetectionRate.toFixed(1)}%
                                   </td>
                                 </tr>
@@ -1166,35 +1198,35 @@ export function CycleCountingPage() {
                   {overallKPIs && (
                     <Card variant="glass" className="p-6">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
-                          <p className="text-3xl font-bold text-blue-400 tracking-tight">
+                        <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">
                             {overallKPIs.inProgressCounts}
                           </p>
-                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 uppercase tracking-wide font-medium">
                             In Progress
                           </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
-                          <p className="text-3xl font-bold text-purple-400 tracking-tight">
+                        <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 tracking-tight">
                             {overallKPIs.scheduledCounts}
                           </p>
-                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 uppercase tracking-wide font-medium">
                             Scheduled
                           </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
-                          <p className="text-3xl font-bold text-green-400 tracking-tight">
+                        <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-green-600 dark:text-green-400 tracking-tight">
                             {overallKPIs.totalItemsCounted}
                           </p>
-                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 uppercase tracking-wide font-medium">
                             Items Counted
                           </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-colors">
-                          <p className="text-3xl font-bold text-yellow-400 tracking-tight">
+                        <div className="p-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors">
+                          <p className="text-3xl font-bold text-amber-600 dark:text-yellow-400 tracking-tight">
                             {overallKPIs.totalVariances}
                           </p>
-                          <p className="text-sm text-gray-400 mt-2 uppercase tracking-wide font-medium">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 uppercase tracking-wide font-medium">
                             Total Variances
                           </p>
                         </div>
