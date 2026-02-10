@@ -1,0 +1,393 @@
+/**
+ * Design Tokens - Theme-aware color system
+ * 
+ * This file defines CSS custom properties for both light and dark modes.
+ * All components should use these tokens instead of hardcoded colors.
+ * 
+ * Light mode follows modern SaaS/ERP design standards:
+ * - Clean neutral backgrounds (slate/gray scale)
+ * - Proper WCAG contrast ratios
+ * - Subtle shadows and depth
+ * - Clear text hierarchy
+ */
+
+:root {
+  /* ============================================
+     COLOR PALETTE - BASE VALUES
+     ============================================ */
+  
+  /* Primary - Blue */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Success - Green */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+
+  /* Warning - Amber */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  /* Error - Red */
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+
+  /* Info - Slate */
+  --color-info-50: #f8fafc;
+  --color-info-100: #f1f5f9;
+  --color-info-200: #e2e8f0;
+  --color-info-300: #cbd5e1;
+  --color-info-400: #94a3b8;
+  --color-info-500: #64748b;
+  --color-info-600: #475569;
+  --color-info-700: #334155;
+  --color-info-800: #1e293b;
+  --color-info-900: #0f172a;
+}
+
+/* ============================================
+   LIGHT MODE (DEFAULT)
+   ============================================ */
+:root,
+html.light {
+  /* Background Colors */
+  --bg-base: #f8fafc;           /* Main page background */
+  --bg-surface: #ffffff;         /* Card/component background */
+  --bg-surface-elevated: #ffffff; /* Elevated surfaces (modals, dropdowns) */
+  --bg-surface-hover: #f1f5f9;   /* Hover state for surfaces */
+  --bg-surface-active: #e2e8f0;  /* Active/pressed state */
+  --bg-surface-muted: #f1f5f9;   /* Muted backgrounds */
+  --bg-backdrop: rgba(15, 23, 42, 0.5); /* Modal backdrops */
+  
+  /* Border Colors */
+  --border-default: #e2e8f0;     /* Default border */
+  --border-subtle: #f1f5f9;      /* Subtle divider */
+  --border-emphasis: #cbd5e1;    /* Emphasized border */
+  --border-focus: var(--color-primary-500); /* Focus ring */
+  --border-error: var(--color-error-400);
+  --border-success: var(--color-success-400);
+  --border-warning: var(--color-warning-400);
+
+  /* Text Colors - WCAG AA compliant */
+  --text-primary: #0f172a;       /* Headings, primary text - 15.5:1 contrast */
+  --text-secondary: #475569;     /* Secondary text - 7.1:1 contrast */
+  --text-tertiary: #64748b;      /* Muted text, placeholders - 5:1 contrast */
+  --text-disabled: #94a3b8;      /* Disabled text - 3.1:1 contrast */
+  --text-inverse: #ffffff;       /* Text on dark backgrounds */
+  --text-link: var(--color-primary-600);
+  --text-link-hover: var(--color-primary-700);
+  --text-error: var(--color-error-600);
+  --text-success: var(--color-success-600);
+  --text-warning: var(--color-warning-600);
+
+  /* Icon Colors */
+  --icon-primary: #475569;
+  --icon-secondary: #64748b;
+  --icon-tertiary: #94a3b8;
+  --icon-inverse: #ffffff;
+
+  /* Input Colors */
+  --input-bg: #ffffff;
+  --input-bg-hover: #f8fafc;
+  --input-bg-disabled: #f1f5f9;
+  --input-border: #cbd5e1;
+  --input-border-hover: #94a3b8;
+  --input-border-focus: var(--color-primary-500);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-tertiary);
+
+  /* Button Colors - Primary */
+  --btn-primary-bg: var(--color-primary-600);
+  --btn-primary-bg-hover: var(--color-primary-700);
+  --btn-primary-bg-active: var(--color-primary-800);
+  --btn-primary-text: #ffffff;
+  --btn-primary-border: transparent;
+
+  /* Button Colors - Secondary */
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-bg-hover: #f8fafc;
+  --btn-secondary-bg-active: #f1f5f9;
+  --btn-secondary-text: #334155;
+  --btn-secondary-border: #cbd5e1;
+  --btn-secondary-border-hover: #94a3b8;
+
+  /* Button Colors - Ghost */
+  --btn-ghost-bg: transparent;
+  --btn-ghost-bg-hover: #f1f5f9;
+  --btn-ghost-text: #475569;
+  --btn-ghost-text-hover: #0f172a;
+
+  /* Shadows - Light mode uses softer shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  --shadow-focus-error: 0 0 0 3px rgba(239, 68, 68, 0.15);
+
+  /* Table Colors */
+  --table-header-bg: #f8fafc;
+  --table-header-text: var(--text-secondary);
+  --table-row-bg: transparent;
+  --table-row-alt-bg: #f8fafc;
+  --table-row-hover-bg: #f1f5f9;
+  --table-border: #e2e8f0;
+
+  /* Badge Colors */
+  --badge-primary-bg: #eff6ff;
+  --badge-primary-text: #1d4ed8;
+  --badge-primary-border: #bfdbfe;
+  
+  --badge-success-bg: #f0fdf4;
+  --badge-success-text: #15803d;
+  --badge-success-border: #bbf7d0;
+  
+  --badge-warning-bg: #fffbeb;
+  --badge-warning-text: #b45309;
+  --badge-warning-border: #fde68a;
+  
+  --badge-error-bg: #fef2f2;
+  --badge-error-text: #b91c1c;
+  --badge-error-border: #fecaca;
+  
+  --badge-info-bg: #f8fafc;
+  --badge-info-text: #475569;
+  --badge-info-border: #e2e8f0;
+
+  /* Navigation Colors */
+  --nav-bg: #ffffff;
+  --nav-border: #e2e8f0;
+  --nav-item-text: var(--text-secondary);
+  --nav-item-text-hover: var(--text-primary);
+  --nav-item-bg-hover: #f1f5f9;
+  --nav-item-active-text: var(--color-primary-600);
+  --nav-item-active-bg: #eff6ff;
+
+  /* Dropdown Colors */
+  --dropdown-bg: #ffffff;
+  --dropdown-border: #e2e8f0;
+  --dropdown-shadow: var(--shadow-lg);
+  --dropdown-item-hover: #f1f5f9;
+  --dropdown-item-active: #eff6ff;
+
+  /* Modal Colors */
+  --modal-bg: #ffffff;
+  --modal-border: #e2e8f0;
+  --modal-shadow: var(--shadow-2xl);
+  --modal-overlay: rgba(15, 23, 42, 0.5);
+
+  /* Tooltip Colors */
+  --tooltip-bg: #1e293b;
+  --tooltip-text: #ffffff;
+
+  /* Scrollbar Colors */
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+html.dark {
+  /* Background Colors */
+  --bg-base: #0f172a;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.05);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-surface-active: rgba(255, 255, 255, 0.12);
+  --bg-surface-muted: rgba(255, 255, 255, 0.02);
+  --bg-backdrop: rgba(0, 0, 0, 0.7);
+  
+  /* Border Colors */
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-emphasis: rgba(255, 255, 255, 0.12);
+  --border-focus: var(--color-primary-400);
+  --border-error: var(--color-error-500);
+  --border-success: var(--color-success-500);
+  --border-warning: var(--color-warning-500);
+
+  /* Text Colors - WCAG AA compliant on dark */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-disabled: #64748b;
+  --text-inverse: #0f172a;
+  --text-link: var(--color-primary-400);
+  --text-link-hover: var(--color-primary-300);
+  --text-error: var(--color-error-400);
+  --text-success: var(--color-success-400);
+  --text-warning: var(--color-warning-400);
+
+  /* Icon Colors */
+  --icon-primary: #e2e8f0;
+  --icon-secondary: #94a3b8;
+  --icon-tertiary: #64748b;
+  --icon-inverse: #0f172a;
+
+  /* Input Colors */
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-bg-hover: rgba(255, 255, 255, 0.08);
+  --input-bg-disabled: rgba(255, 255, 255, 0.02);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --input-border-hover: rgba(255, 255, 255, 0.15);
+  --input-border-focus: var(--color-primary-400);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-tertiary);
+
+  /* Button Colors - Primary */
+  --btn-primary-bg: var(--color-primary-500);
+  --btn-primary-bg-hover: var(--color-primary-400);
+  --btn-primary-bg-active: var(--color-primary-600);
+  --btn-primary-text: #ffffff;
+  --btn-primary-border: transparent;
+
+  /* Button Colors - Secondary */
+  --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+  --btn-secondary-bg-hover: rgba(255, 255, 255, 0.08);
+  --btn-secondary-bg-active: rgba(255, 255, 255, 0.12);
+  --btn-secondary-text: #e2e8f0;
+  --btn-secondary-border: rgba(255, 255, 255, 0.1);
+  --btn-secondary-border-hover: rgba(255, 255, 255, 0.15);
+
+  /* Button Colors - Ghost */
+  --btn-ghost-bg: transparent;
+  --btn-ghost-bg-hover: rgba(255, 255, 255, 0.05);
+  --btn-ghost-text: #cbd5e1;
+  --btn-ghost-text-hover: #ffffff;
+
+  /* Shadows - Dark mode uses glow effects */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-focus: 0 0 0 3px rgba(96, 165, 250, 0.25);
+  --shadow-focus-error: 0 0 0 3px rgba(248, 113, 113, 0.25);
+
+  /* Table Colors */
+  --table-header-bg: rgba(255, 255, 255, 0.03);
+  --table-header-text: var(--text-secondary);
+  --table-row-bg: transparent;
+  --table-row-alt-bg: rgba(255, 255, 255, 0.02);
+  --table-row-hover-bg: rgba(255, 255, 255, 0.05);
+  --table-border: rgba(255, 255, 255, 0.08);
+
+  /* Badge Colors */
+  --badge-primary-bg: rgba(59, 130, 246, 0.15);
+  --badge-primary-text: #93c5fd;
+  --badge-primary-border: rgba(59, 130, 246, 0.3);
+  
+  --badge-success-bg: rgba(34, 197, 94, 0.15);
+  --badge-success-text: #86efac;
+  --badge-success-border: rgba(34, 197, 94, 0.3);
+  
+  --badge-warning-bg: rgba(245, 158, 11, 0.15);
+  --badge-warning-text: #fcd34d;
+  --badge-warning-border: rgba(245, 158, 11, 0.3);
+  
+  --badge-error-bg: rgba(239, 68, 68, 0.15);
+  --badge-error-text: #fca5a5;
+  --badge-error-border: rgba(239, 68, 68, 0.3);
+  
+  --badge-info-bg: rgba(148, 163, 184, 0.15);
+  --badge-info-text: #cbd5e1;
+  --badge-info-border: rgba(148, 163, 184, 0.3);
+
+  /* Navigation Colors */
+  --nav-bg: rgba(255, 255, 255, 0.02);
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-item-text: var(--text-secondary);
+  --nav-item-text-hover: var(--text-primary);
+  --nav-item-bg-hover: rgba(255, 255, 255, 0.05);
+  --nav-item-active-text: var(--color-primary-400);
+  --nav-item-active-bg: rgba(59, 130, 246, 0.1);
+
+  /* Dropdown Colors */
+  --dropdown-bg: #1e293b;
+  --dropdown-border: rgba(255, 255, 255, 0.1);
+  --dropdown-shadow: var(--shadow-xl);
+  --dropdown-item-hover: rgba(255, 255, 255, 0.05);
+  --dropdown-item-active: rgba(59, 130, 246, 0.15);
+
+  /* Modal Colors */
+  --modal-bg: #1e293b;
+  --modal-border: rgba(255, 255, 255, 0.1);
+  --modal-shadow: var(--shadow-2xl);
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Tooltip Colors */
+  --tooltip-bg: #f8fafc;
+  --tooltip-text: #0f172a;
+
+  /* Scrollbar Colors */
+  --scrollbar-track: rgba(255, 255, 255, 0.02);
+  --scrollbar-thumb: rgba(59, 130, 246, 0.5);
+  --scrollbar-thumb-hover: rgba(59, 130, 246, 0.7);
+}
+
+/* ============================================
+   UTILITY CLASSES FROM TOKENS
+   ============================================ */
+
+/* Background utilities */
+.bg-base { background-color: var(--bg-base); }
+.bg-surface { background-color: var(--bg-surface); }
+.bg-surface-elevated { background-color: var(--bg-surface-elevated); }
+.bg-surface-hover { background-color: var(--bg-surface-hover); }
+.bg-surface-muted { background-color: var(--bg-surface-muted); }
+
+/* Text utilities */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-disabled { color: var(--text-disabled); }
+.text-inverse { color: var(--text-inverse); }
+
+/* Border utilities */
+.border-default { border-color: var(--border-default); }
+.border-subtle { border-color: var(--border-subtle); }
+.border-emphasis { border-color: var(--border-emphasis); }
+
+/* Shadow utilities */
+.shadow-theme-sm { box-shadow: var(--shadow-sm); }
+.shadow-theme-md { box-shadow: var(--shadow-md); }
+.shadow-theme-lg { box-shadow: var(--shadow-lg); }
+.shadow-theme-xl { box-shadow: var(--shadow-xl); }
+.shadow-focus { box-shadow: var(--shadow-focus); }

@@ -1,5 +1,8 @@
 /**
  * Button component - Theme-aware (light/dark mode)
+ *
+ * Uses CSS custom properties from tokens.css for consistent theming.
+ * Provides proper contrast in both light and dark modes.
  */
 
 import { ButtonHTMLAttributes, forwardRef } from 'react';
@@ -35,20 +38,39 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-all duration-300 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50';
+      'inline-flex items-center justify-center font-medium transition-all duration-200 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50';
 
     const variantStyles = {
-      primary: 'btn-primary text-white rounded-xl',
-      secondary:
-        'dark:btn-secondary dark:text-gray-200 dark:border-white/[0.1] bg-gray-100 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-white/[0.08] dark:hover:border-white/[0.15] transition-all',
-      success:
-        'bg-gradient-to-r from-success-500 to-success-600 text-white rounded-xl hover:shadow-lg hover:shadow-success-500/25 hover:-translate-y-0.5 transition-all',
-      danger:
-        'bg-gradient-to-r from-error-500 to-error-600 text-white rounded-xl hover:shadow-lg hover:shadow-error-500/25 hover:-translate-y-0.5 transition-all',
-      warning:
-        'bg-gradient-to-r from-warning-500 to-warning-600 text-white rounded-xl hover:shadow-lg hover:shadow-warning-500/25 hover:-translate-y-0.5 transition-all',
-      ghost:
-        'bg-transparent dark:text-gray-300 text-gray-600 dark:hover:bg-white/[0.05] dark:hover:text-white hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-all',
+      primary: ['btn-primary text-white rounded-xl'].join(' '),
+      secondary: [
+        'btn-secondary rounded-xl',
+        // Light mode: white bg with gray border, Dark mode: transparent with subtle border
+        'text-gray-700 dark:text-gray-200',
+      ].join(' '),
+      success: [
+        'bg-green-600 dark:bg-green-500 text-white rounded-xl',
+        'hover:bg-green-700 dark:hover:bg-green-400',
+        'shadow-sm hover:shadow-md',
+        'dark:shadow-none dark:hover:shadow-green-500/25',
+      ].join(' '),
+      danger: [
+        'bg-red-600 dark:bg-red-500 text-white rounded-xl',
+        'hover:bg-red-700 dark:hover:bg-red-400',
+        'shadow-sm hover:shadow-md',
+        'dark:shadow-none dark:hover:shadow-red-500/25',
+      ].join(' '),
+      warning: [
+        'bg-amber-500 dark:bg-amber-400 text-white dark:text-amber-950 rounded-xl',
+        'hover:bg-amber-600 dark:hover:bg-amber-300',
+        'shadow-sm hover:shadow-md',
+        'dark:shadow-none dark:hover:shadow-amber-500/25',
+      ].join(' '),
+      ghost: [
+        'bg-transparent rounded-xl',
+        'text-gray-600 dark:text-gray-300',
+        'hover:bg-gray-100 dark:hover:bg-white/[0.05]',
+        'hover:text-gray-900 dark:hover:text-white',
+      ].join(' '),
     };
 
     const sizeStyles = {

@@ -150,14 +150,14 @@ function MobileMenu({
 
       {/* Mobile Menu Drawer */}
       <div className="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] md:hidden animate-slide-in-from-right">
-        <div className="dark:glass-card bg-white h-full flex flex-col shadow-2xl">
+        <div className="bg-white dark:glass-card h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-none">
           {/* Header */}
-          <div className="dark:border-b dark:border-white/[0.08] border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4 flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold dark:text-white text-gray-900 truncate">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                 {userName}
               </h2>
-              <p className="text-sm dark:text-gray-400 text-gray-500 truncate">{userEmail}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
             </div>
             <button
               onClick={onClose}
@@ -1554,7 +1554,7 @@ export function Header() {
 
   return (
     <>
-      <header className="dark:bg-white/[0.02] bg-white border-b dark:border-white/[0.08] border-primary-300 shadow-md dark:shadow-none shadow-primary-200/60 relative z-50">
+      <header className="bg-white dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/[0.08] shadow-sm dark:shadow-none relative z-50">
         <div className="w-full">
           <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
             {/* Left side - User info */}

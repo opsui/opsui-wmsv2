@@ -1,5 +1,9 @@
 /**
  * Card component - Theme-aware (light/dark mode)
+ *
+ * Uses CSS custom properties from tokens.css for consistent theming.
+ * Light mode: Clean white cards with subtle shadows
+ * Dark mode: Glassmorphism effect with subtle transparency
  */
 
 import { type HTMLAttributes } from 'react';
@@ -27,16 +31,31 @@ export function Card({
   children,
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-xl transition-all duration-300';
+  const baseStyles = 'rounded-xl transition-all duration-200';
 
   const variantStyles = {
-    default:
-      'dark:bg-white/[0.03] dark:border dark:border-white/[0.08] bg-white border border-gray-200 shadow-sm',
-    bordered:
-      'dark:bg-white/[0.03] dark:border dark:border-white/[0.12] bg-white border border-gray-300 shadow-sm',
-    elevated:
-      'dark:bg-white/[0.03] dark:border dark:border-white/[0.08] dark:shadow-premium bg-white border border-gray-200 shadow-md',
-    glass: 'dark:glass-card bg-white/80 backdrop-blur-md border border-gray-200 shadow-sm',
+    default: [
+      // Light mode: white background with subtle border
+      'bg-white dark:bg-white/[0.03]',
+      'border border-gray-200 dark:border-white/[0.08]',
+      'shadow-sm dark:shadow-none',
+    ].join(' '),
+    bordered: [
+      // Light mode: slightly more prominent border
+      'bg-white dark:bg-white/[0.03]',
+      'border-2 border-gray-300 dark:border-white/[0.12]',
+      'shadow-sm dark:shadow-none',
+    ].join(' '),
+    elevated: [
+      // Light mode: more prominent shadow
+      'bg-white dark:bg-white/[0.03]',
+      'border border-gray-200 dark:border-white/[0.08]',
+      'shadow-md dark:shadow-premium',
+    ].join(' '),
+    glass: [
+      // Glass effect - different for light/dark
+      'glass-card',
+    ].join(' '),
   };
 
   const paddingStyles = {
@@ -46,7 +65,7 @@ export function Card({
     lg: 'p-8',
   };
 
-  const hoverStyles = hover ? 'card-hover cursor-pointer dark:card-hover' : '';
+  const hoverStyles = hover ? 'card-hover cursor-pointer' : '';
 
   return (
     <div
@@ -84,7 +103,8 @@ export function CardTitle({ className, children, ...props }: CardTitleProps) {
   return (
     <h3
       className={cn(
-        'text-lg font-semibold dark:text-white text-gray-900 tracking-tight',
+        'text-lg font-semibold tracking-tight',
+        'text-gray-900 dark:text-white',
         className
       )}
       {...props}
@@ -99,7 +119,7 @@ export interface CardDescriptionProps extends HTMLAttributes<HTMLParagraphElemen
 export function CardDescription({ className, children, ...props }: CardDescriptionProps) {
   return (
     <p
-      className={cn('text-sm dark:text-gray-400 text-gray-600 leading-relaxed', className)}
+      className={cn('text-sm leading-relaxed', 'text-gray-600 dark:text-gray-400', className)}
       {...props}
     >
       {children}
