@@ -242,8 +242,7 @@ function UserRolesPage() {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-          </div>
+            <div className="flex items-center gap-4"></div>
             <div className="flex items-center gap-3">
               <Button
                 variant="secondary"

@@ -83,9 +83,9 @@
 :root,
 html.light {
   /* Background Colors */
-  --bg-base: #f8fafc;           /* Main page background */
-  --bg-surface: #ffffff;         /* Card/component background */
-  --bg-surface-elevated: #ffffff; /* Elevated surfaces (modals, dropdowns) */
+  --bg-base: #e8f4fc;           /* Main page background - light blue */
+  --bg-surface: #ffffff;         /* Card/component background - white */
+  --bg-surface-elevated: #ffffff; /* Elevated surfaces (modals, dropdowns) - white */
   --bg-surface-hover: #f1f5f9;   /* Hover state for surfaces */
   --bg-surface-active: #e2e8f0;  /* Active/pressed state */
   --bg-surface-muted: #f1f5f9;   /* Muted backgrounds */
@@ -160,11 +160,11 @@ html.light {
   --shadow-focus-error: 0 0 0 3px rgba(239, 68, 68, 0.15);
 
   /* Table Colors */
-  --table-header-bg: #f8fafc;
+  --table-header-bg: #ffffff;
   --table-header-text: var(--text-secondary);
   --table-row-bg: transparent;
-  --table-row-alt-bg: #f8fafc;
-  --table-row-hover-bg: #f1f5f9;
+  --table-row-alt-bg: #ffffff;
+  --table-row-hover-bg: #f8fafc;
   --table-border: #e2e8f0;
 
   /* Badge Colors */

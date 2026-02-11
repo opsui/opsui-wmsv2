@@ -141,8 +141,7 @@ export function BusinessRulesPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-          </div>
+          <div className="flex items-center gap-4 mb-4"></div>
           <h1 className="text-3xl font-bold text-white">Business Rules</h1>
           <p className="mt-2 text-gray-400">
             Configure automated decision logic for order allocation, picking, and shipping

@@ -112,7 +112,10 @@ export function BinUtilizationHeatmap({
   const sortedZones = Object.keys(binsByZone).sort();
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
         <CardTitle>Bin Utilization</CardTitle>
         <ZoneFilter value={selectedZone} onChange={setSelectedZone} />
@@ -125,12 +128,17 @@ export function BinUtilizationHeatmap({
               .filter(z => selectedZone === 'ALL' || z.zone === selectedZone)
               .slice(0, 4)
               .map(zone => (
-                <div key={zone.zone} className="p-3 rounded-xl bg-white/5 border border-white/10">
-                  <div className="text-xs text-gray-400 mb-1">Zone {zone.zone}</div>
-                  <div className="text-2xl font-bold text-white">
+                <div
+                  key={zone.zone}
+                  className="p-3 rounded-xl dark:bg-white/[0.05] bg-gray-50 dark:border dark:border-white/[0.08] border-gray-200 shadow-sm"
+                >
+                  <div className="text-xs dark:text-gray-400 text-gray-600 mb-1">
+                    Zone {zone.zone}
+                  </div>
+                  <div className="text-2xl font-bold dark:text-white text-gray-900">
                     {Math.round(zone.averageUtilization)}%
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs dark:text-gray-500 text-gray-600 mt-1">
                     {zone.occupiedBins}/{zone.totalBins} bins
                     {zone.overCapacityBins > 0 && (
                       <span className="ml-2 text-red-400">({zone.overCapacityBins} over)</span>

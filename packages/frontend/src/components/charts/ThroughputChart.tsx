@@ -124,64 +124,73 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
   };
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
         <CardTitle>Orders Throughput</CardTitle>
         <TimeRangeSelector value={selectedRange} onChange={handleRangeChange} />
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="dark:stroke-white/[0.08] stroke-gray-200"
-            />
-            <XAxis
-              dataKey="period"
-              tickFormatter={formatPeriodLabel}
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-              interval="preserveStartEnd"
-            />
-            <YAxis className="dark:fill-gray-500 fill-gray-600" tick={{ fontSize: 11 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              labelFormatter={formatPeriodLabel}
-              itemStyle={{ color: '#fff' }}
-            />
-            <Legend
-              wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={value => (
-                <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
-              )}
-            />
-            <Line
-              type="monotone"
-              dataKey="picked"
-              stroke={COLORS.picked}
-              strokeWidth={2.5}
-              dot={{ r: 4, fill: COLORS.picked, strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: COLORS.picked, strokeWidth: 0 }}
-              name="Picked"
-            />
-            <Line
-              type="monotone"
-              dataKey="shipped"
-              stroke={COLORS.shipped}
-              strokeWidth={2.5}
-              dot={{ r: 4, fill: COLORS.shipped, strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: COLORS.shipped, strokeWidth: 0 }}
-              name="Shipped"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {/* Subtle glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="dark:stroke-white/[0.08] stroke-gray-200"
+              />
+              <XAxis
+                dataKey="period"
+                tickFormatter={formatPeriodLabel}
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis className="dark:fill-gray-500 fill-gray-600" tick={{ fontSize: 11 }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                }}
+                labelFormatter={formatPeriodLabel}
+                itemStyle={{ color: '#fff' }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                formatter={value => (
+                  <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
+                )}
+              />
+              <Line
+                type="monotone"
+                dataKey="picked"
+                stroke={COLORS.picked}
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: COLORS.picked, strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: COLORS.picked, strokeWidth: 0 }}
+                name="Picked"
+              />
+              <Line
+                type="monotone"
+                dataKey="shipped"
+                stroke={COLORS.shipped}
+                strokeWidth={2.5}
+                dot={{ r: 4, fill: COLORS.shipped, strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: COLORS.shipped, strokeWidth: 0 }}
+                name="Shipped"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

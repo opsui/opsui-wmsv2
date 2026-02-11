@@ -11,11 +11,7 @@ import { purchasingService } from '../services/PurchasingService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole } from '@opsui/shared';
-import type {
-  RequisitionStatus,
-  RFQStatus,
-  PurchaseOrderStatus,
-} from '@opsui/shared';
+import type { RequisitionStatus, RFQStatus, PurchaseOrderStatus } from '@opsui/shared';
 
 const router = Router();
 

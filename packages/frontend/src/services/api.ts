@@ -1030,11 +1030,13 @@ export const useOrderQueue = (params?: {
   page?: number;
   limit?: number;
   enabled?: boolean;
+  refetchOnMount?: boolean | 'always';
 }) => {
   return useQuery({
     queryKey: ['orders', 'queue', params],
     queryFn: () => orderApi.getOrderQueue(params),
     enabled: params?.enabled ?? true,
+    refetchOnMount: params?.refetchOnMount,
   });
 };
 

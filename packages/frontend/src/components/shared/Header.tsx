@@ -1020,8 +1020,24 @@ export function Header() {
       });
     }
 
-    // Inventory Management Group - for supervisors, admins, stock controllers, and pickers (Phase 2 features)
-    // Only show when effective role is ADMIN, SUPERVISOR, STOCK_CONTROLLER, or PICKER
+    // Picking Group - for pickers (Order Queue is their primary interface)
+    if (effectiveRole === UserRole.PICKER) {
+      groups.push({
+        key: 'picking',
+        label: 'Picking',
+        icon: ClipboardDocumentListIcon,
+        items: [
+          {
+            key: 'order-queue',
+            label: 'Order Queue',
+            path: '/orders',
+            icon: QueueListIcon,
+          },
+        ],
+      });
+    }
+
+    // Inventory Management Group - different items based on role
     if (
       effectiveRole === UserRole.SUPERVISOR ||
       effectiveRole === UserRole.ADMIN ||
@@ -1035,59 +1051,89 @@ export function Header() {
         icon: React.ComponentType<{ className?: string }>;
       }> = [];
 
-      // Quick Adjust - only for supervisors and admins
-      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+      // Stock Controller only sees Cycle Counting
+      if (effectiveRole === UserRole.STOCK_CONTROLLER) {
         items.push({
-          key: 'quick-adjust',
-          label: 'Quick Adjust',
-          path: '/stock-control?tab=quick-actions',
-          icon: AdjustmentsHorizontalIcon,
+          key: 'cycle-counting',
+          label: 'Cycle Counting',
+          path: '/cycle-counting',
+          icon: ClipboardDocumentListIcon,
         });
-      }
+      } else {
+        // Admin, Supervisor, and Picker see more items
+        // Order Queue - NOT for Stock Controller (handled in Picking group for Pickers)
+        if (effectiveRole !== UserRole.PICKER) {
+          items.push({
+            key: 'order-queue',
+            label: 'Order Queue',
+            path: '/orders',
+            icon: QueueListIcon,
+          });
+        }
 
-      // Cycle Counting - available to all roles in this group
-      // Schedule Management is accessible as a tab within the Cycle Counting page
-      items.push({
-        key: 'cycle-counting',
-        label: 'Cycle Counting',
-        path: '/cycle-counting',
-        icon: ClipboardDocumentListIcon,
-      });
-
-      // Bin Locations, Location Capacity, Bin Utilization, Quality Control - only for supervisors and admins
-      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+        // Stock Control - available to admins, supervisors, and pickers
         items.push({
-          key: 'bin-locations',
-          label: 'Bin Locations',
-          path: '/bin-locations',
-          icon: CubeIcon,
-        });
-        items.push({
-          key: 'location-capacity',
-          label: 'Location Capacity',
-          path: '/location-capacity',
+          key: 'stock-control',
+          label: 'Stock Control',
+          path: '/stock-control',
           icon: ScaleIcon,
         });
+
+        // Quick Adjust - only for supervisors and admins
+        if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+          items.push({
+            key: 'quick-adjust',
+            label: 'Quick Adjust',
+            path: '/stock-control?tab=quick-actions',
+            icon: AdjustmentsHorizontalIcon,
+          });
+        }
+
+        // Cycle Counting - available to admins, supervisors, and pickers
         items.push({
-          key: 'bin-utilization',
-          label: 'Bin Utilization',
-          path: '/stock-control?tab=analytics',
-          icon: ChartBarIcon,
+          key: 'cycle-counting',
+          label: 'Cycle Counting',
+          path: '/cycle-counting',
+          icon: ClipboardDocumentListIcon,
         });
-        items.push({
-          key: 'quality-control',
-          label: 'Quality Control',
-          path: '/quality-control',
-          icon: ShieldCheckIcon,
-        });
+
+        // Bin Locations, Location Capacity, Bin Utilization, Quality Control - only for supervisors and admins
+        if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+          items.push({
+            key: 'bin-locations',
+            label: 'Bin Locations',
+            path: '/bin-locations',
+            icon: CubeIcon,
+          });
+          items.push({
+            key: 'location-capacity',
+            label: 'Location Capacity',
+            path: '/location-capacity',
+            icon: ScaleIcon,
+          });
+          items.push({
+            key: 'bin-utilization',
+            label: 'Bin Utilization',
+            path: '/stock-control?tab=analytics',
+            icon: ChartBarIcon,
+          });
+          items.push({
+            key: 'quality-control',
+            label: 'Quality Control',
+            path: '/quality-control',
+            icon: ShieldCheckIcon,
+          });
+        }
       }
 
-      groups.push({
-        key: 'inventory',
-        label: 'Inventory',
-        icon: CubeIcon,
-        items,
-      });
+      if (items.length > 0) {
+        groups.push({
+          key: 'inventory',
+          label: 'Inventory',
+          icon: CubeIcon,
+          items,
+        });
+      }
     }
 
     // Warehouse Operations Group - for supervisors, admins, and pickers
@@ -1104,7 +1150,7 @@ export function Header() {
         icon: React.ComponentType<{ className?: string }>;
       }> = [];
 
-      // Product Search - available to pickers, supervisors, admins, and stock controllers
+      // Product Search - available to pickers, supervisors, admins
       items.push({
         key: 'search',
         label: 'Product Search',
@@ -1148,7 +1194,7 @@ export function Header() {
         icon: MapIcon,
       });
 
-      // Shipped Orders - available to pickers, packers, supervisors, and admins
+      // Shipped Orders - available to pickers, supervisors, and admins
       items.push({
         key: 'shipped-orders',
         label: 'Shipped Orders',

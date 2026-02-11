@@ -79,18 +79,21 @@ function MetricCard({
 }) {
   const colorStyles = {
     primary:
-      'dark:bg-primary-500/10 bg-primary-500/10 dark:text-primary-400 text-primary-600 dark:border-primary-500/20 border-primary-500/30',
+      'dark:bg-primary-500/15 bg-primary-500/15 dark:text-primary-400 text-primary-600 dark:border-primary-500/20 border-primary-500/30',
     success:
-      'dark:bg-success-500/10 bg-success-500/10 dark:text-success-400 text-success-600 dark:border-success-500/20 border-success-500/30',
+      'dark:bg-success-500/15 bg-success-500/15 dark:text-success-400 text-success-600 dark:border-success-500/20 border-success-500/30',
     warning:
-      'dark:bg-warning-500/10 bg-warning-500/10 dark:text-warning-400 text-warning-600 dark:border-warning-500/20 border-warning-500/30',
+      'dark:bg-warning-500/15 bg-warning-500/15 dark:text-warning-400 text-warning-600 dark:border-warning-500/20 border-warning-500/30',
     error:
-      'dark:bg-error-500/10 bg-error-500/10 dark:text-error-400 text-error-600 dark:border-error-500/20 border-error-500/30',
+      'dark:bg-error-500/15 bg-error-500/15 dark:text-error-400 text-error-600 dark:border-error-500/20 border-error-500/30',
   };
 
   return (
     <div onClick={onClick} className={`${onClick ? 'cursor-pointer' : ''}`}>
-      <Card variant="glass" className="card-hover group">
+      <Card
+        variant="glass"
+        className="card-hover shadow-lg dark:shadow-blue-500/5 shadow-gray-200/50 group"
+      >
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -102,7 +105,7 @@ function MetricCard({
               </p>
             </div>
             <div
-              className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110`}
+              className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none`}
             >
               <Icon className="h-7 w-7" />
             </div>

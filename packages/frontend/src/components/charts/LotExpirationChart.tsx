@@ -92,7 +92,10 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
     selectedUrgency === 'ALL' ? data : data.filter(item => item.urgency === selectedUrgency);
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
         <CardTitle>Expiring Lots (FEFO)</CardTitle>
         <UrgencyFilter value={selectedUrgency} onChange={setSelectedUrgency} />
@@ -100,19 +103,19 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
       <CardContent>
         {/* Summary Stats */}
         <div className="mb-4 grid grid-cols-3 gap-3">
-          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+          <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/20 shadow-sm">
             <div className="text-xs text-red-400 mb-1">Expired/Critical</div>
             <div className="text-2xl font-bold text-red-400">
               {data.filter(d => d.urgency === 'CRITICAL').length}
             </div>
           </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <div className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/20 shadow-sm">
             <div className="text-xs text-amber-400 mb-1">Warning (≤14 days)</div>
             <div className="text-2xl font-bold text-amber-400">
               {data.filter(d => d.urgency === 'WARNING').length}
             </div>
           </div>
-          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+          <div className="p-3 rounded-xl bg-blue-500/15 border border-blue-500/20 shadow-sm">
             <div className="text-xs text-blue-400 mb-1">Coming Up (≤30 days)</div>
             <div className="text-2xl font-bold text-blue-400">
               {data.filter(d => d.urgency === 'INFO').length}
@@ -121,19 +124,31 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
         </div>
 
         {/* Timeline Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl dark:bg-white/[0.02] bg-gray-50/50 dark:border dark:border-white/[0.04] border-gray-200">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">SKU</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Name</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Lot</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Expires</th>
-                <th className="text-center py-3 px-4 text-gray-400 font-medium text-sm">
+              <tr className="border-b dark:border-white/10 border-gray-200">
+                <th className="text-left py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
+                  SKU
+                </th>
+                <th className="text-left py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
+                  Name
+                </th>
+                <th className="text-left py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
+                  Lot
+                </th>
+                <th className="text-left py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
+                  Expires
+                </th>
+                <th className="text-center py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
                   Days Left
                 </th>
-                <th className="text-right py-3 px-4 text-gray-400 font-medium text-sm">Qty</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-medium text-sm">Location</th>
+                <th className="text-right py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
+                  Qty
+                </th>
+                <th className="text-left py-3 px-4 dark:text-gray-400 text-gray-600 font-medium text-sm">
+                  Location
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -144,19 +159,21 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
                 return (
                   <tr
                     key={`${item.sku}-${item.lotNumber}-${index}`}
-                    className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors ${styles.bg}`}
+                    className={`border-b dark:border-white/5 border-gray-100 dark:hover:bg-white/[0.02] hover:bg-gray-100/50 transition-colors ${styles.bg}`}
                   >
                     <td className="py-3 px-4">
-                      <span className="text-white font-medium">{item.sku}</span>
+                      <span className="dark:text-white text-gray-900 font-medium">{item.sku}</span>
                     </td>
-                    <td className="py-3 px-4 text-gray-300 text-sm">{item.name}</td>
+                    <td className="py-3 px-4 dark:text-gray-300 text-gray-700 text-sm">
+                      {item.name}
+                    </td>
                     <td className="py-3 px-4">
                       <span className="dark:text-gray-200 text-gray-800 font-mono text-xs">
                         {item.lotNumber}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-gray-300 text-sm">
+                      <span className="dark:text-gray-300 text-gray-700 text-sm">
                         {item.expirationDate.toLocaleDateString()}
                       </span>
                     </td>
@@ -168,10 +185,12 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
                         {isExpired ? 'EXPIRED' : `${Math.abs(item.daysUntilExpiration)} days`}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right text-white font-medium">
+                    <td className="py-3 px-4 text-right dark:text-white text-gray-900 font-medium">
                       {item.available}
                     </td>
-                    <td className="py-3 px-4 text-gray-400 text-sm">{item.binLocation}</td>
+                    <td className="py-3 px-4 dark:text-gray-400 text-gray-600 text-sm">
+                      {item.binLocation}
+                    </td>
                   </tr>
                 );
               })}
@@ -181,8 +200,8 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
 
         {/* Timeline Visualization */}
         <div className="mt-6">
-          <div className="text-sm text-gray-400 mb-3">Expiration Timeline</div>
-          <div className="relative h-4 bg-gray-700 rounded-full overflow-hidden">
+          <div className="text-sm dark:text-gray-400 text-gray-600 mb-3">Expiration Timeline</div>
+          <div className="relative h-4 dark:bg-gray-700 bg-gray-200 rounded-full overflow-hidden shadow-inner">
             {/* Critical zone (expired to 7 days) */}
             <div className="absolute left-0 top-0 h-full bg-red-500" style={{ width: '23%' }} />
             {/* Warning zone (7-14 days) */}
@@ -239,7 +258,7 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
           </div>
 
           {/* Timeline labels */}
-          <div className="flex justify-between text-xs text-gray-500 mt-2">
+          <div className="flex justify-between text-xs dark:text-gray-500 text-gray-600 mt-2">
             <span>Expired</span>
             <span>7 days</span>
             <span>14 days</span>

@@ -19,11 +19,7 @@ import {
   Header,
 } from '@/components/shared';
 import { useQuery } from '@tanstack/react-query';
-import {
-  MagnifyingGlassIcon,
-  CubeIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CubeIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores';

@@ -14,13 +14,13 @@ import { useAuthStore } from '@/stores';
 import { UserRole } from '@opsui/shared';
 
 // Paths that require ADMIN role (admin-only pages)
+// Note: /cycle-counting is NOT here because pickers can also access it
 const ADMIN_PATHS = [
   '/dashboard',
   '/exceptions',
   '/business-rules',
   '/integrations',
   '/reports',
-  '/cycle-counting',
   '/location-capacity',
   '/quality-control',
   '/users',

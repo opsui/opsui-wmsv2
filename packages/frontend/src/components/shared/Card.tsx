@@ -35,22 +35,22 @@ export function Card({
 
   const variantStyles = {
     default: [
-      // Light mode: white background with subtle border
+      // Light mode: white background with subtle border and shadow
       'bg-white dark:bg-white/[0.03]',
-      'border border-gray-200 dark:border-white/[0.08]',
+      'border border-gray-100 dark:border-white/[0.08]',
       'shadow-sm dark:shadow-none',
     ].join(' '),
     bordered: [
-      // Light mode: slightly more prominent border
+      // Light mode: white with more prominent border
       'bg-white dark:bg-white/[0.03]',
-      'border-2 border-gray-300 dark:border-white/[0.12]',
+      'border-2 border-gray-200 dark:border-white/[0.12]',
       'shadow-sm dark:shadow-none',
     ].join(' '),
     elevated: [
-      // Light mode: more prominent shadow
+      // Light mode: white with nice shadow
       'bg-white dark:bg-white/[0.03]',
-      'border border-gray-200 dark:border-white/[0.08]',
-      'shadow-md dark:shadow-premium',
+      'border border-gray-100 dark:border-white/[0.08]',
+      'shadow-lg dark:shadow-premium',
     ].join(' '),
     glass: [
       // Glass effect - different for light/dark

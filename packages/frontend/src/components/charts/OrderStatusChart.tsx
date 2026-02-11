@@ -129,72 +129,82 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
   }
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader>
         <CardTitle>Order Status Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={renderLabel}
-              outerRadius={100}
-              innerRadius={60}
-              dataKey="count"
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  stroke="rgba(255,255,255,0.2)"
-                  strokeWidth={2}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              itemStyle={{ color: '#fff' }}
-              formatter={(value: any, name?: string) => [
-                `${value || 0} (${(((value || 0) / total) * 100).toFixed(1)}%)`,
-                name || '',
-              ]}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {/* Subtle glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderLabel}
+                outerRadius={100}
+                innerRadius={60}
+                dataKey="count"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth={3}
+                    style={{
+                      filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15))',
+                    }}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                }}
+                itemStyle={{ color: '#fff' }}
+                formatter={(value: any, name?: string) => [
+                  `${value || 0} (${(((value || 0) / total) * 100).toFixed(1)}%)`,
+                  name || '',
+                ]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Summary stats */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           {chartData.slice(0, 6).map(item => (
             <div
               key={item.status}
-              className="flex items-center justify-between p-2.5 rounded-lg dark:bg-white/[0.03] bg-gray-50 dark:border dark:border-white/[0.05] border-gray-100"
+              className="flex items-center justify-between p-3 rounded-xl dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none transition-all duration-200 hover:scale-[1.02] cursor-default"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className="w-3 h-3 rounded-full shadow-sm"
+                  className="w-3.5 h-3.5 rounded-full"
                   style={{
                     backgroundColor: item.color,
-                    boxShadow: `0 0 8px ${item.color}40`,
+                    boxShadow: `0 0 12px ${item.color}60, 0 0 4px ${item.color}`,
                   }}
                 />
-                <span className="dark:text-gray-400 text-gray-600 text-sm font-medium">
+                <span className="dark:text-gray-300 text-gray-700 text-sm font-medium">
                   {item.name}
                 </span>
               </div>
-              <span className="dark:text-white text-gray-900 font-semibold text-sm">
-                {item.count}
-              </span>
+              <span className="dark:text-white text-gray-900 font-bold text-sm">{item.count}</span>
             </div>
           ))}
         </div>

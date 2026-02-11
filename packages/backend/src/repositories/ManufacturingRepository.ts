@@ -8,11 +8,7 @@
 
 import { query } from '../db/client';
 import { BaseRepository } from './BaseRepository';
-import {
-  WorkCenterStatus,
-  MRPPlanStatus,
-  CapacityPlanStatus,
-} from '@opsui/shared';
+import { WorkCenterStatus, MRPPlanStatus, CapacityPlanStatus } from '@opsui/shared';
 import type {
   WorkCenter,
   WorkCenterQueue,

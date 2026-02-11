@@ -76,83 +76,92 @@ export function TurnoverChart({ data, isLoading }: TurnoverChartProps) {
   const chartData = data.slice(0, 10);
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0">
         <CardTitle>Inventory Turnover</CardTitle>
         <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart
-            data={chartData}
-            layout="vertical"
-            margin={{ left: 20, right: 20, top: 5, bottom: 5 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="dark:stroke-white/[0.08] stroke-gray-200"
-            />
-            <XAxis
-              type="number"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-              domain={[0, 'dataMax']}
-            />
-            <YAxis
-              type="category"
-              dataKey="sku"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 10 }}
-              width={70}
-              interval={0}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              formatter={(value: number | undefined, name: string | undefined) => {
-                if (name === 'turnoverCount') {
-                  return [`${(value ?? 0).toFixed(2)}x`, 'Turnover Rate'];
-                }
-                return [value ?? 0];
-              }}
-              labelFormatter={label => {
-                const item = chartData.find(d => d.sku === label);
-                return item ? `${item.sku} - ${item.name}` : label;
-              }}
-              itemStyle={{ color: '#fff' }}
-            />
-            {/* Reference lines for turnover rate thresholds */}
-            <ReferenceLine
-              x={4}
-              stroke="#10b981"
-              strokeDasharray="3 3"
-              strokeWidth={1}
-              label={{ value: 'High', fill: '#10b981', fontSize: 10 }}
-            />
-            <ReferenceLine
-              x={2}
-              stroke="#f59e0b"
-              strokeDasharray="3 3"
-              strokeWidth={1}
-              label={{ value: 'Low', fill: '#f59e0b', fontSize: 10 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="turnoverCount"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2 }}
-              activeDot={{ r: 7 }}
-              name="Turnover Rate"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {/* Subtle glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-2xl" />
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart
+              data={chartData}
+              layout="vertical"
+              margin={{ left: 20, right: 20, top: 5, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="dark:stroke-white/[0.08] stroke-gray-200"
+              />
+              <XAxis
+                type="number"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+                domain={[0, 'dataMax']}
+              />
+              <YAxis
+                type="category"
+                dataKey="sku"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 10 }}
+                width={70}
+                interval={0}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                }}
+                formatter={(value: number | undefined, name: string | undefined) => {
+                  if (name === 'turnoverCount') {
+                    return [`${(value ?? 0).toFixed(2)}x`, 'Turnover Rate'];
+                  }
+                  return [value ?? 0];
+                }}
+                labelFormatter={label => {
+                  const item = chartData.find(d => d.sku === label);
+                  return item ? `${item.sku} - ${item.name}` : label;
+                }}
+                itemStyle={{ color: '#fff' }}
+              />
+              {/* Reference lines for turnover rate thresholds */}
+              <ReferenceLine
+                x={4}
+                stroke="#10b981"
+                strokeDasharray="3 3"
+                strokeWidth={1}
+                label={{ value: 'High', fill: '#10b981', fontSize: 10 }}
+              />
+              <ReferenceLine
+                x={2}
+                stroke="#f59e0b"
+                strokeDasharray="3 3"
+                strokeWidth={1}
+                label={{ value: 'Low', fill: '#f59e0b', fontSize: 10 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="turnoverCount"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2 }}
+                activeDot={{ r: 7 }}
+                name="Turnover Rate"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Legend */}
         <div className="mt-4 flex items-center justify-center gap-6 text-sm">

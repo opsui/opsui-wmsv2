@@ -162,7 +162,10 @@ export function PerformanceChart({
   });
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle>{chartTitle}</CardTitle>
@@ -173,107 +176,113 @@ export function PerformanceChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="dark:stroke-white/[0.08] stroke-gray-200"
-            />
-            <XAxis
-              dataKey="displayName"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 12 }}
-              interval={0}
-              textAnchor="middle"
-              height={50}
-            />
-            <YAxis
-              yAxisId="left"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              itemStyle={{ color: '#fff' }}
-              formatter={(value: any, name?: string) => {
-                if (name === 'Avg Time (min)') return [`${value} min`, name];
-                return [value || 0, name || ''];
-              }}
-              labelFormatter={label => {
-                const item = chartData.find(d => d.displayName === label);
-                return item?.displayName || label;
-              }}
-            />
-            <Legend
-              wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={value => (
-                <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
-              )}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="tasksCompleted"
-              fill={COLORS.tasksCompleted}
-              name={roleLabels.tasksLabel}
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="ordersCompleted"
-              fill={COLORS.ordersCompleted}
-              name={roleLabels.ordersLabel}
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              yAxisId="right"
-              dataKey="totalItemsProcessed"
-              fill={COLORS.itemsProcessed}
-              name={roleLabels.itemsLabel}
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {/* Subtle glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-emerald-500/10 blur-2xl" />
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="dark:stroke-white/[0.08] stroke-gray-200"
+              />
+              <XAxis
+                dataKey="displayName"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 12 }}
+                interval={0}
+                textAnchor="middle"
+                height={50}
+              />
+              <YAxis
+                yAxisId="left"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                }}
+                itemStyle={{ color: '#fff' }}
+                formatter={(value: any, name?: string) => {
+                  if (name === 'Avg Time (min)') return [`${value} min`, name];
+                  return [value || 0, name || ''];
+                }}
+                labelFormatter={label => {
+                  const item = chartData.find(d => d.displayName === label);
+                  return item?.displayName || label;
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                formatter={value => (
+                  <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
+                )}
+              />
+              <Bar
+                yAxisId="left"
+                dataKey="tasksCompleted"
+                fill={COLORS.tasksCompleted}
+                name={roleLabels.tasksLabel}
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                yAxisId="left"
+                dataKey="ordersCompleted"
+                fill={COLORS.ordersCompleted}
+                name={roleLabels.ordersLabel}
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                yAxisId="right"
+                dataKey="totalItemsProcessed"
+                fill={COLORS.itemsProcessed}
+                name={roleLabels.itemsLabel}
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Performance summary table */}
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 overflow-x-auto rounded-xl dark:bg-white/[0.02] bg-gray-50/50 dark:border dark:border-white/[0.04] border-gray-200 shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="dark:text-gray-400 text-gray-600 border-b dark:border-white/[0.05] border-gray-200">
-                <th className="text-left py-2 px-2">{roleLabels.tableHeader}</th>
-                <th className="text-right py-2 px-2">
+                <th className="text-left py-3 px-3">{roleLabels.tableHeader}</th>
+                <th className="text-right py-3 px-3">
                   {selectedRole === UserRole.STOCK_CONTROLLER ? 'Trans' : 'Tasks'}
                 </th>
-                <th className="text-right py-2">
+                <th className="text-right py-3">
                   {selectedRole === UserRole.STOCK_CONTROLLER ? 'Trans' : 'Orders'}
                 </th>
-                <th className="text-right py-2 px-2">Items</th>
-                <th className="text-right py-2 px-2">Avg Time</th>
+                <th className="text-right py-3 px-3">Items</th>
+                <th className="text-right py-3 px-3">Avg Time</th>
               </tr>
             </thead>
             <tbody>
               {chartData.slice(0, 5).map(item => (
                 <tr
                   key={item.userId}
-                  className="dark:text-gray-300 text-gray-700 border-b dark:border-white/[0.02] border-gray-100 hover:dark:bg-white/[0.02] hover:bg-gray-50"
+                  className="dark:text-gray-300 text-gray-700 border-b dark:border-white/[0.02] border-gray-100 hover:dark:bg-white/[0.03] hover:bg-gray-100/50 transition-colors duration-200"
                 >
-                  <td className="py-2 px-2 font-medium">{item.displayName}</td>
-                  <td className="text-right py-2 px-2">{item.tasksCompleted}</td>
-                  <td className="text-right py-2 px-2">{item.ordersCompleted}</td>
-                  <td className="text-right py-2 px-2">{item.totalItemsProcessed}</td>
-                  <td className="text-right py-2 px-2">{item.avgTimeMinutes}m</td>
+                  <td className="py-2.5 px-3 font-medium">{item.displayName}</td>
+                  <td className="text-right py-2.5 px-3">{item.tasksCompleted}</td>
+                  <td className="text-right py-2.5 px-3">{item.ordersCompleted}</td>
+                  <td className="text-right py-2.5 px-3">{item.totalItemsProcessed}</td>
+                  <td className="text-right py-2.5 px-3">{item.avgTimeMinutes}m</td>
                 </tr>
               ))}
             </tbody>

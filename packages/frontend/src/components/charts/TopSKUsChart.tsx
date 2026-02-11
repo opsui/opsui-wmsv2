@@ -172,7 +172,10 @@ export function TopSKUsChart({
   const valueLabel = getLabel();
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
         <CardTitle>
           Top {limit} SKUs by Scan Frequency ({periodLabel})
@@ -183,52 +186,58 @@ export function TopSKUsChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="dark:stroke-white/[0.08] stroke-gray-200"
-            />
-            <XAxis
-              type="number"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-              domain={[0, Math.ceil(maxValue * 1.1)]}
-            />
-            <YAxis
-              type="category"
-              dataKey="displayName"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 10 }}
-              width={200}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              itemStyle={{ color: '#fff' }}
-              formatter={(value: any) => [`${value || 0}`, valueLabel]}
-            />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: 'transparent' }}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {/* Subtle glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
+          </div>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="dark:stroke-white/[0.08] stroke-gray-200"
+              />
+              <XAxis
+                type="number"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+                domain={[0, Math.ceil(maxValue * 1.1)]}
+              />
+              <YAxis
+                type="category"
+                dataKey="displayName"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 10 }}
+                width={200}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                }}
+                itemStyle={{ color: '#fff' }}
+                formatter={(value: any) => [`${value || 0}`, valueLabel]}
+              />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: 'transparent' }}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Summary stats */}
-        <div className="mt-4 flex items-center justify-between p-3 rounded-lg dark:bg-white/[0.03] bg-gray-50 dark:border dark:border-white/[0.05] border-gray-100">
+        <div className="mt-4 flex items-center justify-between p-3 rounded-xl dark:bg-white/[0.03] bg-gray-50/80 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none">
           <div className="dark:text-gray-400 text-gray-600 text-sm">
             <span className="dark:text-gray-200 text-gray-900 font-semibold">
               {chartData[0]?.value || 0}

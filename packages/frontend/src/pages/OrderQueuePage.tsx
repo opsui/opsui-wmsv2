@@ -71,7 +71,7 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
           isOpen
             ? 'bg-primary-600 text-white shadow-lg'
-            : 'bg-white/[0.05] text-gray-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+            : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.08] hover:bg-gray-200 dark:hover:text-white hover:text-gray-900 dark:border-white/[0.08] border-gray-300'
         }`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
@@ -82,7 +82,7 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900 rounded-lg border border-white/[0.08] shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in">
           <div className="py-2">
             {options.map(option => {
               const OptionIcon = option.icon;
@@ -97,12 +97,14 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
                     isActive
                       ? 'text-white bg-primary-600'
-                      : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
+                      : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100'
                   }`}
                 >
                   <OptionIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-400'
+                      isActive
+                        ? 'text-white'
+                        : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-gray-600'
                     }`}
                   />
                   {option.label}
@@ -152,7 +154,7 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
           isOpen
             ? 'bg-primary-600 text-white shadow-lg'
-            : 'bg-white/[0.05] text-gray-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+            : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.08] hover:bg-gray-200 dark:hover:text-white hover:text-gray-900 dark:border-white/[0.08] border-gray-300'
         }`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
@@ -163,7 +165,7 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900 rounded-lg border border-white/[0.08] shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in">
           <div className="py-2">
             {options.map(option => {
               const OptionIcon = option.icon;
@@ -178,12 +180,14 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
                     isActive
                       ? 'text-white bg-primary-600'
-                      : 'text-gray-300 hover:text-white hover:bg-white/[0.05]'
+                      : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100'
                   }`}
                 >
                   <OptionIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-400'
+                      isActive
+                        ? 'text-white'
+                        : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-gray-600'
                     }`}
                   />
                   {option.label}
@@ -242,11 +246,13 @@ export function OrderQueuePage() {
 
   // Separate query to check if user has PICKING orders (for auto-detect)
   // This fetches ALL orders (no status filter) to check for PICKING status
+  // refetchOnMount: 'always' ensures fresh data after unclaim redirects
   const allOrdersQuery = useOrderQueue({
     status: undefined as OrderStatus | undefined, // No status filter - get all orders
     pickerId: userId, // Only this picker's orders
     page: 1,
     limit: 100, // Fetch enough orders to detect PICKING status
+    refetchOnMount: 'always', // Always refetch on mount to get fresh data after unclaim
   });
   const allOrdersData = allOrdersQuery.data;
 
@@ -323,7 +329,7 @@ export function OrderQueuePage() {
   };
 
   // Auto-detect which tab to show based on whether picker has items in tote
-  // Priority: 1) PICKING orders (tote), 2) URL status, 3) default to PENDING
+  // Priority: 1) Explicit URL status (user intent), 2) PICKING orders (tote), 3) default to PENDING
   useEffect(() => {
     // Skip if we already auto-detected or user manually navigated
     if (hasAutoDetectedRef.current) {
@@ -332,7 +338,14 @@ export function OrderQueuePage() {
     }
 
     const urlStatus = searchParams.get('status') as OrderStatus | null;
-    console.log('[OrderQueue] Auto-detect check - URL status:', urlStatus);
+    const hasExplicitUrlStatus = urlStatus && Object.values(OrderStatus).includes(urlStatus);
+
+    console.log(
+      '[OrderQueue] Auto-detect check - URL status:',
+      urlStatus,
+      'explicit:',
+      hasExplicitUrlStatus
+    );
     console.log(
       '[OrderQueue] allOrdersData:',
       allOrdersData,
@@ -341,7 +354,16 @@ export function OrderQueuePage() {
     );
 
     if (allOrdersData?.orders) {
-      // Data loaded - first check for PICKING orders (highest priority)
+      // If user explicitly navigated with a URL status (e.g., after unclaim), respect it
+      // This prevents orders from "reclaiming" when user just unclaimed them
+      if (hasExplicitUrlStatus) {
+        console.log('[OrderQueue] Respecting explicit URL status:', urlStatus);
+        setStatusFilter(urlStatus!);
+        hasAutoDetectedRef.current = true;
+        return;
+      }
+
+      // No explicit URL - check for PICKING orders (tote)
       const allOrders = allOrdersData.orders || [];
       const pickingOrders = allOrders.filter(o => o.status === OrderStatus.PICKING);
       console.log(
@@ -360,14 +382,9 @@ export function OrderQueuePage() {
         return;
       }
 
-      // No PICKING orders - check URL or default to PENDING
-      if (urlStatus && Object.values(OrderStatus).includes(urlStatus)) {
-        console.log('[OrderQueue] No PICKING orders, using URL status:', urlStatus);
-        setStatusFilter(urlStatus);
-      } else {
-        console.log('[OrderQueue] No items in tote and no URL status, defaulting to PENDING');
-        setStatusFilter(OrderStatus.PENDING);
-      }
+      // No PICKING orders and no URL status - default to PENDING
+      console.log('[OrderQueue] No items in tote and no URL status, defaulting to PENDING');
+      setStatusFilter(OrderStatus.PENDING);
       hasAutoDetectedRef.current = true;
     } else {
       console.log('[OrderQueue] Waiting for data to load...');
@@ -495,7 +512,9 @@ export function OrderQueuePage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <Card variant="glass" className="max-w-md">
           <CardContent className="p-6 text-center">
-            <p className="text-gray-400">You need picker privileges to view this page.</p>
+            <p className="dark:text-gray-400 text-gray-600">
+              You need picker privileges to view this page.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -505,7 +524,7 @@ export function OrderQueuePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading order queue...</div>
+        <div className="dark:text-gray-400 text-gray-600">Loading order queue...</div>
       </div>
     );
   }
@@ -518,8 +537,10 @@ export function OrderQueuePage() {
         <Breadcrumb />
         {/* Page Header - Centered */}
         <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Order Queue</h1>
-          <p className="mt-2 text-gray-400 text-responsive-sm">
+          <h1 className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
+            Order Queue
+          </h1>
+          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
             {queueData?.total || 0} order{(queueData?.total || 0) !== 1 ? 's' : ''} available
           </p>
         </div>
@@ -533,14 +554,14 @@ export function OrderQueuePage() {
         {/* Search Bar - Below Header */}
         <div className="flex justify-center">
           <div className="w-full max-w-2xl relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 dark:text-gray-400 text-gray-500 pointer-events-none" />
             <input
               type="text"
               placeholder="Search order"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{ fontSize: '16px' }}
-              className="w-full pl-11 pr-4 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+              className="w-full pl-11 pr-4 py-2.5 dark:bg-white/[0.05] bg-gray-100 dark:border-white/[0.08] border-gray-300 rounded-xl text-sm dark:text-white text-gray-900 dark:placeholder-gray-500 placeholder-gray-400 focus:outline-none dark:focus:border-primary-500/50 focus:border-primary-500 dark:focus:bg-white/[0.08] focus:bg-white transition-all duration-300"
             />
           </div>
         </div>
@@ -549,8 +570,8 @@ export function OrderQueuePage() {
         {filteredOrders.length === 0 ? (
           <Card variant="glass" className="card-hover">
             <CardContent className="p-8 sm:p-16 text-center">
-              <ShoppingBagIcon className="h-12 w-12 sm:h-16 sm:w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-responsive-sm">
+              <ShoppingBagIcon className="h-12 w-12 sm:h-16 sm:w-16 dark:text-gray-600 text-gray-400 mx-auto mb-4" />
+              <p className="dark:text-gray-400 text-gray-600 text-responsive-sm">
                 {searchQuery ? 'No orders match your search' : 'No orders available'}
               </p>
             </CardContent>
@@ -562,10 +583,12 @@ export function OrderQueuePage() {
                 <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-base sm:text-lg tracking-tight truncate">
+                      <h3 className="font-semibold dark:text-white text-gray-900 text-base sm:text-lg tracking-tight truncate">
                         {order.orderId}
                       </h3>
-                      <p className="text-sm text-gray-400 mt-1 truncate">{order.customerName}</p>
+                      <p className="text-sm dark:text-gray-400 text-gray-600 mt-1 truncate">
+                        {order.customerName}
+                      </p>
                     </div>
                     <div className="flex flex-col gap-2 ml-2">
                       <OrderPriorityBadge priority={order.priority} />
@@ -574,15 +597,17 @@ export function OrderQueuePage() {
                   </div>
 
                   {/* Scrollable content area */}
-                  <div className="flex-1 overflow-y-auto space-y-3 text-sm text-gray-400 overflow-x-hidden">
+                  <div className="flex-1 overflow-y-auto space-y-3 text-sm dark:text-gray-400 text-gray-600 overflow-x-hidden">
                     <div className="flex items-center justify-between">
                       <span>Items:</span>
-                      <span className="text-white font-medium">{order.items?.length || 0}</span>
+                      <span className="dark:text-white text-gray-900 font-medium">
+                        {order.items?.length || 0}
+                      </span>
                     </div>
                     {order.totalAmount != null && (
                       <div className="flex items-center justify-between">
                         <span>Total:</span>
-                        <span className="text-white font-medium">
+                        <span className="dark:text-white text-gray-900 font-medium">
                           {order.currency || 'NZD'} ${Number(order.totalAmount).toFixed(2)}
                         </span>
                       </div>
@@ -590,10 +615,12 @@ export function OrderQueuePage() {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <span>Progress:</span>
-                        <span className="text-white font-medium">{order.progress}%</span>
+                        <span className="dark:text-white text-gray-900 font-medium">
+                          {order.progress}%
+                        </span>
                       </div>
                       {/* Progress bar */}
-                      <div className="w-full bg-white/[0.05] rounded-full h-2 overflow-hidden">
+                      <div className="w-full dark:bg-white/[0.05] bg-gray-200 rounded-full h-2 overflow-hidden">
                         <div
                           className="bg-gradient-to-r from-primary-500 to-primary-400 h-full rounded-full transition-all duration-500"
                           style={{ width: `${order.progress}%` }}
@@ -602,15 +629,15 @@ export function OrderQueuePage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Created:</span>
-                      <span className="text-white font-medium text-xs sm:text-sm">
+                      <span className="dark:text-white text-gray-900 font-medium text-xs sm:text-sm">
                         {formatDate(order.createdAt)}
                       </span>
                     </div>
 
                     {/* Show items with details - always visible */}
                     {order.items && order.items.length > 0 ? (
-                      <div className="mt-4 pt-4 border-t border-white/[0.08]">
-                        <p className="font-medium text-gray-300 mb-3 text-xs uppercase tracking-wider">
+                      <div className="mt-4 pt-4 dark:border-white/[0.08] border-gray-200">
+                        <p className="font-medium dark:text-gray-300 text-gray-700 mb-3 text-xs uppercase tracking-wider">
                           Items to Pick:
                         </p>
                         <div className="space-y-2">
@@ -627,12 +654,12 @@ export function OrderQueuePage() {
                               item.pickedQuantity > 0 &&
                               item.pickedQuantity < item.quantity;
                             const itemStatusColor = isCompleted
-                              ? 'text-success-400 bg-success-500/10 border-success-500/20'
+                              ? 'dark:text-success-400 text-green-700 dark:bg-success-500/10 bg-green-100 dark:border-success-500/20 border-green-300'
                               : isSkipped
-                                ? 'text-warning-400 bg-warning-500/10 border-warning-500/20'
+                                ? 'dark:text-warning-400 text-amber-700 dark:bg-warning-500/10 bg-amber-100 dark:border-warning-500/20 border-amber-300'
                                 : isPartial
-                                  ? 'text-primary-400 bg-primary-500/10 border-primary-500/20'
-                                  : 'text-gray-400 bg-white/[0.02] border-white/[0.05]';
+                                  ? 'dark:text-primary-400 text-blue-700 dark:bg-primary-500/10 bg-blue-100 dark:border-primary-500/20 border-blue-300'
+                                  : 'dark:text-gray-400 text-gray-600 dark:bg-white/[0.02] bg-gray-100 dark:border-white/[0.05] border-gray-200';
 
                             return (
                               <div
@@ -644,14 +671,18 @@ export function OrderQueuePage() {
                                   <span className="font-semibold text-xs break-all">
                                     {item.sku}
                                   </span>
-                                  <span className="text-gray-500 flex-shrink-0">"</span>
-                                  <span className="text-gray-300 break-all">{item.name}</span>
+                                  <span className="dark:text-gray-500 text-gray-400 flex-shrink-0">
+                                    "
+                                  </span>
+                                  <span className="dark:text-gray-300 text-gray-700 break-all">
+                                    {item.name}
+                                  </span>
                                 </div>
                                 {/* Second row: Location and Quantity */}
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="text-gray-400 text-xs">
+                                  <span className="dark:text-gray-400 text-gray-500 text-xs">
                                     Loc:{' '}
-                                    <span className="text-white font-medium">
+                                    <span className="dark:text-white text-gray-900 font-medium">
                                       {item.binLocation}
                                     </span>
                                   </span>
@@ -663,13 +694,13 @@ export function OrderQueuePage() {
                                 </div>
                                 {/* Third row: Pricing (if available) */}
                                 {item.unitPrice != null && (
-                                  <div className="flex items-center justify-between text-xs border-t border-white/[0.05] pt-1 mt-1">
-                                    <span className="text-gray-500">
+                                  <div className="flex items-center justify-between text-xs border-t dark:border-white/[0.05] border-gray-200 pt-1 mt-1">
+                                    <span className="dark:text-gray-500 text-gray-500">
                                       {item.currency || 'NZD'} ${Number(item.unitPrice).toFixed(2)}
                                       /ea
                                     </span>
                                     {item.lineTotal != null && (
-                                      <span className="text-white font-medium">
+                                      <span className="dark:text-white text-gray-900 font-medium">
                                         {item.currency || 'NZD'} $
                                         {Number(item.lineTotal).toFixed(2)}
                                       </span>
@@ -682,14 +713,14 @@ export function OrderQueuePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="mt-4 pt-4 border-t border-white/[0.08] text-xs text-gray-500">
+                      <div className="mt-4 pt-4 dark:border-white/[0.08] border-gray-200 text-xs dark:text-gray-500 text-gray-400">
                         No items available
                       </div>
                     )}
                   </div>
 
                   {/* Claim button - always at the bottom */}
-                  <div className="mt-4 pt-4 border-t border-white/[0.08]">
+                  <div className="mt-4 pt-4 dark:border-white/[0.08] border-gray-200">
                     <Button
                       fullWidth
                       size="sm"

@@ -464,8 +464,7 @@ function AdminSettingsPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-          </div>
+          <div className="flex items-center gap-4 mb-4"></div>
 
           <div className="flex items-center gap-4">
             <div className="p-3 bg-primary-500/20 rounded-xl">

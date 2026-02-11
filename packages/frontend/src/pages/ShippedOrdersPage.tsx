@@ -222,333 +222,340 @@ export default function ShippedOrdersPage() {
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4">
-        <TruckIcon className="h-8 w-8 text-primary-600" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shipped Orders</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            View and manage all shipped orders
-          </p>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
+            <TruckIcon className="h-8 w-8 text-primary-600" />
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Shipped</p>
-              <p className="text-2xl font-bold">{total || 0}</p>
-            </div>
-            <TruckIcon className="h-8 w-8 text-gray-400" />
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Value</p>
-              <p className="text-2xl font-bold">{formatCurrency(statistics.totalValue)}</p>
-            </div>
-            <DocumentTextIcon className="h-8 w-8 text-gray-400" />
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Delivered</p>
-              <p className="text-2xl font-bold text-green-600">{statistics.deliveredCount}</p>
-            </div>
-            <CheckIcon className="h-8 w-8 text-green-500" />
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Pending Delivery</p>
-              <p className="text-2xl font-bold text-orange-600">{statistics.pendingDelivery}</p>
-            </div>
-            <CalendarIcon className="h-8 w-8 text-orange-500" />
-          </div>
-        </Card>
-      </div>
-
-      {/* Filters and Actions */}
-      <Card className="p-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Search */}
-          <div className="flex-1 min-w-[300px]">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by order ID, customer..."
-                value={filters.search || ''}
-                onChange={e => updateFilter('search', e.target.value)}
-                className={cn(
-                  'w-full rounded-md border-0 py-2 pl-10 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-gray-800 dark:text-white dark:ring-gray-600',
-                  activeFiltersCount > 0 && 'ring-2 ring-primary-600'
-                )}
-              />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shipped Orders</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                View and manage all shipped orders
+              </p>
             </div>
           </div>
 
-          {/* Filter Button */}
-          <Button
-            variant="secondary"
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn('relative', activeFiltersCount > 0 && 'ring-2 ring-primary-600')}
-          >
-            <FunnelIcon className="h-5 w-5 mr-2" />
-            Filters
-            {activeFiltersCount > 0 && (
-              <span className="ml-2 rounded-full bg-primary-600 px-2 py-0.5 text-xs text-white">
-                {activeFiltersCount}
-              </span>
-            )}
-          </Button>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Shipped</p>
+                  <p className="text-2xl font-bold">{total || 0}</p>
+                </div>
+                <TruckIcon className="h-8 w-8 text-gray-400" />
+              </div>
+            </Card>
 
-          {/* Export Button */}
-          <Button variant="secondary" onClick={handleExport} disabled={selectedOrders.size === 0}>
-            <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
-            Export ({selectedOrders.size})
-          </Button>
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Value</p>
+                  <p className="text-2xl font-bold">{formatCurrency(statistics.totalValue)}</p>
+                </div>
+                <DocumentTextIcon className="h-8 w-8 text-gray-400" />
+              </div>
+            </Card>
 
-          {/* Refresh Button */}
-          <Button variant="secondary" onClick={() => refetch()}>
-            {isLoading ? 'Loading...' : 'Refresh'}
-          </Button>
-        </div>
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Delivered</p>
+                  <p className="text-2xl font-bold text-green-600">{statistics.deliveredCount}</p>
+                </div>
+                <CheckIcon className="h-8 w-8 text-green-500" />
+              </div>
+            </Card>
 
-        {/* Expandable Filters */}
-        {showFilters && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 border-t pt-4 dark:border-gray-700">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                From Date
-              </label>
-              <input
-                type="date"
-                value={filters.dateFrom || ''}
-                onChange={e => updateFilter('dateFrom', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-              />
-            </div>
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Pending Delivery</p>
+                  <p className="text-2xl font-bold text-orange-600">{statistics.pendingDelivery}</p>
+                </div>
+                <CalendarIcon className="h-8 w-8 text-orange-500" />
+              </div>
+            </Card>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                To Date
-              </label>
-              <input
-                type="date"
-                value={filters.dateTo || ''}
-                onChange={e => updateFilter('dateTo', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-              />
-            </div>
+          {/* Filters and Actions */}
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Search */}
+              <div className="flex-1 min-w-[300px]">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by order ID, customer..."
+                    value={filters.search || ''}
+                    onChange={e => updateFilter('search', e.target.value)}
+                    className={cn(
+                      'w-full rounded-md border-0 py-2 pl-10 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-gray-800 dark:text-white dark:ring-gray-600',
+                      activeFiltersCount > 0 && 'ring-2 ring-primary-600'
+                    )}
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Carrier
-              </label>
-              <select
-                value={filters.carrier || ''}
-                onChange={e => updateFilter('carrier', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
+              {/* Filter Button */}
+              <Button
+                variant="secondary"
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn('relative', activeFiltersCount > 0 && 'ring-2 ring-primary-600')}
               >
-                <option value="">All Carriers</option>
-                <option value="FedEx">FedEx</option>
-                <option value="UPS">UPS</option>
-                <option value="DHL">DHL</option>
-                <option value="USPS">USPS</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+                <FunnelIcon className="h-5 w-5 mr-2" />
+                Filters
+                {activeFiltersCount > 0 && (
+                  <span className="ml-2 rounded-full bg-primary-600 px-2 py-0.5 text-xs text-white">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
 
-            <div className="flex items-end">
-              <Button variant="secondary" onClick={clearFilters} className="w-full">
-                <XMarkIcon className="h-5 w-5 mr-2" />
-                Clear Filters
+              {/* Export Button */}
+              <Button
+                variant="secondary"
+                onClick={handleExport}
+                disabled={selectedOrders.size === 0}
+              >
+                <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+                Export ({selectedOrders.size})
+              </Button>
+
+              {/* Refresh Button */}
+              <Button variant="secondary" onClick={() => refetch()}>
+                {isLoading ? 'Loading...' : 'Refresh'}
               </Button>
             </div>
-          </div>
-        )}
-      </Card>
 
-      {/* Orders Table */}
-      <Card className="overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            <p className="mt-2 text-gray-500">Loading shipped orders...</p>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center text-red-600">Failed to load shipped orders</div>
-        ) : orders.length > 0 ? (
-          <>
-            {/* Toolbar */}
-            <div className="border-b px-6 py-3 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  checked={orders.length > 0 && orders.every(order => selectedOrders.has(order.id))}
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Select All ({orders.length})
-                </span>
+            {/* Expandable Filters */}
+            {showFilters && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 border-t pt-4 dark:border-gray-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    From Date
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.dateFrom || ''}
+                    onChange={e => updateFilter('dateFrom', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    To Date
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.dateTo || ''}
+                    onChange={e => updateFilter('dateTo', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Carrier
+                  </label>
+                  <select
+                    value={filters.carrier || ''}
+                    onChange={e => updateFilter('carrier', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
+                  >
+                    <option value="">All Carriers</option>
+                    <option value="FedEx">FedEx</option>
+                    <option value="UPS">UPS</option>
+                    <option value="DHL">DHL</option>
+                    <option value="USPS">USPS</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div className="flex items-end">
+                  <Button variant="secondary" onClick={clearFilters} className="w-full">
+                    <XMarkIcon className="h-5 w-5 mr-2" />
+                    Clear Filters
+                  </Button>
+                </div>
               </div>
+            )}
+          </Card>
 
-              <div className="text-sm text-gray-500">
-                Showing {orders.length} of {total} orders
+          {/* Orders Table */}
+          <Card className="overflow-hidden">
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <p className="mt-2 text-gray-500">Loading shipped orders...</p>
               </div>
-            </div>
+            ) : error ? (
+              <div className="p-8 text-center text-red-600">Failed to load shipped orders</div>
+            ) : orders.length > 0 ? (
+              <>
+                {/* Toolbar */}
+                <div className="border-b px-6 py-3 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="checkbox"
+                      checked={
+                        orders.length > 0 && orders.every(order => selectedOrders.has(order.id))
+                      }
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Select All ({orders.length})
+                    </span>
+                  </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={
-                          orders.length > 0 && orders.every(order => selectedOrders.has(order.id))
-                        }
-                        onChange={toggleSelectAll}
-                        className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                      />
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                      onClick={() => handleSort('customerName')}
-                    >
-                      Customer {sortBy === 'customerName' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                      onClick={() => handleSort('shippedAt')}
-                    >
-                      Shipped Date {sortBy === 'shippedAt' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Order ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Items
-                    </th>
-                    <th
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                      onClick={() => handleSort('totalValue')}
-                    >
-                      Value {sortBy === 'totalValue' && (sortOrder === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tracking
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Carrier
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {orders.map(order => (
-                    <tr
-                      key={order.id}
-                      className={cn(
-                        'hover:bg-gray-50 dark:hover:bg-gray-800',
-                        selectedOrders.has(order.id) && 'bg-primary-50 dark:bg-primary-900/20'
-                      )}
-                    >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedOrders.has(order.id)}
-                          onChange={() => toggleOrderSelection(order.id)}
-                          className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {order.customerName}
-                        </div>
-                        <div className="text-xs text-gray-500">{order.shippingAddress}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          {formatDate(order.shippedAt)}
-                        </div>
-                        <div className="text-xs text-gray-500">by {order.shippedBy}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
-                          {order.orderId}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {order.itemCount}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(order.totalValue)}
-                      </td>
-                      <td className="px-6 py-4">
-                        {order.trackingNumber ? (
-                          <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
-                            {order.trackingNumber}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-gray-400 italic">N/A</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {order.carrier || '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.deliveredAt ? 'Delivered' : 'In Transit'}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  <div className="text-sm text-gray-500">
+                    Showing {orders.length} of {total} orders
+                  </div>
+                </div>
 
-            {/* Pagination */}
-            <div className="border-t px-6 py-4 flex items-center justify-between">
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Showing {(currentPage - 1) * pageSize + 1} to{' '}
-                {Math.min(currentPage * pageSize, total)} of {total} orders
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
+                      <tr>
+                        <th className="px-6 py-3 text-left">
+                          <input
+                            type="checkbox"
+                            checked={
+                              orders.length > 0 &&
+                              orders.every(order => selectedOrders.has(order.id))
+                            }
+                            onChange={toggleSelectAll}
+                            className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
+                          />
+                        </th>
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                          onClick={() => handleSort('customerName')}
+                        >
+                          Customer {sortBy === 'customerName' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                          onClick={() => handleSort('shippedAt')}
+                        >
+                          Shipped Date {sortBy === 'shippedAt' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Order ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Items
+                        </th>
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
+                          onClick={() => handleSort('totalValue')}
+                        >
+                          Value {sortBy === 'totalValue' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tracking
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Carrier
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                      {orders.map(order => (
+                        <tr
+                          key={order.id}
+                          className={cn(
+                            'hover:bg-gray-50 dark:hover:bg-gray-800',
+                            selectedOrders.has(order.id) && 'bg-primary-50 dark:bg-primary-900/20'
+                          )}
+                        >
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedOrders.has(order.id)}
+                              onChange={() => toggleOrderSelection(order.id)}
+                              className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              {order.customerName}
+                            </div>
+                            <div className="text-xs text-gray-500">{order.shippingAddress}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              {formatDate(order.shippedAt)}
+                            </div>
+                            <div className="text-xs text-gray-500">by {order.shippedBy}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
+                              {order.orderId}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {order.itemCount}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                            {formatCurrency(order.totalValue)}
+                          </td>
+                          <td className="px-6 py-4">
+                            {order.trackingNumber ? (
+                              <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
+                                {order.trackingNumber}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-400 italic">N/A</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {order.carrier || '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Badge className={getStatusColor(order.status)}>
+                              {order.deliveredAt ? 'Delivered' : 'In Transit'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="border-t px-6 py-4 flex items-center justify-between">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    Showing {(currentPage - 1) * pageSize + 1} to{' '}
+                    {Math.min(currentPage * pageSize, total)} of {total} orders
+                  </div>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={total}
+                    pageSize={pageSize}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="p-8 text-center">
+                <TruckIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No shipped orders found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {activeFiltersCount > 0
+                    ? 'Try adjusting your filters'
+                    : 'Orders will appear here once they are shipped'}
+                </p>
               </div>
-              <Pagination
-                currentPage={currentPage}
-                totalItems={total}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="p-8 text-center">
-            <TruckIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No shipped orders found
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              {activeFiltersCount > 0
-                ? 'Try adjusting your filters'
-                : 'Orders will appear here once they are shipped'}
-            </p>
-          </div>
-        )}
-      </Card>
+            )}
+          </Card>
+        </div>
+      </main>
     </div>
-  </main>
-</div>
   );
 }

@@ -70,6 +70,8 @@ const TAB_PAGE_CONFIG: Record<
       'quick-actions': 'Quick Actions',
       movements: 'Stock Movements',
       adjustments: 'Stock Adjustments',
+      analytics: 'Analytics',
+      lots: 'Lot Tracking',
       dashboard: 'Dashboard',
     },
   },

@@ -2,10 +2,13 @@
  * Badge component - Premium dark theme
  */
 
-import { type HTMLAttributes } from 'react';
+import { type HTMLAttributes, useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { OrderStatus, OrderPriority, TaskStatus } from '@opsui/shared';
 import { UserRole } from '@opsui/shared';
+
+// Custom event for role color changes
+export const ROLE_COLOR_CHANGED_EVENT = 'role-color-changed';
 
 // ============================================================================
 // TYPES
@@ -78,6 +81,13 @@ export function loadRoleColors(): Record<UserRole, RoleColorSetting> {
 export function saveRoleColors(settings: Record<UserRole, RoleColorSetting>): void {
   try {
     localStorage.setItem(ROLE_COLOR_STORAGE_KEY, JSON.stringify(settings));
+
+    // Dispatch custom event to notify components of the change
+    window.dispatchEvent(
+      new CustomEvent(ROLE_COLOR_CHANGED_EVENT, {
+        detail: { isGlobal: true, settings },
+      })
+    );
   } catch (error) {
     console.error('Failed to save role color settings:', error);
   }
@@ -120,6 +130,13 @@ export function saveUserRoleColor(userId: string, role: UserRole, color: string)
     const colors: Record<string, string> = existing ? JSON.parse(existing) : {};
     colors[role] = color;
     localStorage.setItem(key, JSON.stringify(colors));
+
+    // Dispatch custom event to notify components of the change
+    window.dispatchEvent(
+      new CustomEvent(ROLE_COLOR_CHANGED_EVENT, {
+        detail: { userId, role, color },
+      })
+    );
   } catch (error) {
     console.error('Failed to save user role color:', error);
   }
@@ -225,8 +242,21 @@ export function OrderPriorityBadge({ priority }: { priority: OrderPriority }) {
 }
 
 export function UserRoleBadge({ role, userId }: { role: UserRole; userId?: string }) {
-  // Use per-user color if userId is provided, otherwise use global color
-  const roleColor = userId ? getUserRoleColor(userId, role) : getRoleColor(role);
+  // Use state to enable reactive updates when colors change
+  const [roleColor, setRoleColor] = useState<RoleColorSetting>(() =>
+    userId ? getUserRoleColor(userId, role) : getRoleColor(role)
+  );
+
+  // Listen for color change events and update state
+  useEffect(() => {
+    const handleColorChange = () => {
+      setRoleColor(userId ? getUserRoleColor(userId, role) : getRoleColor(role));
+    };
+
+    window.addEventListener(ROLE_COLOR_CHANGED_EVENT, handleColorChange);
+    return () => window.removeEventListener(ROLE_COLOR_CHANGED_EVENT, handleColorChange);
+  }, [userId, role]);
+
   return (
     <Badge variant={roleColor.variant || 'default'} size="sm" customColor={roleColor.color}>
       {role}

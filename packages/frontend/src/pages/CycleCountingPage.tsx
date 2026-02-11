@@ -558,7 +558,7 @@ function CreateCycleCountModal({
 
 export function CycleCountingPage() {
   const { showToast: _showToast } = useToast();
-  const { user } = useAuthStore();
+  const { user, getEffectiveRole } = useAuthStore();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<CycleCountStatus | ''>('');
@@ -621,11 +621,12 @@ export function CycleCountingPage() {
   };
 
   const canCreatePlan =
-    user?.role === UserRole.STOCK_CONTROLLER ||
-    user?.role === UserRole.SUPERVISOR ||
-    user?.role === UserRole.ADMIN;
+    getEffectiveRole() === UserRole.STOCK_CONTROLLER ||
+    getEffectiveRole() === UserRole.SUPERVISOR ||
+    getEffectiveRole() === UserRole.ADMIN;
 
-  const canViewAnalytics = user?.role === UserRole.SUPERVISOR || user?.role === UserRole.ADMIN;
+  const canViewAnalytics =
+    getEffectiveRole() === UserRole.SUPERVISOR || getEffectiveRole() === UserRole.ADMIN;
 
   return (
     <div className="min-h-screen">

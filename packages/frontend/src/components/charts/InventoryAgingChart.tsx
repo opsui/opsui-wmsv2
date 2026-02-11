@@ -74,56 +74,65 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
   ) as AgingBucket[];
 
   return (
-    <Card variant="glass" className="card-hover">
+    <Card
+      variant="glass"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+    >
       <CardHeader>
         <CardTitle>Inventory Aging</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart data={chartData} layout="vertical">
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="dark:stroke-white/[0.08] stroke-gray-200"
-            />
-            <XAxis
-              type="number"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-            />
-            <YAxis
-              type="category"
-              dataKey="range"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-              width={80}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              formatter={(value: number | undefined, name: string | undefined) => [
-                name === 'itemCount' ? `${value ?? 0} items` : `${value ?? 0} units`,
-              ]}
-              itemStyle={{ color: '#fff' }}
-            />
-            <Legend
-              wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={value => (
-                <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
-              )}
-            />
-            <Bar dataKey="itemCount" name="Items" radius={[0, 8, 8, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={AGING_COLORS[entry.range] || '#6b7280'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {/* Subtle glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-amber-500/10 blur-2xl" />
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={chartData} layout="vertical">
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="dark:stroke-white/[0.08] stroke-gray-200"
+              />
+              <XAxis
+                type="number"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+              />
+              <YAxis
+                type="category"
+                dataKey="range"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                }}
+                formatter={(value: number | undefined, name: string | undefined) => [
+                  name === 'itemCount' ? `${value ?? 0} items` : `${value ?? 0} units`,
+                ]}
+                itemStyle={{ color: '#fff' }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                formatter={value => (
+                  <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
+                )}
+              />
+              <Bar dataKey="itemCount" name="Items" radius={[0, 8, 8, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={AGING_COLORS[entry.range] || '#6b7280'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Summary below chart */}
         <div className="mt-4 grid grid-cols-5 gap-2 text-center">
