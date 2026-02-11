@@ -6,7 +6,7 @@
  * shop floor control, quality, and capacity planning
  */
 
-import { Router, Response } from 'express';
+import { Router } from 'express';
 import { manufacturingService } from '../services/ManufacturingService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -83,7 +83,7 @@ router.get(
 router.get(
   '/work-centers/active',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const workCenters = await manufacturingService.getWorkCenters({
       work_center_status: WorkCenterStatus.ACTIVE,
     });
@@ -115,8 +115,8 @@ router.get(
 router.post(
   '/work-centers',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const workCenter = await manufacturingService.createWorkCenter(req.body);
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const workCenter = await manufacturingService.createWorkCenter(_req.body);
     res.status(201).json(workCenter);
   })
 );
@@ -128,7 +128,7 @@ router.post(
 router.get(
   '/work-centers/load/overloaded',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const overloaded = await manufacturingService.getOverloadedWorkCenters();
     res.json(overloaded);
   })
@@ -249,7 +249,7 @@ router.get(
 router.get(
   '/production-orders/active',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const orders = await manufacturingService.getActiveProductionOrders();
     res.json(orders);
   })
@@ -262,7 +262,7 @@ router.get(
 router.get(
   '/production-orders/past-due',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const orders = await manufacturingService.getProductionOrders({});
     // Filter for past due would be done in service
     res.json(orders.filter((o: any) => o.due_date < new Date() && o.order_status !== 'COMPLETED'));
@@ -331,7 +331,7 @@ router.put(
 router.get(
   '/shop-floor/transactions',
   shopFloorAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     // Would implement query in service
     res.json({ message: 'Shop floor transactions endpoint' });
   })
@@ -402,8 +402,8 @@ router.get(
 router.post(
   '/mrp/plans',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const plan = await manufacturingService.createMRPPlan(req.body);
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const plan = await manufacturingService.createMRPPlan(_req.body);
     res.status(201).json(plan);
   })
 );
@@ -451,8 +451,8 @@ router.get(
 router.post(
   '/capacity/plans',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const plan = await manufacturingService.createCapacityPlan(req.body);
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const plan = await manufacturingService.createCapacityPlan(_req.body);
     res.status(201).json(plan);
   })
 );
@@ -464,7 +464,7 @@ router.post(
 router.get(
   '/capacity/overloaded',
   manufacturingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const overloaded = await manufacturingService.getOverloadedWorkCenters();
     res.json(overloaded);
   })

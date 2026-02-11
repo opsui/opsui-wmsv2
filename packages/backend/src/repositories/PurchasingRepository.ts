@@ -6,7 +6,7 @@
  * three-way matching, vendor catalogs, and vendor performance
  */
 
-import { query, transaction } from '../db/client';
+import { query } from '../db/client';
 import { BaseRepository } from './BaseRepository';
 import type {
   PurchaseRequisition,
@@ -14,7 +14,6 @@ import type {
   PurchaseRequisitionLine,
   RequisitionApproval,
   RequisitionQueryFilters,
-  RequisitionStatus,
   RFQHeader,
   RFQHeaderWithDetails,
   RFQLine,
@@ -36,7 +35,6 @@ import type {
   VendorPerformanceSummary,
   VendorPerformanceEvent,
   VendorScorecard,
-  VendorPerformanceRank,
   ScorecardStatus,
 } from '@opsui/shared';
 

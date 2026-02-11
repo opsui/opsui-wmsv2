@@ -4,10 +4,9 @@
  * Data access layer for e-commerce platform integration
  */
 
-import { PoolClient } from 'pg';
-import { query, transaction } from '../db/client';
-import { BaseRepository, toCamelCase, QueryResult, QueryOptions } from './BaseRepository';
-import {
+import { query } from '../db/client';
+import { BaseRepository, toCamelCase } from './BaseRepository';
+import type {
   EcommerceConnection,
   EcommerceProductMapping,
   EcommerceInventorySync,
@@ -21,8 +20,6 @@ import {
   PlatformType,
   ProductMappingStatus,
   EcommerceSyncStatus,
-  InventorySyncType,
-  OrderSyncType,
   WebhookProcessingStatus,
 } from '@opsui/shared';
 

@@ -6,7 +6,7 @@
  * three-way matching, vendor catalogs, and vendor performance
  */
 
-import { Router, Response } from 'express';
+import { Router } from 'express';
 import { purchasingService } from '../services/PurchasingService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -15,7 +15,6 @@ import type {
   RequisitionStatus,
   RFQStatus,
   PurchaseOrderStatus,
-  QualityStatus,
 } from '@opsui/shared';
 
 const router = Router();
@@ -106,7 +105,7 @@ router.get(
 router.get(
   '/requisitions/pending',
   approvalAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const requisitions = await purchasingService.getPendingApprovals();
     res.json(requisitions);
   })
@@ -236,7 +235,7 @@ router.get(
 router.get(
   '/rfqs/pending',
   purchasingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const rfqs = await purchasingService.getRFQsAwaitingResponse();
     res.json(rfqs);
   })
@@ -400,7 +399,7 @@ router.get(
 router.get(
   '/purchase-orders/open',
   purchasingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const orders = await purchasingService.getOpenPurchaseOrders();
     res.json(orders);
   })
@@ -498,7 +497,7 @@ router.get(
 router.get(
   '/receipts/open',
   receivingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     // Would need to implement in service
     res.json({ message: 'Open receipts endpoint' });
   })
@@ -566,7 +565,7 @@ router.put(
 router.get(
   '/match/exceptions',
   matchingAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const exceptions = await purchasingService.getMatchExceptions();
     res.json(exceptions);
   })
@@ -645,7 +644,7 @@ router.get(
 router.get(
   '/vendor-performance/at-risk',
   vendorAuth,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const vendors = await purchasingService.getVendorsAtRisk();
     res.json(vendors);
   })

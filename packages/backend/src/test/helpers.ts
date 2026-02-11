@@ -7,8 +7,8 @@
 import { Pool } from 'pg';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { config } from '../config/index.js';
+import jwt, { Secret } from 'jsonwebtoken';
+import config from '../config/index.js';
 
 // ============================================================================
 // Database Helpers
@@ -109,15 +109,13 @@ export async function createTestUser(
   };
 }
 
-/**
- * Generate a test JWT token
- */
 export function generateTestToken(
   userId: string,
   email: string,
   roleId: string,
-  overrides: { expiresIn?: string } = {}
+  overrides: { expiresIn?: string | number } = {}
 ): string {
+  // @ts-expect-error - jwt.sign overload resolution issue with Secret type
   return jwt.sign(
     {
       userId,
@@ -126,7 +124,7 @@ export function generateTestToken(
     },
     config.jwt.secret,
     {
-      expiresIn: overrides.expiresIn || '1h',
+      expiresIn: overrides.expiresIn || 3600,
     }
   );
 }

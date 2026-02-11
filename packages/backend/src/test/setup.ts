@@ -29,13 +29,13 @@ process.env.TEST_MODE = 'true';
 // Mock Redis
 jest.mock('redis', () => ({
   createClient: jest.fn(() => ({
-    connect: jest.fn().mockResolvedValue(undefined),
-    disconnect: jest.fn().mockResolvedValue(undefined),
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue('OK'),
-    del: jest.fn().mockResolvedValue(1),
-    exists: jest.fn().mockResolvedValue(0),
-    expire: jest.fn().mockResolvedValue(1),
+    connect: jest.fn().mockResolvedValue(undefined as never),
+    disconnect: jest.fn().mockResolvedValue(undefined as never),
+    get: jest.fn().mockResolvedValue(null as never),
+    set: jest.fn().mockResolvedValue('OK' as never),
+    del: jest.fn().mockResolvedValue(1 as never),
+    exists: jest.fn().mockResolvedValue(0 as never),
+    expire: jest.fn().mockResolvedValue(1 as never),
     on: jest.fn(),
   })),
 }));
@@ -43,12 +43,12 @@ jest.mock('redis', () => ({
 // Mock email services
 jest.mock('@sendgrid/mail', () => ({
   setApiKey: jest.fn(),
-  send: jest.fn().mockResolvedValue([{ statusCode: 202 }]),
+  send: jest.fn().mockResolvedValue([{ statusCode: 202 }] as never),
 }));
 
 jest.mock('postmark', () => ({
   ServerClient: jest.fn().mockImplementation(() => ({
-    sendEmail: jest.fn().mockResolvedValue({ ErrorCode: 0, MessageID: 'test-id' }),
+    sendEmail: jest.fn().mockResolvedValue({ ErrorCode: 0, MessageID: 'test-id' } as never),
   })),
 }));
 
@@ -56,14 +56,14 @@ jest.mock('postmark', () => ({
 jest.mock('twilio', () => ({
   Twilio: jest.fn().mockImplementation(() => ({
     messages: {
-      create: jest.fn().mockResolvedValue({ sid: 'test-sid' }),
+      create: jest.fn().mockResolvedValue({ sid: 'test-sid' } as never),
     },
   })),
 }));
 
 // Mock web-push
 jest.mock('web-push', () => ({
-  sendNotification: jest.fn().mockResolvedValue(201),
+  sendNotification: jest.fn().mockResolvedValue(201 as never),
   setVapidDetails: jest.fn(),
 }));
 

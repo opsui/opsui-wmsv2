@@ -1202,7 +1202,7 @@ export class SalesRepository {
     return result.rows.map(row => this.mapRowToBackorder(row));
   }
 
-  async fulfillBackorder(backorderId: string, quantity: number, userId: string): Promise<void> {
+  async fulfillBackorder(backorderId: string, quantity: number, _userId: string): Promise<void> {
     const client = await getPool();
 
     await client.query(
@@ -1252,7 +1252,7 @@ export class SalesRepository {
     return result.rows.map(row => this.mapRowToCommission(row));
   }
 
-  async payCommission(commissionId: string, paymentDate: Date, userId: string): Promise<void> {
+  async payCommission(commissionId: string, paymentDate: Date, _userId: string): Promise<void> {
     const client = await getPool();
 
     const paymentId = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

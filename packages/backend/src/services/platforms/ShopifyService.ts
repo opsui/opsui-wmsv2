@@ -227,7 +227,7 @@ export class ShopifyService {
   private normalizeProducts(products: any[]): PlatformProductData[] {
     return products.flatMap(product => {
       if (product.variants && product.variants.length > 0) {
-        return product.variants.map(variant => this.normalizeProduct(product, variant));
+        return product.variants.map((variant: any) => this.normalizeProduct(product, variant));
       }
       return [this.normalizeProduct(product)];
     });

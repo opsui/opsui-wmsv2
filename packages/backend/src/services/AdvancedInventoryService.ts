@@ -25,8 +25,6 @@ import {
   CreateCycleCountOptimizationDTO,
   InventoryLayerSummary,
   ABCClass,
-  VelocityCategory,
-  LandedCostComponentType,
   AllocationMethod,
   ForecastMethod,
   CycleCountStrategy,

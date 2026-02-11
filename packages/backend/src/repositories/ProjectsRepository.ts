@@ -5,7 +5,7 @@
  * Handles projects, tasks, milestones, time entries, expenses, billing, and resources
  */
 
-import { query, transaction } from '../db/client';
+import { query } from '../db/client';
 import { BaseRepository } from './BaseRepository';
 import type {
   Project,

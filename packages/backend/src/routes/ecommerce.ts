@@ -22,7 +22,7 @@ const router = Router();
 router.get(
   '/connections',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const connections = await ecommerceService.getAllConnections();
     res.json(connections);
   })
@@ -35,7 +35,7 @@ router.get(
 router.get(
   '/connections/active',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const connections = await ecommerceService.getActiveConnections();
     res.json(connections);
   })
@@ -286,7 +286,7 @@ router.post(
 router.get(
   '/status',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const status = await ecommerceService.getConnectionStatus();
     res.json(status);
   })
@@ -299,7 +299,7 @@ router.get(
 router.get(
   '/errors',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const errors = await ecommerceService.getSyncErrors();
     res.json(errors);
   })
@@ -312,7 +312,7 @@ router.get(
 router.get(
   '/pending',
   authenticate,
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const pending = await ecommerceService.getPendingSyncs();
     res.json(pending);
   })

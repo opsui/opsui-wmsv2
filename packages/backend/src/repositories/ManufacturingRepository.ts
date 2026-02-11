@@ -6,12 +6,10 @@
  * shop floor control, quality, and capacity planning
  */
 
-import { query, transaction } from '../db/client';
+import { query } from '../db/client';
 import { BaseRepository } from './BaseRepository';
 import {
   WorkCenterStatus,
-  RoutingStatus,
-  ProductionOrderStatus,
   MRPPlanStatus,
   CapacityPlanStatus,
 } from '@opsui/shared';
