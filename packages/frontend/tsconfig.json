@@ -30,9 +30,5 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
-  "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "../shared" }
-  ]
+  "include": ["src"]
 }
