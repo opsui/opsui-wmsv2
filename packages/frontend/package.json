@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmitOnError false || true && vite build",
+    "build": "tsc && vite build",
     "build:analyze": "tsc --noEmitOnError false || true && vite build && open dist/stats.html",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
