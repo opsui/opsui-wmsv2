@@ -39,7 +39,7 @@
     "type-check": "npm run typecheck",
     "check:unused": "npm run clean:code",
     "clean:code": "ts-prune --ignore unknown",
-    "prepare": "husky install",
+    "prepare": "husky install || true",
     "precommit": "npm run format && npm run lint:fix && npm run type-check && npm test",
     "db:migrate": "npm run db:migrate --workspace=packages/backend",
     "db:seed": "npm run db:seed --workspace=packages/backend",
