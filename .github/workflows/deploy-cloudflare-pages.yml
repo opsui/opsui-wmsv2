@@ -33,4 +33,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy packages/frontend/dist --project-name=opsui-wmsv2
+          command: pages deploy packages/frontend/dist --project-name=opsui-wmsv2 --compatibility-flag=nodejs_compat
