@@ -232,18 +232,24 @@ export class MetricsService {
       endDate: endDate.toISOString(),
     });
 
+    // Since pack_tasks table doesn't exist, we calculate performance from orders
+    // that have a packer assigned and have been packed or shipped
     const result = await query(
       `SELECT
          u.user_id as packer_id,
          u.name as packer_name,
-         COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') as tasks_completed,
+         COUNT(*) as tasks_completed,
          COUNT(DISTINCT o.order_id) FILTER (WHERE o.status IN ('PACKED', 'SHIPPED')) as orders_completed,
-         COALESCE(SUM(pt.packed_quantity) FILTER (WHERE pt.status = 'COMPLETED'), 0) as total_packed,
-         COALESCE(AVG(EXTRACT(EPOCH FROM (pt.completed_at - pt.started_at))), 0) as avg_time
+         COALESCE(SUM(
+           (SELECT COALESCE(SUM(oi.quantity), 0)
+            FROM order_items oi
+            WHERE oi.order_id = o.order_id)
+         ), 0) as total_packed,
+         COALESCE(AVG(EXTRACT(EPOCH FROM (o.updated_at - o.created_at))), 0) as avg_time
        FROM users u
-       INNER JOIN pack_tasks pt ON u.user_id = pt.packer_id
-       INNER JOIN orders o ON pt.order_id = o.order_id
-       WHERE pt.started_at >= $1 AND pt.started_at <= $2
+       INNER JOIN orders o ON u.user_id = o.packer_id
+       WHERE o.updated_at >= $1 AND o.updated_at <= $2
+         AND o.packer_id IS NOT NULL
        GROUP BY u.user_id, u.name
        ORDER BY tasks_completed DESC`,
       [startDate, endDate]

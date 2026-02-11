@@ -29,6 +29,21 @@ import { Client } from 'pg';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load backend .env file
+const envPath = path.join(__dirname, '..', 'packages', 'backend', '.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    if (key && valueParts.length > 0) {
+      const value = valueParts.join('=');
+      if (!process.env[key]) {
+        process.env[key] = value.trim();
+      }
+    }
+  });
+}
+
 // Configuration
 const CONFIG = {
   backendPort: 3001,

@@ -263,7 +263,8 @@ router.post(
     const { query } = await import('../db/client');
 
     // Normalize snake_case to camelCase
-    const barcode = req.body.barcode;
+    // Accept both 'barcode' and 'sku' - frontend may send either
+    const barcode = req.body.barcode || req.body.sku;
     const quantity = req.body.quantity;
     const binLocation = req.body.binLocation || req.body.bin_location;
     const pickTaskId = req.body.pickTaskId || req.body.pick_task_id;
@@ -272,7 +273,7 @@ router.post(
     if (!barcode) {
       res.status(400).json({
         error: 'Validation failed',
-        details: [{ field: 'barcode', message: '"barcode" is required' }],
+        details: [{ field: 'barcode', message: '"barcode" or "sku" is required' }],
       });
       return;
     }

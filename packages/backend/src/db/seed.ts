@@ -179,28 +179,146 @@ async function seedUsers(): Promise<void> {
 }
 
 /**
- * Seed sample orders
+ * Helper function to get a random date within the last N days
+ */
+function getRandomDate(daysBack: number): Date {
+  const now = new Date();
+  const past = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+  return new Date(past.getTime() + Math.random() * (now.getTime() - past.getTime()));
+}
+
+/**
+ * Helper function to get a date relative to a base date
+ */
+function addHours(baseDate: Date, hours: number): Date {
+  return new Date(baseDate.getTime() + hours * 60 * 60 * 1000);
+}
+
+/**
+ * Seed sample orders with historical data for dashboard graphs
  */
 async function seedOrders(): Promise<void> {
-  logger.info('Seeding sample orders...');
+  logger.info('Seeding sample orders with historical data...');
 
-  const customers = ['Acme Corp', 'Globex Inc', 'Soylent Corp', 'Initech'];
+  const customers = [
+    'Acme Corp',
+    'Globex Inc',
+    'Soylent Corp',
+    'Initech',
+    'Umbrella Corp',
+    'Stark Industries',
+    'Wayne Enterprises',
+    'Cyberdyne Systems',
+  ];
   const priorities = ['LOW', 'NORMAL', 'HIGH', 'URGENT'] as const;
+  const pickers = ['USR-PICK01', 'USR-PICK02'];
+  const packers = ['USR-PACK01'];
 
-  for (let i = 0; i < 10; i++) {
+  // Create orders distributed across the last 90 days with various statuses
+  const ordersConfig = [
+    // Recent shipped orders (last 7 days) - for throughput graphs
+    ...Array.from({ length: 15 }, () => ({
+      daysAgo: Math.random() * 7,
+      status: 'SHIPPED' as const,
+      priority: 'NORMAL' as const,
+    })),
+    // Recently picked/packed orders
+    ...Array.from({ length: 8 }, () => ({
+      daysAgo: Math.random() * 3,
+      status: 'PACKED' as const,
+      priority: 'NORMAL' as const,
+    })),
+    ...Array.from({ length: 5 }, () => ({
+      daysAgo: Math.random() * 2,
+      status: 'PICKED' as const,
+      priority: 'NORMAL' as const,
+    })),
+    // Currently being processed
+    ...Array.from({ length: 6 }, () => ({
+      daysAgo: Math.random() * 1,
+      status: 'PICKING' as const,
+      priority: 'HIGH' as const,
+    })),
+    ...Array.from({ length: 4 }, () => ({
+      daysAgo: Math.random() * 1,
+      status: 'PACKING' as const,
+      priority: 'NORMAL' as const,
+    })),
+    // Pending orders in queue
+    ...Array.from({ length: 12 }, () => ({
+      daysAgo: Math.random() * 0.5,
+      status: 'PENDING' as const,
+      priority: priorities[Math.floor(Math.random() * priorities.length)],
+    })),
+    // Historical shipped orders (for monthly/yearly graphs)
+    ...Array.from({ length: 30 }, () => ({
+      daysAgo: 7 + Math.random() * 83, // 7-90 days ago
+      status: 'SHIPPED' as const,
+      priority: 'NORMAL' as const,
+    })),
+    // Some cancelled orders for status breakdown
+    ...Array.from({ length: 3 }, () => ({
+      daysAgo: Math.random() * 30,
+      status: 'CANCELLED' as const,
+      priority: 'LOW' as const,
+    })),
+  ];
+
+  for (const config of ordersConfig) {
     const orderId = generateOrderId();
     const customer = customers[Math.floor(Math.random() * customers.length)];
-    const priority = priorities[Math.floor(Math.random() * priorities.length)];
+    const createdAt = getRandomDate(config.daysAgo);
+    const status = config.status;
+    const priority = config.priority;
+
+    // Assign picker/packer based on status
+    let pickerId: string | null = null;
+    let packerId: string | null = null;
+    let shippedAt: Date | null = null;
+    let progress = 0;
+
+    if (
+      status === 'PICKING' ||
+      status === 'PICKED' ||
+      status === 'PACKING' ||
+      status === 'PACKED' ||
+      status === 'SHIPPED'
+    ) {
+      pickerId = pickers[Math.floor(Math.random() * pickers.length)];
+      progress = status === 'PICKING' ? 50 : 100;
+    }
+
+    if (status === 'PACKING' || status === 'PACKED' || status === 'SHIPPED') {
+      packerId = packers[Math.floor(Math.random() * packers.length)];
+      progress = status === 'PACKING' ? 75 : 100;
+    }
+
+    if (status === 'SHIPPED') {
+      shippedAt = addHours(createdAt, 24 + Math.random() * 48); // 1-3 days after creation
+      progress = 100;
+    }
 
     await query(
-      `INSERT INTO orders (order_id, customer_id, customer_name, priority, status)
-       VALUES ($1, $2, $3, $4, 'PENDING')
+      `INSERT INTO orders (order_id, customer_id, customer_name, priority, status, picker_id, packer_id, shipped_at, created_at, updated_at, progress)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (order_id) DO NOTHING`,
-      [orderId, `CUST-${Math.floor(Math.random() * 1000)}`, customer, priority]
+      [
+        orderId,
+        `CUST-${Math.floor(Math.random() * 10000)}`,
+        customer,
+        priority,
+        status,
+        pickerId,
+        packerId,
+        shippedAt,
+        createdAt,
+        status === 'SHIPPED' ? shippedAt : createdAt,
+        progress,
+      ]
     );
 
     // Add random items to each order
-    const itemCount = Math.floor(Math.random() * 3) + 1;
+    const itemCount = Math.floor(Math.random() * 4) + 1;
     const usedSKUs = new Set<string>();
 
     for (let j = 0; j < itemCount; j++) {
@@ -211,19 +329,98 @@ async function seedOrders(): Promise<void> {
       usedSKUs.add(sku.sku);
 
       const quantity = Math.floor(Math.random() * 5) + 1;
-      const binLocation = sku.binLocations[0];
+      const binLocation = sku.binLocations[Math.floor(Math.random() * sku.binLocations.length)];
 
-      const orderItemId = `OI${orderId.slice(-3)}${Date.now().toString().slice(-6)}`;
-      // Don't specify status - let it use the default
+      const orderItemId = `OI${orderId.slice(-3)}${Date.now().toString().slice(-6)}${j}`;
+
+      // Calculate picked quantity and verified quantity based on order status
+      let pickedQuantity = 0;
+      let verifiedQuantity = 0;
+      let itemStatus = 'PENDING';
+
+      if (status === 'PICKING') {
+        pickedQuantity = Math.floor(Math.random() * quantity);
+        itemStatus = pickedQuantity > 0 ? 'PARTIAL_PICKED' : 'PENDING';
+      } else if (
+        status === 'PICKED' ||
+        status === 'PACKING' ||
+        status === 'PACKED' ||
+        status === 'SHIPPED'
+      ) {
+        pickedQuantity = quantity;
+        itemStatus = 'FULLY_PICKED';
+      }
+
+      if (status === 'PACKING' || status === 'PACKED' || status === 'SHIPPED') {
+        verifiedQuantity = quantity;
+      }
+
       await query(
-        `INSERT INTO order_items (order_item_id, order_id, sku, name, quantity, bin_location)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [orderItemId, orderId, sku.sku, sku.name, quantity, binLocation]
+        `INSERT INTO order_items (order_item_id, order_id, sku, name, quantity, picked_quantity, verified_quantity, bin_location, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          orderItemId,
+          orderId,
+          sku.sku,
+          sku.name,
+          quantity,
+          pickedQuantity,
+          verifiedQuantity,
+          binLocation,
+          itemStatus,
+        ]
       );
+
+      // Create pick_tasks for orders that are being picked or have been picked
+      if (
+        pickerId &&
+        (status === 'PICKING' ||
+          status === 'PICKED' ||
+          status === 'PACKING' ||
+          status === 'PACKED' ||
+          status === 'SHIPPED')
+      ) {
+        const pickTaskId = `PT-${orderId.slice(-6)}${j}`;
+        const startedAt = addHours(createdAt, 1 + Math.random() * 4);
+
+        let taskStatus = 'COMPLETED';
+        let completedAt: Date | null = addHours(startedAt, 0.5 + Math.random() * 2);
+
+        if (status === 'PICKING') {
+          // Some tasks might still be in progress
+          if (Math.random() > 0.7) {
+            taskStatus = 'IN_PROGRESS';
+            completedAt = null;
+          }
+        }
+
+        const actualPickedQuantity = taskStatus === 'COMPLETED' ? quantity : pickedQuantity;
+
+        await query(
+          `INSERT INTO pick_tasks (pick_task_id, order_id, order_item_id, sku, name, target_bin, quantity, picked_quantity, status, picker_id, started_at, completed_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (pick_task_id) DO NOTHING`,
+          [
+            pickTaskId,
+            orderId,
+            orderItemId,
+            sku.sku,
+            sku.name,
+            binLocation,
+            quantity,
+            actualPickedQuantity,
+            taskStatus,
+            pickerId,
+            startedAt,
+            completedAt,
+          ]
+        );
+      }
+      // Note: pack_tasks table doesn't exist in this schema - packers are tracked via orders.packer_id
     }
   }
 
-  logger.info('Seeded sample orders');
+  logger.info('Seeded sample orders with historical data');
 }
 
 /**
@@ -269,8 +466,12 @@ async function main(): Promise<void> {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ES module equivalent of require.main === module)
+const isMainModule =
+  import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}` ||
+  import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`;
+
+if (isMainModule) {
   main();
 }
 

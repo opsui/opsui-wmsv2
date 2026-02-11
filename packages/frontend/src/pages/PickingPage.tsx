@@ -511,7 +511,7 @@ export function PickingPage() {
       await pickMutation.mutateAsync({
         orderId,
         dto: {
-          sku: currentTask.sku,
+          barcode: currentTask.barcode || currentTask.sku, // Send barcode (preferred) or SKU
           quantity: 1, // Pick one at a time for simplicity
           binLocation: currentTask.binLocation,
           pickTaskId: currentTask.orderItemId,

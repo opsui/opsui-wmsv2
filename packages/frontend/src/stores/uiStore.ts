@@ -61,7 +61,7 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       // Initial state
       soundEnabled: true,
-      theme: 'dark',
+      theme: 'auto',
       sidebarOpen: true,
       scanInputFocused: false,
       notifications: [],
