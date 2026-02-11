@@ -297,6 +297,7 @@ interface NavDropdownProps {
 function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -316,8 +317,28 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
     return itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
   });
 
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Quick close when leaving to prevent overlap with other dropdowns
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 50);
+  };
+
   return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
+    <div
+      className="relative z-[9999]"
+      ref={dropdownRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
@@ -326,50 +347,60 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
             : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 dark:border-transparent border-transparent dark:hover:border-white/[0.1] hover:border-primary-200'
         }`}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'scale-110' : ''}`} />
         {label}
         <ChevronDownIcon
-          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-3 w-3 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-60 dark:bg-gray-800 bg-white dark:border-white/[0.1] border-primary-200 rounded-xl shadow-xl animate-fade-in">
-          <div className="py-2">
-            {items.map(item => {
-              const ItemIcon = item.icon;
-              const itemUrl = new URL(item.path, 'http://dummy');
-              const isActive = itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
-              return (
-                <button
-                  key={item.key}
-                  onClick={() => {
-                    navigate(item.path);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+      {/* Dropdown with smooth animations */}
+      <div
+        className={`absolute top-full left-0 mt-2 w-60 overflow-hidden rounded-xl shadow-xl transition-all duration-300 ease-out origin-top ${
+          isOpen
+            ? 'opacity-100 scale-y-100 translate-y-0'
+            : 'opacity-0 scale-y-95 -translate-y-2 pointer-events-none'
+        } dark:bg-gray-800/95 bg-white/95 dark:border-white/[0.1] border-gray-200 backdrop-blur-sm`}
+      >
+        <div className="py-2">
+          {items.map((item, index) => {
+            const ItemIcon = item.icon;
+            const itemUrl = new URL(item.path, 'http://dummy');
+            const isActive = itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
+            return (
+              <button
+                key={item.key}
+                onClick={() => {
+                  navigate(item.path);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+                  isActive
+                    ? 'dark:text-white text-primary-700 dark:bg-white/[0.08] bg-primary-100'
+                    : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50'
+                }`}
+                style={{
+                  transitionDelay: isOpen ? `${index * 30}ms` : '0ms',
+                  opacity: isOpen ? 1 : 0,
+                  transform: isOpen ? 'translateX(0)' : 'translateX(-8px)',
+                }}
+              >
+                <ItemIcon
+                  className={`h-4 w-4 flex-shrink-0 transition-all duration-200 ${
                     isActive
-                      ? 'dark:text-white text-primary-700 dark:bg-white/[0.08] bg-primary-100'
-                      : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50'
+                      ? 'dark:text-primary-300 text-primary-600'
+                      : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-500'
                   }`}
-                >
-                  <ItemIcon
-                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
-                      isActive
-                        ? 'dark:text-primary-300 text-primary-600'
-                        : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-500'
-                    }`}
-                  />
-                  {item.label}
-                  {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-300 bg-primary-600 dark:shadow-[0_0_8px_rgba(96,165,250,0.6)] shadow-[0_0_8px_rgba(37,99,235,0.6)] animate-pulse"></span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                />
+                <span className="flex-1 text-left">{item.label}</span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full dark:bg-primary-300 bg-primary-600 dark:shadow-[0_0_8px_rgba(96,165,250,0.6)] shadow-[0_0_8px_rgba(37,99,235,0.6)] animate-pulse"></span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
