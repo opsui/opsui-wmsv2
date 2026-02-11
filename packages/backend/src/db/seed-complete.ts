@@ -20,6 +20,7 @@ type OrderStatus =
   | 'PACKED'
   | 'SHIPPED'
   | 'CANCELLED'
+  | 'ON_HOLD'
   | 'BACKORDER';
 type ItemStatus = 'PENDING' | 'PARTIAL_PICKED' | 'FULLY_PICKED';
 
@@ -266,6 +267,77 @@ const MOCK_ORDERS: Order[] = [
     packed_at: getDateDaysAgo(19.2),
     shipped_at: getDateDaysAgo(19),
     progress: 100,
+  },
+
+  // Cancelled orders
+  {
+    order_id: 'SO71015',
+    customer_name: 'Vought Inc',
+    status: 'CANCELLED',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(5),
+    updated_at: getDateDaysAgo(5),
+    picker_id: 'USR-PICK02',
+    claimed_at: getDateDaysAgo(4.9),
+    picked_at: undefined,
+    packed_at: undefined,
+    shipped_at: undefined,
+    progress: 0,
+  },
+  {
+    order_id: 'SO71016',
+    customer_name: 'Global Dynamics',
+    status: 'CANCELLED',
+    priority: 'LOW',
+    created_at: getDateDaysAgo(12),
+    updated_at: getDateDaysAgo(12),
+    picker_id: 'USR-PICK03',
+    claimed_at: getDateDaysAgo(11.9),
+    picked_at: getDateDaysAgo(11.5),
+    packed_at: undefined,
+    shipped_at: undefined,
+    progress: 45,
+  },
+
+  // On Hold orders
+  {
+    order_id: 'SO71017',
+    customer_name: 'Massive Dynamic',
+    status: 'ON_HOLD',
+    priority: 'HIGH',
+    created_at: getDateDaysAgo(3),
+    updated_at: getDateDaysAgo(2),
+    picker_id: 'USR-PICK04',
+    claimed_at: getDateDaysAgo(2.5),
+    picked_at: undefined,
+    packed_at: undefined,
+    shipped_at: undefined,
+    progress: 20,
+  },
+  {
+    order_id: 'SO71018',
+    customer_name: 'Primatech',
+    status: 'ON_HOLD',
+    priority: 'URGENT',
+    created_at: getDateDaysAgo(8),
+    updated_at: getDateDaysAgo(7),
+    picker_id: 'USR-PICK01',
+    claimed_at: getDateDaysAgo(7.8),
+    picked_at: undefined,
+    packed_at: undefined,
+    shipped_at: undefined,
+    progress: 0,
+  },
+
+  // Backordered items (orders that need more inventory)
+  {
+    order_id: 'SO71019',
+    customer_name: 'Stark Solutions',
+    status: 'PENDING',
+    priority: 'NORMAL',
+    created_at: getDateDaysAgo(1),
+    updated_at: getDateDaysAgo(0.5),
+    progress: 0,
   },
 ];
 
@@ -794,6 +866,101 @@ const MOCK_ORDER_ITEMS: OrderItem[] = [
     bin_location: 'B-05-03',
     status: 'FULLY_PICKED',
   },
+  // SO71015 items (CANCELLED - not picked)
+  {
+    order_item_id: 'OI71015-1',
+    order_id: 'SO71015',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'A-01-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71015-2',
+    order_id: 'SO71015',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'C-10-05',
+    status: 'PENDING',
+  },
+  // SO71016 items (CANCELLED - partially picked)
+  {
+    order_item_id: 'OI71016-1',
+    order_id: 'SO71016',
+    sku: 'GADGET-B-002',
+    name: 'Gadget B Type 2',
+    quantity: 3,
+    picked_quantity: 1,
+    bin_location: 'B-05-03',
+    status: 'PARTIAL_PICKED',
+  },
+  {
+    order_item_id: 'OI71016-2',
+    order_id: 'SO71016',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 2,
+    picked_quantity: 1,
+    bin_location: 'D-02-01',
+    status: 'PARTIAL_PICKED',
+  },
+  // SO71017 items (ON_HOLD)
+  {
+    order_item_id: 'OI71017-1',
+    order_id: 'SO71017',
+    sku: 'COMP-E-005',
+    name: 'Component E Type 5',
+    quantity: 1,
+    picked_quantity: 0,
+    bin_location: 'E-08-02',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71017-2',
+    order_id: 'SO71017',
+    sku: 'MATERIAL-F-006',
+    name: 'Material F Type 6',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'F-12-03',
+    status: 'PENDING',
+  },
+  // SO71018 items (ON_HOLD)
+  {
+    order_item_id: 'OI71018-1',
+    order_id: 'SO71018',
+    sku: 'WIDGET-A-001',
+    name: 'Widget A Type 1',
+    quantity: 4,
+    picked_quantity: 0,
+    bin_location: 'A-01-01',
+    status: 'PENDING',
+  },
+  {
+    order_item_id: 'OI71018-2',
+    order_id: 'SO71018',
+    sku: 'TOOL-C-003',
+    name: 'Tool C Type 3',
+    quantity: 2,
+    picked_quantity: 0,
+    bin_location: 'C-10-05',
+    status: 'PENDING',
+  },
+  // SO71019 items (PENDING - backorder candidate)
+  {
+    order_item_id: 'OI71019-1',
+    order_id: 'SO71019',
+    sku: 'PART-D-004',
+    name: 'Part D Type 4',
+    quantity: 5,
+    picked_quantity: 0,
+    bin_location: 'D-02-01',
+    status: 'PENDING',
+  },
 ];
 
 async function seedCompleteDatabase() {
@@ -809,13 +976,20 @@ async function seedCompleteDatabase() {
     // Insert users first
     console.log('👤 Inserting users...');
     for (const user of MOCK_USERS) {
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      await client.query(
-        `INSERT INTO users (user_id, name, email, password_hash, role, active, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())
-         ON CONFLICT (user_id) DO NOTHING`,
-        [user.user_id, user.name, user.email, hashedPassword, user.role, true]
-      );
+      try {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await client.query(
+          `INSERT INTO users (user_id, name, email, password_hash, role, active, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())
+           ON CONFLICT (user_id) DO NOTHING`,
+          [user.user_id, user.name, user.email, hashedPassword, user.role, true]
+        );
+      } catch (err: any) {
+        // Ignore duplicate key errors
+        if (!err.code || err.code !== '23505') {
+          throw err;
+        }
+      }
     }
     console.log(`  ✅ Inserted ${MOCK_USERS.length} users`);
 
@@ -1027,6 +1201,102 @@ async function seedCompleteDatabase() {
       }
     }
     console.log(`  ✅ Created pick tasks for ${pickingOrders.length} PICKING orders`);
+
+    // Create historical COMPLETED pick_tasks for past orders (within last 30 days)
+    // This data populates the Weekly Picker Performance and Top SKUs charts
+    console.log('📦 Creating historical completed pick tasks...');
+    const completedOrders = MOCK_ORDERS.filter(o =>
+      ['PICKED', 'PACKING', 'PACKED', 'SHIPPED'].includes(o.status)
+    );
+
+    // Add additional pickers for variety in performance chart
+    const ADDITIONAL_PICKERS = [
+      {
+        user_id: 'USR-PICK02',
+        name: 'Mike Johnson',
+        password: 'picker123',
+        email: 'mike.johnson@wms.local',
+        role: 'PICKER',
+      },
+      {
+        user_id: 'USR-PICK03',
+        name: 'Sarah Williams',
+        password: 'picker123',
+        email: 'sarah.williams@wms.local',
+        role: 'PICKER',
+      },
+      {
+        user_id: 'USR-PICK04',
+        name: 'David Chen',
+        password: 'picker123',
+        email: 'david.chen@wms.local',
+        role: 'PICKER',
+      },
+    ];
+
+    for (const user of ADDITIONAL_PICKERS) {
+      try {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await client.query(
+          `INSERT INTO users (user_id, name, email, password_hash, role, active, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())
+           ON CONFLICT (user_id) DO NOTHING`,
+          [user.user_id, user.name, user.email, hashedPassword, user.role, true]
+        );
+      } catch (err: any) {
+        // Ignore duplicate key errors
+        if (!err.code || err.code !== '23505') {
+          throw err;
+        }
+      }
+    }
+    console.log(`  ✅ Inserted ${ADDITIONAL_PICKERS.length} additional pickers`);
+
+    // Pickers to assign historical tasks to
+    const historicalPickers = ['USR-PICK01', 'USR-PICK02', 'USR-PICK03', 'USR-PICK04'];
+
+    let pickTaskCount = 0;
+    for (const order of completedOrders) {
+      const orderItems = MOCK_ORDER_ITEMS.filter(i => i.order_id === order.order_id);
+      // Assign picker if not already assigned
+      const pickerId = order.picker_id || historicalPickers[Math.floor(Math.random() * historicalPickers.length)];
+      const orderDate = order.updated_at;
+
+      for (const item of orderItems) {
+        const pickTaskId =
+          'PT-HIST-' +
+          order.order_id +
+          '-' +
+          item.order_item_id.substring(item.order_item_id.lastIndexOf('-') + 1);
+
+        // Random completion time between 2-8 minutes
+        const completionMinutes = 2 + Math.floor(Math.random() * 6);
+        const startedAt = new Date(orderDate.getTime() - completionMinutes * 60 * 1000);
+        const completedAt = orderDate;
+
+        await client.query(
+          `INSERT INTO pick_tasks (pick_task_id, order_id, order_item_id, picker_id, sku, name, target_bin, quantity, picked_quantity, status, started_at, completed_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           ON CONFLICT (pick_task_id) DO NOTHING`,
+          [
+            pickTaskId,
+            order.order_id,
+            item.order_item_id,
+            pickerId,
+            item.sku,
+            item.name,
+            item.bin_location,
+            item.quantity,
+            item.quantity,
+            'COMPLETED',
+            startedAt,
+            completedAt,
+          ]
+        );
+        pickTaskCount++;
+      }
+    }
+    console.log(`  ✅ Created ${pickTaskCount} historical completed pick tasks`);
 
     // Insert carriers
     console.log('🚚 Inserting carriers...');

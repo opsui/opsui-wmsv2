@@ -20,14 +20,15 @@ interface OrderStatusChartProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#06b6d4', // cyan-500 (info)
-  PICKING: '#f59e0b', // amber-500 (warning)
-  PICKED: '#10b981', // emerald-500 (success)
-  PACKING: '#3b82f6', // blue-500 (info)
-  PACKED: '#06b6d4', // cyan-500 (info)
-  SHIPPED: '#10b981', // emerald-500 (success)
-  CANCELLED: '#ef4444', // red-500 (error)
-  ON_HOLD: '#8b5cf6', // violet-500 (warning/info)
+  PENDING: '#06b6d4',   // cyan-500
+  PICKING: '#f59e0b',   // amber-500
+  PICKED: '#10b981',    // emerald-500
+  PACKING: '#3b82f6',   // blue-500
+  PACKED: '#8b5cf6',    // violet-500
+  SHIPPED: '#ec4899',   // pink-500
+  CANCELLED: '#ef4444', // red-500
+  ON_HOLD: '#f97316',   // orange-500
+  BACKORDERED: '#14b8a6', // teal-500
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -39,6 +40,7 @@ const STATUS_LABELS: Record<string, string> = {
   SHIPPED: 'Shipped',
   CANCELLED: 'Cancelled',
   ON_HOLD: 'On Hold',
+  BACKORDERED: 'Backordered',
 };
 
 export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartProps) {
@@ -62,8 +64,8 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
   const renderLabel = useMemo(() => {
     return ({ name, percent }: { name?: string; percent?: number }) => {
       const percentValue = percent ? (percent * 100).toFixed(0) : '0';
-      // Only show label if slice is large enough (>5%)
-      if (Number(percentValue) > 5) {
+      // Show label if slice is large enough (>3% - lowered from 5% to show cancelled/backordered)
+      if (Number(percentValue) > 3) {
         return `${name}: ${percentValue}%`;
       }
       return '';
@@ -153,6 +155,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
                 outerRadius={100}
                 innerRadius={60}
                 dataKey="count"
+                isAnimationActive={false}
               >
                 {chartData.map((entry, index) => (
                   <Cell
@@ -187,7 +190,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
 
         {/* Summary stats */}
         <div className="mt-4 grid grid-cols-2 gap-2">
-          {chartData.slice(0, 6).map(item => (
+          {chartData.map(item => (
             <div
               key={item.status}
               className="flex items-center justify-between p-3 rounded-xl dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none transition-all duration-200 hover:scale-[1.02] cursor-default"
