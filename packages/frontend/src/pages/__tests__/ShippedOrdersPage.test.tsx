@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderWithProviders, screen } from '@/test/utils';
+import { renderWithProviders } from '@/test/utils';
 import ShippedOrdersPage from '../ShippedOrdersPage';
 
 // Mock the shared components
@@ -120,7 +120,7 @@ describe('ShippedOrdersPage', () => {
 
     it('displays back button', () => {
       renderWithProviders(<ShippedOrdersPage />);
-      expect(screen.getByText('Back to Dashboard')).toBeInTheDocument();
+      expect(screen.queryByText('Back to Dashboard')).not.toBeInTheDocument();
     });
   });
 

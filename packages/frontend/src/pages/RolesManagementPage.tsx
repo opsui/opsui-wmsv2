@@ -222,15 +222,6 @@ function RolesManagementPage() {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
           </div>
 
           <div className="flex items-center justify-between">

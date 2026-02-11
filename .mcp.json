@@ -12,7 +12,10 @@
       "args": [
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\dist\\index.js"
       ],
-      "disabled": false
+      "disabled": false,
+      "env": {
+        "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW"
+      }
     }
   }
 }

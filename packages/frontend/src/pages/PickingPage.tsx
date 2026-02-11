@@ -814,17 +814,6 @@ export function PickingPage() {
         {/* Order Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            {isViewMode && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 flex-shrink-0"
-              >
-                <ArrowLeftIcon className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            )}
             <div className="min-w-0 flex-1">
               <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
                 {order.orderId}

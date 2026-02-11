@@ -34,6 +34,7 @@ import {
   CardTitle,
   CardContent,
   CycleCountNavigation,
+  Breadcrumb,
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
 import { useFormValidation } from '@/hooks/useFormValidation';
@@ -629,7 +630,9 @@ export function CycleCountingPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         <div className="space-y-6">
           {/* Header */}
           <div className="flex justify-between items-center">

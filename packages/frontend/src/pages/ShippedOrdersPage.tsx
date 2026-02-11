@@ -15,10 +15,9 @@ import {
   XMarkIcon,
   CalendarIcon,
   CheckIcon,
-  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 import { OrderStatus } from '@opsui/shared';
-import { Pagination, Card, Badge, Button, useToast, Breadcrumb } from '@/components/shared';
+import { Pagination, Card, Badge, Button, useToast, Breadcrumb, Header } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import {
   useShippedOrders,
@@ -215,15 +214,14 @@ export default function ShippedOrdersPage() {
   ).length;
 
   return (
-    <div className="space-y-6">
-      {/* Back Button */}
-      <Button variant="secondary" onClick={() => navigate(-1)} className="flex items-center gap-2">
-        <ChevronLeftIcon className="h-4 w-4" />
-        Back to Dashboard
-      </Button>
-
-      {/* Header */}
-      <div className="flex items-center gap-4">
+    <div className="min-h-screen">
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-4">
         <TruckIcon className="h-8 w-8 text-primary-600" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shipped Orders</h1>
@@ -550,5 +548,7 @@ export default function ShippedOrdersPage() {
         )}
       </Card>
     </div>
+  </main>
+</div>
   );
 }

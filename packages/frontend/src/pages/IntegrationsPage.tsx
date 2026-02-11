@@ -157,14 +157,6 @@ export function IntegrationsPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="secondary"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
           </div>
           <h1 className="text-3xl font-bold text-white">Integrations</h1>
           <p className="mt-2 text-gray-400">

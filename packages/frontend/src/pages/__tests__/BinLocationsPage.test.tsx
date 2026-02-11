@@ -167,7 +167,7 @@ describe('BinLocationsPage', () => {
   describe('Actions', () => {
     it('has back button', () => {
       renderWithProviders(<BinLocationsPage />);
-      expect(screen.getByText(/Back to Dashboard/i)).toBeInTheDocument();
+      expect(screen.queryByText('Back to Dashboard')).not.toBeInTheDocument();
     });
 
     it('has create location button', () => {

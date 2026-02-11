@@ -127,21 +127,13 @@ export function SlottingPage() {
   return (
     <div className="min-h-screen">
       <Header />
-      {/* Breadcrumb Navigation */}
-      <Breadcrumb />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                variant="secondary"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Slotting Optimization

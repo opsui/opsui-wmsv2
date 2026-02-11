@@ -56,17 +56,8 @@ export function NotFoundPage() {
           </ul>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Button */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center justify-center gap-2"
-          >
-            <HomeIcon className="h-5 w-5" />
-            Go to Dashboard
-          </Button>
           <Button
             variant="secondary"
             size="lg"

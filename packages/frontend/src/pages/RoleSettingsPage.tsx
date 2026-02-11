@@ -610,15 +610,6 @@ function RoleSettingsPage() {
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
           </div>
 
           <div className="flex items-center gap-4">
@@ -749,39 +740,6 @@ function RoleSettingsPage() {
           ))}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between p-6 bg-gray-900/50 rounded-xl border border-white/5">
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={handleReset}
-            disabled={!hasChanges}
-            className="flex items-center gap-2"
-          >
-            Reset to Defaults
-          </Button>
-
-          <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => navigate('/dashboard')}
-              disabled={hasChanges}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className="flex items-center gap-2"
-            >
-              <CogIcon className="h-5 w-5" />
-              Save Changes
-            </Button>
-          </div>
-        </div>
 
         {/* Info Box */}
         <Card variant="glass" className="mt-8 border-l-4 border-l-blue-500">

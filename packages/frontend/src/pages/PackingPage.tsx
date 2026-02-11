@@ -939,17 +939,6 @@ export function PackingPage() {
         {/* Order Header */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
-            {isViewMode && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeftIcon className="h-4 w-4" />
-                Back to Dashboard
-              </Button>
-            )}
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight">{order.orderId}</h1>
               <p className="mt-2 text-gray-400">{order.customerName}</p>
