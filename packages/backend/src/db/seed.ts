@@ -129,8 +129,8 @@ async function seedSKUs(): Promise<void> {
 
   for (const sku of sampleSKUs) {
     await query(
-      `INSERT INTO skus (sku, name, description, category, barcode)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO skus (sku, name, description, category, image, active)
+       VALUES ($1, $2, $3, $4, NULL, true)
        ON CONFLICT (sku) DO NOTHING`,
       [sku.sku, sku.name, sku.description, sku.category, sku.barcode]
     );
