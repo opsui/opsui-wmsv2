@@ -101,11 +101,11 @@ function MetricCard({
             >
               <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
-            <div className="w-full">
-              <p className="text-sm sm:text-base font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-wide">
+            <div className="w-full min-w-0">
+              <p className="text-xs sm:text-sm md:text-base font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-tight leading-tight px-1">
                 {title}
               </p>
-              <p className="mt-1 text-3xl sm:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
+              <p className="mt-1 text-2xl sm:text-3xl md:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300 px-1">
                 {value}
               </p>
             </div>
