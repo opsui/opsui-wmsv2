@@ -248,36 +248,44 @@ export function PackingQueuePage() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in">
+      <main
+        id="main-content"
+        className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in"
+        // Safe area padding for notched devices
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        tabIndex={-1}
+      >
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header - Responsive layout */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Packing Queue</h1>
-            <p className="mt-2 text-gray-400">Orders ready to be packed</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Packing Queue</h1>
+            <p className="mt-1 sm:mt-2 text-gray-400 text-sm sm:text-base">Orders ready to be packed</p>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative">
+          {/* Search Bar - Full width on mobile */}
+          <div className="relative w-full sm:w-64">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
-              type="text"
+              type="search"
               placeholder="Search order"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-64 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+              className="w-full pl-10 pr-4 py-3 sm:py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl text-base sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300"
+              aria-label="Search orders"
             />
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-3">
+        {/* Tabs - Scrollable on mobile with touch-friendly targets */}
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 touch-scroll">
           <Button
             variant={activeTab === 'my-orders' ? 'primary' : 'secondary'}
             size="sm"
             onClick={() => setActiveTab('my-orders')}
             disabled={searchedMyOrders.length === 0}
+            className="min-h-touch whitespace-nowrap flex-shrink-0"
           >
             My Orders ({searchedMyOrders.length})
           </Button>
@@ -285,21 +293,28 @@ export function PackingQueuePage() {
             variant={activeTab === 'waiting' ? 'primary' : 'secondary'}
             size="sm"
             onClick={() => setActiveTab('waiting')}
+            className="min-h-touch whitespace-nowrap flex-shrink-0"
           >
             Waiting ({filteredOrders.length})
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => navigate('/shipped-orders')}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/shipped-orders')}
+            className="min-h-touch whitespace-nowrap flex-shrink-0"
+          >
             Shipped Orders
           </Button>
         </div>
 
         {/* Priority Filters - only show on Waiting tab */}
         {activeTab === 'waiting' && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:pb-0 touch-scroll">
             <Button
               variant={filter === 'all' ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setFilter('all')}
+              className="min-h-touch whitespace-nowrap flex-shrink-0"
             >
               All
             </Button>
@@ -307,6 +322,7 @@ export function PackingQueuePage() {
               variant={filter === 'high' ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setFilter('high')}
+              className="min-h-touch whitespace-nowrap flex-shrink-0"
             >
               High Priority
             </Button>
@@ -314,6 +330,7 @@ export function PackingQueuePage() {
               variant={filter === 'urgent' ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setFilter('urgent')}
+              className="min-h-touch whitespace-nowrap flex-shrink-0"
             >
               Urgent
             </Button>

@@ -574,7 +574,12 @@ export function DashboardPage() {
     <div className="min-h-screen">
       <Header />
       <AdminOrdersModal isOpen={showAdminOrders} onClose={() => setShowAdminOrders(false)} />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
+      <main
+        id="main-content"
+        className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        tabIndex={-1}
+      >
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         {/* Page Header */}
@@ -651,11 +656,11 @@ export function DashboardPage() {
         <div className="flex flex-col gap-4">
           {/* Toggle between Role Activity and Audit Logs - only for admin/supervisor */}
           {hasBaseAdminRole && (
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 touch-scroll">
                 <button
                   onClick={() => setActivityView('role-activity')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-3 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-touch whitespace-nowrap flex-shrink-0 ${
                     activityView === 'role-activity'
                       ? 'dark:bg-blue-600 bg-blue-600 text-white shadow-lg dark:shadow-blue-500/30 shadow-blue-500/20'
                       : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200 dark:hover:text-gray-300 hover:text-gray-900'
@@ -666,7 +671,7 @@ export function DashboardPage() {
                 </button>
                 <button
                   onClick={() => setActivityView('audit-logs')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-3 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-touch whitespace-nowrap flex-shrink-0 ${
                     activityView === 'audit-logs'
                       ? 'dark:bg-blue-600 bg-blue-600 text-white shadow-lg dark:shadow-blue-500/30 shadow-blue-500/20'
                       : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200 dark:hover:text-gray-300 hover:text-gray-900'

@@ -68,11 +68,14 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+        className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-touch ${
           isOpen
             ? 'bg-primary-600 text-white shadow-lg'
             : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.08] hover:bg-gray-200 dark:hover:text-white hover:text-gray-900 dark:border-white/[0.08] border-gray-300'
         }`}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={`Status filter: ${selectedOption?.label}`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
         <span>{selectedOption?.label}</span>
@@ -82,8 +85,11 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in">
-          <div className="py-2">
+        <div
+          className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in"
+          role="listbox"
+        >
+          <div className="py-1">
             {options.map(option => {
               const OptionIcon = option.icon;
               const isActive = option.value === value;
@@ -94,11 +100,13 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group min-h-touch ${
                     isActive
                       ? 'text-white bg-primary-600'
                       : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100'
                   }`}
+                  role="option"
+                  aria-selected={isActive}
                 >
                   <OptionIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
@@ -151,11 +159,14 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+        className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-touch ${
           isOpen
             ? 'bg-primary-600 text-white shadow-lg'
             : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.08] hover:bg-gray-200 dark:hover:text-white hover:text-gray-900 dark:border-white/[0.08] border-gray-300'
         }`}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={`Priority filter: ${selectedOption?.label}`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
         <span>{selectedOption?.label}</span>
@@ -165,8 +176,11 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in">
-          <div className="py-2">
+        <div
+          className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in"
+          role="listbox"
+        >
+          <div className="py-1">
             {options.map(option => {
               const OptionIcon = option.icon;
               const isActive = option.value === value;
@@ -532,7 +546,13 @@ export function OrderQueuePage() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Header />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden">
+      <main
+        id="main-content"
+        className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden"
+        // Safe area padding for notched devices
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        tabIndex={-1}
+      >
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         {/* Page Header - Centered */}
