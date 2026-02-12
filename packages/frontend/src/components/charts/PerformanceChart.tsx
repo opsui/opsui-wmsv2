@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { UserRole } from '@opsui/shared';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface PerformanceData {
   userId: string;
@@ -96,6 +97,7 @@ export function PerformanceChart({
 }: PerformanceChartProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('weekly');
   const [selectedRole, setSelectedRole] = useState<RoleType>(UserRole.PICKER);
+  const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   const handleRangeChange = (newRange: TimeRange) => {
     setSelectedRange(newRange);
@@ -176,12 +178,12 @@ export function PerformanceChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative" style={{ width: '100%', height: '280px' }}>
+        <div ref={containerRef} className="relative w-full">
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-emerald-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width={containerWidth} height={280}>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid
                 strokeDasharray="3 3"

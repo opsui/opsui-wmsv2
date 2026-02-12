@@ -17,6 +17,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface ThroughputData {
@@ -55,6 +56,7 @@ const RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
 
 export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputChartProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('daily');
+  const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   const handleRangeChange = (newRange: TimeRange) => {
     setSelectedRange(newRange);
@@ -133,12 +135,12 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
         <TimeRangeSelector value={selectedRange} onChange={handleRangeChange} />
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative" style={{ width: '100%', height: '280px' }}>
+        <div ref={containerRef} className="relative w-full">
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width={containerWidth} height={280}>
             <LineChart data={chartData}>
               <CartesianGrid
                 strokeDasharray="3 3"

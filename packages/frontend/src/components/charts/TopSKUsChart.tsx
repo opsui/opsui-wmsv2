@@ -18,6 +18,7 @@ import {
   Cell,
 } from 'recharts';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface TopSKUData {
   sku: string;
@@ -75,6 +76,7 @@ export function TopSKUsChart({
 }: TopSKUsChartProps) {
   const [selectedScanType, setSelectedScanType] = useState<ScanType>('pick');
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<TimePeriod>('monthly');
+  const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   const handleScanTypeChange = (type: ScanType) => {
     setSelectedScanType(type);
@@ -186,12 +188,12 @@ export function TopSKUsChart({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative" style={{ width: '100%', height: '300px' }}>
+        <div ref={containerRef} className="relative w-full">
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width={containerWidth} height={300}>
             <BarChart
               data={chartData}
               layout="vertical"
