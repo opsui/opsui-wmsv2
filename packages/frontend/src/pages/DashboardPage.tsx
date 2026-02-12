@@ -95,19 +95,19 @@ function MetricCard({
         className="card-hover shadow-lg dark:shadow-blue-500/5 shadow-gray-200/50 group h-full"
       >
         <CardContent className="p-4 sm:p-5 lg:p-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-base sm:text-lg font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-wide truncate">
+              <p className="text-sm sm:text-base font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-wide">
                 {title}
               </p>
-              <p className="mt-2 text-3xl sm:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
+              <p className="mt-1 sm:mt-2 text-2xl sm:text-3xl lg:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
                 {value}
               </p>
             </div>
             <div
-              className={`p-3 sm:p-4 rounded-xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none flex-shrink-0`}
+              className={`p-2.5 sm:p-3 lg:p-4 rounded-xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none flex-shrink-0`}
             >
-              <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
             </div>
           </div>
         </CardContent>
