@@ -11,6 +11,7 @@ import { useAuthStore, useUIStore } from '@/stores';
 import { NotificationCenter, ToastProvider, ErrorBoundary } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
 import webSocketService from '@/services/WebSocketService';
+import '@/lib/env-debug'; // Debug env vars
 import {
   LoginPage,
   DashboardPage,
