@@ -4,7 +4,7 @@
  * Modal for creating and editing users
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UserRole } from '@opsui/shared';
 import { CardContent, Button } from '@/components/shared';
 import {
@@ -50,6 +50,26 @@ function UserModal({
 }: UserModalProps) {
   const [showPassword, setShowPassword] = useState(false);
 
+  // Memoize initial values to prevent unnecessary re-renders
+  // This is crucial - without useMemo, a new object is created on every render
+  // which would cause the form to reset constantly
+  const initialValues = useMemo(
+    () => ({
+      name: initialData?.name || '',
+      email: initialData?.email || '',
+      password: '',
+      role: initialData?.role || UserRole.PICKER,
+      active: initialData?.active ?? true,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      initialData?.name,
+      initialData?.email,
+      initialData?.role,
+      initialData?.active,
+    ]
+  );
+
   // Form validation
   const {
     values: formData,
@@ -60,13 +80,7 @@ function UserModal({
     reset,
     setFieldValue,
   } = useFormValidation<UserFormData>({
-    initialValues: {
-      name: initialData?.name || '',
-      email: initialData?.email || '',
-      password: '',
-      role: initialData?.role || UserRole.PICKER,
-      active: initialData?.active ?? true,
-    },
+    initialValues,
     validationRules: {
       name: {
         required: true,
@@ -116,13 +130,13 @@ function UserModal({
   useEffect(() => {
     if (isOpen) {
       reset();
-      setFieldValue('name', initialData?.name || '');
-      setFieldValue('email', initialData?.email || '');
+      setFieldValue('name', initialValues.name);
+      setFieldValue('email', initialValues.email);
       setFieldValue('password', '');
-      setFieldValue('role', initialData?.role || UserRole.PICKER);
-      setFieldValue('active', initialData?.active ?? true);
+      setFieldValue('role', initialValues.role);
+      setFieldValue('active', initialValues.active);
     }
-  }, [isOpen, initialData, reset, setFieldValue]);
+  }, [isOpen, initialValues, reset, setFieldValue]);
 
   if (!isOpen) return null;
 
