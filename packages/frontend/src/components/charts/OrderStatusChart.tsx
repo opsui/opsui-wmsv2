@@ -147,7 +147,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width={containerWidth} height={240}>
+          <ResponsiveContainer width={containerWidth} height={280}>
             <PieChart>
                 <Pie
                   data={chartData}
