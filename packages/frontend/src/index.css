@@ -15,6 +15,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Fix: Ensure html covers full scrollable area in dark mode */
+    min-height: 100%;
+    height: auto;
   }
 
   * {
@@ -24,10 +27,15 @@
   /* Dark theme (default) */
   html {
     color-scheme: dark;
+    /* Fix: Dark background on html to prevent white flash at bottom when scrolling */
+    background: #0f172a;
   }
 
   html.light {
     color-scheme: light;
+    /* Fix: Light background on html for light mode */
+    background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 50%, #cffafe 100%);
+    background-attachment: fixed;
   }
 
   /* ============================================

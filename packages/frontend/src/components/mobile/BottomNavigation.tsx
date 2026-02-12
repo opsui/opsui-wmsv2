@@ -10,6 +10,17 @@
  */
 
 import React from 'react';
+import {
+  HomeIcon,
+  ClipboardDocumentListIcon,
+  CubeIcon,
+  ChartBarIcon,
+  Bars3Icon,
+  UsersIcon,
+  Cog6ToothIcon,
+  MagnifyingGlassIcon,
+  ShoppingBagIcon,
+} from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 
 export interface NavItem {
@@ -122,12 +133,11 @@ export function BottomNavigation({
             )}
           >
             {/* Icon container with badge */}
-            <div className="relative">
+            <div className="relative flex items-center justify-center">
               <div
                 className={cn(
-                  'w-6 h-6',
                   // Active indicator
-                  isActive && 'scale-110 transition-transform'
+                  isActive && 'scale-110 transition-transform duration-150'
                 )}
               >
                 {item.icon}
@@ -137,13 +147,13 @@ export function BottomNavigation({
               {showBadge && (
                 <span
                   className={cn(
-                    'absolute -top-1 -right-1',
+                    'absolute -top-1 -right-2',
                     'min-w-[18px] h-[18px] px-1',
                     'flex items-center justify-center',
                     'bg-error-500 text-white',
                     'text-xs font-medium',
                     'rounded-full',
-                    'ring-2 ring-white dark:ring-dark-100'
+                    'ring-2 ring-white dark:ring-gray-900'
                   )}
                   aria-hidden="true"
                 >
@@ -180,35 +190,33 @@ export function BottomNavigation({
   );
 }
 
-// Default navigation items by role
+// Default navigation items by role using Heroicons
 export const DEFAULT_NAV_ITEMS: Record<string, NavItem[]> = {
   picker: [
-    { id: 'orders', label: 'Orders', icon: '📋', path: '/orders' },
-    { id: 'waves', label: 'Waves', icon: '🌊', path: '/waves' },
-    { id: 'scan', label: 'Scan', icon: '📷', path: '/scan' },
-    { id: 'stock', label: 'Stock', icon: '📦', path: '/stock-control' },
-    { id: 'more', label: 'More', icon: '☰', path: '/more' },
+    { id: 'orders', label: 'Orders', icon: <ClipboardDocumentListIcon className="w-6 h-6" />, path: '/orders' },
+    { id: 'scan', label: 'Scan', icon: <MagnifyingGlassIcon className="w-6 h-6" />, path: '/scan' },
+    { id: 'stock', label: 'Stock', icon: <CubeIcon className="w-6 h-6" />, path: '/stock-control' },
+    { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
   packer: [
-    { id: 'packing', label: 'Packing', icon: '📦', path: '/packing' },
-    { id: 'shipped', label: 'Shipped', icon: '🚚', path: '/shipped-orders' },
-    { id: 'scan', label: 'Scan', icon: '📷', path: '/scan' },
-    { id: 'stock', label: 'Stock', icon: '📦', path: '/stock-control' },
-    { id: 'more', label: 'More', icon: '☰', path: '/more' },
+    { id: 'packing', label: 'Packing', icon: <CubeIcon className="w-6 h-6" />, path: '/packing' },
+    { id: 'shipped', label: 'Shipped', icon: <ShoppingBagIcon className="w-6 h-6" />, path: '/shipped-orders' },
+    { id: 'scan', label: 'Scan', icon: <MagnifyingGlassIcon className="w-6 h-6" />, path: '/scan' },
+    { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
   supervisor: [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
-    { id: 'orders', label: 'Orders', icon: '📋', path: '/orders' },
-    { id: 'packing', label: 'Packing', icon: '📦', path: '/packing' },
-    { id: 'reports', label: 'Reports', icon: '📈', path: '/reports' },
-    { id: 'more', label: 'More', icon: '☰', path: '/more' },
+    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="w-6 h-6" />, path: '/dashboard' },
+    { id: 'orders', label: 'Orders', icon: <ClipboardDocumentListIcon className="w-6 h-6" />, path: '/orders' },
+    { id: 'packing', label: 'Packing', icon: <CubeIcon className="w-6 h-6" />, path: '/packing' },
+    { id: 'reports', label: 'Reports', icon: <ChartBarIcon className="w-6 h-6" />, path: '/reports' },
+    { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
   admin: [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
-    { id: 'users', label: 'Users', icon: '👥', path: '/user-roles' },
-    { id: 'settings', label: 'Settings', icon: '⚙️', path: '/settings' },
-    { id: 'reports', label: 'Reports', icon: '📈', path: '/reports' },
-    { id: 'more', label: 'More', icon: '☰', path: '/more' },
+    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="w-6 h-6" />, path: '/dashboard' },
+    { id: 'users', label: 'Users', icon: <UsersIcon className="w-6 h-6" />, path: '/user-roles' },
+    { id: 'settings', label: 'Settings', icon: <Cog6ToothIcon className="w-6 h-6" />, path: '/settings' },
+    { id: 'reports', label: 'Reports', icon: <ChartBarIcon className="w-6 h-6" />, path: '/reports' },
+    { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
 };
 
