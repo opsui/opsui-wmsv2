@@ -1,6 +1,0 @@
-# Cloudflare Pages Redirects Configuration
-# Routes API requests to the backend tunnel
-/api/v1/* https://api.opsui.app/api/v1/:splat 200
-
-# WebSocket upgrade
-/websocket/* https://ws.opsui.app/:splat 200
