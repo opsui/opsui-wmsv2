@@ -139,15 +139,13 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
         <CardTitle className="text-base sm:text-lg">Order Status Breakdown</CardTitle>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="relative w-full overflow-hidden">
+        <div className="relative w-full">
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
           </div>
-          {/* Responsive height for mobile */}
-          <div className="w-full h-[220px] sm:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+          <ResponsiveContainer width="100%" height={240} minWidth={0}>
+            <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
@@ -187,8 +185,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
                   ]}
                 />
               </PieChart>
-            </ResponsiveContainer>
-          </div>
+          </ResponsiveContainer>
         </div>
 
         {/* Summary stats - responsive grid */}

@@ -191,8 +191,7 @@ export function TopSKUsChart({
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
           </div>
-          <div className="h-[260px] sm:h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={300} minWidth={0}>
             <BarChart
               data={chartData}
               layout="vertical"
@@ -235,7 +234,6 @@ export function TopSKUsChart({
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          </div>
         </div>
 
         {/* Summary stats */}

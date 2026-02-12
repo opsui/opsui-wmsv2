@@ -94,10 +94,10 @@ function MetricCard({
         variant="glass"
         className="card-hover shadow-lg dark:shadow-blue-500/5 shadow-gray-200/50 group h-full"
       >
-        <CardContent className="p-3 sm:p-4 lg:p-6">
-          <div className="flex items-center justify-between gap-3">
+        <CardContent className="p-4 sm:p-5 lg:p-6">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium dark:text-gray-400 text-gray-600 uppercase tracking-wide truncate">
+              <p className="text-sm sm:text-base font-medium dark:text-gray-400 text-gray-600 uppercase tracking-wide truncate">
                 {title}
               </p>
               <p className="mt-2 text-3xl sm:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
