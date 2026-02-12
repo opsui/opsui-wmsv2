@@ -76,10 +76,10 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
 
   return (
     <Card variant="glass" className="card-hover">
-      <CardHeader>
+      <CardHeader className="!flex-row !items-center !justify-center !space-y-0">
         <CardTitle>Picker Performance (7 days)</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 sm:p-6">
         <div className="flex justify-center">
           <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
