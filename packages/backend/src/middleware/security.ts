@@ -126,7 +126,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
   const referer = req.get('referer');
 
   // Use CORS origins from config
-  const allowedOrigins = Array.isArray(config.cors.origin) ? config.cors.origin : (config.cors.origin || '').split(',').filter(Boolean);
+  const allowedOrigins = Array.isArray(config.cors.origin) ? config.cors.origin : (config.cors.origin || '').split(',').map(String).filter(Boolean);
 
   // In development, be more permissive
   if (process.env.NODE_ENV === 'development') {
@@ -141,7 +141,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
   // Validate Origin or Referer
   const isValidOrigin = origin && allowedOrigins.includes(origin);
-  const isValidReferer = referer && allowedOrigins.some(allowed => referer.startsWith(allowed));
+  const isValidReferer = referer && allowedOrigins.some((allowed: string) => referer.startsWith(allowed));
 
   if (!isValidOrigin && !isValidReferer) {
     logger.warn('CSRF protection: Invalid origin/referer', {

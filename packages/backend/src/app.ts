@@ -111,21 +111,8 @@ function setupSecurityMiddleware(app: Application): void {
   // Helmet for additional security headers (with frameguard: deny to work with securityHeaders)
   app.use(helmet({ frameguard: { action: 'deny' } }));
 
-  // CORS configuration
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Allow multiple origins when credentials are enabled
-        const allowedOrigins = Array.isArray(config.cors.origin) ? config.cors.origin : (config.cors.origin || '').split(',').filter(Boolean);
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, false);
-        }
-      },
-      credentials: true,
-    })
-  );
+  // CORS configuration - allow all origins for now
+  app.use(cors({ origin: true, credentials: true }));
 
   // Request size limiting
   app.use(requestSizeLimit);
