@@ -4,6 +4,7 @@
  * Reads and executes the schema.sql file to create/refresh the database schema.
  */
 
+import 'dotenv/config';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';

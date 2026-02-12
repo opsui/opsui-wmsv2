@@ -20,14 +20,14 @@ interface OrderStatusChartProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#06b6d4',   // cyan-500
-  PICKING: '#f59e0b',   // amber-500
-  PICKED: '#10b981',    // emerald-500
-  PACKING: '#3b82f6',   // blue-500
-  PACKED: '#8b5cf6',    // violet-500
-  SHIPPED: '#ec4899',   // pink-500
+  PENDING: '#06b6d4', // cyan-500
+  PICKING: '#f59e0b', // amber-500
+  PICKED: '#10b981', // emerald-500
+  PACKING: '#3b82f6', // blue-500
+  PACKED: '#8b5cf6', // violet-500
+  SHIPPED: '#ec4899', // pink-500
   CANCELLED: '#ef4444', // red-500
-  ON_HOLD: '#f97316',   // orange-500
+  ON_HOLD: '#f97316', // orange-500
   BACKORDERED: '#14b8a6', // teal-500
 };
 

@@ -70,7 +70,7 @@ class WebSocketService {
     try {
       const wsUrl =
         import.meta.env.VITE_WS_URL ||
-        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}:3001`;
+        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}`;
 
       this.socket = io(wsUrl, {
         auth: { token },

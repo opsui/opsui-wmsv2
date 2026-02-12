@@ -347,7 +347,9 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
             : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 dark:border-transparent border-transparent dark:hover:border-white/[0.1] hover:border-primary-200'
         }`}
       >
-        <Icon className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'scale-110' : ''}`} />
+        <Icon
+          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'scale-110' : ''}`}
+        />
         {label}
         <ChevronDownIcon
           className={`h-3 w-3 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
