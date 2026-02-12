@@ -201,10 +201,7 @@ export default {
 
   // CORS - Allow both localhost and production domain
   cors: {
-    origin: getEnv(
-      'CORS_ORIGIN',
-      'https://opsui.app,http://localhost:5173,http://localhost:3000,http://localhost:5174'
-    ),
+    origin: (process.env.CORS_ORIGIN || '').split(',').filter(Boolean),
   },
 
   // Application
