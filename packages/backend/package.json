@@ -2,7 +2,6 @@
   "name": "@opsui/backend",
   "version": "1.0.0",
   "description": "OpsUI Backend API - Warehouse Operations Management",
-  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon",
