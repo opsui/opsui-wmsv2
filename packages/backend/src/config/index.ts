@@ -199,9 +199,12 @@ export default {
     maxRequests: getEnvNumber('RATE_LIMIT_MAX_REQUESTS', 100),
   },
 
-  // CORS
+  // CORS - Allow both localhost and production domain
   cors: {
-    origin: getEnv('CORS_ORIGIN', 'http://localhost:5173'),
+    origin: getEnv(
+      'CORS_ORIGIN',
+      'https://opsui.app,http://localhost:5173,http://localhost:3000,http://localhost:5174'
+    ),
   },
 
   // Application
