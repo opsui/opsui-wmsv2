@@ -11,7 +11,6 @@ import { useAuthStore, useUIStore } from '@/stores';
 import { NotificationCenter, ToastProvider, ErrorBoundary } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
 import webSocketService from '@/services/WebSocketService';
-import '@/lib/env-debug'; // Debug env vars
 import {
   LoginPage,
   DashboardPage,
@@ -424,7 +423,7 @@ function NavigationTracker() {
     // Update current view in backend on navigation (silent, no console spam)
     const updateCurrentView = async () => {
       try {
-        await fetch('/api/v1/auth/current-view', {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL || '/api/v1'}/auth/current-view`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
