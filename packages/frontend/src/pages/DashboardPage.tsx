@@ -97,7 +97,7 @@ function MetricCard({
         <CardContent className="p-4 sm:p-5 lg:p-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium dark:text-gray-400 text-gray-600 uppercase tracking-wide truncate">
+              <p className="text-base sm:text-lg font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-wide truncate">
                 {title}
               </p>
               <p className="mt-2 text-3xl sm:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">

@@ -192,25 +192,25 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
         </div>
 
         {/* Summary stats - responsive grid */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {chartData.map(item => (
             <div
               key={item.status}
-              className="flex items-center justify-between p-2 sm:p-3 rounded-xl dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none transition-all duration-200 hover:scale-[1.02] cursor-default"
+              className="flex items-center justify-between p-3 sm:p-3 rounded-xl dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none transition-all duration-200 hover:scale-[1.02] cursor-default"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  className="w-4 h-4 rounded-full flex-shrink-0"
                   style={{
                     backgroundColor: item.color,
                     boxShadow: `0 0 12px ${item.color}60, 0 0 4px ${item.color}`,
                   }}
                 />
-                <span className="dark:text-gray-300 text-gray-700 text-xs sm:text-sm font-medium truncate">
+                <span className="dark:text-gray-300 text-gray-700 text-sm font-medium truncate">
                   {item.name}
                 </span>
               </div>
-              <span className="dark:text-white text-gray-900 font-bold text-xs sm:text-sm ml-2">{item.count}</span>
+              <span className="dark:text-white text-gray-900 font-bold text-sm ml-2">{item.count}</span>
             </div>
           ))}
         </div>
