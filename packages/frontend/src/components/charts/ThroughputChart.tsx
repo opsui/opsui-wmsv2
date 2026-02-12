@@ -139,7 +139,7 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
           </div>
           {/* Responsive height: smaller on mobile */}
-          <div style={{ width: '100%', height: '220px' }} className="sm:!h-[300px]">
+          <div className="w-full h-[220px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid

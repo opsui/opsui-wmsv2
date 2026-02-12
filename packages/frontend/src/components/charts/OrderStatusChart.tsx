@@ -145,7 +145,7 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
             <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
           </div>
           {/* Responsive height for mobile */}
-          <div style={{ width: '100%', height: '220px' }} className="sm:!h-[300px]">
+          <div className="w-full h-[220px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
