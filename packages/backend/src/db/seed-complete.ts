@@ -1259,7 +1259,8 @@ async function seedCompleteDatabase() {
     for (const order of completedOrders) {
       const orderItems = MOCK_ORDER_ITEMS.filter(i => i.order_id === order.order_id);
       // Assign picker if not already assigned
-      const pickerId = order.picker_id || historicalPickers[Math.floor(Math.random() * historicalPickers.length)];
+      const pickerId =
+        order.picker_id || historicalPickers[Math.floor(Math.random() * historicalPickers.length)];
       const orderDate = order.updated_at;
 
       for (const item of orderItems) {

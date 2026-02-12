@@ -7,6 +7,7 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../config/logger';
+import config from '../config';
 
 // ============================================================================
 // RATE LIMITING
@@ -124,14 +125,8 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
   const origin = req.get('origin');
   const referer = req.get('referer');
 
-  // Allow requests from same origin
-  const allowedOrigins = [
-    process.env.CORS_ORIGIN || 'http://localhost:5173',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000',
-  ];
+  // Use CORS origins from config
+  const allowedOrigins = Array.isArray(config.cors.origin) ? config.cors.origin : (config.cors.origin || '').split(',').filter(Boolean);
 
   // In development, be more permissive
   if (process.env.NODE_ENV === 'development') {

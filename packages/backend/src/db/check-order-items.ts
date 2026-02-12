@@ -11,9 +11,7 @@ async function checkOrderItems() {
   console.log('Sample order items:', JSON.stringify(result.rows, null, 2));
 
   // Check if pick_tasks already exist for these orders
-  const existingTasks = await pool.query(
-    `SELECT pick_task_id FROM pick_tasks LIMIT 5`
-  );
+  const existingTasks = await pool.query(`SELECT pick_task_id FROM pick_tasks LIMIT 5`);
   console.log('\nExisting pick tasks:', JSON.stringify(existingTasks.rows, null, 2));
 
   await pool.end();

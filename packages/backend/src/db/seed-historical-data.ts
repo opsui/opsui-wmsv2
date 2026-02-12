@@ -91,7 +91,8 @@ async function seedHistoricalData() {
 
       const orderItems = itemsResult.rows;
       // Always assign a picker for historical data
-      const pickerId = order.pickerId || historicalPickers[pickTaskCount % historicalPickers.length];
+      const pickerId =
+        order.pickerId || historicalPickers[pickTaskCount % historicalPickers.length];
       const orderDate = order.updatedAt;
 
       for (const item of orderItems) {

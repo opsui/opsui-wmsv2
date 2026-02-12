@@ -108,8 +108,8 @@ function setupSecurityMiddleware(app: Application): void {
   // Custom security headers
   app.use(securityHeaders);
 
-  // Helmet for additional security headers
-  app.use(helmet());
+  // Helmet for additional security headers (with frameguard: deny to work with securityHeaders)
+  app.use(helmet({ frameguard: { action: 'deny' } }));
 
   // CORS configuration
   app.use(
