@@ -114,7 +114,15 @@ function setupSecurityMiddleware(app: Application): void {
   // CORS configuration
   app.use(
     cors({
-      origin: config.cors.origin,
+      origin: (origin, callback) => {
+        // Allow multiple origins when credentials are enabled
+        const allowedOrigins = Array.isArray(config.cors.origin) ? config.cors.origin : (config.cors.origin || '').split(',').filter(Boolean);
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      },
       credentials: true,
     })
   );
