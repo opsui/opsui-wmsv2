@@ -92,22 +92,22 @@ function MetricCard({
     <div onClick={onClick} className={`${onClick ? 'cursor-pointer' : ''}`}>
       <Card
         variant="glass"
-        className="card-hover shadow-lg dark:shadow-blue-500/5 shadow-gray-200/50 group"
+        className="card-hover shadow-lg dark:shadow-blue-500/5 shadow-gray-200/50 group h-full"
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-sm font-medium dark:text-gray-400 text-gray-600 uppercase tracking-wider">
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium dark:text-gray-400 text-gray-600 uppercase tracking-wider truncate">
                 {title}
               </p>
-              <p className="mt-3 text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
+              <p className="mt-1 sm:mt-2 lg:mt-3 text-2xl sm:text-3xl lg:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300">
                 {value}
               </p>
             </div>
             <div
-              className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none`}
+              className={`p-2 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none flex-shrink-0`}
             >
-              <Icon className="h-7 w-7" />
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
             </div>
           </div>
         </CardContent>
@@ -571,12 +571,12 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <Header />
       <AdminOrdersModal isOpen={showAdminOrders} onClose={() => setShowAdminOrders(false)} />
       <main
         id="main-content"
-        className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8"
+        className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 lg:space-y-8 overflow-x-hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
         tabIndex={-1}
       >
@@ -587,13 +587,13 @@ export function DashboardPage() {
           <h1 className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
             Dashboard
           </h1>
-          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
+          <p className="mt-1 sm:mt-2 dark:text-gray-400 text-gray-600 text-sm sm:text-base">
             Real-time warehouse operations overview
           </p>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {/* Key Metrics - Responsive grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
           <MetricCard
             title="Active Staff"
             value={metrics.activePickers}
@@ -622,8 +622,8 @@ export function DashboardPage() {
           />
         </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Charts Section - Stack on mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <ThroughputChart
             data={(throughputData as any) ?? []}
             isLoading={throughputLoading}
@@ -636,7 +636,7 @@ export function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <TopSKUsChart
             data={topSKUs ?? []}
             isLoading={topSKUsLoading}
@@ -657,7 +657,7 @@ export function DashboardPage() {
           {/* Toggle between Role Activity and Audit Logs - only for admin/supervisor */}
           {hasBaseAdminRole && (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 touch-scroll">
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 touch-scroll -mx-4 px-4 sm:mx-0 sm:px-0">
                 <button
                   onClick={() => setActivityView('role-activity')}
                   className={`px-4 py-3 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-touch whitespace-nowrap flex-shrink-0 ${

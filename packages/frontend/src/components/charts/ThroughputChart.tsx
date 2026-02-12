@@ -126,19 +126,21 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
   return (
     <Card
       variant="glass"
-      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50 overflow-hidden"
     >
       <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
-        <CardTitle>Orders Throughput</CardTitle>
+        <CardTitle className="text-base sm:text-lg">Orders Throughput</CardTitle>
         <TimeRangeSelector value={selectedRange} onChange={handleRangeChange} />
       </CardHeader>
-      <CardContent>
-        <div className="relative">
+      <CardContent className="p-3 sm:p-6">
+        <div className="relative w-full overflow-hidden">
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          {/* Responsive height: smaller on mobile */}
+          <div style={{ width: '100%', height: '220px' }} className="sm:!h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -190,6 +192,7 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
               />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </CardContent>
     </Card>
