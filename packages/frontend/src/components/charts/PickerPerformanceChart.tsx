@@ -80,7 +80,8 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
         <CardTitle>Picker Performance (7 days)</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="flex justify-center">
+          <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -153,6 +154,7 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
             />
           </BarChart>
         </ResponsiveContainer>
+        </div>
 
         {/* Performance summary table */}
         <div className="mt-4 overflow-x-auto">

@@ -85,7 +85,7 @@ export function TurnoverChart({ data, isLoading }: TurnoverChartProps) {
         <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
       </CardHeader>
       <CardContent>
-        <div className="relative">
+        <div className="relative flex justify-center">
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-2xl" />
