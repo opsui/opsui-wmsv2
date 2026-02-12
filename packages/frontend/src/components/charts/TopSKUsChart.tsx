@@ -178,11 +178,11 @@ export function TopSKUsChart({
       variant="glass"
       className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
     >
-      <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
-        <CardTitle>
+      <CardHeader className="!flex-row !items-center !justify-between !space-y-0 sm:justify-start flex-col sm:flex-row flex-wrap sm:gap-2 gap-2">
+        <CardTitle className="w-full text-center sm:w-auto sm:text-left">
           Top {limit} SKUs by Scan Frequency ({periodLabel})
         </CardTitle>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <TimePeriodSelector value={selectedTimePeriod} onChange={handleTimePeriodChange} />
           <ScanTypeSelector value={selectedScanType} onChange={handleScanTypeChange} />
         </div>
