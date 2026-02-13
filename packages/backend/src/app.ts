@@ -111,8 +111,42 @@ function setupSecurityMiddleware(app: Application): void {
   // Helmet for additional security headers (with frameguard: deny to work with securityHeaders)
   app.use(helmet({ frameguard: { action: 'deny' } }));
 
-  // CORS configuration - allow all origins for now
-  app.use(cors({ origin: true, credentials: true }));
+  // CORS configuration - use configured origins from environment
+  // In production, this allows the frontend domain to access the API
+  const corsOrigins = config.cors.origin;
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) {
+          return callback(null, true);
+        }
+        // Check if origin is in allowed list
+        const allowedOrigins = Array.isArray(corsOrigins)
+          ? corsOrigins
+          : [corsOrigins].filter(Boolean);
+        if (allowedOrigins.includes(origin) || allowedOrigins.length === 0) {
+          callback(null, true);
+        } else {
+          // In development, be permissive
+          if (
+            config.isDevelopment() &&
+            (origin.includes('localhost') || origin.includes('127.0.0.1'))
+          ) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'));
+          }
+        }
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-Id'],
+      exposedHeaders: ['X-Request-Id'],
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
+    })
+  );
 
   // Request size limiting
   app.use(requestSizeLimit);
@@ -298,6 +332,9 @@ function setupErrorHandlers(app: Application): void {
 
 export function createApp(): Application {
   const app = express();
+
+  // Trust proxy for rate limiting behind Cloudflare/nginx
+  app.set('trust proxy', 1);
 
   // Setup all middleware and routes
   setupSecurityMiddleware(app);

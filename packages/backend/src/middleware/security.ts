@@ -25,7 +25,7 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipFailedRequests: false, // Count failed requests
-  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
+  skip: () => process.env.NODE_ENV !== 'production' || process.env.DISABLE_RATE_LIMIT === 'true',
   handler: (req: Request, res: Response) => {
     logger.warn('Rate limit exceeded', {
       ip: req.ip,
@@ -51,7 +51,7 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipFailedRequests: false,
-  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
+  skip: () => process.env.NODE_ENV !== 'production' || process.env.DISABLE_RATE_LIMIT === 'true',
   handler: (req: Request, res: Response) => {
     logger.warn('API rate limit exceeded', {
       ip: req.ip,
@@ -76,7 +76,7 @@ export const writeOperationRateLimiter = rateLimit({
   message: 'Too many write operations, please slow down',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== 'production', // Skip in development
+  skip: () => process.env.NODE_ENV !== 'production' || process.env.DISABLE_RATE_LIMIT === 'true',
   handler: (req: Request, res: Response) => {
     logger.warn('Write operation rate limit exceeded', {
       ip: req.ip,
@@ -126,7 +126,9 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
   const referer = req.get('referer');
 
   // Use CORS origins from config
-  const allowedOrigins = Array.isArray(config.cors.origin) ? config.cors.origin : (config.cors.origin || '').split(',').map(String).filter(Boolean);
+  const allowedOrigins = Array.isArray(config.cors.origin)
+    ? config.cors.origin
+    : (config.cors.origin || '').split(',').map(String).filter(Boolean);
 
   // In development, be more permissive
   if (process.env.NODE_ENV === 'development') {
@@ -141,7 +143,8 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
   // Validate Origin or Referer
   const isValidOrigin = origin && allowedOrigins.includes(origin);
-  const isValidReferer = referer && allowedOrigins.some((allowed: string) => referer.startsWith(allowed));
+  const isValidReferer =
+    referer && allowedOrigins.some((allowed: string) => referer.startsWith(allowed));
 
   if (!isValidOrigin && !isValidReferer) {
     logger.warn('CSRF protection: Invalid origin/referer', {
@@ -169,10 +172,16 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
  * Add security-related headers to responses
  */
 export const securityHeaders = (_req: Request, res: Response, next: NextFunction) => {
-  // Content Security Policy
+  // Get allowed origins for CSP connect-src
+  const allowedOrigins = Array.isArray(config.cors.origin)
+    ? config.cors.origin.join(' ')
+    : (config.cors.origin || '').split(',').map(String).filter(Boolean).join(' ');
+
+  // Content Security Policy - allow connections to configured CORS origins
+  // This is critical for cross-origin requests from frontend to backend API
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';"
+    `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ${allowedOrigins}; frame-ancestors 'none';`
   );
 
   // Prevent clickjacking
