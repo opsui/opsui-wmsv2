@@ -20,6 +20,7 @@ export const rateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  validate: { trustProxy: false, xForwardedForHeader: false }, // Disable strict proxy validation
   // Skip rate limiting for health check endpoint, development mode, local requests, or when explicitly disabled
   skip: req => {
     return (
@@ -46,6 +47,7 @@ export const authRateLimiterSimple = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false, xForwardedForHeader: false }, // Disable strict proxy validation
   // Skip in development or when explicitly disabled
   skip: req => {
     return (
@@ -71,6 +73,7 @@ export const pickingRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false, xForwardedForHeader: false }, // Disable strict proxy validation
   // Skip in development or when explicitly disabled
   skip: req => {
     return (

@@ -26,6 +26,7 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false,
   skipFailedRequests: false, // Count failed requests
   skip: () => process.env.NODE_ENV !== 'production' || process.env.DISABLE_RATE_LIMIT === 'true',
+  validate: { trustProxy: false, xForwardedForHeader: false }, // Disable strict proxy validation
   handler: (req: Request, res: Response) => {
     logger.warn('Rate limit exceeded', {
       ip: req.ip,
@@ -52,6 +53,7 @@ export const apiRateLimiter = rateLimit({
   legacyHeaders: false,
   skipFailedRequests: false,
   skip: () => process.env.NODE_ENV !== 'production' || process.env.DISABLE_RATE_LIMIT === 'true',
+  validate: { trustProxy: false, xForwardedForHeader: false }, // Disable strict proxy validation
   handler: (req: Request, res: Response) => {
     logger.warn('API rate limit exceeded', {
       ip: req.ip,
@@ -77,6 +79,7 @@ export const writeOperationRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: () => process.env.NODE_ENV !== 'production' || process.env.DISABLE_RATE_LIMIT === 'true',
+  validate: { trustProxy: false, xForwardedForHeader: false }, // Disable strict proxy validation
   handler: (req: Request, res: Response) => {
     logger.warn('Write operation rate limit exceeded', {
       ip: req.ip,
