@@ -128,6 +128,98 @@ router.post(
   })
 );
 
+// ============================================================================
+// EXPORT JOBS
+// ============================================================================
+// NOTE: Export routes must be defined BEFORE /:reportId to avoid route conflicts
+
+/**
+ * GET /api/reports/exports
+ * Get all export jobs
+ */
+router.get(
+  '/exports',
+  asyncHandler(async (req: Request, res: Response) => {
+    const userId = (req as any).user?.userId;
+    const userRole = (req as any).user?.role;
+
+    // Get export jobs - admins see all, others see their own
+    const jobs = await reportsRepository.findAllExportJobs(
+      userRole === UserRole.ADMIN ? undefined : userId
+    );
+
+    res.json({
+      success: true,
+      data: {
+        jobs,
+        count: jobs.length,
+      },
+    });
+  })
+);
+
+/**
+ * POST /api/reports/export
+ * Create and start an export job
+ */
+router.post(
+  '/export',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { entityType, format = ReportFormat.CSV, fields, filters = [] } = req.body;
+    const userId = (req as any).user?.userId;
+
+    if (!entityType || !fields || !Array.isArray(fields)) {
+      res.status(400).json({
+        success: false,
+        error: 'Missing required fields: entityType, fields (array)',
+      });
+      return;
+    }
+
+    const job = await reportsService.createExportJob(
+      entityType,
+      format as ReportFormat,
+      fields,
+      filters,
+      userId
+    );
+
+    res.status(201).json({
+      success: true,
+      data: { job },
+    });
+  })
+);
+
+/**
+ * GET /api/reports/export/:jobId
+ * Get export job status
+ */
+router.get(
+  '/export/:jobId',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { jobId } = req.params;
+    const job = await reportsRepository.getExportJob(jobId);
+
+    if (!job) {
+      res.status(404).json({
+        success: false,
+        error: 'Export job not found',
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: { job },
+    });
+  })
+);
+
+// ============================================================================
+// REPORTS BY ID
+// ============================================================================
+
 /**
  * GET /api/reports/:reportId
  * Get a specific report by ID
@@ -292,93 +384,6 @@ router.get(
         executions,
         count: executions.length,
       },
-    });
-  })
-);
-
-// ============================================================================
-// EXPORT JOBS
-// ============================================================================
-
-/**
- * GET /api/reports/exports
- * Get all export jobs
- */
-router.get(
-  '/exports',
-  asyncHandler(async (req: Request, res: Response) => {
-    const userId = (req as any).user?.userId;
-    const userRole = (req as any).user?.role;
-
-    // Get export jobs - admins see all, others see their own
-    const jobs = await reportsRepository.findAllExportJobs(
-      userRole === UserRole.ADMIN ? undefined : userId
-    );
-
-    res.json({
-      success: true,
-      data: {
-        jobs,
-        count: jobs.length,
-      },
-    });
-  })
-);
-
-/**
- * POST /api/reports/export
- * Create and start an export job
- */
-router.post(
-  '/export',
-  asyncHandler(async (req: Request, res: Response) => {
-    const { entityType, format = ReportFormat.CSV, fields, filters = [] } = req.body;
-    const userId = (req as any).user?.userId;
-
-    if (!entityType || !fields || !Array.isArray(fields)) {
-      res.status(400).json({
-        success: false,
-        error: 'Missing required fields: entityType, fields (array)',
-      });
-      return;
-    }
-
-    const job = await reportsService.createExportJob(
-      entityType,
-      format as ReportFormat,
-      fields,
-      filters,
-      userId
-    );
-
-    res.status(201).json({
-      success: true,
-      data: { job },
-    });
-  })
-);
-
-/**
- * GET /api/reports/export/:jobId
- * Get export job status
- */
-router.get(
-  '/export/:jobId',
-  asyncHandler(async (req: Request, res: Response) => {
-    const { jobId } = req.params;
-    const job = await reportsRepository.getExportJob(jobId);
-
-    if (!job) {
-      res.status(404).json({
-        success: false,
-        error: 'Export job not found',
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: { job },
     });
   })
 );
