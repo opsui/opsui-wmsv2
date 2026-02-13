@@ -657,6 +657,13 @@ export class ReportsRepository {
   }
 
   /**
+   * Get all export jobs (alias for findExportJobs)
+   */
+  async findAllExportJobs(createdBy?: string): Promise<ExportJob[]> {
+    return this.findExportJobs({ createdBy });
+  }
+
+  /**
    * Get all export jobs with optional filtering
    */
   async findExportJobs(filters?: {

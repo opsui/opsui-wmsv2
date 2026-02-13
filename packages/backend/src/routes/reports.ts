@@ -301,6 +301,31 @@ router.get(
 // ============================================================================
 
 /**
+ * GET /api/reports/exports
+ * Get all export jobs
+ */
+router.get(
+  '/exports',
+  asyncHandler(async (req: Request, res: Response) => {
+    const userId = (req as any).user?.userId;
+    const userRole = (req as any).user?.role;
+
+    // Get export jobs - admins see all, others see their own
+    const jobs = await reportsRepository.findAllExportJobs(
+      userRole === UserRole.ADMIN ? undefined : userId
+    );
+
+    res.json({
+      success: true,
+      data: {
+        jobs,
+        count: jobs.length,
+      },
+    });
+  })
+);
+
+/**
  * POST /api/reports/export
  * Create and start an export job
  */
