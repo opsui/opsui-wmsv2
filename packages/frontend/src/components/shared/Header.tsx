@@ -1703,9 +1703,9 @@ export function Header() {
               </div>
             </div>
 
-            {/* Center - Navigation dropdowns - scrollable on narrow screens */}
+            {/* Center - Navigation dropdowns */}
             {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-0.5 flex-1 justify-center min-w-0 overflow-x-auto scrollbar-hide">
+              <nav className="hidden md:flex items-center space-x-0.5 flex-1 justify-center min-w-0">
                 {navGroups.map(group => (
                   <NavDropdown
                     key={group.key}
