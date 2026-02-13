@@ -629,12 +629,12 @@ function NotificationPanel() {
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group ${
+        className={`relative p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group hover:scale-110 ${
           isOpen ? 'dark:bg-white/[0.08] bg-primary-100' : ''
         }`}
         aria-label={`Notifications: ${unreadCount} unread`}
       >
-        <BellIcon className="h-5 w-5" />
+        <BellIcon className="h-5 w-5 transition-transform duration-200" />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full animate-pulse shadow-lg dark:shadow-error-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -735,6 +735,7 @@ function loadRoleVisibility(): Record<string, boolean> {
 function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   const setActiveRoleMutation = useSetActiveRole();
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
@@ -850,6 +851,22 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Hover handlers with buffer delay to prevent flickering
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // 150ms delay before closing to allow mouse to move to dropdown content
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
+  };
+
   // Filter role views based on visibility settings
   const roleViews = dropdownRoleViews.filter(view => roleVisibility[view.key] !== false);
 
@@ -879,7 +896,12 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
   };
 
   return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
+    <div
+      className="relative z-[9999]"
+      ref={dropdownRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl px-4 py-2.5 transition-all duration-300 group dark:border border border-transparent dark:border-transparent dark:hover:border-white/[0.1] hover:border-primary-200"
@@ -1636,19 +1658,19 @@ export function Header() {
       <header className="bg-white dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/[0.08] shadow-sm dark:shadow-none relative z-50">
         <div className="w-full">
           <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
-            {/* Left side - User info */}
-            <div className="flex items-center flex-shrink-0">
+            {/* Left side - User info - prevent squishing */}
+            <div className="flex items-center flex-shrink-0 min-w-0">
               {/* Mobile menu button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors"
+                className="md:hidden p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors flex-shrink-0"
                 aria-label="Open menu"
               >
                 <Bars3Icon className="h-6 w-6" />
               </button>
 
               {/* User info - Desktop */}
-              <div className="hidden md:flex items-center -ml-2">
+              <div className="hidden md:flex items-center -ml-2 flex-shrink-0">
                 {hasRoleSwitcher ? (
                   <>
                     <RoleViewDropdown
@@ -1656,7 +1678,7 @@ export function Header() {
                       userEmail={user.email}
                       availableViews={allRoleViews}
                     />
-                    <div className="ml-1">
+                    <div className="ml-1 flex-shrink-0">
                       <UserRoleBadge
                         role={(getEffectiveRole() || user.role) as UserRole}
                         userId={user.userId}
@@ -1665,21 +1687,25 @@ export function Header() {
                   </>
                 ) : (
                   <>
-                    <div>
-                      <h2 className="text-sm font-semibold dark:text-white text-black tracking-tight">
+                    <div className="min-w-0">
+                      <h2 className="text-sm font-semibold dark:text-white text-black tracking-tight truncate">
                         {user.name}
                       </h2>
-                      <p className="text-xs dark:text-gray-400 text-gray-600">{user.email}</p>
+                      <p className="text-xs dark:text-gray-400 text-gray-600 truncate">
+                        {user.email}
+                      </p>
                     </div>
-                    <UserRoleBadge role={user.role} userId={user.userId} />
+                    <div className="flex-shrink-0">
+                      <UserRoleBadge role={user.role} userId={user.userId} />
+                    </div>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Center - Navigation dropdowns - Absolutely centered */}
+            {/* Center - Navigation dropdowns - scrollable on narrow screens */}
             {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-0.5 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <nav className="hidden md:flex items-center space-x-0.5 flex-1 justify-center min-w-0 overflow-x-auto scrollbar-hide">
                 {navGroups.map(group => (
                   <NavDropdown
                     key={group.key}
@@ -1693,13 +1719,17 @@ export function Header() {
               </nav>
             )}
 
-            {/* Right side - Actions */}
-            <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+            {/* Right side - Actions - prevent squishing */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto">
               {/* Theme Toggle */}
-              <ThemeToggle />
+              <div className="flex-shrink-0">
+                <ThemeToggle />
+              </div>
 
-              {/* Notification Panel - for supervisors and admins */}
-              <NotificationPanel />
+              {/* Notification Panel - for all authenticated users */}
+              <div className="flex-shrink-0">
+                <NotificationPanel />
+              </div>
 
               {/* Report a Problem button - for non-admin users */}
               {getEffectiveRole() !== UserRole.ADMIN && (
@@ -1707,38 +1737,42 @@ export function Header() {
                   variant="secondary"
                   size="sm"
                   onClick={() => navigate('/exceptions?report=true')}
-                  className="flex items-center gap-2"
+                  className="hidden sm:flex items-center gap-2 flex-shrink-0"
                   title="Report a Problem"
                 >
                   <ExclamationCircleIcon className="h-4 w-4" />
-                  Report Problem
+                  <span className="hidden lg:inline">Report Problem</span>
                 </Button>
               )}
 
               {/* Settings button - accessible to all authenticated users */}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/role-settings?section=role-switcher')}
-                className="p-2"
-                title="Settings"
-                aria-label="Settings"
-              >
-                <CogIcon className="h-5 w-5" />
-              </Button>
+              <div className="flex-shrink-0">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate('/role-settings?section=role-switcher')}
+                  className="p-2"
+                  title="Settings"
+                  aria-label="Settings"
+                >
+                  <CogIcon className="h-5 w-5" />
+                </Button>
+              </div>
 
               {/* Logout button */}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleLogout}
-                disabled={logoutMutation.isPending}
-                className="p-2"
-                title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-              >
-                <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-              </Button>
+              <div className="flex-shrink-0">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                  className="p-2"
+                  title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                >
+                  <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
