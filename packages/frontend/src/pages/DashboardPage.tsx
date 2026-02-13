@@ -556,13 +556,13 @@ export function DashboardPage() {
             <MetricCardSkeleton />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card variant="glass" className="p-6 h-80">
+            <Card variant="glass" className="p-6 h-96">
               <Skeleton variant="text" className="w-32 h-6 mb-4" />
-              <Skeleton variant="rectangular" className="w-full h-60" />
+              <Skeleton variant="rectangular" className="w-full h-72" />
             </Card>
-            <Card variant="glass" className="p-6 h-80">
+            <Card variant="glass" className="p-6 h-96">
               <Skeleton variant="text" className="w-32 h-6 mb-4" />
-              <Skeleton variant="rectangular" className="w-full h-60" />
+              <Skeleton variant="rectangular" className="w-full h-72" />
             </Card>
           </div>
         </main>

@@ -140,8 +140,8 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width={containerWidth} height={280}>
-            <LineChart data={chartData}>
+          <ResponsiveContainer width={containerWidth} height={350}>
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 className="dark:stroke-white/[0.08] stroke-gray-200"
