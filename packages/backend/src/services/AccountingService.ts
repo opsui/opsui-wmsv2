@@ -1632,15 +1632,16 @@ export class AccountingService {
   // ========================================================================
 
   async getTrialBalance(asOfDate: Date): Promise<TrialBalance> {
-    const fiscalPeriod = `${asOfDate.getFullYear()}-${String(asOfDate.getMonth() + 1).padStart(2, '0')}`;
+    const fiscalYear = asOfDate.getFullYear();
+    const fiscalPeriod = asOfDate.getMonth() + 1; // 1-12
 
     const trialBalanceId = this.generateId('TB');
 
     // Create trial balance snapshot
     await dbQuery(
-      `INSERT INTO acct_trial_balance (trial_balance_id, as_of_date, fiscal_period, generated_at)
-      VALUES ($1, $2, $3, NOW())`,
-      [trialBalanceId, asOfDate, fiscalPeriod]
+      `INSERT INTO acct_trial_balance (trial_balance_id, as_of_date, fiscal_year, fiscal_period, generated_at)
+      VALUES ($1, $2, $3, $4, NOW())`,
+      [trialBalanceId, asOfDate, fiscalYear, fiscalPeriod]
     );
 
     // Get all account balances
@@ -1662,6 +1663,7 @@ export class AccountingService {
     return {
       trialBalanceId,
       asOfDate,
+      fiscalYear,
       fiscalPeriod,
       generatedAt: new Date(),
     };
