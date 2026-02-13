@@ -15,7 +15,7 @@ async function runOrderExceptionsMigration(): Promise<void> {
 
   try {
     // Read the migration file
-    const migrationPath = join(__dirname, 'migrations', 'fix_order_exceptions_foreign_key.sql');
+    const migrationPath = join(__dirname, 'migrations', '035_fix_order_exceptions_foreign_key.sql');
     const sql = readFileSync(migrationPath, 'utf-8');
 
     console.log('Executing order_exceptions migration SQL...');

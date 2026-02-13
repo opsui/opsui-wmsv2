@@ -16,7 +16,7 @@ async function runMigration() {
   try {
     const migrationPath = path.join(
       __dirname,
-      '../src/db/migrations/fix_order_exceptions_foreign_key.sql'
+      '../src/db/migrations/035_fix_order_exceptions_foreign_key.sql'
     );
     const sql = fs.readFileSync(migrationPath, 'utf8');
 
