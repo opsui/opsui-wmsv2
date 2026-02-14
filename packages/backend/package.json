@@ -26,6 +26,9 @@
     "migrate:phase3": "node scripts/migrate-003.js",
     "migrate:phase2": "tsx src/db/run-migrations.ts",
     "db:migrate:all": "node scripts/run-migrations.cjs",
+    "db:migrate:full": "node scripts/run-all-migrations.cjs",
+    "db:migrate:dry-run": "node scripts/run-all-migrations.cjs --dry-run",
+    "db:migrate:all": "tsx src/db/run-all-migrations.ts",
     "db:health": "tsx src/db/run-migrations.ts verify",
     "migrate:addon-modules": "tsx src/db/run-addon-modules-migration.ts"
   },

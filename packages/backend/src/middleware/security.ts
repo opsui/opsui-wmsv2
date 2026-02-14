@@ -128,10 +128,8 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
   const origin = req.get('origin');
   const referer = req.get('referer');
 
-  // Use CORS origins from config
-  const allowedOrigins = Array.isArray(config.cors.origin)
-    ? config.cors.origin
-    : (config.cors.origin || '').split(',').map(String).filter(Boolean);
+  // Use CORS origins from config (always an array)
+  const allowedOrigins = config.cors.origin;
 
   // In development, be more permissive
   if (process.env.NODE_ENV === 'development') {
@@ -175,10 +173,8 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
  * Add security-related headers to responses
  */
 export const securityHeaders = (_req: Request, res: Response, next: NextFunction) => {
-  // Get allowed origins for CSP connect-src
-  const allowedOrigins = Array.isArray(config.cors.origin)
-    ? config.cors.origin.join(' ')
-    : (config.cors.origin || '').split(',').map(String).filter(Boolean).join(' ');
+  // Get allowed origins for CSP connect-src (always an array from config)
+  const allowedOrigins = config.cors.origin.join(' ');
 
   // Content Security Policy - allow connections to configured CORS origins
   // This is critical for cross-origin requests from frontend to backend API

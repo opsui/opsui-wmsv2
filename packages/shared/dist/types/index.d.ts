@@ -2761,7 +2761,8 @@ export interface JournalEntryLine {
 export interface TrialBalance {
     trialBalanceId: string;
     asOfDate: Date;
-    fiscalPeriod: string;
+    fiscalYear: number;
+    fiscalPeriod: number;
     generatedAt: Date;
     lines?: TrialBalanceLine[];
 }
