@@ -339,6 +339,75 @@ const MOCK_ORDERS: Order[] = [
     updated_at: getDateDaysAgo(0.5),
     progress: 0,
   },
+
+  // === Additional 50 orders spread across last 30 days for chart visualization ===
+  // Day 1-5: Recent SHIPPED orders
+  ...Array.from({ length: 10 }, (_, i) => ({
+    order_id: `SO720${String(i + 1).padStart(2, '0')}`,
+    customer_name: ['Acme Corp', 'TechStart', 'DataFlow', 'CloudNet', 'ByteWise', 'NextGen', 'ProLink', 'SmartSys', 'InnoTech', 'CoreDev'][i],
+    status: 'SHIPPED',
+    priority: ['LOW', 'NORMAL', 'HIGH', 'URGENT'][i % 4] as Priority,
+    created_at: getDateDaysAgo(i + 1),
+    updated_at: getDateDaysAgo(i + 0.8),
+    picker_id: ['USR-PICK01', 'USR-PICK02', 'USR-PICK03', 'USR-PICK04'][i % 4],
+    packer_id: 'USR-JMSQXXDN',
+    claimed_at: getDateDaysAgo(i + 0.95),
+    picked_at: getDateDaysAgo(i + 0.9),
+    packed_at: getDateDaysAgo(i + 0.85),
+    shipped_at: getDateDaysAgo(i + 0.8),
+    progress: 100,
+  })),
+
+  // Day 6-15: Mix of SHIPPED and PICKED orders
+  ...Array.from({ length: 15 }, (_, i) => ({
+    order_id: `SO721${String(i + 1).padStart(2, '0')}`,
+    customer_name: ['Quantum Ltd', 'Apex Solutions', 'Vertex Inc', 'Horizon Tech', 'Pinnacle Corp', 'Summit Systems', 'Zenith Data', 'Orbit Networks', 'Pulse Tech', 'Wave Systems', 'Flux Corp', 'Spark Inc', 'Flow Dynamics', 'Stream Tech', 'River Systems'][i],
+    status: i % 3 === 0 ? 'PICKED' : 'SHIPPED',
+    priority: ['LOW', 'NORMAL', 'HIGH'][i % 3] as Priority,
+    created_at: getDateDaysAgo(6 + i),
+    updated_at: getDateDaysAgo(6 + i - 0.2),
+    picker_id: ['USR-PICK01', 'USR-PICK02', 'USR-PICK03', 'USR-PICK04'][i % 4],
+    packer_id: i % 3 !== 0 ? 'USR-JMSQXXDN' : undefined,
+    claimed_at: getDateDaysAgo(6 + i - 0.1),
+    picked_at: getDateDaysAgo(6 + i - 0.15),
+    packed_at: i % 3 !== 0 ? getDateDaysAgo(6 + i - 0.2) : undefined,
+    shipped_at: i % 3 !== 0 ? getDateDaysAgo(6 + i - 0.25) : undefined,
+    progress: i % 3 === 0 ? 75 : 100,
+  })),
+
+  // Day 16-25: More SHIPPED orders with some PICKED
+  ...Array.from({ length: 15 }, (_, i) => ({
+    order_id: `SO722${String(i + 1).padStart(2, '0')}`,
+    customer_name: ['Alpha Tech', 'Beta Systems', 'Gamma Inc', 'Delta Corp', 'Epsilon Ltd', 'Zeta Solutions', 'Eta Networks', 'Theta Data', 'Iota Soft', 'Kappa Labs', 'Lambda Corp', 'Mu Systems', 'Nu Tech', 'Xi Dynamics', 'Omicron Inc'][i],
+    status: i % 4 === 0 ? 'PICKED' : 'SHIPPED',
+    priority: ['LOW', 'NORMAL', 'HIGH', 'URGENT'][i % 4] as Priority,
+    created_at: getDateDaysAgo(16 + i),
+    updated_at: getDateDaysAgo(16 + i - 0.3),
+    picker_id: ['USR-PICK01', 'USR-PICK02', 'USR-PICK03', 'USR-PICK04'][i % 4],
+    packer_id: i % 4 !== 0 ? 'USR-JMSQXXDN' : undefined,
+    claimed_at: getDateDaysAgo(16 + i - 0.1),
+    picked_at: getDateDaysAgo(16 + i - 0.2),
+    packed_at: i % 4 !== 0 ? getDateDaysAgo(16 + i - 0.25) : undefined,
+    shipped_at: i % 4 !== 0 ? getDateDaysAgo(16 + i - 0.3) : undefined,
+    progress: i % 4 === 0 ? 75 : 100,
+  })),
+
+  // Day 26-30: Older orders
+  ...Array.from({ length: 10 }, (_, i) => ({
+    order_id: `SO723${String(i + 1).padStart(2, '0')}`,
+    customer_name: ['Sigma Corp', 'Tau Systems', 'Upsilon Tech', 'Phi Networks', 'Chi Data', 'Psi Soft', 'Omega Labs', 'Prime Inc', 'Nova Corp', 'Stellar Systems'][i],
+    status: i % 2 === 0 ? 'SHIPPED' : 'PICKED',
+    priority: ['NORMAL', 'HIGH'][i % 2] as Priority,
+    created_at: getDateDaysAgo(26 + i),
+    updated_at: getDateDaysAgo(26 + i - 0.4),
+    picker_id: ['USR-PICK01', 'USR-PICK02', 'USR-PICK03', 'USR-PICK04'][i % 4],
+    packer_id: i % 2 === 0 ? 'USR-JMSQXXDN' : undefined,
+    claimed_at: getDateDaysAgo(26 + i - 0.1),
+    picked_at: getDateDaysAgo(26 + i - 0.2),
+    packed_at: i % 2 === 0 ? getDateDaysAgo(26 + i - 0.3) : undefined,
+    shipped_at: i % 2 === 0 ? getDateDaysAgo(26 + i - 0.4) : undefined,
+    progress: i % 2 === 0 ? 100 : 75,
+  })),
 ];
 
 const MOCK_ORDER_ITEMS: OrderItem[] = [
@@ -961,6 +1030,37 @@ const MOCK_ORDER_ITEMS: OrderItem[] = [
     bin_location: 'D-02-01',
     status: 'PENDING',
   },
+
+  // === Order items for the additional 50 orders ===
+  // Generate 2-3 items per order
+  ...Array.from({ length: 50 }, (_, orderIdx) => {
+    const orderId = orderIdx < 10 ? `SO720${String(orderIdx + 1).padStart(2, '0')}` :
+                    orderIdx < 25 ? `SO721${String(orderIdx - 9).padStart(2, '0')}` :
+                    orderIdx < 40 ? `SO722${String(orderIdx - 24).padStart(2, '0')}` :
+                    `SO723${String(orderIdx - 39).padStart(2, '0')}`;
+    const numItems = 2 + (orderIdx % 2); // 2 or 3 items per order
+    const orderStatus = orderIdx < 10 ? 'FULLY_PICKED' :
+                        orderIdx < 25 ? (orderIdx % 3 === 0 ? 'PENDING' : 'FULLY_PICKED') :
+                        orderIdx < 40 ? (orderIdx % 4 === 0 ? 'PENDING' : 'FULLY_PICKED') :
+                        (orderIdx % 2 === 0 ? 'FULLY_PICKED' : 'PENDING');
+
+    return Array.from({ length: numItems }, (_, itemIdx) => {
+      const skus = ['WIDGET-A-001', 'GADGET-B-002', 'TOOL-C-003', 'PART-D-004', 'COMP-E-005', 'SUPPLY-F-006'];
+      const names = ['Widget A Type 1', 'Gadget B Type 2', 'Tool C Type 3', 'Part D Type 4', 'Component E Type 5', 'Supply F Type 6'];
+      const bins = ['A-01-01', 'B-02-03', 'C-10-05', 'D-02-01', 'E-05-02', 'A-03-04'];
+
+      return {
+        order_item_id: `OI${orderId.slice(2)}-${itemIdx + 1}`,
+        order_id: orderId,
+        sku: skus[(orderIdx + itemIdx) % skus.length],
+        name: names[(orderIdx + itemIdx) % names.length],
+        quantity: 1 + (orderIdx % 4),
+        picked_quantity: orderStatus === 'FULLY_PICKED' ? 1 + (orderIdx % 4) : 0,
+        bin_location: bins[(orderIdx + itemIdx) % bins.length],
+        status: orderStatus as ItemStatus,
+      };
+    });
+  }).flat(),
 ];
 
 async function seedCompleteDatabase() {
