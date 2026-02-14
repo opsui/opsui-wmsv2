@@ -1178,9 +1178,13 @@ async function seedCompleteDatabase() {
     }
     console.log(`  ✅ Inserted ${MOCK_ORDERS.length} orders`);
 
-    // Disable the trigger to preserve timestamps
+    // Disable the trigger to preserve timestamps (skip if no permission)
     console.log('  🔧 Disabling trigger_update_order_progress...');
-    await client.query('DROP TRIGGER IF EXISTS trigger_update_order_progress ON order_items');
+    try {
+      await client.query('DROP TRIGGER IF EXISTS trigger_update_order_progress ON order_items');
+    } catch (triggerError) {
+      console.log('  ⚠️ Could not disable trigger (continuing anyway)');
+    }
 
     // Insert order items
     console.log('📦 Inserting order items...');
@@ -1203,14 +1207,18 @@ async function seedCompleteDatabase() {
     }
     console.log(`  ✅ Inserted ${MOCK_ORDER_ITEMS.length} order items`);
 
-    // Re-enable the trigger
+    // Re-enable the trigger (skip if no permission)
     console.log('  🔧 Re-enabling trigger_update_order_progress...');
-    await client.query(`
-      CREATE TRIGGER trigger_update_order_progress
-      AFTER INSERT OR UPDATE ON order_items
-      FOR EACH ROW
-      EXECUTE FUNCTION update_order_progress()
-    `);
+    try {
+      await client.query(`
+        CREATE TRIGGER trigger_update_order_progress
+        AFTER INSERT OR UPDATE ON order_items
+        FOR EACH ROW
+        EXECUTE FUNCTION update_order_progress()
+      `);
+    } catch (triggerError) {
+      console.log('  ⚠️ Could not re-enable trigger (continuing anyway)');
+    }
 
     // Create pick_tasks for PICKING orders
     console.log('📦 Creating pick tasks for PICKING orders...');
