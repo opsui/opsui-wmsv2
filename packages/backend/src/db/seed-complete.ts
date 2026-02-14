@@ -344,8 +344,19 @@ const MOCK_ORDERS: Order[] = [
   // Day 1-5: Recent SHIPPED orders
   ...Array.from({ length: 10 }, (_, i) => ({
     order_id: `SO720${String(i + 1).padStart(2, '0')}`,
-    customer_name: ['Acme Corp', 'TechStart', 'DataFlow', 'CloudNet', 'ByteWise', 'NextGen', 'ProLink', 'SmartSys', 'InnoTech', 'CoreDev'][i],
-    status: 'SHIPPED',
+    customer_name: [
+      'Acme Corp',
+      'TechStart',
+      'DataFlow',
+      'CloudNet',
+      'ByteWise',
+      'NextGen',
+      'ProLink',
+      'SmartSys',
+      'InnoTech',
+      'CoreDev',
+    ][i],
+    status: 'SHIPPED' as OrderStatus,
     priority: ['LOW', 'NORMAL', 'HIGH', 'URGENT'][i % 4] as Priority,
     created_at: getDateDaysAgo(i + 1),
     updated_at: getDateDaysAgo(i + 0.8),
@@ -361,8 +372,24 @@ const MOCK_ORDERS: Order[] = [
   // Day 6-15: Mix of SHIPPED and PICKED orders
   ...Array.from({ length: 15 }, (_, i) => ({
     order_id: `SO721${String(i + 1).padStart(2, '0')}`,
-    customer_name: ['Quantum Ltd', 'Apex Solutions', 'Vertex Inc', 'Horizon Tech', 'Pinnacle Corp', 'Summit Systems', 'Zenith Data', 'Orbit Networks', 'Pulse Tech', 'Wave Systems', 'Flux Corp', 'Spark Inc', 'Flow Dynamics', 'Stream Tech', 'River Systems'][i],
-    status: i % 3 === 0 ? 'PICKED' : 'SHIPPED',
+    customer_name: [
+      'Quantum Ltd',
+      'Apex Solutions',
+      'Vertex Inc',
+      'Horizon Tech',
+      'Pinnacle Corp',
+      'Summit Systems',
+      'Zenith Data',
+      'Orbit Networks',
+      'Pulse Tech',
+      'Wave Systems',
+      'Flux Corp',
+      'Spark Inc',
+      'Flow Dynamics',
+      'Stream Tech',
+      'River Systems',
+    ][i],
+    status: (i % 3 === 0 ? 'PICKED' : 'SHIPPED') as OrderStatus,
     priority: ['LOW', 'NORMAL', 'HIGH'][i % 3] as Priority,
     created_at: getDateDaysAgo(6 + i),
     updated_at: getDateDaysAgo(6 + i - 0.2),
@@ -378,8 +405,24 @@ const MOCK_ORDERS: Order[] = [
   // Day 16-25: More SHIPPED orders with some PICKED
   ...Array.from({ length: 15 }, (_, i) => ({
     order_id: `SO722${String(i + 1).padStart(2, '0')}`,
-    customer_name: ['Alpha Tech', 'Beta Systems', 'Gamma Inc', 'Delta Corp', 'Epsilon Ltd', 'Zeta Solutions', 'Eta Networks', 'Theta Data', 'Iota Soft', 'Kappa Labs', 'Lambda Corp', 'Mu Systems', 'Nu Tech', 'Xi Dynamics', 'Omicron Inc'][i],
-    status: i % 4 === 0 ? 'PICKED' : 'SHIPPED',
+    customer_name: [
+      'Alpha Tech',
+      'Beta Systems',
+      'Gamma Inc',
+      'Delta Corp',
+      'Epsilon Ltd',
+      'Zeta Solutions',
+      'Eta Networks',
+      'Theta Data',
+      'Iota Soft',
+      'Kappa Labs',
+      'Lambda Corp',
+      'Mu Systems',
+      'Nu Tech',
+      'Xi Dynamics',
+      'Omicron Inc',
+    ][i],
+    status: (i % 4 === 0 ? 'PICKED' : 'SHIPPED') as OrderStatus,
     priority: ['LOW', 'NORMAL', 'HIGH', 'URGENT'][i % 4] as Priority,
     created_at: getDateDaysAgo(16 + i),
     updated_at: getDateDaysAgo(16 + i - 0.3),
@@ -395,8 +438,19 @@ const MOCK_ORDERS: Order[] = [
   // Day 26-30: Older orders
   ...Array.from({ length: 10 }, (_, i) => ({
     order_id: `SO723${String(i + 1).padStart(2, '0')}`,
-    customer_name: ['Sigma Corp', 'Tau Systems', 'Upsilon Tech', 'Phi Networks', 'Chi Data', 'Psi Soft', 'Omega Labs', 'Prime Inc', 'Nova Corp', 'Stellar Systems'][i],
-    status: i % 2 === 0 ? 'SHIPPED' : 'PICKED',
+    customer_name: [
+      'Sigma Corp',
+      'Tau Systems',
+      'Upsilon Tech',
+      'Phi Networks',
+      'Chi Data',
+      'Psi Soft',
+      'Omega Labs',
+      'Prime Inc',
+      'Nova Corp',
+      'Stellar Systems',
+    ][i],
+    status: (i % 2 === 0 ? 'SHIPPED' : 'PICKED') as OrderStatus,
     priority: ['NORMAL', 'HIGH'][i % 2] as Priority,
     created_at: getDateDaysAgo(26 + i),
     updated_at: getDateDaysAgo(26 + i - 0.4),
@@ -407,6 +461,68 @@ const MOCK_ORDERS: Order[] = [
     packed_at: i % 2 === 0 ? getDateDaysAgo(26 + i - 0.3) : undefined,
     shipped_at: i % 2 === 0 ? getDateDaysAgo(26 + i - 0.4) : undefined,
     progress: i % 2 === 0 ? 100 : 75,
+  })),
+
+  // === 50 PENDING orders for queue ===
+  ...Array.from({ length: 50 }, (_, i) => ({
+    order_id: `SO724${String(i + 1).padStart(2, '0')}`,
+    customer_name: [
+      'TechFlow Inc',
+      'DataPrime',
+      'CloudSoft',
+      'NexGen Labs',
+      'ByteSystems',
+      'QuantumCore',
+      'ApexDigital',
+      'VertexTech',
+      'HorizonData',
+      'PinnacleSoft',
+      'SummitTech',
+      'ZenithCorp',
+      'OrbitData',
+      'PulseSystems',
+      'WaveTech',
+      'FluxInc',
+      'SparkLabs',
+      'FlowCorp',
+      'StreamSoft',
+      'RiverTech',
+      'AlphaData',
+      'BetaCorp',
+      'GammaTech',
+      'DeltaSoft',
+      'EpsilonLabs',
+      'ZetaCorp',
+      'EtaTech',
+      'ThetaData',
+      'IotaSoft',
+      'KappaLabs',
+      'LambdaTech',
+      'MuCorp',
+      'NuSoft',
+      'XiLabs',
+      'OmicronTech',
+      'PiCorp',
+      'RhoTech',
+      'SigmaSoft',
+      'TauLabs',
+      'UpsilonTech',
+      'PhiCorp',
+      'ChiTech',
+      'PsiSoft',
+      'OmegaLabs',
+      'PrimeTech',
+      'NovaCorp',
+      'StellarTech',
+      'CosmicSoft',
+      'NebulaLabs',
+      'GalaxyTech',
+    ][i],
+    status: 'PENDING' as OrderStatus,
+    priority: ['LOW', 'NORMAL', 'HIGH', 'URGENT'][i % 4] as Priority,
+    created_at: getDateDaysAgo((i % 10) * 0.1), // Spread across last day
+    updated_at: getDateDaysAgo((i % 10) * 0.1),
+    progress: 0,
   })),
 ];
 
@@ -1034,19 +1150,47 @@ const MOCK_ORDER_ITEMS: OrderItem[] = [
   // === Order items for the additional 50 orders ===
   // Generate 2-3 items per order
   ...Array.from({ length: 50 }, (_, orderIdx) => {
-    const orderId = orderIdx < 10 ? `SO720${String(orderIdx + 1).padStart(2, '0')}` :
-                    orderIdx < 25 ? `SO721${String(orderIdx - 9).padStart(2, '0')}` :
-                    orderIdx < 40 ? `SO722${String(orderIdx - 24).padStart(2, '0')}` :
-                    `SO723${String(orderIdx - 39).padStart(2, '0')}`;
+    const orderId =
+      orderIdx < 10
+        ? `SO720${String(orderIdx + 1).padStart(2, '0')}`
+        : orderIdx < 25
+          ? `SO721${String(orderIdx - 9).padStart(2, '0')}`
+          : orderIdx < 40
+            ? `SO722${String(orderIdx - 24).padStart(2, '0')}`
+            : `SO723${String(orderIdx - 39).padStart(2, '0')}`;
     const numItems = 2 + (orderIdx % 2); // 2 or 3 items per order
-    const orderStatus = orderIdx < 10 ? 'FULLY_PICKED' :
-                        orderIdx < 25 ? (orderIdx % 3 === 0 ? 'PENDING' : 'FULLY_PICKED') :
-                        orderIdx < 40 ? (orderIdx % 4 === 0 ? 'PENDING' : 'FULLY_PICKED') :
-                        (orderIdx % 2 === 0 ? 'FULLY_PICKED' : 'PENDING');
+    const orderStatus =
+      orderIdx < 10
+        ? 'FULLY_PICKED'
+        : orderIdx < 25
+          ? orderIdx % 3 === 0
+            ? 'PENDING'
+            : 'FULLY_PICKED'
+          : orderIdx < 40
+            ? orderIdx % 4 === 0
+              ? 'PENDING'
+              : 'FULLY_PICKED'
+            : orderIdx % 2 === 0
+              ? 'FULLY_PICKED'
+              : 'PENDING';
 
     return Array.from({ length: numItems }, (_, itemIdx) => {
-      const skus = ['WIDGET-A-001', 'GADGET-B-002', 'TOOL-C-003', 'PART-D-004', 'COMP-E-005', 'SUPPLY-F-006'];
-      const names = ['Widget A Type 1', 'Gadget B Type 2', 'Tool C Type 3', 'Part D Type 4', 'Component E Type 5', 'Supply F Type 6'];
+      const skus = [
+        'WIDGET-A-001',
+        'GADGET-B-002',
+        'TOOL-C-003',
+        'PART-D-004',
+        'COMP-E-005',
+        'MATERIAL-F-006',
+      ];
+      const names = [
+        'Widget A Type 1',
+        'Gadget B Type 2',
+        'Tool C Type 3',
+        'Part D Type 4',
+        'Component E Type 5',
+        'Material F Type 6',
+      ];
       const bins = ['A-01-01', 'B-02-03', 'C-10-05', 'D-02-01', 'E-05-02', 'A-03-04'];
 
       return {
@@ -1058,6 +1202,43 @@ const MOCK_ORDER_ITEMS: OrderItem[] = [
         picked_quantity: orderStatus === 'FULLY_PICKED' ? 1 + (orderIdx % 4) : 0,
         bin_location: bins[(orderIdx + itemIdx) % bins.length],
         status: orderStatus as ItemStatus,
+      };
+    });
+  }).flat(),
+
+  // === Order items for the 50 PENDING orders ===
+  ...Array.from({ length: 50 }, (_, orderIdx) => {
+    const orderId = `SO724${String(orderIdx + 1).padStart(2, '0')}`;
+    const numItems = 2 + (orderIdx % 2); // 2 or 3 items per order
+
+    return Array.from({ length: numItems }, (_, itemIdx) => {
+      const skus = [
+        'WIDGET-A-001',
+        'GADGET-B-002',
+        'TOOL-C-003',
+        'PART-D-004',
+        'COMP-E-005',
+        'MATERIAL-F-006',
+      ];
+      const names = [
+        'Widget A Type 1',
+        'Gadget B Type 2',
+        'Tool C Type 3',
+        'Part D Type 4',
+        'Component E Type 5',
+        'Material F Type 6',
+      ];
+      const bins = ['A-01-01', 'B-02-03', 'C-10-05', 'D-02-01', 'E-05-02', 'A-03-04'];
+
+      return {
+        order_item_id: `OI724${String(orderIdx + 1).padStart(2, '0')}-${itemIdx + 1}`,
+        order_id: orderId,
+        sku: skus[(orderIdx + itemIdx) % skus.length],
+        name: names[(orderIdx + itemIdx) % names.length],
+        quantity: 1 + (orderIdx % 4),
+        picked_quantity: 0,
+        bin_location: bins[(orderIdx + itemIdx) % bins.length],
+        status: 'PENDING' as ItemStatus,
       };
     });
   }).flat(),
@@ -1195,15 +1376,16 @@ async function seedCompleteDatabase() {
     ];
     for (const sku of MOCK_SKUS) {
       await client.query(
-        `INSERT INTO skus (sku, name, description, category, active, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        `INSERT INTO skus (sku, name, description, category, barcode, active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
          ON CONFLICT (sku) DO UPDATE SET
            name = EXCLUDED.name,
            description = EXCLUDED.description,
            category = EXCLUDED.category,
+           barcode = EXCLUDED.barcode,
            active = EXCLUDED.active,
            updated_at = NOW()`,
-        [sku.sku, sku.name, sku.description, sku.category, sku.active]
+        [sku.sku, sku.name, sku.description, sku.category, sku.barcode, sku.active]
       );
     }
     console.log(`  ✅ Inserted ${MOCK_SKUS.length} SKUs`);
@@ -1257,7 +1439,18 @@ async function seedCompleteDatabase() {
       await client.query(
         `INSERT INTO orders (order_id, customer_id, customer_name, status, priority, created_at, updated_at, picker_id, packer_id, claimed_at, picked_at, packed_at, shipped_at, progress)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-         ON CONFLICT (order_id) DO NOTHING`,
+         ON CONFLICT (order_id) DO UPDATE SET
+           status = EXCLUDED.status,
+           priority = EXCLUDED.priority,
+           created_at = EXCLUDED.created_at,
+           updated_at = EXCLUDED.updated_at,
+           picker_id = EXCLUDED.picker_id,
+           packer_id = EXCLUDED.packer_id,
+           claimed_at = EXCLUDED.claimed_at,
+           picked_at = EXCLUDED.picked_at,
+           packed_at = EXCLUDED.packed_at,
+           shipped_at = EXCLUDED.shipped_at,
+           progress = EXCLUDED.progress`,
         [
           order.order_id,
           customer_id,
@@ -1456,6 +1649,249 @@ async function seedCompleteDatabase() {
     }
     console.log(`  ✅ Inserted ${MOCK_INVENTORY_UNITS.length} inventory units`);
 
+    // Insert inventory_transactions for turnover analytics
+    console.log('📦 Inserting inventory transactions...');
+    const transactionTypes = ['RECEIPT', 'DEDUCTION', 'ADJUSTMENT'];
+    const transactionSkus = [
+      'WIDGET-A-001',
+      'GADGET-B-002',
+      'TOOL-C-003',
+      'PART-D-004',
+      'COMP-E-005',
+      'MATERIAL-F-006',
+    ];
+    const binLocations = ['A-01-01', 'B-05-03', 'C-10-05', 'D-02-01', 'E-08-02', 'F-12-03'];
+
+    let transactionCount = 0;
+    // Generate transactions spread over the past 30 days
+    for (let day = 0; day < 30; day++) {
+      const numTransactionsPerDay = 3 + Math.floor(Math.random() * 5); // 3-7 transactions per day
+      for (let t = 0; t < numTransactionsPerDay; t++) {
+        const sku = transactionSkus[Math.floor(Math.random() * transactionSkus.length)];
+        const binLocation = binLocations[Math.floor(Math.random() * binLocations.length)];
+        const type = transactionTypes[Math.floor(Math.random() * transactionTypes.length)];
+        const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 6)}-${day}-${t}`;
+        const timestamp = new Date(Date.now() - day * 24 * 60 * 60 * 1000 - t * 60 * 60 * 1000);
+        const quantity =
+          type === 'RECEIPT'
+            ? 10 + Math.floor(Math.random() * 50)
+            : type === 'DEDUCTION'
+              ? -(5 + Math.floor(Math.random() * 20))
+              : Math.floor(Math.random() * 10) - 5;
+
+        try {
+          await client.query('SAVEPOINT insert_transaction');
+          await client.query(
+            `INSERT INTO inventory_transactions (transaction_id, type, sku, quantity, reason, bin_location, timestamp)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             ON CONFLICT (transaction_id) DO NOTHING`,
+            [
+              transactionId,
+              type,
+              sku,
+              quantity,
+              type === 'RECEIPT'
+                ? 'Stock receipt from supplier'
+                : type === 'DEDUCTION'
+                  ? 'Stock picked for order'
+                  : 'Inventory adjustment',
+              binLocation,
+              timestamp,
+            ]
+          );
+          await client.query('RELEASE SAVEPOINT insert_transaction');
+          transactionCount++;
+        } catch (err: any) {
+          await client.query('ROLLBACK TO SAVEPOINT insert_transaction');
+          // Continue with next transaction
+        }
+      }
+    }
+    console.log(`  ✅ Inserted ${transactionCount} inventory transactions`);
+
+    // Insert location_capacities for bin utilization analytics
+    console.log('📦 Inserting location capacities...');
+    const locationCapacities = [
+      // Zone A - Fast Moving Items
+      {
+        bin_location: 'A-01-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 100,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'A-01-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 100,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'A-01-03',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 100,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'A-02-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 100,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'A-02-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 100,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'A-02-03',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 100,
+        capacity_unit: 'UNITS',
+      },
+      // Zone B - Medium Moving Items
+      {
+        bin_location: 'B-05-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 80,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'B-05-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 80,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'B-05-03',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 80,
+        capacity_unit: 'UNITS',
+      },
+      // Zone C - Slow Moving Items
+      {
+        bin_location: 'C-10-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 50,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'C-10-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 50,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'C-10-03',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 50,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'C-10-04',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 50,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'C-10-05',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 50,
+        capacity_unit: 'UNITS',
+      },
+      // Zone D - Bulk Storage
+      {
+        bin_location: 'D-02-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 200,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'D-02-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 200,
+        capacity_unit: 'UNITS',
+      },
+      // Zone E - Components
+      {
+        bin_location: 'E-08-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 120,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'E-08-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 120,
+        capacity_unit: 'UNITS',
+      },
+      // Zone F - Materials
+      {
+        bin_location: 'F-12-01',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 150,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'F-12-02',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 150,
+        capacity_unit: 'UNITS',
+      },
+      {
+        bin_location: 'F-12-03',
+        capacity_type: 'QUANTITY',
+        maximum_capacity: 150,
+        capacity_unit: 'UNITS',
+      },
+    ];
+
+    let capacityCount = 0;
+    for (const cap of locationCapacities) {
+      // Get current inventory in this bin
+      const invResult = await client.query(
+        'SELECT COALESCE(SUM(quantity), 0) as total FROM inventory_units WHERE bin_location = $1',
+        [cap.bin_location]
+      );
+      const currentUtilization = parseInt(invResult.rows[0].total) || 0;
+      const utilizationPercent =
+        Math.round((currentUtilization / cap.maximum_capacity) * 100 * 100) / 100;
+      const availableCapacity = cap.maximum_capacity - currentUtilization;
+
+      const capacityId = `CAP-${cap.bin_location}`;
+
+      try {
+        await client.query('SAVEPOINT insert_capacity');
+        await client.query(
+          `INSERT INTO location_capacities (capacity_id, bin_location, capacity_type, maximum_capacity, current_utilization, available_capacity, utilization_percent, capacity_unit, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT (bin_location) DO UPDATE SET
+             current_utilization = EXCLUDED.current_utilization,
+             available_capacity = EXCLUDED.available_capacity,
+             utilization_percent = EXCLUDED.utilization_percent,
+             status = EXCLUDED.status,
+             last_updated = NOW()`,
+          [
+            capacityId,
+            cap.bin_location,
+            cap.capacity_type,
+            cap.maximum_capacity,
+            currentUtilization,
+            availableCapacity,
+            utilizationPercent,
+            cap.capacity_unit,
+            utilizationPercent > 100 ? 'EXCEEDED' : utilizationPercent >= 80 ? 'WARNING' : 'ACTIVE',
+          ]
+        );
+        await client.query('RELEASE SAVEPOINT insert_capacity');
+        capacityCount++;
+      } catch (err: any) {
+        await client.query('ROLLBACK TO SAVEPOINT insert_capacity');
+        console.log(`  ⚠️ Skipping capacity insert for ${cap.bin_location}: ${err.message}`);
+      }
+    }
+    console.log(`  ✅ Inserted ${capacityCount} location capacities`);
+
     // Commit transaction
     await client.query('COMMIT');
     console.log('✅ Database seed completed successfully!');
@@ -1468,6 +1904,8 @@ async function seedCompleteDatabase() {
     console.log(`  Inventory Units: ${MOCK_INVENTORY_UNITS.length}`);
     console.log(`  Orders: ${MOCK_ORDERS.length}`);
     console.log(`  Order Items: ${MOCK_ORDER_ITEMS.length}`);
+    console.log(`  Inventory Transactions: ${transactionCount}`);
+    console.log(`  Location Capacities: ${capacityCount}`);
 
     console.log('\n👤 Users:');
     MOCK_USERS.forEach(u => console.log(`  - ${u.name} (${u.role}): ${u.password}`));
