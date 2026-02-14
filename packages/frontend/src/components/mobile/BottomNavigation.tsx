@@ -99,7 +99,7 @@ export function BottomNavigation({
         className
       )}
     >
-      {items.map((item) => {
+      {items.map(item => {
         const isActive = activeId === item.id;
         const showBadge = item.badge && item.badge > 0;
 
@@ -108,7 +108,7 @@ export function BottomNavigation({
             key={item.id}
             type="button"
             onClick={() => handleItemClick(item)}
-            onKeyDown={(e) => handleKeyDown(e, item)}
+            onKeyDown={e => handleKeyDown(e, item)}
             disabled={item.disabled}
             aria-current={isActive ? 'page' : undefined}
             aria-label={cn(
@@ -193,29 +193,69 @@ export function BottomNavigation({
 // Default navigation items by role using Heroicons
 export const DEFAULT_NAV_ITEMS: Record<string, NavItem[]> = {
   picker: [
-    { id: 'orders', label: 'Orders', icon: <ClipboardDocumentListIcon className="w-6 h-6" />, path: '/orders' },
+    {
+      id: 'orders',
+      label: 'Orders',
+      icon: <ClipboardDocumentListIcon className="w-6 h-6" />,
+      path: '/orders',
+    },
     { id: 'scan', label: 'Scan', icon: <MagnifyingGlassIcon className="w-6 h-6" />, path: '/scan' },
     { id: 'stock', label: 'Stock', icon: <CubeIcon className="w-6 h-6" />, path: '/stock-control' },
     { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
   packer: [
     { id: 'packing', label: 'Packing', icon: <CubeIcon className="w-6 h-6" />, path: '/packing' },
-    { id: 'shipped', label: 'Shipped', icon: <ShoppingBagIcon className="w-6 h-6" />, path: '/shipped-orders' },
+    {
+      id: 'shipped',
+      label: 'Shipped',
+      icon: <ShoppingBagIcon className="w-6 h-6" />,
+      path: '/shipped-orders',
+    },
     { id: 'scan', label: 'Scan', icon: <MagnifyingGlassIcon className="w-6 h-6" />, path: '/scan' },
     { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
   supervisor: [
-    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="w-6 h-6" />, path: '/dashboard' },
-    { id: 'orders', label: 'Orders', icon: <ClipboardDocumentListIcon className="w-6 h-6" />, path: '/orders' },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <HomeIcon className="w-6 h-6" />,
+      path: '/dashboard',
+    },
+    {
+      id: 'orders',
+      label: 'Orders',
+      icon: <ClipboardDocumentListIcon className="w-6 h-6" />,
+      path: '/orders',
+    },
     { id: 'packing', label: 'Packing', icon: <CubeIcon className="w-6 h-6" />, path: '/packing' },
-    { id: 'reports', label: 'Reports', icon: <ChartBarIcon className="w-6 h-6" />, path: '/reports' },
+    {
+      id: 'reports',
+      label: 'Reports',
+      icon: <ChartBarIcon className="w-6 h-6" />,
+      path: '/reports',
+    },
     { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
   admin: [
-    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="w-6 h-6" />, path: '/dashboard' },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <HomeIcon className="w-6 h-6" />,
+      path: '/dashboard',
+    },
     { id: 'users', label: 'Users', icon: <UsersIcon className="w-6 h-6" />, path: '/user-roles' },
-    { id: 'settings', label: 'Settings', icon: <Cog6ToothIcon className="w-6 h-6" />, path: '/settings' },
-    { id: 'reports', label: 'Reports', icon: <ChartBarIcon className="w-6 h-6" />, path: '/reports' },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Cog6ToothIcon className="w-6 h-6" />,
+      path: '/settings',
+    },
+    {
+      id: 'reports',
+      label: 'Reports',
+      icon: <ChartBarIcon className="w-6 h-6" />,
+      path: '/reports',
+    },
     { id: 'more', label: 'More', icon: <Bars3Icon className="w-6 h-6" />, path: '/more' },
   ],
 };

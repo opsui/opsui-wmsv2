@@ -8,6 +8,7 @@
  * 4. Order Items
  */
 
+import 'dotenv/config';
 import { getPool } from './client';
 import * as bcrypt from 'bcrypt';
 
@@ -20,7 +21,6 @@ type OrderStatus =
   | 'PACKED'
   | 'SHIPPED'
   | 'CANCELLED'
-  | 'ON_HOLD'
   | 'BACKORDER';
 type ItemStatus = 'PENDING' | 'PARTIAL_PICKED' | 'FULLY_PICKED';
 
@@ -303,7 +303,7 @@ const MOCK_ORDERS: Order[] = [
   {
     order_id: 'SO71017',
     customer_name: 'Massive Dynamic',
-    status: 'ON_HOLD',
+    status: 'PENDING',
     priority: 'HIGH',
     created_at: getDateDaysAgo(3),
     updated_at: getDateDaysAgo(2),
@@ -317,7 +317,7 @@ const MOCK_ORDERS: Order[] = [
   {
     order_id: 'SO71018',
     customer_name: 'Primatech',
-    status: 'ON_HOLD',
+    status: 'PENDING',
     priority: 'URGENT',
     created_at: getDateDaysAgo(8),
     updated_at: getDateDaysAgo(7),
@@ -981,7 +981,10 @@ async function seedCompleteDatabase() {
         await client.query(
           `INSERT INTO users (user_id, name, email, password_hash, role, active, created_at)
            VALUES ($1, $2, $3, $4, $5, $6, NOW())
-           ON CONFLICT (user_id) DO NOTHING`,
+           ON CONFLICT (email) DO UPDATE SET
+             name = EXCLUDED.name,
+             password_hash = EXCLUDED.password_hash,
+             role = EXCLUDED.role`,
           [user.user_id, user.name, user.email, hashedPassword, user.role, true]
         );
       } catch (err: any) {
@@ -992,6 +995,51 @@ async function seedCompleteDatabase() {
       }
     }
     console.log(`  ✅ Inserted ${MOCK_USERS.length} users`);
+
+    // Insert additional pickers for historical tasks
+    const ADDITIONAL_PICKERS = [
+      {
+        user_id: 'USR-PICK02',
+        name: 'Mike Johnson',
+        password: 'picker123',
+        email: 'mike.johnson@wms.local',
+        role: 'PICKER',
+      },
+      {
+        user_id: 'USR-PICK03',
+        name: 'Sarah Williams',
+        password: 'picker123',
+        email: 'sarah.williams@wms.local',
+        role: 'PICKER',
+      },
+      {
+        user_id: 'USR-PICK04',
+        name: 'David Chen',
+        password: 'picker123',
+        email: 'david.chen@wms.local',
+        role: 'PICKER',
+      },
+    ];
+
+    for (const user of ADDITIONAL_PICKERS) {
+      try {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await client.query(
+          `INSERT INTO users (user_id, name, email, password_hash, role, active, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())
+           ON CONFLICT (email) DO UPDATE SET
+             name = EXCLUDED.name,
+             password_hash = EXCLUDED.password_hash,
+             role = EXCLUDED.role`,
+          [user.user_id, user.name, user.email, hashedPassword, user.role, true]
+        );
+      } catch (err: any) {
+        if (!err.code || err.code !== '23505') {
+          throw err;
+        }
+      }
+    }
+    console.log(`  ✅ Inserted ${ADDITIONAL_PICKERS.length} additional pickers`);
 
     // Insert SKUs
     console.log('📦 Inserting SKUs...');
@@ -1047,10 +1095,15 @@ async function seedCompleteDatabase() {
     ];
     for (const sku of MOCK_SKUS) {
       await client.query(
-        `INSERT INTO skus (sku, name, description, category, barcode, active, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-         ON CONFLICT (sku) DO NOTHING`,
-        [sku.sku, sku.name, sku.description, sku.category, sku.barcode, sku.active]
+        `INSERT INTO skus (sku, name, description, category, active, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+         ON CONFLICT (sku) DO UPDATE SET
+           name = EXCLUDED.name,
+           description = EXCLUDED.description,
+           category = EXCLUDED.category,
+           active = EXCLUDED.active,
+           updated_at = NOW()`,
+        [sku.sku, sku.name, sku.description, sku.category, sku.active]
       );
     }
     console.log(`  ✅ Inserted ${MOCK_SKUS.length} SKUs`);
@@ -1209,49 +1262,6 @@ async function seedCompleteDatabase() {
       ['PICKED', 'PACKING', 'PACKED', 'SHIPPED'].includes(o.status)
     );
 
-    // Add additional pickers for variety in performance chart
-    const ADDITIONAL_PICKERS = [
-      {
-        user_id: 'USR-PICK02',
-        name: 'Mike Johnson',
-        password: 'picker123',
-        email: 'mike.johnson@wms.local',
-        role: 'PICKER',
-      },
-      {
-        user_id: 'USR-PICK03',
-        name: 'Sarah Williams',
-        password: 'picker123',
-        email: 'sarah.williams@wms.local',
-        role: 'PICKER',
-      },
-      {
-        user_id: 'USR-PICK04',
-        name: 'David Chen',
-        password: 'picker123',
-        email: 'david.chen@wms.local',
-        role: 'PICKER',
-      },
-    ];
-
-    for (const user of ADDITIONAL_PICKERS) {
-      try {
-        const hashedPassword = await bcrypt.hash(user.password, 10);
-        await client.query(
-          `INSERT INTO users (user_id, name, email, password_hash, role, active, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, NOW())
-           ON CONFLICT (user_id) DO NOTHING`,
-          [user.user_id, user.name, user.email, hashedPassword, user.role, true]
-        );
-      } catch (err: any) {
-        // Ignore duplicate key errors
-        if (!err.code || err.code !== '23505') {
-          throw err;
-        }
-      }
-    }
-    console.log(`  ✅ Inserted ${ADDITIONAL_PICKERS.length} additional pickers`);
-
     // Pickers to assign historical tasks to
     const historicalPickers = ['USR-PICK01', 'USR-PICK02', 'USR-PICK03', 'USR-PICK04'];
 
@@ -1299,45 +1309,6 @@ async function seedCompleteDatabase() {
     }
     console.log(`  ✅ Created ${pickTaskCount} historical completed pick tasks`);
 
-    // Insert carriers
-    console.log('🚚 Inserting carriers...');
-    const MOCK_CARRIERS = [
-      {
-        carrier_id: 'CARRIER-UPS',
-        name: 'United Parcel Service',
-        carrier_code: 'UPS',
-        service_types: '["Ground", "Next Day Air", "2nd Day Air"]',
-      },
-      {
-        carrier_id: 'CARRIER-FEDEX',
-        name: 'FedEx Corporation',
-        carrier_code: 'FDX',
-        service_types: '["Ground", "Express", "2Day"]',
-      },
-      {
-        carrier_id: 'CARRIER-USPS',
-        name: 'United States Postal Service',
-        carrier_code: 'USPS',
-        service_types: '["Priority Mail", "First Class"]',
-      },
-      {
-        carrier_id: 'CARRIER-DHL',
-        name: 'DHL Express',
-        carrier_code: 'DHL',
-        service_types: '["Express Worldwide", "Ground"]',
-      },
-    ];
-
-    for (const carrier of MOCK_CARRIERS) {
-      await client.query(
-        `INSERT INTO carriers (carrier_id, name, carrier_code, service_types, is_active)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (carrier_id) DO NOTHING`,
-        [carrier.carrier_id, carrier.name, carrier.carrier_code, carrier.service_types, true]
-      );
-    }
-    console.log(`  ✅ Inserted ${MOCK_CARRIERS.length} carriers`);
-
     // Insert inventory_units (stock in bins)
     console.log('📦 Inserting inventory units...');
     const MOCK_INVENTORY_UNITS = [
@@ -1377,10 +1348,9 @@ async function seedCompleteDatabase() {
 
     // Print summary
     console.log('\n📊 Summary:');
-    console.log(`  Users: ${MOCK_USERS.length}`);
+    console.log(`  Users: ${MOCK_USERS.length + ADDITIONAL_PICKERS.length}`);
     console.log(`  SKUs: ${MOCK_SKUS.length}`);
     console.log(`  Bin Locations: ${MOCK_BIN_LOCATIONS.length}`);
-    console.log(`  Carriers: ${MOCK_CARRIERS.length}`);
     console.log(`  Inventory Units: ${MOCK_INVENTORY_UNITS.length}`);
     console.log(`  Orders: ${MOCK_ORDERS.length}`);
     console.log(`  Order Items: ${MOCK_ORDER_ITEMS.length}`);

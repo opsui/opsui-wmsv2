@@ -260,8 +260,12 @@ export function PackingQueuePage() {
         {/* Header - Responsive layout */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Packing Queue</h1>
-            <p className="mt-1 sm:mt-2 text-gray-400 text-sm sm:text-base">Orders ready to be packed</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Packing Queue
+            </h1>
+            <p className="mt-1 sm:mt-2 text-gray-400 text-sm sm:text-base">
+              Orders ready to be packed
+            </p>
           </div>
 
           {/* Search Bar - Full width on mobile */}

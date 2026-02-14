@@ -219,18 +219,29 @@ export class UserRepository extends BaseRepository<User> {
    * This fetches granted roles from user_role_assignments table
    */
   private async attachAdditionalRoles(user: User): Promise<User> {
-    const result = await query<{ role: UserRole }>(
-      `SELECT role
-       FROM user_role_assignments
-       WHERE user_id = $1 AND active = true
-       ORDER BY granted_at DESC`,
-      [user.userId]
-    );
+    try {
+      const result = await query<{ role: UserRole }>(
+        `SELECT role
+         FROM user_role_assignments
+         WHERE user_id = $1 AND active = true
+         ORDER BY granted_at DESC`,
+        [user.userId]
+      );
 
-    return {
-      ...user,
-      additionalRoles: result.rows.map(row => row.role),
-    };
+      return {
+        ...user,
+        additionalRoles: result.rows.map(row => row.role),
+      };
+    } catch (error: any) {
+      // If user_role_assignments table doesn't exist, just return the user without additional roles
+      if (error.code === '42P01') {
+        return {
+          ...user,
+          additionalRoles: [],
+        };
+      }
+      throw error;
+    }
   }
 
   // --------------------------------------------------------------------------

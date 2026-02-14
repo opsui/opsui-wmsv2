@@ -13,7 +13,10 @@ import React, { forwardRef, useId } from 'react';
 import { XMarkIcon, MicrophoneIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 
-export interface MobileInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface MobileInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'size'
+> {
   /** Label for the input (required for accessibility) */
   label: string;
   /** Error message to display */
@@ -86,7 +89,8 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
 
     const handleVoiceInput = () => {
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        const SpeechRecognition =
+          (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
@@ -109,10 +113,7 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
 
     return (
       <div className={cn('space-y-2', className)}>
-        <label
-          htmlFor={id}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
           {required && (
             <span className="text-error-500 ml-1" aria-hidden="true">

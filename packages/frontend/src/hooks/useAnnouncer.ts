@@ -78,8 +78,7 @@ export function useAnnouncer(options: AnnouncerOptions = {}): AnnouncerReturn {
       }
 
       // If same message, add a space to force re-announcement
-      const messageToAnnounce =
-        previousMessageRef.current === message ? `${message} ` : message;
+      const messageToAnnounce = previousMessageRef.current === message ? `${message} ` : message;
       previousMessageRef.current = message;
 
       // Delay slightly to ensure screen reader catches the change

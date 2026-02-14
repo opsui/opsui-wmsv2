@@ -104,9 +104,11 @@ async function runMigrations() {
       successCount++;
     } catch (error) {
       // Check if it's a "already exists" type error which is fine
-      if (error.message.includes('already exists') ||
-          error.message.includes('duplicate key') ||
-          error.message.includes('already been created')) {
+      if (
+        error.message.includes('already exists') ||
+        error.message.includes('duplicate key') ||
+        error.message.includes('already been created')
+      ) {
         console.log(`⏭️  SKIP: ${migrationFile} (already applied)\n`);
         skipCount++;
       } else {

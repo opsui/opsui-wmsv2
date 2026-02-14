@@ -175,7 +175,17 @@ export function useSwipe(config: SwipeConfig = {}): SwipeHandlers & SwipeState {
         isSwiping: false,
       });
     },
-    [enabled, state, maxDuration, threshold, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, onSwipe]
+    [
+      enabled,
+      state,
+      maxDuration,
+      threshold,
+      onSwipeLeft,
+      onSwipeRight,
+      onSwipeUp,
+      onSwipeDown,
+      onSwipe,
+    ]
   );
 
   return {

@@ -79,10 +79,7 @@ export function Modal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      role="presentation"
-    >
+    <div className="fixed inset-0 z-50 overflow-y-auto" role="presentation">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -110,10 +107,7 @@ export function Modal({
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-4 md:px-6 border-b border-white/[0.08]">
-            <h2
-              id={titleId}
-              className="text-lg md:text-xl font-semibold text-white pr-8"
-            >
+            <h2 id={titleId} className="text-lg md:text-xl font-semibold text-white pr-8">
               {title}
             </h2>
             {showCloseButton && (
@@ -207,7 +201,9 @@ export function FormInput({
       <label htmlFor={name} className="block text-sm font-medium text-gray-300">
         {label}
         {required && (
-          <span className="text-error-400 ml-1" aria-hidden="true">*</span>
+          <span className="text-error-400 ml-1" aria-hidden="true">
+            *
+          </span>
         )}
       </label>
       <input
@@ -224,10 +220,7 @@ export function FormInput({
         // Accessibility attributes
         aria-required={required}
         aria-invalid={!!error}
-        aria-describedby={cn(
-          error && errorId,
-          hint && hintId
-        ).trim() || undefined}
+        aria-describedby={cn(error && errorId, hint && hintId).trim() || undefined}
         className={cn(
           'w-full px-4 py-3 md:py-2.5 bg-white/[0.05] border rounded-lg text-white placeholder-gray-500',
           // 16px minimum to prevent iOS zoom
@@ -246,12 +239,7 @@ export function FormInput({
         </p>
       )}
       {error && (
-        <p
-          id={errorId}
-          className="text-sm text-error-400"
-          role="alert"
-          aria-live="polite"
-        >
+        <p id={errorId} className="text-sm text-error-400" role="alert" aria-live="polite">
           {error}
         </p>
       )}
@@ -301,7 +289,9 @@ export function FormTextarea({
       <label htmlFor={name} className="block text-sm font-medium text-gray-300">
         {label}
         {required && (
-          <span className="text-error-400 ml-1" aria-hidden="true">*</span>
+          <span className="text-error-400 ml-1" aria-hidden="true">
+            *
+          </span>
         )}
       </label>
       <textarea
@@ -316,10 +306,7 @@ export function FormTextarea({
         // Accessibility attributes
         aria-required={required}
         aria-invalid={!!error}
-        aria-describedby={cn(
-          error && errorId,
-          hint && hintId
-        ).trim() || undefined}
+        aria-describedby={cn(error && errorId, hint && hintId).trim() || undefined}
         className={cn(
           'w-full px-4 py-3 md:py-2.5 bg-white/[0.05] border rounded-lg text-white placeholder-gray-500',
           // 16px minimum to prevent iOS zoom
@@ -338,12 +325,7 @@ export function FormTextarea({
         </p>
       )}
       {error && (
-        <p
-          id={errorId}
-          className="text-sm text-error-400"
-          role="alert"
-          aria-live="polite"
-        >
+        <p id={errorId} className="text-sm text-error-400" role="alert" aria-live="polite">
           {error}
         </p>
       )}
@@ -394,7 +376,9 @@ export function FormSelect({
       <label htmlFor={name} className="block text-sm font-medium text-gray-300">
         {label}
         {required && (
-          <span className="text-error-400 ml-1" aria-hidden="true">*</span>
+          <span className="text-error-400 ml-1" aria-hidden="true">
+            *
+          </span>
         )}
       </label>
       <select
@@ -407,10 +391,7 @@ export function FormSelect({
         // Accessibility attributes
         aria-required={required}
         aria-invalid={!!error}
-        aria-describedby={cn(
-          error && errorId,
-          hint && hintId
-        ).trim() || undefined}
+        aria-describedby={cn(error && errorId, hint && hintId).trim() || undefined}
         className={cn(
           'w-full px-4 py-3 md:py-2.5 bg-white/[0.05] border rounded-lg text-white',
           // 16px minimum to prevent iOS zoom
@@ -441,12 +422,7 @@ export function FormSelect({
         </p>
       )}
       {error && (
-        <p
-          id={errorId}
-          className="text-sm text-error-400"
-          role="alert"
-          aria-live="polite"
-        >
+        <p id={errorId} className="text-sm text-error-400" role="alert" aria-live="polite">
           {error}
         </p>
       )}

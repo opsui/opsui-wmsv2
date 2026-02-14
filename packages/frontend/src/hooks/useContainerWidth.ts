@@ -9,7 +9,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
   React.RefObject<T | null>,
-  number
+  number,
 ] {
   const containerRef = useRef<T>(null);
   const [width, setWidth] = useState(300); // Default width
@@ -29,7 +29,7 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
     updateWidth();
 
     // Use ResizeObserver for responsive updates
-    const resizeObserver = new ResizeObserver((entries) => {
+    const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width: newWidth } = entry.contentRect;
         if (newWidth > 0) {

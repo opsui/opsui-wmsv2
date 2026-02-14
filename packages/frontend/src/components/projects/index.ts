@@ -5,7 +5,5 @@
  */
 
 export { CreateProjectModal } from './CreateProjectModal';
-export { default as CreateProjectModal } from './CreateProjectModal';
 
 export { TimeEntryModal } from './TimeEntryModal';
-export { default as TimeEntryModal } from './TimeEntryModal';

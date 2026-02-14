@@ -78,10 +78,14 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role user_role NOT NULL DEFAULT 'PICKER',
-  active BOOLEAN NOT NULL DEFAULT true,
+  active BOOLEAN,
   current_task_id VARCHAR(20),
+  current_view VARCHAR(50),
+  current_view_updated_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  last_login_at TIMESTAMP WITH TIME ZONE
+  last_login_at TIMESTAMP WITH TIME ZONE,
+  last_login_at TIMESTAMP WITH TIME ZONE,
+  deleted_at TIMESTAMP WITH TIME ZONE
 );
 
 -- ----------------------------------------------------------------------------

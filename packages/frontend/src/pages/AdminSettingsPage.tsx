@@ -327,9 +327,9 @@ function AdminSettingsPage() {
   });
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Per-user role color state
-  const [userRoleColor, setUserRoleColor] = useState<string>('#3b82f6');
-  const [hasColorChange, setHasColorChange] = useState(false);
+  // Per-user role colors state - track colors for ALL roles
+  const [roleColors, setRoleColors] = useState<Record<string, string>>({});
+  const [originalRoleColors, setOriginalRoleColors] = useState<Record<string, string>>({});
 
   // Update roles when granted roles change, using JSON comparison for stability
   useEffect(() => {
@@ -353,13 +353,18 @@ function AdminSettingsPage() {
     }
   }, [grantedRoles]);
 
-  // Load user's role color on mount
+  // Load all role colors on mount
   useEffect(() => {
-    if (user) {
-      const colorSetting = getUserRoleColor(user.userId, user.role);
-      setUserRoleColor(colorSetting.color);
+    if (user && roles.length > 0) {
+      const colors: Record<string, string> = {};
+      roles.forEach(role => {
+        const colorSetting = getUserRoleColor(user.userId, role.role);
+        colors[role.role] = colorSetting.color;
+      });
+      setRoleColors(colors);
+      setOriginalRoleColors(colors);
     }
-  }, [user]);
+  }, [user, roles]);
 
   const visibleCount = roles.filter(r => r.visible).length;
 
@@ -428,33 +433,44 @@ function AdminSettingsPage() {
   };
 
   // Color handlers
-  const handleColorChange = (color: string) => {
-    setUserRoleColor(color);
-    setHasColorChange(true);
+  const handleColorChange = (role: UserRole, color: string) => {
+    setRoleColors(prev => ({
+      ...prev,
+      [role]: color,
+    }));
   };
 
-  const handleSaveColor = () => {
+  const handleSaveColor = (role: UserRole) => {
     if (user) {
-      saveUserRoleColor(user.userId, user.role, userRoleColor);
-      setHasColorChange(false);
+      const color = roleColors[role];
+      saveUserRoleColor(user.userId, role, color);
+      setOriginalRoleColors(prev => ({
+        ...prev,
+        [role]: color,
+      }));
       playSound('success');
 
       // Dispatch custom event to notify other components (like Header) of the color change
       window.dispatchEvent(
         new CustomEvent('role-color-changed', {
-          detail: { userId: user.userId, role: user.role, color: userRoleColor },
+          detail: { userId: user.userId, role, color },
         })
       );
     }
   };
 
-  const handleResetColor = () => {
+  const handleResetColor = (role: UserRole) => {
     if (user) {
-      // Reset to default global color
-      const defaultColor = getUserRoleColor(user.userId, user.role).color;
-      setUserRoleColor(defaultColor);
-      setHasColorChange(false);
+      // Reset to the original color
+      setRoleColors(prev => ({
+        ...prev,
+        [role]: originalRoleColors[role] || '#3b82f6',
+      }));
     }
+  };
+
+  const hasColorChange = (role: UserRole) => {
+    return roleColors[role] !== originalRoleColors[role];
   };
 
   return (
@@ -527,64 +543,100 @@ function AdminSettingsPage() {
                   </CardContent>
                 </Card>
 
-                {/* My Role Badge Color */}
-                {user && (
+                {/* Role Badge Colors - All Roles */}
+                {user && roles.length > 0 && (
                   <Card variant="glass">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle>My Role Badge Color</CardTitle>
-                        {hasColorChange && (
-                          <div className="flex items-center gap-2">
-                            <Button variant="secondary" size="sm" onClick={handleResetColor}>
-                              Reset
-                            </Button>
-                            <Button variant="primary" size="sm" onClick={handleSaveColor}>
-                              Save Color
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                      <CardTitle>Role Badge Colors</CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
-                      <p className="text-sm text-gray-400 mb-4">
-                        Customize the badge color for your current role{' '}
-                        <Badge size="sm" customColor={userRoleColor}>
-                          {user.role}
-                        </Badge>
-                        . This color is personal to you and only affects how your role badge appears
-                        on your device.
+                      <p className="text-sm text-gray-400 mb-6">
+                        Customize the badge color for each role you have access to. These colors are
+                        personal to you and only affect how role badges appear on your device.
                       </p>
-                      <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
-                        {[
-                          '#ef4444',
-                          '#f97316',
-                          '#f59e0b',
-                          '#eab308',
-                          '#84cc16',
-                          '#10b981',
-                          '#06b6d4',
-                          '#3b82f6',
-                          '#6366f1',
-                          '#8b5cf6',
-                          '#d946ef',
-                          '#ec4899',
-                          '#f43f5e',
-                          '#64748b',
-                          '#71717a',
-                        ].map(color => (
-                          <button
-                            key={color}
-                            onClick={() => handleColorChange(color)}
-                            className={`w-full aspect-square rounded-md transition-all duration-200 ${
-                              userRoleColor === color
-                                ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-105 shadow-lg'
-                                : 'hover:scale-105 opacity-60 hover:opacity-100 hover:shadow-md'
-                            }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                            aria-label={`Select ${color} for your role`}
-                          />
-                        ))}
+                      <div className="space-y-6">
+                        {roles.map(role => {
+                          const currentColor = roleColors[role.role] || '#3b82f6';
+                          const hasChange = hasColorChange(role.role);
+                          const isBaseRole = role.role === user?.role;
+
+                          return (
+                            <div
+                              key={role.key}
+                              className={`p-4 rounded-xl border transition-all duration-200 ${
+                                isBaseRole
+                                  ? 'bg-primary-500/10 border-primary-500/30'
+                                  : 'bg-gray-800/50 border-gray-700/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Badge size="sm" customColor={currentColor}>
+                                    {role.role}
+                                  </Badge>
+                                  <span className="text-sm font-medium text-white">
+                                    {role.label}
+                                  </span>
+                                  {isBaseRole && (
+                                    <span className="px-1.5 py-0.5 text-xs font-medium bg-primary-500/20 text-primary-400 rounded">
+                                      Base
+                                    </span>
+                                  )}
+                                </div>
+                                {hasChange && (
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      onClick={() => handleResetColor(role.role)}
+                                    >
+                                      Reset
+                                    </Button>
+                                    <Button
+                                      variant="primary"
+                                      size="sm"
+                                      onClick={() => handleSaveColor(role.role)}
+                                    >
+                                      Save
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-8 md:grid-cols-15 gap-2">
+                                {[
+                                  '#ef4444',
+                                  '#f97316',
+                                  '#f59e0b',
+                                  '#eab308',
+                                  '#84cc16',
+                                  '#10b981',
+                                  '#06b6d4',
+                                  '#3b82f6',
+                                  '#6366f1',
+                                  '#8b5cf6',
+                                  '#d946ef',
+                                  '#ec4899',
+                                  '#f43f5e',
+                                  '#64748b',
+                                  '#71717a',
+                                ].map(color => (
+                                  <button
+                                    key={color}
+                                    onClick={() => handleColorChange(role.role, color)}
+                                    className={`w-full aspect-square rounded-md transition-all duration-200 ${
+                                      currentColor === color
+                                        ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-105 shadow-lg'
+                                        : 'hover:scale-105 opacity-60 hover:opacity-100 hover:shadow-md'
+                                    }`}
+                                    style={{ backgroundColor: color }}
+                                    title={color}
+                                    aria-label={`Select ${color} for ${role.role}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>

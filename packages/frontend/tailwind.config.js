@@ -5,13 +5,13 @@ export default {
   theme: {
     // Mobile-first breakpoints (base styles = mobile, breakpoints = larger screens)
     screens: {
-      'xs': '320px',    // Small phones (iPhone SE, etc.)
-      'sm': '375px',    // Standard phones (iPhone 6/7/8, etc.)
-      'md': '414px',    // Large phones (iPhone Plus, etc.)
-      'lg': '768px',    // Tablets portrait
-      'xl': '1024px',   // Tablets landscape / small laptops
-      '2xl': '1280px',  // Desktops
-      '3xl': '1536px',  // Large desktops
+      xs: '320px', // Small phones (iPhone SE, etc.)
+      sm: '375px', // Standard phones (iPhone 6/7/8, etc.)
+      md: '414px', // Large phones (iPhone Plus, etc.)
+      lg: '768px', // Tablets portrait
+      xl: '1024px', // Tablets landscape / small laptops
+      '2xl': '1280px', // Desktops
+      '3xl': '1536px', // Large desktops
     },
     extend: {
       fontFamily: {
@@ -144,23 +144,23 @@ export default {
       },
       // Mobile-specific design tokens
       spacing: {
-        'touch': '44px',        // iOS minimum touch target
-        'touch-lg': '48px',     // Android minimum touch target
+        touch: '44px', // iOS minimum touch target
+        'touch-lg': '48px', // Android minimum touch target
         'safe-bottom': 'env(safe-area-inset-bottom, 16px)',
         'safe-top': 'env(safe-area-inset-top, 0px)',
         'safe-left': 'env(safe-area-inset-left, 0px)',
         'safe-right': 'env(safe-area-inset-right, 0px)',
       },
       minHeight: {
-        'touch': '44px',
+        touch: '44px',
         'touch-lg': '48px',
       },
       minWidth: {
-        'touch': '44px',
+        touch: '44px',
         'touch-lg': '48px',
       },
       fontSize: {
-        'touch': '16px',  // Minimum to prevent iOS zoom on focus
+        touch: '16px', // Minimum to prevent iOS zoom on focus
       },
     },
   },

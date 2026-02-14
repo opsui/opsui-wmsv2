@@ -62,12 +62,7 @@ function UserModal({
       active: initialData?.active ?? true,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      initialData?.name,
-      initialData?.email,
-      initialData?.role,
-      initialData?.active,
-    ]
+    [initialData?.name, initialData?.email, initialData?.role, initialData?.active]
   );
 
   // Form validation

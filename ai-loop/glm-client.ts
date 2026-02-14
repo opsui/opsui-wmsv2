@@ -51,10 +51,46 @@ interface BugReport {
   suggestions?: string[];
 }
 
+// Available GLM models (Opus/Sonnet-style selection)
+export const GLM_MODELS = {
+  'glm-5': {
+    name: 'GLM-5',
+    description: 'Most capable model (like Claude Opus) - best for complex reasoning',
+    contextWindow: 128000,
+    recommended: true,
+  },
+  'glm-4.7': {
+    name: 'GLM-4.7',
+    description: 'Fast and efficient (like Claude Sonnet) - balanced performance',
+    contextWindow: 128000,
+    recommended: false,
+  },
+} as const;
+
+export type GLMModelName = keyof typeof GLM_MODELS;
+
 export class GLMClient {
   private apiKey: string;
   private baseURL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-  private model = 'glm-4.7'; // GLM-4.7 model
+  private model: GLMModelName;
+
+  /**
+   * Get list of available models
+   */
+  static getAvailableModels(): typeof GLM_MODELS {
+    return GLM_MODELS;
+  }
+
+  /**
+   * Get the default model (from env or glm-5)
+   */
+  static getDefaultModel(): GLMModelName {
+    const envModel = process.env.GLM_MODEL as GLMModelName;
+    if (envModel && GLM_MODELS[envModel]) {
+      return envModel;
+    }
+    return 'glm-5'; // Default to GLM-5 (Opus-equivalent)
+  }
 
   // Retry configuration for rate limiting
   private maxRetries = 3;
@@ -67,8 +103,35 @@ export class GLMClient {
   private requestDelay = 3000; // 3 seconds delay between requests (GLM has very strict limits)
   private lastRequestTime = 0;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model?: GLMModelName) {
     this.apiKey = apiKey;
+    this.model = model || GLMClient.getDefaultModel();
+  }
+
+  /**
+   * Get the current model being used
+   */
+  getModel(): GLMModelName {
+    return this.model;
+  }
+
+  /**
+   * Set the model to use
+   */
+  setModel(model: GLMModelName): void {
+    if (!GLM_MODELS[model]) {
+      throw new Error(
+        `Invalid model: ${model}. Available models: ${Object.keys(GLM_MODELS).join(', ')}`
+      );
+    }
+    this.model = model;
+  }
+
+  /**
+   * Get info about the current model
+   */
+  getModelInfo(): (typeof GLM_MODELS)[GLMModelName] {
+    return GLM_MODELS[this.model];
   }
 
   /**

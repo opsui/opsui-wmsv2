@@ -1,14 +1,25 @@
-# GLM 4.7 Setup for Claude Code in VS Code
+# GLM Setup for Claude Code in VS Code
 
-This guide shows how to configure GLM 4.7 as a custom model for Claude Code in VS Code using an MCP server.
+This guide shows how to configure GLM models (including GLM 5) as custom models for Claude Code in VS Code using an MCP server.
 
 ## Overview
 
-GLM 4.7 is now available as a custom model through a Model Context Protocol (MCP) server. This allows Claude Code to use GLM 4.7 for:
+GLM models are now available as custom models through a Model Context Protocol (MCP) server. This allows Claude Code to use GLM for:
 
 - General AI tasks and conversations
 - Code generation, review, and debugging
 - Text analysis and pattern detection
+
+## Available Models
+
+| Model         | Description                         | Best For                                          |
+| ------------- | ----------------------------------- | ------------------------------------------------- |
+| `glm-5`       | **Latest flagship model (default)** | Advanced reasoning, complex coding, general tasks |
+| `glm-4.7`     | Previous flagship                   | General coding, complex tasks                     |
+| `glm-4-plus`  | Enhanced version                    | Complex reasoning                                 |
+| `glm-4-flash` | Faster, cheaper                     | Quick tasks, simple queries                       |
+| `glm-4-air`   | Lightweight                         | Basic assistance                                  |
+| `glm-4`       | General purpose                     | Standard tasks                                    |
 
 ## Prerequisites
 
@@ -130,7 +141,7 @@ Use for text analysis, data interpretation, and pattern detection.
 "Use glm_analyze with context 'this is from user feedback' to analyze sentiment"
 ```
 
-## Using GLM 4.7 in Claude Code
+## Using GLM in Claude Code
 
 ### Direct Requests
 
@@ -154,11 +165,11 @@ Claude Code will automatically determine when to use GLM for tasks that benefit 
 
 ## Testing Your Setup
 
-To verify that GLM 4.7 is working correctly:
+To verify that GLM is working correctly:
 
 1. Start a new conversation in Claude Code
-2. Ask: "Use glm_chat to say 'Hello, GLM 4.7 is working!'"
-3. You should receive a response from GLM 4.7
+2. Ask: "Use glm_chat to say 'Hello, GLM is working!'"
+3. You should receive a response from GLM
 
 ### Troubleshooting
 
@@ -213,29 +224,55 @@ Since the server runs TypeScript directly via npx tsx, changes take effect immed
 
 ## API Cost Considerations
 
-- GLM 4.7 has associated costs based on token usage
+- GLM models have associated costs based on token usage
 - Monitor your usage in the Zhipu AI dashboard
 - Set up budget alerts if available
-- Consider using `glm-4` or `glm-4-air` for cost-sensitive tasks
+- Consider using `glm-4-flash` or `glm-4-air` for cost-sensitive tasks
+- `glm-5` is the flagship model with the best performance but may have higher costs
 
-## GLM Model Variants
+## Changing the Model
 
-The server currently uses `glm-4.7`. To switch to a different model:
+The server defaults to `glm-5`. To switch to a different model, you have two options:
+
+### Option 1: Environment Variable (Recommended)
+
+Add `GLM_MODEL` to the environment in your `.claude/settings.json`:
+
+```json
+"glm": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "tsx",
+    "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\src\\index.ts"
+  ],
+  "env": {
+    "GLM_API_KEY": "YOUR_GLM_API_KEY_HERE",
+    "GLM_MODEL": "glm-5"
+  }
+}
+```
+
+### Option 2: Edit the Source File
 
 1. Edit `tools/mcp-server-glm/src/index.ts`
-2. Change the `GLM_MODEL` constant:
+2. Find the `GLM_MODEL` constant near the top:
    ```typescript
-   const GLM_MODEL = 'glm-4'; // or 'glm-4-plus', 'glm-4-air', 'glm-4-flash'
+   const GLM_MODEL: GLMModel = (process.env.GLM_MODEL as GLMModel) || 'glm-5';
    ```
-3. Restart VS Code (no rebuild needed since we use npx tsx)
+3. Change the default value (the last string) to your preferred model
+4. Restart VS Code (no rebuild needed since we use npx tsx)
 
 **Available models:**
 
-- `glm-4` - General purpose
-- `glm-4-plus` - Enhanced performance
-- `glm-4-air` - Faster inference
-- `glm-4-flash` - Ultra-fast
-- `glm-4.7` - Latest model (current default)
+| Model         | Description               | Best For                          |
+| ------------- | ------------------------- | --------------------------------- |
+| `glm-5`       | Latest flagship (default) | Advanced reasoning, complex tasks |
+| `glm-4.7`     | Previous flagship         | General coding, complex tasks     |
+| `glm-4-plus`  | Enhanced version          | Complex reasoning                 |
+| `glm-4-flash` | Ultra-fast                | Quick tasks, simple queries       |
+| `glm-4-air`   | Lightweight               | Basic assistance                  |
+| `glm-4`       | General purpose           | Standard tasks                    |
 
 ## Support
 
@@ -271,7 +308,7 @@ The server currently uses `glm-4.7`. To switch to a different model:
 
 ## Integration with Existing Tools
 
-GLM 4.7 works alongside your existing MCP servers:
+GLM works alongside your existing MCP servers:
 
 - **erp-dev-accelerator**: Project-specific tools
 - **github**: GitHub integration
@@ -296,4 +333,4 @@ You can chain tools together:
 
 ---
 
-**Enjoy using GLM 4.7 with Claude Code!** 🚀
+**Enjoy using GLM with Claude Code!** 🚀

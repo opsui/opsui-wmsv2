@@ -48,12 +48,12 @@ const FOCUSABLE_SELECTOR = [
   'select:not([disabled])',
   '[tabindex]:not([tabindex="-1"])',
 ]
-  .map((s) => `${s}:not([inert])`)
+  .map(s => `${s}:not([inert])`)
   .join(', ');
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (el) => el.offsetParent !== null && !el.hasAttribute('aria-hidden')
+    el => el.offsetParent !== null && !el.hasAttribute('aria-hidden')
   );
 }
 

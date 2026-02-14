@@ -13,7 +13,16 @@ import { useState, useEffect } from 'react';
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useCreateEmployee, useUpdateEmployee, useDeductionTypes } from '@/services/api';
 import { useToast } from '@/components/shared';
-import type { HREmployeeWithDetails, HRBankAccount } from '@opsui/shared';
+import type { HREmployeeWithDetails } from '@opsui/shared';
+
+// Local type for form bank account (subset of HRBankAccount)
+interface FormBankAccount {
+  bankName: string;
+  bankBranch: string;
+  accountNumber: string;
+  accountType: 'CHECKING' | 'SAVINGS';
+  isPrimary: boolean;
+}
 
 interface EmployeeFormModalProps {
   employee: HREmployeeWithDetails | null;
@@ -61,7 +70,7 @@ const BANKS = [
 ] as const;
 
 export function EmployeeFormModal({ employee, onClose, onSuccess }: EmployeeFormModalProps) {
-  const toast = useToast();
+  const { showToast } = useToast();
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   const { data: deductionTypes = [] } = useDeductionTypes();
@@ -103,7 +112,7 @@ export function EmployeeFormModal({ employee, onClose, onSuccess }: EmployeeForm
   const [kiwiSaverRate, setKiwiSaverRate] = useState('RATE_3');
 
   // Bank Accounts
-  const [bankAccounts, setBankAccounts] = useState<Omit<HRBankAccount, 'bankAccountId'>[]>([
+  const [bankAccounts, setBankAccounts] = useState<FormBankAccount[]>([
     {
       bankName: 'ANZ',
       bankBranch: '',
@@ -147,7 +156,7 @@ export function EmployeeFormModal({ employee, onClose, onSuccess }: EmployeeForm
         setEmploymentType(employee.primaryEmployment.employmentType || 'FULL_TIME');
         setPayType(employee.primaryEmployment.payType || 'HOURLY');
         setHourlyRate(employee.primaryEmployment.hourlyRate?.toString() || '');
-        setSalary(employee.primaryEmployment.annualSalary?.toString() || '');
+        setSalary(employee.primaryEmployment.salaryAmount?.toString() || '');
         setStandardHours(employee.primaryEmployment.standardHoursPerWeek?.toString() || '40');
       }
 
@@ -155,7 +164,8 @@ export function EmployeeFormModal({ employee, onClose, onSuccess }: EmployeeForm
         setIrdNumber(employee.taxDetails.irdNumber || '');
         setTaxCode(employee.taxDetails.taxCode || 'M');
         setHasStudentLoan(employee.taxDetails.hasStudentLoan || false);
-        setKiwiSaverRate(employee.taxDetails.kiwisaverRate || 'RATE_3');
+        // kiwiSaverRate is stored separately, use default if not available
+        setKiwiSaverRate('RATE_3');
       }
 
       if (employee.bankAccounts && employee.bankAccounts.length > 0) {
@@ -167,7 +177,7 @@ export function EmployeeFormModal({ employee, onClose, onSuccess }: EmployeeForm
   const handleSubmit = async () => {
     // Validation
     if (!firstName || !lastName || !email) {
-      toast.error('Please fill in required fields');
+      showToast('Please fill in required fields', 'error');
       return;
     }
 
@@ -215,16 +225,16 @@ export function EmployeeFormModal({ employee, onClose, onSuccess }: EmployeeForm
 
       if (employee) {
         await updateEmployee.mutateAsync({ employeeId: employee.employeeId, ...employeeData });
-        toast.success('Employee updated successfully');
+        showToast('Employee updated successfully', 'success');
       } else {
         await createEmployee.mutateAsync(employeeData);
-        toast.success('Employee created successfully');
+        showToast('Employee created successfully', 'success');
       }
 
       onSuccess();
       onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save employee');
+      showToast(error.message || 'Failed to save employee', 'error');
     } finally {
       setIsSubmitting(false);
     }

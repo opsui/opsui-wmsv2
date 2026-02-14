@@ -138,10 +138,7 @@ export const MobileNumericInput = forwardRef<HTMLInputElement, MobileNumericInpu
 
     return (
       <div className={cn('space-y-2', className)}>
-        <label
-          htmlFor={id}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
           {required && (
             <span className="text-error-500 ml-1" aria-hidden="true">
@@ -242,7 +239,7 @@ export const MobileNumericInput = forwardRef<HTMLInputElement, MobileNumericInpu
         {/* Quick increment buttons */}
         {showStepper && size !== 'sm' && (
           <div className="flex justify-center gap-2 mt-2">
-            {[5, 10, 25, 50].map((increment) => (
+            {[5, 10, 25, 50].map(increment => (
               <button
                 key={increment}
                 type="button"

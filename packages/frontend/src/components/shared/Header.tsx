@@ -90,6 +90,8 @@ interface MobileMenuProps {
     role: any;
   }>;
   onRoleSwitch: (role: any, path: string) => void;
+  currentPath: string;
+  currentSearch: string;
 }
 
 function MobileMenu({
@@ -106,6 +108,8 @@ function MobileMenu({
   hasRoleSwitcher,
   allRoleViews,
   onRoleSwitch,
+  currentPath,
+  currentSearch,
 }: MobileMenuProps) {
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
 
@@ -229,14 +233,27 @@ function MobileMenu({
                   <div className="space-y-1">
                     {group.items.map(item => {
                       const ItemIcon = item.icon;
+                      // Check if this item is active (matches current path and search)
+                      const itemUrl = new URL(item.path, 'http://dummy');
+                      const isActive =
+                        itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
                       return (
                         <button
                           key={item.key}
                           onClick={() => handleNavigate(item.path)}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 transition-all duration-200 touch-target"
+                          className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 touch-target ${
+                            isActive
+                              ? 'dark:text-white text-primary-700 dark:bg-primary-600/20 bg-primary-100 dark:border-primary-500/30 border-primary-300 border'
+                              : 'dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 border border-transparent'
+                          }`}
                         >
-                          <ItemIcon className="h-5 w-5 flex-shrink-0 dark:text-gray-500 text-gray-500" />
+                          <ItemIcon
+                            className={`h-5 w-5 flex-shrink-0 ${isActive ? 'dark:text-primary-400 text-primary-600' : 'dark:text-gray-500 text-gray-500'}`}
+                          />
                           <span className="font-medium">{item.label}</span>
+                          {isActive && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-400 bg-primary-600 dark:shadow-[0_0_8px_rgba(96,165,250,0.6)] shadow-[0_0_8px_rgba(37,99,235,0.6)] animate-pulse" />
+                          )}
                         </button>
                       );
                     })}
@@ -1793,6 +1810,8 @@ export function Header() {
         hasRoleSwitcher={hasRoleSwitcher}
         allRoleViews={allRoleViews}
         onRoleSwitch={handleRoleSwitch}
+        currentPath={location.pathname}
+        currentSearch={location.search}
       />
     </>
   );

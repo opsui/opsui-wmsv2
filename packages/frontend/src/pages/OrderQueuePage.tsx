@@ -65,7 +65,7 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
   }, []);
 
   return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
+    <div className="relative z-40" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-touch ${
@@ -156,7 +156,7 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
   }, []);
 
   return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
+    <div className="relative z-40" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-touch ${

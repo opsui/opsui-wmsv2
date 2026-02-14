@@ -143,34 +143,34 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
       {/* Chart */}
       <div className="flex justify-center">
         <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6B7280" />
-          <YAxis
-            label={{ value: 'Quantity', angle: -90, position: 'insideLeft' }}
-            tick={{ fontSize: 12 }}
-            stroke="#6B7280"
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1F2937',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#F3F4F6',
-            }}
-          />
-          <Legend />
-          <Line
-            type="monotone"
-            dataKey="quantity"
-            stroke="#6366F1"
-            strokeWidth={2}
-            dot={{ fill: '#6366F1', r: 4 }}
-            activeDot={{ r: 6 }}
-            name="Forecasted Demand"
-          />
-        </LineChart>
-      </ResponsiveContainer>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6B7280" />
+            <YAxis
+              label={{ value: 'Quantity', angle: -90, position: 'insideLeft' }}
+              tick={{ fontSize: 12 }}
+              stroke="#6B7280"
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#1F2937',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#F3F4F6',
+              }}
+            />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="quantity"
+              stroke="#6366F1"
+              strokeWidth={2}
+              dot={{ fill: '#6366F1', r: 4 }}
+              activeDot={{ r: 6 }}
+              name="Forecasted Demand"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Metadata */}

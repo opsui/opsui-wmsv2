@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * MCP Server for GLM 4.7 API
+ * MCP Server for GLM API
  *
- * This server provides GLM 4.7 as a tool for Claude Code
+ * This server provides GLM models (glm-4, glm-4-plus, glm-4-air, glm-4-flash, glm-4.7, glm-5) as tools for Claude Code
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -13,7 +13,28 @@ import * as crypto from 'crypto';
 
 // GLM API Configuration
 const GLM_BASE_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-const GLM_MODEL = 'glm-4.7';
+
+// Available GLM models
+const GLM_AVAILABLE_MODELS = [
+  'glm-4', // General purpose
+  'glm-4-plus', // Enhanced performance
+  'glm-4-air', // Faster inference
+  'glm-4-flash', // Ultra-fast
+  'glm-4.7', // Previous flagship
+  'glm-5', // Latest flagship model (default)
+] as const;
+
+type GLMModel = (typeof GLM_AVAILABLE_MODELS)[number];
+
+// Get model from environment or use default
+const GLM_MODEL: GLMModel = (process.env.GLM_MODEL as GLMModel) || 'glm-5';
+
+// Validate model
+if (!GLM_AVAILABLE_MODELS.includes(GLM_MODEL)) {
+  console.error(
+    `Warning: Unknown model "${GLM_MODEL}". Available models: ${GLM_AVAILABLE_MODELS.join(', ')}`
+  );
+}
 
 // Get API key from environment
 const GLM_API_KEY = process.env.GLM_API_KEY;
@@ -127,13 +148,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'glm_chat',
         description:
-          'Send a message to GLM 4.7 and get a response. Use this for general AI tasks, code generation, analysis, and more.',
+          'Send a message to GLM and get a response. Use this for general AI tasks, code generation, analysis, and more. Default model is glm-5.',
         inputSchema: {
           type: 'object',
           properties: {
             prompt: {
               type: 'string',
-              description: 'The prompt or question to send to GLM 4.7',
+              description: 'The prompt or question to send to GLM',
             },
             systemPrompt: {
               type: 'string',
@@ -159,7 +180,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'glm_code',
         description:
-          'Use GLM 4.7 for code-related tasks (generation, review, debugging, refactoring)',
+          'Use GLM for code-related tasks (generation, review, debugging, refactoring). Default model is glm-5.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -183,7 +204,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'glm_analyze',
         description:
-          'Use GLM 4.7 for analysis tasks (text analysis, data interpretation, pattern detection)',
+          'Use GLM for analysis tasks (text analysis, data interpretation, pattern detection). Default model is glm-5.',
         inputSchema: {
           type: 'object',
           properties: {

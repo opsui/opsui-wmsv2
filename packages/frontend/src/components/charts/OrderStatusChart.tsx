@@ -149,45 +149,45 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
           </div>
           <ResponsiveContainer width={containerWidth} height={350}>
             <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderLabel}
-                  outerRadius={80}
-                  innerRadius={45}
-                  dataKey="count"
-                  isAnimationActive={false}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      stroke="rgba(255,255,255,0.3)"
-                      strokeWidth={3}
-                      style={{
-                        filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15))',
-                      }}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '13px',
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
-                  }}
-                  itemStyle={{ color: '#fff' }}
-                  formatter={(value: any, name?: string) => [
-                    `${value || 0} (${(((value || 0) / total) * 100).toFixed(1)}%)`,
-                    name || '',
-                  ]}
-                />
-              </PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderLabel}
+                outerRadius={80}
+                innerRadius={45}
+                dataKey="count"
+                isAnimationActive={false}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth={3}
+                    style={{
+                      filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15))',
+                    }}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.4)',
+                }}
+                itemStyle={{ color: '#fff' }}
+                formatter={(value: any, name?: string) => [
+                  `${value || 0} (${(((value || 0) / total) * 100).toFixed(1)}%)`,
+                  name || '',
+                ]}
+              />
+            </PieChart>
           </ResponsiveContainer>
         </div>
 
@@ -210,7 +210,9 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
                   {item.name}
                 </span>
               </div>
-              <span className="dark:text-white text-gray-900 font-bold text-sm ml-2">{item.count}</span>
+              <span className="dark:text-white text-gray-900 font-bold text-sm ml-2">
+                {item.count}
+              </span>
             </div>
           ))}
         </div>

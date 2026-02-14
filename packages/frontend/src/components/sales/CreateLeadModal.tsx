@@ -58,9 +58,7 @@ const PRIORITIES = [
 export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalProps) {
   const { showToast } = useToast();
   const createLeadMutation = useCreateLead();
-  const { data: usersData } = useUsers();
-
-  const users = usersData?.users || [];
+  const { data: users = [] } = useUsers();
 
   const { values, errors, handleChange, handleBlur, handleSubmit, isSubmitting, reset } =
     useFormValidation<LeadFormData>({
@@ -108,7 +106,6 @@ export function CreateLeadModal({ isOpen, onClose, onSuccess }: CreateLeadModalP
         estimatedValue: {
           required: false,
           pattern: /^\d+(\.\d{1,2})?$/,
-          customError: 'Must be a valid amount',
         },
         expectedCloseDate: {
           required: false,

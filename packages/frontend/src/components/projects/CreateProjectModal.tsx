@@ -178,7 +178,7 @@ export function CreateProjectModal({
       size="lg"
       footer={
         <>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
@@ -217,7 +217,10 @@ export function CreateProjectModal({
           onChange={handleChange}
           options={[
             { value: '', label: 'Select a customer (optional)' },
-            ...customers.map(c => ({ value: c.id, label: c.name })),
+            ...customers.map(c => ({
+              value: c.customerId,
+              label: c.companyName || c.contactName || 'Unknown',
+            })),
           ]}
         />
 
@@ -285,8 +288,6 @@ export function CreateProjectModal({
           onChange={handleChange}
           error={errors.estimated_budget}
           placeholder="0.00"
-          min="0"
-          step="0.01"
         />
 
         {/* Billing Type */}
@@ -306,8 +307,6 @@ export function CreateProjectModal({
           value={formData.advance_payment || 0}
           onChange={handleChange}
           placeholder="0.00"
-          min="0"
-          step="0.01"
         />
 
         {/* Managers */}
@@ -320,8 +319,8 @@ export function CreateProjectModal({
             options={[
               { value: '', label: 'Select manager (optional)' },
               ...users.map(u => ({
-                value: u.user_id,
-                label: `${u.first_name} ${u.last_name}`,
+                value: u.userId,
+                label: u.name,
               })),
             ]}
           />
@@ -334,8 +333,8 @@ export function CreateProjectModal({
             options={[
               { value: '', label: 'Select manager (optional)' },
               ...users.map(u => ({
-                value: u.user_id,
-                label: `${u.first_name} ${u.last_name}`,
+                value: u.userId,
+                label: u.name,
               })),
             ]}
           />

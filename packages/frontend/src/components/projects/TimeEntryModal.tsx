@@ -180,7 +180,7 @@ export function TimeEntryModal({
       size="md"
       footer={
         <>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>

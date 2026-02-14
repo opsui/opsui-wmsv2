@@ -82,78 +82,78 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
       <CardContent className="p-3 sm:p-6">
         <div className="flex justify-center">
           <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="dark:stroke-white/[0.08] stroke-gray-200"
-            />
-            <XAxis
-              dataKey="displayName"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 12 }}
-              interval={0}
-              textAnchor="middle"
-              height={50}
-            />
-            <YAxis
-              yAxisId="left"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              className="dark:fill-gray-500 fill-gray-600"
-              tick={{ fontSize: 11 }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                color: '#fff',
-                fontSize: '13px',
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-              itemStyle={{ color: '#fff' }}
-              formatter={(value: any, name?: string) => {
-                if (name === 'Avg Time (min)') return [`${value} min`, name];
-                return [value || 0, name || ''];
-              }}
-              labelFormatter={label => {
-                const item = chartData.find(d => d.displayName === label);
-                return item?.pickerName || label;
-              }}
-            />
-            <Legend
-              wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-              formatter={value => (
-                <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
-              )}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="tasksCompleted"
-              fill={COLORS.tasksCompleted}
-              name="Tasks Completed"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="ordersCompleted"
-              fill={COLORS.ordersCompleted}
-              name="Orders Completed"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              yAxisId="right"
-              dataKey="totalItemsPicked"
-              fill={COLORS.itemsPicked}
-              name="Items Picked"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="dark:stroke-white/[0.08] stroke-gray-200"
+              />
+              <XAxis
+                dataKey="displayName"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 12 }}
+                interval={0}
+                textAnchor="middle"
+                height={50}
+              />
+              <YAxis
+                yAxisId="left"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                className="dark:fill-gray-500 fill-gray-600"
+                tick={{ fontSize: 11 }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '13px',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                }}
+                itemStyle={{ color: '#fff' }}
+                formatter={(value: any, name?: string) => {
+                  if (name === 'Avg Time (min)') return [`${value} min`, name];
+                  return [value || 0, name || ''];
+                }}
+                labelFormatter={label => {
+                  const item = chartData.find(d => d.displayName === label);
+                  return item?.pickerName || label;
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                formatter={value => (
+                  <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
+                )}
+              />
+              <Bar
+                yAxisId="left"
+                dataKey="tasksCompleted"
+                fill={COLORS.tasksCompleted}
+                name="Tasks Completed"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                yAxisId="left"
+                dataKey="ordersCompleted"
+                fill={COLORS.ordersCompleted}
+                name="Orders Completed"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                yAxisId="right"
+                dataKey="totalItemsPicked"
+                fill={COLORS.itemsPicked}
+                name="Items Picked"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
         {/* Performance summary table */}

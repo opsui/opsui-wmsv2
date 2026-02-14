@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: wms_password
       POSTGRES_DB: wms_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./packages/backend/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql

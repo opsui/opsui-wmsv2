@@ -9,7 +9,7 @@
 // ============================================================================
 
 /**
- * Query to fetch pick tasks with barcode and verified quantity for PICKING orders
+ * Query to fetch pick tasks for PICKING orders
  * Used in: getOrderWithItems, getOrderQueue, getOrdersWithItemsByStatus
  */
 export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
@@ -18,25 +18,21 @@ export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
     pt.order_id,
     pt.sku,
     pt.name,
-    s.barcode,
     pt.target_bin as bin_location,
     pt.quantity,
     pt.picked_quantity as picked_quantity,
-    COALESCE(oi.verified_quantity, 0) as verified_quantity,
+    0 as verified_quantity,
     pt.status,
     pt.completed_at,
-    oi.unit_price,
-    oi.line_total,
-    COALESCE(oi.currency, s.currency, 'NZD') as currency
+    s.barcode
   FROM pick_tasks pt
   LEFT JOIN skus s ON pt.sku = s.sku
-  LEFT JOIN order_items oi ON pt.order_item_id = oi.order_item_id
   WHERE pt.order_id = $1
   ORDER BY pt.pick_task_id ASC
 `;
 
 /**
- * Query to fetch order items with barcode for non-PICKING orders
+ * Query to fetch order items for non-PICKING orders
  * Used in: getOrderWithItems, getOrderQueue, getOrdersWithItemsByStatus
  */
 export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
@@ -45,16 +41,12 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     oi.order_id,
     oi.sku,
     oi.name,
-    s.barcode,
     oi.bin_location,
     oi.quantity,
     oi.picked_quantity,
-    COALESCE(oi.verified_quantity, 0) as verified_quantity,
+    0 as verified_quantity,
     oi.status,
-    oi.skip_reason,
-    oi.unit_price,
-    oi.line_total,
-    COALESCE(oi.currency, s.currency, 'NZD') as currency
+    s.barcode
   FROM order_items oi
   LEFT JOIN skus s ON oi.sku = s.sku
   WHERE oi.order_id = $1
@@ -114,7 +106,6 @@ export function mapOrderItem(row: any): any {
     orderId: row.order_id || row.orderId,
     sku: row.sku,
     name: row.name,
-    barcode: row.barcode,
     binLocation: row.bin_location || row.binLocation,
     quantity: row.quantity,
     pickedQuantity: row.picked_quantity || row.pickedQuantity,
@@ -122,9 +113,7 @@ export function mapOrderItem(row: any): any {
     status: row.status,
     skipReason: row.skip_reason || row.skipReason,
     completedAt: row.completed_at || row.completedAt,
-    unitPrice: row.unit_price,
-    lineTotal: row.line_total,
-    currency: row.currency,
+    barcode: row.barcode || null,
   };
 }
 

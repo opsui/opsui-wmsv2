@@ -6,4 +6,9 @@
 
 export { MobileInput, type MobileInputProps } from './MobileInput';
 export { MobileNumericInput, type MobileNumericInputProps } from './MobileNumericInput';
-export { BottomNavigation, type BottomNavigationProps, type NavItem, DEFAULT_NAV_ITEMS } from './BottomNavigation';
+export {
+  BottomNavigation,
+  type BottomNavigationProps,
+  type NavItem,
+  DEFAULT_NAV_ITEMS,
+} from './BottomNavigation';
