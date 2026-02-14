@@ -1755,18 +1755,18 @@ export function StockControlPage() {
           className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
         >
           <CardContent className="p-2">
-            <div className="flex gap-2 overflow-x-auto">
+            <div className="flex gap-1 sm:gap-2 overflow-x-auto -mx-2 px-2">
               {tabs.map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap flex-shrink-0 text-sm ${
                     activeTab === tab.key
                       ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                   }`}
                 >
-                  <tab.icon className="h-5 w-5" />
+                  <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                   {tab.label}
                 </button>
               ))}
