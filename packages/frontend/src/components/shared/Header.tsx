@@ -923,11 +923,11 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-3 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl px-4 py-2.5 transition-all duration-300 group dark:border border border-transparent dark:border-transparent dark:hover:border-white/[0.1] hover:border-primary-200"
       >
-        <div className="text-left">
-          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-primary-800 transition-colors">
+        <div className="text-left min-w-0">
+          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-primary-800 transition-colors whitespace-nowrap">
             {userName}
           </h2>
-          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-primary-600 transition-colors">
+          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-primary-600 transition-colors truncate max-w-[150px]">
             {userEmail}
           </p>
         </div>
@@ -1637,13 +1637,6 @@ export function Header() {
       icon: CurrencyDollarIcon,
       role: 'ACCOUNTING' as UserRole,
     },
-    {
-      key: 'hr',
-      label: 'HR View',
-      path: '/hr/employees',
-      icon: UserIcon,
-      role: 'HR_MANAGER' as UserRole,
-    },
   ];
 
   // Filter role views to only include user's base role + granted additional roles
@@ -1722,16 +1715,17 @@ export function Header() {
 
             {/* Center - Navigation dropdowns */}
             {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-0.5 flex-1 justify-center min-w-0">
+              <nav className="hidden md:flex items-center space-x-0.5 flex-1 justify-center min-w-0 overflow-x-auto">
                 {navGroups.map(group => (
-                  <NavDropdown
-                    key={group.key}
-                    label={group.label}
-                    icon={group.icon}
-                    items={group.items}
-                    currentPath={location.pathname}
-                    currentSearch={location.search}
-                  />
+                  <div key={group.key} className="flex-shrink-0">
+                    <NavDropdown
+                      label={group.label}
+                      icon={group.icon}
+                      items={group.items}
+                      currentPath={location.pathname}
+                      currentSearch={location.search}
+                    />
+                  </div>
                 ))}
               </nav>
             )}
