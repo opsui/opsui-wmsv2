@@ -233,10 +233,21 @@ function MobileMenu({
                   <div className="space-y-1">
                     {group.items.map(item => {
                       const ItemIcon = item.icon;
-                      // Check if this item is active (matches current path and search)
+                      // Check if this item is active (matches pathname, and query params if specified)
                       const itemUrl = new URL(item.path, 'http://dummy');
-                      const isActive =
-                        itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
+                      let isActive = itemUrl.pathname === currentPath;
+                      // If item has query params, verify they match
+                      if (isActive && itemUrl.search) {
+                        const currentUrl = new URL(currentPath + currentSearch, 'http://dummy');
+                        const itemParams = new URLSearchParams(itemUrl.search);
+                        const currentParams = new URLSearchParams(currentUrl.search);
+                        for (const [key, value] of itemParams.entries()) {
+                          if (currentParams.get(key) !== value) {
+                            isActive = false;
+                            break;
+                          }
+                        }
+                      }
                       return (
                         <button
                           key={item.key}
@@ -329,10 +340,24 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
 
   const navigate = useNavigate();
 
-  const hasActiveItem = items.some(item => {
-    const itemUrl = new URL(item.path, 'http://dummy');
-    return itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
-  });
+  // Helper to check if a nav item is active
+  // Matches if: pathname matches AND (item has no query params OR item's query params are present in current URL)
+  const isItemActive = (itemPath: string): boolean => {
+    const itemUrl = new URL(itemPath, 'http://dummy');
+    if (itemUrl.pathname !== currentPath) return false;
+    // If item has no query params, just match pathname
+    if (!itemUrl.search) return true;
+    // If item has query params, check if they're present in current URL
+    const currentUrl = new URL(currentPath + currentSearch, 'http://dummy');
+    const itemParams = new URLSearchParams(itemUrl.search);
+    const currentParams = new URLSearchParams(currentUrl.search);
+    for (const [key, value] of itemParams.entries()) {
+      if (currentParams.get(key) !== value) return false;
+    }
+    return true;
+  };
+
+  const hasActiveItem = items.some(item => isItemActive(item.path));
 
   const handleMouseEnter = () => {
     if (closeTimeoutRef.current) {
@@ -384,8 +409,7 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
         <div className="py-2">
           {items.map((item, index) => {
             const ItemIcon = item.icon;
-            const itemUrl = new URL(item.path, 'http://dummy');
-            const isActive = itemUrl.pathname === currentPath && itemUrl.search === currentSearch;
+            const isActive = isItemActive(item.path);
             return (
               <button
                 key={item.key}
