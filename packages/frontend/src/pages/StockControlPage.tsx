@@ -1755,22 +1755,12 @@ export function StockControlPage() {
           className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
         >
           <CardContent className="p-2 relative">
-            {/* Scroll container with fade indicators */}
+            {/* Scroll container with fade indicator */}
             <div className="relative">
-              {/* Right fade indicator - shows when there's more to scroll */}
-              <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white dark:from-gray-800 to-transparent z-10 pointer-events-none sm:hidden tab-scroll-fade" />
+              {/* Right fade indicator - always visible on mobile to indicate scrollability */}
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-800 to-transparent z-10 pointer-events-none sm:hidden" />
 
-              <div
-                className="flex gap-1 sm:gap-2 overflow-x-auto -mx-2 px-2 scrollbar-hide"
-                onScroll={(e) => {
-                  const target = e.target as HTMLDivElement;
-                  const fade = target.parentElement?.querySelector('.tab-scroll-fade');
-                  if (fade) {
-                    const isAtEnd = target.scrollLeft + target.clientWidth >= target.scrollWidth - 1;
-                    (fade as HTMLElement).style.opacity = isAtEnd ? '0' : '1';
-                  }
-                }}
-              >
+              <div className="flex gap-1 sm:gap-2 overflow-x-auto -mx-2 px-2 scrollbar-hide">
                 {tabs.map(tab => (
                   <button
                     key={tab.key}
