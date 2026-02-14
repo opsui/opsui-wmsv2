@@ -1432,6 +1432,17 @@ async function seedCompleteDatabase() {
     }
     console.log(`  ✅ Inserted ${MOCK_BIN_LOCATIONS.length} bin locations`);
 
+    // Disable the updated_at trigger on orders to preserve historical dates
+    console.log('  🔧 Disabling trigger_orders_updated_at...');
+    try {
+      await client.query('SAVEPOINT before_orders_trigger');
+      await client.query('ALTER TABLE orders DISABLE TRIGGER trigger_orders_updated_at');
+      await client.query('RELEASE SAVEPOINT before_orders_trigger');
+    } catch (triggerError) {
+      await client.query('ROLLBACK TO SAVEPOINT before_orders_trigger');
+      console.log('  ⚠️ Could not disable orders trigger (continuing anyway)');
+    }
+
     // Insert orders
     console.log('📦 Inserting orders...');
     for (const order of MOCK_ORDERS) {
@@ -1470,6 +1481,17 @@ async function seedCompleteDatabase() {
       );
     }
     console.log(`  ✅ Inserted ${MOCK_ORDERS.length} orders`);
+
+    // Re-enable the updated_at trigger on orders
+    console.log('  🔧 Re-enabling trigger_orders_updated_at...');
+    try {
+      await client.query('SAVEPOINT after_orders_trigger');
+      await client.query('ALTER TABLE orders ENABLE TRIGGER trigger_orders_updated_at');
+      await client.query('RELEASE SAVEPOINT after_orders_trigger');
+    } catch (triggerError) {
+      await client.query('ROLLBACK TO SAVEPOINT after_orders_trigger');
+      console.log('  ⚠️ Could not re-enable orders trigger (continuing anyway)');
+    }
 
     // Disable the trigger to preserve timestamps (skip if no permission)
     console.log('  🔧 Disabling trigger_update_order_progress...');
