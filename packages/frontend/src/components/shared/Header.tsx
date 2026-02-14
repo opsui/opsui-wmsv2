@@ -1715,17 +1715,16 @@ export function Header() {
 
             {/* Center - Navigation dropdowns */}
             {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-0.5 flex-1 justify-center min-w-0 overflow-x-auto">
+              <nav className="hidden md:flex items-center space-x-0.5 justify-center flex-shrink px-2">
                 {navGroups.map(group => (
-                  <div key={group.key} className="flex-shrink-0">
-                    <NavDropdown
-                      label={group.label}
-                      icon={group.icon}
-                      items={group.items}
-                      currentPath={location.pathname}
-                      currentSearch={location.search}
-                    />
-                  </div>
+                  <NavDropdown
+                    key={group.key}
+                    label={group.label}
+                    icon={group.icon}
+                    items={group.items}
+                    currentPath={location.pathname}
+                    currentSearch={location.search}
+                  />
                 ))}
               </nav>
             )}
