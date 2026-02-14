@@ -4,47 +4,39 @@
  * This migration adds support for custom roles with granular permissions
  */
 
-export async function up(query) {
-  // Create custom_roles table
-  await query(`
-    CREATE TABLE IF NOT EXISTS custom_roles (
-      role_id VARCHAR(50) PRIMARY KEY,
-      name VARCHAR(100) NOT NULL UNIQUE,
-      description TEXT,
-      is_system BOOLEAN NOT NULL DEFAULT FALSE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `);
+-- Create custom_roles table
+CREATE TABLE IF NOT EXISTS custom_roles (
+  role_id VARCHAR(50) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  is_system BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-  // Create role_permissions table for mapping roles to permissions
-  await query(`
-    CREATE TABLE IF NOT EXISTS role_permissions (
-      role_permission_id SERIAL PRIMARY KEY,
-      role_id VARCHAR(50) NOT NULL,
-      permission VARCHAR(100) NOT NULL,
-      granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      granted_by VARCHAR(50) NOT NULL,
-      UNIQUE(role_id, permission),
-      CONSTRAINT fk_role_permissions_user FOREIGN KEY (granted_by) REFERENCES users(user_id) ON DELETE CASCADE
-    );
-  `);
+-- Create role_permissions table for mapping roles to permissions
+CREATE TABLE IF NOT EXISTS role_permissions (
+  role_permission_id SERIAL PRIMARY KEY,
+  role_id VARCHAR(50) NOT NULL,
+  permission VARCHAR(100) NOT NULL,
+  granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  granted_by VARCHAR(50) NOT NULL,
+  UNIQUE(role_id, permission)
+);
 
-  // Create index for faster lookups
-  await query(`
-    CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id);
-  `);
+-- Create index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id);
 
-  // Grant access to the application user
-  await query(`
-    GRANT SELECT, INSERT, UPDATE, DELETE ON custom_roles TO wms_app;
-    GRANT SELECT, INSERT, UPDATE, DELETE ON role_permissions TO wms_app;
-    GRANT USAGE, SELECT ON SEQUENCE custom_roles_role_id_seq TO wms_app;
-    GRANT USAGE, SELECT ON SEQUENCE role_permissions_role_permission_id_seq TO wms_app;
-  `);
-}
-
-export async function down(query) {
-  await query(`DROP TABLE IF EXISTS role_permissions CASCADE;`);
-  await query(`DROP TABLE IF EXISTS custom_roles CASCADE;`);
-}
+-- Add foreign key constraint if users table exists (wrapped in do block to handle gracefully)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'users') THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint WHERE conname = 'fk_role_permissions_user'
+    ) THEN
+      ALTER TABLE role_permissions
+      ADD CONSTRAINT fk_role_permissions_user
+      FOREIGN KEY (granted_by) REFERENCES users(user_id) ON DELETE CASCADE;
+    END IF;
+  END IF;
+END $$;

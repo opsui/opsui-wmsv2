@@ -21,7 +21,7 @@ const userRepo = new UserRepository();
 // Helper middleware to check if user is admin
 // ADMIN role always has access (same as authorize middleware)
 const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  if (req.user?.role !== UserRole.ADMIN) {
+  if (req.user?.baseRole !== UserRole.ADMIN) {
     res.status(403).json({
       error: 'Admin access required',
       code: 'FORBIDDEN',
@@ -56,7 +56,7 @@ router.get(
     const { userId } = req.params;
 
     // Users can view their own role assignments, admins can view any
-    if (req.user?.userId !== userId && req.user?.role !== UserRole.ADMIN) {
+    if (req.user?.userId !== userId && req.user?.baseRole !== UserRole.ADMIN) {
       res.status(403).json({
         error: 'You do not have permission to view role assignments for this user',
         code: 'FORBIDDEN',
