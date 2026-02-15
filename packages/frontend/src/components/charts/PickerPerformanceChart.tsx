@@ -15,6 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface PickerPerformanceData {
   pickerId: string;
@@ -37,6 +38,10 @@ const COLORS = {
 };
 
 export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceChartProps) {
+  const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
+  const isMobile = containerWidth < 500;
+  const isSmall = containerWidth < 400;
+
   if (isLoading) {
     return (
       <Card variant="glass">
@@ -65,14 +70,26 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
     );
   }
 
-  // Format data for chart - shorten names if needed
+  // Format data for chart - shorten names more aggressively on mobile
+  const maxNameLength = isSmall ? 8 : isMobile ? 10 : 12;
   const chartData = data.map(item => ({
     ...item,
     displayName:
-      item.pickerName.length > 15 ? item.pickerName.substring(0, 12) + '...' : item.pickerName,
+      item.pickerName.length > maxNameLength
+        ? item.pickerName.substring(0, maxNameLength - 2) + '...'
+        : item.pickerName,
     // Convert average time from seconds to minutes for display
     avgTimeMinutes: item.averageTimePerTask ? (item.averageTimePerTask / 60).toFixed(1) : 0,
   }));
+
+  // Adjust chart margins for rotated labels on mobile
+  const chartMargin = isMobile
+    ? { top: 20, right: 15, left: 15, bottom: 60 }
+    : { top: 20, right: 30, left: 20, bottom: 5 };
+
+  // Calculate minimum bar size based on number of pickers and container width
+  const minBarGap = 4;
+  const barCategoryGap = isMobile ? '20%' : '30%';
 
   return (
     <Card variant="glass" className="card-hover">
@@ -80,9 +97,14 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
         <CardTitle>Picker Performance (7 days)</CardTitle>
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
-        <div className="flex justify-center">
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <div className="flex justify-center" ref={containerRef}>
+          <ResponsiveContainer width="100%" height={isMobile ? 320 : 300}>
+            <BarChart
+              data={chartData}
+              margin={chartMargin}
+              barCategoryGap={barCategoryGap}
+              barGap={minBarGap}
+            >
               <CartesianGrid
                 strokeDasharray="3 3"
                 className="dark:stroke-white/[0.08] stroke-gray-200"
@@ -90,21 +112,26 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
               <XAxis
                 dataKey="displayName"
                 className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 12 }}
+                tick={{
+                  fontSize: isMobile ? 10 : 12,
+                  angle: isMobile ? -45 : 0,
+                  textAnchor: isMobile ? 'end' : 'middle',
+                }}
                 interval={0}
-                textAnchor="middle"
-                height={50}
+                height={isMobile ? 70 : 50}
               />
               <YAxis
                 yAxisId="left"
                 className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: isMobile ? 10 : 11 }}
+                width={isMobile ? 35 : 45}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: isMobile ? 10 : 11 }}
+                width={isMobile ? 35 : 45}
               />
               <Tooltip
                 contentStyle={{
@@ -126,7 +153,10 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
                 }}
               />
               <Legend
-                wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                wrapperStyle={{
+                  fontSize: isMobile ? '11px' : '13px',
+                  paddingTop: isMobile ? '4px' : '8px',
+                }}
                 formatter={value => (
                   <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
                 )}
