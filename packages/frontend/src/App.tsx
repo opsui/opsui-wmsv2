@@ -125,27 +125,61 @@ const RootCauseAnalysisPage = lazy(() =>
 const AccountingPage = lazy(() =>
   import('@/pages/AccountingPage').then(m => ({ default: m.AccountingPage }))
 );
-const ChartOfAccountsPage = lazy(() => import('@/pages/accounting/ChartOfAccountsPage'));
-const JournalEntriesPage = lazy(() => import('@/pages/accounting/JournalEntriesPage'));
-const TrialBalancePage = lazy(() => import('@/pages/accounting/TrialBalancePage'));
-const BalanceSheetPage = lazy(() => import('@/pages/accounting/BalanceSheetPage'));
-const CashFlowPage = lazy(() => import('@/pages/accounting/CashFlowPage'));
-const ARAgingPage = lazy(() => import('@/pages/accounting/ARAgingPage'));
-const APAgingPage = lazy(() => import('@/pages/accounting/APAgingPage'));
-const BankReconciliationPage = lazy(() => import('@/pages/accounting/BankReconciliationPage'));
-const FixedAssetsPage = lazy(() => import('@/pages/accounting/FixedAssetsPage'));
-const BudgetingPage = lazy(() => import('@/pages/accounting/BudgetingPage'));
+const ChartOfAccountsPage = lazy(() =>
+  import('@/pages/accounting/ChartOfAccountsPage').then(m => ({ default: m.default }))
+);
+const JournalEntriesPage = lazy(() =>
+  import('@/pages/accounting/JournalEntriesPage').then(m => ({ default: m.default }))
+);
+const TrialBalancePage = lazy(() =>
+  import('@/pages/accounting/TrialBalancePage').then(m => ({ default: m.default }))
+);
+const BalanceSheetPage = lazy(() =>
+  import('@/pages/accounting/BalanceSheetPage').then(m => ({ default: m.default }))
+);
+const CashFlowPage = lazy(() =>
+  import('@/pages/accounting/CashFlowPage').then(m => ({ default: m.default }))
+);
+const ARAgingPage = lazy(() =>
+  import('@/pages/accounting/ARAgingPage').then(m => ({ default: m.default }))
+);
+const APAgingPage = lazy(() =>
+  import('@/pages/accounting/APAgingPage').then(m => ({ default: m.default }))
+);
+const BankReconciliationPage = lazy(() =>
+  import('@/pages/accounting/BankReconciliationPage').then(m => ({ default: m.default }))
+);
+const FixedAssetsPage = lazy(() =>
+  import('@/pages/accounting/FixedAssetsPage').then(m => ({ default: m.default }))
+);
+const BudgetingPage = lazy(() =>
+  import('@/pages/accounting/BudgetingPage').then(m => ({ default: m.default }))
+);
 const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage }))
 );
 // HR & Payroll pages
-const EmployeesPage = lazy(() => import('@/pages/hr/EmployeesPage'));
-const TimesheetsPage = lazy(() => import('@/pages/hr/TimesheetsPage'));
-const PayrollDashboardPage = lazy(() => import('@/pages/hr/PayrollDashboardPage'));
-const PayrollProcessingPage = lazy(() => import('@/pages/hr/PayrollProcessingPage'));
-const PayrollRunsPage = lazy(() => import('@/pages/hr/PayrollRunsPage'));
-const LeaveRequestsPage = lazy(() => import('@/pages/hr/LeaveRequestsPage'));
-const HRSettingsPage = lazy(() => import('@/pages/hr/HRSettingsPage'));
+const EmployeesPage = lazy(() =>
+  import('@/pages/hr/EmployeesPage').then(m => ({ default: m.default }))
+);
+const TimesheetsPage = lazy(() =>
+  import('@/pages/hr/TimesheetsPage').then(m => ({ default: m.default }))
+);
+const PayrollDashboardPage = lazy(() =>
+  import('@/pages/hr/PayrollDashboardPage').then(m => ({ default: m.default }))
+);
+const PayrollProcessingPage = lazy(() =>
+  import('@/pages/hr/PayrollProcessingPage').then(m => ({ default: m.default }))
+);
+const PayrollRunsPage = lazy(() =>
+  import('@/pages/hr/PayrollRunsPage').then(m => ({ default: m.default }))
+);
+const LeaveRequestsPage = lazy(() =>
+  import('@/pages/hr/LeaveRequestsPage').then(m => ({ default: m.default }))
+);
+const HRSettingsPage = lazy(() =>
+  import('@/pages/hr/HRSettingsPage').then(m => ({ default: m.default }))
+);
 
 // ============================================================================
 // PAGE LOADING FALLBACK
