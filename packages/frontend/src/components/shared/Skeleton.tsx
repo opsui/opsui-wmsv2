@@ -2,6 +2,7 @@
  * Skeleton Component
  *
  * Loading skeleton placeholders for better UX during content loading
+ * Uses smooth animations to prevent jittering
  */
 
 export function Skeleton({
@@ -37,7 +38,7 @@ export function Skeleton({
 
   return (
     <div
-      className={`bg-gray-700/50 ${variantClasses[variant]} ${animationClasses[animation]} ${className}`}
+      className={`bg-gray-700/50 ${variantClasses[variant]} ${animationClasses[animation]} animate-fade-in ${className}`}
       style={style}
     />
   );
