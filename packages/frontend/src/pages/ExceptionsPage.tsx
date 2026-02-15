@@ -487,7 +487,7 @@ export function ExceptionsPage() {
           <>
             {/* Page Header */}
             <div className="animate-in">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-1">
                   <h1 className="text-3xl font-bold text-white tracking-tight">
                     Exception Management
@@ -495,14 +495,14 @@ export function ExceptionsPage() {
                   <p className="mt-2 text-gray-400">View and resolve order exceptions</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-initial">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search exceptions..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-3 py-1.5 w-64 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="pl-9 pr-3 py-1.5 w-full sm:w-64 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <Button
