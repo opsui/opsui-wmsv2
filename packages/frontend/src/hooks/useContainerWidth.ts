@@ -3,6 +3,7 @@
  *
  * Returns a ref to attach to the container and the current width.
  * This is useful for charts that need explicit numeric dimensions.
+ * Includes retry mechanism for mobile devices where layout may be delayed.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -12,26 +13,47 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
   number,
 ] {
   const containerRef = useRef<T>(null);
-  const [width, setWidth] = useState(0); // Start at 0 to indicate not yet measured
-  const [isMeasured, setIsMeasured] = useState(false);
+  const [width, setWidth] = useState(0);
+  const retryCountRef = useRef(0);
+  const maxRetries = 10; // Retry up to 10 times (with 100ms between retries = 1 second max)
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Initial measurement with requestAnimationFrame to ensure DOM is ready
+    let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let rafId: number | null = null;
+
     const updateWidth = () => {
       const rect = container.getBoundingClientRect();
       if (rect.width > 0) {
         setWidth(rect.width);
-        setIsMeasured(true);
+        retryCountRef.current = 0; // Reset retry count on success
+        return true;
+      }
+      return false;
+    };
+
+    const attemptMeasurement = () => {
+      const success = updateWidth();
+
+      // If measurement failed and we haven't exhausted retries, try again
+      if (!success && retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        // Use a combination of rAF and timeout for mobile reliability
+        if (retryCountRef.current % 3 === 0) {
+          // Every 3rd attempt, use a timeout to allow more time for layout
+          retryTimeoutId = setTimeout(() => {
+            rafId = requestAnimationFrame(attemptMeasurement);
+          }, 100);
+        } else {
+          rafId = requestAnimationFrame(attemptMeasurement);
+        }
       }
     };
 
-    // Use requestAnimationFrame to ensure layout is complete
-    const rafId = requestAnimationFrame(() => {
-      updateWidth();
-    });
+    // Start measurement process
+    rafId = requestAnimationFrame(attemptMeasurement);
 
     // Use ResizeObserver for responsive updates
     const resizeObserver = new ResizeObserver(entries => {
@@ -39,22 +61,39 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
         const { width: newWidth } = entry.contentRect;
         if (newWidth > 0) {
           setWidth(newWidth);
-          setIsMeasured(true);
+          retryCountRef.current = 0;
         }
       }
     });
 
     resizeObserver.observe(container);
 
+    // Also observe parent elements for size changes (helps with nested containers)
+    let parentObserver: ResizeObserver | null = null;
+    const parent = container.parentElement;
+    if (parent) {
+      parentObserver = new ResizeObserver(() => {
+        // When parent resizes, re-measure our container
+        updateWidth();
+      });
+      parentObserver.observe(parent);
+    }
+
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      if (retryTimeoutId !== null) {
+        clearTimeout(retryTimeoutId);
+      }
       resizeObserver.disconnect();
+      if (parentObserver) {
+        parentObserver.disconnect();
+      }
     };
   }, []);
 
-  // Return a stable width - if not measured yet, use a percentage-based fallback
-  // This prevents the chart from rendering at wrong size initially
-  return [containerRef, isMeasured ? width : 0];
+  return [containerRef, width];
 }
 
 export default useContainerWidth;
