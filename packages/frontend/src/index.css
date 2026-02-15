@@ -491,31 +491,9 @@
     will-change: background-color;
   }
 
-  /* Active indicator dot with animated glow ring using pseudo-element */
+  /* Static indicator dot with subtle glow - no animation */
   .indicator-dot {
-    position: relative;
-  }
-
-  .indicator-dot::after {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: 0;
-    animation: indicator-glow 2s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  @keyframes indicator-glow {
-    0%, 100% {
-      opacity: 0;
-      transform: scale(0.8);
-    }
-    50% {
-      opacity: 0.4;
-      transform: scale(1.5);
-    }
+    box-shadow: 0 0 6px currentColor;
   }
 }
 
