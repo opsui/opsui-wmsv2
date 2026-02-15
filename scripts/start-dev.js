@@ -107,11 +107,11 @@ async function checkPrerequisites() {
   const pgRunning = await checkPostgreSQL();
   if (!pgRunning) {
     logError('PostgreSQL is not running or not accessible');
-    log('\nPlease start PostgreSQL:');
-    log('  Windows: Start PostgreSQL service from Services');
-    log(
-      '  Docker: docker run --name wms-postgres -e POSTGRES_PASSWORD=wms_password -e POSTGRES_DB=wms_db -p 5432:5432 -d postgres:15'
-    );
+    log('\nProduction database requires SSH tunnel:');
+    log('  ssh -f -N -L 5433:localhost:5432 root@103.208.85.233');
+    log('\nThen ensure .env has:');
+    log('  DB_HOST=localhost');
+    log('  DB_PORT=5433');
     return false;
   }
   logSuccess('PostgreSQL is running');

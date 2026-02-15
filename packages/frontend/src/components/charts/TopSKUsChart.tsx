@@ -5,20 +5,20 @@
  * with dropdown selector for scan type
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@/components/shared';
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useEffect, useRef, useState } from 'react';
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
 } from 'recharts';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface TopSKUData {
   sku: string;
@@ -193,7 +193,7 @@ export function TopSKUsChart({
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width={containerWidth} height={280}>
+          <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={280}>
             <BarChart
               data={chartData}
               layout="vertical"

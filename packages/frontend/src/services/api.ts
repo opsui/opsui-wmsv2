@@ -5,56 +5,56 @@
  */
 
 import { apiClient, handleAPIError } from '@/lib/api-client';
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import {
+  IntegrationProvider,
+  IntegrationStatus,
+  IntegrationType,
+  ReportStatus,
+  SyncStatus,
   UserRole,
-  type Order,
-  type OrderStatus,
-  type OrderPriority,
-  type CreateOrderDTO,
-  type ClaimOrderDTO,
-  type PickItemDTO,
-  type CompleteOrderDTO,
-  type CancelOrderDTO,
-  type PickActionResponse,
-  type DashboardMetricsResponse,
-  type User,
-  type LoginCredentials,
+  WebhookEventType,
   type AuthTokens,
-  type ExceptionType,
-  type ExceptionStatus,
-  type LogExceptionDTO,
-  type ResolveExceptionDTO,
+  type BusinessRule,
+  type CancelOrderDTO,
+  type ClaimOrderDTO,
+  type CompleteOrderDTO,
+  type CreateOrderDTO,
   type CycleCountStatus,
   type CycleCountType,
+  type Dashboard,
+  type DashboardMetricsResponse,
+  type ExceptionStatus,
+  type ExceptionType,
+  type ExportJob,
+  type Integration,
+  type LogExceptionDTO,
+  type LoginCredentials,
+  type NZCLabelResponse,
   type NZCRateRequest,
   type NZCRateResponse,
   type NZCShipmentRequest,
   type NZCShipmentResponse,
-  type NZCLabelResponse,
-  type BusinessRule,
-  type RuleStatus,
-  type RuleType,
+  type Order,
+  type OrderPriority,
+  type OrderStatus,
+  type PickActionResponse,
+  type PickItemDTO,
   type Report,
+  type ReportExecution,
   type ReportField,
   type ReportFilter,
-  type ReportType,
-  ReportStatus,
   type ReportFormat,
-  type ReportExecution,
+  type ReportGroup,
   type ReportSchedule,
   type ReportTemplate,
-  type ReportGroup,
-  type Dashboard,
-  type ExportJob,
-  type Integration,
-  IntegrationType,
-  IntegrationStatus,
-  IntegrationProvider,
-  SyncStatus,
-  WebhookEventType,
+  type ReportType,
+  type ResolveExceptionDTO,
+  type RuleStatus,
+  type RuleType,
+  type User,
 } from '@opsui/shared';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 
 // ============================================================================
 // AUTH API
@@ -1675,8 +1675,12 @@ export const useUnclaimOrder = () => {
       return response.data;
     },
     onSuccess: () => {
+      // Invalidate all order-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
       queryClient.invalidateQueries({ queryKey: ['orders', 'packing-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
     },
   });
 };

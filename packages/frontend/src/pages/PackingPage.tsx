@@ -4,37 +4,36 @@
  * Main packing interface for verifying and packing orders
  */
 
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { useOrder, useCompletePacking, nzcApi } from '@/services/api';
 import {
+  Breadcrumb,
+  Button,
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardContent,
-  ScanInput,
-  Button,
-  Header,
-  UnclaimModal,
   ConfirmDialog,
-  Breadcrumb,
+  Header,
+  ScanInput,
+  UnclaimModal,
+  useToast,
 } from '@/components/shared';
-import { useToast } from '@/components/shared';
-import { useAuthStore } from '@/stores';
-import {
-  CheckIcon,
-  ExclamationTriangleIcon,
-  ArrowLeftIcon,
-  CubeIcon,
-  MinusCircleIcon,
-  ArrowPathIcon,
-  PrinterIcon,
-} from '@heroicons/react/24/outline';
+import { usePageTracking } from '@/hooks/usePageTracking';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
-import { usePageTracking } from '@/hooks/usePageTracking';
-import { Carrier, Address, NZCQuote } from '@opsui/shared';
+import { nzcApi, useCompletePacking, useOrder } from '@/services/api';
+import { useAuthStore } from '@/stores';
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  CubeIcon,
+  ExclamationTriangleIcon,
+  MinusCircleIcon,
+  PrinterIcon,
+} from '@heroicons/react/24/outline';
+import { Address, Carrier, NZCQuote } from '@opsui/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENT
@@ -894,8 +893,11 @@ export function PackingPage() {
       hasClaimedRef.current = false;
       isClaimingRef.current = false;
       setClaimError(null);
+      // Invalidate all relevant queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'packing-queue'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
       navigate('/packing');
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to unclaim order';

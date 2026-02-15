@@ -16,11 +16,6 @@
       "Bash(npm run dev:smart:*)",
       "Bash(npm run dev:safe:*)",
       "Bash(npm run db:*)",
-      "Bash(npm run docker:up:*)",
-      "Bash(docker-compose logs:*)",
-      "Bash(docker-compose restart:*)",
-      "Bash(docker-compose down:*)",
-      "Bash(docker-compose up:*)",
       "Bash(npx tsx:*)",
       "Bash(npx tsc:*)",
       "Bash(tasklist:*)",
@@ -43,7 +38,7 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(git status:*)",
-      "Bash(docker start:*)",
+      "Bash(ssh:*)",
       "mcp__erp-dev-accelerator__*",
       "mcp__postgres__*",
       "mcp__filesystem__*",
@@ -73,7 +68,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://erp_user:erp_password@localhost:5432/erp_db"
+        "postgresql://wms_user:wms_password@localhost:5433/wms_db"
       ]
     },
     "filesystem": {
@@ -92,7 +87,8 @@
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\src\\index.ts"
       ],
       "env": {
-        "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW"
+        "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW",
+        "GLM_MODEL": "glm-4.7"
       }
     }
   }

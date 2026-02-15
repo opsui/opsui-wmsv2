@@ -4,61 +4,62 @@
  * Supervisor dashboard showing real-time warehouse metrics
  */
 
-import { useState, useMemo } from 'react';
 import {
-  useDashboardMetrics,
-  useRoleActivity,
-  useRoleDetails,
-  useThroughputByRange,
-  useOrderStatusBreakdown,
-  useTopSKUs,
-  useAllPickersPerformance,
-  useAllPackersPerformance,
-  useAllStockControllersPerformance,
-  useOrderQueue,
-  useAuditLogs,
-  type AuditLog,
-} from '@/services/api';
-import {
+  AuditLogsCard,
+  Breadcrumb,
+  Button,
   Card,
   CardContent,
   Header,
-  RoleActivityCard,
-  AuditLogsCard,
-  ThroughputChart,
-  OrderStatusChart,
-  TopSKUsChart,
-  PerformanceChart,
-  Button,
-  Pagination,
-  type AuditLogFilters,
-  MetricCardSkeleton,
-  Skeleton,
   ListSkeleton,
-  Breadcrumb,
+  MetricCardSkeleton,
+  OrderPriorityBadge,
+  OrderStatusBadge,
+  OrderStatusChart,
+  Pagination,
+  PerformanceChart,
+  RoleActivityCard,
+  Skeleton,
+  ThroughputChart,
+  TopSKUsChart,
+  useToast,
+  type AuditLogFilters,
 } from '@/components/shared';
-import { useToast } from '@/components/shared';
-import { useAuthStore } from '@/stores';
-import { UserRole, OrderStatus } from '@opsui/shared';
 import {
-  UserGroupIcon,
-  QueueListIcon,
-  ArrowTrendingUpIcon,
-  ExclamationTriangleIcon,
-  XMarkIcon,
-  EyeIcon,
-  DocumentTextIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
-import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
-import { formatDate } from '@/lib/utils';
-import {
-  useOrderUpdates,
-  usePickUpdates,
   useInventoryUpdates,
   useNotifications,
+  useOrderUpdates,
+  usePickUpdates,
 } from '@/hooks/useWebSocket';
+import { formatDate } from '@/lib/utils';
+import {
+  useAllPackersPerformance,
+  useAllPickersPerformance,
+  useAllStockControllersPerformance,
+  useAuditLogs,
+  useDashboardMetrics,
+  useOrderQueue,
+  useOrderStatusBreakdown,
+  useRoleActivity,
+  useRoleDetails,
+  useThroughputByRange,
+  useTopSKUs,
+  type AuditLog,
+} from '@/services/api';
+import { useAuthStore } from '@/stores';
+import {
+  ArrowTrendingUpIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  QueueListIcon,
+  UserGroupIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { OrderStatus, UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 
 // ============================================================================
 // SUBCOMPONENTS
@@ -636,7 +637,7 @@ export function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6">
           <TopSKUsChart
             data={topSKUs ?? []}
             isLoading={topSKUsLoading}

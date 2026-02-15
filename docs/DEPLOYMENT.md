@@ -2,13 +2,13 @@
 
 This guide covers deploying the Warehouse Management System to various environments.
 
+**Production Server:** `ssh root@103.208.85.233`
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Development Setup](#development-setup)
-- [Staging Deployment](#staging-deployment)
 - [Production Deployment](#production-deployment)
-- [Docker Deployment](#docker-deployment)
 - [Health Checks](#health-checks)
 - [Monitoring](#monitoring)
 - [Rollback Procedures](#rollback-procedures)
@@ -22,7 +22,7 @@ This guide covers deploying the Warehouse Management System to various environme
 - **Node.js**: v18.x or later
 - **PostgreSQL**: v14.x or later
 - **Redis**: v6.x or later (optional, for caching)
-- **Docker**: v20.x or later (for containerized deployment)
+- **PM2**: For process management
 - **Git**: For cloning the repository
 
 ### System Requirements
@@ -62,19 +62,25 @@ npm install --workspace=packages/shared
 ```bash
 # Copy example environment files
 cp packages/backend/.env.example packages/backend/.env
-cp packages/frontend/.env.example packages/frontend/.env
 
 # Edit with your values
 nano packages/backend/.env
 ```
 
-### 4. Initialize Database
+### 4. Connect to Remote Database (via SSH Tunnel)
 
 ```bash
-# Create database
-createdb wms_dev
+# Establish SSH tunnel to production database
+ssh -f -N -L 5433:localhost:5432 root@103.208.85.233
 
-# Run migrations
+# Verify tunnel is active
+ss -tlnp | grep 5433
+```
+
+### 5. Initialize Database
+
+```bash
+# Run migrations (targets remote DB via tunnel)
 cd packages/backend
 npm run db:migrate
 
@@ -82,7 +88,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-### 5. Start Development Servers
+### 6. Start Development Servers
 
 ```bash
 # Terminal 1: Backend
@@ -97,7 +103,7 @@ npm run dev
 # WebSocket server starts on WS_PORT (default 3002)
 ```
 
-### 6. Access the Application
+### 7. Access the Application
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3001
@@ -106,11 +112,15 @@ npm run dev
 
 ---
 
-## Staging Deployment
+## Production Deployment
+
+**Target Server:** `ssh root@103.208.85.233`
 
 ### 1. Server Preparation
 
 ```bash
+ssh root@103.208.85.233
+
 # Update system
 sudo apt update && sudo apt upgrade -y
 
@@ -118,10 +128,10 @@ sudo apt update && sudo apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# Install PostgreSQL
+# Install PostgreSQL (if not already installed)
 sudo apt install -y postgresql postgresql-contrib
 
-# Install Redis
+# Install Redis (optional)
 sudo apt install -y redis-server
 
 # Install Nginx
@@ -145,22 +155,21 @@ npm install --workspace=packages/backend
 npm install --workspace=packages/frontend
 npm install --workspace=packages/shared
 
-# Build frontend
-cd packages/frontend
+# Build
 npm run build
 ```
 
 ### 3. Database Configuration
 
 ```bash
-# Create database
-sudo -u postgres createdb wms_staging
+# Create database (if not exists)
+sudo -u postgres createdb wms_db
 
 # Create user
-sudo -u postgres createuser --pwprompt wms_staging
+sudo -u postgres createuser --pwprompt wms_user
 
 # Grant privileges
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE wms_staging TO wms_staging;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE wms_db TO wms_user;"
 
 # Run migrations
 cd /var/www/wms/packages/backend
@@ -173,15 +182,15 @@ npm run db:seed
 ### 4. Environment Configuration
 
 ```bash
-# Create staging environment
+# Create production environment
 cat > /var/www/wms/packages/backend/.env << EOF
-NODE_ENV=staging
+NODE_ENV=production
 PORT=3001
 HOST=0.0.0.0
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=wms_staging
-DB_USER=wms_staging
+DB_NAME=wms_db
+DB_USER=wms_user
 DB_PASSWORD=your_secure_password
 JWT_SECRET=$(openssl rand -hex 32)
 LOG_LEVEL=info
@@ -226,10 +235,10 @@ pm2 startup
 
 ```bash
 # Create Nginx config
-sudo cat > /etc/nginx/sites-available/wms-staging << EOF
+sudo cat > /etc/nginx/sites-available/wms << EOF
 server {
     listen 80;
-    server_name staging.wms.example.com;
+    server_name wms.example.com;
 
     # Frontend static files
     location / {
@@ -263,14 +272,10 @@ server {
 EOF
 
 # Enable site
-sudo ln -s /etc/nginx/sites-available/wms-staging /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/wms /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
-
----
-
-## Production Deployment
 
 ### Security Hardening
 
@@ -280,10 +285,6 @@ sudo ufw allow 22/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
-
-# Disable root login
-sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
-sudo systemctl restart sshd
 
 # Install fail2ban
 sudo apt install -y fail2ban
@@ -302,78 +303,6 @@ sudo certbot --nginx -d wms.example.com
 sudo certbot renew --dry-run
 ```
 
-### Production Nginx Configuration
-
-```bash
-sudo cat > /etc/nginx/sites-available/wms-production << EOF
-# Redirect HTTP to HTTPS
-server {
-    listen 80;
-    server_name wms.example.com;
-    return 301 https://\$server_name\$request_uri;
-}
-
-# HTTPS server
-server {
-    listen 443 ssl http2;
-    server_name wms.example.com;
-
-    ssl_certificate /etc/letsencrypt/live/wms.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/wms.example.com/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
-    ssl_prefer_server_ciphers off;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-    # Frontend static files
-    location / {
-        root /var/www/wms/packages/frontend/dist;
-        try_files \$uri \$uri/ /index.html;
-        expires 1h;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Backend API
-    location /api {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
-
-        # Rate limiting
-        limit_req zone=api burst=20 nodelay;
-    }
-
-    # WebSocket
-    location /socket.io {
-        proxy_pass http://localhost:3002;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_read_timeout 86400;
-    }
-}
-EOF
-
-sudo ln -s /etc/nginx/sites-available/wms-production /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
 ### Database Backup Setup
 
 ```bash
@@ -384,7 +313,7 @@ BACKUP_DIR="/backups/wms"
 DATE=\$(date +%Y%m%d_%H%M%S)
 mkdir -p \$BACKUP_DIR
 
-pg_dump -U wms_production -h localhost wms_production | gzip > \$BACKUP_DIR/wms_\$DATE.sql.gz
+pg_dump -U wms_user -h localhost wms_db | gzip > \$BACKUP_DIR/wms_\$DATE.sql.gz
 
 # Keep only last 7 days of backups
 find \$BACKUP_DIR -name "wms_*.sql.gz" -mtime +7 -delete
@@ -394,109 +323,6 @@ chmod +x /home/wms/backup-db.sh
 
 # Add to crontab (daily at 2 AM)
 (crontab -l 2>/dev/null; echo "0 2 * * * /home/wms/backup-db.sh") | crontab -
-```
-
----
-
-## Docker Deployment
-
-### Docker Compose Setup
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:14-alpine
-    container_name: wms-postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./packages/backend/src/db/migrations:/docker-entrypoint-initdb.d
-    ports:
-      - '5432:5432'
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:6-alpine
-    container_name: wms-redis
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - '6379:6379'
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  backend:
-    build:
-      context: ./packages/backend
-      dockerfile: Dockerfile
-    container_name: wms-backend
-    environment:
-      - NODE_ENV=production
-      - DB_HOST=postgres
-      - REDIS_HOST=redis
-    env_file:
-      - ./packages/backend/.env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    ports:
-      - '3001:3001'
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./packages/frontend
-      dockerfile: Dockerfile
-    container_name: wms-frontend
-    environment:
-      - VITE_API_BASE_URL=http://localhost:3001
-    ports:
-      - '80:80'
-    depends_on:
-      - backend
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
-  redis_data:
-```
-
-### Building and Running
-
-```bash
-# Build images
-docker-compose build
-
-# Start services
-docker-compose up -d
-
-# Run migrations
-docker-compose exec backend npm run db:migrate
-
-# Seed data
-docker-compose exec backend npm run db:seed
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
 ```
 
 ---
@@ -530,7 +356,7 @@ Expected response:
 pg_isready -h localhost -p 5432
 
 # Check connection count
-psql -U wms_production -c "SELECT count(*) FROM pg_stat_activity;"
+psql -U wms_user -c "SELECT count(*) FROM pg_stat_activity;"
 ```
 
 ### Redis Health Check
@@ -637,7 +463,7 @@ pm2 restart wms-backend --update-env
 pm2 stop wms-backend
 
 # Restore from backup
-gunzip -c /backups/wms/wms_YYYYMMDD_HHMMSS.sql.gz | psql -U wms_production wms_production
+gunzip -c /backups/wms/wms_YYYYMMDD_HHMMSS.sql.gz | psql -U wms_user wms_db
 
 # Restart with previous version
 cd /var/www/wms
@@ -687,7 +513,7 @@ sudo lsof -i :3001
 sudo systemctl status postgresql
 
 # Test connection
-psql -U wms_production -h localhost -d wms_production
+psql -U wms_user -h localhost -d wms_db
 ```
 
 **WebSocket not connecting:**
@@ -716,3 +542,4 @@ grep WS_PORT /var/www/wms/packages/backend/.env
 - [Configuration Guide](./CONFIGURATION.md)
 - [API Documentation](../packages/backend/docs/API.md)
 - [Database Schema](../packages/backend/docs/DATABASE_SCHEMA.md)
+- [Deployment Checklist](./deployment-checklist.md)

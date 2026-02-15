@@ -17,6 +17,10 @@ import { resolve } from 'path';
 
 const FRONTEND_PORT = 5173; // 🔒 LOCKED - Frontend Dev Server (never change)
 
+// Backend API target - use env var or default to remote server
+// For local backend: set VITE_API_PROXY_TARGET=http://localhost:3001
+const API_PROXY_TARGET = process.env.VITE_API_PROXY_TARGET || 'http://103.208.85.233:3001';
+
 export default defineConfig({
   plugins: [
     react({
@@ -64,7 +68,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: API_PROXY_TARGET,
         changeOrigin: true,
         timeout: 60000, // 60 second timeout
         proxyTimeout: 60000, // 60 second proxy timeout

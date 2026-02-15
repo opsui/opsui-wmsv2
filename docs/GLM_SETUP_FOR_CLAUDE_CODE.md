@@ -12,14 +12,14 @@ GLM models are now available as custom models through a Model Context Protocol (
 
 ## Available Models
 
-| Model         | Description                         | Best For                                          |
-| ------------- | ----------------------------------- | ------------------------------------------------- |
-| `glm-5`       | **Latest flagship model (default)** | Advanced reasoning, complex coding, general tasks |
-| `glm-4.7`     | Previous flagship                   | General coding, complex tasks                     |
-| `glm-4-plus`  | Enhanced version                    | Complex reasoning                                 |
-| `glm-4-flash` | Faster, cheaper                     | Quick tasks, simple queries                       |
-| `glm-4-air`   | Lightweight                         | Basic assistance                                  |
-| `glm-4`       | General purpose                     | Standard tasks                                    |
+| Model         | Description                       | Best For                             |
+| ------------- | --------------------------------- | ------------------------------------ |
+| `glm-4.7`     | **Default model for Claude Code** | General coding, balanced performance |
+| `glm-5`       | Latest flagship model             | Advanced reasoning, complex coding   |
+| `glm-4-plus`  | Enhanced version                  | Complex reasoning                    |
+| `glm-4-flash` | Faster, cheaper                   | Quick tasks, simple queries          |
+| `glm-4-air`   | Lightweight                       | Basic assistance                     |
+| `glm-4`       | General purpose                   | Standard tasks                       |
 
 ## Prerequisites
 
@@ -232,7 +232,7 @@ Since the server runs TypeScript directly via npx tsx, changes take effect immed
 
 ## Changing the Model
 
-The server defaults to `glm-5`. To switch to a different model, you have two options:
+The server defaults to `glm-4.7`. To switch to a different model, you have two options:
 
 ### Option 1: Environment Variable (Recommended)
 
@@ -258,21 +258,21 @@ Add `GLM_MODEL` to the environment in your `.claude/settings.json`:
 1. Edit `tools/mcp-server-glm/src/index.ts`
 2. Find the `GLM_MODEL` constant near the top:
    ```typescript
-   const GLM_MODEL: GLMModel = (process.env.GLM_MODEL as GLMModel) || 'glm-5';
+   const GLM_MODEL: GLMModel = (process.env.GLM_MODEL as GLMModel) || 'glm-4.7';
    ```
 3. Change the default value (the last string) to your preferred model
 4. Restart VS Code (no rebuild needed since we use npx tsx)
 
 **Available models:**
 
-| Model         | Description               | Best For                          |
-| ------------- | ------------------------- | --------------------------------- |
-| `glm-5`       | Latest flagship (default) | Advanced reasoning, complex tasks |
-| `glm-4.7`     | Previous flagship         | General coding, complex tasks     |
-| `glm-4-plus`  | Enhanced version          | Complex reasoning                 |
-| `glm-4-flash` | Ultra-fast                | Quick tasks, simple queries       |
-| `glm-4-air`   | Lightweight               | Basic assistance                  |
-| `glm-4`       | General purpose           | Standard tasks                    |
+| Model         | Description             | Best For                          |
+| ------------- | ----------------------- | --------------------------------- |
+| `glm-4.7`     | Default for Claude Code | General coding, balanced tasks    |
+| `glm-5`       | Latest flagship         | Advanced reasoning, complex tasks |
+| `glm-4-plus`  | Enhanced version        | Complex reasoning                 |
+| `glm-4-flash` | Ultra-fast              | Quick tasks, simple queries       |
+| `glm-4-air`   | Lightweight             | Basic assistance                  |
+| `glm-4`       | General purpose         | Standard tasks                    |
 
 ## Support
 

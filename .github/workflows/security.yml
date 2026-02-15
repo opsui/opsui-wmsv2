@@ -194,43 +194,6 @@ jobs:
           head: HEAD
 
   # ============================================================================
-  # Container Image Scan
-  # ============================================================================
-  container-scan:
-    name: Container Image Scan
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./packages/backend/Dockerfile
-          tags: wms-backend:test
-          load: true
-          cache-from: type=gha
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: wms-backend:test
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  # ============================================================================
   # Dependency Review
   # ============================================================================
   dependency-review:

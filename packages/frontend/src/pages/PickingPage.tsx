@@ -4,41 +4,40 @@
  * Main picking interface for scanning and picking items
  */
 
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { useOrder, usePickItem, useCompleteOrder, useLogException } from '@/services/api';
 import {
+  Breadcrumb,
+  Button,
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardContent,
-  ScanInput,
-  Button,
+  ConfirmDialog,
   Header,
+  ScanInput,
+  TaskStatusBadge,
   UnclaimModal,
   UndoPickModal,
   useToast,
-  ConfirmDialog,
-  Breadcrumb,
 } from '@/components/shared';
-import { TaskStatusBadge } from '@/components/shared';
-import { formatBinLocation } from '@/lib/utils';
-import { useAuthStore } from '@/stores';
+import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
-import {
-  CheckIcon,
-  XMarkIcon,
-  ExclamationTriangleIcon,
-  ArrowPathIcon,
-  MinusCircleIcon,
-  ExclamationCircleIcon,
-  ArrowLeftIcon,
-  WrenchScrewdriverIcon,
-} from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
-import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
-import { TaskStatus, ExceptionType, OrderStatus } from '@opsui/shared';
+import { formatBinLocation } from '@/lib/utils';
+import { useCompleteOrder, useLogException, useOrder, usePickItem } from '@/services/api';
+import { useAuthStore } from '@/stores';
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  MinusCircleIcon,
+  WrenchScrewdriverIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENT
@@ -511,7 +510,7 @@ export function PickingPage() {
       await pickMutation.mutateAsync({
         orderId,
         dto: {
-          barcode: currentTask.barcode || currentTask.sku, // Send barcode (preferred) or SKU
+          sku: currentTask.barcode || currentTask.sku, // Send barcode (preferred) or SKU
           quantity: 1, // Pick one at a time for simplicity
           binLocation: currentTask.binLocation,
           pickTaskId: currentTask.orderItemId,
@@ -686,9 +685,10 @@ export function PickingPage() {
 
       // Clear all order-related queries to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
-      await queryClient.invalidateQueries({ queryKey: ['order-queue'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
       await queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       await queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
+      await queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
 
       // Force a full page reload to ensure fresh state and proper URL param reading
       window.location.href = '/orders?status=PENDING';

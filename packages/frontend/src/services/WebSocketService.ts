@@ -5,8 +5,8 @@
  * Handles authentication, reconnection, and event subscriptions
  */
 
-import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/stores/authStore';
+import { io, Socket } from 'socket.io-client';
 
 // ============================================================================
 // TYPES
@@ -46,11 +46,9 @@ export type EventHandler<E extends keyof ServerToClientEvents> = (
 
 class WebSocketService {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
   private isManualDisconnect = false;
   private eventHandlers: Map<keyof ServerToClientEvents, Set<EventHandler<any>>> = new Map();
+  private hasLoggedMaxAttempts = false;
 
   /**
    * Connect to WebSocket server
@@ -67,6 +65,9 @@ class WebSocketService {
       return;
     }
 
+    // Reset the max attempts log flag when manually connecting
+    this.hasLoggedMaxAttempts = false;
+
     try {
       const wsUrl =
         import.meta.env.VITE_WS_URL ||
@@ -76,8 +77,9 @@ class WebSocketService {
         auth: { token },
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionDelay: this.reconnectDelay,
-        reconnectionAttempts: this.maxReconnectAttempts,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
+        reconnectionAttempts: 5,
         timeout: 10000,
       });
 
@@ -97,24 +99,32 @@ class WebSocketService {
     // Connection established
     this.socket.on('connect', () => {
       console.log('[WebSocket] Connected', { socketId: this.socket?.id });
-      this.reconnectAttempts = 0;
+      this.hasLoggedMaxAttempts = false;
       this.triggerHandlers('connected' as const, [{ message: 'Connected' }]);
     });
 
     // Disconnection
     this.socket.on('disconnect', reason => {
       console.log('[WebSocket] Disconnected', { reason });
+      // Socket.io handles reconnection automatically when reconnection: true
+    });
 
-      // Reconnect if not manual disconnect
-      if (!this.isManualDisconnect && reason !== 'io client disconnect') {
-        this.handleReconnect();
+    // Connection error - socket.io handles reconnection, we just log
+    this.socket.on('connect_error', error => {
+      // Only log once when max attempts reached to avoid console spam
+      if (!this.hasLoggedMaxAttempts) {
+        console.warn('[WebSocket] Connection failed, will retry...', error.message);
       }
     });
 
-    // Connection error
-    this.socket.on('connect_error', error => {
-      console.error('[WebSocket] Connection error', error);
-      this.handleReconnect();
+    // Reconnection failed (all attempts exhausted)
+    this.socket.io.on('reconnect_failed', () => {
+      if (!this.hasLoggedMaxAttempts) {
+        console.warn(
+          '[WebSocket] Max reconnection attempts reached. Will retry on next user action.'
+        );
+        this.hasLoggedMaxAttempts = true;
+      }
     });
 
     // Set up all registered event handlers
@@ -123,29 +133,6 @@ class WebSocketService {
         this.socket?.on(event, handler as any);
       });
     });
-  }
-
-  /**
-   * Handle automatic reconnection
-   */
-  private handleReconnect(): void {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[WebSocket] Max reconnection attempts reached');
-      return;
-    }
-
-    this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-
-    console.log(
-      `[WebSocket] Reconnecting... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
-    );
-
-    setTimeout(() => {
-      if (!this.socket?.connected && !this.isManualDisconnect) {
-        this.connect();
-      }
-    }, delay);
   }
 
   /**
@@ -257,7 +244,7 @@ class WebSocketService {
    */
   disconnect(): void {
     this.isManualDisconnect = true;
-    this.reconnectAttempts = 0;
+    this.hasLoggedMaxAttempts = false;
 
     if (this.socket) {
       this.socket.disconnect();

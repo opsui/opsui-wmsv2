@@ -5,21 +5,21 @@
  * with time range and role selector dropdowns
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@/components/shared';
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { UserRole } from '@opsui/shared';
+import { useEffect, useRef, useState } from 'react';
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
   Legend,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
-import { UserRole } from '@opsui/shared';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface PerformanceData {
   userId: string;
@@ -183,7 +183,7 @@ export function PerformanceChart({
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-emerald-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width={containerWidth} height={350}>
+          <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={350}>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid
                 strokeDasharray="3 3"

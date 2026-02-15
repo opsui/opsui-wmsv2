@@ -51,17 +51,17 @@ interface BugReport {
   suggestions?: string[];
 }
 
-// Available GLM models (Opus/Sonnet-style selection)
+// Available GLM models
 export const GLM_MODELS = {
-  'glm-5': {
-    name: 'GLM-5',
-    description: 'Most capable model (like Claude Opus) - best for complex reasoning',
+  'glm-4.7': {
+    name: 'GLM-4.7',
+    description: 'Default model for Claude Code - balanced performance',
     contextWindow: 128000,
     recommended: true,
   },
-  'glm-4.7': {
-    name: 'GLM-4.7',
-    description: 'Fast and efficient (like Claude Sonnet) - balanced performance',
+  'glm-5': {
+    name: 'GLM-5',
+    description: 'Most capable model - best for complex reasoning',
     contextWindow: 128000,
     recommended: false,
   },
@@ -82,14 +82,14 @@ export class GLMClient {
   }
 
   /**
-   * Get the default model (from env or glm-5)
+   * Get the default model (from env or glm-4.7)
    */
   static getDefaultModel(): GLMModelName {
     const envModel = process.env.GLM_MODEL as GLMModelName;
     if (envModel && GLM_MODELS[envModel]) {
       return envModel;
     }
-    return 'glm-5'; // Default to GLM-5 (Opus-equivalent)
+    return 'glm-4.7'; // Default to GLM-4.7 for Claude Code
   }
 
   // Retry configuration for rate limiting

@@ -4,12 +4,19 @@
  * Handles all database operations for orders and order items
  */
 
-import { BaseRepository } from './BaseRepository';
-import { Order, OrderStatus, OrderPriority, CreateOrderDTO } from '@opsui/shared';
-import { query } from '../db/client';
-import { ConflictError, NotFoundError } from '@opsui/shared';
+import {
+  ConflictError,
+  CreateOrderDTO,
+  generateOrderId,
+  generatePickTaskId,
+  NotFoundError,
+  Order,
+  OrderPriority,
+  OrderStatus,
+} from '@opsui/shared';
 import { logger } from '../config/logger';
-import { generatePickTaskId, generateOrderId } from '@opsui/shared';
+import { query } from '../db/client';
+import { BaseRepository } from './BaseRepository';
 import { getOrderItemsQuery, mapOrderItem } from './queries/OrderQueries';
 
 // ============================================================================
@@ -196,6 +203,12 @@ export class OrderRepository extends BaseRepository<Order> {
     if (filters.pickerId) {
       conditions.push(`o.picker_id = $${paramIndex++}`);
       params.push(filters.pickerId);
+    }
+
+    // For PENDING status, exclude orders that are already claimed (have a picker_id)
+    // This prevents showing already-claimed orders in the queue
+    if (filters.status === OrderStatus.PENDING && !filters.pickerId) {
+      conditions.push(`o.picker_id IS NULL`);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

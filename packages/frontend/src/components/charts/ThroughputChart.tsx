@@ -5,20 +5,20 @@
  * with time range selector dropdown
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@/components/shared';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
 import { useContainerWidth } from '@/hooks/useContainerWidth';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useEffect, useRef, useState } from 'react';
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 interface ThroughputData {
   period: string;
@@ -140,7 +140,7 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width={containerWidth} height={350}>
+          <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={350}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <CartesianGrid
                 strokeDasharray="3 3"

@@ -20,14 +20,14 @@ const GLM_AVAILABLE_MODELS = [
   'glm-4-plus', // Enhanced performance
   'glm-4-air', // Faster inference
   'glm-4-flash', // Ultra-fast
-  'glm-4.7', // Previous flagship
-  'glm-5', // Latest flagship model (default)
+  'glm-4.7', // Default for Claude Code
+  'glm-5', // Latest flagship model
 ] as const;
 
 type GLMModel = (typeof GLM_AVAILABLE_MODELS)[number];
 
 // Get model from environment or use default
-const GLM_MODEL: GLMModel = (process.env.GLM_MODEL as GLMModel) || 'glm-5';
+const GLM_MODEL: GLMModel = (process.env.GLM_MODEL as GLMModel) || 'glm-4.7';
 
 // Validate model
 if (!GLM_AVAILABLE_MODELS.includes(GLM_MODEL)) {
@@ -148,7 +148,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'glm_chat',
         description:
-          'Send a message to GLM and get a response. Use this for general AI tasks, code generation, analysis, and more. Default model is glm-5.',
+          'Send a message to GLM and get a response. Use this for general AI tasks, code generation, analysis, and more. Default model is glm-4.7.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -180,7 +180,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'glm_code',
         description:
-          'Use GLM for code-related tasks (generation, review, debugging, refactoring). Default model is glm-5.',
+          'Use GLM for code-related tasks (generation, review, debugging, refactoring). Default model is glm-4.7.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -204,7 +204,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'glm_analyze',
         description:
-          'Use GLM for analysis tasks (text analysis, data interpretation, pattern detection). Default model is glm-5.',
+          'Use GLM for analysis tasks (text analysis, data interpretation, pattern detection). Default model is glm-4.7.',
         inputSchema: {
           type: 'object',
           properties: {

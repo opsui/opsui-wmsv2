@@ -4,35 +4,36 @@
  * Lists available orders for pickers to claim
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { useOrderQueue, useClaimOrder, useContinueOrder } from '@/services/api';
 import {
+  Breadcrumb,
+  Button,
   Card,
   CardContent,
-  Button,
   Header,
+  OrderPriorityBadge,
+  OrderStatusBadge,
   Pagination,
   useToast,
-  Breadcrumb,
 } from '@/components/shared';
-import { OrderPriorityBadge, OrderStatusBadge } from '@/components/shared';
-import { formatDate } from '@/lib/utils';
-import { useAuthStore } from '@/stores';
-import { usePageTracking, PageViews } from '@/hooks/usePageTracking';
+import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
+import { formatDate } from '@/lib/utils';
+import { useClaimOrder, useContinueOrder, useOrderQueue } from '@/services/api';
+import { useAuthStore } from '@/stores';
 import {
-  ShoppingBagIcon,
-  MagnifyingGlassIcon,
-  ClipboardDocumentListIcon,
-  QueueListIcon,
-  ExclamationTriangleIcon,
-  ChartBarIcon,
   ArrowPathIcon,
+  ChartBarIcon,
   ChevronDownIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  QueueListIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 // ============================================================================
 // FILTER DROPDOWN COMPONENTS
@@ -411,6 +412,17 @@ export function OrderQueuePage() {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
   }, [queryClient, statusFilter, priorityFilter]);
 
+  // Polling fallback when WebSocket is not connected
+  // This ensures fresh data even when real-time updates aren't working
+  useEffect(() => {
+    // Poll every 10 seconds to refresh order list
+    const pollInterval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+    }, 10000);
+
+    return () => clearInterval(pollInterval);
+  }, [queryClient]);
+
   // ==========================================================================
   // Real-time WebSocket Subscriptions
   // ==========================================================================
@@ -487,6 +499,10 @@ export function OrderQueuePage() {
     lastClaimedOrderIdRef.current = orderId; // Track this order as just claimed
 
     try {
+      // Refetch orders right before claiming to ensure we have fresh data
+      // This helps prevent 409 conflicts from stale cache when WebSocket is down
+      await queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+
       await claimMutation.mutateAsync({
         orderId,
         dto: { pickerId: userId },
@@ -502,6 +518,8 @@ export function OrderQueuePage() {
 
         if (backendError.includes('already claimed')) {
           showToast('Order is already claimed by another picker', 'error');
+          // Refresh the order list to show updated status
+          queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
         } else if (backendError.includes('status')) {
           showToast(`Order cannot be claimed: ${backendError}`, 'error');
         } else if (backendError.includes('too many active orders')) {

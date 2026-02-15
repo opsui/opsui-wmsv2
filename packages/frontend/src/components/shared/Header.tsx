@@ -854,18 +854,18 @@ function loadRoleVisibility(): Record<string, boolean> {
   } catch (error) {
     console.error('Failed to load role visibility settings:', error);
   }
-  // Default: all roles visible
+  // Default: all roles visible - organized by ERP priority
   return {
-    picking: true,
-    packing: true,
+    admin: true,
+    sales: true,
+    accounting: true,
     'stock-control': true,
     inwards: true,
-    sales: true,
     production: true,
-    maintenance: true,
+    picking: true,
+    packing: true,
     rma: true,
-    accounting: true,
-    admin: true,
+    maintenance: true,
   };
 }
 
@@ -882,8 +882,50 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
   );
 
   // Use provided availableViews or default to all views (for backwards compatibility)
+  // Organized by ERP business priority
   const dropdownRoleViews = availableViews || [
+    // 1. Admin - System oversight
     { key: 'admin', label: 'Admin View', path: '/dashboard', icon: CogIcon, role: UserRole.ADMIN },
+    // 2. Sales - Revenue generation
+    {
+      key: 'sales',
+      label: 'Sales View',
+      path: '/sales',
+      icon: CurrencyDollarIcon,
+      role: 'SALES' as UserRole,
+    },
+    // 3. Finance - Financial management
+    {
+      key: 'accounting',
+      label: 'Finance View',
+      path: '/accounting',
+      icon: BanknotesIcon,
+      role: 'ACCOUNTING' as UserRole,
+    },
+    // 4. Inventory - Stock management
+    {
+      key: 'stock-control',
+      label: 'Inventory View',
+      path: '/stock-control',
+      icon: CubeIcon,
+      role: UserRole.STOCK_CONTROLLER,
+    },
+    {
+      key: 'inwards',
+      label: 'Receiving View',
+      path: '/inwards',
+      icon: InboxIcon,
+      role: 'INWARDS' as UserRole,
+    },
+    // 5. Production - Manufacturing
+    {
+      key: 'production',
+      label: 'Production View',
+      path: '/production',
+      icon: CogIcon,
+      role: 'PRODUCTION' as UserRole,
+    },
+    // 6. Warehouse - Fulfillment operations
     {
       key: 'picking',
       label: 'Picking View',
@@ -898,33 +940,13 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
       icon: CubeIcon,
       role: UserRole.PACKER,
     },
+    // 7. Support - Returns & Maintenance
     {
-      key: 'stock-control',
-      label: 'Stock Control View',
-      path: '/stock-control',
-      icon: ScaleIcon,
-      role: UserRole.STOCK_CONTROLLER,
-    },
-    {
-      key: 'inwards',
-      label: 'Inwards View',
-      path: '/inwards',
-      icon: InboxIcon,
-      role: 'INWARDS' as UserRole,
-    },
-    {
-      key: 'sales',
-      label: 'Sales View',
-      path: '/sales',
-      icon: CurrencyDollarIcon,
-      role: 'SALES' as UserRole,
-    },
-    {
-      key: 'production',
-      label: 'Production View',
-      path: '/production',
-      icon: CogIcon,
-      role: 'PRODUCTION' as UserRole,
+      key: 'rma',
+      label: 'Returns View',
+      path: '/rma',
+      icon: ArrowPathIcon,
+      role: 'RMA' as UserRole,
     },
     {
       key: 'maintenance',
@@ -932,14 +954,6 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
       path: '/maintenance',
       icon: WrenchScrewdriverIcon,
       role: 'MAINTENANCE' as UserRole,
-    },
-    { key: 'rma', label: 'RMA View', path: '/rma', icon: ArrowPathIcon, role: 'RMA' as UserRole },
-    {
-      key: 'accounting',
-      label: 'Accounting View',
-      path: '/accounting',
-      icon: CurrencyDollarIcon,
-      role: 'ACCOUNTING' as UserRole,
     },
   ];
 
@@ -1174,6 +1188,9 @@ export function Header() {
   const effectiveRole = getEffectiveRole() || user.role;
 
   // Group navigation items into dropdowns
+  // Organization: Modular ERP System - ordered by business priority
+  // 1. Dashboard (Central Overview) -> 2. Sales & CRM -> 3. Finance/Accounting ->
+  // 4. Inventory -> 5. HR & Payroll -> 6. Production -> 7. Reports -> 8. Admin
   const getNavGroups = () => {
     const groups: Array<{
       key: string;
@@ -1188,355 +1205,84 @@ export function Header() {
       }>;
     }> = [];
 
-    // Operations Group - for supervisors and admins (oversight/monitoring)
-    // Only show when effective role is ADMIN or SUPERVISOR
+    // =========================================================================
+    // 1. DASHBOARD - Central Overview (Highest Priority)
+    // =========================================================================
+    // For admins and supervisors - provides business-wide oversight
     if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-      const items: Array<{
+      groups.push({
+        key: 'dashboard',
+        label: 'Dashboard',
+        icon: ChartBarIcon,
+        items: [
+          { key: 'dashboard-main', label: 'Overview', path: '/dashboard', icon: ChartBarIcon },
+          {
+            key: 'exceptions',
+            label: 'Exceptions',
+            path: '/exceptions',
+            icon: ExclamationTriangleIcon,
+          },
+        ],
+      });
+    }
+
+    // =========================================================================
+    // 2. SALES & CRM - Revenue Generation (Critical for Business)
+    // =========================================================================
+    if (
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === UserRole.SUPERVISOR ||
+      effectiveRole === ('SALES' as UserRole)
+    ) {
+      const salesItems: Array<{
         key: string;
         label: string;
         path: string;
         icon: React.ComponentType<{ className?: string }>;
         requiredRole?: UserRole;
       }> = [
-        { key: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: ChartBarIcon },
+        { key: 'sales', label: 'Sales Dashboard', path: '/sales', icon: CurrencyDollarIcon },
         {
-          key: 'exceptions',
-          label: 'Exceptions',
-          path: '/exceptions',
-          icon: ExclamationTriangleIcon,
+          key: 'order-queue',
+          label: 'Order Queue',
+          path: '/orders',
+          icon: QueueListIcon,
+          requiredRole: UserRole.PICKER,
+        },
+        {
+          key: 'shipped-orders',
+          label: 'Shipped Orders',
+          path: '/shipped-orders',
+          icon: TruckIcon,
         },
       ];
-      groups.push({
-        key: 'operations',
-        label: 'Operations',
-        icon: ChartBarIcon,
-        items,
-      });
-    }
 
-    // Picking Group - for pickers (Order Queue is their primary interface)
-    if (effectiveRole === UserRole.PICKER) {
-      groups.push({
-        key: 'picking',
-        label: 'Picking',
-        icon: ClipboardDocumentListIcon,
-        items: [
-          {
-            key: 'order-queue',
-            label: 'Order Queue',
-            path: '/orders',
-            icon: QueueListIcon,
-          },
-        ],
-      });
-    }
-
-    // Inventory Management Group - different items based on role
-    if (
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.STOCK_CONTROLLER ||
-      effectiveRole === UserRole.PICKER
-    ) {
-      const items: Array<{
-        key: string;
-        label: string;
-        path: string;
-        icon: React.ComponentType<{ className?: string }>;
-        requiredRole?: UserRole;
-      }> = [];
-
-      // Stock Controller only sees Cycle Counting
-      if (effectiveRole === UserRole.STOCK_CONTROLLER) {
-        items.push({
-          key: 'cycle-counting',
-          label: 'Cycle Counting',
-          path: '/cycle-counting',
-          icon: ClipboardDocumentListIcon,
-        });
-      } else {
-        // Admin, Supervisor, and Picker see more items
-        // Order Queue - NOT for Stock Controller (handled in Picking group for Pickers)
-        if (effectiveRole !== UserRole.PICKER) {
-          items.push({
-            key: 'order-queue',
-            label: 'Order Queue',
-            path: '/orders',
-            icon: QueueListIcon,
-            requiredRole: UserRole.PICKER, // Switch to picker role when admin clicks
-          });
-        }
-
-        // Stock Control - only for supervisors and pickers (NOT admin - they use role view)
-        if (effectiveRole !== UserRole.ADMIN) {
-          items.push({
-            key: 'stock-control',
-            label: 'Stock Control',
-            path: '/stock-control',
-            icon: ScaleIcon,
-          });
-        }
-
-        // Quick Adjust - only for supervisors and admins
-        if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-          items.push({
-            key: 'quick-adjust',
-            label: 'Quick Adjust',
-            path: '/stock-control?tab=quick-actions',
-            icon: AdjustmentsHorizontalIcon,
-          });
-        }
-
-        // Cycle Counting - available to admins, supervisors, and pickers
-        items.push({
-          key: 'cycle-counting',
-          label: 'Cycle Counting',
-          path: '/cycle-counting',
-          icon: ClipboardDocumentListIcon,
-        });
-
-        // Bin Locations, Location Capacity, Bin Utilization, Quality Control - only for supervisors and admins
-        if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-          items.push({
-            key: 'bin-locations',
-            label: 'Bin Locations',
-            path: '/bin-locations',
-            icon: CubeIcon,
-          });
-          items.push({
-            key: 'location-capacity',
-            label: 'Location Capacity',
-            path: '/location-capacity',
-            icon: ScaleIcon,
-          });
-          items.push({
-            key: 'bin-utilization',
-            label: 'Bin Utilization',
-            path: '/stock-control?tab=analytics',
-            icon: ChartBarIcon,
-          });
-          items.push({
-            key: 'quality-control',
-            label: 'Quality Control',
-            path: '/quality-control',
-            icon: ShieldCheckIcon,
-          });
-        }
-      }
-
-      if (items.length > 0) {
-        groups.push({
-          key: 'inventory',
-          label: 'Inventory',
-          icon: CubeIcon,
-          items,
-        });
-      }
-    }
-
-    // Warehouse Operations Group - for supervisors, admins, and pickers
-    // Shows advanced picking and slotting features
-    if (
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.PICKER
-    ) {
-      const items: Array<{
-        key: string;
-        label: string;
-        path: string;
-        icon: React.ComponentType<{ className?: string }>;
-        requiredRole?: UserRole;
-      }> = [];
-
-      // Product Search - available to pickers, supervisors, admins
-      items.push({
-        key: 'search',
-        label: 'Product Search',
-        path: '/search',
-        icon: MagnifyingGlassIcon,
-      });
-
-      // Wave Picking and Zone Picking - supervisors and admins only
-      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-        items.push(
-          {
-            key: 'waves',
-            label: 'Wave Picking',
-            path: '/waves',
-            icon: QueueListIcon,
-          },
-          {
-            key: 'zones',
-            label: 'Zone Picking',
-            path: '/zones',
-            icon: CubeIcon,
-          }
-        );
-      }
-
-      // Slotting - supervisors and admins only
-      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
-        items.push({
-          key: 'slotting',
-          label: 'Slotting',
-          path: '/slotting',
-          icon: TagIcon,
+      // Add customer-related items for admins and supervisors
+      if (effectiveRole === UserRole.ADMIN || effectiveRole === UserRole.SUPERVISOR) {
+        salesItems.push({
+          key: 'search',
+          label: 'Product Search',
+          path: '/search',
+          icon: MagnifyingGlassIcon,
         });
       }
 
-      // Route Optimization - available to pickers, supervisors, and admins
-      items.push({
-        key: 'route-optimization',
-        label: 'Route Optimization',
-        path: '/route-optimization',
-        icon: MapIcon,
-      });
-
-      // Shipped Orders - available to pickers, supervisors, and admins
-      items.push({
-        key: 'shipped-orders',
-        label: 'Shipped Orders',
-        path: '/shipped-orders',
-        icon: TruckIcon,
-      });
-
-      if (items.length > 0) {
-        groups.push({
-          key: 'warehouse-ops',
-          label: 'Warehouse',
-          icon: BuildingOfficeIcon,
-          items,
-        });
-      }
-    }
-
-    // Packer Operations Group - for packers
-    if (effectiveRole === UserRole.PACKER) {
       groups.push({
-        key: 'packing-ops',
-        label: 'Packing',
-        icon: CubeIcon,
-        items: [
-          {
-            key: 'packing',
-            label: 'Packing Queue',
-            path: '/packing',
-            icon: CubeIcon,
-            requiredRole: UserRole.PACKER,
-          },
-          {
-            key: 'shipped-orders',
-            label: 'Shipped Orders',
-            path: '/shipped-orders',
-            icon: TruckIcon,
-          },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-        ],
-      });
-    }
-
-    // Inwards Operations Group - for inwards/receiving
-    if (effectiveRole === ('INWARDS' as UserRole)) {
-      groups.push({
-        key: 'inwards-ops',
-        label: 'Receiving',
-        icon: InboxIcon,
-        items: [
-          { key: 'inwards', label: 'Inwards/Receiving', path: '/inwards', icon: InboxIcon },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
-        ],
-      });
-    }
-
-    // Sales Operations Group - for sales
-    if (effectiveRole === ('SALES' as UserRole)) {
-      groups.push({
-        key: 'sales-ops',
+        key: 'sales',
         label: 'Sales',
         icon: CurrencyDollarIcon,
-        items: [
-          { key: 'sales', label: 'Sales Dashboard', path: '/sales', icon: CurrencyDollarIcon },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-          {
-            key: 'shipped-orders',
-            label: 'Shipped Orders',
-            path: '/shipped-orders',
-            icon: TruckIcon,
-          },
-        ],
+        items: salesItems,
       });
     }
 
-    // Production Operations Group - for production
-    if (effectiveRole === ('PRODUCTION' as UserRole)) {
-      groups.push({
-        key: 'production-ops',
-        label: 'Production',
-        icon: CogIcon,
-        items: [
-          {
-            key: 'production',
-            label: 'Production Dashboard',
-            path: '/production',
-            icon: ChartBarIcon,
-          },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
-        ],
-      });
-    }
-
-    // Maintenance Operations Group - for maintenance
-    if (effectiveRole === ('MAINTENANCE' as UserRole)) {
-      groups.push({
-        key: 'maintenance-ops',
-        label: 'Maintenance',
-        icon: WrenchScrewdriverIcon,
-        items: [
-          {
-            key: 'maintenance',
-            label: 'Maintenance',
-            path: '/maintenance',
-            icon: WrenchScrewdriverIcon,
-          },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-          { key: 'bin-locations', label: 'Bin Locations', path: '/bin-locations', icon: CubeIcon },
-        ],
-      });
-    }
-
-    // RMA Operations Group - for RMA/returns
-    if (effectiveRole === ('RMA' as UserRole)) {
-      groups.push({
-        key: 'rma-ops',
-        label: 'Returns',
-        icon: ArrowPathIcon,
-        items: [
-          { key: 'rma', label: 'RMA/Returns', path: '/rma', icon: ArrowPathIcon },
-          { key: 'search', label: 'Product Search', path: '/search', icon: MagnifyingGlassIcon },
-          {
-            key: 'shipped-orders',
-            label: 'Shipped Orders',
-            path: '/shipped-orders',
-            icon: TruckIcon,
-          },
-          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon },
-        ],
-      });
-    }
-
-    // Accounting Operations Group - for Accounting
-    // Note: Accounting pages are now in the Admin/Supervisor groups below
-
-    // Accounting Group - for admins and accounting role
-    // Core accounting functions (not reports)
+    // =========================================================================
+    // 3. FINANCE & ACCOUNTING - Financial Management
+    // =========================================================================
     if (effectiveRole === UserRole.ADMIN || effectiveRole === ('ACCOUNTING' as UserRole)) {
       groups.push({
-        key: 'accounting',
-        label: 'Accounting',
-        icon: CurrencyDollarIcon,
+        key: 'finance',
+        label: 'Finance',
+        icon: BanknotesIcon,
         items: [
           {
             key: 'accounting',
@@ -1556,23 +1302,6 @@ export function Header() {
             path: '/accounting/journal-entries',
             icon: ClipboardDocumentListIcon,
           },
-        ],
-      });
-    }
-
-    // Reports Group - for supervisors, admins, and accounting role
-    // All accounting reports and general reports
-    if (
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === ('ACCOUNTING' as UserRole)
-    ) {
-      groups.push({
-        key: 'reports',
-        label: 'Reports',
-        icon: DocumentChartBarIcon,
-        items: [
-          { key: 'reports', label: 'All Reports', path: '/reports', icon: DocumentChartBarIcon },
           {
             key: 'trial-balance',
             label: 'Trial Balance',
@@ -1625,31 +1354,109 @@ export function Header() {
       });
     }
 
-    // Admin Tools Group - for admins, HR Manager, HR Admin
-    // HR and Payroll items are included here since they're admin functions
+    // =========================================================================
+    // 4. INVENTORY - Stock Management
+    // =========================================================================
+    if (
+      effectiveRole === UserRole.SUPERVISOR ||
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === UserRole.STOCK_CONTROLLER ||
+      effectiveRole === UserRole.PICKER ||
+      effectiveRole === ('INWARDS' as UserRole)
+    ) {
+      const inventoryItems: Array<{
+        key: string;
+        label: string;
+        path: string;
+        icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
+      }> = [];
+
+      // Stock Control - core inventory function
+      inventoryItems.push({
+        key: 'stock-control',
+        label: 'Stock Control',
+        path: '/stock-control',
+        icon: ScaleIcon,
+      });
+
+      // Quick Adjust - for supervisors and admins
+      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+        inventoryItems.push({
+          key: 'quick-adjust',
+          label: 'Quick Adjust',
+          path: '/stock-control?tab=quick-actions',
+          icon: AdjustmentsHorizontalIcon,
+        });
+      }
+
+      // Cycle Counting - available to all inventory roles
+      inventoryItems.push({
+        key: 'cycle-counting',
+        label: 'Cycle Counting',
+        path: '/cycle-counting',
+        icon: ClipboardDocumentListIcon,
+      });
+
+      // Inwards/Receiving
+      inventoryItems.push({
+        key: 'inwards',
+        label: 'Receiving',
+        path: '/inwards',
+        icon: InboxIcon,
+      });
+
+      // Advanced inventory features for supervisors and admins
+      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+        inventoryItems.push(
+          {
+            key: 'bin-locations',
+            label: 'Bin Locations',
+            path: '/bin-locations',
+            icon: CubeIcon,
+          },
+          {
+            key: 'location-capacity',
+            label: 'Location Capacity',
+            path: '/location-capacity',
+            icon: ScaleIcon,
+          },
+          {
+            key: 'bin-utilization',
+            label: 'Bin Utilization',
+            path: '/stock-control?tab=analytics',
+            icon: ChartBarIcon,
+          },
+          {
+            key: 'quality-control',
+            label: 'Quality Control',
+            path: '/quality-control',
+            icon: ShieldCheckIcon,
+          }
+        );
+      }
+
+      groups.push({
+        key: 'inventory',
+        label: 'Inventory',
+        icon: CubeIcon,
+        items: inventoryItems,
+      });
+    }
+
+    // =========================================================================
+    // 5. HR & PAYROLL - Human Resources
+    // =========================================================================
     if (
       effectiveRole === UserRole.ADMIN ||
       effectiveRole === ('HR_MANAGER' as UserRole) ||
       effectiveRole === ('HR_ADMIN' as UserRole)
     ) {
-      const adminItems = [
-        { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
-        {
-          key: 'business-rules',
-          label: 'Business Rules',
-          path: '/business-rules',
-          icon: CogIcon,
-        },
-        { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
-      ];
-
-      // Add HR & Payroll items for HR roles and Admin
-      if (
-        effectiveRole === UserRole.ADMIN ||
-        effectiveRole === ('HR_MANAGER' as UserRole) ||
-        effectiveRole === ('HR_ADMIN' as UserRole)
-      ) {
-        adminItems.push(
+      groups.push({
+        key: 'hr',
+        label: 'HR & Payroll',
+        icon: UserGroupIcon,
+        items: [
           { key: 'employees', label: 'Employees', path: '/hr/employees', icon: UserGroupIcon },
           {
             key: 'timesheets',
@@ -1676,31 +1483,230 @@ export function Header() {
             label: 'HR Settings',
             path: '/hr/settings',
             icon: CogIcon,
+          },
+        ],
+      });
+    }
+
+    // =========================================================================
+    // 6. PRODUCTION - Manufacturing Operations
+    // =========================================================================
+    if (
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === UserRole.SUPERVISOR ||
+      effectiveRole === ('PRODUCTION' as UserRole)
+    ) {
+      const productionItems: Array<{
+        key: string;
+        label: string;
+        path: string;
+        icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
+      }> = [
+        {
+          key: 'production',
+          label: 'Production Dashboard',
+          path: '/production',
+          icon: ChartBarIcon,
+        },
+      ];
+
+      // Add more production features for admins and supervisors
+      if (effectiveRole === UserRole.ADMIN || effectiveRole === UserRole.SUPERVISOR) {
+        productionItems.push({
+          key: 'search',
+          label: 'Product Search',
+          path: '/search',
+          icon: MagnifyingGlassIcon,
+        });
+      }
+
+      groups.push({
+        key: 'production',
+        label: 'Production',
+        icon: CogIcon,
+        items: productionItems,
+      });
+    }
+
+    // =========================================================================
+    // 7. WAREHOUSE OPERATIONS - Fulfillment & Logistics
+    // =========================================================================
+    // For pickers, packers, and warehouse staff
+    if (
+      effectiveRole === UserRole.PICKER ||
+      effectiveRole === UserRole.PACKER ||
+      effectiveRole === UserRole.SUPERVISOR ||
+      effectiveRole === UserRole.ADMIN
+    ) {
+      const warehouseItems: Array<{
+        key: string;
+        label: string;
+        path: string;
+        icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
+      }> = [];
+
+      // Picker-specific items
+      if (effectiveRole === UserRole.PICKER) {
+        warehouseItems.push({
+          key: 'order-queue',
+          label: 'Order Queue',
+          path: '/orders',
+          icon: QueueListIcon,
+        });
+      }
+
+      // Packer-specific items
+      if (effectiveRole === UserRole.PACKER) {
+        warehouseItems.push({
+          key: 'packing',
+          label: 'Packing Queue',
+          path: '/packing',
+          icon: CubeIcon,
+          requiredRole: UserRole.PACKER,
+        });
+      }
+
+      // Wave and Zone Picking - supervisors and admins only
+      if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
+        warehouseItems.push(
+          {
+            key: 'waves',
+            label: 'Wave Picking',
+            path: '/waves',
+            icon: QueueListIcon,
+          },
+          {
+            key: 'zones',
+            label: 'Zone Picking',
+            path: '/zones',
+            icon: CubeIcon,
+          },
+          {
+            key: 'slotting',
+            label: 'Slotting',
+            path: '/slotting',
+            icon: TagIcon,
           }
         );
       }
 
+      // Route Optimization - available to all warehouse roles
+      if (effectiveRole !== UserRole.PACKER) {
+        warehouseItems.push({
+          key: 'route-optimization',
+          label: 'Route Optimization',
+          path: '/route-optimization',
+          icon: MapIcon,
+        });
+      }
+
+      // Shipped Orders
+      warehouseItems.push({
+        key: 'shipped-orders',
+        label: 'Shipped Orders',
+        path: '/shipped-orders',
+        icon: TruckIcon,
+      });
+
+      if (warehouseItems.length > 0) {
+        groups.push({
+          key: 'warehouse',
+          label: 'Warehouse',
+          icon: BuildingOfficeIcon,
+          items: warehouseItems,
+        });
+      }
+    }
+
+    // =========================================================================
+    // 8. RETURNS & MAINTENANCE - Support Functions
+    // =========================================================================
+    if (effectiveRole === ('RMA' as UserRole) || effectiveRole === ('MAINTENANCE' as UserRole)) {
+      const supportItems: Array<{
+        key: string;
+        label: string;
+        path: string;
+        icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
+      }> = [];
+
+      if (effectiveRole === ('RMA' as UserRole)) {
+        supportItems.push(
+          { key: 'rma', label: 'RMA/Returns', path: '/rma', icon: ArrowPathIcon },
+          { key: 'stock-control', label: 'Stock Control', path: '/stock-control', icon: ScaleIcon }
+        );
+      }
+
+      if (effectiveRole === ('MAINTENANCE' as UserRole)) {
+        supportItems.push(
+          {
+            key: 'maintenance',
+            label: 'Maintenance',
+            path: '/maintenance',
+            icon: WrenchScrewdriverIcon,
+          },
+          { key: 'bin-locations', label: 'Bin Locations', path: '/bin-locations', icon: CubeIcon }
+        );
+      }
+
+      supportItems.push({
+        key: 'search',
+        label: 'Product Search',
+        path: '/search',
+        icon: MagnifyingGlassIcon,
+      });
+
+      if (supportItems.length > 0) {
+        groups.push({
+          key: 'support',
+          label: 'Support',
+          icon: WrenchScrewdriverIcon,
+          items: supportItems,
+        });
+      }
+    }
+
+    // =========================================================================
+    // 9. REPORTS - Business Intelligence
+    // =========================================================================
+    if (
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === UserRole.SUPERVISOR ||
+      effectiveRole === ('ACCOUNTING' as UserRole)
+    ) {
+      groups.push({
+        key: 'reports',
+        label: 'Reports',
+        icon: DocumentChartBarIcon,
+        items: [
+          { key: 'reports', label: 'All Reports', path: '/reports', icon: DocumentChartBarIcon },
+        ],
+      });
+    }
+
+    // =========================================================================
+    // 10. ADMIN - System Configuration (Lowest Priority)
+    // =========================================================================
+    if (
+      effectiveRole === UserRole.ADMIN ||
+      effectiveRole === ('HR_MANAGER' as UserRole) ||
+      effectiveRole === ('HR_ADMIN' as UserRole)
+    ) {
       groups.push({
         key: 'admin',
         label: 'Admin',
         icon: CogIcon,
-        items: adminItems,
-      });
-    }
-
-    // Production Management - also available to ADMIN and SUPERVISOR
-    if (effectiveRole === UserRole.ADMIN || effectiveRole === UserRole.SUPERVISOR) {
-      groups.push({
-        key: 'production-management',
-        label: 'Production',
-        icon: CogIcon,
         items: [
+          { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
           {
-            key: 'production',
-            label: 'Production Dashboard',
-            path: '/production',
-            icon: ChartBarIcon,
+            key: 'business-rules',
+            label: 'Business Rules',
+            path: '/business-rules',
+            icon: CogIcon,
           },
+          { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
         ],
       });
     }
@@ -1711,8 +1717,50 @@ export function Header() {
   const navGroups = getNavGroups();
 
   // Define all available role views with their paths and icons
+  // Organized by ERP business priority: Admin -> Sales -> Finance -> Inventory -> HR -> Production -> Warehouse -> Support
   const allAvailableRoleViews = [
+    // 1. Admin - System oversight
     { key: 'admin', label: 'Admin View', path: '/dashboard', icon: CogIcon, role: UserRole.ADMIN },
+    // 2. Sales - Revenue generation
+    {
+      key: 'sales',
+      label: 'Sales View',
+      path: '/sales',
+      icon: CurrencyDollarIcon,
+      role: 'SALES' as UserRole,
+    },
+    // 3. Finance - Financial management
+    {
+      key: 'accounting',
+      label: 'Finance View',
+      path: '/accounting',
+      icon: BanknotesIcon,
+      role: 'ACCOUNTING' as UserRole,
+    },
+    // 4. Inventory - Stock management
+    {
+      key: 'stock-control',
+      label: 'Inventory View',
+      path: '/stock-control',
+      icon: CubeIcon,
+      role: UserRole.STOCK_CONTROLLER,
+    },
+    {
+      key: 'inwards',
+      label: 'Receiving View',
+      path: '/inwards',
+      icon: InboxIcon,
+      role: 'INWARDS' as UserRole,
+    },
+    // 5. Production - Manufacturing
+    {
+      key: 'production',
+      label: 'Production View',
+      path: '/production',
+      icon: CogIcon,
+      role: 'PRODUCTION' as UserRole,
+    },
+    // 6. Warehouse - Fulfillment operations
     {
       key: 'picking',
       label: 'Picking View',
@@ -1727,33 +1775,13 @@ export function Header() {
       icon: CubeIcon,
       role: UserRole.PACKER,
     },
+    // 7. Support - Returns & Maintenance
     {
-      key: 'stock-control',
-      label: 'Stock Control View',
-      path: '/stock-control',
-      icon: ScaleIcon,
-      role: UserRole.STOCK_CONTROLLER,
-    },
-    {
-      key: 'inwards',
-      label: 'Inwards View',
-      path: '/inwards',
-      icon: InboxIcon,
-      role: 'INWARDS' as UserRole,
-    },
-    {
-      key: 'sales',
-      label: 'Sales View',
-      path: '/sales',
-      icon: CurrencyDollarIcon,
-      role: 'SALES' as UserRole,
-    },
-    {
-      key: 'production',
-      label: 'Production View',
-      path: '/production',
-      icon: CogIcon,
-      role: 'PRODUCTION' as UserRole,
+      key: 'rma',
+      label: 'Returns View',
+      path: '/rma',
+      icon: ArrowPathIcon,
+      role: 'RMA' as UserRole,
     },
     {
       key: 'maintenance',
@@ -1761,14 +1789,6 @@ export function Header() {
       path: '/maintenance',
       icon: WrenchScrewdriverIcon,
       role: 'MAINTENANCE' as UserRole,
-    },
-    { key: 'rma', label: 'RMA View', path: '/rma', icon: ArrowPathIcon, role: 'RMA' as UserRole },
-    {
-      key: 'accounting',
-      label: 'Accounting View',
-      path: '/accounting',
-      icon: CurrencyDollarIcon,
-      role: 'ACCOUNTING' as UserRole,
     },
   ];
 
@@ -1810,9 +1830,9 @@ export function Header() {
   return (
     <>
       <header className="relative z-50">
-        <div className="w-full">
-          {/* Mobile: Add top spacing for iPhone island effect */}
-          <div className="relative flex items-center h-14 px-4 pt-4 sm:pt-0">
+        <div className="w-full dynamic-island-header">
+          {/* Mobile: Add top spacing for iPhone dynamic island effect */}
+          <div className="relative flex items-center h-14 px-4">
             {/* Left side - Menu button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -1823,8 +1843,8 @@ export function Header() {
               <Bars3Icon className="h-6 w-6" />
             </button>
 
-            {/* Center - Actions Toolbar (iPhone island effect on mobile - floating pill) */}
-            <div className="absolute left-1/2 top-3 sm:top-1/2 -translate-x-1/2 sm:-translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
+            {/* Center - Actions Toolbar (iPhone dynamic island effect on mobile - floating pill) */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
               {/* Theme Toggle */}
               <ThemeToggle />
 

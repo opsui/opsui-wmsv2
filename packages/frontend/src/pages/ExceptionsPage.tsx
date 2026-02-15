@@ -4,41 +4,41 @@
  * Supervisor dashboard for viewing and resolving order exceptions
  */
 
-import { useState, useEffect } from 'react';
 import {
-  useExceptions,
-  useOpenExceptions,
-  useExceptionSummary,
-  useResolveException,
-} from '@/services/api';
-import {
+  Breadcrumb,
+  Button,
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardContent,
   Header,
-  Button,
   Pagination,
-  Breadcrumb,
 } from '@/components/shared';
+import {
+  useExceptions,
+  useExceptionSummary,
+  useOpenExceptions,
+  useResolveException,
+} from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XMarkIcon,
-  ClockIcon,
-  ChevronRightIcon,
-  ExclamationCircleIcon,
-  InformationCircleIcon,
   ArrowUturnLeftIcon,
+  CheckCircleIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
   MagnifyingGlassIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import {
-  ExceptionType,
-  ExceptionStatus,
   ExceptionResolution,
+  ExceptionStatus,
+  ExceptionType,
   type OrderException,
 } from '@opsui/shared';
+import { useEffect, useState } from 'react';
 
 // ============================================================================
 // SUBCOMPONENTS
@@ -502,7 +502,7 @@ export function ExceptionsPage() {
                       placeholder="Search exceptions..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="pl-9 pr-3 py-1.5 w-64 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <Button
