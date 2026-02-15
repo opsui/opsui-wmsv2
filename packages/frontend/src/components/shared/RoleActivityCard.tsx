@@ -234,7 +234,7 @@ function RoleSelectorDropdown({ value, onChange }: RoleSelectorDropdownProps) {
                   />
                   {option.label}
                   {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 shadow-[0_0_6px_currentColor]"></span>
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 indicator-dot"></span>
                   )}
                 </button>
               );
