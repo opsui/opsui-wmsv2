@@ -90,7 +90,8 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-amber-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={280}>
+          {containerWidth > 0 && (
+            <ResponsiveContainer width={containerWidth} height={280}>
             <BarChart data={chartData} layout="vertical">
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -135,6 +136,7 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          )}
         </div>
 
         {/* Summary below chart */}

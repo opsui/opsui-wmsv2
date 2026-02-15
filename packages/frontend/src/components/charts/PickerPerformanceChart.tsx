@@ -99,8 +99,9 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
         <div className="flex justify-center" ref={containerRef}>
-          <ResponsiveContainer
-            width={containerWidth > 0 ? containerWidth : '100%'}
+          {containerWidth > 0 && (
+            <ResponsiveContainer
+            width={containerWidth}
             height={isMobile ? 320 : 300}
           >
             <BarChart
@@ -188,6 +189,7 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
               />
             </BarChart>
           </ResponsiveContainer>
+          )}
         </div>
 
         {/* Performance summary table */}

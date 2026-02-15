@@ -144,7 +144,8 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
 
       {/* Chart */}
       <div className="flex justify-center" ref={containerRef}>
-        <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={280}>
+        {containerWidth > 0 && (
+          <ResponsiveContainer width={containerWidth} height={280}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6B7280" />
@@ -173,6 +174,7 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
             />
           </LineChart>
         </ResponsiveContainer>
+        )}
       </div>
 
       {/* Metadata */}
