@@ -5,24 +5,24 @@
  * Dynamic component that adapts to all available roles in the system
  */
 
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/shared';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/shared';
 import {
-  UsersIcon,
-  CubeIcon,
-  ClipboardDocumentListIcon,
-  DocumentTextIcon,
-  XMarkIcon,
-  ShoppingBagIcon,
-  TruckIcon,
-  CogIcon,
-  TagIcon,
-  WrenchIcon,
   ArrowPathIcon,
   ChevronDownIcon,
+  ClipboardDocumentListIcon,
+  CogIcon,
+  CubeIcon,
+  DocumentTextIcon,
   EyeIcon,
+  ShoppingBagIcon,
+  TagIcon,
+  TruckIcon,
+  UsersIcon,
+  WrenchIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '@opsui/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 // ============================================================================
 // TYPES
@@ -234,7 +234,7 @@ function RoleSelectorDropdown({ value, onChange }: RoleSelectorDropdownProps) {
                   />
                   {option.label}
                   {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 dark:shadow-[0_0_8px_rgba(255,255,255,0.6)] shadow-[0_0_8px_rgba(0,0,0,0.3)] animate-pulse"></span>
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-white bg-gray-900 glow-pulse"></span>
                   )}
                 </button>
               );
