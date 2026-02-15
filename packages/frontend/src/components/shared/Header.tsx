@@ -242,7 +242,7 @@ function MobileMenu({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="bg-white dark:glass-card h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-none">
+        <div className="bg-white dark:bg-gray-900 h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-gray-700">
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
             <div className="flex-1 min-w-0">
@@ -503,7 +503,7 @@ function NavDropdown({
           isOpen
             ? 'opacity-100 scale-y-100 translate-y-0'
             : 'opacity-0 scale-y-95 -translate-y-2 pointer-events-none'
-        } dark:bg-gray-800/95 bg-white/95 dark:border-white/[0.1] border-gray-200 backdrop-blur-sm`}
+        } dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-200`}
       >
         <div className="py-2">
           {items.map((item, index) => {
@@ -809,7 +809,7 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-96 dark:bg-gray-800 bg-white dark:border-white/[0.1] border-primary-200 rounded-xl shadow-xl animate-fade-in">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-96 dark:bg-gray-800 bg-white dark:border-gray-700 border-primary-200 rounded-xl shadow-xl animate-fade-in">
           {/* Header */}
           <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-primary-200 flex items-center justify-between">
             <p className="text-sm font-semibold dark:text-white text-gray-900">Notifications</p>
@@ -1100,7 +1100,7 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-72 dark:bg-gray-800 bg-white dark:border-white/[0.1] border-primary-200 rounded-xl shadow-xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-72 dark:bg-gray-800 bg-white dark:border-gray-700 border-primary-200 rounded-xl shadow-xl animate-fade-in">
           <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-primary-200">
             <p className="text-xs font-semibold dark:text-primary-300 text-primary-600 uppercase tracking-wider">
               Role Views
