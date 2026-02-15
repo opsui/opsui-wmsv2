@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@/components/shared';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 import {
   LineChart,
   Line,
@@ -43,6 +44,7 @@ const PERIOD_OPTIONS = [
 
 export function TurnoverChart({ data, isLoading }: TurnoverChartProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('month');
+  const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   if (isLoading) {
     return (
@@ -85,12 +87,12 @@ export function TurnoverChart({ data, isLoading }: TurnoverChartProps) {
         <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
       </CardHeader>
       <CardContent>
-        <div className="relative flex justify-center">
+        <div className="relative flex justify-center" ref={containerRef}>
           {/* Subtle glow effect behind the chart */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-2xl" />
           </div>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={280}>
             <LineChart
               data={chartData}
               layout="vertical"

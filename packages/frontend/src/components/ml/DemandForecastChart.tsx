@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { ArrowTrendingUpIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { apiClient } from '@/lib/api-client';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface ForecastDataPoint {
   day: number;
@@ -48,6 +49,7 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   useEffect(() => {
     const fetchForecast = async () => {
@@ -141,8 +143,8 @@ export function DemandForecastChart({ skuId, forecastHorizonDays = 14 }: DemandF
       </div>
 
       {/* Chart */}
-      <div className="flex justify-center">
-        <ResponsiveContainer width="100%" height={280}>
+      <div className="flex justify-center" ref={containerRef}>
+        <ResponsiveContainer width={containerWidth > 0 ? containerWidth : '100%'} height={280}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6B7280" />
