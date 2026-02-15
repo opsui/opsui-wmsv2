@@ -344,7 +344,7 @@ function MobileMenu({
                           />
                           <span className="font-medium">{item.label}</span>
                           {isActive && (
-                            <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-400 bg-primary-600 glow-pulse" />
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-400 bg-primary-600 shadow-[0_0_6px_currentColor]" />
                           )}
                         </button>
                       );
@@ -533,7 +533,7 @@ const NavDropdown = memo(function NavDropdown({
                 />
                 <span className="flex-1 text-left">{item.label}</span>
                 {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full dark:bg-primary-300 bg-primary-600 glow-pulse"></span>
+                  <span className="w-1.5 h-1.5 rounded-full dark:bg-primary-300 bg-primary-600 shadow-[0_0_6px_currentColor]"></span>
                 )}
               </button>
             );
@@ -1135,7 +1135,7 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
                         <span className="text-xs dark:text-primary-300 text-primary-600">
                           Current View
                         </span>
-                        <span className="w-1.5 h-1.5 rounded-full dark:bg-primary-300 bg-primary-600 glow-pulse"></span>
+                        <span className="w-1.5 h-1.5 rounded-full dark:bg-primary-300 bg-primary-600 shadow-[0_0_6px_currentColor]"></span>
                       </div>
                     )}
                   </div>

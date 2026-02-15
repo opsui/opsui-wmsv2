@@ -491,18 +491,23 @@
     will-change: background-color;
   }
 
-  /* Smooth glow animation for active indicator dots - no opacity flickering */
+  /* Static glow effect for active indicator dots - no animation flickering */
   .glow-pulse {
-    animation: glow-pulse 2s ease-in-out infinite;
-    will-change: box-shadow;
+    box-shadow: 0 0 8px currentColor;
   }
 
-  @keyframes glow-pulse {
+  /* Smooth scale animation for active indicator dots - GPU accelerated */
+  .glow-pulse-animate {
+    animation: glow-scale 2s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  @keyframes glow-scale {
     0%, 100% {
-      box-shadow: 0 0 6px currentColor;
+      transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 12px currentColor, 0 0 18px currentColor;
+      transform: scale(1.2);
     }
   }
 }
