@@ -154,15 +154,42 @@ function MobileMenu({
     }, 300);
   };
 
+  // Store scroll position to restore after closing
+  const scrollPositionRef = useRef(0);
+
   useEffect(() => {
-    // Prevent body scroll when menu is open
+    // Prevent body scroll when menu is open - with iOS Safari workaround
     if (isOpen) {
+      // Store current scroll position
+      scrollPositionRef.current = window.scrollY;
+
+      // iOS Safari requires position: fixed to prevent background scrolling
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
+      document.body.style.width = '100%';
     } else {
+      // Restore body styles
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
+      document.body.style.width = '';
+
+      // Restore scroll position
+      window.scrollTo(0, scrollPositionRef.current);
     }
     return () => {
+      // Cleanup on unmount
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
+      document.body.style.width = '';
     };
   }, [isOpen]);
 
@@ -202,6 +229,8 @@ function MobileMenu({
         }`}
         onClick={handleClose}
         onMouseLeave={handleMouseLeave}
+        onTouchMove={e => e.preventDefault()}
+        style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         aria-hidden="true"
       />
 

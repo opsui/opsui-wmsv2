@@ -42,6 +42,7 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
   const isMobile = containerWidth < 500;
   const isSmall = containerWidth < 400;
 
+  // Show skeleton while loading
   if (isLoading) {
     return (
       <Card variant="glass">
@@ -98,7 +99,10 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
       </CardHeader>
       <CardContent className="p-3 sm:p-6">
         <div className="flex justify-center" ref={containerRef}>
-          <ResponsiveContainer width="100%" height={isMobile ? 320 : 300}>
+          <ResponsiveContainer
+            width={containerWidth > 0 ? containerWidth : '100%'}
+            height={isMobile ? 320 : 300}
+          >
             <BarChart
               data={chartData}
               margin={chartMargin}

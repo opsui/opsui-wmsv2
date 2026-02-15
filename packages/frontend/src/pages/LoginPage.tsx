@@ -95,15 +95,22 @@ export function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-responsive-xl font-bold text-white tracking-tight">OpsUI</h1>
-          <p className="mt-2 text-gray-400 text-responsive-sm">Warehouse Management System</p>
+          <h1 className="text-responsive-xl font-bold dark:text-white text-gray-900 tracking-tight">
+            OpsUI
+          </h1>
+          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
+            Warehouse Management System
+          </p>
         </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div className="glass-card rounded-xl p-6 sm:p-8 space-y-6 card-hover">
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-300 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold dark:text-gray-300 text-gray-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -114,10 +121,10 @@ export function LoginPage() {
                 onChange={handleChange}
                 autoComplete="email"
                 required
-                className={`mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] text-white placeholder:text-gray-500 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300 ${
+                className={`mobile-input block w-full px-4 py-3 border rounded-xl dark:bg-white/[0.05] bg-gray-50 dark:text-white text-gray-900 placeholder:text-gray-500 dark:focus:bg-white/[0.08] focus:bg-gray-100 focus:shadow-glow transition-all duration-300 ${
                   errors.email
                     ? 'border-red-500 focus:border-red-500'
-                    : 'border-white/[0.08] focus:border-primary-500/50'
+                    : 'dark:border-white/[0.08] border-gray-300 focus:border-primary-500/50'
                 }`}
                 placeholder="Enter your email"
               />
@@ -125,7 +132,10 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-300 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold dark:text-gray-300 text-gray-700 mb-2"
+              >
                 Password
               </label>
               <input
@@ -136,10 +146,10 @@ export function LoginPage() {
                 onChange={handleChange}
                 autoComplete="current-password"
                 required
-                className={`mobile-input block w-full px-4 py-3 border rounded-xl bg-white/[0.05] text-white placeholder:text-gray-500 focus:bg-white/[0.08] focus:shadow-glow transition-all duration-300 ${
+                className={`mobile-input block w-full px-4 py-3 border rounded-xl dark:bg-white/[0.05] bg-gray-50 dark:text-white text-gray-900 placeholder:text-gray-500 dark:focus:bg-white/[0.08] focus:bg-gray-100 focus:shadow-glow transition-all duration-300 ${
                   errors.password
                     ? 'border-red-500 focus:border-red-500'
-                    : 'border-white/[0.08] focus:border-primary-500/50'
+                    : 'dark:border-white/[0.08] border-gray-300 focus:border-primary-500/50'
                 }`}
                 placeholder="Enter your password"
               />

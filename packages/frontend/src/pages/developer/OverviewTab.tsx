@@ -10,27 +10,27 @@
  * - SQL Query
  */
 
-import { useState, useEffect } from 'react';
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  Button,
-  Input,
   ConfirmDialog,
+  Input,
 } from '@/components/shared';
 import { apiClient } from '@/lib/api-client';
 import {
-  ServerIcon,
-  DocumentTextIcon,
-  TrashIcon,
   ArrowPathIcon,
-  PlusIcon,
-  PencilIcon,
   CheckCircleIcon,
+  DocumentTextIcon,
+  PencilIcon,
+  PlusIcon,
+  ServerIcon,
+  TrashIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
 
 interface DatabaseStats {
   orders: number;
@@ -451,9 +451,9 @@ export function OverviewTab({ onAddMessage }: OverviewTabProps) {
               <p className="text-gray-500 dark:text-gray-400 text-sm">No test users found</p>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {testUsers.map(user => (
+                {testUsers.map((user, index) => (
                   <div
-                    key={user.user_id}
+                    key={user.user_id || `test-user-${index}`}
                     className={`flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 ${
                       !user.is_active ? 'opacity-60 bg-gray-50 dark:bg-gray-800/50' : ''
                     }`}
