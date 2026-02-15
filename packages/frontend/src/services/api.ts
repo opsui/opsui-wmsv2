@@ -910,11 +910,18 @@ export const useAssignableUsers = (
   });
 };
 
-export const useAllRoleAssignments = () => {
+export const useAllRoleAssignments = (options?: { enabled?: boolean }) => {
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
+  const effectiveRole = getEffectiveRole();
+  const isAdmin = isAuthenticated && effectiveRole === UserRole.ADMIN;
+
   return useQuery({
     queryKey: ['role-assignments', 'all'],
     queryFn: roleAssignmentApi.getAllAssignments,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    // Only fetch if user is authenticated and effectively admin (endpoint requires admin access)
+    enabled: isAdmin && (options?.enabled ?? true),
   });
 };
 

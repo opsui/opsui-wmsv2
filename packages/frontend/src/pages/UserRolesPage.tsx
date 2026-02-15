@@ -4,44 +4,44 @@
  * Admin page for managing user role assignments and creating users
  */
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  CardHeader,
-  CardContent,
-  Button,
-  UserRoleBadge,
-  Pagination,
-  ConfirmDialog,
   Breadcrumb,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  ConfirmDialog,
   Header,
+  Pagination,
+  UserRoleBadge,
 } from '@/components/shared';
+import UserModal, { UserFormData } from '@/components/users/UserModal';
 import {
-  UserGroupIcon,
-  UserIcon,
-  KeyIcon,
-  CheckIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  PencilIcon,
-  TrashIcon,
-  LockClosedIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline';
-import { UserRole, User } from '@opsui/shared';
-import { playSound } from '@/stores';
-import {
-  useUsers,
-  useGrantRole,
-  useRevokeRole,
   useAllRoleAssignments,
   useCreateUser,
-  useUpdateUser,
   useDeleteUser,
+  useGrantRole,
   useRestoreUser,
+  useRevokeRole,
+  useUpdateUser,
+  useUsers,
 } from '@/services/api';
-import UserModal, { UserFormData } from '@/components/users/UserModal';
+import { playSound } from '@/stores';
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  KeyIcon,
+  LockClosedIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserGroupIcon,
+  UserIcon,
+} from '@heroicons/react/24/outline';
+import { User, UserRole } from '@opsui/shared';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // MAIN PAGE

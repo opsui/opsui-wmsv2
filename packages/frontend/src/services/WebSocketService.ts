@@ -49,11 +49,18 @@ class WebSocketService {
   private isManualDisconnect = false;
   private eventHandlers: Map<keyof ServerToClientEvents, Set<EventHandler<any>>> = new Map();
   private hasLoggedMaxAttempts = false;
+  // Track active connections to handle React StrictMode double-invocation
+  private connectionId = 0;
+  private activeConnectionId = 0;
 
   /**
    * Connect to WebSocket server
    */
   connect(): void {
+    // Increment connection ID to track this connection attempt
+    const currentConnectionId = ++this.connectionId;
+    this.activeConnectionId = currentConnectionId;
+
     if (this.socket?.connected) {
       console.warn('[WebSocket] Already connected');
       return;
@@ -67,6 +74,8 @@ class WebSocketService {
 
     // Reset the max attempts log flag when manually connecting
     this.hasLoggedMaxAttempts = false;
+    // Reset manual disconnect flag when connecting
+    this.isManualDisconnect = false;
 
     try {
       const wsUrl =
@@ -84,7 +93,7 @@ class WebSocketService {
       });
 
       this.setupEventHandlers();
-      console.log('[WebSocket] Connecting...', { url: wsUrl });
+      console.log('[WebSocket] Connecting...', { url: wsUrl, connectionId: currentConnectionId });
     } catch (error) {
       console.error('[WebSocket] Connection error', error);
     }
@@ -241,8 +250,30 @@ class WebSocketService {
 
   /**
    * Disconnect from WebSocket server
+   * @param force - If true, disconnect immediately. If false, defer disconnect to handle StrictMode.
    */
-  disconnect(): void {
+  disconnect(force = false): void {
+    const currentConnectionId = this.connectionId;
+
+    // In development mode with React StrictMode, effects are double-invoked.
+    // This causes connect -> disconnect -> connect cycle rapidly.
+    // We use a small defer to allow the reconnect to cancel the disconnect.
+    if (!force && !this.isManualDisconnect) {
+      // Use a small timeout to allow reconnection to cancel this disconnect
+      setTimeout(() => {
+        // Only disconnect if no new connection was started and this wasn't a manual disconnect
+        if (this.connectionId === currentConnectionId && !this.isManualDisconnect && this.socket) {
+          console.log('[WebSocket] Disconnecting (deferred cleanup)', {
+            connectionId: currentConnectionId,
+          });
+          this.socket.disconnect();
+          this.socket = null;
+          this.eventHandlers.clear();
+        }
+      }, 100);
+      return;
+    }
+
     this.isManualDisconnect = true;
     this.hasLoggedMaxAttempts = false;
 
@@ -254,7 +285,7 @@ class WebSocketService {
     // Clear all event handlers
     this.eventHandlers.clear();
 
-    console.log('[WebSocket] Disconnected manually');
+    console.log('[WebSocket] Disconnected manually', { connectionId: currentConnectionId });
   }
 
   /**
