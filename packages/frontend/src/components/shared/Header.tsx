@@ -50,7 +50,7 @@ import type { Notification } from '@opsui/shared';
 import { UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserRoleBadge } from './index';
 
@@ -94,7 +94,7 @@ interface MobileMenuProps {
   onHoverOff?: () => void;
 }
 
-function MobileMenu({
+const MobileMenu = memo(function MobileMenu({
   isOpen,
   onClose,
   navGroups,
@@ -384,7 +384,7 @@ function MobileMenu({
       </div>
     </>
   );
-}
+});
 
 // ============================================================================
 // DROPDOWN COMPONENT
@@ -405,7 +405,7 @@ interface NavDropdownProps {
   onNavigateWithRole?: (path: string, role?: UserRole) => void;
 }
 
-function NavDropdown({
+const NavDropdown = memo(function NavDropdown({
   label,
   icon: Icon,
   items,
@@ -542,7 +542,7 @@ function NavDropdown({
       </div>
     </div>
   );
-}
+});
 
 // ============================================================================
 // NOTIFICATION PREVIEW COMPONENT

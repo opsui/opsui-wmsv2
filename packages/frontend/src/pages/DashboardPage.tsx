@@ -60,13 +60,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { OrderStatus, UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 // ============================================================================
 // SUBCOMPONENTS
 // ============================================================================
 
-function MetricCard({
+const MetricCard = memo(function MetricCard({
   title,
   value,
   icon: Icon,
@@ -116,7 +116,7 @@ function MetricCard({
       </Card>
     </div>
   );
-}
+});
 
 // Admin Orders Modal Component
 function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

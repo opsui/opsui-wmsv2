@@ -2,74 +2,93 @@
  * App component
  *
  * Main application with routing and authentication
+ * Uses lazy loading for route-based code splitting
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useAuthStore, useUIStore } from '@/stores';
 import { NotificationCenter, ToastProvider, ErrorBoundary } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
 import webSocketService from '@/services/WebSocketService';
-import {
-  LoginPage,
-  DashboardPage,
-  OrderQueuePage,
-  PickingPage,
-  PackingQueuePage,
-  PackingPage,
-  ShippedOrdersPage,
-  StockControlPage,
-  InwardsGoodsPage,
-  ProductionPage,
-  MaintenancePage,
-  RMAPage,
-  SalesPage,
-  AdminSettingsPage,
-  UserRolesPage,
-  RolesManagementPage,
-  ExceptionsPage,
-  CycleCountingPage,
-  CycleCountDetailPage,
-  LocationCapacityPage,
-  BinLocationsPage,
-  QualityControlPage,
-  BusinessRulesPage,
-  ReportsPage,
-  IntegrationsPage,
-  ProductSearchPage,
-  WavePickingPage,
-  ZonePickingPage,
-  SlottingPage,
-  RouteOptimizationPage,
-  DeveloperPage,
-  NotificationPreferencesPage,
-  NotificationsPage,
-  MobileScanningPage,
-  ScheduleManagementPage,
-  RootCauseAnalysisPage,
-  AccountingPage,
-  ChartOfAccountsPage,
-  JournalEntriesPage,
-  TrialBalancePage,
-  BalanceSheetPage,
-  CashFlowPage,
-  ARAgingPage,
-  APAgingPage,
-  BankReconciliationPage,
-  FixedAssetsPage,
-  BudgetingPage,
-  NotFoundPage,
-  // HR & Payroll pages
-  EmployeesPage,
-  TimesheetsPage,
-  PayrollDashboardPage,
-  PayrollProcessingPage,
-  PayrollRunsPage,
-  LeaveRequestsPage,
-  HRSettingsPage,
-} from '@/pages';
 import { UserRole } from '@opsui/shared';
+
+// ============================================================================
+// LAZY LOADED PAGE COMPONENTS
+// ============================================================================
+
+const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const OrderQueuePage = lazy(() => import('@/pages/OrderQueuePage').then(m => ({ default: m.OrderQueuePage })));
+const PickingPage = lazy(() => import('@/pages/PickingPage').then(m => ({ default: m.PickingPage })));
+const PackingQueuePage = lazy(() => import('@/pages/PackingQueuePage').then(m => ({ default: m.PackingQueuePage })));
+const PackingPage = lazy(() => import('@/pages/PackingPage').then(m => ({ default: m.PackingPage })));
+const ShippedOrdersPage = lazy(() => import('@/pages/ShippedOrdersPage').then(m => ({ default: m.ShippedOrdersPage })));
+const StockControlPage = lazy(() => import('@/pages/StockControlPage').then(m => ({ default: m.StockControlPage })));
+const InwardsGoodsPage = lazy(() => import('@/pages/InwardsGoodsPage').then(m => ({ default: m.InwardsGoodsPage })));
+const ProductionPage = lazy(() => import('@/pages/ProductionPage').then(m => ({ default: m.ProductionPage })));
+const MaintenancePage = lazy(() => import('@/pages/MaintenancePage').then(m => ({ default: m.MaintenancePage })));
+const RMAPage = lazy(() => import('@/pages/RMAPage').then(m => ({ default: m.RMAPage })));
+const SalesPage = lazy(() => import('@/pages/SalesPage').then(m => ({ default: m.SalesPage })));
+const AdminSettingsPage = lazy(() => import('@/pages/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })));
+const UserRolesPage = lazy(() => import('@/pages/UserRolesPage').then(m => ({ default: m.UserRolesPage })));
+const RolesManagementPage = lazy(() => import('@/pages/RolesManagementPage').then(m => ({ default: m.RolesManagementPage })));
+const ExceptionsPage = lazy(() => import('@/pages/ExceptionsPage').then(m => ({ default: m.ExceptionsPage })));
+const CycleCountingPage = lazy(() => import('@/pages/CycleCountingPage').then(m => ({ default: m.CycleCountingPage })));
+const CycleCountDetailPage = lazy(() => import('@/pages/CycleCountDetailPage').then(m => ({ default: m.CycleCountDetailPage })));
+const LocationCapacityPage = lazy(() => import('@/pages/LocationCapacityPage').then(m => ({ default: m.LocationCapacityPage })));
+const BinLocationsPage = lazy(() => import('@/pages/BinLocationsPage').then(m => ({ default: m.BinLocationsPage })));
+const QualityControlPage = lazy(() => import('@/pages/QualityControlPage').then(m => ({ default: m.QualityControlPage })));
+const BusinessRulesPage = lazy(() => import('@/pages/BusinessRulesPage').then(m => ({ default: m.BusinessRulesPage })));
+const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const IntegrationsPage = lazy(() => import('@/pages/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
+const ProductSearchPage = lazy(() => import('@/pages/ProductSearchPage').then(m => ({ default: m.ProductSearchPage })));
+const WavePickingPage = lazy(() => import('@/pages/WavePickingPage').then(m => ({ default: m.WavePickingPage })));
+const ZonePickingPage = lazy(() => import('@/pages/ZonePickingPage').then(m => ({ default: m.ZonePickingPage })));
+const SlottingPage = lazy(() => import('@/pages/SlottingPage').then(m => ({ default: m.SlottingPage })));
+const RouteOptimizationPage = lazy(() => import('@/pages/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })));
+const DeveloperPage = lazy(() => import('@/pages/DeveloperPage').then(m => ({ default: m.DeveloperPage })));
+const NotificationPreferencesPage = lazy(() => import('@/pages/NotificationPreferencesPage').then(m => ({ default: m.NotificationPreferencesPage })));
+const NotificationsPage = lazy(() => import('@/pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const MobileScanningPage = lazy(() => import('@/pages/MobileScanningPage').then(m => ({ default: m.MobileScanningPage })));
+const ScheduleManagementPage = lazy(() => import('@/pages/ScheduleManagementPage').then(m => ({ default: m.ScheduleManagementPage })));
+const RootCauseAnalysisPage = lazy(() => import('@/pages/RootCauseAnalysisPage').then(m => ({ default: m.RootCauseAnalysisPage })));
+const AccountingPage = lazy(() => import('@/pages/AccountingPage').then(m => ({ default: m.AccountingPage })));
+const ChartOfAccountsPage = lazy(() => import('@/pages/ChartOfAccountsPage').then(m => ({ default: m.ChartOfAccountsPage })));
+const JournalEntriesPage = lazy(() => import('@/pages/JournalEntriesPage').then(m => ({ default: m.JournalEntriesPage })));
+const TrialBalancePage = lazy(() => import('@/pages/TrialBalancePage').then(m => ({ default: m.TrialBalancePage })));
+const BalanceSheetPage = lazy(() => import('@/pages/BalanceSheetPage').then(m => ({ default: m.BalanceSheetPage })));
+const CashFlowPage = lazy(() => import('@/pages/CashFlowPage').then(m => ({ default: m.CashFlowPage })));
+const ARAgingPage = lazy(() => import('@/pages/ARAgingPage').then(m => ({ default: m.ARAgingPage })));
+const APAgingPage = lazy(() => import('@/pages/APAgingPage').then(m => ({ default: m.APAgingPage })));
+const BankReconciliationPage = lazy(() => import('@/pages/BankReconciliationPage').then(m => ({ default: m.BankReconciliationPage })));
+const FixedAssetsPage = lazy(() => import('@/pages/FixedAssetsPage').then(m => ({ default: m.FixedAssetsPage })));
+const BudgetingPage = lazy(() => import('@/pages/BudgetingPage').then(m => ({ default: m.BudgetingPage })));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+// HR & Payroll pages
+const EmployeesPage = lazy(() => import('@/pages/EmployeesPage').then(m => ({ default: m.EmployeesPage })));
+const TimesheetsPage = lazy(() => import('@/pages/TimesheetsPage').then(m => ({ default: m.TimesheetsPage })));
+const PayrollDashboardPage = lazy(() => import('@/pages/PayrollDashboardPage').then(m => ({ default: m.PayrollDashboardPage })));
+const PayrollProcessingPage = lazy(() => import('@/pages/PayrollProcessingPage').then(m => ({ default: m.PayrollProcessingPage })));
+const PayrollRunsPage = lazy(() => import('@/pages/PayrollRunsPage').then(m => ({ default: m.PayrollRunsPage })));
+const LeaveRequestsPage = lazy(() => import('@/pages/LeaveRequestsPage').then(m => ({ default: m.LeaveRequestsPage })));
+const HRSettingsPage = lazy(() => import('@/pages/HRSettingsPage').then(m => ({ default: m.HRSettingsPage })));
+
+// ============================================================================
+// PAGE LOADING FALLBACK
+// ============================================================================
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center dark:bg-gray-900 bg-gray-50">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+        <p className="text-sm dark:text-gray-400 text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 // Create a client
 const queryClient = new QueryClient({
@@ -172,7 +191,7 @@ function ProtectedRoute({
     }
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
 // ============================================================================
@@ -209,7 +228,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
 // ============================================================================
