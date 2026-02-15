@@ -1811,7 +1811,8 @@ export function Header() {
     <>
       <header className="relative z-50">
         <div className="w-full">
-          <div className="relative flex items-center h-14 px-4">
+          {/* Mobile: Add top spacing for iPhone island effect */}
+          <div className="relative flex items-center h-14 px-4 pt-4 sm:pt-0">
             {/* Left side - Menu button */}
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -1822,8 +1823,8 @@ export function Header() {
               <Bars3Icon className="h-6 w-6" />
             </button>
 
-            {/* Center - Actions Toolbar (absolutely positioned for true center) */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+            {/* Center - Actions Toolbar (iPhone island effect on mobile - floating pill) */}
+            <div className="absolute left-1/2 top-3 sm:top-1/2 -translate-x-1/2 sm:-translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
               {/* Theme Toggle */}
               <ThemeToggle />
 
