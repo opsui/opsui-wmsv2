@@ -3,10 +3,10 @@
  *
  * Returns a ref to attach to the container and the current width.
  * This is useful for charts that need explicit numeric dimensions.
- * Includes retry mechanism for mobile devices where layout may be delayed.
+ * Includes retry mechanism and fallback for mobile devices.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
   React.RefObject<T | null>,
@@ -18,65 +18,61 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
   // Use refs for cleanup tracking to prevent race conditions
   const isMountedRef = useRef(true);
   const retryCountRef = useRef(0);
-  const measurementInProgressRef = useRef(false);
+  const hasGivenUpRef = useRef(false);
 
-  const maxRetries = 10;
+  const maxRetries = 15; // More retries for mobile
+  const retryDelay = 50; // Base delay between retries
 
   useEffect(() => {
     isMountedRef.current = true;
     retryCountRef.current = 0;
-    measurementInProgressRef.current = false;
+    hasGivenUpRef.current = false;
 
     const container = containerRef.current;
-    if (!container) return;
+
+    // Helper to get a reasonable fallback width
+    const getFallbackWidth = (): number => {
+      // Try to use window width with some padding
+      if (typeof window !== 'undefined') {
+        // Use 90% of viewport width, max 800px, with minimum 300px
+        const viewportWidth = window.innerWidth;
+        return Math.max(300, Math.min(800, viewportWidth * 0.9));
+      }
+      return 400; // Default fallback
+    };
+
+    // If container doesn't exist, use fallback immediately
+    if (!container) {
+      setWidth(getFallbackWidth());
+      return;
+    }
 
     let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    let rafId: number | null = null;
 
-    const updateWidth = useCallback(() => {
-      if (!isMountedRef.current) return false;
+    const attemptMeasurement = () => {
+      if (!isMountedRef.current) return;
 
       const rect = container.getBoundingClientRect();
+
       if (rect.width > 0) {
         setWidth(rect.width);
         retryCountRef.current = 0;
-        measurementInProgressRef.current = false;
-        return true;
-      }
-      return false;
-    }, [container]);
-
-    const attemptMeasurement = useCallback(() => {
-      if (!isMountedRef.current || measurementInProgressRef.current) return;
-
-      measurementInProgressRef.current = true;
-      const success = updateWidth();
-
-      if (!success && retryCountRef.current < maxRetries && isMountedRef.current) {
+        hasGivenUpRef.current = false;
+      } else if (retryCountRef.current < maxRetries) {
+        // Retry with exponential backoff
         retryCountRef.current++;
-        measurementInProgressRef.current = false;
-
-        // Stagger retries: use timeout every 3rd attempt for mobile reliability
-        if (retryCountRef.current % 3 === 0) {
-          retryTimeoutId = setTimeout(() => {
-            if (isMountedRef.current) {
-              rafId = requestAnimationFrame(attemptMeasurement);
-            }
-          }, 100);
-        } else {
-          rafId = requestAnimationFrame(attemptMeasurement);
-        }
-      } else {
-        measurementInProgressRef.current = false;
+        const delay = retryDelay * Math.min(retryCountRef.current, 5);
+        retryTimeoutId = setTimeout(attemptMeasurement, delay);
+      } else if (!hasGivenUpRef.current) {
+        // Give up and use fallback - but only once
+        hasGivenUpRef.current = true;
+        console.warn('[useContainerWidth] Container measurement failed, using fallback width');
+        setWidth(getFallbackWidth());
       }
-    }, [updateWidth]);
+    };
 
-    // Start measurement after a small delay to allow layout to settle
-    rafId = requestAnimationFrame(() => {
-      if (isMountedRef.current) {
-        attemptMeasurement();
-      }
-    });
+    // Start measurement immediately
+    attemptMeasurement();
 
     // Use ResizeObserver for responsive updates
     let resizeObserver: ResizeObserver | null = null;
@@ -89,37 +85,47 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
           if (newWidth > 0) {
             setWidth(newWidth);
             retryCountRef.current = 0;
+            hasGivenUpRef.current = false;
           }
         }
       });
 
       resizeObserver.observe(container);
     } catch {
-      // ResizeObserver not supported, fall back to window resize
-      console.warn('ResizeObserver not supported');
+      // ResizeObserver not supported
     }
+
+    // Also listen for window resize as backup
+    const handleWindowResize = () => {
+      if (!isMountedRef.current) return;
+
+      const rect = container.getBoundingClientRect();
+      if (rect.width > 0) {
+        setWidth(rect.width);
+      } else if (hasGivenUpRef.current) {
+        // Update fallback on resize
+        setWidth(getFallbackWidth());
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
 
     // Cleanup function
     return () => {
       isMountedRef.current = false;
 
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
       if (retryTimeoutId !== null) {
         clearTimeout(retryTimeoutId);
-        retryTimeoutId = null;
       }
       if (resizeObserver) {
         resizeObserver.disconnect();
-        resizeObserver = null;
       }
+      window.removeEventListener('resize', handleWindowResize);
 
-      // Reset width on unmount to ensure fresh measurement on remount
+      // Reset state for next mount
       setWidth(0);
     };
-  }, []); // Empty deps - only run once per mount
+  }, []);
 
   return [containerRef, width];
 }
