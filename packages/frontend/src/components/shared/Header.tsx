@@ -94,7 +94,7 @@ interface MobileMenuProps {
   onHoverOff?: () => void;
 }
 
-const MobileMenu = memo(function MobileMenu({
+function MobileMenu({
   isOpen,
   onClose,
   navGroups,
@@ -384,7 +384,7 @@ const MobileMenu = memo(function MobileMenu({
       </div>
     </>
   );
-});
+}
 
 // ============================================================================
 // DROPDOWN COMPONENT
