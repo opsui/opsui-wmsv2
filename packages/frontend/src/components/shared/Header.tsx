@@ -4,57 +4,55 @@
  * Application header with user info, navigation links, and logout button
  */
 
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore, useUIStore } from '@/stores';
 import {
   useLogout,
-  useSetActiveRole,
+  useMarkAsRead,
   useMyRoles,
   useNotifications,
-  useMarkAsRead,
+  useNotificationStats,
+  useSetActiveRole,
 } from '@/services/api';
-import { Button, UserRoleBadge } from './index';
-import type { Notification } from '@opsui/shared';
-import {
-  ArrowRightStartOnRectangleIcon,
-  CubeIcon,
-  ChartBarIcon,
-  DocumentChartBarIcon,
-  ExclamationTriangleIcon,
-  ClipboardDocumentListIcon,
-  ScaleIcon,
-  ShieldCheckIcon,
-  CogIcon,
-  ServerIcon,
-  ChevronDownIcon,
-  InboxIcon,
-  WrenchScrewdriverIcon,
-  ArrowPathIcon,
-  BuildingOfficeIcon,
-  CurrencyDollarIcon,
-  Bars3Icon,
-  XMarkIcon,
-  UserGroupIcon,
-  QueueListIcon,
-  TagIcon,
-  AdjustmentsHorizontalIcon,
-  BellIcon,
-  MagnifyingGlassIcon,
-  ExclamationCircleIcon,
-  MapIcon,
-  TruckIcon,
-  UserIcon,
-  CalendarDaysIcon,
-  BanknotesIcon,
-  SunIcon,
-  MoonIcon,
-} from '@heroicons/react/24/outline';
-import { UserRole } from '@opsui/shared';
-import { useState, useRef, useEffect } from 'react';
-import { useNotificationStats } from '@/services/api';
-import { formatDistanceToNow } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
 import webSocketService from '@/services/WebSocketService';
+import { useAuthStore, useUIStore } from '@/stores';
+import {
+  AdjustmentsHorizontalIcon,
+  ArrowPathIcon,
+  ArrowRightStartOnRectangleIcon,
+  BanknotesIcon,
+  Bars3Icon,
+  BellIcon,
+  BuildingOfficeIcon,
+  CalendarDaysIcon,
+  ChartBarIcon,
+  ChevronDownIcon,
+  ClipboardDocumentListIcon,
+  CogIcon,
+  CubeIcon,
+  CurrencyDollarIcon,
+  DocumentChartBarIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InboxIcon,
+  MagnifyingGlassIcon,
+  MapIcon,
+  MoonIcon,
+  QueueListIcon,
+  ScaleIcon,
+  ServerIcon,
+  ShieldCheckIcon,
+  SunIcon,
+  TagIcon,
+  TruckIcon,
+  UserGroupIcon,
+  WrenchScrewdriverIcon,
+} from '@heroicons/react/24/outline';
+import type { Notification } from '@opsui/shared';
+import { UserRole } from '@opsui/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { UserRoleBadge } from './index';
 
 // ============================================================================
 // MOBILE MENU COMPONENT
@@ -72,6 +70,7 @@ interface MobileMenuProps {
       label: string;
       path: string;
       icon: React.ComponentType<{ className?: string }>;
+      requiredRole?: UserRole;
     }>;
   }>;
   userName: string;
@@ -80,7 +79,7 @@ interface MobileMenuProps {
   userId: string;
   getEffectiveRole: () => string | null;
   onLogout: () => void;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, requiredRole?: UserRole) => void;
   hasRoleSwitcher: boolean;
   allRoleViews: Array<{
     key: string;
@@ -92,6 +91,7 @@ interface MobileMenuProps {
   onRoleSwitch: (role: any, path: string) => void;
   currentPath: string;
   currentSearch: string;
+  onHoverOff?: () => void;
 }
 
 function MobileMenu({
@@ -110,8 +110,49 @@ function MobileMenu({
   onRoleSwitch,
   currentPath,
   currentSearch,
+  onHoverOff,
 }: MobileMenuProps) {
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle open/close animations
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure transition plays on open
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 10);
+      setIsClosing(false);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+  }, [isOpen]);
+
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsClosing(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsClosing(true);
+    closeTimeoutRef.current = setTimeout(() => {
+      onHoverOff?.();
+    }, 300);
+  };
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
 
   useEffect(() => {
     // Prevent body scroll when menu is open
@@ -125,51 +166,62 @@ function MobileMenu({
     };
   }, [isOpen]);
 
-  const handleNavigate = (path: string) => {
-    onNavigate(path);
-    onClose();
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleNavigate = (path: string, requiredRole?: UserRole) => {
+    onNavigate(path, requiredRole);
+    handleClose();
   };
 
   const handleLogout = () => {
     onLogout();
-    onClose();
+    handleClose();
   };
 
   const handleRoleClick = async (role: any, path: string) => {
     onRoleSwitch(role, path);
     setShowRoleSwitcher(false);
-    onClose();
+    handleClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !isClosing) return null;
 
   return (
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity duration-300 ${
+          isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
+        }`}
+        onClick={handleClose}
+        onMouseLeave={handleMouseLeave}
         aria-hidden="true"
       />
 
-      {/* Mobile Menu Drawer */}
-      <div className="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] md:hidden animate-slide-in-from-right">
+      {/* Menu Drawer */}
+      <div
+        className={`fixed inset-y-0 left-0 z-[110] w-80 max-w-[85vw] transform transition-transform duration-300 ease-out ${
+          isClosing || !isVisible ? '-translate-x-full' : 'translate-x-0'
+        }`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="bg-white dark:glass-card h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-none">
           {/* Header */}
-          <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4 flex items-center justify-between">
+          <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                 {userName}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="ml-4 p-2 dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 touch-target"
-              aria-label="Close menu"
-            >
-              <XMarkIcon className="h-6 w-6" />
-            </button>
           </div>
 
           {/* Navigation */}
@@ -209,7 +261,7 @@ function MobileMenu({
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 touch-target ${
                             isActive
                               ? 'dark:bg-primary-600 bg-primary-600 text-white'
-                              : 'dark:bg-white/[0.05] dark:hover:bg-white/[0.08] bg-gray-100 dark:text-gray-700 text-gray-900 hover:bg-gray-200'
+                              : 'dark:bg-white/[0.05] dark:hover:bg-white/[0.08] bg-gray-100 dark:text-white text-gray-900 hover:bg-gray-200'
                           }`}
                         >
                           <ViewIcon className="h-5 w-5 flex-shrink-0" />
@@ -251,7 +303,7 @@ function MobileMenu({
                       return (
                         <button
                           key={item.key}
-                          onClick={() => handleNavigate(item.path)}
+                          onClick={() => handleNavigate(item.path, item.requiredRole)}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 touch-target ${
                             isActive
                               ? 'dark:text-white text-primary-700 dark:bg-primary-600/20 bg-primary-100 dark:border-primary-500/30 border-primary-300 border'
@@ -317,12 +369,21 @@ interface NavDropdownProps {
     label: string;
     path: string;
     icon: React.ComponentType<{ className?: string }>;
+    requiredRole?: UserRole; // Optional role required for this item
   }>;
   currentPath: string;
   currentSearch: string;
+  onNavigateWithRole?: (path: string, role?: UserRole) => void;
 }
 
-function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: NavDropdownProps) {
+function NavDropdown({
+  label,
+  icon: Icon,
+  items,
+  currentPath,
+  currentSearch,
+  onNavigateWithRole,
+}: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -374,27 +435,36 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
     }, 50);
   };
 
+  const handleItemClick = (item: { path: string; requiredRole?: UserRole }) => {
+    if (onNavigateWithRole && item.requiredRole) {
+      onNavigateWithRole(item.path, item.requiredRole);
+    } else {
+      navigate(item.path);
+    }
+    setIsOpen(false);
+  };
+
   return (
     <div
-      className="relative z-[9999]"
+      className="relative z-[9999] min-w-0 shrink"
       ref={dropdownRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+        className={`flex items-center gap-1.5 px-2 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
           hasActiveItem
             ? 'dark:text-white text-primary-700 dark:bg-white/[0.08] bg-primary-100 dark:border-white/[0.15] border-primary-300 shadow-md dark:shadow-white/[0.1] shadow-primary-200'
             : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 dark:border-transparent border-transparent dark:hover:border-white/[0.1] hover:border-primary-200'
         }`}
       >
         <Icon
-          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'scale-110' : ''}`}
+          className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'scale-110' : ''}`}
         />
-        {label}
+        <span className="truncate">{label}</span>
         <ChevronDownIcon
-          className={`h-3 w-3 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-3 w-3 flex-shrink-0 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -413,10 +483,7 @@ function NavDropdown({ label, icon: Icon, items, currentPath, currentSearch }: N
             return (
               <button
                 key={item.key}
-                onClick={() => {
-                  navigate(item.path);
-                  setIsOpen(false);
-                }}
+                onClick={() => handleItemClick(item)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
                   isActive
                     ? 'dark:text-white text-primary-700 dark:bg-white/[0.08] bg-primary-100'
@@ -612,14 +679,14 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group"
+      className="p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {isDark ? (
-        <SunIcon className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+        <SunIcon className="h-5 w-5 flex-shrink-0 group-hover:rotate-90 transition-transform duration-300" />
       ) : (
-        <MoonIcon className="h-5 w-5 group-hover:-rotate-12 transition-transform duration-300" />
+        <MoonIcon className="h-5 w-5 flex-shrink-0 group-hover:-rotate-12 transition-transform duration-300" />
       )}
     </button>
   );
@@ -632,6 +699,7 @@ function ThemeToggle() {
 function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   const canSupervise = useAuthStore(state => state.canSupervise);
   const queryClient = useQueryClient();
@@ -664,18 +732,46 @@ function NotificationPanel() {
     };
   }, [queryClient]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Show notification panel for all authenticated users
 
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    // Delay before closing to allow mouse to reach the dropdown
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
+  };
+
   return (
-    <div className="relative z-[9999]" ref={dropdownRef}>
+    <div
+      className="relative z-[9999] min-w-0 shrink"
+      ref={dropdownRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group hover:scale-110 ${
+        className={`relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group hover:scale-110 ${
           isOpen ? 'dark:bg-white/[0.08] bg-primary-100' : ''
         }`}
         aria-label={`Notifications: ${unreadCount} unread`}
       >
-        <BellIcon className="h-5 w-5 transition-transform duration-200" />
+        <BellIcon className="h-5 w-5 flex-shrink-0 transition-transform duration-200" />
         {unreadCount > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full animate-pulse shadow-lg dark:shadow-error-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -684,7 +780,7 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-96 dark:bg-gray-800 bg-white dark:border-white/[0.1] border-primary-200 rounded-xl shadow-xl animate-fade-in">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-96 dark:bg-gray-800 bg-white dark:border-white/[0.1] border-primary-200 rounded-xl shadow-xl animate-fade-in">
           {/* Header */}
           <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-primary-200 flex items-center justify-between">
             <p className="text-sm font-semibold dark:text-white text-gray-900">Notifications</p>
@@ -938,25 +1034,25 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
 
   return (
     <div
-      className="relative z-[9999]"
+      className="relative z-[9999] min-w-0 shrink"
       ref={dropdownRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl px-4 py-2.5 transition-all duration-300 group dark:border border border-transparent dark:border-transparent dark:hover:border-white/[0.1] hover:border-primary-200"
+        className="flex items-center gap-1.5 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg px-2 py-1.5 transition-all duration-300 group"
       >
         <div className="text-left min-w-0">
-          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-primary-800 transition-colors whitespace-nowrap">
+          <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-primary-800 transition-colors truncate max-w-[100px] xl:max-w-[120px]">
             {userName}
           </h2>
-          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-primary-600 transition-colors truncate max-w-[150px]">
+          <p className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-primary-600 transition-colors truncate hidden xl:block max-w-[100px]">
             {userEmail}
           </p>
         </div>
         <ChevronDownIcon
-          className={`h-4 w-4 dark:text-gray-400 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 flex-shrink-0 dark:text-gray-400 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-600 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -979,14 +1075,14 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
                   className={`w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all duration-200 group ${
                     isActive
                       ? 'dark:text-white text-primary-700 dark:bg-white/[0.08] bg-primary-100'
-                      : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50'
+                      : 'dark:text-white text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50'
                   }`}
                 >
                   <ViewIcon
                     className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
                       isActive
                         ? 'dark:text-primary-300 text-primary-600'
-                        : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-500'
+                        : 'dark:text-gray-300 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-500'
                     }`}
                   />
                   <div className="text-left flex-1">
@@ -1009,11 +1105,11 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
           <div className="dark:border-t border-t dark:border-gray-700 border-primary-200">
             <button
               onClick={handleSettingsClick}
-              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 transition-all duration-200 group"
+              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium dark:text-white text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 transition-all duration-200 group"
             >
-              <CogIcon className="h-4 w-4 flex-shrink-0 transition-colors duration-200 dark:text-gray-500 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-500" />
+              <CogIcon className="h-4 w-4 flex-shrink-0 transition-colors duration-200 dark:text-gray-300 text-gray-500 dark:group-hover:text-primary-300 group-hover:text-primary-500" />
               <span className="flex-1 text-left">Role Settings</span>
-              <span className="text-xs dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-primary-500">
+              <span className="text-xs dark:text-gray-400 text-gray-500 dark:group-hover:text-gray-300 group-hover:text-primary-500">
                 {roleViews.length} / {dropdownRoleViews.length} visible
               </span>
             </button>
@@ -1088,6 +1184,7 @@ export function Header() {
         label: string;
         path: string;
         icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
       }>;
     }> = [];
 
@@ -1099,6 +1196,7 @@ export function Header() {
         label: string;
         path: string;
         icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
       }> = [
         { key: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: ChartBarIcon },
         {
@@ -1145,6 +1243,7 @@ export function Header() {
         label: string;
         path: string;
         icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
       }> = [];
 
       // Stock Controller only sees Cycle Counting
@@ -1164,16 +1263,19 @@ export function Header() {
             label: 'Order Queue',
             path: '/orders',
             icon: QueueListIcon,
+            requiredRole: UserRole.PICKER, // Switch to picker role when admin clicks
           });
         }
 
-        // Stock Control - available to admins, supervisors, and pickers
-        items.push({
-          key: 'stock-control',
-          label: 'Stock Control',
-          path: '/stock-control',
-          icon: ScaleIcon,
-        });
+        // Stock Control - only for supervisors and pickers (NOT admin - they use role view)
+        if (effectiveRole !== UserRole.ADMIN) {
+          items.push({
+            key: 'stock-control',
+            label: 'Stock Control',
+            path: '/stock-control',
+            icon: ScaleIcon,
+          });
+        }
 
         // Quick Adjust - only for supervisors and admins
         if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
@@ -1244,6 +1346,7 @@ export function Header() {
         label: string;
         path: string;
         icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
       }> = [];
 
       // Product Search - available to pickers, supervisors, admins
@@ -1315,7 +1418,13 @@ export function Header() {
         label: 'Packing',
         icon: CubeIcon,
         items: [
-          { key: 'packing', label: 'Packing Queue', path: '/packing', icon: CubeIcon },
+          {
+            key: 'packing',
+            label: 'Packing Queue',
+            path: '/packing',
+            icon: CubeIcon,
+            requiredRole: UserRole.PACKER,
+          },
           {
             key: 'shipped-orders',
             label: 'Shipped Orders',
@@ -1687,132 +1796,69 @@ export function Header() {
     }
   };
 
+  // Handle navigation with optional role switching for admin users
+  const handleNavigateWithRole = async (path: string, requiredRole?: UserRole) => {
+    // If user is admin and a specific role is required, switch to that role first
+    if (requiredRole && user?.role === UserRole.ADMIN && requiredRole !== getEffectiveRole()) {
+      console.log('[Header] Admin navigating to role-specific page, switching to:', requiredRole);
+      await handleRoleSwitch(requiredRole, path);
+    } else {
+      navigate(path);
+    }
+  };
+
   return (
     <>
-      <header className="bg-white dark:bg-white/[0.02] border-b border-gray-200 dark:border-white/[0.08] shadow-sm dark:shadow-none relative z-50">
+      <header className="relative z-50">
         <div className="w-full">
-          <div className="relative flex items-center h-16 px-4 sm:px-6 lg:px-8">
-            {/* Left side - User info - prevent squishing */}
-            <div className="flex items-center flex-shrink-0 min-w-0">
-              {/* Mobile menu button */}
+          <div className="relative flex items-center h-14 px-4">
+            {/* Left side - Menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              onMouseEnter={() => setMobileMenuOpen(true)}
+              className="p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors"
+              aria-label="Open menu"
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
+
+            {/* Center - Actions Toolbar (absolutely positioned for true center) */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
+              {/* Notification Panel */}
+              <NotificationPanel />
+
+              {/* Divider */}
+              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+
+              {/* Settings button */}
               <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors flex-shrink-0"
-                aria-label="Open menu"
+                onClick={() => navigate('/role-settings?section=role-switcher')}
+                className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg transition-colors"
+                title="Settings"
+                aria-label="Settings"
               >
-                <Bars3Icon className="h-6 w-6" />
+                <CogIcon className="h-5 w-5" />
               </button>
 
-              {/* User info - Desktop */}
-              <div className="hidden md:flex items-center -ml-2 flex-shrink-0">
-                {hasRoleSwitcher ? (
-                  <>
-                    <RoleViewDropdown
-                      userName={user.name}
-                      userEmail={user.email}
-                      availableViews={allRoleViews}
-                    />
-                    <div className="ml-1 flex-shrink-0">
-                      <UserRoleBadge
-                        role={(getEffectiveRole() || user.role) as UserRole}
-                        userId={user.userId}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="min-w-0">
-                      <h2 className="text-sm font-semibold dark:text-white text-black tracking-tight truncate">
-                        {user.name}
-                      </h2>
-                      <p className="text-xs dark:text-gray-400 text-gray-600 truncate">
-                        {user.email}
-                      </p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <UserRoleBadge role={user.role} userId={user.userId} />
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Center - Navigation dropdowns */}
-            {navGroups.length > 0 && (
-              <nav className="hidden md:flex items-center space-x-0.5 justify-center flex-shrink px-2">
-                {navGroups.map(group => (
-                  <NavDropdown
-                    key={group.key}
-                    label={group.label}
-                    icon={group.icon}
-                    items={group.items}
-                    currentPath={location.pathname}
-                    currentSearch={location.search}
-                  />
-                ))}
-              </nav>
-            )}
-
-            {/* Right side - Actions - prevent squishing */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto">
-              {/* Theme Toggle */}
-              <div className="flex-shrink-0">
-                <ThemeToggle />
-              </div>
-
-              {/* Notification Panel - for all authenticated users */}
-              <div className="flex-shrink-0">
-                <NotificationPanel />
-              </div>
-
-              {/* Report a Problem button - for non-admin users */}
-              {getEffectiveRole() !== UserRole.ADMIN && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate('/exceptions?report=true')}
-                  className="hidden sm:flex items-center gap-2 flex-shrink-0"
-                  title="Report a Problem"
-                >
-                  <ExclamationCircleIcon className="h-4 w-4" />
-                  <span className="hidden lg:inline">Report Problem</span>
-                </Button>
-              )}
-
-              {/* Settings button - accessible to all authenticated users */}
-              <div className="flex-shrink-0">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate('/role-settings?section=role-switcher')}
-                  className="p-2"
-                  title="Settings"
-                  aria-label="Settings"
-                >
-                  <CogIcon className="h-5 w-5" />
-                </Button>
-              </div>
-
               {/* Logout button */}
-              <div className="flex-shrink-0">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleLogout}
-                  disabled={logoutMutation.isPending}
-                  className="p-2"
-                  title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                  aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                >
-                  <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-                </Button>
-              </div>
+              <button
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+                className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+              >
+                <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu */}
+      {/* Navigation Menu */}
       <MobileMenu
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
@@ -1823,12 +1869,13 @@ export function Header() {
         userId={user.userId}
         getEffectiveRole={getEffectiveRole}
         onLogout={handleLogout}
-        onNavigate={navigate}
+        onNavigate={handleNavigateWithRole}
         hasRoleSwitcher={hasRoleSwitcher}
         allRoleViews={allRoleViews}
         onRoleSwitch={handleRoleSwitch}
         currentPath={location.pathname}
         currentSearch={location.search}
+        onHoverOff={() => setMobileMenuOpen(false)}
       />
     </>
   );
