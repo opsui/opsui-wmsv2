@@ -199,11 +199,11 @@ export default {
     maxRequests: getEnvNumber('RATE_LIMIT_MAX_REQUESTS', 100),
   },
 
-  // CORS - Allow both localhost and production domain
+  // CORS - Allow both localhost and production domain (with and without www)
   cors: {
     origin: (
-      process.env.CORS_ORIGIN ||
-      'https://opsui.app,http://localhost:5173,http://localhost:3000,http://localhost:5174'
+      process.env.CORS_ORIGIN ??
+      'https://opsui.app,https://www.opsui.app,http://localhost:5173,http://localhost:3000,http://localhost:5174'
     )
       .split(',')
       .map(String)
