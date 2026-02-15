@@ -2,7 +2,7 @@
  * Skeleton Component
  *
  * Loading skeleton placeholders for better UX during content loading
- * Uses smooth animations to prevent jittering
+ * Uses smooth animations to prevent jittering and flickering
  */
 
 export function Skeleton({
@@ -26,7 +26,7 @@ export function Skeleton({
   };
 
   const animationClasses = {
-    pulse: 'animate-pulse',
+    pulse: 'skeleton-pulse',
     wave: 'animate-shimmer',
     none: '',
   };
@@ -38,7 +38,7 @@ export function Skeleton({
 
   return (
     <div
-      className={`bg-gray-700/50 ${variantClasses[variant]} ${animationClasses[animation]} animate-fade-in ${className}`}
+      className={`bg-gray-700/50 ${variantClasses[variant]} ${animationClasses[animation]} ${className}`}
       style={style}
     />
   );

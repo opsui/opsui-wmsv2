@@ -447,6 +447,16 @@
     }
   }
 
+  /* Smooth skeleton pulse - uses subtle background change instead of opacity */
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      background-color: rgba(55, 65, 81, 0.5);
+    }
+    50% {
+      background-color: rgba(75, 85, 99, 0.6);
+    }
+  }
+
   .animate-in {
     animation: fade-in 0.3s ease-out;
   }
@@ -473,6 +483,12 @@
     );
     background-size: 1000px 100%;
     background-repeat: no-repeat;
+  }
+
+  /* Override Tailwind's animate-pulse for skeletons to prevent flickering */
+  .skeleton-pulse {
+    animation: skeleton-pulse 2s ease-in-out infinite;
+    will-change: background-color;
   }
 }
 
