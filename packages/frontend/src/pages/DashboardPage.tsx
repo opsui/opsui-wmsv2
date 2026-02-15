@@ -31,6 +31,7 @@ import {
   useOrderUpdates,
   usePickUpdates,
 } from '@/hooks/useWebSocket';
+import { useDebouncedInvalidation } from '@/hooks/useDebouncedInvalidation';
 import { formatDate } from '@/lib/utils';
 import {
   useAllPackersPerformance,
@@ -275,6 +276,7 @@ function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 export function DashboardPage() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const { invalidateQueued } = useDebouncedInvalidation(500);
   const canSupervise = useAuthStore(state => state.canSupervise);
   // Check if user has admin/supervisor as their BASE role (not active role)
   // This is important for features like audit logs that require actual permissions
@@ -313,16 +315,17 @@ export function DashboardPage() {
   useOrderUpdates(
     (data: { orderId: string; pickerId?: string; pickerName?: string; reason?: string }) => {
       // Refresh dashboard metrics and role activity for all order events
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['role-activity'] });
+      // Using debounced invalidation to batch multiple updates
+      invalidateQueued('dashboard-metrics');
+      invalidateQueued('role-activity');
       // Only invalidate order status breakdown on status changes (not on every pick/pack event)
       // This prevents the chart from flashing constantly
       if (data.reason) {
         // Order was cancelled/completed - status definitely changed
-        queryClient.invalidateQueries({ queryKey: ['order-status-breakdown'] });
+        invalidateQueued('order-status-breakdown');
       }
-      queryClient.invalidateQueries({ queryKey: ['throughput'] });
-      queryClient.invalidateQueries({ queryKey: ['top-skus'] });
+      invalidateQueued('throughput');
+      invalidateQueued('top-skus');
 
       // Show toast for specific events
       if (data.reason) {
@@ -341,16 +344,17 @@ export function DashboardPage() {
   // Subscribe to pick updates to refresh performance metrics
   usePickUpdates(() => {
     // Refresh performance data and metrics for all pick events
-    queryClient.invalidateQueries({ queryKey: ['picker-performance'] });
-    queryClient.invalidateQueries({ queryKey: ['packer-performance'] });
-    queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-    queryClient.invalidateQueries({ queryKey: ['role-activity'] });
+    // Using debounced invalidation to batch with other updates
+    invalidateQueued('picker-performance');
+    invalidateQueued('packer-performance');
+    invalidateQueued('dashboard-metrics');
+    invalidateQueued('role-activity');
   });
 
   // Subscribe to inventory updates
   useInventoryUpdates((data: { sku: string; binLocation?: string; quantity?: number }) => {
     // Refresh inventory-related metrics
-    queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+    invalidateQueued('dashboard-metrics');
 
     // Show alert toast for low stock
     if (data.quantity !== undefined && data.quantity > 0) {

@@ -131,10 +131,10 @@
 
   @keyframes backgroundShift {
     0%, 100% {
-      transform: rotate(0deg) scale(1.5);
+      opacity: 0.8;
     }
     50% {
-      transform: rotate(180deg) scale(1.6);
+      opacity: 1;
     }
   }
 
@@ -221,8 +221,8 @@
      ============================================ */
   .glass-card {
     background: rgba(59, 130, 246, 0.18);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(96, 165, 250, 0.35);
     box-shadow: none;
     transition: all 0.3s ease;
@@ -235,8 +235,8 @@
 
   html.light .glass-card {
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   }
@@ -1053,4 +1053,74 @@ html.light .bg-card {
 
 html.light .bg-surface {
   background: #ffffff;
+}
+
+/* ============================================
+   PERFORMANCE MODE - Low-end device optimizations
+   Automatically disables GPU-intensive effects
+   ============================================ */
+
+html.performance-mode,
+html.performance-mode * {
+  /* Disable all backdrop-filter blur effects - very GPU intensive */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Disable background animations */
+html.performance-mode body,
+html.performance-mode body::before,
+html.performance-mode body::after {
+  animation: none !important;
+  background-attachment: scroll !important;
+}
+
+/* Simplify glass-card to solid backgrounds */
+html.performance-mode .glass-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+html.light.performance-mode .glass-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Reduce shadow complexity */
+html.performance-mode .glass-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Disable mobile header blur */
+html.performance-mode .mobile-fixed-header,
+html.performance-mode .mobile-sticky-header {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Disable modal backdrop blur */
+html.performance-mode .modal-backdrop,
+html.performance-mode [class*='backdrop-blur'] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Reduce glow shadows */
+html.performance-mode .shadow-glow,
+html.performance-mode .shadow-glow-lg {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Disable shimmer animations */
+html.performance-mode .animate-shimmer {
+  animation: none !important;
+}
+
+/* Reduce transition durations for snappier feel */
+html.performance-mode *,
+html.performance-mode *::before,
+html.performance-mode *::after {
+  transition-duration: 0.1s !important;
+  animation-duration: 0.1s !important;
 }

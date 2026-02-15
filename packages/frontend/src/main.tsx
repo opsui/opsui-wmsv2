@@ -8,6 +8,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { initializePerformanceMode } from './stores/uiStore';
+
+// ==============================================================================
+// PERFORMANCE INITIALIZATION
+// ==============================================================================
+
+// Initialize performance mode before app mounts to prevent visual flash
+initializePerformanceMode();
 
 // ==============================================================================
 // APP MOUNTING

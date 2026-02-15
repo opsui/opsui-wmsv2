@@ -50,7 +50,7 @@ import type { Notification } from '@opsui/shared';
 import { UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserRoleBadge } from './index';
 
@@ -1194,7 +1194,7 @@ export function Header() {
   // Determine if user should see role switcher (admin OR has additional granted roles)
   const hasRoleSwitcher = user?.role === UserRole.ADMIN || additionalRoles.length > 0;
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       // Call backend logout endpoint to clear current_view and active orders
       await logoutMutation.mutateAsync();
@@ -1207,7 +1207,7 @@ export function Header() {
       // Navigate to login page
       navigate('/login');
     }
-  };
+  }, [logoutMutation, logout, navigate]);
 
   if (!user) {
     return null;
@@ -1743,7 +1743,8 @@ export function Header() {
     return groups;
   };
 
-  const navGroups = getNavGroups();
+  // Memoize navigation groups to prevent recalculation on every render
+  const navGroups = useMemo(() => getNavGroups(), [effectiveRole, additionalRoles]);
 
   // Define all available role views with their paths and icons
   // Organized by ERP business priority: Admin -> Sales -> Finance -> Inventory -> HR -> Production -> Warehouse -> Support
@@ -1830,31 +1831,37 @@ export function Header() {
 
   const allRoleViews = allAvailableRoleViews.filter(view => availableRoles.includes(view.role));
 
-  const handleRoleSwitch = async (role: UserRole, path: string) => {
-    console.log('[Header] Switching to role:', role, 'path:', path);
-    try {
-      // Optimistically update local state immediately for instant UI feedback
-      setActiveRole(role);
+  const handleRoleSwitch = useCallback(
+    async (role: UserRole, path: string) => {
+      console.log('[Header] Switching to role:', role, 'path:', path);
+      try {
+        // Optimistically update local state immediately for instant UI feedback
+        setActiveRole(role);
 
-      await setActiveRoleMutation.mutateAsync(role);
-      console.log('[Header] Role set successfully, navigating to:', path);
-      navigate(path);
-      console.log('[Header] Navigation called');
-    } catch (error) {
-      console.error('[Header] Failed to switch role:', error);
-    }
-  };
+        await setActiveRoleMutation.mutateAsync(role);
+        console.log('[Header] Role set successfully, navigating to:', path);
+        navigate(path);
+        console.log('[Header] Navigation called');
+      } catch (error) {
+        console.error('[Header] Failed to switch role:', error);
+      }
+    },
+    [setActiveRole, setActiveRoleMutation, navigate]
+  );
 
   // Handle navigation with optional role switching for admin users
-  const handleNavigateWithRole = async (path: string, requiredRole?: UserRole) => {
-    // If user is admin and a specific role is required, switch to that role first
-    if (requiredRole && user?.role === UserRole.ADMIN && requiredRole !== getEffectiveRole()) {
-      console.log('[Header] Admin navigating to role-specific page, switching to:', requiredRole);
-      await handleRoleSwitch(requiredRole, path);
-    } else {
-      navigate(path);
-    }
-  };
+  const handleNavigateWithRole = useCallback(
+    async (path: string, requiredRole?: UserRole) => {
+      // If user is admin and a specific role is required, switch to that role first
+      if (requiredRole && user?.role === UserRole.ADMIN && requiredRole !== getEffectiveRole()) {
+        console.log('[Header] Admin navigating to role-specific page, switching to:', requiredRole);
+        await handleRoleSwitch(requiredRole, path);
+      } else {
+        navigate(path);
+      }
+    },
+    [user?.role, getEffectiveRole, handleRoleSwitch, navigate]
+  );
 
   return (
     <>

@@ -13,6 +13,7 @@ import { persist } from 'zustand/middleware';
 
 type SoundEnabled = boolean;
 type Theme = 'light' | 'dark' | 'auto';
+type PerformanceMode = 'auto' | 'low' | 'normal';
 
 interface UIState {
   // Sound settings
@@ -23,6 +24,11 @@ interface UIState {
   // Theme settings
   theme: Theme;
   setTheme: (theme: Theme) => void;
+
+  // Performance mode settings
+  performanceMode: PerformanceMode;
+  setPerformanceMode: (mode: PerformanceMode) => void;
+  effectivePerformanceMode: () => 'low' | 'normal';
 
   // Sidebar state
   sidebarOpen: boolean;
@@ -62,6 +68,7 @@ export const useUIStore = create<UIState>()(
       // Initial state
       soundEnabled: true,
       theme: 'auto',
+      performanceMode: 'auto',
       sidebarOpen: true,
       scanInputFocused: false,
       notifications: [],
@@ -78,6 +85,25 @@ export const useUIStore = create<UIState>()(
       // Theme actions
       setTheme: (theme: Theme) => {
         set({ theme });
+      },
+
+      // Performance mode actions
+      setPerformanceMode: (mode: PerformanceMode) => {
+        set({ performanceMode: mode });
+        // Apply or remove performance class on html element
+        const effectiveMode = mode === 'auto' ? detectLowEndDevice() ? 'low' : 'normal' : mode;
+        if (effectiveMode === 'low') {
+          document.documentElement.classList.add('performance-mode');
+        } else {
+          document.documentElement.classList.remove('performance-mode');
+        }
+      },
+      effectivePerformanceMode: () => {
+        const mode = get().performanceMode;
+        if (mode === 'auto') {
+          return detectLowEndDevice() ? 'low' : 'normal';
+        }
+        return mode;
       },
 
       // Sidebar actions
@@ -137,6 +163,7 @@ export const useUIStore = create<UIState>()(
       partialize: state => ({
         soundEnabled: state.soundEnabled,
         theme: state.theme,
+        performanceMode: state.performanceMode,
         sidebarOpen: state.sidebarOpen,
       }),
     }
@@ -149,12 +176,76 @@ export const useUIStore = create<UIState>()(
 
 export const selectSoundEnabled = (state: UIState) => state.soundEnabled;
 export const selectTheme = (state: UIState) => state.theme;
+export const selectPerformanceMode = (state: UIState) => state.performanceMode;
 export const selectSidebarOpen = (state: UIState) => state.sidebarOpen;
 export const selectNotifications = (state: UIState) => state.notifications;
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/**
+ * Detect if the device is low-end and would benefit from performance mode
+ * Checks CPU cores, device memory, and GPU capabilities
+ */
+function detectLowEndDevice(): boolean {
+  // Check CPU cores - less than 4 suggests older hardware
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+    return true;
+  }
+
+  // Check device memory (Chrome/Edge only) - less than 4GB
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  if (nav.deviceMemory && nav.deviceMemory < 4) {
+    return true;
+  }
+
+  // Check for known low-end GPUs via WebGL
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (gl) {
+      const debugInfo = (gl as WebGLRenderingContext).getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        const renderer = (gl as WebGLRenderingContext).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        // Intel HD 4000 series (4th gen and older), other old integrated graphics
+        if (/Intel.*HD\s*(Graphics)?\s*(4|3|2)\d{3}/i.test(renderer)) {
+          return true;
+        }
+        // Intel UHD 600 series (low-end)
+        if (/Intel.*UHD.*Graphics\s*6\d{2}/i.test(renderer)) {
+          return true;
+        }
+        // Generic software renderers
+        if (/SwiftShader|llvmpipe|Software/i.test(renderer)) {
+          return true;
+        }
+      }
+    }
+  } catch {
+    // WebGL not available, assume low-end
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Initialize performance mode based on stored preference or auto-detection
+ * Should be called once when the app loads
+ */
+export function initializePerformanceMode(): void {
+  const state = useUIStore.getState();
+  const mode = state.performanceMode;
+
+  const effectiveMode = mode === 'auto' ? (detectLowEndDevice() ? 'low' : 'normal') : mode;
+
+  if (effectiveMode === 'low') {
+    document.documentElement.classList.add('performance-mode');
+  } else {
+    document.documentElement.classList.remove('performance-mode');
+  }
+}
 
 /**
  * Play a sound notification

@@ -82,8 +82,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          // Core React ecosystem
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Data fetching
           'query-vendor': ['@tanstack/react-query'],
+          // Charts (large library ~200KB)
+          'recharts-vendor': ['recharts'],
+          // Date utilities
+          'date-fns-vendor': ['date-fns'],
+          // State management
+          'zustand-vendor': ['zustand'],
+          // Shared utilities
+          'shared-vendor': ['@opsui/shared'],
         },
       },
     },
