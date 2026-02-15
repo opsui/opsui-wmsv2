@@ -6,7 +6,7 @@
  * Includes retry mechanism for mobile devices where layout may be delayed.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
   React.RefObject<T | null>,
@@ -14,84 +14,112 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
 ] {
   const containerRef = useRef<T>(null);
   const [width, setWidth] = useState(0);
+
+  // Use refs for cleanup tracking to prevent race conditions
+  const isMountedRef = useRef(true);
   const retryCountRef = useRef(0);
-  const maxRetries = 10; // Retry up to 10 times (with 100ms between retries = 1 second max)
+  const measurementInProgressRef = useRef(false);
+
+  const maxRetries = 10;
 
   useEffect(() => {
+    isMountedRef.current = true;
+    retryCountRef.current = 0;
+    measurementInProgressRef.current = false;
+
     const container = containerRef.current;
     if (!container) return;
 
     let retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
     let rafId: number | null = null;
 
-    const updateWidth = () => {
+    const updateWidth = useCallback(() => {
+      if (!isMountedRef.current) return false;
+
       const rect = container.getBoundingClientRect();
       if (rect.width > 0) {
         setWidth(rect.width);
-        retryCountRef.current = 0; // Reset retry count on success
+        retryCountRef.current = 0;
+        measurementInProgressRef.current = false;
         return true;
       }
       return false;
-    };
+    }, [container]);
 
-    const attemptMeasurement = () => {
+    const attemptMeasurement = useCallback(() => {
+      if (!isMountedRef.current || measurementInProgressRef.current) return;
+
+      measurementInProgressRef.current = true;
       const success = updateWidth();
 
-      // If measurement failed and we haven't exhausted retries, try again
-      if (!success && retryCountRef.current < maxRetries) {
+      if (!success && retryCountRef.current < maxRetries && isMountedRef.current) {
         retryCountRef.current++;
-        // Use a combination of rAF and timeout for mobile reliability
+        measurementInProgressRef.current = false;
+
+        // Stagger retries: use timeout every 3rd attempt for mobile reliability
         if (retryCountRef.current % 3 === 0) {
-          // Every 3rd attempt, use a timeout to allow more time for layout
           retryTimeoutId = setTimeout(() => {
-            rafId = requestAnimationFrame(attemptMeasurement);
+            if (isMountedRef.current) {
+              rafId = requestAnimationFrame(attemptMeasurement);
+            }
           }, 100);
         } else {
           rafId = requestAnimationFrame(attemptMeasurement);
         }
+      } else {
+        measurementInProgressRef.current = false;
       }
-    };
+    }, [updateWidth]);
 
-    // Start measurement process
-    rafId = requestAnimationFrame(attemptMeasurement);
-
-    // Use ResizeObserver for responsive updates
-    const resizeObserver = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const { width: newWidth } = entry.contentRect;
-        if (newWidth > 0) {
-          setWidth(newWidth);
-          retryCountRef.current = 0;
-        }
+    // Start measurement after a small delay to allow layout to settle
+    rafId = requestAnimationFrame(() => {
+      if (isMountedRef.current) {
+        attemptMeasurement();
       }
     });
 
-    resizeObserver.observe(container);
+    // Use ResizeObserver for responsive updates
+    let resizeObserver: ResizeObserver | null = null;
+    try {
+      resizeObserver = new ResizeObserver(entries => {
+        if (!isMountedRef.current) return;
 
-    // Also observe parent elements for size changes (helps with nested containers)
-    let parentObserver: ResizeObserver | null = null;
-    const parent = container.parentElement;
-    if (parent) {
-      parentObserver = new ResizeObserver(() => {
-        // When parent resizes, re-measure our container
-        updateWidth();
+        for (const entry of entries) {
+          const { width: newWidth } = entry.contentRect;
+          if (newWidth > 0) {
+            setWidth(newWidth);
+            retryCountRef.current = 0;
+          }
+        }
       });
-      parentObserver.observe(parent);
+
+      resizeObserver.observe(container);
+    } catch {
+      // ResizeObserver not supported, fall back to window resize
+      console.warn('ResizeObserver not supported');
     }
 
+    // Cleanup function
     return () => {
+      isMountedRef.current = false;
+
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
+        rafId = null;
       }
       if (retryTimeoutId !== null) {
         clearTimeout(retryTimeoutId);
+        retryTimeoutId = null;
       }
-      resizeObserver.disconnect();
-      if (parentObserver) {
-        parentObserver.disconnect();
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
       }
+
+      // Reset width on unmount to ensure fresh measurement on remount
+      setWidth(0);
     };
-  }, []);
+  }, []); // Empty deps - only run once per mount
 
   return [containerRef, width];
 }
