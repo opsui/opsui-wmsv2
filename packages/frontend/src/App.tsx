@@ -18,168 +18,73 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 // LAZY LOADED PAGE COMPONENTS
 // ============================================================================
 
-const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const DashboardPage = lazy(() =>
-  import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage }))
+// Helper to handle both default and named exports
+const createLazyPage = (importFn: () => Promise<any>) => {
+  return lazy(() =>
+    importFn().then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
+  );
+};
+
+const LoginPage = createLazyPage(() => import('@/pages/LoginPage'));
+const DashboardPage = createLazyPage(() => import('@/pages/DashboardPage'));
+const OrderQueuePage = createLazyPage(() => import('@/pages/OrderQueuePage'));
+const PickingPage = createLazyPage(() => import('@/pages/PickingPage'));
+const PackingQueuePage = createLazyPage(() => import('@/pages/PackingQueuePage'));
+const PackingPage = createLazyPage(() => import('@/pages/PackingPage'));
+const ShippedOrdersPage = createLazyPage(() => import('@/pages/ShippedOrdersPage'));
+const StockControlPage = createLazyPage(() => import('@/pages/StockControlPage'));
+const InwardsGoodsPage = createLazyPage(() => import('@/pages/InwardsGoodsPage'));
+const ProductionPage = createLazyPage(() => import('@/pages/ProductionPage'));
+const MaintenancePage = createLazyPage(() => import('@/pages/MaintenancePage'));
+const RMAPage = createLazyPage(() => import('@/pages/RMAPage'));
+const SalesPage = createLazyPage(() => import('@/pages/SalesPage'));
+const AdminSettingsPage = createLazyPage(() => import('@/pages/AdminSettingsPage'));
+const UserRolesPage = createLazyPage(() => import('@/pages/UserRolesPage'));
+const RolesManagementPage = createLazyPage(() => import('@/pages/RolesManagementPage'));
+const ExceptionsPage = createLazyPage(() => import('@/pages/ExceptionsPage'));
+const CycleCountingPage = createLazyPage(() => import('@/pages/CycleCountingPage'));
+const CycleCountDetailPage = createLazyPage(() => import('@/pages/CycleCountDetailPage'));
+const LocationCapacityPage = createLazyPage(() => import('@/pages/LocationCapacityPage'));
+const BinLocationsPage = createLazyPage(() => import('@/pages/BinLocationsPage'));
+const QualityControlPage = createLazyPage(() => import('@/pages/QualityControlPage'));
+const BusinessRulesPage = createLazyPage(() => import('@/pages/BusinessRulesPage'));
+const ReportsPage = createLazyPage(() => import('@/pages/ReportsPage'));
+const IntegrationsPage = createLazyPage(() => import('@/pages/IntegrationsPage'));
+const ProductSearchPage = createLazyPage(() => import('@/pages/ProductSearchPage'));
+const WavePickingPage = createLazyPage(() => import('@/pages/WavePickingPage'));
+const ZonePickingPage = createLazyPage(() => import('@/pages/ZonePickingPage'));
+const SlottingPage = createLazyPage(() => import('@/pages/SlottingPage'));
+const RouteOptimizationPage = createLazyPage(() => import('@/pages/RouteOptimizationPage'));
+const DeveloperPage = createLazyPage(() => import('@/pages/DeveloperPage'));
+const NotificationPreferencesPage = createLazyPage(
+  () => import('@/pages/NotificationPreferencesPage')
 );
-const OrderQueuePage = lazy(() =>
-  import('@/pages/OrderQueuePage').then(m => ({ default: m.OrderQueuePage }))
+const NotificationsPage = createLazyPage(() => import('@/pages/NotificationsPage'));
+const MobileScanningPage = createLazyPage(() => import('@/pages/MobileScanningPage'));
+const ScheduleManagementPage = createLazyPage(() => import('@/pages/ScheduleManagementPage'));
+const RootCauseAnalysisPage = createLazyPage(() => import('@/pages/RootCauseAnalysisPage'));
+const AccountingPage = createLazyPage(() => import('@/pages/AccountingPage'));
+const ChartOfAccountsPage = createLazyPage(() => import('@/pages/accounting/ChartOfAccountsPage'));
+const JournalEntriesPage = createLazyPage(() => import('@/pages/accounting/JournalEntriesPage'));
+const TrialBalancePage = createLazyPage(() => import('@/pages/accounting/TrialBalancePage'));
+const BalanceSheetPage = createLazyPage(() => import('@/pages/accounting/BalanceSheetPage'));
+const CashFlowPage = createLazyPage(() => import('@/pages/accounting/CashFlowPage'));
+const ARAgingPage = createLazyPage(() => import('@/pages/accounting/ARAgingPage'));
+const APAgingPage = createLazyPage(() => import('@/pages/accounting/APAgingPage'));
+const BankReconciliationPage = createLazyPage(
+  () => import('@/pages/accounting/BankReconciliationPage')
 );
-const PickingPage = lazy(() =>
-  import('@/pages/PickingPage').then(m => ({ default: m.PickingPage }))
-);
-const PackingQueuePage = lazy(() =>
-  import('@/pages/PackingQueuePage').then(m => ({ default: m.PackingQueuePage }))
-);
-const PackingPage = lazy(() =>
-  import('@/pages/PackingPage').then(m => ({ default: m.PackingPage }))
-);
-const ShippedOrdersPage = lazy(() =>
-  import('@/pages/ShippedOrdersPage').then(m => ({ default: m.ShippedOrdersPage }))
-);
-const StockControlPage = lazy(() =>
-  import('@/pages/StockControlPage').then(m => ({ default: m.StockControlPage }))
-);
-const InwardsGoodsPage = lazy(() =>
-  import('@/pages/InwardsGoodsPage').then(m => ({ default: m.InwardsGoodsPage }))
-);
-const ProductionPage = lazy(() =>
-  import('@/pages/ProductionPage').then(m => ({ default: m.ProductionPage }))
-);
-const MaintenancePage = lazy(() =>
-  import('@/pages/MaintenancePage').then(m => ({ default: m.MaintenancePage }))
-);
-const RMAPage = lazy(() => import('@/pages/RMAPage').then(m => ({ default: m.RMAPage })));
-const SalesPage = lazy(() => import('@/pages/SalesPage').then(m => ({ default: m.SalesPage })));
-const AdminSettingsPage = lazy(() =>
-  import('@/pages/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage }))
-);
-const UserRolesPage = lazy(() =>
-  import('@/pages/UserRolesPage').then(m => ({ default: m.UserRolesPage }))
-);
-const RolesManagementPage = lazy(() =>
-  import('@/pages/RolesManagementPage').then(m => ({ default: m.RolesManagementPage }))
-);
-const ExceptionsPage = lazy(() =>
-  import('@/pages/ExceptionsPage').then(m => ({ default: m.ExceptionsPage }))
-);
-const CycleCountingPage = lazy(() =>
-  import('@/pages/CycleCountingPage').then(m => ({ default: m.CycleCountingPage }))
-);
-const CycleCountDetailPage = lazy(() =>
-  import('@/pages/CycleCountDetailPage').then(m => ({ default: m.CycleCountDetailPage }))
-);
-const LocationCapacityPage = lazy(() =>
-  import('@/pages/LocationCapacityPage').then(m => ({ default: m.LocationCapacityPage }))
-);
-const BinLocationsPage = lazy(() =>
-  import('@/pages/BinLocationsPage').then(m => ({ default: m.BinLocationsPage }))
-);
-const QualityControlPage = lazy(() =>
-  import('@/pages/QualityControlPage').then(m => ({ default: m.QualityControlPage }))
-);
-const BusinessRulesPage = lazy(() =>
-  import('@/pages/BusinessRulesPage').then(m => ({ default: m.BusinessRulesPage }))
-);
-const ReportsPage = lazy(() =>
-  import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage }))
-);
-const IntegrationsPage = lazy(() =>
-  import('@/pages/IntegrationsPage').then(m => ({ default: m.IntegrationsPage }))
-);
-const ProductSearchPage = lazy(() =>
-  import('@/pages/ProductSearchPage').then(m => ({ default: m.ProductSearchPage }))
-);
-const WavePickingPage = lazy(() =>
-  import('@/pages/WavePickingPage').then(m => ({ default: m.WavePickingPage }))
-);
-const ZonePickingPage = lazy(() =>
-  import('@/pages/ZonePickingPage').then(m => ({ default: m.ZonePickingPage }))
-);
-const SlottingPage = lazy(() =>
-  import('@/pages/SlottingPage').then(m => ({ default: m.SlottingPage }))
-);
-const RouteOptimizationPage = lazy(() =>
-  import('@/pages/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage }))
-);
-const DeveloperPage = lazy(() =>
-  import('@/pages/DeveloperPage').then(m => ({ default: m.DeveloperPage }))
-);
-const NotificationPreferencesPage = lazy(() =>
-  import('@/pages/NotificationPreferencesPage').then(m => ({
-    default: m.NotificationPreferencesPage,
-  }))
-);
-const NotificationsPage = lazy(() =>
-  import('@/pages/NotificationsPage').then(m => ({ default: m.NotificationsPage }))
-);
-const MobileScanningPage = lazy(() =>
-  import('@/pages/MobileScanningPage').then(m => ({ default: m.MobileScanningPage }))
-);
-const ScheduleManagementPage = lazy(() =>
-  import('@/pages/ScheduleManagementPage').then(m => ({ default: m.ScheduleManagementPage }))
-);
-const RootCauseAnalysisPage = lazy(() =>
-  import('@/pages/RootCauseAnalysisPage').then(m => ({ default: m.RootCauseAnalysisPage }))
-);
-const AccountingPage = lazy(() =>
-  import('@/pages/AccountingPage').then(m => ({ default: m.AccountingPage }))
-);
-const ChartOfAccountsPage = lazy(() =>
-  import('@/pages/accounting/ChartOfAccountsPage').then(m => ({ default: m.default }))
-);
-const JournalEntriesPage = lazy(() =>
-  import('@/pages/accounting/JournalEntriesPage').then(m => ({ default: m.default }))
-);
-const TrialBalancePage = lazy(() =>
-  import('@/pages/accounting/TrialBalancePage').then(m => ({ default: m.default }))
-);
-const BalanceSheetPage = lazy(() =>
-  import('@/pages/accounting/BalanceSheetPage').then(m => ({ default: m.default }))
-);
-const CashFlowPage = lazy(() =>
-  import('@/pages/accounting/CashFlowPage').then(m => ({ default: m.default }))
-);
-const ARAgingPage = lazy(() =>
-  import('@/pages/accounting/ARAgingPage').then(m => ({ default: m.default }))
-);
-const APAgingPage = lazy(() =>
-  import('@/pages/accounting/APAgingPage').then(m => ({ default: m.default }))
-);
-const BankReconciliationPage = lazy(() =>
-  import('@/pages/accounting/BankReconciliationPage').then(m => ({ default: m.default }))
-);
-const FixedAssetsPage = lazy(() =>
-  import('@/pages/accounting/FixedAssetsPage').then(m => ({ default: m.default }))
-);
-const BudgetingPage = lazy(() =>
-  import('@/pages/accounting/BudgetingPage').then(m => ({ default: m.default }))
-);
-const NotFoundPage = lazy(() =>
-  import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage }))
-);
+const FixedAssetsPage = createLazyPage(() => import('@/pages/accounting/FixedAssetsPage'));
+const BudgetingPage = createLazyPage(() => import('@/pages/accounting/BudgetingPage'));
+const NotFoundPage = createLazyPage(() => import('@/pages/NotFoundPage'));
 // HR & Payroll pages
-const EmployeesPage = lazy(() =>
-  import('@/pages/hr/EmployeesPage').then(m => ({ default: m.default }))
-);
-const TimesheetsPage = lazy(() =>
-  import('@/pages/hr/TimesheetsPage').then(m => ({ default: m.default }))
-);
-const PayrollDashboardPage = lazy(() =>
-  import('@/pages/hr/PayrollDashboardPage').then(m => ({ default: m.default }))
-);
-const PayrollProcessingPage = lazy(() =>
-  import('@/pages/hr/PayrollProcessingPage').then(m => ({ default: m.default }))
-);
-const PayrollRunsPage = lazy(() =>
-  import('@/pages/hr/PayrollRunsPage').then(m => ({ default: m.default }))
-);
-const LeaveRequestsPage = lazy(() =>
-  import('@/pages/hr/LeaveRequestsPage').then(m => ({ default: m.default }))
-);
-const HRSettingsPage = lazy(() =>
-  import('@/pages/hr/HRSettingsPage').then(m => ({ default: m.default }))
-);
+const EmployeesPage = createLazyPage(() => import('@/pages/hr/EmployeesPage'));
+const TimesheetsPage = createLazyPage(() => import('@/pages/hr/TimesheetsPage'));
+const PayrollDashboardPage = createLazyPage(() => import('@/pages/hr/PayrollDashboardPage'));
+const PayrollProcessingPage = createLazyPage(() => import('@/pages/hr/PayrollProcessingPage'));
+const PayrollRunsPage = createLazyPage(() => import('@/pages/hr/PayrollRunsPage'));
+const LeaveRequestsPage = createLazyPage(() => import('@/pages/hr/LeaveRequestsPage'));
+const HRSettingsPage = createLazyPage(() => import('@/pages/hr/HRSettingsPage'));
 
 // ============================================================================
 // PAGE LOADING FALLBACK
