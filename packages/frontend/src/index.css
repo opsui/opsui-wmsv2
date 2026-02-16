@@ -1210,6 +1210,28 @@ html.performance-mode [class*='backdrop-blur'] {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Exception: Keep navbar backdrop blur for visual consistency */
+html.performance-mode .dynamic-island-header {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Exception: Keep modal backdrop blur for visual hierarchy */
+html.performance-mode .modal-backdrop,
+html.performance-mode [data-modal-backdrop],
+html.performance-mode .fixed.inset-0.bg-black {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* Exception: Keep dropdown menu blur for readability */
+html.performance-mode [role='menu'],
+html.performance-mode [role='listbox'],
+html.performance-mode .dropdown-menu {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
 /* Reduce glow shadows */
 html.performance-mode .shadow-glow,
 html.performance-mode .shadow-glow-lg {
