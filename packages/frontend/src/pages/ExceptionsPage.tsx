@@ -630,7 +630,7 @@ export function ExceptionsPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   filterStatus === 'all'
                     ? 'bg-primary-500 text-white'
-                    : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
+                    : 'bg-white dark:bg-white/[0.02] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/[0.05] shadow-sm'
                 }`}
               >
                 All ({openExceptions?.total || 0})
@@ -640,7 +640,7 @@ export function ExceptionsPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   filterStatus === ExceptionStatus.OPEN
                     ? 'bg-primary-500 text-white'
-                    : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
+                    : 'bg-white dark:bg-white/[0.02] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/[0.05] shadow-sm'
                 }`}
               >
                 Open ({summary?.open || 0})
@@ -650,7 +650,7 @@ export function ExceptionsPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   filterStatus === ExceptionStatus.RESOLVED
                     ? 'bg-primary-500 text-white'
-                    : 'bg-white/[0.02] text-gray-400 hover:text-white border border-white/[0.05]'
+                    : 'bg-white dark:bg-white/[0.02] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/[0.05] shadow-sm'
                 }`}
               >
                 Resolved ({summary?.resolved || 0})
