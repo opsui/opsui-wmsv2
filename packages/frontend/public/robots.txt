@@ -1,0 +1,50 @@
+# OpsUI Robots.txt
+# https://opsui.app
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and authentication pages
+Disallow: /login
+Disallow: /admin
+Disallow: /users
+Disallow: /api/
+
+# Disallow user-specific pages that require authentication
+Disallow: /orders/
+Disallow: /packing/
+Disallow: /pick/
+Disallow: /pack/
+
+# Allow public resources
+Allow: /OP_logo.png
+Allow: /favicon.ico
+Allow: /og-image.png
+
+# Sitemap location
+Sitemap: https://opsui.app/sitemap.xml
+
+# Crawl delay (optional, for server performance)
+Crawl-delay: 1
+
+# Google-specific
+User-agent: Googlebot
+Allow: /
+Disallow: /login
+Disallow: /admin
+Disallow: /api/
+
+# Bing-specific
+User-agent: Bingbot
+Allow: /
+Disallow: /login
+Disallow: /admin
+Disallow: /api/
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /login
+Disallow: /admin
+Disallow: /api/

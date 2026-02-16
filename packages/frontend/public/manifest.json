@@ -1,0 +1,75 @@
+{
+  "name": "OpsUI - Enterprise Resource Planning System",
+  "short_name": "OpsUI",
+  "description": "Comprehensive warehouse management and ERP solution featuring inventory control, order fulfillment, picking, packing, shipping, and real-time analytics for modern businesses.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/OP_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Dashboard Overview"
+    },
+    {
+      "src": "/screenshots/orders.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Order Management"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your warehouse dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/OP_logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "description": "View order queue",
+      "url": "/orders",
+      "icons": [{ "src": "/OP_logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Stock Control",
+      "short_name": "Stock",
+      "description": "Manage inventory",
+      "url": "/stock-control",
+      "icons": [{ "src": "/OP_logo.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

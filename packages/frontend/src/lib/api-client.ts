@@ -33,6 +33,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Add auth token if available
     let token = useAuthStore.getState().accessToken;
+    let user = useAuthStore.getState().user;
 
     // Fallback: read from localStorage directly if Zustand hasn't hydrated yet
     // This prevents 401 errors during initial page load due to race condition
@@ -42,6 +43,7 @@ apiClient.interceptors.request.use(
         if (storage) {
           const parsed = JSON.parse(storage);
           token = parsed.state.accessToken;
+          user = parsed.state.user;
         }
       } catch (e) {
         // Ignore storage parsing errors
@@ -50,6 +52,11 @@ apiClient.interceptors.request.use(
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Add entity ID header if user has an entity assigned
+    if (user?.entityId && config.headers) {
+      config.headers['x-entity-id'] = user.entityId;
     }
 
     // Note: We use camelCase consistently throughout the app

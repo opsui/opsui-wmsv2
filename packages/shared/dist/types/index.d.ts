@@ -360,6 +360,7 @@ export interface PickTask {
  */
 export interface User {
     userId: string;
+    entityId?: string | null;
     name: string;
     email: string;
     role: UserRole;

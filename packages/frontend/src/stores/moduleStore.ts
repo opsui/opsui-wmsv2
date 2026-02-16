@@ -119,14 +119,16 @@ export const useModuleStore = create<ModuleState>()(
           const data = response.data;
 
           // Merge with MODULE_DEFINITIONS to ensure features are included
-          const modulesWithFeatures = (data.modulesWithStatus || []).map((module: ModuleWithStatus) => {
-            const definition = MODULE_DEFINITIONS[module.id];
-            return {
-              ...definition, // Include all definition properties (features, etc.)
-              ...module, // Override with status data
-              features: module.features || definition?.features || [], // Ensure features array exists
-            };
-          });
+          const modulesWithFeatures = (data.modulesWithStatus || []).map(
+            (module: ModuleWithStatus) => {
+              const definition = MODULE_DEFINITIONS[module.id];
+              return {
+                ...definition, // Include all definition properties (features, etc.)
+                ...module, // Override with status data
+                features: module.features || definition?.features || [], // Ensure features array exists
+              };
+            }
+          );
 
           set({
             enabledModules: data.enabledModules || [],

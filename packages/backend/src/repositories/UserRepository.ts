@@ -35,7 +35,7 @@ export class UserRepository extends BaseRepository<User> {
     }
 
     const user = result.rows[0] as User;
-    return await this.attachAdditionalRoles(user);
+    return await this.enrichUser(user);
   }
 
   // --------------------------------------------------------------------------
@@ -50,7 +50,7 @@ export class UserRepository extends BaseRepository<User> {
     );
 
     const user = result.rows[0] as User;
-    return user ? await this.attachAdditionalRoles(user) : null;
+    return user ? await this.enrichUser(user) : null;
   }
 
   // --------------------------------------------------------------------------
@@ -124,7 +124,7 @@ export class UserRepository extends BaseRepository<User> {
     // Return user without password hash - use already camelCased keys
     const { passwordHash: _, ...userWithoutPassword } = userWithHash;
     // Attach additional roles before returning
-    return await this.attachAdditionalRoles(userWithoutPassword);
+    return await this.enrichUser(userWithoutPassword);
   }
 
   // --------------------------------------------------------------------------
@@ -199,7 +199,7 @@ export class UserRepository extends BaseRepository<User> {
     if (!user) return null;
 
     // Attach additional roles
-    return await this.attachAdditionalRoles(user as User);
+    return await this.enrichUser(user as User);
   }
 
   // --------------------------------------------------------------------------
@@ -245,19 +245,65 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   // --------------------------------------------------------------------------
+  // ATTACH ENTITY ID
+  // --------------------------------------------------------------------------
+
+  /**
+   * Attach entityId to a user object
+   * This fetches the user's default entity (or first active entity) from entity_users table
+   */
+  private async attachEntityId(user: User): Promise<User> {
+    try {
+      const result = await query<{ entityId: string }>(
+        `SELECT entity_id as "entityId"
+         FROM entity_users
+         WHERE user_id = $1 AND is_active = true
+         ORDER BY is_default_entity DESC, created_at ASC
+         LIMIT 1`,
+        [user.userId]
+      );
+
+      return {
+        ...user,
+        entityId: result.rows[0]?.entityId || null,
+      };
+    } catch (error: any) {
+      // If entity_users table doesn't exist, return user without entityId
+      if (error.code === '42P01') {
+        return {
+          ...user,
+          entityId: null,
+        };
+      }
+      throw error;
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // ENRICH USER (attach both additional roles and entity)
+  // --------------------------------------------------------------------------
+
+  /**
+   * Enrich user with additional roles and entity assignment
+   */
+  private async enrichUser(user: User): Promise<User> {
+    let enrichedUser = await this.attachAdditionalRoles(user);
+    enrichedUser = await this.attachEntityId(enrichedUser);
+    return enrichedUser;
+  }
+
+  // --------------------------------------------------------------------------
   // GET ALL USERS
   // --------------------------------------------------------------------------
 
   /**
-   * Get all users with their additional roles attached
+   * Get all users with their additional roles and entity attached
    */
   async getAllUsers(): Promise<User[]> {
     const result = await query<User>(`SELECT * FROM users ORDER BY created_at DESC`);
 
-    // Attach additional roles to each user
-    const usersWithRoles = await Promise.all(
-      result.rows.map(user => this.attachAdditionalRoles(user))
-    );
+    // Enrich each user with additional roles and entity
+    const usersWithRoles = await Promise.all(result.rows.map(user => this.enrichUser(user)));
 
     return usersWithRoles;
   }
@@ -301,7 +347,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0] as User);
+    return await this.enrichUser(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -322,7 +368,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0] as User);
+    return await this.enrichUser(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -343,7 +389,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0] as User);
+    return await this.enrichUser(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -374,7 +420,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0] as User);
+    return await this.enrichUser(result.rows[0] as User);
   }
 
   // --------------------------------------------------------------------------
@@ -430,7 +476,7 @@ export class UserRepository extends BaseRepository<User> {
       throw new NotFoundError('User', userId);
     }
 
-    return await this.attachAdditionalRoles(result.rows[0] as User);
+    return await this.enrichUser(result.rows[0] as User);
   }
 }
 

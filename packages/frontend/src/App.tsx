@@ -7,8 +7,9 @@
 
 import { ErrorBoundary, NotificationCenter, ToastProvider } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
+import { useSEO } from '@/hooks/useSEO';
 import webSocketService from '@/services/WebSocketService';
-import { useAuthStore, useUIStore, useModuleStore } from '@/stores';
+import { useAuthStore, useModuleStore, useUIStore } from '@/stores';
 import { UserRole } from '@opsui/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useEffect, useState } from 'react';
@@ -278,6 +279,9 @@ function NavigationTracker() {
   const userId = useAuthStore(state => state.user?.userId);
   const userRole = useAuthStore(state => state.user?.role);
   const accessToken = useAuthStore(state => state.accessToken);
+
+  // Auto-update SEO on route change
+  useSEO();
 
   // Store the last known view for workers (persists across tab switches)
   const [lastKnownView, setLastKnownView] = useState<string>('');
