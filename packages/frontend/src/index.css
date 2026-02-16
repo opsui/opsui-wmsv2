@@ -38,6 +38,44 @@
     background-attachment: fixed;
   }
 
+  /* Smooth theme transitions - applied to body and main containers only */
+  body {
+    transition: background-color 0.3s ease-out, color 0.25s ease-out;
+  }
+
+  /* Cards and containers */
+  .glass-card,
+  .modal-content,
+  .modal-backdrop,
+  .dropdown-menu {
+    transition: background-color 0.25s ease-out,
+                border-color 0.25s ease-out,
+                box-shadow 0.25s ease-out;
+  }
+
+  /* Form elements */
+  .input-themed,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    transition: background-color 0.2s ease-out,
+                border-color 0.2s ease-out,
+                color 0.2s ease-out;
+  }
+
+  /* Buttons */
+  button,
+  .btn,
+  a {
+    transition: background-color 0.15s ease-out,
+                border-color 0.15s ease-out,
+                color 0.15s ease-out,
+                transform 0.15s ease-out;
+  }
+
   /* ============================================
      LIGHT MODE - Spinning effect on blue background
      ============================================ */

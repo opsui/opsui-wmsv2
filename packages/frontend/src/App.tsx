@@ -1129,21 +1129,43 @@ function AppInner() {
 // ============================================================================
 
 function App() {
-  // Initialize and sync theme
+  // Initialize and sync theme with smooth transitions
   useEffect(() => {
-    // Apply theme function
+    // Apply theme function with smooth transition
     const applyTheme = () => {
       const theme = useUIStore.getState().theme;
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
       const shouldBeDark = theme === 'dark' || (theme === 'auto' && prefersDark);
+      const currentlyDark = document.documentElement.classList.contains('dark');
 
-      if (shouldBeDark) {
-        document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
+      // Only transition if theme is actually changing
+      if (currentlyDark !== shouldBeDark) {
+        // Add transition class for smooth animation
+        document.documentElement.classList.add('theme-transitioning');
+
+        // Apply theme change
+        if (shouldBeDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        }
+
+        // Remove transition class after animation completes
+        setTimeout(() => {
+          document.documentElement.classList.remove('theme-transitioning');
+        }, 350);
       } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
+        // Initial load - just apply without transition
+        if (shouldBeDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        }
       }
     };
 
