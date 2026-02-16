@@ -1905,12 +1905,12 @@ export function Header() {
     <>
       <header className="relative z-50">
         <div className="w-full dynamic-island-header">
-          {/* Mobile: Logo centered above toolbar, desktop: horizontal layout */}
-          {/* Desktop: Toolbar centered, Mobile: Toolbar below logo */}
-          <div className="relative flex items-center h-14 px-4">
-            {/* Left side - Menu button and OpsUI Branding - visible on both, but different positions */}
-            <div className="flex items-center gap-3">
-              {/* Always visible: Menu button */}
+          {/* Mobile: Logo above toolbar (stacked), desktop: horizontal layout */}
+          {/* Mobile: flex-col for stacking, desktop: flex-row */}
+          <div className="flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
+            {/* Mobile: Top row - Hamburger on left, Logo centered. Desktop: Left side with menu */}
+            <div className="flex items-center justify-between md:justify-start w-full md:w-auto mb-2 md:mb-0">
+              {/* Hamburger - always visible */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
@@ -1920,22 +1920,24 @@ export function Header() {
                 <Bars3Icon className="h-6 w-6" />
               </button>
 
-              {/* Logo - centered on mobile (absolute position), left on desktop */}
+              {/* Logo - centered on mobile, left on desktop */}
               <button
                 onClick={() => {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer md:relative md:left-0 md:mx-0 absolute left-1/2 md:static -translate-x-1/2 md:translate-x-0"
+                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0"
                 style={{ fontFamily: "'Inter', sans-serif" }}
                 title="Go to home"
               >
                 OpsUI
               </button>
+              {/* Spacer for mobile to balance hamburger */}
+              <div className="w-10 md:hidden"></div>
             </div>
 
-            {/* Center - Actions Toolbar (iPhone dynamic island effect on mobile - floating pill) */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
+            {/* Toolbar - centered on both mobile and desktop */}
+            <div className="flex items-center justify-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto">
               {/* Theme Toggle */}
               <ThemeToggle />
 
