@@ -126,10 +126,15 @@ export default function ModuleManagementPage() {
     }
   }, [fetchModules, fetchBillingSummary]);
 
-  // Group modules by category
-  const modulesByCategory = Array.isArray(modulesWithStatus)
-    ? modulesWithStatus.reduce(
+  // Group modules by category - with comprehensive safety checks
+  const modulesByCategory = (() => {
+    if (!Array.isArray(modulesWithStatus) || modulesWithStatus.length === 0) {
+      return {};
+    }
+    try {
+      return modulesWithStatus.reduce(
         (acc, module) => {
+          if (!module || !module.category) return acc;
           if (!acc[module.category]) {
             acc[module.category] = [];
           }
@@ -137,8 +142,12 @@ export default function ModuleManagementPage() {
           return acc;
         },
         {} as Record<ModuleCategory, ModuleWithStatus[]>
-      )
-    : {};
+      );
+    } catch (error) {
+      console.error('Error grouping modules:', error);
+      return {};
+    }
+  })();
 
   // Calculate totals
   const safeModules = Array.isArray(modulesWithStatus) ? modulesWithStatus : [];
@@ -305,10 +314,10 @@ export default function ModuleManagementPage() {
                     User Tier
                   </p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white mt-1 truncate">
-                    {billingSummary?.userTier.tierName ?? 'Starter'}
+                    {billingSummary?.userTier?.tierName ?? 'Starter'}
                   </p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    {billingSummary?.userTier.currentUserCount ?? 0} active users
+                    {billingSummary?.userTier?.currentUserCount ?? 0} active users
                   </p>
                 </div>
                 <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl shrink-0">
