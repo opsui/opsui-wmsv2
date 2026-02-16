@@ -222,18 +222,6 @@ function MobileMenu({
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/60 z-[100] transition-opacity duration-300 ${
-          isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
-        }`}
-        onClick={handleClose}
-        onMouseLeave={handleMouseLeave}
-        onTouchMove={e => e.preventDefault()}
-        style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
-        aria-hidden="true"
-      />
-
       {/* Menu Drawer */}
       <div
         className={`fixed inset-y-0 left-0 z-[110] w-80 max-w-[85vw] transform transition-transform duration-300 ease-out ${
