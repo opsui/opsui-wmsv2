@@ -95,8 +95,10 @@ export function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <img src="/OP_logo.png" alt="OpsUI Logo" className="mx-auto h-16 w-auto mb-4" />
-          <p className="dark:text-gray-400 text-gray-600 text-responsive-sm">
+          <h1 className="text-responsive-xl font-bold dark:text-white text-gray-900 tracking-tight">
+            OpsUI
+          </h1>
+          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
             Warehouse Management System
           </p>
         </div>

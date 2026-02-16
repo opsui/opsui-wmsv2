@@ -1869,18 +1869,15 @@ export function Header() {
         <div className="w-full dynamic-island-header">
           {/* Mobile: Add top spacing for iPhone dynamic island effect */}
           <div className="relative flex items-center h-14 px-4">
-            {/* Left side - Menu button and Logo */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                onMouseEnter={() => setMobileMenuOpen(true)}
-                className="p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors"
-                aria-label="Open menu"
-              >
-                <Bars3Icon className="h-6 w-6" />
-              </button>
-              <img src="/OP_logo.png" alt="OpsUI" className="h-8 w-auto" />
-            </div>
+            {/* Left side - Menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              onMouseEnter={() => setMobileMenuOpen(true)}
+              className="p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors"
+              aria-label="Open menu"
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
 
             {/* Center - Actions Toolbar (iPhone dynamic island effect on mobile - floating pill) */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
