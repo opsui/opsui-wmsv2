@@ -44,7 +44,7 @@ const UNCLAIM_CATEGORIES: UnclaimReasonCategory[] = [
         />
       </svg>
     ),
-    color: 'text-warning-400',
+    color: 'text-orange-600 dark:text-warning-400',
     reasons: [
       {
         id: 'scanner_malfunction',
@@ -90,7 +90,7 @@ const UNCLAIM_CATEGORIES: UnclaimReasonCategory[] = [
         />
       </svg>
     ),
-    color: 'text-info-400',
+    color: 'text-blue-600 dark:text-info-400',
     reasons: [
       {
         id: 'illness',
@@ -130,7 +130,7 @@ const UNCLAIM_CATEGORIES: UnclaimReasonCategory[] = [
         />
       </svg>
     ),
-    color: 'text-error-400',
+    color: 'text-red-600 dark:text-error-400',
     reasons: [
       {
         id: 'wrong_items',
@@ -288,41 +288,44 @@ export function UnclaimModal({
         ></div>
 
         {/* Modal panel */}
-        <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-scale-in">
+        <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-scale-in bg-white dark:bg-gray-900">
           {/* Modal header */}
-          <div className="bg-white/[0.02] px-6 py-4 sm:px-6 flex items-center justify-between border-b border-white/[0.08]">
+          <div className="px-6 py-4 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-white/[0.08]">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-error-500/10">
-                <ExclamationTriangleIcon className="h-5 w-5 text-error-400" />
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-error-500/10">
+                <ExclamationTriangleIcon className="h-5 w-5 text-red-600 dark:text-error-400" />
               </div>
               <div>
-                <h3 className="text-lg leading-6 font-semibold text-white">Unclaim Order</h3>
-                <p className="text-sm text-gray-400">{orderId}</p>
+                <h3 className="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+                  Unclaim Order
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{orderId}</p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-white focus:outline-none transition-colors duration-200"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-white focus:outline-none transition-colors duration-200"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
 
           {/* Warning message */}
-          <div className="px-6 py-4 bg-error-500/5 border-b border-error-500/10">
-            <p className="text-sm text-error-300">
+          <div className="px-6 py-4 bg-red-50 dark:bg-error-500/5 border-b border-red-100 dark:border-error-500/10">
+            <p className="text-sm text-red-800 dark:text-error-300">
               <strong>Warning:</strong> You are about to unclaim this order. All your progress will
               be reset and the order will return to the queue. This action cannot be undone.
             </p>
           </div>
 
           {/* Modal content */}
-          <div className="px-6 py-5 sm:px-6 max-h-[60vh] overflow-y-auto">
+          <div className="px-6 py-5 sm:px-6 max-h-[60vh] overflow-y-auto bg-white dark:bg-transparent">
             {!selectedCategory ? (
               // Category selection
               <div>
-                <label className="block text-sm font-medium text-white mb-3">
-                  Select a Reason Category <span className="text-error-400">*</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-white mb-3">
+                  Select a Reason Category{' '}
+                  <span className="text-red-600 dark:text-error-400">*</span>
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {UNCLAIM_CATEGORIES.map(category => {
@@ -331,13 +334,17 @@ export function UnclaimModal({
                       <button
                         key={category.id}
                         onClick={() => setSelectedCategory(category.id)}
-                        className="text-left p-4 rounded-lg border-2 border-white/[0.08] hover:border-white/[0.15] bg-white/[0.02] hover:bg-white/[0.05] transition-all"
+                        className="text-left p-4 rounded-lg border-2 border-gray-200 dark:border-white/[0.08] hover:border-gray-300 dark:hover:border-white/[0.15] bg-gray-50 dark:bg-white/[0.02] hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <Icon className={`h-5 w-5 ${category.color}`} />
-                          <span className="font-medium text-white">{category.label}</span>
+                          <Icon
+                            className={`h-5 w-5 ${category.color.replace('400', '600').replace('text-warning-', 'text-orange-').replace('text-info-', 'text-blue-').replace('text-error-', 'text-red-')}`}
+                          />
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {category.label}
+                          </span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                           {category.reasons.length} options
                         </p>
                       </button>
@@ -354,7 +361,7 @@ export function UnclaimModal({
                     setSelectedReason(null);
                     setNotes('');
                   }}
-                  className="text-sm text-gray-400 hover:text-white mb-4 flex items-center gap-1"
+                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white mb-4 flex items-center gap-1"
                 >
                   <svg
                     className="h-4 w-4"
@@ -373,8 +380,9 @@ export function UnclaimModal({
                 </button>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-3">
-                    Select Specific Reason <span className="text-error-400">*</span>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-3">
+                    Select Specific Reason{' '}
+                    <span className="text-red-600 dark:text-error-400">*</span>
                   </label>
                   <div className="space-y-2">
                     {UNCLAIM_CATEGORIES.find(c => c.id === selectedCategory)?.reasons.map(
@@ -384,14 +392,18 @@ export function UnclaimModal({
                           onClick={() => setSelectedReason(reason.id)}
                           className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                             selectedReason === reason.id
-                              ? 'border-primary-500 bg-primary-500/10'
-                              : 'border-white/[0.08] hover:border-white/[0.15] bg-white/[0.02]'
+                              ? 'border-blue-500 bg-blue-50 dark:bg-primary-500/10'
+                              : 'border-gray-200 dark:border-white/[0.08] hover:border-gray-300 dark:hover:border-white/[0.15] bg-gray-50 dark:bg-white/[0.02]'
                           }`}
                         >
-                          <div className="font-medium text-white">{reason.label}</div>
-                          <div className="text-xs text-gray-400 mt-1">{reason.description}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {reason.label}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {reason.description}
+                          </div>
                           {reason.requiresNotes && (
-                            <div className="text-xs text-warning-400 mt-2">
+                            <div className="text-xs text-orange-600 dark:text-warning-400 mt-2">
                               Additional notes required
                             </div>
                           )}
@@ -404,14 +416,14 @@ export function UnclaimModal({
                 {/* Notes field (shown when reason requires notes) */}
                 {selectedReasonData?.requiresNotes && (
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-white mb-2">
-                      Additional Details <span className="text-error-400">*</span>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
+                      Additional Details <span className="text-red-600 dark:text-error-400">*</span>
                     </label>
                     <textarea
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
                       rows={3}
-                      className="w-full px-4 py-2 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
+                      className="w-full px-4 py-2 bg-gray-50 dark:bg-white/[0.02] border border-gray-300 dark:border-white/[0.08] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-primary-500"
                       placeholder="Please provide more details about this issue..."
                     />
                   </div>
@@ -420,14 +432,14 @@ export function UnclaimModal({
                 {/* Optional notes for all reasons */}
                 {!selectedReasonData?.requiresNotes && (
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Additional Notes (Optional)
                     </label>
                     <textarea
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-2 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-primary-500"
+                      className="w-full px-4 py-2 bg-gray-50 dark:bg-white/[0.02] border border-gray-300 dark:border-white/[0.08] rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-primary-500"
                       placeholder="Add any additional context..."
                     />
                   </div>
@@ -437,7 +449,7 @@ export function UnclaimModal({
           </div>
 
           {/* Modal footer */}
-          <div className="bg-white/[0.02] px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse gap-3 border-t border-white/[0.08]">
+          <div className="px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse gap-3 border-t border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02]">
             <Button
               variant="danger"
               onClick={handleConfirm}
