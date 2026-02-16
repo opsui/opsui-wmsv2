@@ -1217,7 +1217,13 @@ export function Header() {
   const effectiveRole = getEffectiveRole() || user.role;
 
   // Helper function to get the home path for a given role
-  const getHomePathForRole = (role: UserRole | string): string => {
+  // Note: Admins always go to their dashboard, regardless of current role view
+  const getHomePathForRole = (role: UserRole | string, baseRole: UserRole): string => {
+    // Admins always go to their dashboard, even when in a different role view
+    if (baseRole === UserRole.ADMIN) {
+      return '/dashboard';
+    }
+    
     switch (role) {
       case UserRole.ADMIN:
       case UserRole.SUPERVISOR:
@@ -1949,7 +1955,8 @@ export function Header() {
               <button
                 onClick={() => {
                   // Navigate to role-specific home page
-                  const homePath = getHomePathForRole(effectiveRole);
+                  // Admins always go to their dashboard, even when in a different role view
+                  const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
                 className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer"
