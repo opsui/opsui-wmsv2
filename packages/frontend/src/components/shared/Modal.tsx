@@ -96,7 +96,7 @@ export function Modal({
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
           className={cn(
-            'relative w-full glass-card rounded-2xl shadow-2xl border border-white/[0.08] transform transition-all',
+            'relative w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 transform transition-all',
             sizeClasses[size],
             // Mobile-responsive
             'mx-auto',
@@ -106,8 +106,11 @@ export function Modal({
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-4 md:px-6 border-b border-white/[0.08]">
-            <h2 id={titleId} className="text-lg md:text-xl font-semibold text-white pr-8">
+          <div className="flex items-center justify-between px-4 py-4 md:px-6 border-b border-gray-200 dark:border-gray-700">
+            <h2
+              id={titleId}
+              className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white pr-8"
+            >
               {title}
             </h2>
             {showCloseButton && (
@@ -115,8 +118,8 @@ export function Modal({
                 onClick={onClose}
                 className={cn(
                   'absolute top-4 right-4',
-                  'text-gray-400 hover:text-white transition-colors',
-                  'p-2 rounded-lg hover:bg-white/[0.05]',
+                  'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors',
+                  'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05]',
                   // Touch-friendly target size
                   'min-w-touch min-h-touch flex items-center justify-center',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500/50'
@@ -198,10 +201,10 @@ export function FormInput({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-300">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && (
-          <span className="text-error-400 ml-1" aria-hidden="true">
+          <span className="text-red-500 ml-1" aria-hidden="true">
             *
           </span>
         )}
@@ -222,14 +225,12 @@ export function FormInput({
         aria-invalid={!!error}
         aria-describedby={cn(error && errorId, hint && hintId).trim() || undefined}
         className={cn(
-          'w-full px-4 py-3 md:py-2.5 bg-white/[0.05] border rounded-lg text-white placeholder-gray-500',
+          'w-full px-4 py-3 md:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400',
           // 16px minimum to prevent iOS zoom
           'text-base',
           'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50',
           'transition-all duration-200',
-          error
-            ? 'border-error-500/50 focus:ring-error-500/50 focus:border-error-500/50'
-            : 'border-white/[0.08]',
+          error ? 'border-red-500 focus:ring-red-500/50 focus:border-red-500' : '',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       />
@@ -239,7 +240,12 @@ export function FormInput({
         </p>
       )}
       {error && (
-        <p id={errorId} className="text-sm text-error-400" role="alert" aria-live="polite">
+        <p
+          id={errorId}
+          className="text-sm text-red-500 dark:text-red-400"
+          role="alert"
+          aria-live="polite"
+        >
           {error}
         </p>
       )}
@@ -373,10 +379,10 @@ export function FormSelect({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-300">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && (
-          <span className="text-error-400 ml-1" aria-hidden="true">
+          <span className="text-red-500 ml-1" aria-hidden="true">
             *
           </span>
         )}
@@ -393,15 +399,13 @@ export function FormSelect({
         aria-invalid={!!error}
         aria-describedby={cn(error && errorId, hint && hintId).trim() || undefined}
         className={cn(
-          'w-full px-4 py-3 md:py-2.5 bg-white/[0.05] border rounded-lg text-white',
+          'w-full px-4 py-3 md:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white',
           // 16px minimum to prevent iOS zoom
           'text-base',
           'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50',
           'transition-all duration-200',
-          '[&_option]:bg-gray-900 [&_option]:text-gray-100',
-          error
-            ? 'border-error-500/50 focus:ring-error-500/50 focus:border-error-500/50'
-            : 'border-white/[0.08]',
+          '[&_option]:bg-white [&_option]:text-gray-900 dark:[&_option]:bg-gray-900 dark:[&_option]:text-gray-100',
+          error ? 'border-red-500 focus:ring-red-500/50 focus:border-red-500' : '',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
@@ -422,7 +426,12 @@ export function FormSelect({
         </p>
       )}
       {error && (
-        <p id={errorId} className="text-sm text-error-400" role="alert" aria-live="polite">
+        <p
+          id={errorId}
+          className="text-sm text-red-500 dark:text-red-400"
+          role="alert"
+          aria-live="polite"
+        >
           {error}
         </p>
       )}

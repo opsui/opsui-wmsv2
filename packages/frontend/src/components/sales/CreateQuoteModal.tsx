@@ -275,7 +275,22 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
         {/* Line Items */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-white">Line Items</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-primary-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+              Line Items
+            </h3>
             <Button
               type="button"
               variant="secondary"
@@ -290,35 +305,44 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
 
           <div className="space-y-3">
             {lineItems.map((item, index) => (
-              <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
+              <div
+                key={index}
+                className="bg-gray-50 dark:bg-white/[0.02] rounded-lg p-4 border border-gray-200 dark:border-white/[0.08]"
+              >
                 <div className="grid grid-cols-12 gap-2 items-start">
                   {/* SKU */}
                   <div className="col-span-2">
-                    <label className="block text-xs text-gray-400 mb-1">SKU *</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      SKU *
+                    </label>
                     <input
                       type="text"
                       value={item.sku}
                       onChange={e => updateLineItem(index, 'sku', e.target.value)}
                       placeholder="SKU"
-                      className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   {/* Description */}
                   <div className="col-span-3">
-                    <label className="block text-xs text-gray-400 mb-1">Description *</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Description *
+                    </label>
                     <input
                       type="text"
                       value={item.description}
                       onChange={e => updateLineItem(index, 'description', e.target.value)}
                       placeholder="Item description"
-                      className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   {/* Quantity */}
                   <div className="col-span-1">
-                    <label className="block text-xs text-gray-400 mb-1">Qty *</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Qty *
+                    </label>
                     <input
                       type="number"
                       min="1"
@@ -326,13 +350,15 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                       onChange={e =>
                         updateLineItem(index, 'quantity', parseInt(e.target.value) || 0)
                       }
-                      className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   {/* Unit Price */}
                   <div className="col-span-2">
-                    <label className="block text-xs text-gray-400 mb-1">Unit Price *</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Unit Price *
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -341,13 +367,15 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                       onChange={e =>
                         updateLineItem(index, 'unitPrice', parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   {/* Discount */}
                   <div className="col-span-1">
-                    <label className="block text-xs text-gray-400 mb-1">Discount %</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Disc %
+                    </label>
                     <input
                       type="number"
                       min="0"
@@ -356,13 +384,15 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                       onChange={e =>
                         updateLineItem(index, 'discount', parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   {/* Tax Rate */}
                   <div className="col-span-1">
-                    <label className="block text-xs text-gray-400 mb-1">Tax %</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Tax %
+                    </label>
                     <input
                       type="number"
                       min="0"
@@ -371,14 +401,16 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                       onChange={e =>
                         updateLineItem(index, 'taxRate', parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:border-primary-500"
+                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   {/* Line Total */}
                   <div className="col-span-1">
-                    <label className="block text-xs text-gray-400 mb-1">Total</label>
-                    <div className="px-2 py-1.5 bg-primary-500/20 border border-primary-500/30 rounded text-sm text-primary-300 font-medium">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Total
+                    </label>
+                    <div className="px-2 py-1.5 bg-primary-50 dark:bg-primary-500/20 border border-primary-200 dark:border-primary-500/30 rounded text-sm text-primary-700 dark:text-primary-300 font-semibold">
                       $
                       {(
                         item.quantity *
@@ -395,7 +427,7 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                       type="button"
                       onClick={() => removeLineItem(index)}
                       disabled={lineItems.length === 1}
-                      className="p-1.5 text-danger-400 hover:text-danger-300 hover:bg-danger-500/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
@@ -407,24 +439,30 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
         </div>
 
         {/* Totals */}
-        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+        <div className="bg-primary-50 dark:bg-primary-500/10 rounded-lg p-4 border border-primary-200 dark:border-primary-500/20">
           <div className="flex justify-end">
             <div className="w-64 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Subtotal:</span>
-                <span className="text-white">${totals.subtotal.toFixed(2)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                <span className="text-gray-900 dark:text-white font-medium">
+                  ${totals.subtotal.toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Discount:</span>
-                <span className="text-danger-400">-${totals.totalDiscount.toFixed(2)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+                <span className="text-red-500 dark:text-red-400">
+                  -${totals.totalDiscount.toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Tax:</span>
-                <span className="text-white">${totals.totalTax.toFixed(2)}</span>
+                <span className="text-gray-600 dark:text-gray-400">Tax:</span>
+                <span className="text-gray-900 dark:text-white">${totals.totalTax.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold border-t border-white/10 pt-2">
-                <span className="text-white">Total:</span>
-                <span className="text-primary-400">${totals.total.toFixed(2)}</span>
+              <div className="flex justify-between text-lg font-bold border-t border-primary-200 dark:border-primary-500/20 pt-2">
+                <span className="text-gray-900 dark:text-white">Total:</span>
+                <span className="text-primary-600 dark:text-primary-400">
+                  ${totals.total.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>

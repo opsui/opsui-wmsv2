@@ -24,9 +24,9 @@ export function FormField({
   return (
     <div className={cn('space-y-1', className)} {...props}>
       {label && (
-        <label className="text-sm font-medium text-gray-300">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
-          {required && <span className="text-rose-400 ml-1">*</span>}
+          {required && <span className="text-rose-400 dark:text-rose-400 ml-1">*</span>}
         </label>
       )}
       {children}

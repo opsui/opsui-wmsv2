@@ -71,17 +71,21 @@ function AccountRow({
   const hasChildren = account.children.length > 0;
   const isExpanded = expandedNodes.has(account.accountId);
   const accountTypeColors: Record<string, string> = {
-    ASSET: 'from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-400',
-    LIABILITY: 'from-rose-500/20 to-rose-600/20 border-rose-500/30 text-rose-400',
-    EQUITY: 'from-purple-500/20 to-purple-600/20 border-purple-500/30 text-purple-400',
-    REVENUE: 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30 text-emerald-400',
-    EXPENSE: 'from-amber-500/20 to-amber-600/20 border-amber-500/30 text-amber-400',
+    ASSET: 'from-blue-500/20 to-blue-600/20 border-blue-500/30 text-blue-600 dark:text-blue-400',
+    LIABILITY:
+      'from-rose-500/20 to-rose-600/20 border-rose-500/30 text-rose-600 dark:text-rose-400',
+    EQUITY:
+      'from-purple-500/20 to-purple-600/20 border-purple-500/30 text-purple-600 dark:text-purple-400',
+    REVENUE:
+      'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
+    EXPENSE:
+      'from-amber-500/20 to-amber-600/20 border-amber-500/30 text-amber-600 dark:text-amber-400',
   };
 
   return (
     <>
       <tr
-        className={`border-b border-gray-800 hover:bg-white/[0.02] ${account.isHeader ? 'bg-white/[0.03]' : ''}`}
+        className={`border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02] ${account.isHeader ? 'bg-gray-50 dark:bg-white/[0.03]' : ''}`}
         style={{ paddingLeft: `${account.level * 16}px` }}
       >
         <td className="py-3 px-4">
@@ -89,18 +93,18 @@ function AccountRow({
             {hasChildren ? (
               <button
                 onClick={() => onToggleExpand(account.accountId)}
-                className="p-1 hover:bg-white/10 rounded"
+                className="p-1 hover:bg-gray-200 dark:hover:bg-white/10 rounded"
                 aria-label={isExpanded ? 'Collapse' : 'Expand'}
               >
                 <ChevronRightIcon
-                  className={`h-4 w-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                  className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
                 />
               </button>
             ) : (
               <span className="w-6" />
             )}
             <span
-              className={`font-mono text-sm ${account.isHeader ? 'font-bold' : ''}`}
+              className={`font-mono text-sm ${account.isHeader ? 'font-bold' : 'text-gray-700 dark:text-gray-300'}`}
               style={{ paddingLeft: `${account.level * 12}px` }}
             >
               {account.accountCode}
@@ -110,15 +114,17 @@ function AccountRow({
         <td className="py-3 px-4">
           <div className="flex items-center gap-2">
             {account.isHeader ? (
-              <FolderIcon className="h-4 w-4 text-gray-500" />
+              <FolderIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             ) : (
-              <DocumentTextIcon className="h-4 w-4 text-gray-600" />
+              <DocumentTextIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
             )}
-            <span className={`text-sm ${account.isHeader ? 'font-bold' : 'text-gray-300'}`}>
+            <span
+              className={`text-sm ${account.isHeader ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}
+            >
               {account.accountName}
             </span>
             {!account.isActive && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-500/20 text-gray-500">
+              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-200 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400">
                 Inactive
               </span>
             )}
@@ -133,7 +139,7 @@ function AccountRow({
         </td>
         <td className="py-3 px-4 text-center">
           <span
-            className={`inline-flex items-center gap-1 text-sm ${account.normalBalance === 'D' ? 'text-blue-400' : 'text-rose-400'}`}
+            className={`inline-flex items-center gap-1 text-sm ${account.normalBalance === 'D' ? 'text-blue-600 dark:text-blue-400' : 'text-rose-600 dark:text-rose-400'}`}
           >
             {account.normalBalance === 'D' ? (
               <ArrowDownIcon className="h-3 w-3" />
@@ -143,22 +149,24 @@ function AccountRow({
             {account.normalBalance === 'D' ? 'Debit' : 'Credit'}
           </span>
         </td>
-        <td className="py-3 px-4 text-sm text-gray-500">{account.parentAccountId || '-'}</td>
+        <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+          {account.parentAccountId || '-'}
+        </td>
         <td className="py-3 px-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => onViewBalance(account.accountId)}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors"
               title="View Balance"
             >
-              <EyeIcon className="h-4 w-4 text-gray-400" />
+              <EyeIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </button>
             <button
               onClick={() => onEdit(account)}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors"
               title="Edit Account"
             >
-              <PencilIcon className="h-4 w-4 text-gray-400" />
+              <PencilIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         </td>
@@ -205,7 +213,9 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Account Code *</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          Account Code *
+        </label>
         <Input
           type="text"
           value={formData.accountCode}
@@ -217,7 +227,9 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
       </div>
 
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Account Name *</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          Account Name *
+        </label>
         <Input
           type="text"
           value={formData.accountName}
@@ -228,13 +240,15 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
       </div>
 
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Account Type *</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          Account Type *
+        </label>
         <select
           value={formData.accountType}
           onChange={e => setFormData({ ...formData, accountType: e.target.value as AccountType })}
           required
           disabled={!!account}
-          className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         >
           <option value={AccountType.ASSET}>Asset</option>
           <option value={AccountType.LIABILITY}>Liability</option>
@@ -245,13 +259,13 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
       </div>
 
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
           Parent Account (optional)
         </label>
         <select
           value={formData.parentAccountId}
           onChange={e => setFormData({ ...formData, parentAccountId: e.target.value })}
-          className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         >
           <option value="">No Parent</option>
           {parentOptions
@@ -265,14 +279,16 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
       </div>
 
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Normal Balance *</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          Normal Balance *
+        </label>
         <select
           value={formData.normalBalance}
           onChange={e =>
             setFormData({ ...formData, normalBalance: e.target.value as NormalBalance })
           }
           required
-          className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         >
           <option value="D">Debit</option>
           <option value="C">Credit</option>
@@ -285,21 +301,23 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
           id="isHeader"
           checked={formData.isHeader}
           onChange={e => setFormData({ ...formData, isHeader: e.target.checked })}
-          className="w-4 h-4 rounded border-gray-600 bg-white/5 text-primary-500 focus:ring-primary-500"
+          className="w-4 h-4 rounded border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-white/5 text-primary-500 dark:text-primary-400 focus:ring-primary-500"
         />
-        <label htmlFor="isHeader" className="text-sm text-gray-300">
+        <label htmlFor="isHeader" className="text-sm text-gray-700 dark:text-gray-300">
           This is a header account (contains sub-accounts)
         </label>
       </div>
 
       <div>
-        <label className="text-sm font-medium text-gray-300 mb-2 block">Description</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          Description
+        </label>
         <textarea
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
           placeholder="Optional description"
           rows={3}
-          className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         />
       </div>
 
@@ -448,8 +466,12 @@ function ChartOfAccountsPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">Chart of Accounts</h1>
-              <p className="mt-2 text-gray-400">Manage your account structure and hierarchy</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Chart of Accounts
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage your account structure and hierarchy
+              </p>
             </div>
             <Button
               variant="primary"
@@ -467,14 +489,17 @@ function ChartOfAccountsPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex-1 min-w-[200px]">
-                <label htmlFor="filter-type" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="filter-type"
+                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                >
                   Account Type
                 </label>
                 <select
                   id="filter-type"
                   value={filterType}
                   onChange={e => setFilterType(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                   <option value="">All Types</option>
                   <option value="ASSET">Assets</option>
@@ -485,14 +510,17 @@ function ChartOfAccountsPage() {
                 </select>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <label htmlFor="filter-status" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="filter-status"
+                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                >
                   Status
                 </label>
                 <select
                   id="filter-status"
                   value={filterActive}
                   onChange={e => setFilterActive(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                   <option value="all">All</option>
                   <option value="active">Active Only</option>
@@ -517,47 +545,47 @@ function ChartOfAccountsPage() {
               </div>
             ) : accounts.length === 0 ? (
               <div className="text-center py-12">
-                <FolderIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No accounts found</p>
+                <FolderIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">No accounts found</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full" role="table" aria-label="Chart of accounts">
                   <thead>
-                    <tr className="border-b border-gray-700">
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-400 w-40"
+                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-40"
                       >
                         Account Code
                       </th>
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                       >
                         Account Name
                       </th>
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-400 w-32"
+                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-32"
                       >
                         Type
                       </th>
                       <th
                         scope="col"
-                        className="text-center py-3 px-4 text-sm font-medium text-gray-400 w-28"
+                        className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28"
                       >
                         Normal Balance
                       </th>
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-400 w-32"
+                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-32"
                       >
                         Parent
                       </th>
                       <th
                         scope="col"
-                        className="text-right py-3 px-4 text-sm font-medium text-gray-400 w-24"
+                        className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-24"
                       >
                         Actions
                       </th>

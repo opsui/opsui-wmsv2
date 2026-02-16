@@ -118,13 +118,15 @@ function ARAgingPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-amber-500/20 rounded-xl">
-                <ClockIcon className="h-8 w-8 text-amber-400" />
+                <ClockIcon className="h-8 w-8 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Accounts Receivable Aging
                 </h1>
-                <p className="mt-2 text-gray-400">Track outstanding invoices by aging period</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Track outstanding invoices by aging period
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -145,7 +147,10 @@ function ARAgingPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div>
-                <label htmlFor="as-of-date" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="as-of-date"
+                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
+                >
                   As of Date
                 </label>
                 <input
@@ -153,7 +158,7 @@ function ARAgingPage() {
                   type="date"
                   value={asOfDate}
                   onChange={e => setAsOfDate(e.target.value)}
-                  className="px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
               </div>
             </div>
@@ -172,20 +177,22 @@ function ARAgingPage() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-3 gap-6">
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Report Date</p>
-                    <p className="text-lg font-medium text-white">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Report Date</p>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">
                       {new Date(mockReport.asOfDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Total Outstanding</p>
-                    <p className="text-2xl font-bold text-amber-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Total Outstanding
+                    </p>
+                    <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                       {formatCurrency(mockReport.totalOutstanding)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Total Invoices</p>
-                    <p className="text-2xl font-bold text-white">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Invoices</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {mockReport.buckets.reduce((sum, b) => sum + b.count, 0)}
                     </p>
                   </div>
@@ -197,7 +204,7 @@ function ARAgingPage() {
             <Card variant="glass">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CurrencyDollarIcon className="h-5 w-5 text-amber-400" />
+                  <CurrencyDollarIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   Aging Breakdown
                 </CardTitle>
               </CardHeader>
@@ -209,14 +216,14 @@ function ARAgingPage() {
                         ? (bucket.amount / mockReport.totalOutstanding) * 100
                         : 0;
 
-                    let colorClass = 'text-emerald-400';
+                    let colorClass = 'text-emerald-600 dark:text-emerald-400';
                     let bgClass = 'bg-emerald-500/20';
 
                     if (bucket.days >= 90) {
-                      colorClass = 'text-rose-400';
+                      colorClass = 'text-rose-600 dark:text-rose-400';
                       bgClass = 'bg-rose-500/20';
                     } else if (bucket.days >= 60) {
-                      colorClass = 'text-amber-400';
+                      colorClass = 'text-amber-600 dark:text-amber-400';
                       bgClass = 'bg-amber-500/20';
                     }
 
@@ -224,7 +231,7 @@ function ARAgingPage() {
                       <div key={index} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-300 min-w-[140px]">
+                            <span className="text-sm text-gray-700 dark:text-gray-300 min-w-[140px]">
                               {bucket.label}
                             </span>
                             <span className={`text-lg font-bold ${colorClass}`}>
@@ -232,9 +239,11 @@ function ARAgingPage() {
                             </span>
                             <span className="text-xs text-gray-500">({bucket.count} invoices)</span>
                           </div>
-                          <span className="text-sm text-gray-400">{percent.toFixed(1)}%</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {percent.toFixed(1)}%
+                          </span>
                         </div>
-                        <div className="w-full bg-white/[0.05] rounded-full h-2">
+                        <div className="w-full bg-gray-200 dark:bg-white/[0.05] rounded-full h-2">
                           <div
                             className={`h-2 rounded-full ${bgClass} transition-all duration-500`}
                             style={{ width: `${percent}%` }}
@@ -264,16 +273,16 @@ function ARAgingPage() {
                       <ClockIcon
                         className={`h-6 w-6 ${
                           mockReport.buckets[0].amount / mockReport.totalOutstanding > 0.5
-                            ? 'text-emerald-400'
+                            ? 'text-emerald-600 dark:text-emerald-400'
                             : mockReport.buckets[1].amount / mockReport.totalOutstanding > 0.3
-                              ? 'text-amber-400'
-                              : 'text-rose-400'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-rose-600 dark:text-rose-400'
                         }`}
                       />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">Collection Health</p>
-                      <p className="text-lg font-bold text-white">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Collection Health</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {mockReport.buckets[0].amount / mockReport.totalOutstanding > 0.5
                           ? 'Good'
                           : mockReport.buckets[1].amount / mockReport.totalOutstanding > 0.3
@@ -283,8 +292,8 @@ function ARAgingPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-1">Current Ratio</p>
-                    <p className="text-2xl font-bold text-emerald-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Current Ratio</p>
+                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                       {((mockReport.buckets[0].amount / mockReport.totalOutstanding) * 100).toFixed(
                         0
                       )}

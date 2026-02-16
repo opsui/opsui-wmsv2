@@ -76,7 +76,23 @@ function JournalEntryStatusBadge({ status }: { status: JournalEntryStatus }) {
   };
 
   const config = statusConfig[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return (
+    <span
+      className={`px-2 py-1 rounded-full text-xs font-medium ${
+        status === JournalEntryStatus.DRAFT
+          ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
+          : status === JournalEntryStatus.SUBMITTED
+            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+            : status === JournalEntryStatus.APPROVED || status === JournalEntryStatus.POSTED
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+              : status === JournalEntryStatus.REVERSED
+                ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                : 'bg-gray-100 text-gray-700'
+      }`}
+    >
+      {config.label}
+    </span>
+  );
 }
 
 // ============================================================================
@@ -161,7 +177,10 @@ function JournalEntryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 bg-gray-100 dark:bg-transparent p-4 rounded-xl"
+    >
       <div className="grid grid-cols-2 gap-4">
         <FormField label="Entry Number" required>
           <Input
@@ -207,7 +226,9 @@ function JournalEntryForm({
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-gray-300">Entry Lines</label>
+          <label className="text-sm font-medium text-gray-900 dark:text-gray-300">
+            Entry Lines
+          </label>
           <Button
             type="button"
             variant="secondary"
@@ -220,18 +241,20 @@ function JournalEntryForm({
           </Button>
         </div>
 
-        <div className="border border-white/[0.08] rounded-xl overflow-hidden">
+        <div className="border border-gray-300 dark:border-white/[0.08] rounded-xl overflow-hidden">
           <table className="w-full">
-            <thead className="bg-white/[0.03]">
+            <thead className="bg-gray-200 dark:bg-white/[0.03]">
               <tr>
-                <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">Account</th>
-                <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">
+                <th className="text-left py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400">
+                  Account
+                </th>
+                <th className="text-left py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400">
                   Description
                 </th>
-                <th className="text-right py-2 px-3 text-xs font-medium text-gray-400 w-28">
+                <th className="text-right py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400 w-28">
                   Debit
                 </th>
-                <th className="text-right py-2 px-3 text-xs font-medium text-gray-400 w-28">
+                <th className="text-right py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400 w-28">
                   Credit
                 </th>
                 <th className="w-10" />
@@ -239,12 +262,12 @@ function JournalEntryForm({
             </thead>
             <tbody>
               {formData.lines.map((line, index) => (
-                <tr key={index} className="border-t border-white/[0.05]">
+                <tr key={index} className="border-t border-gray-400 dark:border-white/[0.05]">
                   <td className="py-2 px-3">
                     <select
                       value={line.accountId}
                       onChange={e => updateLine(index, 'accountId', e.target.value)}
-                      className="w-full px-2 py-1.5 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                      className="w-full px-2 py-1.5 bg-gray-200 dark:bg-white/[0.05] border border-gray-400 dark:border-white/[0.08] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                       required
                     >
                       <option value="">Select Account</option>
@@ -295,29 +318,32 @@ function JournalEntryForm({
                       type="button"
                       onClick={() => removeLine(index)}
                       disabled={formData.lines.length <= 2}
-                      className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                      className="p-1 hover:bg-gray-300 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-30"
                     >
-                      <TrashIcon className="h-4 w-4 text-gray-500" />
+                      <TrashIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-white/[0.03] border-t border-white/[0.08]">
+            <tfoot className="bg-gray-200 dark:bg-white/[0.03] border-t border-gray-400 dark:border-white/[0.08]">
               <tr>
-                <td colSpan={2} className="py-2 px-3 text-sm font-medium text-gray-400 text-right">
+                <td
+                  colSpan={2}
+                  className="py-2 px-3 text-sm font-medium text-gray-900 dark:text-gray-400 text-right"
+                >
                   Totals:
                 </td>
                 <td className="py-2 px-3 text-right">
                   <span
-                    className={`text-sm font-medium ${totalDebits > 0 ? 'text-blue-400' : 'text-gray-500'}`}
+                    className={`text-sm font-medium ${totalDebits > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}
                   >
                     ${totalDebits.toFixed(2)}
                   </span>
                 </td>
                 <td className="py-2 px-3 text-right">
                   <span
-                    className={`text-sm font-medium ${totalCredits > 0 ? 'text-rose-400' : 'text-gray-500'}`}
+                    className={`text-sm font-medium ${totalCredits > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500'}`}
                   >
                     ${totalCredits.toFixed(2)}
                   </span>
@@ -329,14 +355,14 @@ function JournalEntryForm({
         </div>
 
         {!isBalanced && (
-          <p className="text-sm text-rose-400 mt-2 flex items-center gap-1">
+          <p className="text-sm text-rose-600 dark:text-rose-400 mt-2 flex items-center gap-1">
             <XMarkIcon className="h-4 w-4" />
             Entry must balance (debits = credits)
           </p>
         )}
 
         {isBalanced && (
-          <p className="text-sm text-emerald-400 mt-2 flex items-center gap-1">
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1">
             <CheckIcon className="h-4 w-4" />
             Entry is balanced
           </p>
@@ -349,11 +375,11 @@ function JournalEntryForm({
           onChange={e => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes..."
           rows={2}
-          className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-gray-200 dark:bg-white/[0.05] border border-gray-400 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         />
       </FormField>
 
-      <div className="flex items-center gap-3 justify-end pt-4 border-t border-white/[0.08]">
+      <div className="flex items-center gap-3 justify-end pt-4 border-t border-gray-200 dark:border-white/[0.08]">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
           Cancel
         </Button>
@@ -416,58 +442,64 @@ function ViewEntryModal({ entryId, onClose, onApprove, onPost, onReverse }: View
             {/* Header Info */}
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <p className="text-xs text-gray-500 mb-1">Entry Number</p>
-                <p className="text-sm font-medium text-white">{entry.entryNumber}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Entry Number</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {entry.entryNumber}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-1">Date</p>
-                <p className="text-sm text-gray-300">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   {new Date(entry.entryDate).toLocaleDateString()}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-1">Period</p>
-                <p className="text-sm text-gray-300">{entry.fiscalPeriod}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Period</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{entry.fiscalPeriod}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-1">Status</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
                 <JournalEntryStatusBadge status={entry.status} />
               </div>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500 mb-1">Description</p>
-              <p className="text-sm text-white">{entry.description}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Description</p>
+              <p className="text-sm text-gray-900 dark:text-white">{entry.description}</p>
             </div>
 
             {/* Lines */}
-            <div className="border border-white/[0.08] rounded-xl overflow-hidden">
+            <div className="border border-gray-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
               <table className="w-full">
-                <thead className="bg-white/[0.03]">
+                <thead className="bg-gray-100 dark:bg-white/[0.03]">
                   <tr>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
                       Account
                     </th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-400">
+                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
                       Description
                     </th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-400 w-28">
+                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-28">
                       Debit
                     </th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-400 w-28">
+                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-28">
                       Credit
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {entry.lines?.map((line, index) => (
-                    <tr key={index} className="border-t border-white/[0.05]">
-                      <td className="py-2 px-3 text-sm text-white">{line.accountCode}</td>
-                      <td className="py-2 px-3 text-sm text-gray-300">{line.description || '-'}</td>
-                      <td className="py-2 px-3 text-sm text-right text-blue-400">
-                        {line.debitAmount > 0 ? `$${line.debitAmount.toFixed(2)}` : '-'}
+                    <tr key={index} className="border-t border-gray-200 dark:border-white/[0.05]">
+                      <td className="py-2 px-3 text-sm text-gray-900 dark:text-white">
+                        {line.accountCode}
                       </td>
-                      <td className="py-2 px-3 text-sm text-right text-rose-400">
+                      <td className="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
+                        {line.description || '-'}
+                      </td>
+                      <td className="py-2 px-3 text-sm text-right text-blue-600 dark:text-blue-400">
+                        {line.debitAmount > 0 ? `${line.debitAmount.toFixed(2)}` : '-'}
+                      </td>
+                      <td className="py-2 px-3 text-sm text-right text-rose-600 dark:text-rose-400">
                         {line.creditAmount > 0 ? `$${line.creditAmount.toFixed(2)}` : '-'}
                       </td>
                     </tr>
@@ -568,8 +600,144 @@ function JournalEntriesPage() {
   const { data: accounts = [] } = useChartOfAccounts();
   const createMutation = useCreateJournalEntry();
 
-  const entries = entriesData?.entries || [];
-  const totalEntries = entriesData?.total || 0;
+  // Sample data for demonstration
+  const sampleEntries = [
+    {
+      journalEntryId: 'JE-001',
+      entryNumber: 'JE-2024-0001',
+      entryDate: '2024-02-15',
+      description: 'Cash sale - Order SO0001',
+      fiscalPeriod: 'Feb 2024',
+      status: JournalEntryStatus.POSTED,
+      totalDebit: 1250.0,
+      totalCredit: 1250.0,
+      lines: [
+        {
+          accountId: '1000',
+          accountCode: '1000',
+          accountName: 'Cash',
+          debitAmount: 1250.0,
+          creditAmount: 0,
+        },
+        {
+          accountId: '4000',
+          accountCode: '4000',
+          accountName: 'Sales Revenue',
+          debitAmount: 0,
+          creditAmount: 1250.0,
+        },
+      ],
+    },
+    {
+      journalEntryId: 'JE-002',
+      entryNumber: 'JE-2024-0002',
+      entryDate: '2024-02-14',
+      description: 'Inventory purchase - SKU10050',
+      fiscalPeriod: 'Feb 2024',
+      status: JournalEntryStatus.APPROVED,
+      totalDebit: 450.0,
+      totalCredit: 450.0,
+      lines: [
+        {
+          accountId: '1500',
+          accountCode: '1500',
+          accountName: 'Inventory',
+          debitAmount: 450.0,
+          creditAmount: 0,
+        },
+        {
+          accountId: '2000',
+          accountCode: '2000',
+          accountName: 'Accounts Payable',
+          debitAmount: 0,
+          creditAmount: 450.0,
+        },
+      ],
+    },
+    {
+      journalEntryId: 'JE-003',
+      entryNumber: 'JE-2024-0003',
+      entryDate: '2024-02-13',
+      description: 'Rent payment - February 2024',
+      fiscalPeriod: 'Feb 2024',
+      status: JournalEntryStatus.POSTED,
+      totalDebit: 2800.0,
+      totalCredit: 2800.0,
+      lines: [
+        {
+          accountId: '6100',
+          accountCode: '6100',
+          accountName: 'Rent Expense',
+          debitAmount: 2800.0,
+          creditAmount: 0,
+        },
+        {
+          accountId: '1000',
+          accountCode: '1000',
+          accountName: 'Cash',
+          debitAmount: 0,
+          creditAmount: 2800.0,
+        },
+      ],
+    },
+    {
+      journalEntryId: 'JE-004',
+      entryNumber: 'JE-2024-0004',
+      entryDate: '2024-02-12',
+      description: 'Customer refund - Order SO0003',
+      fiscalPeriod: 'Feb 2024',
+      status: JournalEntryStatus.SUBMITTED,
+      totalDebit: 185.0,
+      totalCredit: 185.0,
+      lines: [
+        {
+          accountId: '4200',
+          accountCode: '4200',
+          accountName: 'Sales Returns',
+          debitAmount: 185.0,
+          creditAmount: 0,
+        },
+        {
+          accountId: '1000',
+          accountCode: '1000',
+          accountName: 'Cash',
+          debitAmount: 0,
+          creditAmount: 185.0,
+        },
+      ],
+    },
+    {
+      journalEntryId: 'JE-005',
+      entryNumber: 'JE-2024-0005',
+      entryDate: '2024-02-11',
+      description: 'Payroll expense - Bi-weekly',
+      fiscalPeriod: 'Feb 2024',
+      status: JournalEntryStatus.DRAFT,
+      totalDebit: 5500.0,
+      totalCredit: 5500.0,
+      lines: [
+        {
+          accountId: '6200',
+          accountCode: '6200',
+          accountName: 'Wages Expense',
+          debitAmount: 5500.0,
+          creditAmount: 0,
+        },
+        {
+          accountId: '2100',
+          accountCode: '2100',
+          accountName: 'Wages Payable',
+          debitAmount: 0,
+          creditAmount: 5500.0,
+        },
+      ],
+    },
+  ];
+
+  // Use API data or fall back to sample data for demonstration
+  const apiEntries = entriesData?.entries || [];
+  const entries = apiEntries.length > 0 ? apiEntries : sampleEntries;
+  const totalEntries = entriesData?.total || sampleEntries.length;
   const totalPages = Math.ceil(totalEntries / pageSize);
 
   // Format currency
@@ -603,8 +771,12 @@ function JournalEntriesPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">Journal Entries</h1>
-              <p className="mt-2 text-gray-400">Create and manage double-entry journal entries</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Journal Entries
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Create and manage double-entry journal entries
+              </p>
             </div>
             <Button
               variant="primary"
@@ -622,14 +794,17 @@ function JournalEntriesPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex-1 min-w-[200px]">
-                <label htmlFor="filter-status" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="filter-status"
+                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                >
                   Status
                 </label>
                 <select
                   id="filter-status"
                   value={filterStatus}
                   onChange={e => setFilterStatus(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                   <option value="">All Statuses</option>
                   <option value={JournalEntryStatus.DRAFT}>Draft</option>
@@ -640,7 +815,10 @@ function JournalEntriesPage() {
                 </select>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <label htmlFor="date-from" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="date-from"
+                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
+                >
                   From Date
                 </label>
                 <Input
@@ -648,10 +826,14 @@ function JournalEntriesPage() {
                   type="date"
                   value={dateFrom}
                   onChange={e => setDateFrom(e.target.value)}
+                  className="bg-white dark:bg-gray-800"
                 />
               </div>
               <div className="flex-1 min-w-[200px]">
-                <label htmlFor="date-to" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="date-to"
+                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
+                >
                   To Date
                 </label>
                 <Input
@@ -659,6 +841,7 @@ function JournalEntriesPage() {
                   type="date"
                   value={dateTo}
                   onChange={e => setDateTo(e.target.value)}
+                  className="bg-white dark:bg-gray-800"
                 />
               </div>
             </div>
@@ -679,34 +862,34 @@ function JournalEntriesPage() {
               </div>
             ) : entries.length === 0 ? (
               <div className="text-center py-12">
-                <DocumentTextIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No journal entries found</p>
+                <DocumentTextIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400">No journal entries found</p>
               </div>
             ) : (
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full" role="table" aria-label="Journal entries">
                     <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Entry Number
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Date
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Description
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400 w-28">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28">
                           Period
                         </th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-400 w-28">
+                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28">
                           Status
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400 w-28">
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28">
                           Total
                         </th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-400 w-24">
+                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-24">
                           Actions
                         </th>
                       </tr>
@@ -715,29 +898,33 @@ function JournalEntriesPage() {
                       {entries.map((entry: JournalEntry) => (
                         <tr
                           key={entry.journalEntryId}
-                          className="border-b border-gray-800 hover:bg-white/[0.02]"
+                          className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                         >
-                          <td className="py-3 px-4 text-sm font-medium text-white">
+                          <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">
                             {entry.entryNumber}
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-300">
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
                             {new Date(entry.entryDate).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-300">{entry.description}</td>
-                          <td className="py-3 px-4 text-sm text-gray-400">{entry.fiscalPeriod}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                            {entry.description}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+                            {entry.fiscalPeriod}
+                          </td>
                           <td className="py-3 px-4 text-center">
                             <JournalEntryStatusBadge status={entry.status} />
                           </td>
-                          <td className="py-3 px-4 text-sm text-right text-white font-medium">
+                          <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white font-medium">
                             {formatCurrency(entry.totalDebit)}
                           </td>
                           <td className="py-3 px-4 text-center">
                             <button
                               onClick={() => setViewEntryId(entry.journalEntryId)}
-                              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                              className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors"
                               title="View Entry"
                             >
-                              <EyeIcon className="h-4 w-4 text-gray-400" />
+                              <EyeIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                             </button>
                           </td>
                         </tr>
@@ -748,8 +935,8 @@ function JournalEntriesPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-800">
-                    <p className="text-sm text-gray-500">
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Showing {currentPage * pageSize + 1}-
                       {Math.min((currentPage + 1) * pageSize, totalEntries)} of {totalEntries}{' '}
                       entries

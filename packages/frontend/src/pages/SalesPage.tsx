@@ -724,8 +724,8 @@ function SalesPage() {
                   onClick={() => setTab(tab.key)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-300 border border-blue-200 dark:border-primary-500/30'
-                      : 'bg-white dark:bg-transparent text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-transparent hover:bg-gray-50 dark:hover:bg-white/5 shadow-sm'
+                      ? 'bg-primary-50 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-500/30'
+                      : 'bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   <Icon className="h-4 w-4" />

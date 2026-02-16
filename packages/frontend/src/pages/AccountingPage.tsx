@@ -594,21 +594,25 @@ function AccountingPage() {
           <div className="flex items-center gap-2 overflow-x-auto pb-2">
             {tabs.map(tab => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   role="tab"
-                  aria-selected={activeTab === tab.id}
+                  aria-selected={isActive}
                   aria-controls={`panel-${tab.id}`}
                   id={`tab-${tab.id}`}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    activeTab === tab.id
-                      ? 'dark:bg-primary-500 bg-stone-100 text-stone-700 dark:text-white'
-                      : 'dark:bg-white/5 bg-stone-50 text-stone-600 dark:text-gray-400 hover:bg-stone-100 dark:hover:bg-white/10'
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border-2 ${
+                    isActive
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 border-transparent'
                   }`}
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  <Icon
+                    className={`h-4 w-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : ''}`}
+                    aria-hidden="true"
+                  />
                   {tab.label}
                 </button>
               );
@@ -725,25 +729,29 @@ function AccountingPage() {
                 {/* Revenue Section */}
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Revenue</CardTitle>
+                    <CardTitle className="text-emerald-600 dark:text-emerald-400">
+                      Revenue
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center py-3 border-b border-gray-700">
-                        <span className="text-gray-400">Gross Revenue</span>
-                        <span className="text-white font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">Gross Revenue</span>
+                        <span className="text-gray-900 dark:text-white font-semibold">
                           {formatCurrency(sampleProfitLoss.grossRevenue)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-gray-700">
-                        <span className="text-gray-400">Returns & Refunds</span>
-                        <span className="text-rose-400 font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">Returns & Refunds</span>
+                        <span className="text-rose-600 dark:text-rose-400 font-medium">
                           ({formatCurrency(sampleProfitLoss.returns)})
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 bg-primary-500/10 rounded-lg px-4">
-                        <span className="text-white font-medium">Net Revenue</span>
-                        <span className="text-emerald-400 font-bold text-lg">
+                      <div className="flex justify-between items-center py-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg px-4 border border-emerald-200 dark:border-emerald-500/20">
+                        <span className="text-gray-900 dark:text-white font-semibold">
+                          Net Revenue
+                        </span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">
                           {formatCurrency(sampleProfitLoss.netRevenue)}
                         </span>
                       </div>
@@ -754,25 +762,29 @@ function AccountingPage() {
                 {/* Cost of Goods Sold */}
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Cost of Goods Sold</CardTitle>
+                    <CardTitle className="text-rose-600 dark:text-rose-400">
+                      Cost of Goods Sold
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center py-3 border-b border-gray-700">
-                        <span className="text-gray-400">Material Costs</span>
-                        <span className="text-white font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">Material Costs</span>
+                        <span className="text-gray-900 dark:text-white font-medium">
                           {formatCurrency(sampleProfitLoss.materialCosts)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-gray-700">
-                        <span className="text-gray-400">Labor Costs</span>
-                        <span className="text-white font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">Labor Costs</span>
+                        <span className="text-gray-900 dark:text-white font-medium">
                           {formatCurrency(sampleProfitLoss.laborCosts)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 bg-primary-500/10 rounded-lg px-4">
-                        <span className="text-white font-medium">Total COGS</span>
-                        <span className="text-white font-bold text-lg">
+                      <div className="flex justify-between items-center py-4 bg-rose-50 dark:bg-rose-500/10 rounded-lg px-4 border border-rose-200 dark:border-rose-500/20">
+                        <span className="text-gray-900 dark:text-white font-semibold">
+                          Total COGS
+                        </span>
+                        <span className="text-rose-600 dark:text-rose-400 font-bold text-lg">
                           {formatCurrency(sampleProfitLoss.totalCOGS)}
                         </span>
                       </div>
@@ -781,18 +793,25 @@ function AccountingPage() {
                 </Card>
 
                 {/* Gross Profit */}
-                <Card variant="glass" className="border-l-4 border-l-emerald-500">
+                <Card
+                  variant="glass"
+                  className="border-l-4 border-l-emerald-500 bg-emerald-50 dark:bg-emerald-500/5"
+                >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-400 mb-1">Gross Profit</p>
-                        <p className="text-3xl font-bold text-emerald-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          Gross Profit
+                        </p>
+                        <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                           {formatCurrency(sampleProfitLoss.grossProfit)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-400 mb-1">Gross Margin</p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          Gross Margin
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
                           {sampleProfitLoss.grossProfitMargin.toFixed(1)}%
                         </p>
                       </div>
@@ -803,7 +822,9 @@ function AccountingPage() {
                 {/* Operating Expenses */}
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Operating Expenses</CardTitle>
+                    <CardTitle className="text-amber-600 dark:text-amber-400">
+                      Operating Expenses
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -813,20 +834,22 @@ function AccountingPage() {
                           value > 0 && (
                             <div
                               key={key}
-                              className="flex justify-between items-center py-3 border-b border-gray-700"
+                              className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700"
                             >
-                              <span className="text-gray-400 capitalize">
+                              <span className="text-gray-600 dark:text-gray-400 capitalize">
                                 {key.replace(/_/g, ' ')}
                               </span>
-                              <span className="text-white font-medium">
+                              <span className="text-gray-900 dark:text-white font-medium">
                                 {formatCurrency(value as number)}
                               </span>
                             </div>
                           )
                       )}
-                      <div className="flex justify-between items-center py-3 bg-primary-500/10 rounded-lg px-4">
-                        <span className="text-white font-medium">Total Operating Expenses</span>
-                        <span className="text-white font-bold text-lg">
+                      <div className="flex justify-between items-center py-4 bg-amber-50 dark:bg-amber-500/10 rounded-lg px-4 border border-amber-200 dark:border-amber-500/20">
+                        <span className="text-gray-900 dark:text-white font-semibold">
+                          Total Operating Expenses
+                        </span>
+                        <span className="text-amber-600 dark:text-amber-400 font-bold text-lg">
                           {formatCurrency(sampleProfitLoss.totalOperatingExpenses)}
                         </span>
                       </div>
@@ -837,22 +860,22 @@ function AccountingPage() {
                 {/* Net Income */}
                 <Card
                   variant="glass"
-                  className={`border-l-4 ${sampleProfitLoss.netIncome >= 0 ? 'border-l-emerald-500' : 'border-l-rose-500'}`}
+                  className={`border-l-4 ${sampleProfitLoss.netIncome >= 0 ? 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-500/5' : 'border-l-rose-500 bg-rose-50 dark:bg-rose-500/5'}`}
                 >
                   <CardContent className="p-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-400 mb-1">Net Income</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Income</p>
                         <p
-                          className={`text-3xl font-bold ${sampleProfitLoss.netIncome >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                          className={`text-3xl font-bold ${sampleProfitLoss.netIncome >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                         >
                           {formatCurrency(sampleProfitLoss.netIncome)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-400 mb-1">Net Margin</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Margin</p>
                         <p
-                          className={`text-2xl font-bold ${sampleProfitLoss.netMargin >= 0 ? 'text-white' : 'text-rose-400'}`}
+                          className={`text-2xl font-bold ${sampleProfitLoss.netMargin >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                         >
                           {sampleProfitLoss.netMargin.toFixed(1)}%
                         </p>
@@ -881,12 +904,14 @@ function AccountingPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-400 mb-1">Total Inventory Value</p>
-                        <p className="text-4xl font-bold text-white">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                          Total Inventory Value
+                        </p>
+                        <p className="text-4xl font-bold text-gray-900 dark:text-white">
                           {formatCurrency(sampleInventoryData?.totalValue || 0)}
                         </p>
                       </div>
-                      <CubeIcon className="h-12 w-12 text-primary-400" />
+                      <CubeIcon className="h-12 w-12 text-primary-500 dark:text-primary-400" />
                     </div>
                   </CardContent>
                 </Card>
@@ -902,14 +927,16 @@ function AccountingPage() {
                         ([category, value]) => (
                           <div key={category}>
                             <div className="flex items-center justify-between text-sm mb-2">
-                              <span className="text-gray-300">{category}</span>
-                              <span className="text-white font-medium">
+                              <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                {category}
+                              </span>
+                              <span className="text-gray-900 dark:text-white font-bold">
                                 {formatCurrency(value as number)}
                               </span>
                             </div>
-                            <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                               <div
-                                className="bg-primary-500 h-2 rounded-full"
+                                className="bg-primary-500 h-3 rounded-full"
                                 style={{
                                   width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
                                 }}
@@ -932,14 +959,16 @@ function AccountingPage() {
                       {Object.entries(sampleInventoryData?.byZone || {}).map(([zone, value]) => (
                         <div key={zone}>
                           <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-gray-300">{zone}</span>
-                            <span className="text-white font-medium">
+                            <span className="text-gray-700 dark:text-gray-300 font-medium">
+                              {zone}
+                            </span>
+                            <span className="text-gray-900 dark:text-white font-bold">
                               {formatCurrency(value as number)}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                             <div
-                              className="bg-emerald-500 h-2 rounded-full"
+                              className="bg-emerald-500 h-3 rounded-full"
                               style={{
                                 width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
                               }}
@@ -965,13 +994,13 @@ function AccountingPage() {
                   <div className="flex-1 min-w-[200px]">
                     <label
                       htmlFor="transaction-type-filter"
-                      className="text-sm text-gray-400 mb-2 block"
+                      className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
                     >
                       Transaction Type
                     </label>
                     <select
                       id="transaction-type-filter"
-                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       aria-label="Filter by transaction type"
                     >
                       <option value="">All Types</option>
@@ -984,13 +1013,13 @@ function AccountingPage() {
                   <div className="flex-1 min-w-[200px]">
                     <label
                       htmlFor="reference-type-filter"
-                      className="text-sm text-gray-400 mb-2 block"
+                      className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
                     >
                       Reference Type
                     </label>
                     <select
                       id="reference-type-filter"
-                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       aria-label="Filter by reference type"
                     >
                       <option value="">All References</option>
@@ -1000,12 +1029,15 @@ function AccountingPage() {
                     </select>
                   </div>
                   <div className="flex-1 min-w-[200px]">
-                    <label htmlFor="status-filter" className="text-sm text-gray-400 mb-2 block">
+                    <label
+                      htmlFor="status-filter"
+                      className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                    >
                       Status
                     </label>
                     <select
                       id="status-filter"
-                      className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                       aria-label="Filter by transaction status"
                     >
                       <option value="">All Statuses</option>
@@ -1027,128 +1059,162 @@ function AccountingPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full" role="table" aria-label="Transaction history">
                     <thead>
-                      <tr className="border-b border-gray-700">
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
                         <th
                           scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                         >
                           Date
                         </th>
                         <th
                           scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                         >
                           Type
                         </th>
                         <th
                           scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                         >
                           Description
                         </th>
                         <th
                           scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-400"
+                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                         >
                           Reference
                         </th>
                         <th
                           scope="col"
-                          className="text-right py-3 px-4 text-sm font-medium text-gray-400"
+                          className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                         >
                           Amount
                         </th>
                         <th
                           scope="col"
-                          className="text-center py-3 px-4 text-sm font-medium text-gray-400"
+                          className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
                         >
                           Status
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-gray-800 hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-300">2024-02-07</td>
+                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          2024-02-07
+                        </td>
                         <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                             REVENUE
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-white">Order SO0001 - Shipment</td>
-                        <td className="py-4 px-4 text-sm text-gray-400">ORD-12345678-1234</td>
-                        <td className="py-4 px-4 text-sm text-emerald-400 text-right">
+                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
+                          Order SO0001 - Shipment
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                          ORD-12345678-1234
+                        </td>
+                        <td className="py-4 px-4 text-sm text-emerald-600 dark:text-emerald-400 text-right">
                           +$1,250.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="border-b border-gray-800 hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-300">2024-02-07</td>
+                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          2024-02-07
+                        </td>
                         <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-rose-500/20 text-rose-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-rose-500/20 text-rose-600 dark:text-rose-400">
                             EXPENSE
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-white">Inventory - SKU10050</td>
-                        <td className="py-4 px-4 text-sm text-gray-400">RCP-001</td>
-                        <td className="py-4 px-4 text-sm text-rose-400 text-right">-$450.00</td>
+                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
+                          Inventory - SKU10050
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                          RCP-001
+                        </td>
+                        <td className="py-4 px-4 text-sm text-rose-600 dark:text-rose-400 text-right">
+                          -$450.00
+                        </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="border-b border-gray-800 hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-300">2024-02-06</td>
+                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          2024-02-06
+                        </td>
                         <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                             REVENUE
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-white">Order SO0002 - Shipment</td>
-                        <td className="py-4 px-4 text-sm text-gray-400">ORD-12345678-5678</td>
-                        <td className="py-4 px-4 text-sm text-emerald-400 text-right">
+                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
+                          Order SO0002 - Shipment
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                          ORD-12345678-5678
+                        </td>
+                        <td className="py-4 px-4 text-sm text-emerald-600 dark:text-emerald-400 text-right">
                           +$3,200.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="border-b border-gray-800 hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-300">2024-02-06</td>
+                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          2024-02-06
+                        </td>
                         <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400">
                             PAYMENT
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-white">Vendor Payment - Acme Corp</td>
-                        <td className="py-4 px-4 text-sm text-gray-400">PAY-001</td>
-                        <td className="py-4 px-4 text-sm text-rose-400 text-right">-$2,800.00</td>
+                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
+                          Vendor Payment - Acme Corp
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                          PAY-001
+                        </td>
+                        <td className="py-4 px-4 text-sm text-rose-600 dark:text-rose-400 text-right">
+                          -$2,800.00
+                        </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-300">2024-02-05</td>
+                      <tr className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          2024-02-05
+                        </td>
                         <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-600 dark:text-purple-400">
                             REFUND
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-white">
+                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
                           Order SO0003 - Customer Return
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-400">RET-001</td>
-                        <td className="py-4 px-4 text-sm text-rose-400 text-right">-$185.00</td>
+                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                          RET-001
+                        </td>
+                        <td className="py-4 px-4 text-sm text-rose-600 dark:text-rose-400 text-right">
+                          -$185.00
+                        </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
                             COMPLETED
                           </span>
                         </td>
@@ -1161,7 +1227,9 @@ function AccountingPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">Showing 1-5 of 128 transactions</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Showing 1-5 of 128 transactions
+              </p>
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" disabled>
                   Previous

@@ -224,7 +224,7 @@ function MobileMenu({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/60 z-[100] transition-opacity duration-300 ${
           isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
         }`}
         onClick={handleClose}
@@ -482,10 +482,10 @@ const NavDropdown = memo(function NavDropdown({
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-2 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+        className={`flex items-center gap-1.5 px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
           hasActiveItem
-            ? 'dark:text-white text-primary-700 dark:bg-white/[0.08] bg-primary-100 dark:border-white/[0.15] border-primary-300 shadow-md dark:shadow-white/[0.1] shadow-primary-200'
-            : 'dark:text-gray-300 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 dark:border-transparent border-transparent dark:hover:border-white/[0.1] hover:border-primary-200'
+            ? 'text-primary-700 dark:text-white bg-primary-50 dark:bg-white/[0.08] border border-primary-200 dark:border-white/[0.15]'
+            : 'text-gray-600 dark:text-gray-300 hover:text-primary-700 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.05]'
         }`}
       >
         <Icon
@@ -795,14 +795,12 @@ function NotificationPanel() {
       onMouseLeave={handleMouseLeave}
     >
       <button
-        className={`relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group hover:scale-110 ${
-          isOpen ? 'dark:bg-white/[0.08] bg-primary-100' : ''
-        }`}
+        className="relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group hover:scale-110"
         aria-label={`Notifications: ${unreadCount} unread`}
       >
         <BellIcon className="h-5 w-5 flex-shrink-0 transition-transform duration-200" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full animate-pulse shadow-lg dark:shadow-error-500/50">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -1084,7 +1082,7 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg px-2 py-1.5 transition-all duration-300 group"
+        className="flex items-center gap-1.5 dark:hover:bg-white/[0.05] hover:bg-gray-100 rounded-lg px-2 py-1.5 transition-all duration-200 group"
       >
         <div className="text-left min-w-0">
           <h2 className="text-sm font-semibold dark:text-white text-gray-800 tracking-tight dark:group-hover:text-white group-hover:text-primary-800 transition-colors truncate max-w-[100px] xl:max-w-[120px]">
@@ -1914,10 +1912,10 @@ export function Header() {
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
-                className="p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors"
+                className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
                 aria-label="Open menu"
               >
-                <Bars3Icon className="h-6 w-6" />
+                <Bars3Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
               </button>
 
               {/* Logo - centered on mobile, left on desktop */}
