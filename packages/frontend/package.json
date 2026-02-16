@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run build --workspace=packages/shared",
     "build": "tsc --noEmitOnError false || true && vite build",
     "build:analyze": "tsc --noEmitOnError false || true && vite build && open dist/stats.html",
     "preview": "vite preview",
