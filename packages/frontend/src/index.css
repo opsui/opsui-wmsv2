@@ -1251,6 +1251,14 @@ html.performance-mode *::after {
   animation-duration: 0.1s !important;
 }
 
+/* Exception: Keep smooth theme transitions */
+html.performance-mode .theme-transitioning,
+html.performance-mode .theme-transitioning *,
+html.performance-mode body,
+html.performance-mode .dynamic-island-header {
+  transition-duration: 0.3s !important;
+}
+
 /* Keep body background animations disabled in performance mode */
 html.performance-mode body,
 html.performance-mode body::before,
