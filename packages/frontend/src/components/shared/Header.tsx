@@ -1905,19 +1905,21 @@ export function Header() {
     <>
       <header className="relative z-50">
         <div className="w-full dynamic-island-header">
-          {/* Mobile: Add top spacing for iPhone dynamic island effect */}
-          <div className="relative flex items-center h-14 px-4">
-            {/* Left side - Menu button and OpsUI Branding */}
-            <div className="flex items-center gap-3">
+          {/* Mobile: Logo centered above toolbar, desktop: horizontal layout with menu */}
+          <div className="flex flex-col items-center px-4 py-3 md:py-0 md:flex-row md:items-center md:h-14">
+            {/* Top row (mobile) / Left side (desktop): Logo - centered on mobile, left on desktop */}
+            <div className="flex items-center w-full md:w-auto mb-2 md:mb-0">
+              {/* Desktop only: Menu button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
-                className="p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors"
+                className="hidden md:block p-2 dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 touch-target rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100 transition-colors mr-3"
                 aria-label="Open menu"
               >
                 <Bars3Icon className="h-6 w-6" />
               </button>
 
+              {/* Logo - centered on mobile, left-aligned on desktop */}
               <button
                 onClick={() => {
                   // Navigate to role-specific home page
@@ -1925,7 +1927,7 @@ export function Header() {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer"
+                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer mx-auto md:mx-0"
                 style={{ fontFamily: "'Inter', sans-serif" }}
                 title="Go to home"
               >
@@ -1933,8 +1935,8 @@ export function Header() {
               </button>
             </div>
 
-            {/* Center - Actions Toolbar (iPhone dynamic island effect on mobile - floating pill) */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
+            {/* Bottom row (mobile) / Right side (desktop): Actions Toolbar */}
+            <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm">
               {/* Theme Toggle */}
               <ThemeToggle />
 
