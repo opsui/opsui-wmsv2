@@ -814,6 +814,15 @@
 /* Dynamic island header spacing for mobile */
 .dynamic-island-header {
   padding-top: max(env(safe-area-inset-top, 0px), 20px);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+html.dark .dynamic-island-header {
+  background: rgba(17, 24, 39, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 @media (min-width: 640px) {

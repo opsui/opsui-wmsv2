@@ -1890,7 +1890,7 @@ export function Header() {
   return (
     <>
       <header className="relative z-50">
-        <div className="w-full dynamic-island-header backdrop-blur-md bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/50 dark:border-white/5">
+        <div className="w-full dynamic-island-header">
           {/* Mobile: Logo above toolbar (stacked), desktop: horizontal layout */}
           {/* Mobile: flex-col for stacking, desktop: flex-row */}
           <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
