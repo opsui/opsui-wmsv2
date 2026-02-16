@@ -1907,7 +1907,7 @@ export function Header() {
         <div className="w-full dynamic-island-header">
           {/* Mobile: Logo above toolbar (stacked), desktop: horizontal layout */}
           {/* Mobile: flex-col for stacking, desktop: flex-row */}
-          <div className="flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
+          <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
             {/* Mobile: Top row - Hamburger on left, Logo centered. Desktop: Left side with menu */}
             <div className="flex items-center justify-between md:justify-start w-full md:w-auto mb-2 md:mb-0">
               {/* Hamburger - always visible */}
@@ -1936,8 +1936,8 @@ export function Header() {
               <div className="w-10 md:hidden"></div>
             </div>
 
-            {/* Toolbar - centered on both mobile and desktop */}
-            <div className="flex items-center justify-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto">
+            {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
+            <div className="flex items-center justify-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
               {/* Theme Toggle */}
               <ThemeToggle />
 
