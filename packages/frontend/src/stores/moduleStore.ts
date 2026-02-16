@@ -4,17 +4,17 @@
  * Manages module subscriptions and entitlements for the current entity
  */
 
+import { apiClient } from '@/lib/api-client';
+import {
+  MODULE_DEFINITIONS,
+  ModuleCategory,
+  ModuleDefinition,
+  ModuleId,
+  USER_TIERS,
+  UserTierId,
+} from '@opsui/shared';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import {
-  ModuleId,
-  UserTierId,
-  ModuleDefinition,
-  MODULE_DEFINITIONS,
-  USER_TIERS,
-  ModuleCategory,
-} from '@opsui/shared';
-import { apiClient } from '@/lib/api-client';
 
 // ============================================================================
 // TYPES
@@ -63,6 +63,7 @@ interface ModuleState {
   isLoading: boolean;
   error: string | null;
   lastFetched: number | null;
+  _hydrated: boolean;
 
   // Computed (via methods)
   isModuleEnabled: (moduleId: ModuleId) => boolean;
@@ -97,6 +98,7 @@ export const useModuleStore = create<ModuleState>()(
       isLoading: false,
       error: null,
       lastFetched: null,
+      _hydrated: false,
 
       // Computed methods
       isModuleEnabled: (moduleId: ModuleId): boolean => {
@@ -116,9 +118,19 @@ export const useModuleStore = create<ModuleState>()(
           const response = await apiClient.get('/modules/status');
           const data = response.data;
 
+          // Merge with MODULE_DEFINITIONS to ensure features are included
+          const modulesWithFeatures = (data.modulesWithStatus || []).map((module: ModuleWithStatus) => {
+            const definition = MODULE_DEFINITIONS[module.id];
+            return {
+              ...definition, // Include all definition properties (features, etc.)
+              ...module, // Override with status data
+              features: module.features || definition?.features || [], // Ensure features array exists
+            };
+          });
+
           set({
-            enabledModules: data.enabledModules,
-            modulesWithStatus: data.modulesWithStatus,
+            enabledModules: data.enabledModules || [],
+            modulesWithStatus: modulesWithFeatures,
             isLoading: false,
             lastFetched: Date.now(),
           });
@@ -211,6 +223,14 @@ export const useModuleStore = create<ModuleState>()(
         enabledModules: state.enabledModules,
         lastFetched: state.lastFetched,
       }),
+      // Skip hydration on server-side
+      skipHydration: typeof window === 'undefined',
+      // Mark store as hydrated after rehydration completes
+      onRehydrateStorage: () => state => {
+        if (state) {
+          state._hydrated = true;
+        }
+      },
     }
   )
 );
@@ -220,21 +240,28 @@ export const useModuleStore = create<ModuleState>()(
 // ============================================================================
 
 /**
+ * Hook to check if the store has finished hydrating
+ */
+export function useModuleStoreHydrated(): boolean {
+  return useModuleStore(state => state?._hydrated ?? false);
+}
+
+/**
  * Hook to check if a module is enabled
  */
 export function useModuleEnabled(moduleId: ModuleId): boolean {
-  const enabledModules = useModuleStore(state => state.enabledModules);
-  return enabledModules.includes(moduleId);
+  const enabledModules = useModuleStore(state => state?.enabledModules ?? []);
+  return Array.isArray(enabledModules) && enabledModules.includes(moduleId);
 }
 
 /**
  * Hook to check if multiple modules are enabled
  */
 export function useModulesEnabled(moduleIds: ModuleId[]): Record<ModuleId, boolean> {
-  const enabledModules = useModuleStore(state => state.enabledModules);
+  const enabledModules = useModuleStore(state => state?.enabledModules ?? []);
   return moduleIds.reduce(
     (acc, id) => {
-      acc[id] = enabledModules.includes(id);
+      acc[id] = Array.isArray(enabledModules) && enabledModules.includes(id);
       return acc;
     },
     {} as Record<ModuleId, boolean>
@@ -245,22 +272,24 @@ export function useModulesEnabled(moduleIds: ModuleId[]): Record<ModuleId, boole
  * Hook to get all modules in a category with their status
  */
 export function useModulesByCategory(category: ModuleCategory): ModuleWithStatus[] {
-  const modulesWithStatus = useModuleStore(state => state.modulesWithStatus);
-  return modulesWithStatus.filter(m => m.category === category);
+  const modulesWithStatus = useModuleStore(state => state?.modulesWithStatus ?? []);
+  return Array.isArray(modulesWithStatus)
+    ? modulesWithStatus.filter(m => m.category === category)
+    : [];
 }
 
 /**
  * Hook to get the billing summary
  */
 export function useBillingSummary() {
-  return useModuleStore(state => state.billingSummary);
+  return useModuleStore(state => state?.billingSummary ?? null);
 }
 
 /**
  * Hook to get user tier information
  */
 export function useUserTier() {
-  const billingSummary = useModuleStore(state => state.billingSummary);
+  const billingSummary = useModuleStore(state => state?.billingSummary ?? null);
   return billingSummary?.userTier ?? null;
 }
 
