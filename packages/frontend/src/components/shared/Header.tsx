@@ -344,7 +344,7 @@ function MobileMenu({
                           />
                           <span className="font-medium">{item.label}</span>
                           {isActive && (
-                            <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-400 bg-primary-600 indicator-dot" />
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-400 bg-primary-600 indicator-pulse" />
                           )}
                         </button>
                       );

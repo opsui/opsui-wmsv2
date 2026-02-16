@@ -65,6 +65,10 @@
     z-index: -1;
     pointer-events: none;
     animation: backgroundShift 20s ease-in-out infinite;
+    /* GPU acceleration for smooth animation */
+    will-change: filter;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   /* No secondary layer needed */
@@ -118,6 +122,10 @@
     z-index: -1;
     pointer-events: none;
     animation: backgroundShift 20s ease-in-out infinite;
+    /* GPU acceleration for smooth animation */
+    will-change: filter;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   /* Enhanced typography - dark mode */
@@ -131,10 +139,10 @@
 
   @keyframes backgroundShift {
     0%, 100% {
-      opacity: 0.8;
+      filter: brightness(1);
     }
     50% {
-      opacity: 1;
+      filter: brightness(1.1);
     }
   }
 
@@ -487,6 +495,7 @@
 
   /* Override Tailwind's animate-pulse for skeletons to prevent flickering */
   .skeleton-pulse {
+    background-color: rgba(55, 65, 81, 0.5);
     animation: skeleton-pulse 2s ease-in-out infinite;
     will-change: background-color;
   }
@@ -494,6 +503,39 @@
   /* Static indicator dot with subtle glow - no animation */
   .indicator-dot {
     box-shadow: 0 0 6px currentColor;
+  }
+
+  /* Smooth indicator dot pulse - uses scale and glow instead of opacity */
+  @keyframes indicator-pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 4px currentColor;
+    }
+    50% {
+      transform: scale(1.3);
+      box-shadow: 0 0 8px currentColor;
+    }
+  }
+
+  .indicator-pulse {
+    animation: indicator-pulse 2s ease-in-out infinite;
+    will-change: transform, box-shadow;
+  }
+
+  /* Notification badge pulse animation with glow */
+  @keyframes notification-pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    }
+  }
+
+  .notification-badge-pulse {
+    animation: notification-pulse 2s ease-in-out infinite;
   }
 }
 
@@ -1147,4 +1189,27 @@ html.performance-mode *::before,
 html.performance-mode *::after {
   transition-duration: 0.1s !important;
   animation-duration: 0.1s !important;
+}
+
+/* Keep body background animations disabled in performance mode */
+html.performance-mode body,
+html.performance-mode body::before,
+html.performance-mode body::after {
+  animation: none !important;
+  animation-duration: 0s !important;
+}
+
+/* Keep skeleton animations smooth - they're already lightweight */
+html.performance-mode .skeleton-pulse {
+  animation-duration: 2s !important;
+}
+
+/* Keep Tailwind's animate-pulse smooth for notification badges and indicators */
+html.performance-mode .animate-pulse {
+  animation-duration: 2s !important;
+}
+
+/* Keep indicator-pulse smooth in performance mode */
+html.performance-mode .indicator-pulse {
+  animation-duration: 2s !important;
 }

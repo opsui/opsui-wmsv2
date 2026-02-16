@@ -9,19 +9,19 @@
  * - Accessible with proper ARIA attributes
  */
 
-import React from 'react';
+import { cn } from '@/lib/utils';
 import {
-  HomeIcon,
-  ClipboardDocumentListIcon,
-  CubeIcon,
-  ChartBarIcon,
   Bars3Icon,
-  UsersIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
   Cog6ToothIcon,
+  CubeIcon,
+  HomeIcon,
   MagnifyingGlassIcon,
   ShoppingBagIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
-import { cn } from '@/lib/utils';
+import React from 'react';
 
 export interface NavItem {
   /** Unique identifier */
@@ -179,7 +179,7 @@ export function BottomNavigation({
             {/* Active indicator dot */}
             {isActive && (
               <span
-                className="absolute bottom-1 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400"
+                className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 indicator-pulse"
                 aria-hidden="true"
               />
             )}

@@ -26,9 +26,9 @@ export function Skeleton({
   };
 
   const animationClasses = {
-    pulse: 'skeleton-pulse',
-    wave: 'animate-shimmer',
-    none: '',
+    pulse: 'skeleton-pulse', // Uses its own background-color animation, no base bg needed
+    wave: 'animate-shimmer bg-gray-700/50', // Needs base bg for shimmer overlay
+    none: 'bg-gray-700/50', // Static background when no animation
   };
 
   const style: React.CSSProperties = {
@@ -38,7 +38,7 @@ export function Skeleton({
 
   return (
     <div
-      className={`bg-gray-700/50 ${variantClasses[variant]} ${animationClasses[animation]} ${className}`}
+      className={`${variantClasses[variant]} ${animationClasses[animation]} ${className}`}
       style={style}
     />
   );
