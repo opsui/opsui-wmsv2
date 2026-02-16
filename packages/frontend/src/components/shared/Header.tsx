@@ -1911,6 +1911,16 @@ export function Header() {
                 <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
               </button>
             </div>
+
+            {/* Right side - OpsUI Branding */}
+            <div className="ml-auto flex items-center">
+              <span
+                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900"
+                style={{ fontFamily: "'Inter', sans-serif" }}
+              >
+                OpsUI
+              </span>
+            </div>
           </div>
         </div>
       </header>
