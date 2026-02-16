@@ -92,50 +92,50 @@ export function InventoryAgingChart({ data, isLoading }: InventoryAgingChartProp
           </div>
           {containerWidth > 0 && (
             <ResponsiveContainer width={containerWidth} height={280}>
-            <BarChart data={chartData} layout="vertical">
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="dark:stroke-white/[0.08] stroke-gray-200"
-              />
-              <XAxis
-                type="number"
-                className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 11 }}
-              />
-              <YAxis
-                type="category"
-                dataKey="range"
-                className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 11 }}
-                width={80}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-                }}
-                formatter={(value: number | undefined, name: string | undefined) => [
-                  name === 'itemCount' ? `${value ?? 0} items` : `${value ?? 0} units`,
-                ]}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Legend
-                wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
-                formatter={value => (
-                  <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
-                )}
-              />
-              <Bar dataKey="itemCount" name="Items" radius={[0, 8, 8, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={AGING_COLORS[entry.range] || '#6b7280'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+              <BarChart data={chartData} layout="vertical">
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  className="dark:stroke-white/[0.08] stroke-gray-200"
+                />
+                <XAxis
+                  type="number"
+                  className="dark:fill-gray-500 fill-gray-600"
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="range"
+                  className="dark:fill-gray-500 fill-gray-600"
+                  tick={{ fontSize: 11 }}
+                  width={80}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '13px',
+                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                  }}
+                  formatter={(value: number | undefined, name: string | undefined) => [
+                    name === 'itemCount' ? `${value ?? 0} items` : `${value ?? 0} units`,
+                  ]}
+                  itemStyle={{ color: '#fff' }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                  formatter={value => (
+                    <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
+                  )}
+                />
+                <Bar dataKey="itemCount" name="Items" radius={[0, 8, 8, 0]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={AGING_COLORS[entry.range] || '#6b7280'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </div>
 

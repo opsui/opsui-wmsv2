@@ -91,7 +91,7 @@ export const useUIStore = create<UIState>()(
       setPerformanceMode: (mode: PerformanceMode) => {
         set({ performanceMode: mode });
         // Apply or remove performance class on html element
-        const effectiveMode = mode === 'auto' ? detectLowEndDevice() ? 'low' : 'normal' : mode;
+        const effectiveMode = mode === 'auto' ? (detectLowEndDevice() ? 'low' : 'normal') : mode;
         if (effectiveMode === 'low') {
           document.documentElement.classList.add('performance-mode');
         } else {
@@ -207,7 +207,9 @@ function detectLowEndDevice(): boolean {
     if (gl) {
       const debugInfo = (gl as WebGLRenderingContext).getExtension('WEBGL_debug_renderer_info');
       if (debugInfo) {
-        const renderer = (gl as WebGLRenderingContext).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        const renderer = (gl as WebGLRenderingContext).getParameter(
+          debugInfo.UNMASKED_RENDERER_WEBGL
+        );
         // Intel HD 4000 series (4th gen and older), other old integrated graphics
         if (/Intel.*HD\s*(Graphics)?\s*(4|3|2)\d{3}/i.test(renderer)) {
           return true;

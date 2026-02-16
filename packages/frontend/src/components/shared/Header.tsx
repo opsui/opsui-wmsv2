@@ -1223,7 +1223,7 @@ export function Header() {
     if (baseRole === UserRole.ADMIN) {
       return '/dashboard';
     }
-    
+
     switch (role) {
       case UserRole.ADMIN:
       case UserRole.SUPERVISOR:

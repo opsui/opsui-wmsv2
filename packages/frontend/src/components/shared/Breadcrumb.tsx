@@ -234,6 +234,11 @@ const TAB_PAGE_CONFIG: Record<
     homeLabel: 'Reports',
     tabLabels: {},
   },
+  '/modules': {
+    homePath: '/modules',
+    homeLabel: 'Module Management',
+    tabLabels: {},
+  },
 };
 
 // ============================================================================

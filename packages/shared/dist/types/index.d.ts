@@ -3709,4 +3709,5 @@ export { WorkCenterStatus, RoutingStatus, OperationType, ProductionOrderStatus a
 export * from './ecommerce';
 export * from './advanced-inventory';
 export { StatementType, PeriodType as FinancialPeriodType, ConsolidationMethod as FinancialConsolidationMethod, IntercompanyTransactionType as FinancialIntercompanyTransactionType, IntercompanyStatus, TaxType, TaxStatus, RatioCategory, FinancialStatementTemplate, GeneratedFinancialStatement, ConsolidatedStatement, BudgetActualAnalysis, BudgetActualDetail, IntercompanyTransaction as FinancialIntercompanyTransaction, IntercompanyTransactionLine, TaxCompliancePeriod, TaxPayment, FinancialRatio, BalanceSheetView, IncomeStatementView, CashFlowView, CreateFinancialStatementDTO, GenerateBalanceSheetDTO, CreateConsolidationDTO, CreateBudgetActualAnalysisDTO, CreateIntercompanyTransactionDTO as CreateFinancialIntercompanyTransactionDTO, RecordTaxPaymentDTO, CalculateFinancialRatiosDTO, } from './advanced-financials';
+export * from './modules';
 //# sourceMappingURL=index.d.ts.map

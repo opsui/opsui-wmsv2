@@ -4653,3 +4653,9 @@ export {
   RecordTaxPaymentDTO,
   CalculateFinancialRatiosDTO,
 } from './advanced-financials';
+
+// ============================================================================
+// MODULE PRICING & SUBSCRIPTION TYPES - Modular ERP pricing system
+// ============================================================================
+
+export * from './modules';

@@ -1048,3 +1048,7 @@ export * from './advanced-inventory.js';
 // Note: Some types renamed to avoid conflicts with multi-entity and advanced-inventory
 // ============================================================================
 export { StatementType, PeriodType as FinancialPeriodType, ConsolidationMethod as FinancialConsolidationMethod, IntercompanyTransactionType as FinancialIntercompanyTransactionType, IntercompanyStatus, TaxType, TaxStatus, RatioCategory, } from './advanced-financials.js';
+// ============================================================================
+// MODULE PRICING & SUBSCRIPTION TYPES - Modular ERP pricing system
+// ============================================================================
+export * from './modules.js';

@@ -8,7 +8,7 @@
 import { ErrorBoundary, NotificationCenter, ToastProvider } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
 import webSocketService from '@/services/WebSocketService';
-import { useAuthStore, useUIStore } from '@/stores';
+import { useAuthStore, useUIStore, useModuleStore } from '@/stores';
 import { UserRole } from '@opsui/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useEffect, useState } from 'react';
@@ -85,6 +85,8 @@ const PayrollProcessingPage = createLazyPage(() => import('@/pages/hr/PayrollPro
 const PayrollRunsPage = createLazyPage(() => import('@/pages/hr/PayrollRunsPage'));
 const LeaveRequestsPage = createLazyPage(() => import('@/pages/hr/LeaveRequestsPage'));
 const HRSettingsPage = createLazyPage(() => import('@/pages/hr/HRSettingsPage'));
+// Module Management page
+const ModuleManagementPage = createLazyPage(() => import('@/pages/ModuleManagementPage'));
 
 // ============================================================================
 // PAGE LOADING FALLBACK
@@ -124,14 +126,28 @@ const queryClient = new QueryClient({
 function ProtectedRoute({
   children,
   requiredRoles,
+  requiredModules,
 }: {
   children: React.ReactNode;
   requiredRoles?: UserRole[];
+  requiredModules?: string[]; // Module IDs to check
 }) {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
   const activeRole = useAuthStore(state => state.activeRole);
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
+
+  // Module entitlement check
+  const enabledModules = useModuleStore(state => state.enabledModules);
+  const fetchModules = useModuleStore(state => state.fetchModules);
+  const lastFetched = useModuleStore(state => state.lastFetched);
+
+  // Fetch modules if not cached
+  useEffect(() => {
+    if (!lastFetched || Date.now() - lastFetched > 5 * 60 * 1000) {
+      fetchModules();
+    }
+  }, [fetchModules, lastFetched]);
 
   // Use effective role (active role if set, otherwise base role) for authorization
   const effectiveRole = getEffectiveRole();
@@ -139,6 +155,17 @@ function ProtectedRoute({
   // Not authenticated - redirect to login
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check module requirements
+  if (requiredModules && requiredModules.length > 0) {
+    const hasAllModules = requiredModules.every(moduleId =>
+      enabledModules.includes(moduleId as any)
+    );
+    if (!hasAllModules) {
+      // Redirect to dashboard with module unavailable message
+      return <Navigate to="/dashboard" replace state={{ moduleUnavailable: true }} />;
+    }
   }
 
   // Check role requirements using effective role
@@ -828,6 +855,16 @@ function AppInner() {
           element={
             <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <RolesManagementPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Module Management route - Admin only */}
+        <Route
+          path="/modules"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+              <ModuleManagementPage />
             </ProtectedRoute>
           }
         />

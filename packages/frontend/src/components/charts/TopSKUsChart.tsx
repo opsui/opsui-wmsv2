@@ -195,48 +195,48 @@ export function TopSKUsChart({
           </div>
           {containerWidth > 0 && (
             <ResponsiveContainer width={containerWidth} height={280}>
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="dark:stroke-white/[0.08] stroke-gray-200"
-              />
-              <XAxis
-                type="number"
-                className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 11 }}
-                domain={[0, Math.ceil(maxValue * 1.1)]}
-              />
-              <YAxis
-                type="category"
-                dataKey="displayName"
-                className="dark:fill-gray-500 fill-gray-600"
-                tick={{ fontSize: 10 }}
-                width={200}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-                }}
-                itemStyle={{ color: '#fff' }}
-                formatter={(value: any) => [`${value || 0}`, valueLabel]}
-              />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: 'transparent' }}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  className="dark:stroke-white/[0.08] stroke-gray-200"
+                />
+                <XAxis
+                  type="number"
+                  className="dark:fill-gray-500 fill-gray-600"
+                  tick={{ fontSize: 11 }}
+                  domain={[0, Math.ceil(maxValue * 1.1)]}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="displayName"
+                  className="dark:fill-gray-500 fill-gray-600"
+                  tick={{ fontSize: 10 }}
+                  width={200}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '13px',
+                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                  }}
+                  itemStyle={{ color: '#fff' }}
+                  formatter={(value: any) => [`${value || 0}`, valueLabel]}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: 'transparent' }}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </div>
 

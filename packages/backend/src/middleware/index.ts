@@ -13,6 +13,7 @@ export * from './requestId';
 export * from './cache';
 export * from './permissions';
 export * from './audit';
+export * from './moduleEntitlement';
 
 // Re-export commonly used utilities
 export { asyncHandler } from './errorHandler';

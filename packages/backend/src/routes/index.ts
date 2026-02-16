@@ -54,6 +54,7 @@ import automationRoutes from './automation';
 import varianceSeverityRoutes from './varianceSeverity';
 import recurringScheduleRoutes from './recurringSchedules';
 import rootCauseRoutes from './rootCauseAnalysis';
+import moduleRoutes from './modules';
 
 const router = Router();
 
@@ -103,6 +104,7 @@ v1Router.use('/audit', auditRoutes);
 v1Router.use('/notifications', notificationRoutes);
 v1Router.use('/route-optimization', routeOptimizationRoutes);
 v1Router.use('/automation', automationRoutes);
+v1Router.use('/modules', moduleRoutes);
 
 // Developer tools (development only)
 v1Router.use('/developer', developerRoutes);
@@ -161,5 +163,6 @@ router.use('/audit', auditRoutes);
 router.use('/developer', developerRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/route-optimization', routeOptimizationRoutes);
+router.use('/modules', moduleRoutes);
 
 export default router;
