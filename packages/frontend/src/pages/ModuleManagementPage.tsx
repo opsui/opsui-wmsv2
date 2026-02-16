@@ -5,41 +5,40 @@
  * Follows SaaS subscription management best practices
  */
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Header,
-  Button,
   Badge,
   Breadcrumb,
-  LoadingSpinner,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   ConfirmDialog,
+  Header,
+  LoadingSpinner,
 } from '@/components/shared';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores';
-import { UserRole, ModuleId, ModuleCategory, USER_TIERS, UserTierId } from '@opsui/shared';
+import { getCategoryDisplayName, useModuleStore, useModuleStoreHydrated } from '@/stores/moduleStore';
 import {
-  Cog6ToothIcon,
-  CheckCircleIcon,
-  SparklesIcon,
-  CurrencyDollarIcon,
-  UsersIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  PlusIcon,
   BoltIcon,
   BuildingOfficeIcon,
   ChartBarIcon,
-  TruckIcon,
-  ShieldCheckIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  Cog6ToothIcon,
   CogIcon,
   CubeIcon,
+  CurrencyDollarIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  TruckIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
-import { useModuleStore, getCategoryDisplayName } from '@/stores/moduleStore';
-import { cn } from '@/lib/utils';
+import { ModuleCategory, ModuleId, USER_TIERS, UserRole, UserTierId } from '@opsui/shared';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // TYPES
@@ -85,15 +84,18 @@ export default function ModuleManagementPage() {
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
 
-  // Module store
-  const modulesWithStatus = useModuleStore(state => state.modulesWithStatus);
-  const billingSummary = useModuleStore(state => state.billingSummary);
-  const isLoading = useModuleStore(state => state.isLoading);
-  const fetchModules = useModuleStore(state => state.fetchModules);
-  const fetchBillingSummary = useModuleStore(state => state.fetchBillingSummary);
-  const enableModule = useModuleStore(state => state.enableModule);
-  const disableModule = useModuleStore(state => state.disableModule);
-  const setUserTier = useModuleStore(state => state.setUserTier);
+  // Check if store has hydrated from localStorage
+  const isHydrated = useModuleStoreHydrated();
+
+  // Module store - with safe defaults
+  const modulesWithStatus = useModuleStore(state => state?.modulesWithStatus ?? []);
+  const billingSummary = useModuleStore(state => state?.billingSummary ?? null);
+  const isLoading = useModuleStore(state => state?.isLoading ?? false);
+  const fetchModules = useModuleStore(state => state?.fetchModules);
+  const fetchBillingSummary = useModuleStore(state => state?.fetchBillingSummary);
+  const enableModule = useModuleStore(state => state?.enableModule);
+  const disableModule = useModuleStore(state => state?.disableModule);
+  const setUserTier = useModuleStore(state => state?.setUserTier);
 
   // Local state
   const [selectedCategory, setSelectedCategory] = useState<ModuleCategory | 'all'>('all');
@@ -118,24 +120,28 @@ export default function ModuleManagementPage() {
 
   // Fetch data on mount
   useEffect(() => {
-    fetchModules();
-    fetchBillingSummary();
+    if (fetchModules && fetchBillingSummary) {
+      fetchModules();
+      fetchBillingSummary();
+    }
   }, [fetchModules, fetchBillingSummary]);
 
   // Group modules by category
-  const modulesByCategory = (modulesWithStatus || []).reduce(
-    (acc, module) => {
-      if (!acc[module.category]) {
-        acc[module.category] = [];
-      }
-      acc[module.category].push(module as ModuleWithStatus);
-      return acc;
-    },
-    {} as Record<ModuleCategory, ModuleWithStatus[]>
-  );
+  const modulesByCategory = Array.isArray(modulesWithStatus)
+    ? modulesWithStatus.reduce(
+        (acc, module) => {
+          if (!acc[module.category]) {
+            acc[module.category] = [];
+          }
+          acc[module.category].push(module as ModuleWithStatus);
+          return acc;
+        },
+        {} as Record<ModuleCategory, ModuleWithStatus[]>
+      )
+    : {};
 
   // Calculate totals
-  const safeModules = modulesWithStatus || [];
+  const safeModules = Array.isArray(modulesWithStatus) ? modulesWithStatus : [];
   const enabledCount = safeModules.filter(m => m.isEnabled).length;
   const totalModules = safeModules.length || 1; // Avoid division by zero
   const monthlyTotal = billingSummary?.totals.monthly ?? 0;
@@ -220,10 +226,11 @@ export default function ModuleManagementPage() {
     { label: 'Module Management' },
   ];
 
-  if (isLoading && (!modulesWithStatus || modulesWithStatus.length === 0)) {
+  // Show loading state while hydrating or fetching initial data
+  if (!isHydrated || (isLoading && modulesWithStatus.length === 0)) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header title="Module Management" />
+        <Header />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center h-64">
             <LoadingSpinner size="lg" />
@@ -235,7 +242,7 @@ export default function ModuleManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header title="Module Management" />
+      <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
@@ -309,7 +316,7 @@ export default function ModuleManagementPage() {
                 </div>
               </div>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 className="mt-3 w-full"
                 onClick={() => setShowTiersModal(true)}
@@ -416,11 +423,14 @@ export default function ModuleManagementPage() {
 
         {/* Module List */}
         <div className="space-y-6">
-          {Object.entries(modulesByCategory).map(([category, modules]) => {
-            if (selectedCategory !== 'all' && category !== selectedCategory) return null;
+          {(Object.entries(modulesByCategory) as [ModuleCategory, ModuleWithStatus[]][]).map(
+            ([category, modules]) => {
+              if (selectedCategory !== 'all' && category !== selectedCategory) return null;
+              // Safety check for modules array
+              if (!Array.isArray(modules) || modules.length === 0) return null;
 
-            const CategoryIcon = CATEGORY_ICONS[category as ModuleCategory] || CubeIcon;
-            const categoryEnabledCount = modules.filter(m => m.isEnabled).length;
+              const CategoryIcon = CATEGORY_ICONS[category] || CubeIcon;
+              const categoryEnabledCount = modules.filter(m => m.isEnabled).length;
 
             return (
               <div key={category}>
@@ -430,7 +440,7 @@ export default function ModuleManagementPage() {
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {getCategoryDisplayName(category as ModuleCategory)}
                   </h2>
-                  <Badge variant="secondary" size="sm">
+                  <Badge variant="default" size="sm">
                     {categoryEnabledCount}/{modules.length} active
                   </Badge>
                 </div>
@@ -464,7 +474,7 @@ export default function ModuleManagementPage() {
                                     Active
                                   </Badge>
                                 ) : (
-                                  <Badge variant="secondary" size="sm">
+                                  <Badge variant="default" size="sm">
                                     Inactive
                                   </Badge>
                                 )}
@@ -563,11 +573,12 @@ export default function ModuleManagementPage() {
                 </div>
               </div>
             );
-          })}
+          }
+          )}
         </div>
 
         {/* Empty State */}
-        {(!modulesWithStatus || modulesWithStatus.length === 0) && !isLoading && (
+        {modulesWithStatus.length === 0 && !isLoading && (
           <Card>
             <CardContent className="py-12 text-center">
               <CubeIcon className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
@@ -641,7 +652,7 @@ export default function ModuleManagementPage() {
               </div>
 
               <div className="mt-6 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowTiersModal(false)}>
+                <Button variant="secondary" onClick={() => setShowTiersModal(false)}>
                   Cancel
                 </Button>
               </div>
