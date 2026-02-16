@@ -85,65 +85,69 @@ function ExceptionTypeBadge({ type }: { type: ExceptionType }) {
   const typeConfig: Record<ExceptionType, { icon: any; color: string; label: string }> = {
     [ExceptionType.UNCLAIM]: {
       icon: XMarkIcon,
-      color: 'text-gray-300',
+      color: 'text-gray-600 dark:text-gray-300',
       label: 'Unclaimed',
     },
     [ExceptionType.UNDO_PICK]: {
       icon: ArrowUturnLeftIcon,
-      color: 'text-yellow-300',
+      color: 'text-yellow-700 dark:text-yellow-300',
       label: 'Undo Pick',
     },
     [ExceptionType.SHORT_PICK]: {
       icon: ExclamationTriangleIcon,
-      color: 'text-red-300',
+      color: 'text-red-700 dark:text-red-300',
       label: 'Short Pick',
     },
     [ExceptionType.SHORT_PICK_BACKORDER]: {
       icon: ClockIcon,
-      color: 'text-yellow-300',
+      color: 'text-yellow-700 dark:text-yellow-300',
       label: 'Backorder',
     },
     [ExceptionType.DAMAGE]: {
       icon: ExclamationCircleIcon,
-      color: 'text-red-300',
+      color: 'text-red-700 dark:text-red-300',
       label: 'Damaged',
     },
     [ExceptionType.DEFECTIVE]: {
       icon: ExclamationCircleIcon,
-      color: 'text-red-300',
+      color: 'text-red-700 dark:text-red-300',
       label: 'Defective',
     },
     [ExceptionType.WRONG_ITEM]: {
       icon: ExclamationTriangleIcon,
-      color: 'text-red-300',
+      color: 'text-red-700 dark:text-red-300',
       label: 'Wrong Item',
     },
     [ExceptionType.SUBSTITUTION]: {
       icon: InformationCircleIcon,
-      color: 'text-blue-300',
+      color: 'text-blue-700 dark:text-blue-300',
       label: 'Substitution',
     },
     [ExceptionType.OUT_OF_STOCK]: {
       icon: ExclamationTriangleIcon,
-      color: 'text-red-300',
+      color: 'text-red-700 dark:text-red-300',
       label: 'Out of Stock',
     },
     [ExceptionType.BIN_MISMATCH]: {
       icon: ExclamationTriangleIcon,
-      color: 'text-yellow-300',
+      color: 'text-yellow-700 dark:text-yellow-300',
       label: 'Bin Mismatch',
     },
     [ExceptionType.BARCODE_MISMATCH]: {
       icon: ExclamationTriangleIcon,
-      color: 'text-yellow-300',
+      color: 'text-yellow-700 dark:text-yellow-300',
       label: 'Barcode Issue',
     },
     [ExceptionType.EXPIRED]: {
       icon: ExclamationTriangleIcon,
-      color: 'text-red-300',
+      color: 'text-red-700 dark:text-red-300',
       label: 'Expired',
     },
-    [ExceptionType.OTHER]: { icon: InformationCircleIcon, color: 'text-gray-300', label: 'Other' },
+    [ExceptionType.OTHER]: {
+      icon: InformationCircleIcon,
+      color: 'text-gray-600 dark:text-gray-300',
+      label: 'Other',
+    },
   };
 
   const config = typeConfig[type] || typeConfig[ExceptionType.OTHER];
@@ -152,7 +156,7 @@ function ExceptionTypeBadge({ type }: { type: ExceptionType }) {
   return (
     <div className="flex items-center gap-1.5">
       <Icon className={`h-4 w-4 ${config.color}`} />
-      <span className="text-sm font-medium text-white">{config.label}</span>
+      <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
     </div>
   );
 }
@@ -184,6 +188,8 @@ export function ExceptionsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
+    refetchAll();
+    refetchOpen();
   }, [filterStatus, searchQuery]);
 
   const { data: openExceptions, refetch: refetchOpen } = useOpenExceptions();
@@ -459,7 +465,7 @@ export function ExceptionsPage() {
   };
 
   const displayExceptions =
-    filterStatus === 'all' || filterStatus === ExceptionStatus.OPEN
+    filterStatus === ExceptionStatus.OPEN
       ? openExceptions?.exceptions || []
       : allExceptions?.exceptions || [];
 
@@ -489,10 +495,12 @@ export function ExceptionsPage() {
             <div className="animate-in">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white tracking-tight">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                     Exception Management
                   </h1>
-                  <p className="mt-2 text-gray-400">View and resolve order exceptions</p>
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">
+                    View and resolve order exceptions
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="relative flex-1 sm:flex-initial">
@@ -528,10 +536,10 @@ export function ExceptionsPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Total Exceptions
                         </p>
-                        <p className="mt-3 text-3xl font-bold text-white tracking-tight">
+                        <p className="mt-3 text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                           {summary.total}
                         </p>
                       </div>
@@ -546,10 +554,10 @@ export function ExceptionsPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Open
                         </p>
-                        <p className="mt-3 text-3xl font-bold text-error-400 tracking-tight">
+                        <p className="mt-3 text-3xl font-bold text-error-500 dark:text-error-400 tracking-tight">
                           {summary.open}
                         </p>
                       </div>
@@ -564,10 +572,10 @@ export function ExceptionsPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Resolved
                         </p>
-                        <p className="mt-3 text-3xl font-bold text-success-400 tracking-tight">
+                        <p className="mt-3 text-3xl font-bold text-success-500 dark:text-success-400 tracking-tight">
                           {summary.resolved}
                         </p>
                       </div>
@@ -582,10 +590,10 @@ export function ExceptionsPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Resolution Rate
                         </p>
-                        <p className="mt-3 text-3xl font-bold text-primary-400 tracking-tight">
+                        <p className="mt-3 text-3xl font-bold text-primary-500 dark:text-primary-400 tracking-tight">
                           {summary.total > 0
                             ? Math.round((summary.resolved / summary.total) * 100)
                             : 0}
@@ -605,17 +613,23 @@ export function ExceptionsPage() {
             {!summaryLoading && summary && Object.keys(summary.byType).length > 0 && (
               <Card variant="glass" className="card-hover">
                 <CardHeader>
-                  <CardTitle>Exceptions by Type</CardTitle>
+                  <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">
+                    Exceptions by Type
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Object.entries(summary.byType).map(([type, count]: [string, unknown]) => (
                       <div
                         key={type}
-                        className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                        className="text-center p-4 rounded-xl bg-white/[0.02] dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.05]"
                       >
-                        <p className="text-2xl font-bold text-white">{count as number}</p>
-                        <p className="text-xs text-gray-400 mt-1">{type.replace(/_/g, ' ')}</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {count as number}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          {type.replace(/_/g, ' ')}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -627,30 +641,30 @@ export function ExceptionsPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                   filterStatus === 'all'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white dark:bg-white/[0.02] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/[0.05] shadow-sm'
+                    ? 'bg-primary-500 text-white shadow-lg'
+                    : 'bg-white dark:bg-white/[0.02] text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/[0.05] border border-gray-300 dark:border-white/[0.05]'
                 }`}
               >
-                All ({openExceptions?.total || 0})
+                All ({summary?.total || 0})
               </button>
               <button
                 onClick={() => setFilterStatus(ExceptionStatus.OPEN)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                   filterStatus === ExceptionStatus.OPEN
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white dark:bg-white/[0.02] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/[0.05] shadow-sm'
+                    ? 'bg-error-500 text-white shadow-lg'
+                    : 'bg-white dark:bg-white/[0.02] text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/[0.05] border border-gray-300 dark:border-white/[0.05]'
                 }`}
               >
                 Open ({summary?.open || 0})
               </button>
               <button
                 onClick={() => setFilterStatus(ExceptionStatus.RESOLVED)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                   filterStatus === ExceptionStatus.RESOLVED
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white dark:bg-white/[0.02] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/[0.05] shadow-sm'
+                    ? 'bg-success-500 text-white shadow-lg'
+                    : 'bg-white dark:bg-white/[0.02] text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/[0.05] border border-gray-300 dark:border-white/[0.05]'
                 }`}
               >
                 Resolved ({summary?.resolved || 0})
@@ -662,7 +676,7 @@ export function ExceptionsPage() {
               <CardHeader>
                 <CardTitle>
                   {filterStatus === 'all'
-                    ? 'All Open Exceptions'
+                    ? 'All Exceptions'
                     : filterStatus === ExceptionStatus.OPEN
                       ? 'Open Exceptions'
                       : filterStatus === ExceptionStatus.RESOLVED
@@ -677,60 +691,66 @@ export function ExceptionsPage() {
                       return (
                         <div
                           key={exception.exceptionId}
-                          className="border border-white/[0.08] rounded-xl p-4 hover:bg-white/[0.02] transition-all duration-300"
+                          className="border border-gray-300 dark:border-white/[0.08] rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-all duration-300 shadow-sm hover:shadow-md bg-white dark:bg-transparent"
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <ExceptionTypeBadge type={exception.type} />
                                 <ExceptionBadge status={exception.status} />
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-gray-500 dark:text-gray-500">
                                   {exception.exceptionId}
                                 </span>
                               </div>
 
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div>
-                                  <span className="text-gray-400">Order:</span>
-                                  <span className="ml-2 text-white font-medium">
+                                  <span className="text-gray-600 dark:text-gray-400">Order:</span>
+                                  <span className="ml-2 text-gray-900 dark:text-white font-medium">
                                     {exception.orderId}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-gray-400">SKU:</span>
-                                  <span className="ml-2 text-white font-medium">
+                                  <span className="text-gray-600 dark:text-gray-400">SKU:</span>
+                                  <span className="ml-2 text-gray-900 dark:text-white font-medium">
                                     {exception.sku}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-gray-400">Qty:</span>
-                                  <span className="ml-2 text-white">
+                                  <span className="text-gray-600 dark:text-gray-400">Qty:</span>
+                                  <span className="ml-2 text-gray-900 dark:text-white">
                                     {exception.quantityActual} / {exception.quantityExpected}
                                     {exception.quantityShort > 0 && (
-                                      <span className="text-error-400 ml-1">
+                                      <span className="text-red-600 dark:text-error-400 ml-1">
                                         (-{exception.quantityShort})
                                       </span>
                                     )}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-gray-400">Reported:</span>
-                                  <span className="ml-2 text-white">
+                                  <span className="text-gray-600 dark:text-gray-400">
+                                    Reported:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 dark:text-white">
                                     {new Date(exception.reportedAt).toLocaleString()}
                                   </span>
                                 </div>
                               </div>
 
                               {exception.reason && (
-                                <div className="mt-3 p-3 bg-white/[0.02] rounded-lg">
-                                  <p className="text-sm text-gray-300">{exception.reason}</p>
+                                <div className="mt-3 p-3 bg-gray-100 dark:bg-white/[0.02] rounded-lg">
+                                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    {exception.reason}
+                                  </p>
                                 </div>
                               )}
 
                               {exception.resolution && (
                                 <div className="mt-3 flex items-center gap-2">
-                                  <span className="text-sm text-gray-400">Resolution:</span>
-                                  <span className="text-sm font-medium text-success-400">
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    Resolution:
+                                  </span>
+                                  <span className="text-sm font-medium text-green-700 dark:text-success-400">
                                     {exception.resolution.replace(/_/g, ' ')}
                                   </span>
                                 </div>
@@ -773,7 +793,7 @@ export function ExceptionsPage() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16">
                     <CheckCircleIcon className="h-16 w-16 text-gray-600 mb-4" />
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {searchQuery ? 'No exceptions match your search' : 'No exceptions found'}
                     </p>
                     <p className="text-xs text-gray-500 mt-2">

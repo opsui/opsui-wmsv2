@@ -487,8 +487,12 @@ function AdminSettingsPage() {
               <CogIcon className="h-8 w-8 text-primary-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">Admin Settings</h1>
-              <p className="mt-2 text-gray-400">Customize your admin experience</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Admin Settings
+              </h1>
+              <p className="mt-3 text-lg text-gray-700 dark:text-gray-300">
+                Customize your admin experience
+              </p>
             </div>
           </div>
         </div>
@@ -506,10 +510,10 @@ function AdminSettingsPage() {
                       <button
                         key={section.key}
                         onClick={() => setSection(section.key)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
                           isActive
-                            ? 'text-white bg-primary-500/20 border border-primary-500/30'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                            ? 'text-gray-900 bg-primary-100 border border-primary-300 dark:text-white dark:bg-primary-500/25 dark:border-primary-500/40 dark:shadow-lg dark:shadow-primary-500/20'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-white/10 border border-gray-300 dark:border-gray-700/50'
                         }`}
                       >
                         <div className="flex items-center justify-center w-4 flex-shrink-0">
@@ -531,13 +535,15 @@ function AdminSettingsPage() {
               <>
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Role Switcher Settings</CardTitle>
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                      Role Switcher Settings
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-400 mb-4">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 font-medium">
                       Showing {visibleCount} of {roles.length} roles in switcher
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-400">
                       Hidden roles can still be accessed but won't appear in the dropdown menu
                     </p>
                   </CardContent>
@@ -547,10 +553,12 @@ function AdminSettingsPage() {
                 {user && roles.length > 0 && (
                   <Card variant="glass">
                     <CardHeader>
-                      <CardTitle>Role Badge Colors</CardTitle>
+                      <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                        Role Badge Colors
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
-                      <p className="text-sm text-gray-400 mb-6">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                         Customize the badge color for each role you have access to. These colors are
                         personal to you and only affect how role badges appear on your device.
                       </p>
@@ -623,10 +631,10 @@ function AdminSettingsPage() {
                                   <button
                                     key={color}
                                     onClick={() => handleColorChange(role.role, color)}
-                                    className={`w-full aspect-square rounded-md transition-all duration-200 ${
+                                    className={`w-full aspect-square rounded-lg transition-all duration-200 ${
                                       currentColor === color
-                                        ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-105 shadow-lg'
-                                        : 'hover:scale-105 opacity-60 hover:opacity-100 hover:shadow-md'
+                                        ? 'ring-2 ring-offset-2 ring-offset-gray-900 ring-white scale-110 shadow-xl'
+                                        : 'hover:scale-110 opacity-75 hover:opacity-100 hover:shadow-lg border border-gray-700'
                                     }`}
                                     style={{ backgroundColor: color }}
                                     title={color}
@@ -690,29 +698,37 @@ function AdminSettingsPage() {
               <>
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Appearance</CardTitle>
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                      Appearance
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Theme Selection */}
                     <div>
-                      <h3 className="text-sm font-semibold text-white mb-3">Theme</h3>
-                      <div className="grid grid-cols-3 gap-3">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">
+                        Theme
+                      </h3>
+                      <div className="grid grid-cols-3 gap-4">
                         <button
                           onClick={() => setTheme('light')}
-                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                          className={`flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
                             theme === 'light'
-                              ? 'bg-amber-500/20 border-amber-500/30'
-                              : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                              ? 'bg-amber-100 dark:bg-amber-500/25 border-amber-400 dark:border-amber-500/50 shadow-lg shadow-amber-500/20'
+                              : 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                         >
                           <SunIcon
-                            className={`h-6 w-6 ${
-                              theme === 'light' ? 'text-amber-400' : 'text-gray-500'
+                            className={`h-10 w-10 ${
+                              theme === 'light'
+                                ? 'text-amber-600'
+                                : 'text-gray-500 dark:text-gray-400'
                             }`}
                           />
                           <span
-                            className={`text-sm font-medium ${
-                              theme === 'light' ? 'text-white' : 'text-gray-400'
+                            className={`text-base font-bold ${
+                              theme === 'light'
+                                ? 'text-gray-900'
+                                : 'text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             Light
@@ -720,20 +736,24 @@ function AdminSettingsPage() {
                         </button>
                         <button
                           onClick={() => setTheme('dark')}
-                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                          className={`flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
                             theme === 'dark'
-                              ? 'bg-purple-500/20 border-purple-500/30'
-                              : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                              ? 'bg-purple-100 dark:bg-purple-500/25 border-purple-400 dark:border-purple-500/50 shadow-lg shadow-purple-500/20'
+                              : 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                         >
                           <MoonIcon
-                            className={`h-6 w-6 ${
-                              theme === 'dark' ? 'text-purple-400' : 'text-gray-500'
+                            className={`h-10 w-10 ${
+                              theme === 'dark'
+                                ? 'text-purple-600'
+                                : 'text-gray-500 dark:text-gray-400'
                             }`}
                           />
                           <span
-                            className={`text-sm font-medium ${
-                              theme === 'dark' ? 'text-white' : 'text-gray-400'
+                            className={`text-base font-bold ${
+                              theme === 'dark'
+                                ? 'text-gray-900'
+                                : 'text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             Dark
@@ -741,27 +761,31 @@ function AdminSettingsPage() {
                         </button>
                         <button
                           onClick={() => setTheme('auto')}
-                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                          className={`flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all duration-200 ${
                             theme === 'auto'
-                              ? 'bg-blue-500/20 border-blue-500/30'
-                              : 'bg-gray-800/50 border-gray-700 hover:border-gray-600'
+                              ? 'bg-blue-100 dark:bg-blue-500/25 border-blue-400 dark:border-blue-500/50 shadow-lg shadow-blue-500/20'
+                              : 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700'
                           }`}
                         >
                           <ComputerDesktopIcon
-                            className={`h-6 w-6 ${
-                              theme === 'auto' ? 'text-blue-400' : 'text-gray-500'
+                            className={`h-10 w-10 ${
+                              theme === 'auto'
+                                ? 'text-blue-600'
+                                : 'text-gray-500 dark:text-gray-400'
                             }`}
                           />
                           <span
-                            className={`text-sm font-medium ${
-                              theme === 'auto' ? 'text-white' : 'text-gray-400'
+                            className={`text-base font-bold ${
+                              theme === 'auto'
+                                ? 'text-gray-900'
+                                : 'text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             Auto
                           </span>
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-3">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
                         Auto mode switches between light and dark based on your system preferences
                       </p>
                     </div>
@@ -775,7 +799,9 @@ function AdminSettingsPage() {
               <>
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Notifications & Sounds</CardTitle>
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                      Notifications & Sounds
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Sound Toggle */}
@@ -788,21 +814,25 @@ function AdminSettingsPage() {
                             <SpeakerXMarkIcon className="h-6 w-6 text-gray-500" />
                           )}
                           <div>
-                            <h3 className="text-sm font-semibold text-white">Sound Effects</h3>
-                            <p className="text-xs text-gray-400">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                              Sound Effects
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                               Play sounds for notifications and actions
                             </p>
                           </div>
                         </div>
                         <button
                           onClick={() => setSoundEnabled(!soundEnabled)}
-                          className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-                            soundEnabled ? 'bg-primary-500' : 'bg-gray-700'
+                          className={`relative w-16 h-8 rounded-full transition-all duration-200 ${
+                            soundEnabled
+                              ? 'bg-primary-500 shadow-lg shadow-primary-500/30'
+                              : 'bg-gray-600'
                           }`}
                         >
                           <span
-                            className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
-                              soundEnabled ? 'translate-x-7' : ''
+                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-200 flex items-center justify-center ${
+                              soundEnabled ? 'translate-x-8' : ''
                             }`}
                           />
                         </button>
@@ -815,8 +845,12 @@ function AdminSettingsPage() {
                         <div className="flex items-center gap-3">
                           <BellIcon className="h-6 w-6 text-blue-400" />
                           <div>
-                            <h3 className="text-sm font-semibold text-white">Test Sounds</h3>
-                            <p className="text-xs text-gray-400">Preview notification sounds</p>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                              Test Sounds
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Preview notification sounds
+                            </p>
                           </div>
                         </div>
                         <Button
@@ -839,11 +873,13 @@ function AdminSettingsPage() {
               <>
                 <Card variant="glass">
                   <CardHeader>
-                    <CardTitle>Account</CardTitle>
+                    <CardTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                      Account
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Change Password */}
-                    <div className="p-4 bg-gray-800/50 rounded-xl">
+                    <div className="p-4 bg-gray-100 dark:bg-gray-800/50 rounded-xl">
                       <div className="flex items-center gap-3 mb-3">
                         <KeyIcon className="h-6 w-6 text-yellow-400" />
                         <div>
