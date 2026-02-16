@@ -383,7 +383,7 @@ export default function ModuleManagementPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Category Tabs */}
             <div className="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0">
-              {categories.map(cat => (
+              {Array.isArray(categories) && categories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
@@ -563,7 +563,7 @@ export default function ModuleManagementPage() {
                                 Included Features
                               </h4>
                               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                                {module.features.map((feature, idx) => (
+                                {Array.isArray(module.features) && module.features.map((feature, idx) => (
                                   <li
                                     key={idx}
                                     className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400 min-w-0"
@@ -614,8 +614,8 @@ export default function ModuleManagementPage() {
             </CardHeader>
             <CardContent className="p-4 overflow-y-auto">
               <div className="space-y-2">
-                {Object.values(USER_TIERS).map(tier => {
-                  const isSelected = billingSummary?.userTier.tierId === tier.id;
+                {Object.values(USER_TIERS || {}).map(tier => {
+                  const isSelected = billingSummary?.userTier?.tierId === tier.id;
                   return (
                     <button
                       key={tier.id}
