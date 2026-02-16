@@ -4,14 +4,14 @@
  * User authentication form
  */
 
+import { Button } from '@/components/shared';
+import { commonValidations, useFormValidation } from '@/hooks/useFormValidation';
+import { authApi } from '@/services/api';
+import { useAuthStore } from '@/stores';
+import { showError, showSuccess } from '@/stores/uiStore';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { useAuthStore } from '@/stores';
-import { authApi } from '@/services/api';
-import { Button } from '@/components/shared';
-import { showSuccess, showError } from '@/stores/uiStore';
-import { useFormValidation, commonValidations } from '@/hooks/useFormValidation';
 
 // ============================================================================
 // TYPES
@@ -95,10 +95,8 @@ export function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-responsive-xl font-bold dark:text-white text-gray-900 tracking-tight">
-            OpsUI
-          </h1>
-          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
+          <img src="/OP_logo.png" alt="OpsUI Logo" className="mx-auto h-16 w-auto mb-4" />
+          <p className="dark:text-gray-400 text-gray-600 text-responsive-sm">
             Warehouse Management System
           </p>
         </div>
