@@ -1216,6 +1216,38 @@ export function Header() {
   // Get the effective role (switched role) or fall back to base role
   const effectiveRole = getEffectiveRole() || user.role;
 
+  // Helper function to get the home path for a given role
+  const getHomePathForRole = (role: UserRole | string): string => {
+    switch (role) {
+      case UserRole.ADMIN:
+      case UserRole.SUPERVISOR:
+        return '/dashboard';
+      case UserRole.PICKER:
+        return '/orders';
+      case UserRole.PACKER:
+        return '/packing';
+      case UserRole.STOCK_CONTROLLER:
+        return '/stock-control';
+      case 'SALES':
+        return '/sales';
+      case 'ACCOUNTING':
+        return '/accounting';
+      case 'INWARDS':
+        return '/inwards';
+      case 'PRODUCTION':
+        return '/production';
+      case 'RMA':
+        return '/rma';
+      case 'MAINTENANCE':
+        return '/maintenance';
+      case 'HR_MANAGER':
+      case 'HR_ADMIN':
+        return '/hr';
+      default:
+        return '/dashboard';
+    }
+  };
+
   // Group navigation items into dropdowns
   // Organization: Modular ERP System - ordered by business priority
   // 1. Dashboard (Central Overview) -> 2. Sales & CRM -> 3. Finance/Accounting ->
@@ -1912,14 +1944,20 @@ export function Header() {
               </button>
             </div>
 
-            {/* Right side - OpsUI Branding */}
-            <div className="ml-auto flex items-center">
-              <span
-                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900"
+            {/* Right side - OpsUI Branding (clickable home button) */}
+            <div className="ml-auto flex items-center pr-4">
+              <button
+                onClick={() => {
+                  // Navigate to role-specific home page
+                  const homePath = getHomePathForRole(effectiveRole);
+                  navigate(homePath);
+                }}
+                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer"
                 style={{ fontFamily: "'Inter', sans-serif" }}
+                title="Go to home"
               >
                 OpsUI
-              </span>
+              </button>
             </div>
           </div>
         </div>
