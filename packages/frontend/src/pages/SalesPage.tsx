@@ -4,43 +4,43 @@
  * Sales & CRM module for customer management, leads, opportunities, and quotes
  */
 
-import { useSearchParams } from 'react-router-dom';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Header,
-  Button,
-  useToast,
-  Pagination,
-  Breadcrumb,
-} from '@/components/shared';
-import {
-  useCustomers,
-  useLeads,
-  useOpportunities,
-  useQuotes,
-  useSalesDashboard,
-  useConvertLeadToCustomer,
-  useSendQuote,
-  useAcceptQuote,
-} from '@/services/api';
 import { CreateCustomerModal } from '@/components/sales/CreateCustomerModal';
 import { CreateLeadModal } from '@/components/sales/CreateLeadModal';
 import { CreateOpportunityModal } from '@/components/sales/CreateOpportunityModal';
 import { CreateQuoteModal } from '@/components/sales/CreateQuoteModal';
 import { CustomerDetailModal } from '@/components/sales/CustomerDetailModal';
-import { useEffect, useState } from 'react';
 import {
+  Breadcrumb,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Header,
+  Pagination,
+  useToast,
+} from '@/components/shared';
+import {
+  useAcceptQuote,
+  useConvertLeadToCustomer,
+  useCustomers,
+  useLeads,
+  useOpportunities,
+  useQuotes,
+  useSalesDashboard,
+  useSendQuote,
+} from '@/services/api';
+import {
+  ChartBarIcon,
   CurrencyDollarIcon,
-  UserGroupIcon,
-  UserPlusIcon,
-  TrophyIcon,
   DocumentTextIcon,
   PlusIcon,
-  ChartBarIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  UserPlusIcon,
 } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 // ============================================================================
 // TYPES
@@ -725,7 +725,7 @@ function SalesPage() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-300 border border-blue-200 dark:border-primary-500/30'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                      : 'bg-white dark:bg-transparent text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-transparent hover:bg-gray-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
