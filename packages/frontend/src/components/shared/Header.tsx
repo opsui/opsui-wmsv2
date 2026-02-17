@@ -222,6 +222,14 @@ function MobileMenu({
 
   return (
     <>
+      {/* Backdrop with blur */}
+      <div
+        className={`fixed inset-0 z-[105] bg-black/20 dark:bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+          isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
+        }`}
+        onClick={() => onHoverOff?.()}
+      />
+
       {/* Menu Drawer */}
       <div
         className={`fixed inset-y-0 left-0 z-[110] w-80 max-w-[85vw] transform transition-transform duration-300 ease-out ${
@@ -230,7 +238,7 @@ function MobileMenu({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="bg-white dark:bg-gray-900 h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-gray-700">
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl h-full flex flex-col shadow-2xl border-r border-gray-200/50 dark:border-gray-700/50">
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
             <div className="flex-1 min-w-0">
@@ -1889,74 +1897,15 @@ export function Header() {
 
   return (
     <>
-      <header className="relative z-50">
-        <div className="w-full dynamic-island-header">
-          {/* Mobile: Logo above toolbar (stacked), desktop: horizontal layout */}
-          {/* Mobile: flex-col for stacking, desktop: flex-row */}
-          <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
-            {/* Mobile: Top row - Hamburger on left, Logo centered. Desktop: Left side with menu */}
-            <div className="flex items-center justify-between md:justify-start w-full md:w-auto mb-2 md:mb-0">
-              {/* Hamburger - always visible */}
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                onMouseEnter={() => setMobileMenuOpen(true)}
-                className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
-                aria-label="Open menu"
-              >
-                <Bars3Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-              </button>
-
-              {/* Logo - centered on mobile, left on desktop */}
-              <button
-                onClick={() => {
-                  const homePath = getHomePathForRole(effectiveRole, user.role);
-                  navigate(homePath);
-                }}
-                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0"
-                style={{ fontFamily: "'Inter', sans-serif" }}
-                title="Go to home"
-              >
-                OpsUI
-              </button>
-              {/* Spacer for mobile to balance hamburger */}
-              <div className="w-10 md:hidden"></div>
-            </div>
-
-            {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
-            <div className="flex items-center justify-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
-              {/* Notification Panel */}
-              <NotificationPanel />
-
-              {/* Divider */}
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-
-              {/* Settings button */}
-              <button
-                onClick={() => navigate('/role-settings?section=role-switcher')}
-                className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg transition-colors"
-                title="Settings"
-                aria-label="Settings"
-              >
-                <CogIcon className="h-5 w-5" />
-              </button>
-
-              {/* Logout button */}
-              <button
-                onClick={handleLogout}
-                disabled={logoutMutation.isPending}
-                className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
-                title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-              >
-                <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Floating Hamburger Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(true)}
+        onMouseEnter={() => setMobileMenuOpen(true)}
+        className="fixed top-4 left-4 z-[100] p-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-full shadow-lg border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 transition-all duration-200"
+        aria-label="Open menu"
+      >
+        <Bars3Icon className="h-6 w-6" />
+      </button>
 
       {/* Navigation Menu */}
       <MobileMenu

@@ -816,38 +816,16 @@
    High specificity to ensure it works
    ============================================ */
 
-/* Base navbar glassmorphism - works in normal mode */
-.dynamic-island-header,
-header .dynamic-island-header,
-header > div.dynamic-island-header {
-  padding-top: max(env(safe-area-inset-top, 0px), 20px) !important;
-  background: rgba(255, 255, 255, 0.75) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+/* Mobile menu glassmorphism - Apple-style frosted glass effect */
+/* Floating hamburger button - safe area support */
+.fixed.top-4.left-4 {
+  padding-top: max(env(safe-area-inset-top, 0px), 16px) !important;
 }
 
-/* Dark mode navbar */
-html.dark .dynamic-island-header,
-html.dark header .dynamic-island-header,
-html.dark header > div.dynamic-island-header {
-  background: rgba(17, 24, 39, 0.75) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Performance mode - keep navbar blur working */
-html.performance-mode .dynamic-island-header,
-html.performance-mode header .dynamic-island-header,
-html.performance-mode header > div.dynamic-island-header {
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-}
-
-/* Desktop - remove top padding */
+/* Desktop - standard padding */
 @media (min-width: 640px) {
-  .dynamic-island-header {
-    padding-top: 0 !important;
+  .fixed.top-4.left-4 {
+    padding-top: 16px !important;
   }
 }
 
