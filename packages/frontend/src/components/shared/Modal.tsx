@@ -331,7 +331,12 @@ export function FormTextarea({
         </p>
       )}
       {error && (
-        <p id={errorId} className="text-sm text-red-500 dark:text-error-400" role="alert" aria-live="polite">
+        <p
+          id={errorId}
+          className="text-sm text-red-500 dark:text-error-400"
+          role="alert"
+          aria-live="polite"
+        >
           {error}
         </p>
       )}

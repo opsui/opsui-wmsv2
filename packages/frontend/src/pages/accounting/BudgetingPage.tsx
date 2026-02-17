@@ -78,9 +78,17 @@ function BudgetingPage() {
       budgetType: 'QUARTERLY',
       status: 'ACTIVE',
     },
+    {
+      budgetId: 'BG-2024-003',
+      budgetName: 'FY 2024 Q2 Forecast',
+      fiscalYear: 2024,
+      budgetType: 'QUARTERLY',
+      status: 'DRAFT',
+    },
   ];
 
   const mockBudgetLines: BudgetLine[] = [
+    // Revenue
     {
       accountId: 'ACT-4100',
       accountName: 'Sales Revenue',
@@ -92,6 +100,27 @@ function BudgetingPage() {
       variancePercent: -5,
     },
     {
+      accountId: 'ACT-4150',
+      accountName: 'Service Revenue',
+      accountCode: '4150',
+      period: '2024-01',
+      budgetedAmount: 150000,
+      actualAmount: 162000,
+      variance: -12000,
+      variancePercent: -8,
+    },
+    {
+      accountId: 'ACT-4200',
+      accountName: 'Interest Income',
+      accountCode: '4200',
+      period: '2024-01',
+      budgetedAmount: 5000,
+      actualAmount: 5200,
+      variance: -200,
+      variancePercent: -4,
+    },
+    // Cost of Goods
+    {
       accountId: 'ACT-5100',
       accountName: 'Cost of Goods Sold',
       accountCode: '5100',
@@ -101,6 +130,17 @@ function BudgetingPage() {
       variance: 10000,
       variancePercent: 3.33,
     },
+    {
+      accountId: 'ACT-5120',
+      accountName: 'Material Costs',
+      accountCode: '5120',
+      period: '2024-01',
+      budgetedAmount: 180000,
+      actualAmount: 175000,
+      variance: 5000,
+      variancePercent: 2.78,
+    },
+    // Operating Expenses
     {
       accountId: 'ACT-5200',
       accountName: 'Operating Expenses',
@@ -130,6 +170,66 @@ function BudgetingPage() {
       actualAmount: 14800,
       variance: 200,
       variancePercent: 1.33,
+    },
+    {
+      accountId: 'ACT-5230',
+      accountName: 'Marketing Expenses',
+      accountCode: '5230',
+      period: '2024-01',
+      budgetedAmount: 12000,
+      actualAmount: 14500,
+      variance: -2500,
+      variancePercent: -20.83,
+    },
+    {
+      accountId: 'ACT-5240',
+      accountName: 'Insurance',
+      accountCode: '5240',
+      period: '2024-01',
+      budgetedAmount: 8000,
+      actualAmount: 8000,
+      variance: 0,
+      variancePercent: 0,
+    },
+    {
+      accountId: 'ACT-5250',
+      accountName: 'Depreciation',
+      accountCode: '5250',
+      period: '2024-01',
+      budgetedAmount: 6500,
+      actualAmount: 6500,
+      variance: 0,
+      variancePercent: 0,
+    },
+    {
+      accountId: 'ACT-5260',
+      accountName: 'Travel & Entertainment',
+      accountCode: '5260',
+      period: '2024-01',
+      budgetedAmount: 4500,
+      actualAmount: 5200,
+      variance: -700,
+      variancePercent: -15.56,
+    },
+    {
+      accountId: 'ACT-5270',
+      accountName: 'Office Supplies',
+      accountCode: '5270',
+      period: '2024-01',
+      budgetedAmount: 2500,
+      actualAmount: 2100,
+      variance: 400,
+      variancePercent: 16,
+    },
+    {
+      accountId: 'ACT-5280',
+      accountName: 'Professional Fees',
+      accountCode: '5280',
+      period: '2024-01',
+      budgetedAmount: 10000,
+      actualAmount: 9500,
+      variance: 500,
+      variancePercent: 5,
     },
   ];
 
@@ -188,14 +288,14 @@ function BudgetingPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/20 rounded-xl">
-                <ChartBarIcon className="h-8 w-8 text-emerald-400" />
+              <div className="p-3 bg-emerald-500/20 dark:bg-emerald-500/20 rounded-xl">
+                <ChartBarIcon className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Budgeting & Forecasting
                 </h1>
-                <p className="mt-2 text-gray-400">Manage budgets and analyze variances</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">Manage budgets and analyze variances</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -223,14 +323,14 @@ function BudgetingPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <label htmlFor="budget-select" className="text-sm text-gray-400 mb-2 block">
+                <label htmlFor="budget-select" className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
                   Select Budget
                 </label>
                 <select
                   id="budget-select"
                   value={selectedBudgetId}
                   onChange={e => setSelectedBudgetId(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-4 py-2 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 [&_option]:bg-white [&_option]:text-gray-900 dark:[&_option]:bg-gray-900 dark:[&_option]:text-gray-100"
                 >
                   <option value="">Select a budget...</option>
                   {mockBudgets.map(budget => (
@@ -252,38 +352,38 @@ function BudgetingPage() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-4 gap-6">
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Total Budgeted</p>
-                    <p className="text-2xl font-bold text-blue-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Budgeted</p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {formatCurrency(
                         mockBudgetLines.reduce((sum, l) => sum + l.budgetedAmount, 0)
                       )}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Total Actual</p>
-                    <p className="text-2xl font-bold text-purple-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Actual</p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       {formatCurrency(mockBudgetLines.reduce((sum, l) => sum + l.actualAmount, 0))}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Net Variance</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Variance</p>
                     <p
                       className={`text-2xl font-bold ${
                         mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
-                          ? 'text-emerald-400'
-                          : 'text-rose-400'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-rose-600 dark:text-rose-400'
                       }`}
                     >
                       {formatCurrency(mockBudgetLines.reduce((sum, l) => sum + l.variance, 0))}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">Under/Over Budget</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Under/Over Budget</p>
                     <p
                       className={`text-2xl font-bold ${
                         mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
-                          ? 'text-emerald-400'
-                          : 'text-rose-400'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-rose-600 dark:text-rose-400'
                       }`}
                     >
                       {mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
@@ -304,48 +404,48 @@ function BudgetingPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full" role="table">
                     <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Account
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Account Code
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Budgeted
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Actual
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Variance
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Variance %
                         </th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
+                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
                           Status
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {mockBudgetLines.map((line, index) => (
-                        <tr key={index} className="border-b border-gray-800 hover:bg-white/[0.02]">
-                          <td className="py-3 px-4 text-sm text-white font-medium">
+                        <tr key={index} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-white/[0.02]">
+                          <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
                             {line.accountName}
                           </td>
-                          <td className="py-3 px-4 text-sm font-mono text-gray-400">
+                          <td className="py-3 px-4 text-sm font-mono text-gray-600 dark:text-gray-400">
                             {line.accountCode}
                           </td>
-                          <td className="py-3 px-4 text-sm text-right text-blue-400">
+                          <td className="py-3 px-4 text-sm text-right text-blue-600 dark:text-blue-400">
                             {formatCurrency(line.budgetedAmount)}
                           </td>
-                          <td className="py-3 px-4 text-sm text-right text-purple-400">
+                          <td className="py-3 px-4 text-sm text-right text-purple-600 dark:text-purple-400">
                             {formatCurrency(line.actualAmount)}
                           </td>
                           <td
                             className={`py-3 px-4 text-sm text-right font-medium ${
-                              line.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                              line.variance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                             }`}
                           >
                             {line.variance >= 0 ? '+' : ''}
@@ -353,7 +453,7 @@ function BudgetingPage() {
                           </td>
                           <td
                             className={`py-3 px-4 text-sm text-right ${
-                              line.variancePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                              line.variancePercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                             }`}
                           >
                             {line.variancePercent >= 0 ? '+' : ''}
@@ -362,19 +462,19 @@ function BudgetingPage() {
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-1">
                               {Math.abs(line.variancePercent) <= 5 ? (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 rounded-full">
-                                  <ArrowTrendingUpIcon className="h-3 w-3 text-emerald-400" />
-                                  <span className="text-xs text-emerald-400">On Track</span>
+                                <div className="flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-500/20 rounded-full">
+                                  <ArrowTrendingUpIcon className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                  <span className="text-xs text-emerald-600 dark:text-emerald-400">On Track</span>
                                 </div>
                               ) : Math.abs(line.variancePercent) <= 10 ? (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 rounded-full">
-                                  <ArrowTrendingDownIcon className="h-3 w-3 text-amber-400" />
-                                  <span className="text-xs text-amber-400">Watch</span>
+                                <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-500/20 rounded-full">
+                                  <ArrowTrendingDownIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                  <span className="text-xs text-amber-600 dark:text-amber-400">Watch</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-rose-500/20 rounded-full">
-                                  <ArrowTrendingDownIcon className="h-3 w-3 text-rose-400" />
-                                  <span className="text-xs text-rose-400">Alert</span>
+                                <div className="flex items-center gap-1 px-2 py-1 bg-rose-100 dark:bg-rose-500/20 rounded-full">
+                                  <ArrowTrendingDownIcon className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                                  <span className="text-xs text-rose-600 dark:text-rose-400">Alert</span>
                                 </div>
                               )}
                             </div>
@@ -392,21 +492,21 @@ function BudgetingPage() {
         {!selectedBudgetId && (
           <Card variant="glass">
             <CardContent className="p-12 text-center">
-              <ChartBarIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">Select a budget to view variance analysis</p>
+              <ChartBarIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">Select a budget to view variance analysis</p>
             </CardContent>
           </Card>
         )}
 
         {/* Add Budget Modal */}
         {showAddBudgetModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 dark:bg-black/50 flex items-center justify-center z-50">
             <Card variant="glass" className="w-full max-w-md mx-4">
               <CardHeader>
                 <CardTitle>Create New Budget</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-gray-400 mb-4">Budget creation form would go here...</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">Budget creation form would go here...</p>
                 <div className="flex justify-end gap-3">
                   <Button variant="secondary" onClick={() => setShowAddBudgetModal(false)}>
                     Cancel

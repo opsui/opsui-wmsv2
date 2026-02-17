@@ -364,7 +364,10 @@ function CapacityRuleModal({
               name="allowOverfill"
               className="h-4 w-4 text-blue-600 rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:ring-blue-500"
             />
-            <label htmlFor="allowOverfill" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="allowOverfill"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
               Allow Overfill
             </label>
           </div>
@@ -533,7 +536,9 @@ export function LocationCapacityPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Location Capacity</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Location Capacity
+                </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Monitor and manage bin location capacity constraints
                 </p>
@@ -608,26 +613,36 @@ export function LocationCapacityPage() {
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                       <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-800 rounded-lg p-4">
-                        <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">Total Locations</div>
+                        <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                          Total Locations
+                        </div>
                         <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">
                           {capacities.length}
                         </div>
                       </div>
                       <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800 rounded-lg p-4">
-                        <div className="text-sm text-green-700 dark:text-green-300 font-medium">Total Capacity</div>
+                        <div className="text-sm text-green-700 dark:text-green-300 font-medium">
+                          Total Capacity
+                        </div>
                         <div className="text-2xl font-bold text-green-900 dark:text-green-100 mt-1">
                           {totalCapacity.toFixed(0)}
                         </div>
                       </div>
                       <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
-                        <div className="text-sm text-yellow-700 dark:text-yellow-300 font-medium">Utilization</div>
+                        <div className="text-sm text-yellow-700 dark:text-yellow-300 font-medium">
+                          Utilization
+                        </div>
                         <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mt-1">
                           {overallUtilization.toFixed(1)}%
                         </div>
                       </div>
                       <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg p-4">
-                        <div className="text-sm text-red-700 dark:text-red-300 font-medium">Active Alerts</div>
-                        <div className="text-2xl font-bold text-red-900 dark:text-red-100 mt-1">{alerts.length}</div>
+                        <div className="text-sm text-red-700 dark:text-red-300 font-medium">
+                          Active Alerts
+                        </div>
+                        <div className="text-2xl font-bold text-red-900 dark:text-red-100 mt-1">
+                          {alerts.length}
+                        </div>
                       </div>
                     </div>
 
@@ -646,7 +661,9 @@ export function LocationCapacityPage() {
                     {/* Capacities by Location */}
                     <div>
                       <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location Capacities</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Location Capacities
+                        </h3>
                         <div className="flex gap-2">
                           <div className="relative">
                             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -707,13 +724,19 @@ export function LocationCapacityPage() {
                           <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                             {paginatedCapacities.length === 0 ? (
                               <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-gray-600 dark:text-gray-400">
+                                <td
+                                  colSpan={5}
+                                  className="px-6 py-12 text-center text-gray-600 dark:text-gray-400"
+                                >
                                   No location capacities found.
                                 </td>
                               </tr>
                             ) : (
                               paginatedCapacities.map((capacity: any) => (
-                                <tr key={capacity.capacityId} className="hover:bg-gray-100 dark:hover:bg-gray-800/50">
+                                <tr
+                                  key={capacity.capacityId}
+                                  className="hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                                >
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                                       {capacity.binLocation}
@@ -835,7 +858,10 @@ export function LocationCapacityPage() {
                         <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                           {paginatedRules.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-6 py-12 text-center text-gray-600 dark:text-gray-400">
+                              <td
+                                colSpan={7}
+                                className="px-6 py-12 text-center text-gray-600 dark:text-gray-400"
+                              >
                                 {searchTerm
                                   ? 'No rules match your search.'
                                   : 'No capacity rules configured. Create a rule to get started.'}
@@ -843,18 +869,27 @@ export function LocationCapacityPage() {
                             </tr>
                           ) : (
                             paginatedRules.map((rule: any) => (
-                              <tr key={rule.ruleId} className="hover:bg-gray-100 dark:hover:bg-gray-800/50">
+                              <tr
+                                key={rule.ruleId}
+                                className="hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                              >
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm font-medium text-gray-900 dark:text-white">
                                     {rule.ruleName}
                                   </div>
                                   {rule.description && (
-                                    <div className="text-xs text-gray-600 dark:text-gray-400">{rule.description}</div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                      {rule.description}
+                                    </div>
                                   )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-800 dark:text-white">{rule.capacityType}</div>
-                                  <div className="text-xs text-gray-600 dark:text-gray-400">{rule.capacityUnit}</div>
+                                  <div className="text-sm text-gray-800 dark:text-white">
+                                    {rule.capacityType}
+                                  </div>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                                    {rule.capacityUnit}
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-800 dark:text-white">
@@ -979,9 +1014,13 @@ export function LocationCapacityPage() {
                                   {alert.binLocation} - {alert.capacityType} Capacity{' '}
                                   {alert.alertType}
                                 </h4>
-                                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">{alert.alertMessage}</p>
+                                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">
+                                  {alert.alertMessage}
+                                </p>
                                 <div className="text-sm mt-2 text-gray-700 dark:text-gray-300">
-                                  <span className="font-medium text-gray-900 dark:text-white">Current: </span>
+                                  <span className="font-medium text-gray-900 dark:text-white">
+                                    Current:{' '}
+                                  </span>
                                   {alert.currentUtilization.toFixed(1)} / {alert.maximumCapacity} (
                                   {alert.utilizationPercent.toFixed(1)}%)
                                 </div>

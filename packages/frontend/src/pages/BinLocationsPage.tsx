@@ -130,7 +130,9 @@ function BinLocationModal({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bin ID *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Bin ID *
+            </label>
             <input
               name="binId"
               type="text"
@@ -149,12 +151,18 @@ function BinLocationModal({
               }`}
               placeholder="e.g., A-12-03"
             />
-            {errors.binId && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.binId}</p>}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Format: Z-A-S (e.g., A-12-03)</p>
+            {errors.binId && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.binId}</p>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Format: Z-A-S (e.g., A-12-03)
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zone *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Zone *
+            </label>
             <input
               name="zone"
               type="text"
@@ -173,11 +181,15 @@ function BinLocationModal({
               }`}
               placeholder="e.g., A"
             />
-            {errors.zone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.zone}</p>}
+            {errors.zone && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.zone}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aisle *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Aisle *
+            </label>
             <input
               name="aisle"
               type="text"
@@ -189,11 +201,15 @@ function BinLocationModal({
               }`}
               placeholder="e.g., 12"
             />
-            {errors.aisle && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.aisle}</p>}
+            {errors.aisle && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.aisle}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Shelf *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Shelf *
+            </label>
             <input
               name="shelf"
               type="text"
@@ -205,11 +221,15 @@ function BinLocationModal({
               }`}
               placeholder="e.g., 03"
             />
-            {errors.shelf && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shelf}</p>}
+            {errors.shelf && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shelf}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Type *
+            </label>
             <select
               name="type"
               required
@@ -224,7 +244,9 @@ function BinLocationModal({
               <option value={BinType.RACK}>Rack</option>
               <option value={BinType.BIN}>Bin</option>
             </select>
-            {errors.type && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type}</p>}
+            {errors.type && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type}</p>
+            )}
           </div>
 
           {isEdit && (
@@ -340,7 +362,9 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 my-8">
         <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Batch Create Bin Locations</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Batch Create Bin Locations
+          </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Enter one bin ID per line (format: Z-A-S, e.g., A-12-03)
           </p>
@@ -500,7 +524,9 @@ export function BinLocationsPage() {
             <div className="flex items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bin Locations</h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">Manage warehouse bin locations</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Manage warehouse bin locations
+                </p>
               </div>
             </div>
             {canManageLocations && (
@@ -610,7 +636,9 @@ export function BinLocationsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="glass-card rounded-lg p-4">
               <div className="text-sm text-gray-600 dark:text-gray-400">Total Locations</div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">{locationsData?.total || 0}</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {locationsData?.total || 0}
+              </div>
             </div>
             <div className="glass-card rounded-lg p-4">
               <div className="text-sm text-gray-600 dark:text-gray-400">Active</div>
@@ -626,7 +654,9 @@ export function BinLocationsPage() {
             </div>
             <div className="glass-card rounded-lg p-4">
               <div className="text-sm text-gray-600 dark:text-gray-400">Zones</div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{zones.length}</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {zones.length}
+              </div>
             </div>
           </div>
 
@@ -644,7 +674,9 @@ export function BinLocationsPage() {
               {Object.entries(locationsByZone).map(([zone, zoneLocations]) => (
                 <div key={zone} className="glass-card rounded-lg">
                   <div className="px-6 py-4 border-b border-blue-500/30 bg-blue-500/20">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Zone {zone}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Zone {zone}
+                    </h3>
                     <p className="text-sm text-blue-700 dark:text-blue-100">
                       {zoneLocations.length} location{zoneLocations.length > 1 ? 's' : ''}
                     </p>
@@ -682,19 +714,29 @@ export function BinLocationsPage() {
                         {zoneLocations.map((location: BinLocation) => (
                           <tr key={location.binId} className="hover:bg-blue-500/25">
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">{location.binId}</div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                {location.binId}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-800 dark:text-white">{location.zone}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">
+                                {location.zone}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-800 dark:text-white">{location.aisle}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">
+                                {location.aisle}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-800 dark:text-white">{location.shelf}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">
+                                {location.shelf}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-800 dark:text-white">{location.type}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">
+                                {location.type}
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span

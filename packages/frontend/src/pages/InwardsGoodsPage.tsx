@@ -258,7 +258,9 @@ function MetricCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 text-left">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">{title}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">
+            {title}
+          </p>
           <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
           {trend && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{trend}</p>}
         </div>
@@ -429,7 +431,9 @@ function ASNListItem({
         <div className="flex-1 min-w-0 grid grid-cols-12 gap-4 items-center">
           {/* PO Number */}
           <div className="col-span-3">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{asn.purchaseOrderNumber}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              {asn.purchaseOrderNumber}
+            </p>
             <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{asn.supplierId}</p>
           </div>
 
@@ -526,7 +530,9 @@ function ReceiptListItem({
         <div className="flex-1 min-w-0 grid grid-cols-12 gap-4 items-center">
           {/* Receipt ID */}
           <div className="col-span-3">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{receipt.receiptId}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              {receipt.receiptId}
+            </p>
             <p className="text-xs text-gray-600 dark:text-gray-400">
               {new Date(receipt.receiptDate).toLocaleDateString()}
             </p>
@@ -551,7 +557,9 @@ function ReceiptListItem({
           {/* Items */}
           <div className="col-span-2">
             <p className="text-xs text-gray-500 dark:text-gray-500">Items</p>
-            <p className="text-sm text-gray-700 dark:text-gray-300">{receipt.lineItems?.length || 0}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              {receipt.lineItems?.length || 0}
+            </p>
           </div>
 
           {/* Actions */}
@@ -680,7 +688,9 @@ function ExceptionCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{exception.sku}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              {exception.sku}
+            </p>
             <StatusBadge status={exception.status} type="exception" />
           </div>
           <p className="text-xs text-error-700 dark:text-error-300 font-medium mb-2">
@@ -790,8 +800,13 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
       <Card className="max-w-md w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-gray-900 dark:text-white">Create Advance Shipping Notice</CardTitle>
-            <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <CardTitle className="text-gray-900 dark:text-white">
+              Create Advance Shipping Notice
+            </CardTitle>
+            <button
+              onClick={onClose}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -799,7 +814,9 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supplier ID</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Supplier ID
+              </label>
               <input
                 type="text"
                 name="supplierId"
@@ -816,7 +833,9 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PO Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                PO Number
+              </label>
               <input
                 type="text"
                 name="poNumber"
@@ -828,7 +847,9 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 }`}
                 placeholder="PO-2024-001"
               />
-              {errors.poNumber && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.poNumber}</p>}
+              {errors.poNumber && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.poNumber}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -919,7 +940,10 @@ function CreateReceiptModal({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-gray-900 dark:text-white">Create Receipt</CardTitle>
-            <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <button
+              onClick={onClose}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -927,7 +951,9 @@ function CreateReceiptModal({
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Receipt Type</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Receipt Type
+              </label>
               <select
                 name="receiptType"
                 value={formData.receiptType}
@@ -1028,7 +1054,10 @@ function UpdatePutawayTaskModal({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-gray-900 dark:text-white">Update Putaway Progress</CardTitle>
-            <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <button
+              onClick={onClose}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+            >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -1042,7 +1071,9 @@ function UpdatePutawayTaskModal({
               </div>
               <div>
                 <p className="text-gray-600 dark:text-gray-400">Target Bin</p>
-                <p className="text-gray-900 dark:text-white font-medium">{task.targetBinLocation}</p>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {task.targetBinLocation}
+                </p>
               </div>
               <div>
                 <p className="text-gray-600 dark:text-gray-400">Current Progress</p>
@@ -1074,7 +1105,9 @@ function UpdatePutawayTaskModal({
                 }`}
               />
               {errors.quantityPutaway && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.quantityPutaway}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.quantityPutaway}
+                </p>
               )}
             </div>
 
@@ -1279,8 +1312,12 @@ function InwardsGoodsPage() {
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Inwards Goods</h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Manage receiving from ASN to putaway</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Inwards Goods
+            </h1>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Manage receiving from ASN to putaway
+            </p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -1463,7 +1500,9 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Advance Shipping Notices</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Advance Shipping Notices
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Track incoming shipments before arrival
                 </p>
@@ -1513,7 +1552,9 @@ function InwardsGoodsPage() {
                   <Card variant="glass">
                     <CardContent className="p-12 text-center">
                       <TruckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No ASNs</h3>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        No ASNs
+                      </h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-4">
                         Create an ASN to track incoming shipments
                       </p>
@@ -1546,7 +1587,9 @@ function InwardsGoodsPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Receiving Dock</h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Receive and verify incoming goods</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  Receive and verify incoming goods
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -1595,7 +1638,9 @@ function InwardsGoodsPage() {
                   <Card variant="glass">
                     <CardContent className="p-12 text-center">
                       <InboxIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Receipts</h3>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        No Receipts
+                      </h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-4">
                         Create a receipt to record incoming goods
                       </p>
@@ -1627,7 +1672,9 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quality Control</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Quality Control
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Inspect received goods for quality compliance
                 </p>
@@ -1695,8 +1742,12 @@ function InwardsGoodsPage() {
                   <Card variant="glass" className="md:col-span-2 lg:col-span-3">
                     <CardContent className="p-12 text-center">
                       <ClipboardDocumentCheckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No QC Inspections</h3>
-                      <p className="text-gray-600 dark:text-gray-400">QC inspections will appear after receiving</p>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        No QC Inspections
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        QC inspections will appear after receiving
+                      </p>
                     </CardContent>
                   </Card>
                 )}
@@ -1721,13 +1772,17 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Staging Areas</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">License plates and staging locations</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                License plates and staging locations
+              </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Staging Locations */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Staging Locations</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Staging Locations
+                </h3>
                 {isLoadingStaging ? (
                   <div className="space-y-3">
                     <Skeleton variant="rounded" className="h-24" />
@@ -1772,7 +1827,9 @@ function InwardsGoodsPage() {
 
               {/* License Plates */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">License Plates</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  License Plates
+                </h3>
                 {isLoadingLicensePlates ? (
                   <div className="space-y-3">
                     <Skeleton variant="rounded" className="h-24" />
@@ -1892,7 +1949,9 @@ function InwardsGoodsPage() {
                   <Card variant="glass" className="md:col-span-2 lg:col-span-3">
                     <CardContent className="p-12 text-center">
                       <CubeIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Putaway Tasks</h3>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        No Putaway Tasks
+                      </h3>
                       <p className="text-gray-600 dark:text-gray-400">
                         Putaway tasks will appear after receiving goods
                       </p>
@@ -1920,7 +1979,9 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Receiving Exceptions</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Receiving Exceptions
+                </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Manage receiving discrepancies and exceptions
                 </p>
@@ -1972,8 +2033,12 @@ function InwardsGoodsPage() {
                   <Card variant="glass" className="md:col-span-2">
                     <CardContent className="p-12 text-center">
                       <ExclamationTriangleIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Exceptions</h3>
-                      <p className="text-gray-600 dark:text-gray-400">No receiving exceptions to display</p>
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        No Exceptions
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        No receiving exceptions to display
+                      </p>
                     </CardContent>
                   </Card>
                 )}

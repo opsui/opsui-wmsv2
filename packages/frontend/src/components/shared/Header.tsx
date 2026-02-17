@@ -1504,12 +1504,6 @@ export function Header() {
             icon: ScaleIcon,
           },
           {
-            key: 'bin-utilization',
-            label: 'Bin Utilization',
-            path: '/stock-control?tab=analytics',
-            icon: ChartBarIcon,
-          },
-          {
             key: 'quality-control',
             label: 'Quality Control',
             path: '/quality-control',
