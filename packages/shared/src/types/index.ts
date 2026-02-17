@@ -2794,17 +2794,17 @@ export interface NZCLabelResponse {
 
 // Export all Phase 3 types
 export * from './business-rules';
-export * from './reporting';
 export * from './integrations';
+export * from './reporting';
 
 // ============================================================================
 // ADD-ON MODULES - EXPORTS
 // ============================================================================
 
 // Export all add-on module types
+export * from './maintenance';
 export * from './production';
 export * from './sales-crm';
-export * from './maintenance';
 
 // ============================================================================
 // UTILITY TYPES - For type-safe replacements of 'any'
@@ -4551,58 +4551,58 @@ export * from './purchasing';
 // ============================================================================
 
 export {
-  WorkCenterStatus,
-  RoutingStatus,
-  OperationType,
-  ProductionOrderStatus as ManufacturingOrderStatus,
-  MPSStatus,
-  MRPPlanStatus,
-  MRPActionType,
-  ShopFloorTransactionType,
+  BatchCompleteProductionOrdersDTO,
+  BatchReleaseProductionOrdersDTO,
+  CapacityPlan,
+  CapacityPlanDetail,
+  CapacityPlanQueryFilters,
+  CapacityPlanStatus,
+  CreateCapacityPlanDTO,
+  CreateProductionOrderDTO as CreateManufacturingOrderDTO,
+  CreateMRPPlanDTO,
+  CreateProductionInspectionDTO,
+  CreateRoutingDTO,
+  CreateShopFloorTransactionDTO,
+  CreateWorkCenterDTO,
+  DefectDisposition,
   // DefectType excluded - already defined in main index.ts for quality inspections
   DefectSeverity,
-  DefectDisposition,
-  CapacityPlanStatus,
-  WorkCenter,
-  WorkCenterQueue,
-  CreateWorkCenterDTO,
-  Routing,
-  RoutingWithDetails,
-  RoutingOperation,
-  RoutingBOMComponent,
-  CreateRoutingDTO,
-  MSPPeriod,
+  ImplementMRPActionsDTO,
+  ManufacturingDashboardMetrics,
+  ProductionOrder as ManufacturingOrder,
+  ProductionOrderStatus as ManufacturingOrderStatus,
+  ProductionOrderWithDetails as ManufacturingOrderWithDetails,
   MPSItem,
+  MPSStatus,
+  MRPActionMessage,
+  MRPActionType,
+  MRPAnalysisSummary,
   MRPParameters,
   MRPPlan,
   MRPPlanDetail,
-  MRPActionMessage,
-  CreateMRPPlanDTO,
-  ProductionOrder as ManufacturingOrder,
-  ProductionOrderWithDetails as ManufacturingOrderWithDetails,
-  ProductionOrderOperation,
-  CreateProductionOrderDTO as CreateManufacturingOrderDTO,
-  ReleaseProductionOrderDTO,
-  ShopFloorTransaction,
-  CreateShopFloorTransactionDTO,
-  ProductionInspection,
-  ProductionDefect,
-  CreateProductionInspectionDTO,
-  CapacityPlan,
-  CapacityPlanDetail,
-  CreateCapacityPlanDTO,
-  WorkCenterQueryFilters,
-  RoutingQueryFilters,
-  ProductionOrderQueryFilters,
   MRPPlanQueryFilters,
-  CapacityPlanQueryFilters,
-  ManufacturingDashboardMetrics,
-  WorkCenterPerformanceReport,
+  MRPPlanStatus,
+  MSPPeriod,
+  OperationType,
+  ProductionDefect,
+  ProductionInspection,
   ProductionOrderCostAnalysis,
-  MRPAnalysisSummary,
-  BatchReleaseProductionOrdersDTO,
-  BatchCompleteProductionOrdersDTO,
-  ImplementMRPActionsDTO,
+  ProductionOrderOperation,
+  ProductionOrderQueryFilters,
+  ReleaseProductionOrderDTO,
+  Routing,
+  RoutingBOMComponent,
+  RoutingOperation,
+  RoutingQueryFilters,
+  RoutingStatus,
+  RoutingWithDetails,
+  ShopFloorTransaction,
+  ShopFloorTransactionType,
+  WorkCenter,
+  WorkCenterPerformanceReport,
+  WorkCenterQueryFilters,
+  WorkCenterQueue,
+  WorkCenterStatus,
 } from './manufacturing';
 
 // ============================================================================
@@ -4623,36 +4623,36 @@ export * from './advanced-inventory';
 // ============================================================================
 
 export {
-  StatementType,
-  PeriodType as FinancialPeriodType,
-  ConsolidationMethod as FinancialConsolidationMethod,
-  IntercompanyTransactionType as FinancialIntercompanyTransactionType,
-  IntercompanyStatus,
-  TaxType,
-  TaxStatus,
-  RatioCategory,
-  FinancialStatementTemplate,
-  GeneratedFinancialStatement,
-  ConsolidatedStatement,
+  BalanceSheetView,
   BudgetActualAnalysis,
   BudgetActualDetail,
-  // CurrencyRevaluation excluded - already defined in main index.ts
-  IntercompanyTransaction as FinancialIntercompanyTransaction,
-  IntercompanyTransactionLine,
-  TaxCompliancePeriod,
-  TaxPayment,
-  FinancialRatio,
-  BalanceSheetView,
-  IncomeStatementView,
+  CalculateFinancialRatiosDTO,
   CashFlowView,
-  CreateFinancialStatementDTO,
-  GenerateBalanceSheetDTO,
-  CreateConsolidationDTO,
+  ConsolidatedStatement,
   CreateBudgetActualAnalysisDTO,
+  CreateConsolidationDTO,
   // CurrencyRevaluationDTO excluded - already defined in main index.ts
   CreateIntercompanyTransactionDTO as CreateFinancialIntercompanyTransactionDTO,
+  CreateFinancialStatementDTO,
+  ConsolidationMethod as FinancialConsolidationMethod,
+  // CurrencyRevaluation excluded - already defined in main index.ts
+  IntercompanyTransaction as FinancialIntercompanyTransaction,
+  IntercompanyTransactionType as FinancialIntercompanyTransactionType,
+  PeriodType as FinancialPeriodType,
+  FinancialRatio,
+  FinancialStatementTemplate,
+  GenerateBalanceSheetDTO,
+  GeneratedFinancialStatement,
+  IncomeStatementView,
+  IntercompanyStatus,
+  IntercompanyTransactionLine,
+  RatioCategory,
   RecordTaxPaymentDTO,
-  CalculateFinancialRatiosDTO,
+  StatementType,
+  TaxCompliancePeriod,
+  TaxPayment,
+  TaxStatus,
+  TaxType,
 } from './advanced-financials';
 
 // ============================================================================
@@ -4660,3 +4660,9 @@ export {
 // ============================================================================
 
 export * from './modules';
+
+// ============================================================================
+// ORGANIZATION TYPES - Multi-tenant organization management
+// ============================================================================
+
+export * from './organization';

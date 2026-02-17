@@ -4,11 +4,11 @@
  * Handles JWT validation and role-based access control
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { ForbiddenError, UnauthorizedError, UserRole } from '@opsui/shared';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { logger } from '../config/logger';
 import config from '../config';
-import { UserRole, UnauthorizedError, ForbiddenError } from '@opsui/shared';
+import { logger } from '../config/logger';
 
 // ============================================================================
 // TYPES
@@ -21,6 +21,8 @@ export interface JWTPayload {
   baseRole: UserRole; // Alias for base role (same as role field)
   activeRole?: UserRole | null; // Active role for multi-role users
   effectiveRole: UserRole; // The role being used (active role or base role)
+  organizationId?: string | null; // Current organization context
+  organizationRole?: string | null; // User's role in the organization
   iat?: number;
   exp?: number;
 }
@@ -29,6 +31,7 @@ export interface JWTPayload {
 export interface AuthenticatedRequest extends Request {
   id?: string;
   user?: JWTPayload;
+  organizationId?: string | null; // Current organization context from header or token
 }
 
 // ============================================================================

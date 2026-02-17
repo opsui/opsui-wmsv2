@@ -873,15 +873,15 @@ export var NZCLabelFormat;
 // ============================================================================
 // Export all Phase 3 types
 export * from './business-rules.js';
-export * from './reporting.js';
 export * from './integrations.js';
+export * from './reporting.js';
 // ============================================================================
 // ADD-ON MODULES - EXPORTS
 // ============================================================================
 // Export all add-on module types
+export * from './maintenance.js';
 export * from './production.js';
 export * from './sales-crm.js';
-export * from './maintenance.js';
 // ============================================================================
 // ENHANCED INBOUND FEATURES EXPORTS
 // ============================================================================
@@ -1032,9 +1032,9 @@ export * from './purchasing.js';
 // MANUFACTURING TYPES - Re-export from dedicated manufacturing types module
 // Note: Some types renamed to avoid conflicts with production.ts
 // ============================================================================
-export { WorkCenterStatus, RoutingStatus, OperationType, ProductionOrderStatus as ManufacturingOrderStatus, MPSStatus, MRPPlanStatus, MRPActionType, ShopFloorTransactionType, 
+export { CapacityPlanStatus, DefectDisposition, 
 // DefectType excluded - already defined in main index.ts for quality inspections
-DefectSeverity, DefectDisposition, CapacityPlanStatus, } from './manufacturing.js';
+DefectSeverity, ProductionOrderStatus as ManufacturingOrderStatus, MPSStatus, MRPActionType, MRPPlanStatus, OperationType, RoutingStatus, ShopFloorTransactionType, WorkCenterStatus, } from './manufacturing.js';
 // ============================================================================
 // E-COMMERCE TYPES - Re-export from dedicated e-commerce types module
 // ============================================================================
@@ -1047,8 +1047,12 @@ export * from './advanced-inventory.js';
 // ADVANCED FINANCIALS TYPES - Re-export from dedicated advanced financials types module
 // Note: Some types renamed to avoid conflicts with multi-entity and advanced-inventory
 // ============================================================================
-export { StatementType, PeriodType as FinancialPeriodType, ConsolidationMethod as FinancialConsolidationMethod, IntercompanyTransactionType as FinancialIntercompanyTransactionType, IntercompanyStatus, TaxType, TaxStatus, RatioCategory, } from './advanced-financials.js';
+export { ConsolidationMethod as FinancialConsolidationMethod, IntercompanyTransactionType as FinancialIntercompanyTransactionType, PeriodType as FinancialPeriodType, IntercompanyStatus, RatioCategory, StatementType, TaxStatus, TaxType, } from './advanced-financials.js';
 // ============================================================================
 // MODULE PRICING & SUBSCRIPTION TYPES - Modular ERP pricing system
 // ============================================================================
 export * from './modules.js';
+// ============================================================================
+// ORGANIZATION TYPES - Multi-tenant organization management
+// ============================================================================
+export * from './organization.js';

@@ -811,23 +811,43 @@
   padding-top: var(--safe-area-top);
 }
 
-/* Dynamic island header spacing for mobile */
-.dynamic-island-header {
-  padding-top: max(env(safe-area-inset-top, 0px), 20px);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+/* ============================================
+   NAVBAR GLASSMORPHISM - Dedicated section
+   High specificity to ensure it works
+   ============================================ */
+
+/* Base navbar glassmorphism - works in normal mode */
+.dynamic-island-header,
+header .dynamic-island-header,
+header > div.dynamic-island-header {
+  padding-top: max(env(safe-area-inset-top, 0px), 20px) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
-html.dark .dynamic-island-header {
-  background: rgba(17, 24, 39, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+/* Dark mode navbar */
+html.dark .dynamic-island-header,
+html.dark header .dynamic-island-header,
+html.dark header > div.dynamic-island-header {
+  background: rgba(17, 24, 39, 0.65) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
+/* Performance mode - keep navbar blur working */
+html.performance-mode .dynamic-island-header,
+html.performance-mode header .dynamic-island-header,
+html.performance-mode header > div.dynamic-island-header {
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+/* Desktop - remove top padding */
 @media (min-width: 640px) {
   .dynamic-island-header {
-    padding-top: 0;
+    padding-top: 0 !important;
   }
 }
 
@@ -1174,16 +1194,10 @@ html.light .bg-surface {
    ============================================ */
 
 /* Disable backdrop-filter for all elements EXCEPT navbar */
-html.performance-mode *:not(.dynamic-island-header) {
+html.performance-mode *:not(.dynamic-island-header):not(header) {
   /* Disable all backdrop-filter blur effects - very GPU intensive */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-}
-
-/* Navbar keeps its glassmorphism effect */
-html.performance-mode .dynamic-island-header {
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
 }
 
 /* Disable background animations */
