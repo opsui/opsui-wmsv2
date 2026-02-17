@@ -551,7 +551,9 @@
 
   .indicator-pulse {
     animation: indicator-pulse 2s ease-in-out infinite;
-    will-change: transform, box-shadow;
+    /* Use GPU acceleration without will-change to avoid flickering */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   /* Notification badge pulse animation with glow */

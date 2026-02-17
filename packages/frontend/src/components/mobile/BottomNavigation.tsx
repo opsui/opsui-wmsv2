@@ -122,6 +122,8 @@ export function BottomNavigation({
               'transition-colors duration-150',
               // Touch-friendly
               'min-h-touch',
+              // Positioning context for indicator dot
+              'relative',
               // Active state
               isActive
                 ? 'text-primary-600 dark:text-primary-400'
