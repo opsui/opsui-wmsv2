@@ -457,19 +457,54 @@ html.dark {
    THEME TRANSITION SUPPORT
    ============================================ */
 
-/* Smooth theme transition class - add to body during theme switch */
-.theme-transitioning,
-.theme-transitioning * {
-  transition: background-color 0.3s ease-out,
-              border-color 0.25s ease-out,
-              color 0.2s ease-out,
-              box-shadow 0.25s ease-out,
-              opacity 0.2s ease-out !important;
+/* 
+ * Optimized theme transition using CSS custom properties
+ * Instead of transitioning all elements, we use a single overlay fade
+ * This eliminates layout thrashing and provides smooth 60fps transitions
+ */
+
+/* Theme transition overlay - provides smooth cross-fade effect */
+html.theme-transitioning::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--theme-transition-overlay, #0f172a);
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  animation: themeFadeOverlay 0.3s ease-out forwards;
+}
+
+html.theme-transitioning.light::before {
+  background: var(--theme-transition-overlay-light, #dbeafe);
+}
+
+@keyframes themeFadeOverlay {
+  0% { opacity: 0; }
+  30% { opacity: 0.15; }
+  100% { opacity: 0; }
+}
+
+/* Smooth transitions for key UI elements only - not wildcard */
+html.theme-transitioning body,
+html.theme-transitioning .glass-card,
+html.theme-transitioning .modal-content,
+html.theme-transitioning .dropdown-menu,
+html.theme-transitioning nav,
+html.theme-transitioning header,
+html.theme-transitioning main,
+html.theme-transitioning aside {
+  transition: background-color 0.25s ease-out,
+              border-color 0.2s ease-out,
+              box-shadow 0.2s ease-out !important;
 }
 
 /* Disable background animations during theme transition to prevent jitter */
-.theme-transitioning body::before,
-.theme-transitioning body::after,
-.theme-transitioning html.light body::before {
+html.theme-transitioning body::before,
+html.theme-transitioning body::after {
   animation: none !important;
+  opacity: 0 !important;
 }

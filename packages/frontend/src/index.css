@@ -38,42 +38,14 @@
     background-attachment: fixed;
   }
 
-  /* Smooth theme transitions - applied to body and main containers only */
-  body {
-    transition: background-color 0.3s ease-out, color 0.25s ease-out;
-  }
-
-  /* Cards and containers */
-  .glass-card,
-  .modal-content,
-  .modal-backdrop,
-  .dropdown-menu {
-    transition: background-color 0.25s ease-out,
-                border-color 0.25s ease-out,
-                box-shadow 0.25s ease-out;
-  }
-
-  /* Form elements */
-  .input-themed,
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  select,
-  textarea {
-    transition: background-color 0.2s ease-out,
-                border-color 0.2s ease-out,
-                color 0.2s ease-out;
-  }
-
-  /* Buttons */
-  button,
-  .btn,
+  /* Optimized theme transitions - only applied during theme switch via .theme-transitioning class */
+  /* Base transitions removed to prevent constant recalculation - see tokens.css for theme transition handling */
+  
+  /* Minimal hover transitions for interactive elements only */
+  button:not(:disabled),
+  .btn:not(:disabled),
   a {
-    transition: background-color 0.15s ease-out,
-                border-color 0.15s ease-out,
-                color 0.15s ease-out,
-                transform 0.15s ease-out;
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
   }
 
   /* ============================================
@@ -109,6 +81,13 @@
     backface-visibility: hidden;
   }
 
+  /* Disable light mode background animation during theme transition */
+  html.theme-transitioning html.light body::before {
+    animation: none !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease-out;
+  }
+
   /* No secondary layer needed */
   html.light body::after {
     display: none;
@@ -142,6 +121,14 @@
     background-size: 400% 400%;
     background-attachment: fixed;
     animation: gradientShift 15s ease infinite;
+    /* Optimize for theme transitions */
+    transition: background 0.25s ease-out;
+  }
+
+  /* Disable background animation during theme transition */
+  html.theme-transitioning body {
+    animation: none !important;
+    background-size: 100% 100% !important;
   }
 
   /* Premium animated background - dark mode */
@@ -164,6 +151,13 @@
     will-change: filter;
     transform: translateZ(0);
     backface-visibility: hidden;
+  }
+
+  /* Disable background pseudo-element animation during theme transition */
+  html.theme-transitioning body::before {
+    animation: none !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease-out;
   }
 
   /* Enhanced typography - dark mode */
@@ -1250,20 +1244,23 @@ html.performance-mode .animate-shimmer {
   animation: none !important;
 }
 
-/* Reduce transition durations for snappier feel */
-html.performance-mode *,
+/* Reduce transition durations for snappier feel - but exclude theme transitions */
+html.performance-mode *:not(.theme-transitioning):not(html.theme-transitioning *),
 html.performance-mode *::before,
 html.performance-mode *::after {
   transition-duration: 0.1s !important;
   animation-duration: 0.1s !important;
 }
 
-/* Exception: Keep smooth theme transitions */
-html.performance-mode .theme-transitioning,
-html.performance-mode .theme-transitioning *,
-html.performance-mode body,
-html.performance-mode .dynamic-island-header {
-  transition-duration: 0.3s !important;
+/* Keep smooth theme transitions - optimized selectors only */
+html.performance-mode.theme-transitioning body,
+html.performance-mode.theme-transitioning .glass-card,
+html.performance-mode.theme-transitioning .modal-content,
+html.performance-mode.theme-transitioning .dropdown-menu,
+html.performance-mode.theme-transitioning nav,
+html.performance-mode.theme-transitioning header,
+html.performance-mode.theme-transitioning main {
+  transition-duration: 0.25s !important;
 }
 
 /* Keep body background animations disabled in performance mode */

@@ -1129,67 +1129,85 @@ function AppInner() {
 // ============================================================================
 
 function App() {
-  // Initialize and sync theme with smooth transitions
+  // Initialize and sync theme with optimized smooth transitions
   useEffect(() => {
-    // Apply theme function with smooth transition
-    const applyTheme = () => {
+    let previousTheme: string | null = null;
+    let transitionTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // Apply theme function with optimized smooth transition
+    const applyTheme = (animate: boolean = false) => {
       const theme = useUIStore.getState().theme;
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
       const shouldBeDark = theme === 'dark' || (theme === 'auto' && prefersDark);
       const currentlyDark = document.documentElement.classList.contains('dark');
 
-      // Only transition if theme is actually changing
-      if (currentlyDark !== shouldBeDark) {
-        // Add transition class for smooth animation
-        document.documentElement.classList.add('theme-transitioning');
-
-        // Apply theme change
-        if (shouldBeDark) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        }
-
-        // Remove transition class after animation completes
-        setTimeout(() => {
-          document.documentElement.classList.remove('theme-transitioning');
-        }, 350);
-      } else {
-        // Initial load - just apply without transition
-        if (shouldBeDark) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        }
+      // Skip if theme hasn't actually changed
+      if (previousTheme !== null && currentlyDark === shouldBeDark) {
+        return;
       }
+      previousTheme = shouldBeDark ? 'dark' : 'light';
+
+      // Clear any pending transition cleanup
+      if (transitionTimeout) {
+        clearTimeout(transitionTimeout);
+        transitionTimeout = null;
+      }
+
+      // Use requestAnimationFrame for smooth visual updates
+      requestAnimationFrame(() => {
+        // Add transition class before theme change for smooth animation
+        if (animate) {
+          document.documentElement.classList.add('theme-transitioning');
+        }
+
+        // Apply theme change in next frame for smooth transition
+        requestAnimationFrame(() => {
+          if (shouldBeDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+          }
+
+          // Remove transition class after animation completes
+          if (animate) {
+            transitionTimeout = setTimeout(() => {
+              document.documentElement.classList.remove('theme-transitioning');
+              transitionTimeout = null;
+            }, 300);
+          }
+        });
+      });
     };
 
-    // Apply initial theme
-    applyTheme();
+    // Apply initial theme without animation
+    applyTheme(false);
 
     // Listen for system preference changes when in auto mode
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleSystemThemeChange = () => {
       const theme = useUIStore.getState().theme;
       if (theme === 'auto') {
-        applyTheme();
+        applyTheme(true);
       }
     };
 
     mediaQuery.addEventListener('change', handleSystemThemeChange);
 
     // Subscribe to theme changes in the store
-    const unsubscribe = useUIStore.subscribe(() => {
-      applyTheme();
+    const unsubscribe = useUIStore.subscribe((state, prevState) => {
+      if (state.theme !== prevState.theme) {
+        applyTheme(true);
+      }
     });
 
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
+      if (transitionTimeout) {
+        clearTimeout(transitionTimeout);
+      }
       unsubscribe();
     };
   }, []);

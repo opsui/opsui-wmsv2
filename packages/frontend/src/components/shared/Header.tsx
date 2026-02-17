@@ -207,14 +207,10 @@ function MobileMenu({
       {/* Backdrop with blur - more intense */}
       <div
         className={`fixed inset-0 z-[105] transition-all duration-300 ease-out ${
-          isClosing || !isVisible 
-            ? 'opacity-0 backdrop-blur-none' 
-            : 'opacity-100 backdrop-blur-md'
+          isClosing || !isVisible ? 'opacity-0 backdrop-blur-none' : 'opacity-100 backdrop-blur-md'
         }`}
         style={{
-          backgroundColor: isClosing || !isVisible 
-            ? 'transparent' 
-            : 'rgba(0, 0, 0, 0.6)',
+          backgroundColor: isClosing || !isVisible ? 'transparent' : 'rgba(0, 0, 0, 0.6)',
         }}
         onClick={() => onHoverOff?.()}
       />
@@ -676,16 +672,8 @@ function ThemeToggle() {
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
+    // Only update the store - App.tsx handles DOM updates with smooth transitions
     setTheme(newTheme);
-    // Immediately update DOM for instant feedback
-    const html = document.documentElement;
-    if (newTheme === 'dark') {
-      html.classList.add('dark');
-      html.classList.remove('light');
-    } else {
-      html.classList.remove('dark');
-      html.classList.add('light');
-    }
   };
 
   const isDark = theme !== 'light';
