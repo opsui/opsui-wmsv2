@@ -222,17 +222,13 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop with blur - smooth transition for both opacity and backdrop-filter */}
+      {/* Backdrop - neutral dark overlay without blur to avoid color shifts */}
       <div
-        className={`fixed inset-0 z-[105] transition-all duration-300 ease-out ${
-          isClosing || !isVisible 
-            ? 'opacity-0 backdrop-blur-none' 
-            : 'opacity-100 backdrop-blur-sm'
+        className={`fixed inset-0 z-[105] transition-opacity duration-300 ease-out ${
+          isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
         }`}
         style={{
-          backgroundColor: isClosing || !isVisible 
-            ? 'transparent' 
-            : 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
         }}
         onClick={() => onHoverOff?.()}
       />
@@ -245,7 +241,7 @@ function MobileMenu({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl h-full flex flex-col shadow-2xl border-r border-gray-200/50 dark:border-gray-700/50">
+        <div className="bg-white/95 dark:bg-gray-900/95 h-full flex flex-col shadow-2xl border-r border-gray-200/50 dark:border-gray-700/50">
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
             <div className="flex-1 min-w-0">
