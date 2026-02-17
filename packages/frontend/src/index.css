@@ -529,7 +529,9 @@
   .skeleton-pulse {
     background-color: rgba(55, 65, 81, 0.5);
     animation: skeleton-pulse 2s ease-in-out infinite;
-    will-change: background-color;
+    /* Use GPU acceleration without will-change to avoid flickering */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   /* Static indicator dot with subtle glow - no animation */
@@ -1246,12 +1248,11 @@ html.performance-mode .animate-shimmer {
   animation: none !important;
 }
 
-/* Reduce transition durations for snappier feel - but exclude theme transitions */
-html.performance-mode *:not(.theme-transitioning):not(html.theme-transitioning *),
+/* Reduce transition durations for snappier feel - exclude animations that should remain smooth */
+html.performance-mode *:not(.skeleton-pulse):not(.indicator-pulse):not(.animate-pulse):not(.theme-transitioning):not(html.theme-transitioning *),
 html.performance-mode *::before,
 html.performance-mode *::after {
   transition-duration: 0.1s !important;
-  animation-duration: 0.1s !important;
 }
 
 /* Keep smooth theme transitions - optimized selectors only */
@@ -1274,8 +1275,10 @@ html.performance-mode body::after {
 }
 
 /* Keep skeleton animations smooth - they're already lightweight */
-html.performance-mode .skeleton-pulse {
+html.performance-mode .skeleton-pulse,
+html.performance-mode .skeleton-pulse::before {
   animation-duration: 2s !important;
+  animation-timing-function: ease-in-out !important;
 }
 
 /* Keep Tailwind's animate-pulse smooth for notification badges and indicators */
@@ -1286,4 +1289,5 @@ html.performance-mode .animate-pulse {
 /* Keep indicator-pulse smooth in performance mode */
 html.performance-mode .indicator-pulse {
   animation-duration: 2s !important;
+  animation-timing-function: ease-in-out !important;
 }
