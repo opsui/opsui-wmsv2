@@ -816,34 +816,32 @@
    High specificity to ensure it works
    ============================================ */
 
-/* Base navbar glassmorphism - Apple-style frosted glass effect */
+/* Base navbar glassmorphism - works in normal mode */
 .dynamic-island-header,
 header .dynamic-island-header,
 header > div.dynamic-island-header {
-  position: sticky !important;
-  top: 0 !important;
   padding-top: max(env(safe-area-inset-top, 0px), 20px) !important;
-  background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Dark mode navbar - Apple-style dark frosted glass */
+/* Dark mode navbar */
 html.dark .dynamic-island-header,
 html.dark header .dynamic-island-header,
 html.dark header > div.dynamic-island-header {
-  background: rgba(30, 30, 30, 0.72) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(17, 24, 39, 0.75) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Performance mode - keep navbar blur working */
 html.performance-mode .dynamic-island-header,
 html.performance-mode header .dynamic-island-header,
 html.performance-mode header > div.dynamic-island-header {
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
 }
 
 /* Desktop - remove top padding */

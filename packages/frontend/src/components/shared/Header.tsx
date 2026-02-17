@@ -1923,7 +1923,7 @@ export function Header() {
             </div>
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
-            <div className="flex items-center justify-center gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+            <div className="flex items-center justify-center gap-1 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
               {/* Theme Toggle */}
               <ThemeToggle />
 
