@@ -158,34 +158,20 @@ function MobileMenu({
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
-    // Prevent body scroll when menu is open - using overflow only to avoid background shift
+    // Prevent body scroll when menu is open
     if (isOpen) {
       // Store current scroll position
       scrollPositionRef.current = window.scrollY;
 
-      // Use overflow hidden only - this prevents scroll without shifting fixed backgrounds
+      // Simple overflow hidden - works on desktop without shifting backgrounds
       document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollPositionRef.current}px`;
-      document.body.style.width = '100%';
     } else {
       // Restore body styles
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-
-      // Restore scroll position
-      if (scrollPositionRef.current > 0) {
-        window.scrollTo(0, scrollPositionRef.current);
-      }
     }
     return () => {
       // Cleanup on unmount
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
     };
   }, [isOpen]);
 
