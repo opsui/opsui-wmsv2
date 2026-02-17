@@ -220,13 +220,13 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop with blur - more intense */}
+      {/* Backdrop overlay - no blur to preserve background gradient */}
       <div
-        className={`fixed inset-0 z-[105] transition-all duration-300 ease-out ${
-          isClosing || !isVisible ? 'opacity-0 backdrop-blur-none' : 'opacity-100 backdrop-blur-md'
+        className={`fixed inset-0 z-[105] transition-opacity duration-300 ease-out ${
+          isClosing || !isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
         style={{
-          backgroundColor: isClosing || !isVisible ? 'transparent' : 'rgba(0, 0, 0, 0.6)',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
         }}
         onClick={() => onHoverOff?.()}
       />
