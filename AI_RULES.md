@@ -2,8 +2,14 @@
 
 **Purpose**: This file defines boundaries and guardrails for AI agents working on this codebase.
 
-**Version**: 2.0.0
-**Last Updated**: 2026-02-10
+**Version**: 2.0.1
+**Last Updated**: 2026-02-17
+
+---
+
+## Terminology & Conventions
+
+**IMPORTANT**: When the user references "navbar", they are referring to the **mobile navbar** (hamburger menu drawer on the left side), NOT a top header bar. The mobile navbar is the main and only navigation component.
 
 ---
 
