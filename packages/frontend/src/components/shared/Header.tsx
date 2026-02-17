@@ -204,17 +204,17 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop with blur */}
+      {/* Backdrop with blur - more intense */}
       <div
         className={`fixed inset-0 z-[105] transition-all duration-300 ease-out ${
           isClosing || !isVisible 
             ? 'opacity-0 backdrop-blur-none' 
-            : 'opacity-100 backdrop-blur-sm'
+            : 'opacity-100 backdrop-blur-md'
         }`}
         style={{
           backgroundColor: isClosing || !isVisible 
             ? 'transparent' 
-            : 'rgba(0, 0, 0, 0.2)',
+            : 'rgba(0, 0, 0, 0.6)',
         }}
         onClick={() => onHoverOff?.()}
       />
@@ -227,7 +227,7 @@ function MobileMenu({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl h-full flex flex-col shadow-2xl border-r border-gray-200/50 dark:border-gray-700/50">
+        <div className="bg-white dark:bg-gray-900 h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-gray-700">
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
             <div className="flex-1 min-w-0">
