@@ -4,18 +4,18 @@
  * Bar chart showing picker performance metrics
  */
 
-import { Card, CardHeader, CardTitle, CardContent, Skeleton } from '@/components/shared';
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
+import { useContainerWidth } from '@/hooks/useContainerWidth';
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
   Legend,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
-import { useContainerWidth } from '@/hooks/useContainerWidth';
 
 interface PickerPerformanceData {
   pickerId: string;
@@ -72,7 +72,7 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
   }
 
   // Format data for chart - shorten names more aggressively on mobile
-  const maxNameLength = isSmall ? 8 : isMobile ? 10 : 12;
+  const maxNameLength = isSmall ? 6 : isMobile ? 8 : 12;
   const chartData = data.map(item => ({
     ...item,
     displayName:
@@ -83,9 +83,20 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
     avgTimeMinutes: item.averageTimePerTask ? (item.averageTimePerTask / 60).toFixed(1) : 0,
   }));
 
+  // Calculate dynamic tick interval to prevent label overlap on mobile
+  // On mobile, show fewer labels to prevent squishing
+  const getTickInterval = () => {
+    if (!isMobile) return 0; // Show all labels on desktop
+    const labelWidth = 35; // Approximate width per rotated label
+    const availableWidth = containerWidth - 60; // Account for margins
+    const labelsToFit = Math.floor(availableWidth / labelWidth);
+    return Math.max(0, Math.ceil(chartData.length / labelsToFit) - 1);
+  };
+  const tickInterval = getTickInterval();
+
   // Adjust chart margins for rotated labels on mobile
   const chartMargin = isMobile
-    ? { top: 20, right: 15, left: 15, bottom: 60 }
+    ? { top: 20, right: 10, left: 10, bottom: 60 }
     : { top: 20, right: 30, left: 20, bottom: 5 };
 
   // Calculate minimum bar size based on number of pickers and container width
@@ -100,7 +111,7 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
       <CardContent className="p-3 sm:p-6">
         <div className="flex justify-center" ref={containerRef}>
           {containerWidth > 0 && (
-            <ResponsiveContainer width={containerWidth} height={isMobile ? 320 : 300}>
+            <ResponsiveContainer width={containerWidth} height={isMobile ? 350 : 300}>
               <BarChart
                 data={chartData}
                 margin={chartMargin}
@@ -114,13 +125,12 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
                 <XAxis
                   dataKey="displayName"
                   className="dark:fill-gray-500 fill-gray-600"
-                  tick={{
-                    fontSize: isMobile ? 10 : 12,
-                    angle: isMobile ? -45 : 0,
-                    textAnchor: isMobile ? 'end' : 'middle',
-                  }}
+                  tick={isMobile ? { fontSize: 0 } : { fontSize: 12, fill: 'currentColor' }}
+                  tickLine={isMobile ? false : true}
+                  axisLine={isMobile ? false : true}
+                  tickFormatter={(_value, index) => chartData[index!]?.displayName || ''}
                   interval={0}
-                  height={isMobile ? 70 : 50}
+                  height={isMobile ? 10 : 50}
                 />
                 <YAxis
                   yAxisId="left"
@@ -189,33 +199,87 @@ export function PickerPerformanceChart({ data, isLoading }: PickerPerformanceCha
           )}
         </div>
 
-        {/* Performance summary table */}
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="dark:text-gray-400 text-gray-600 border-b dark:border-white/[0.05] border-gray-200">
-                <th className="text-left py-2 px-2">Picker</th>
-                <th className="text-right py-2 px-2">Tasks</th>
-                <th className="text-right py-2 px-2">Orders</th>
-                <th className="text-right py-2 px-2">Items</th>
-                <th className="text-right py-2 px-2">Avg Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {chartData.slice(0, 5).map(item => (
-                <tr
-                  key={item.pickerId}
-                  className="dark:text-gray-300 text-gray-700 border-b dark:border-white/[0.02] border-gray-100 hover:dark:bg-white/[0.02] hover:bg-gray-50"
-                >
-                  <td className="py-2 px-2 font-medium">{item.pickerName}</td>
-                  <td className="text-right py-2 px-2">{item.tasksCompleted}</td>
-                  <td className="text-right py-2 px-2">{item.ordersCompleted}</td>
-                  <td className="text-right py-2 px-2">{item.totalItemsPicked}</td>
-                  <td className="text-right py-2 px-2">{item.avgTimeMinutes}m</td>
+        {/* Performance summary - mobile: card layout, desktop: table layout */}
+        <div className="mt-4">
+          {/* Desktop table view */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="dark:text-gray-400 text-gray-600 border-b dark:border-white/[0.05] border-gray-200">
+                  <th className="text-left py-2 px-2">Picker</th>
+                  <th className="text-right py-2 px-2">Tasks</th>
+                  <th className="text-right py-2 px-2">Orders</th>
+                  <th className="text-right py-2 px-2">Items</th>
+                  <th className="text-right py-2 px-2">Avg Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {chartData.slice(0, 5).map(item => (
+                  <tr
+                    key={item.pickerId}
+                    className="dark:text-gray-300 text-gray-700 border-b dark:border-white/[0.02] border-gray-100 hover:dark:bg-white/[0.02] hover:bg-gray-50"
+                  >
+                    <td className="py-2 px-2 font-medium">{item.pickerName}</td>
+                    <td className="text-right py-2 px-2">{item.tasksCompleted}</td>
+                    <td className="text-right py-2 px-2">{item.ordersCompleted}</td>
+                    <td className="text-right py-2 px-2">{item.totalItemsPicked}</td>
+                    <td className="text-right py-2 px-2">{item.avgTimeMinutes}m</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card view */}
+          <div className="md:hidden flex flex-col gap-2">
+            {chartData.slice(0, 5).map(item => (
+              <div
+                key={item.pickerId}
+                className="p-3 rounded-xl dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium dark:text-white text-gray-900 text-sm">
+                    {item.pickerName}
+                  </span>
+                  <span className="text-xs dark:text-gray-400 text-gray-500">
+                    {item.avgTimeMinutes}m avg
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: COLORS.tasksCompleted }}
+                    />
+                    <span className="dark:text-gray-400 text-gray-600">Tasks:</span>
+                    <span className="font-medium dark:text-gray-200 text-gray-800">
+                      {item.tasksCompleted}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: COLORS.ordersCompleted }}
+                    />
+                    <span className="dark:text-gray-400 text-gray-600">Orders:</span>
+                    <span className="font-medium dark:text-gray-200 text-gray-800">
+                      {item.ordersCompleted}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: COLORS.itemsPicked }}
+                    />
+                    <span className="dark:text-gray-400 text-gray-600">Items:</span>
+                    <span className="font-medium dark:text-gray-200 text-gray-800">
+                      {item.totalItemsPicked}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -509,16 +509,6 @@ export function ExceptionsPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="relative flex-1 sm:flex-initial">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search exceptions..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-3 py-1.5 w-full sm:w-64 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
                   <Button
                     variant="secondary"
                     size="sm"
@@ -680,15 +670,28 @@ export function ExceptionsPage() {
             {/* Exceptions List */}
             <Card variant="glass" className="card-hover">
               <CardHeader>
-                <CardTitle>
-                  {filterStatus === 'all'
-                    ? 'All Exceptions'
-                    : filterStatus === ExceptionStatus.OPEN
-                      ? 'Open Exceptions'
-                      : filterStatus === ExceptionStatus.RESOLVED
-                        ? 'Resolved Exceptions'
-                        : 'Exceptions'}
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle>
+                    {filterStatus === 'all'
+                      ? 'All Exceptions'
+                      : filterStatus === ExceptionStatus.OPEN
+                        ? 'Open Exceptions'
+                        : filterStatus === ExceptionStatus.RESOLVED
+                          ? 'Resolved Exceptions'
+                          : 'Exceptions'}
+                  </CardTitle>
+                  {/* Search Exceptions Filter - inside the card header */}
+                  <div className="relative w-full sm:w-64">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search exceptions..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="pl-9 pr-3 py-2 w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {filteredExceptions.length > 0 ? (
@@ -699,80 +702,86 @@ export function ExceptionsPage() {
                           key={exception.exceptionId}
                           className="border border-gray-300 dark:border-white/[0.08] rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-all duration-300 shadow-sm hover:shadow-md bg-white dark:bg-transparent"
                         >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <ExceptionTypeBadge type={exception.type} />
-                                <ExceptionBadge status={exception.status} />
-                                <span className="text-xs text-gray-500 dark:text-gray-500">
-                                  {exception.exceptionId}
-                                </span>
-                              </div>
+                          {/* Header row with badges and ID */}
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <ExceptionTypeBadge type={exception.type} />
+                            <ExceptionBadge status={exception.status} />
+                            <span className="text-xs text-gray-500 dark:text-gray-500">
+                              {exception.exceptionId}
+                            </span>
+                          </div>
 
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">Order:</span>
-                                  <span className="ml-2 text-gray-900 dark:text-white font-medium">
-                                    {exception.orderId}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">SKU:</span>
-                                  <span className="ml-2 text-gray-900 dark:text-white font-medium">
-                                    {exception.sku}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">Qty:</span>
-                                  <span className="ml-2 text-gray-900 dark:text-white">
-                                    {exception.quantityActual} / {exception.quantityExpected}
-                                    {exception.quantityShort > 0 && (
-                                      <span className="text-red-600 dark:text-error-400 ml-1">
-                                        (-{exception.quantityShort})
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">
-                                    Reported:
-                                  </span>
-                                  <span className="ml-2 text-gray-900 dark:text-white">
-                                    {new Date(exception.reportedAt).toLocaleString()}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {exception.reason && (
-                                <div className="mt-3 p-3 bg-gray-100 dark:bg-white/[0.02] rounded-lg">
-                                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                                    {exception.reason}
-                                  </p>
-                                </div>
-                              )}
-
-                              {exception.resolution && (
-                                <div className="mt-3 flex items-center gap-2">
-                                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    Resolution:
-                                  </span>
-                                  <span className="text-sm font-medium text-green-700 dark:text-success-400">
-                                    {exception.resolution.replace(/_/g, ' ')}
-                                  </span>
-                                </div>
-                              )}
-
-                              {exception.resolutionNotes && (
-                                <div className="mt-2 p-3 bg-success-500/10 border border-success-500/20 rounded-lg">
-                                  <p className="text-sm text-success-300">
-                                    {exception.resolutionNotes}
-                                  </p>
-                                </div>
-                              )}
+                          {/* Details grid - responsive */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
+                            <div className="flex flex-wrap">
+                              <span className="text-gray-600 dark:text-gray-400 shrink-0">
+                                Order:
+                              </span>
+                              <span className="ml-2 text-gray-900 dark:text-white font-medium break-all">
+                                {exception.orderId}
+                              </span>
                             </div>
+                            <div className="flex flex-wrap">
+                              <span className="text-gray-600 dark:text-gray-400 shrink-0">
+                                SKU:
+                              </span>
+                              <span className="ml-2 text-gray-900 dark:text-white font-medium break-all">
+                                {exception.sku}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap">
+                              <span className="text-gray-600 dark:text-gray-400 shrink-0">
+                                Qty:
+                              </span>
+                              <span className="ml-2 text-gray-900 dark:text-white">
+                                {exception.quantityActual} / {exception.quantityExpected}
+                                {exception.quantityShort > 0 && (
+                                  <span className="text-red-600 dark:text-error-400 ml-1">
+                                    (-{exception.quantityShort})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap">
+                              <span className="text-gray-600 dark:text-gray-400 shrink-0">
+                                Reported:
+                              </span>
+                              <span className="ml-2 text-gray-900 dark:text-white">
+                                {new Date(exception.reportedAt).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
 
-                            {exception.status === ExceptionStatus.OPEN ? (
-                              // Standard Exception: Resolve Button
+                          {exception.reason && (
+                            <div className="mt-3 p-3 bg-gray-100 dark:bg-white/[0.02] rounded-lg">
+                              <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
+                                {exception.reason}
+                              </p>
+                            </div>
+                          )}
+
+                          {exception.resolution && (
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Resolution:
+                              </span>
+                              <span className="text-sm font-medium text-green-700 dark:text-success-400">
+                                {exception.resolution.replace(/_/g, ' ')}
+                              </span>
+                            </div>
+                          )}
+
+                          {exception.resolutionNotes && (
+                            <div className="mt-2 p-3 bg-success-500/10 border border-success-500/20 rounded-lg">
+                              <p className="text-sm text-success-300 break-words">
+                                {exception.resolutionNotes}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Resolve button - full width on mobile */}
+                          {exception.status === ExceptionStatus.OPEN && (
+                            <div className="mt-4">
                               <Button
                                 variant="primary"
                                 size="sm"
@@ -785,13 +794,13 @@ export function ExceptionsPage() {
                                   setNewQuantity(0);
                                   setNewBinLocation('');
                                 }}
-                                className="ml-4"
+                                className="w-full sm:w-auto"
                               >
                                 Resolve
                                 <ChevronRightIcon className="h-4 w-4 ml-1" />
                               </Button>
-                            ) : null}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

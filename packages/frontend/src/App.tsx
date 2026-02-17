@@ -25,7 +25,7 @@ const createLazyPage = (importFn: () => Promise<any>) => {
     const retry = (retriesLeft: number, interval: number): Promise<any> => {
       return importFn()
         .then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
-        .catch((error) => {
+        .catch(error => {
           if (retriesLeft <= 0) {
             // If all retries fail, reload the page to get fresh chunks
             console.error('Failed to load chunk after retries, reloading page...', error);
@@ -33,7 +33,7 @@ const createLazyPage = (importFn: () => Promise<any>) => {
             return Promise.reject(error);
           }
           // Wait and retry
-          return new Promise((resolve) => {
+          return new Promise(resolve => {
             setTimeout(() => {
               resolve(retry(retriesLeft - 1, interval));
             }, interval);

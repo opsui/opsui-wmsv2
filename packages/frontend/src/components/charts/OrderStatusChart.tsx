@@ -201,16 +201,16 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
           )}
         </div>
 
-        {/* Summary stats - responsive grid */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {/* Summary stats - mobile: list layout, desktop: grid layout */}
+        <div className="mt-4 flex flex-col gap-2 sm:gap-3 md:grid md:grid-cols-3">
           {chartData.map(item => {
             const percentage = ((item.count / total) * 100).toFixed(1);
             return (
               <div
                 key={item.status}
-                className="flex items-center justify-between p-3 rounded-lg dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none transition-all duration-200 hover:scale-[1.02] cursor-default"
+                className="flex items-center justify-between p-3 rounded-xl dark:bg-white/[0.04] bg-gray-50 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none transition-all duration-200 hover:scale-[1.01] cursor-default min-w-0 min-h-[44px]"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <div
                     className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{
@@ -218,17 +218,15 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
                       boxShadow: `0 0 8px ${item.color}60`,
                     }}
                   />
-                  <span className="dark:text-gray-300 text-gray-700 text-xs font-medium whitespace-nowrap">
+                  <span className="dark:text-gray-300 text-gray-700 text-sm font-medium">
                     {item.name}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="dark:text-white text-gray-900 font-bold text-xs">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className="dark:text-white text-gray-900 font-bold text-sm">
                     {item.count}
                   </span>
-                  <span className="text-gray-500 dark:text-gray-400 text-[10px]">
-                    ({percentage}%)
-                  </span>
+                  <span className="text-gray-500 dark:text-gray-400 text-xs">({percentage}%)</span>
                 </div>
               </div>
             );

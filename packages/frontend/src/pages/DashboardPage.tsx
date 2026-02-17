@@ -25,13 +25,13 @@ import {
   useToast,
   type AuditLogFilters,
 } from '@/components/shared';
+import { useDebouncedInvalidation } from '@/hooks/useDebouncedInvalidation';
 import {
   useInventoryUpdates,
   useNotifications,
   useOrderUpdates,
   usePickUpdates,
 } from '@/hooks/useWebSocket';
-import { useDebouncedInvalidation } from '@/hooks/useDebouncedInvalidation';
 import { formatDate } from '@/lib/utils';
 import {
   useAllPackersPerformance,
@@ -99,15 +99,15 @@ const MetricCard = memo(function MetricCard({
         <CardContent className="p-4 sm:p-5 lg:p-6">
           <div className="flex flex-col items-center text-center gap-3">
             <div
-              className={`p-3 sm:p-4 rounded-xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none`}
+              className={`p-3 sm:p-4 rounded-xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none shrink-0`}
             >
               <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
-            <div className="w-full min-w-0">
-              <p className="text-xs sm:text-sm md:text-base font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-tight leading-tight px-1">
+            <div className="flex flex-col items-center">
+              <p className="text-xs sm:text-sm md:text-base font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-tight leading-tight text-center">
                 {title}
               </p>
-              <p className="mt-1 text-2xl sm:text-3xl md:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300 px-1">
+              <p className="mt-1 text-2xl sm:text-3xl md:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300 text-center">
                 {value}
               </p>
             </div>
