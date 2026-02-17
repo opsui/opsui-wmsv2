@@ -19,11 +19,29 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 // LAZY LOADED PAGE COMPONENTS
 // ============================================================================
 
-// Helper to handle both default and named exports
+// Helper to handle both default and named exports with retry logic for deployment updates
 const createLazyPage = (importFn: () => Promise<any>) => {
-  return lazy(() =>
-    importFn().then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
-  );
+  return lazy(() => {
+    const retry = (retriesLeft: number, interval: number): Promise<any> => {
+      return importFn()
+        .then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
+        .catch((error) => {
+          if (retriesLeft <= 0) {
+            // If all retries fail, reload the page to get fresh chunks
+            console.error('Failed to load chunk after retries, reloading page...', error);
+            window.location.reload();
+            return Promise.reject(error);
+          }
+          // Wait and retry
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(retry(retriesLeft - 1, interval));
+            }, interval);
+          });
+        });
+    };
+    return retry(3, 500); // 3 retries with 500ms interval
+  });
 };
 
 const LoginPage = createLazyPage(() => import('@/pages/LoginPage'));

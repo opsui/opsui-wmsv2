@@ -7,11 +7,29 @@
 
 import { lazy } from 'react';
 
-// Create lazy-loaded components with loading fallback
+// Create lazy-loaded components with retry logic for deployment updates
 const createLazyPage = (importFn: () => Promise<any>) => {
-  return lazy(() =>
-    importFn().then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
-  );
+  return lazy(() => {
+    const retry = (retriesLeft: number, interval: number): Promise<any> => {
+      return importFn()
+        .then(m => ({ default: m.default || (Object.values(m)[0] as React.ComponentType) }))
+        .catch((error) => {
+          if (retriesLeft <= 0) {
+            // If all retries fail, reload the page to get fresh chunks
+            console.error('Failed to load chunk after retries, reloading page...', error);
+            window.location.reload();
+            return Promise.reject(error);
+          }
+          // Wait and retry
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(retry(retriesLeft - 1, interval));
+            }, interval);
+          });
+        });
+    };
+    return retry(3, 500); // 3 retries with 500ms interval
+  });
 };
 
 // ============================================================================
