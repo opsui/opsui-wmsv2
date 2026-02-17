@@ -1173,11 +1173,17 @@ html.light .bg-surface {
    Automatically disables GPU-intensive effects
    ============================================ */
 
-html.performance-mode,
-html.performance-mode * {
+/* Disable backdrop-filter for all elements EXCEPT navbar */
+html.performance-mode *:not(.dynamic-island-header) {
   /* Disable all backdrop-filter blur effects - very GPU intensive */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+/* Navbar keeps its glassmorphism effect */
+html.performance-mode .dynamic-island-header {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 /* Disable background animations */
@@ -1214,15 +1220,9 @@ html.performance-mode .mobile-sticky-header {
 
 /* Disable modal backdrop blur */
 html.performance-mode .modal-backdrop,
-html.performance-mode [class*='backdrop-blur'] {
+html.performance-mode [class*='backdrop-blur']:not(.dynamic-island-header) {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-}
-
-/* Exception: Keep navbar backdrop blur for visual consistency */
-html.performance-mode .dynamic-island-header {
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 /* Exception: Keep modal backdrop blur for visual hierarchy */
