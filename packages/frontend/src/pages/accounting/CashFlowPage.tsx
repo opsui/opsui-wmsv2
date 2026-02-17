@@ -292,7 +292,7 @@ function CashFlowPage() {
                   className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
               </div>
-              {(cashFlow || sampleData) && (
+              {(cashFlow || sampleCashFlow) && (
                 <div className="px-4 py-2 bg-gray-100 dark:bg-white/[0.03] rounded-xl">
                   <p className="text-xs text-gray-500 dark:text-gray-500">Period</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -378,7 +378,8 @@ function CashFlowPage() {
                 </CardContent>
               </Card>
             </div>
-            // Summary Card
+
+            {/* Summary Card */}
             <Card variant="glass" className="mt-6">
               <CardContent className="p-6">
                 <div className="grid grid-cols-4 gap-6">

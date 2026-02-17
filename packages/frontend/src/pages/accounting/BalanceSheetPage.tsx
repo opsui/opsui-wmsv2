@@ -56,21 +56,25 @@ function AccountSection({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider">{title}</h4>
+      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+        {title}
+      </h4>
       <div className="space-y-2">
         {accounts.map(account => (
           <div
             key={account.accountId}
-            className="flex items-center justify-between py-2 border-b border-gray-800"
+            className="flex items-center justify-between py-2 border-b border-gray-300 dark:border-gray-700"
           >
-            <span className="text-sm text-gray-300">{account.accountName}</span>
-            <span className={`text-sm font-medium ${colorClass}`}>
+            <span className="text-sm text-gray-900 dark:text-white">{account.accountName}</span>
+            <span className={`text-sm font-semibold ${colorClass}`}>
               {formatCurrency(account.amount)}
             </span>
           </div>
         ))}
-        <div className="flex items-center justify-between py-2 bg-white/[0.03] px-3 rounded-lg">
-          <span className="text-sm font-medium text-gray-400">{totalLabel}</span>
+        <div className="flex items-center justify-between py-2 bg-gray-100 dark:bg-white/[0.05] px-3 rounded-lg">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {totalLabel}
+          </span>
           <span className={`text-sm font-bold ${colorClass}`}>{formatCurrency(total)}</span>
         </div>
       </div>
@@ -193,8 +197,10 @@ function BalanceSheetPage() {
                 <BuildingOfficeIcon className="h-8 w-8 text-blue-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">Balance Sheet</h1>
-                <p className="mt-2 text-gray-400">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  Balance Sheet
+                </h1>
+                <p className="mt-2 text-gray-700 dark:text-gray-300">
                   Financial position statement: Assets = Liabilities + Equity
                 </p>
               </div>
@@ -217,7 +223,10 @@ function BalanceSheetPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <label htmlFor="as-of-date" className="text-sm text-gray-400 mb-2 block">
+                <label
+                  htmlFor="as-of-date"
+                  className="text-sm text-gray-700 dark:text-gray-300 mb-2 block font-medium"
+                >
                   As of Date
                 </label>
                 <input
@@ -225,7 +234,7 @@ function BalanceSheetPage() {
                   type="date"
                   value={asOfDate}
                   onChange={e => setAsOfDate(e.target.value)}
-                  className="px-4 py-2 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
               </div>
 
@@ -283,10 +292,12 @@ function BalanceSheetPage() {
                   />
 
                   {/* Total Assets */}
-                  <div className="pt-4 border-t-2 border-gray-700">
+                  <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-base font-bold text-white">TOTAL ASSETS</span>
-                      <span className="text-xl font-bold text-blue-400">
+                      <span className="text-base font-bold text-gray-900 dark:text-white">
+                        TOTAL ASSETS
+                      </span>
+                      <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrency(balanceSheet.assets.total)}
                       </span>
                     </div>
@@ -324,10 +335,12 @@ function BalanceSheetPage() {
                   />
 
                   {/* Total Liabilities */}
-                  <div className="pt-4 border-t-2 border-gray-700">
+                  <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-base font-bold text-white">TOTAL LIABILITIES</span>
-                      <span className="text-xl font-bold text-rose-400">
+                      <span className="text-base font-bold text-gray-900 dark:text-white">
+                        TOTAL LIABILITIES
+                      </span>
+                      <span className="text-xl font-bold text-rose-600 dark:text-rose-400">
                         {formatCurrency(balanceSheet.liabilities.total)}
                       </span>
                     </div>
@@ -355,10 +368,12 @@ function BalanceSheetPage() {
                   />
 
                   {/* Total Liabilities + Equity */}
-                  <div className="pt-4 border-t-2 border-gray-700">
+                  <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-base font-bold text-white">TOTAL L&E</span>
-                      <span className="text-xl font-bold text-purple-400">
+                      <span className="text-base font-bold text-gray-900 dark:text-white">
+                        TOTAL L&E
+                      </span>
+                      <span className="text-xl font-bold text-purple-600 dark:text-purple-400">
                         {formatCurrency(balanceSheet.liabilities.total + balanceSheet.equity.total)}
                       </span>
                     </div>
@@ -371,20 +386,20 @@ function BalanceSheetPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <ScaleIcon
-                          className={`h-5 w-5 ${isBalanced ? 'text-emerald-400' : 'text-rose-400'}`}
+                          className={`h-5 w-5 ${isBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                         />
-                        <span className="text-sm font-medium text-gray-300">
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                           {isBalanced ? 'Balance Verified' : 'Balance Mismatch'}
                         </span>
                       </div>
                       <span
-                        className={`text-lg font-bold ${isBalanced ? 'text-emerald-400' : 'text-rose-400'}`}
+                        className={`text-lg font-bold ${isBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                       >
                         {isBalanced ? '✓' : '✗'}
                       </span>
                     </div>
                     {!isBalanced && (
-                      <p className="text-xs text-rose-300 mt-2">
+                      <p className="text-xs text-rose-600 dark:text-rose-400 mt-2">
                         Difference:{' '}
                         {formatCurrency(
                           Math.abs(
@@ -404,20 +419,26 @@ function BalanceSheetPage() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-3 gap-8">
                   <div className="text-center">
-                    <p className="text-sm text-gray-400 mb-2">Total Assets</p>
-                    <p className="text-3xl font-bold text-blue-400">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Total Assets
+                    </p>
+                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                       {formatCurrency(balanceSheet.assets.total)}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-gray-400 mb-2">Total Liabilities</p>
-                    <p className="text-3xl font-bold text-rose-400">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Total Liabilities
+                    </p>
+                    <p className="text-3xl font-bold text-rose-600 dark:text-rose-400">
                       {formatCurrency(balanceSheet.liabilities.total)}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-gray-400 mb-2">Total Equity</p>
-                    <p className="text-3xl font-bold text-purple-400">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Total Equity
+                    </p>
+                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                       {formatCurrency(balanceSheet.equity.total)}
                     </p>
                   </div>
@@ -428,8 +449,10 @@ function BalanceSheetPage() {
         ) : (
           <Card variant="glass">
             <CardContent className="p-12 text-center">
-              <BuildingOfficeIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400">No balance sheet data available for the selected date</p>
+              <BuildingOfficeIcon className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-700 dark:text-gray-300">
+                No balance sheet data available for the selected date
+              </p>
             </CardContent>
           </Card>
         )}

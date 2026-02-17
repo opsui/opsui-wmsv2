@@ -30,6 +30,7 @@ import {
   DocumentTextIcon,
   XMarkIcon,
   TrashIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import {
   useJournalEntries,
@@ -60,6 +61,134 @@ interface JournalEntryFormData {
   description: string;
   lines: JournalEntryLineInput[];
   notes?: string;
+}
+
+// ============================================================================
+// CUSTOM DROPDOWN COMPONENT
+// ============================================================================
+
+interface CustomDropdownProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}
+
+function CustomDropdown({ label, value, onChange, options, placeholder }: CustomDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative flex-1 min-w-[200px]">
+      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border-2 ${
+          isOpen
+            ? 'border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/20'
+            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+        } rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all duration-200 flex items-center justify-between shadow-sm`}
+      >
+        <span className={value === '' ? 'text-gray-500 dark:text-gray-400' : 'font-medium'}>
+          {selectedOption?.label || placeholder || 'Select...'}
+        </span>
+        <ChevronDownIcon
+          className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10 animate-in fade-in" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-20 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-xl animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+            {options.map((option, index) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-4 py-3 text-sm text-left transition-all duration-200 border-b last:border-b-0 border-gray-100 dark:border-gray-700 ${
+                  value === option.value
+                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white font-semibold shadow-md'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-100/80 hover:to-teal-100/80 dark:hover:from-emerald-900/40 dark:hover:to-teal-900/40 hover:pl-2 hover:scale-[1.02]'
+                }`}
+                style={{ animationDelay: `${index * 25}ms` }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Compact inline dropdown for table cells
+interface InlineDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}
+
+function InlineDropdown({ value, onChange, options, placeholder }: InlineDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-2 py-1.5 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border ${
+          isOpen
+            ? 'border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/20'
+            : 'border-gray-400 dark:border-white/[0.08] hover:border-gray-500 dark:hover:border-gray-600'
+        } rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none transition-all duration-200 flex items-center justify-between`}
+      >
+        <span className={value === '' ? 'text-gray-500 dark:text-gray-400' : 'truncate'}>
+          {selectedOption?.label || placeholder || 'Select...'}
+        </span>
+        <ChevronDownIcon
+          className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 flex-shrink-0 ml-1 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10 animate-in fade-in" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl animate-in slide-in-from-top-1 duration-200 overflow-hidden">
+            {options.map(option => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-3 py-2 text-sm text-left transition-all duration-200 border-b last:border-b-0 border-gray-100 dark:border-gray-700 ${
+                  value === option.value
+                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white font-semibold'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-100/80 hover:to-teal-100/80 dark:hover:from-emerald-900/40 dark:hover:to-teal-900/40'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 // ============================================================================
@@ -264,19 +393,18 @@ function JournalEntryForm({
               {formData.lines.map((line, index) => (
                 <tr key={index} className="border-t border-gray-400 dark:border-white/[0.05]">
                   <td className="py-2 px-3">
-                    <select
+                    <InlineDropdown
                       value={line.accountId}
-                      onChange={e => updateLine(index, 'accountId', e.target.value)}
-                      className="w-full px-2 py-1.5 bg-gray-200 dark:bg-white/[0.05] border border-gray-400 dark:border-white/[0.08] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
-                      required
-                    >
-                      <option value="">Select Account</option>
-                      {accounts.map(acc => (
-                        <option key={acc.accountId} value={acc.accountId}>
-                          {acc.accountCode} - {acc.accountName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={val => updateLine(index, 'accountId', val)}
+                      placeholder="Select Account"
+                      options={[
+                        { value: '', label: 'Select Account' },
+                        ...accounts.map(acc => ({
+                          value: acc.accountId,
+                          label: `${acc.accountCode} - ${acc.accountName}`,
+                        })),
+                      ]}
+                    />
                   </td>
                   <td className="py-2 px-3">
                     <Input
@@ -793,27 +921,20 @@ function JournalEntriesPage() {
         <Card variant="glass" className="mb-6">
           <CardContent className="p-6">
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <label
-                  htmlFor="filter-status"
-                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
-                >
-                  Status
-                </label>
-                <select
-                  id="filter-status"
-                  value={filterStatus}
-                  onChange={e => setFilterStatus(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                >
-                  <option value="">All Statuses</option>
-                  <option value={JournalEntryStatus.DRAFT}>Draft</option>
-                  <option value={JournalEntryStatus.SUBMITTED}>Submitted</option>
-                  <option value={JournalEntryStatus.APPROVED}>Approved</option>
-                  <option value={JournalEntryStatus.POSTED}>Posted</option>
-                  <option value={JournalEntryStatus.REVERSED}>Reversed</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Status"
+                value={filterStatus}
+                onChange={setFilterStatus}
+                placeholder="All Statuses"
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: JournalEntryStatus.DRAFT, label: 'Draft' },
+                  { value: JournalEntryStatus.SUBMITTED, label: 'Submitted' },
+                  { value: JournalEntryStatus.APPROVED, label: 'Approved' },
+                  { value: JournalEntryStatus.POSTED, label: 'Posted' },
+                  { value: JournalEntryStatus.REVERSED, label: 'Reversed' },
+                ]}
+              />
               <div className="flex-1 min-w-[200px]">
                 <label
                   htmlFor="date-from"

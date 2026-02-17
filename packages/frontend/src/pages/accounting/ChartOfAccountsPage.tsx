@@ -25,6 +25,7 @@ import {
   PencilIcon,
   EyeIcon,
   ChevronRightIcon,
+  ChevronDownIcon,
   FolderIcon,
   DocumentTextIcon,
   ArrowDownIcon,
@@ -50,8 +51,361 @@ interface AccountNode extends ChartOfAccounts {
 }
 
 // ============================================================================
+// SAMPLE DATA
+// ============================================================================
+
+const sampleAccounts: ChartOfAccounts[] = [
+  // Assets
+  {
+    accountId: 'ACT-1000',
+    accountCode: '1000',
+    accountName: 'ASSETS',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: null,
+  },
+  {
+    accountId: 'ACT-1100',
+    accountCode: '1100',
+    accountName: 'Current Assets',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: 'ACT-1000',
+  },
+  {
+    accountId: 'ACT-1110',
+    accountCode: '1110',
+    accountName: 'Cash',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-1100',
+    description: 'Cash on hand and in banks',
+  },
+  {
+    accountId: 'ACT-1120',
+    accountCode: '1120',
+    accountName: 'Accounts Receivable',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-1100',
+    description: 'Money owed by customers',
+  },
+  {
+    accountId: 'ACT-1130',
+    accountCode: '1130',
+    accountName: 'Inventory',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-1100',
+    description: 'Products for sale',
+  },
+  {
+    accountId: 'ACT-1200',
+    accountCode: '1200',
+    accountName: 'Non-Current Assets',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: 'ACT-1000',
+  },
+  {
+    accountId: 'ACT-1210',
+    accountCode: '1210',
+    accountName: 'Equipment',
+    accountType: AccountType.ASSET,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-1200',
+    description: 'Machinery and equipment',
+  },
+  {
+    accountId: 'ACT-1220',
+    accountCode: '1220',
+    accountName: 'Accumulated Depreciation',
+    accountType: AccountType.ASSET,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-1200',
+    description: 'Depreciation on equipment',
+  },
+  // Liabilities
+  {
+    accountId: 'ACT-2000',
+    accountCode: '2000',
+    accountName: 'LIABILITIES',
+    accountType: AccountType.LIABILITY,
+    normalBalance: 'C',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: null,
+  },
+  {
+    accountId: 'ACT-2100',
+    accountCode: '2100',
+    accountName: 'Current Liabilities',
+    accountType: AccountType.LIABILITY,
+    normalBalance: 'C',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: 'ACT-2000',
+  },
+  {
+    accountId: 'ACT-2110',
+    accountCode: '2110',
+    accountName: 'Accounts Payable',
+    accountType: AccountType.LIABILITY,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-2100',
+    description: 'Money owed to suppliers',
+  },
+  {
+    accountId: 'ACT-2120',
+    accountCode: '2120',
+    accountName: 'Accrued Expenses',
+    accountType: AccountType.LIABILITY,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-2100',
+    description: 'Expenses incurred but not yet paid',
+  },
+  {
+    accountId: 'ACT-2200',
+    accountCode: '2200',
+    accountName: 'Non-Current Liabilities',
+    accountType: AccountType.LIABILITY,
+    normalBalance: 'C',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: 'ACT-2000',
+  },
+  {
+    accountId: 'ACT-2210',
+    accountCode: '2210',
+    accountName: 'Long-Term Debt',
+    accountType: AccountType.LIABILITY,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-2200',
+    description: 'Loans and long-term obligations',
+  },
+  // Equity
+  {
+    accountId: 'ACT-3000',
+    accountCode: '3000',
+    accountName: 'EQUITY',
+    accountType: AccountType.EQUITY,
+    normalBalance: 'C',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: null,
+  },
+  {
+    accountId: 'ACT-3100',
+    accountCode: '3100',
+    accountName: "Owner's Equity",
+    accountType: AccountType.EQUITY,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-3000',
+    description: "Owner's investment in the business",
+  },
+  {
+    accountId: 'ACT-3200',
+    accountCode: '3200',
+    accountName: 'Retained Earnings',
+    accountType: AccountType.EQUITY,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-3000',
+    description: 'Accumulated profits',
+  },
+  // Revenue
+  {
+    accountId: 'ACT-4000',
+    accountCode: '4000',
+    accountName: 'REVENUE',
+    accountType: AccountType.REVENUE,
+    normalBalance: 'C',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: null,
+  },
+  {
+    accountId: 'ACT-4100',
+    accountCode: '4100',
+    accountName: 'Sales Revenue',
+    accountType: AccountType.REVENUE,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-4000',
+    description: 'Income from sales',
+  },
+  {
+    accountId: 'ACT-4200',
+    accountCode: '4200',
+    accountName: 'Service Revenue',
+    accountType: AccountType.REVENUE,
+    normalBalance: 'C',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-4000',
+    description: 'Income from services',
+  },
+  // Expenses
+  {
+    accountId: 'ACT-5000',
+    accountCode: '5000',
+    accountName: 'EXPENSES',
+    accountType: AccountType.EXPENSE,
+    normalBalance: 'D',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: null,
+  },
+  {
+    accountId: 'ACT-5100',
+    accountCode: '5100',
+    accountName: 'Cost of Goods Sold',
+    accountType: AccountType.EXPENSE,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-5000',
+    description: 'Direct costs of goods sold',
+  },
+  {
+    accountId: 'ACT-5200',
+    accountCode: '5200',
+    accountName: 'Operating Expenses',
+    accountType: AccountType.EXPENSE,
+    normalBalance: 'D',
+    isHeader: true,
+    isActive: true,
+    parentAccountId: 'ACT-5000',
+  },
+  {
+    accountId: 'ACT-5210',
+    accountCode: '5210',
+    accountName: 'Rent Expense',
+    accountType: AccountType.EXPENSE,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-5200',
+    description: 'Rent for facilities',
+  },
+  {
+    accountId: 'ACT-5220',
+    accountCode: '5220',
+    accountName: 'Utilities Expense',
+    accountType: AccountType.EXPENSE,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-5200',
+    description: 'Electricity, water, gas',
+  },
+  {
+    accountId: 'ACT-5230',
+    accountCode: '5230',
+    accountName: 'Salaries Expense',
+    accountType: AccountType.EXPENSE,
+    normalBalance: 'D',
+    isHeader: false,
+    isActive: true,
+    parentAccountId: 'ACT-5200',
+    description: 'Employee salaries and wages',
+  },
+];
+
+// ============================================================================
 // HELPER COMPONENTS
 // ============================================================================
+
+// Custom Dropdown Component
+interface CustomDropdownProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}
+
+function CustomDropdown({ label, value, onChange, options, placeholder }: CustomDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative flex-1 min-w-[200px]">
+      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border-2 ${
+          isOpen
+            ? 'border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/20'
+            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+        } rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all duration-200 flex items-center justify-between shadow-sm`}
+      >
+        <span className={value === '' ? 'text-gray-500 dark:text-gray-400' : 'font-medium'}>
+          {selectedOption?.label || placeholder || 'Select...'}
+        </span>
+        <ChevronDownIcon
+          className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10 animate-in fade-in" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-20 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-xl animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+            {options.map((option, index) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full px-4 py-3 text-sm text-left transition-all duration-200 border-b last:border-b-0 border-gray-100 dark:border-gray-700 ${
+                  value === option.value
+                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white font-semibold shadow-md'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-100/80 hover:to-teal-100/80 dark:hover:from-emerald-900/40 dark:hover:to-teal-900/40 hover:pl-2 hover:scale-[1.02]'
+                }`}
+                style={{ animationDelay: `${index * 25}ms` }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 interface AccountRowProps {
   account: AccountNode;
@@ -104,7 +458,7 @@ function AccountRow({
               <span className="w-6" />
             )}
             <span
-              className={`font-mono text-sm ${account.isHeader ? 'font-bold' : 'text-gray-700 dark:text-gray-300'}`}
+              className={`font-mono text-sm ${account.isHeader ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-800 dark:text-gray-200'}`}
               style={{ paddingLeft: `${account.level * 12}px` }}
             >
               {account.accountCode}
@@ -119,7 +473,7 @@ function AccountRow({
               <DocumentTextIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
             )}
             <span
-              className={`text-sm ${account.isHeader ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}
+              className={`text-sm ${account.isHeader ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}
             >
               {account.accountName}
             </span>
@@ -149,7 +503,7 @@ function AccountRow({
             {account.normalBalance === 'D' ? 'Debit' : 'Credit'}
           </span>
         </td>
-        <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
+        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
           {account.parentAccountId || '-'}
         </td>
         <td className="py-3 px-4">
@@ -210,6 +564,19 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
     onSubmit(formData);
   };
 
+  const accountTypeOptions = [
+    { value: AccountType.ASSET, label: 'Asset' },
+    { value: AccountType.LIABILITY, label: 'Liability' },
+    { value: AccountType.EQUITY, label: 'Equity' },
+    { value: AccountType.REVENUE, label: 'Revenue' },
+    { value: AccountType.EXPENSE, label: 'Expense' },
+  ];
+
+  const normalBalanceOptions = [
+    { value: 'D', label: 'Debit' },
+    { value: 'C', label: 'Credit' },
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -248,13 +615,13 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
           onChange={e => setFormData({ ...formData, accountType: e.target.value as AccountType })}
           required
           disabled={!!account}
-          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         >
-          <option value={AccountType.ASSET}>Asset</option>
-          <option value={AccountType.LIABILITY}>Liability</option>
-          <option value={AccountType.EQUITY}>Equity</option>
-          <option value={AccountType.REVENUE}>Revenue</option>
-          <option value={AccountType.EXPENSE}>Expense</option>
+          {accountTypeOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -265,7 +632,7 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
         <select
           value={formData.parentAccountId}
           onChange={e => setFormData({ ...formData, parentAccountId: e.target.value })}
-          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         >
           <option value="">No Parent</option>
           {parentOptions
@@ -288,10 +655,13 @@ function AccountForm({ account, onSubmit, onCancel, parentOptions, isLoading }: 
             setFormData({ ...formData, normalBalance: e.target.value as NormalBalance })
           }
           required
-          className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         >
-          <option value="D">Debit</option>
-          <option value="C">Credit</option>
+          {normalBalanceOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -344,7 +714,18 @@ function ChartOfAccountsPage() {
   const [filterType, setFilterType] = useState<string>('');
   const [filterActive, setFilterActive] = useState<string>('all');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(
-    new Set(['ACT-1000', 'ACT-2000', 'ACT-3000', 'ACT-4000', 'ACT-5000'])
+    new Set([
+      'ACT-1000',
+      'ACT-1100',
+      'ACT-1200',
+      'ACT-2000',
+      'ACT-2100',
+      'ACT-2200',
+      'ACT-3000',
+      'ACT-4000',
+      'ACT-5000',
+      'ACT-5200',
+    ])
   );
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -354,13 +735,16 @@ function ChartOfAccountsPage() {
 
   // API hooks
   const {
-    data: accounts = [],
+    data: apiAccounts = [],
     isLoading,
     refetch,
   } = useChartOfAccounts({
     accountType: filterType || undefined,
     isActive: filterActive === 'active' ? true : filterActive === 'inactive' ? false : undefined,
   });
+
+  // Use sample data if API returns nothing
+  const accounts = apiAccounts.length > 0 ? apiAccounts : sampleAccounts;
 
   const { data: balanceData } = useAccountBalance(
     selectedAccountForBalance || '',
@@ -452,7 +836,9 @@ function ChartOfAccountsPage() {
   };
 
   // Get parent options (only header accounts)
-  const parentOptions = accounts.filter(a => a.isHeader || !a.parentAccountId);
+  const parentOptions = (accounts.length > 0 ? accounts : sampleAccounts).filter(
+    a => a.isHeader || !a.parentAccountId
+  );
 
   return (
     <div className="min-h-screen">
@@ -488,45 +874,31 @@ function ChartOfAccountsPage() {
         <Card variant="glass" className="mb-6">
           <CardContent className="p-6">
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <label
-                  htmlFor="filter-type"
-                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
-                >
-                  Account Type
-                </label>
-                <select
-                  id="filter-type"
-                  value={filterType}
-                  onChange={e => setFilterType(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                >
-                  <option value="">All Types</option>
-                  <option value="ASSET">Assets</option>
-                  <option value="LIABILITY">Liabilities</option>
-                  <option value="EQUITY">Equity</option>
-                  <option value="REVENUE">Revenue</option>
-                  <option value="EXPENSE">Expenses</option>
-                </select>
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <label
-                  htmlFor="filter-status"
-                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
-                >
-                  Status
-                </label>
-                <select
-                  id="filter-status"
-                  value={filterActive}
-                  onChange={e => setFilterActive(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                >
-                  <option value="all">All</option>
-                  <option value="active">Active Only</option>
-                  <option value="inactive">Inactive Only</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Account Type"
+                value={filterType}
+                onChange={setFilterType}
+                placeholder="All Types"
+                options={[
+                  { value: '', label: 'All Types' },
+                  { value: 'ASSET', label: 'Assets' },
+                  { value: 'LIABILITY', label: 'Liabilities' },
+                  { value: 'EQUITY', label: 'Equity' },
+                  { value: 'REVENUE', label: 'Revenue' },
+                  { value: 'EXPENSE', label: 'Expenses' },
+                ]}
+              />
+              <CustomDropdown
+                label="Status"
+                value={filterActive}
+                onChange={setFilterActive}
+                placeholder="All"
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'active', label: 'Active Only' },
+                  { value: 'inactive', label: 'Inactive Only' },
+                ]}
+              />
             </div>
           </CardContent>
         </Card>
@@ -555,37 +927,37 @@ function ChartOfAccountsPage() {
                     <tr className="border-b border-gray-200 dark:border-gray-700">
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-40"
+                        className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 w-40"
                       >
                         Account Code
                       </th>
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
+                        className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300"
                       >
                         Account Name
                       </th>
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-32"
+                        className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 w-32"
                       >
                         Type
                       </th>
                       <th
                         scope="col"
-                        className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28"
+                        className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 w-28"
                       >
                         Normal Balance
                       </th>
                       <th
                         scope="col"
-                        className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-32"
+                        className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 w-32"
                       >
                         Parent
                       </th>
                       <th
                         scope="col"
-                        className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-24"
+                        className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300 w-24"
                       >
                         Actions
                       </th>
