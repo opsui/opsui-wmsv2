@@ -158,37 +158,33 @@ function MobileMenu({
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
-    // Prevent body scroll when menu is open - with iOS Safari workaround
+    // Prevent body scroll when menu is open - using overflow only to avoid background shift
     if (isOpen) {
       // Store current scroll position
       scrollPositionRef.current = window.scrollY;
 
-      // iOS Safari requires position: fixed to prevent background scrolling
+      // Use overflow hidden only - this prevents scroll without shifting fixed backgrounds
+      document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollPositionRef.current}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.overflow = 'hidden';
       document.body.style.width = '100%';
     } else {
       // Restore body styles
+      document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
       document.body.style.width = '';
 
       // Restore scroll position
-      window.scrollTo(0, scrollPositionRef.current);
+      if (scrollPositionRef.current > 0) {
+        window.scrollTo(0, scrollPositionRef.current);
+      }
     }
     return () => {
       // Cleanup on unmount
+      document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.overflow = '';
       document.body.style.width = '';
     };
   }, [isOpen]);
@@ -222,13 +218,17 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop - neutral dark overlay without blur to avoid color shifts */}
+      {/* Backdrop with blur */}
       <div
-        className={`fixed inset-0 z-[105] transition-opacity duration-300 ease-out ${
-          isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
+        className={`fixed inset-0 z-[105] transition-all duration-300 ease-out ${
+          isClosing || !isVisible 
+            ? 'opacity-0 backdrop-blur-none' 
+            : 'opacity-100 backdrop-blur-sm'
         }`}
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: isClosing || !isVisible 
+            ? 'transparent' 
+            : 'rgba(0, 0, 0, 0.2)',
         }}
         onClick={() => onHoverOff?.()}
       />
@@ -241,7 +241,7 @@ function MobileMenu({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="bg-white/95 dark:bg-gray-900/95 h-full flex flex-col shadow-2xl border-r border-gray-200/50 dark:border-gray-700/50">
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl h-full flex flex-col shadow-2xl border-r border-gray-200/50 dark:border-gray-700/50">
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
             <div className="flex-1 min-w-0">
