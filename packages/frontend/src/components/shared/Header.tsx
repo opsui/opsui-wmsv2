@@ -158,19 +158,35 @@ function MobileMenu({
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
-    // Prevent body scroll when menu is open
+    // Prevent body scroll when menu is open - mobile-friendly approach
     if (isOpen) {
       // Store current scroll position
       scrollPositionRef.current = window.scrollY;
 
-      // Simple overflow hidden - works on desktop without shifting backgrounds
+      // Use position: fixed for mobile - this is the only reliable way to prevent scroll on iOS
+      // This also works on desktop and prevents all background scrolling
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
     } else {
       // Restore body styles
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
+
+      // Restore scroll position
+      window.scrollTo(0, scrollPositionRef.current);
     }
     return () => {
       // Cleanup on unmount
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
     };
   }, [isOpen]);
@@ -235,7 +251,7 @@ function MobileMenu({
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 overscroll-contain">
             {/* Role Switcher Section for users with multiple roles */}
             {hasRoleSwitcher && (
               <div>
