@@ -342,10 +342,10 @@ export function RootCauseAnalysisPage() {
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-between px-3">
-                      <span className="text-xs text-gray-600 dark:text-white/80">
+                      <span className="text-xs text-white dark:text-white drop-shadow-sm">
                         Variance: {item.totalVariance}
                       </span>
-                      <span className="text-xs text-gray-600 dark:text-white/80">
+                      <span className="text-xs text-white dark:text-white drop-shadow-sm">
                         Count: {item.count}
                       </span>
                     </div>

@@ -188,8 +188,12 @@ function FixedAssetsPage() {
                 <BuildingOfficeIcon className="h-8 w-8 text-indigo-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">Fixed Assets</h1>
-                <p className="mt-2 text-gray-400">Manage fixed assets and depreciation schedules</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  Fixed Assets
+                </h1>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Manage fixed assets and depreciation schedules
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -201,7 +205,11 @@ function FixedAssetsPage() {
                 <PrinterIcon className="h-4 w-4" />
                 Print
               </Button>
-              <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
+              <Button
+                variant="primary"
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2"
+              >
                 <PlusIcon className="h-4 w-4" />
                 Add Asset
               </Button>
@@ -214,24 +222,26 @@ function FixedAssetsPage() {
           <CardContent className="p-6">
             <div className="grid grid-cols-4 gap-6">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Total Assets</p>
-                <p className="text-2xl font-bold text-white">{mockAssets.length}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Assets</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockAssets.length}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Total Original Cost</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Original Cost</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {formatCurrency(totalOriginalCost)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Accumulated Depreciation</p>
-                <p className="text-2xl font-bold text-amber-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  Accumulated Depreciation
+                </p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {formatCurrency(totalAccumulatedDepreciation)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Net Book Value</p>
-                <p className="text-2xl font-bold text-emerald-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Book Value</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(totalNetBookValue)}
                 </p>
               </div>
@@ -247,38 +257,38 @@ function FixedAssetsPage() {
         ) : (
           <Card variant="glass">
             <CardHeader>
-              <CardTitle>Asset Register</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Asset Register</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full" role="table">
                   <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Asset #
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Name
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Category
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Purchase Date
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Cost
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Accum. Dep.
                       </th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Net Book Value
                       </th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Dep. Method
                       </th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-400">
+                      <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Actions
                       </th>
                     </tr>
@@ -287,39 +297,39 @@ function FixedAssetsPage() {
                     {mockAssets.map(asset => (
                       <tr
                         key={asset.assetId}
-                        className="border-b border-gray-800 hover:bg-white/[0.02]"
+                        className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                       >
-                        <td className="py-3 px-4 text-sm font-mono text-gray-300">
+                        <td className="py-3 px-4 text-sm font-mono text-gray-700 dark:text-gray-300">
                           {asset.assetNumber}
                         </td>
-                        <td className="py-3 px-4 text-sm text-white font-medium">
+                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
                           {asset.assetName}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-400">
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
                           {asset.assetCategory || '-'}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-300">
+                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
                           {new Date(asset.purchaseDate).toLocaleDateString()}
                         </td>
-                        <td className="py-3 px-4 text-sm text-right text-blue-400">
+                        <td className="py-3 px-4 text-sm text-right text-blue-600 dark:text-blue-400">
                           {formatCurrency(asset.purchaseCost)}
                         </td>
-                        <td className="py-3 px-4 text-sm text-right text-amber-400">
+                        <td className="py-3 px-4 text-sm text-right text-amber-600 dark:text-amber-400">
                           {formatCurrency(asset.accumulatedDepreciation)}
                         </td>
-                        <td className="py-3 px-4 text-sm text-right font-bold text-emerald-400">
+                        <td className="py-3 px-4 text-sm text-right font-bold text-emerald-600 dark:text-emerald-400">
                           {formatCurrency(asset.currentBookValue)}
                         </td>
-                        <td className="py-3 px-4 text-sm text-center text-gray-400">
+                        <td className="py-3 px-4 text-sm text-center text-gray-600 dark:text-gray-400">
                           {asset.depreciationMethod.replace('_', ' ')}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-center gap-2">
-                            <button className="p-1 hover:bg-white/[0.05] rounded">
-                              <PencilIcon className="h-4 w-4 text-gray-400" />
+                            <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/[0.05] rounded">
+                              <PencilIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                             </button>
-                            <button className="p-1 hover:bg-white/[0.05] rounded">
-                              <TrashIcon className="h-4 w-4 text-rose-400" />
+                            <button className="p-1 hover:bg-gray-100 dark:hover:bg-white/[0.05] rounded">
+                              <TrashIcon className="h-4 w-4 text-rose-600 dark:text-rose-400" />
                             </button>
                           </div>
                         </td>
@@ -327,20 +337,20 @@ function FixedAssetsPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t-2 border-gray-700 bg-white/[0.02]">
+                    <tr className="border-t-2 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.02]">
                       <td
                         colSpan={4}
-                        className="py-3 px-4 text-sm font-bold text-gray-400 text-right"
+                        className="py-3 px-4 text-sm font-bold text-gray-700 dark:text-gray-400 text-right"
                       >
                         TOTALS:
                       </td>
-                      <td className="py-3 px-4 text-sm text-right font-bold text-blue-400">
+                      <td className="py-3 px-4 text-sm text-right font-bold text-blue-600 dark:text-blue-400">
                         {formatCurrency(totalOriginalCost)}
                       </td>
-                      <td className="py-3 px-4 text-sm text-right font-bold text-amber-400">
+                      <td className="py-3 px-4 text-sm text-right font-bold text-amber-600 dark:text-amber-400">
                         {formatCurrency(totalAccumulatedDepreciation)}
                       </td>
-                      <td className="py-3 px-4 text-sm text-right font-bold text-emerald-400">
+                      <td className="py-3 px-4 text-sm text-right font-bold text-emerald-600 dark:text-emerald-400">
                         {formatCurrency(totalNetBookValue)}
                       </td>
                       <td colSpan={2} />
@@ -357,15 +367,19 @@ function FixedAssetsPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <Card variant="glass" className="w-full max-w-2xl mx-4">
               <CardHeader>
-                <CardTitle>Add New Fixed Asset</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-white">Add New Fixed Asset</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-gray-400 mb-4">Asset creation form would go here...</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Asset creation form would go here...
+                </p>
                 <div className="flex justify-end gap-3">
                   <Button variant="secondary" onClick={() => setShowAddModal(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={() => setShowAddModal(false)}>Save Asset</Button>
+                  <Button variant="primary" onClick={() => setShowAddModal(false)}>
+                    Save Asset
+                  </Button>
                 </div>
               </CardContent>
             </Card>

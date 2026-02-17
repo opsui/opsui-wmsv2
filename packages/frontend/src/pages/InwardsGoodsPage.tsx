@@ -168,7 +168,7 @@ function WorkflowProgress({
   const currentIndex = stageOrder.indexOf(currentStage);
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+    <div className="bg-gray-800/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6">
       <div className="flex items-center justify-between gap-2 overflow-x-auto">
         {stages.map((stage, index) => {
           const isComplete = index < currentIndex;
@@ -195,19 +195,19 @@ function WorkflowProgress({
 
       {/* Exceptions Alert */}
       {counts.exceptions > 0 && (
-        <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10">
           <button
             onClick={() => onStageClick('exceptions')}
             className="w-full flex items-center justify-between px-4 py-3 bg-error-500/10 border border-error-500/30 rounded-xl hover:bg-error-500/20 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <ExclamationTriangleIcon className="h-5 w-5 text-error-400" />
-              <span className="text-sm font-medium text-error-300">
+              <ExclamationTriangleIcon className="h-5 w-5 text-error-500 dark:text-error-400" />
+              <span className="text-sm font-medium text-error-700 dark:text-error-300">
                 {counts.exceptions} Receiving Exception{counts.exceptions > 1 ? 's' : ''} Require
                 Attention
               </span>
             </div>
-            <ChevronRightIcon className="h-5 w-5 text-error-400" />
+            <ChevronRightIcon className="h-5 w-5 text-error-500 dark:text-error-400" />
           </button>
         </div>
       )}
@@ -258,9 +258,9 @@ function MetricCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 text-left">
-          <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-white">{value}</p>
-          {trend && <p className="mt-1 text-xs text-gray-400">{trend}</p>}
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">{title}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
+          {trend && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{trend}</p>}
         </div>
         <div className={`p-3 rounded-lg ${iconColors[color]}`}>
           <Icon className="h-5 w-5" />
@@ -287,106 +287,106 @@ function StatusBadge({
     if (type === 'asn') {
       switch (status) {
         case ASNStatus.PENDING:
-          return `${baseStyles} bg-gray-500/10 text-gray-300 border-gray-500/30`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
         case ASNStatus.IN_TRANSIT:
-          return `${baseStyles} bg-blue-500/10 text-blue-300 border-blue-500/30`;
+          return `${baseStyles} bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30`;
         case ASNStatus.RECEIVED:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case ASNStatus.PARTIALLY_RECEIVED:
-          return `${baseStyles} bg-warning-500/10 text-warning-300 border-warning-500/30`;
+          return `${baseStyles} bg-amber-100 dark:bg-warning-500/10 text-amber-700 dark:text-warning-300 border-amber-200 dark:border-warning-500/30`;
         case ASNStatus.CANCELLED:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     } else if (type === 'receipt') {
       switch (status) {
         case ReceiptStatus.RECEIVING:
-          return `${baseStyles} bg-blue-500/10 text-blue-300 border-blue-500/30`;
+          return `${baseStyles} bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30`;
         case ReceiptStatus.COMPLETED:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case ReceiptStatus.CANCELLED:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     } else if (type === 'putaway') {
       switch (status) {
         case PutawayStatus.PENDING:
-          return `${baseStyles} bg-gray-500/10 text-gray-300 border-gray-500/30`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
         case PutawayStatus.IN_PROGRESS:
-          return `${baseStyles} bg-blue-500/10 text-blue-300 border-blue-500/30`;
+          return `${baseStyles} bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30`;
         case PutawayStatus.COMPLETED:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case PutawayStatus.CANCELLED:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     } else if (type === 'qc') {
       switch (status) {
         case QualityStatus.PENDING:
-          return `${baseStyles} bg-gray-500/10 text-gray-300 border-gray-500/30`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
         case QualityStatus.PASSED:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case QualityStatus.FAILED:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         case QualityStatus.PARTIAL:
-          return `${baseStyles} bg-warning-500/10 text-warning-300 border-warning-500/30`;
+          return `${baseStyles} bg-amber-100 dark:bg-warning-500/10 text-amber-700 dark:text-warning-300 border-amber-200 dark:border-warning-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     } else if (type === 'license') {
       switch (status) {
         case LicensePlateStatus.OPEN:
-          return `${baseStyles} bg-gray-500/10 text-gray-300 border-gray-500/30`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
         case LicensePlateStatus.SEALED:
-          return `${baseStyles} bg-blue-500/10 text-blue-300 border-blue-500/30`;
+          return `${baseStyles} bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30`;
         case LicensePlateStatus.IN_QC:
-          return `${baseStyles} bg-purple-500/10 text-purple-300 border-purple-500/30`;
+          return `${baseStyles} bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30`;
         case LicensePlateStatus.QC_PASSED:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case LicensePlateStatus.QC_FAILED:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         case LicensePlateStatus.IN_STAGING:
-          return `${baseStyles} bg-orange-500/10 text-orange-300 border-orange-500/30`;
+          return `${baseStyles} bg-orange-100 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/30`;
         case LicensePlateStatus.PUTAWAY_COMPLETE:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case LicensePlateStatus.CLOSED:
-          return `${baseStyles} bg-gray-500/10 text-gray-400 border-gray-500/30`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     } else if (type === 'staging') {
       switch (status) {
         case StagingLocationStatus.AVAILABLE:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case StagingLocationStatus.OCCUPIED:
-          return `${baseStyles} bg-warning-500/10 text-warning-300 border-warning-500/30`;
+          return `${baseStyles} bg-amber-100 dark:bg-warning-500/10 text-amber-700 dark:text-warning-300 border-amber-200 dark:border-warning-500/30`;
         case StagingLocationStatus.RESERVED:
-          return `${baseStyles} bg-blue-500/10 text-blue-300 border-blue-500/30`;
+          return `${baseStyles} bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30`;
         case StagingLocationStatus.BLOCKED:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     } else if (type === 'exception') {
       switch (status) {
         case ReceivingExceptionStatus.OPEN:
-          return `${baseStyles} bg-error-500/10 text-error-300 border-error-500/30`;
+          return `${baseStyles} bg-red-100 dark:bg-error-500/10 text-red-700 dark:text-error-300 border-red-200 dark:border-error-500/30`;
         case ReceivingExceptionStatus.INVESTIGATING:
-          return `${baseStyles} bg-blue-500/10 text-blue-300 border-blue-500/30`;
+          return `${baseStyles} bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30`;
         case ReceivingExceptionStatus.AWAITING_DECISION:
-          return `${baseStyles} bg-warning-500/10 text-warning-300 border-warning-500/30`;
+          return `${baseStyles} bg-amber-100 dark:bg-warning-500/10 text-amber-700 dark:text-warning-300 border-amber-200 dark:border-warning-500/30`;
         case ReceivingExceptionStatus.RESOLVED:
-          return `${baseStyles} bg-success-500/10 text-success-300 border-success-500/30`;
+          return `${baseStyles} bg-emerald-100 dark:bg-success-500/10 text-emerald-700 dark:text-success-300 border-emerald-200 dark:border-success-500/30`;
         case ReceivingExceptionStatus.CANCELLED:
-          return `${baseStyles} bg-gray-500/10 text-gray-400 border-gray-500/30`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-500/30`;
         default:
-          return `${baseStyles} bg-gray-500/10 text-gray-300`;
+          return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
       }
     }
-    return `${baseStyles} bg-gray-500/10 text-gray-300`;
+    return `${baseStyles} bg-gray-200 dark:bg-gray-500/10 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-500/30`;
   };
 
   return <span className={getStatusStyles()}>{status.replace(/_/g, ' ')}</span>;
@@ -410,7 +410,7 @@ function ASNListItem({
   const isUrgent = new Date(asn.expectedArrivalDate) < new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   return (
-    <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4 hover:border-gray-600 transition-all">
+    <div className="bg-gray-100 dark:bg-gray-800/40 border border-gray-300 dark:border-gray-700 rounded-xl p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-all">
       <div className="flex items-center gap-4">
         {/* Status indicator */}
         <div
@@ -421,7 +421,7 @@ function ASNListItem({
                 ? 'bg-success-500'
                 : asn.status === ASNStatus.PARTIALLY_RECEIVED
                   ? 'bg-warning-500'
-                  : 'bg-gray-500'
+                  : 'bg-gray-400 dark:bg-gray-500'
           }`}
         />
 
@@ -429,8 +429,8 @@ function ASNListItem({
         <div className="flex-1 min-w-0 grid grid-cols-12 gap-4 items-center">
           {/* PO Number */}
           <div className="col-span-3">
-            <p className="text-sm font-semibold text-white truncate">{asn.purchaseOrderNumber}</p>
-            <p className="text-xs text-gray-400 truncate">{asn.supplierId}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{asn.purchaseOrderNumber}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{asn.supplierId}</p>
           </div>
 
           {/* Status */}
@@ -441,27 +441,27 @@ function ASNListItem({
           {/* Details */}
           <div className="col-span-4 grid grid-cols-3 gap-2 text-xs">
             <div>
-              <p className="text-gray-500">Expected</p>
-              <p className="text-gray-300">
+              <p className="text-gray-500 dark:text-gray-500">Expected</p>
+              <p className="text-gray-700 dark:text-gray-300">
                 {new Date(asn.expectedArrivalDate).toLocaleDateString()}
               </p>
             </div>
             <div>
-              <p className="text-gray-500">Items</p>
-              <p className="text-gray-300">
+              <p className="text-gray-500 dark:text-gray-500">Items</p>
+              <p className="text-gray-700 dark:text-gray-300">
                 {itemCount} ({totalExpected})
               </p>
             </div>
             <div>
-              <p className="text-gray-500">Carrier</p>
-              <p className="text-gray-300">{asn.carrier || 'TBD'}</p>
+              <p className="text-gray-500 dark:text-gray-500">Carrier</p>
+              <p className="text-gray-700 dark:text-gray-300">{asn.carrier || 'TBD'}</p>
             </div>
           </div>
 
           {/* Urgency indicator */}
           {isUrgent && (
             <div className="col-span-1">
-              <span className="px-2 py-1 rounded-md text-xs font-medium bg-warning-500/10 text-warning-300 border border-warning-500/30">
+              <span className="px-2 py-1 rounded-md text-xs font-medium bg-warning-500/10 text-warning-700 dark:text-warning-300 border border-warning-500/30">
                 Urgent
               </span>
             </div>
@@ -509,7 +509,7 @@ function ReceiptListItem({
     ) || false;
 
   return (
-    <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4 hover:border-gray-600 transition-all">
+    <div className="bg-gray-100 dark:bg-gray-800/40 border border-gray-300 dark:border-gray-700 rounded-xl p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-all">
       <div className="flex items-center gap-4">
         {/* Status indicator */}
         <div
@@ -526,8 +526,8 @@ function ReceiptListItem({
         <div className="flex-1 min-w-0 grid grid-cols-12 gap-4 items-center">
           {/* Receipt ID */}
           <div className="col-span-3">
-            <p className="text-sm font-semibold text-white truncate">{receipt.receiptId}</p>
-            <p className="text-xs text-gray-400">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{receipt.receiptId}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
               {new Date(receipt.receiptDate).toLocaleDateString()}
             </p>
           </div>
@@ -536,7 +536,7 @@ function ReceiptListItem({
           <div className="col-span-2 flex items-center gap-2">
             <StatusBadge status={receipt.status} type="receipt" />
             {hasExceptions && (
-              <span className="px-2 py-1 rounded-md text-xs font-medium bg-warning-500/10 text-warning-300 border border-warning-500/30">
+              <span className="px-2 py-1 rounded-md text-xs font-medium bg-warning-500/10 text-warning-700 dark:text-warning-300 border border-warning-500/30">
                 !
               </span>
             )}
@@ -544,14 +544,14 @@ function ReceiptListItem({
 
           {/* Type */}
           <div className="col-span-2">
-            <p className="text-xs text-gray-500">Type</p>
-            <p className="text-sm text-gray-300">{receipt.receiptType}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">Type</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">{receipt.receiptType}</p>
           </div>
 
           {/* Items */}
           <div className="col-span-2">
-            <p className="text-xs text-gray-500">Items</p>
-            <p className="text-sm text-gray-300">{receipt.lineItems?.length || 0}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">Items</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">{receipt.lineItems?.length || 0}</p>
           </div>
 
           {/* Actions */}
@@ -623,27 +623,27 @@ function CompactTaskCard({
   const colors = colorClasses[color];
 
   return (
-    <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-4 hover:border-gray-600 transition-all">
+    <div className="bg-gray-100 dark:bg-gray-800/40 border border-gray-300 dark:border-gray-700 rounded-xl p-4 hover:border-gray-400 dark:hover:border-gray-600 transition-all">
       <div className="flex items-start gap-3">
         <div className={`p-2 rounded-lg ${colors.bg}`}>
           <Icon className={`h-5 w-5 ${colors.text}`} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-sm font-semibold text-white truncate">{title}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{title}</p>
             <StatusBadge status={status} type={statusType} />
           </div>
-          <p className="text-xs text-gray-400 mb-2">{subtitle}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{subtitle}</p>
 
           {progress !== undefined && total !== undefined && (
             <div className="mb-2">
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-500">Progress</span>
-                <span className="text-gray-300">
+                <span className="text-gray-500 dark:text-gray-500">Progress</span>
+                <span className="text-gray-700 dark:text-gray-300">
                   {progress} / {total}
                 </span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-1.5">
+              <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5">
                 <div
                   className={`${colors.progress} h-1.5 rounded-full transition-all`}
                   style={{ width: `${progressPercent}%` }}
@@ -676,25 +676,25 @@ function ExceptionCard({
     <div className="bg-error-500/5 border border-error-500/30 rounded-xl p-4">
       <div className="flex items-start gap-3">
         <div className="p-2 rounded-lg bg-error-500/10">
-          <ExclamationTriangleIcon className="h-5 w-5 text-error-400" />
+          <ExclamationTriangleIcon className="h-5 w-5 text-error-600 dark:text-error-400" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-sm font-semibold text-white truncate">{exception.sku}</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{exception.sku}</p>
             <StatusBadge status={exception.status} type="exception" />
           </div>
-          <p className="text-xs text-error-300 font-medium mb-2">
+          <p className="text-xs text-error-700 dark:text-error-300 font-medium mb-2">
             {exception.exceptionType.replace(/_/g, ' ')}
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-3">
-            <div className="bg-white/5 p-2 rounded-lg">
-              <p className="text-xs text-gray-500">Expected</p>
-              <p className="text-sm text-white">{exception.expectedQuantity}</p>
+            <div className="bg-white dark:bg-white/5 p-2 rounded-lg border border-gray-200 dark:border-transparent">
+              <p className="text-xs text-gray-500 dark:text-gray-500">Expected</p>
+              <p className="text-sm text-gray-900 dark:text-white">{exception.expectedQuantity}</p>
             </div>
-            <div className="bg-white/5 p-2 rounded-lg">
-              <p className="text-xs text-gray-500">Actual</p>
-              <p className="text-sm text-white">{exception.actualQuantity}</p>
+            <div className="bg-white dark:bg-white/5 p-2 rounded-lg border border-gray-200 dark:border-transparent">
+              <p className="text-xs text-gray-500 dark:text-gray-500">Actual</p>
+              <p className="text-sm text-gray-900 dark:text-white">{exception.actualQuantity}</p>
             </div>
           </div>
 
@@ -790,8 +790,8 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
       <Card className="max-w-md w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Create Advance Shipping Notice</CardTitle>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <CardTitle className="text-gray-900 dark:text-white">Create Advance Shipping Notice</CardTitle>
+            <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -799,39 +799,39 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Supplier ID</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supplier ID</label>
               <input
                 type="text"
                 name="supplierId"
                 required
                 value={formData.supplierId}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                  errors.supplierId ? 'border-red-500' : 'border-gray-600'
+                className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.supplierId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="SUP-001"
               />
               {errors.supplierId && (
-                <p className="mt-1 text-sm text-red-400">{errors.supplierId}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.supplierId}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">PO Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PO Number</label>
               <input
                 type="text"
                 name="poNumber"
                 required
                 value={formData.poNumber}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                  errors.poNumber ? 'border-red-500' : 'border-gray-600'
+                className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.poNumber ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder="PO-2024-001"
               />
-              {errors.poNumber && <p className="mt-1 text-sm text-red-400">{errors.poNumber}</p>}
+              {errors.poNumber && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.poNumber}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Expected Arrival
               </label>
               <input
@@ -840,12 +840,12 @@ function CreateASNModal({ onClose, onSuccess }: { onClose: () => void; onSuccess
                 required
                 value={formData.expectedDate}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                  errors.expectedDate ? 'border-red-500' : 'border-gray-600'
+                className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.expectedDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
               />
               {errors.expectedDate && (
-                <p className="mt-1 text-sm text-red-400">{errors.expectedDate}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.expectedDate}</p>
               )}
             </div>
             <div className="flex gap-3">
@@ -918,8 +918,8 @@ function CreateReceiptModal({
       <Card className="max-w-md w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Create Receipt</CardTitle>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <CardTitle className="text-gray-900 dark:text-white">Create Receipt</CardTitle>
+            <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
@@ -927,19 +927,19 @@ function CreateReceiptModal({
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Receipt Type</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Receipt Type</label>
               <select
                 name="receiptType"
                 value={formData.receiptType}
                 onChange={handleChange}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="PO">Purchase Order</option>
                 <option value="RETURN">Customer Return</option>
                 <option value="TRANSFER">Warehouse Transfer</option>
               </select>
               {errors.receiptType && (
-                <p className="mt-1 text-sm text-red-400">{errors.receiptType}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.receiptType}</p>
               )}
             </div>
             <div className="flex gap-3">
@@ -1027,39 +1027,39 @@ function UpdatePutawayTaskModal({
       <Card className="max-w-md w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Update Putaway Progress</CardTitle>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <CardTitle className="text-gray-900 dark:text-white">Update Putaway Progress</CardTitle>
+            <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 bg-white/5 rounded-lg">
+          <div className="mb-4 p-3 bg-gray-100 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-transparent">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-gray-400">SKU</p>
-                <p className="text-white font-medium">{task.sku}</p>
+                <p className="text-gray-600 dark:text-gray-400">SKU</p>
+                <p className="text-gray-900 dark:text-white font-medium">{task.sku}</p>
               </div>
               <div>
-                <p className="text-gray-400">Target Bin</p>
-                <p className="text-white font-medium">{task.targetBinLocation}</p>
+                <p className="text-gray-600 dark:text-gray-400">Target Bin</p>
+                <p className="text-gray-900 dark:text-white font-medium">{task.targetBinLocation}</p>
               </div>
               <div>
-                <p className="text-gray-400">Current Progress</p>
-                <p className="text-white font-medium">
+                <p className="text-gray-600 dark:text-gray-400">Current Progress</p>
+                <p className="text-gray-900 dark:text-white font-medium">
                   {task.quantityPutaway} / {task.quantityToPutaway}
                 </p>
               </div>
               <div>
-                <p className="text-gray-400">Remaining</p>
-                <p className="text-white font-medium">{remaining}</p>
+                <p className="text-gray-600 dark:text-gray-400">Remaining</p>
+                <p className="text-gray-900 dark:text-white font-medium">{remaining}</p>
               </div>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Quantity Put Away
               </label>
               <input
@@ -1069,12 +1069,12 @@ function UpdatePutawayTaskModal({
                 max={task.quantityToPutaway}
                 value={formData.quantityPutaway}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 bg-gray-700 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                  errors.quantityPutaway ? 'border-red-500' : 'border-gray-600'
+                className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.quantityPutaway ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
               />
               {errors.quantityPutaway && (
-                <p className="mt-1 text-sm text-red-400">{errors.quantityPutaway}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.quantityPutaway}</p>
               )}
             </div>
 
@@ -1279,8 +1279,8 @@ function InwardsGoodsPage() {
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Inwards Goods</h1>
-            <p className="mt-2 text-gray-400">Manage receiving from ASN to putaway</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Inwards Goods</h1>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">Manage receiving from ASN to putaway</p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -1387,8 +1387,8 @@ function InwardsGoodsPage() {
                       />
                     ))}
                     {asns.length === 0 && (
-                      <div className="text-center py-8 text-gray-400">
-                        <TruckIcon className="h-12 w-12 mx-auto mb-2 text-gray-600" />
+                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                        <TruckIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
                         <p>No shipments yet</p>
                       </div>
                     )}
@@ -1446,8 +1446,8 @@ function InwardsGoodsPage() {
                       />
                     ))}
                     {putawayTasks.length === 0 && qcInspections.length === 0 && (
-                      <div className="text-center py-8 text-gray-400">
-                        <ClockIcon className="h-12 w-12 mx-auto mb-2 text-gray-600" />
+                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                        <ClockIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
                         <p>No active tasks</p>
                       </div>
                     )}
@@ -1463,20 +1463,20 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Advance Shipping Notices</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Advance Shipping Notices</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Track incoming shipments before arrival
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search ASNs..."
                     value={asnsSearchTerm}
                     onChange={e => setAsnsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
               </div>
@@ -1512,9 +1512,9 @@ function InwardsGoodsPage() {
                 {asns.length === 0 && (
                   <Card variant="glass">
                     <CardContent className="p-12 text-center">
-                      <TruckIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">No ASNs</h3>
-                      <p className="text-gray-400 mb-4">
+                      <TruckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No ASNs</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">
                         Create an ASN to track incoming shipments
                       </p>
                       <Button variant="primary" onClick={() => setAsnModalOpen(true)}>
@@ -1545,18 +1545,18 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Receiving Dock</h2>
-                <p className="text-gray-400 text-sm mt-1">Receive and verify incoming goods</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Receiving Dock</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Receive and verify incoming goods</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search receipts..."
                     value={receiptsSearchTerm}
                     onChange={e => setReceiptsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
               </div>
@@ -1594,9 +1594,9 @@ function InwardsGoodsPage() {
                 {receipts.length === 0 && (
                   <Card variant="glass">
                     <CardContent className="p-12 text-center">
-                      <InboxIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">No Receipts</h3>
-                      <p className="text-gray-400 mb-4">
+                      <InboxIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Receipts</h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">
                         Create a receipt to record incoming goods
                       </p>
                       <Button variant="primary" onClick={() => setReceiptModalOpen(true)}>
@@ -1627,20 +1627,20 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Quality Control</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quality Control</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Inspect received goods for quality compliance
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search inspections..."
                     value={qcSearchTerm}
                     onChange={e => setQcSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
               </div>
@@ -1694,9 +1694,9 @@ function InwardsGoodsPage() {
                 {qcInspections.length === 0 && (
                   <Card variant="glass" className="md:col-span-2 lg:col-span-3">
                     <CardContent className="p-12 text-center">
-                      <ClipboardDocumentCheckIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">No QC Inspections</h3>
-                      <p className="text-gray-400">QC inspections will appear after receiving</p>
+                      <ClipboardDocumentCheckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No QC Inspections</h3>
+                      <p className="text-gray-600 dark:text-gray-400">QC inspections will appear after receiving</p>
                     </CardContent>
                   </Card>
                 )}
@@ -1720,14 +1720,14 @@ function InwardsGoodsPage() {
         {currentStage === 'staging' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-white">Staging Areas</h2>
-              <p className="text-gray-400 text-sm mt-1">License plates and staging locations</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Staging Areas</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">License plates and staging locations</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Staging Locations */}
               <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Staging Locations</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Staging Locations</h3>
                 {isLoadingStaging ? (
                   <div className="space-y-3">
                     <Skeleton variant="rounded" className="h-24" />
@@ -1761,8 +1761,8 @@ function InwardsGoodsPage() {
                       />
                     ))}
                     {stagingLocations.length === 0 && (
-                      <div className="text-center py-8 text-gray-400">
-                        <CubeIcon className="h-12 w-12 mx-auto mb-2 text-gray-600" />
+                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                        <CubeIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
                         <p>No staging locations configured</p>
                       </div>
                     )}
@@ -1772,7 +1772,7 @@ function InwardsGoodsPage() {
 
               {/* License Plates */}
               <div>
-                <h3 className="text-lg font-semibold text-white mb-4">License Plates</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">License Plates</h3>
                 {isLoadingLicensePlates ? (
                   <div className="space-y-3">
                     <Skeleton variant="rounded" className="h-24" />
@@ -1812,8 +1812,8 @@ function InwardsGoodsPage() {
                       />
                     ))}
                     {licensePlates.length === 0 && (
-                      <div className="text-center py-8 text-gray-400">
-                        <TagIcon className="h-12 w-12 mx-auto mb-2 text-gray-600" />
+                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                        <TagIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
                         <p>No license plates created</p>
                       </div>
                     )}
@@ -1829,20 +1829,20 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Putaway Tasks</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Putaway Tasks</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Store received items in their bin locations
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search tasks..."
                     value={putawaySearchTerm}
                     onChange={e => setPutawaySearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
               </div>
@@ -1891,9 +1891,9 @@ function InwardsGoodsPage() {
                 {putawayTasks.length === 0 && (
                   <Card variant="glass" className="md:col-span-2 lg:col-span-3">
                     <CardContent className="p-12 text-center">
-                      <CubeIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">No Putaway Tasks</h3>
-                      <p className="text-gray-400">
+                      <CubeIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Putaway Tasks</h3>
+                      <p className="text-gray-600 dark:text-gray-400">
                         Putaway tasks will appear after receiving goods
                       </p>
                     </CardContent>
@@ -1920,20 +1920,20 @@ function InwardsGoodsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">Receiving Exceptions</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Receiving Exceptions</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                   Manage receiving discrepancies and exceptions
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search exceptions..."
                     value={exceptionsSearchTerm}
                     onChange={e => setExceptionsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
                   />
                 </div>
               </div>
@@ -1971,9 +1971,9 @@ function InwardsGoodsPage() {
                 {receivingExceptions.length === 0 && (
                   <Card variant="glass" className="md:col-span-2">
                     <CardContent className="p-12 text-center">
-                      <ExclamationTriangleIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-white mb-2">No Exceptions</h3>
-                      <p className="text-gray-400">No receiving exceptions to display</p>
+                      <ExclamationTriangleIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Exceptions</h3>
+                      <p className="text-gray-600 dark:text-gray-400">No receiving exceptions to display</p>
                     </CardContent>
                   </Card>
                 )}

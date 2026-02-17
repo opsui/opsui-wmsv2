@@ -121,16 +121,16 @@ function BinLocationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 my-8">
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 my-8">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {isEdit ? 'Edit Bin Location' : 'Create Bin Location'}
           </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Bin ID *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bin ID *</label>
             <input
               name="binId"
               type="text"
@@ -144,17 +144,17 @@ function BinLocationModal({
                   target: { ...e.target, value: upper },
                 } as React.ChangeEvent<HTMLInputElement>);
               }}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
-                errors.binId ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
+                errors.binId ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               placeholder="e.g., A-12-03"
             />
-            {errors.binId && <p className="mt-1 text-sm text-red-400">{errors.binId}</p>}
-            <p className="text-xs text-gray-500 mt-1">Format: Z-A-S (e.g., A-12-03)</p>
+            {errors.binId && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.binId}</p>}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Format: Z-A-S (e.g., A-12-03)</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Zone *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zone *</label>
             <input
               name="zone"
               type="text"
@@ -168,55 +168,55 @@ function BinLocationModal({
                   target: { ...e.target, value: upper },
                 } as React.ChangeEvent<HTMLInputElement>);
               }}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 ${
-                errors.zone ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                errors.zone ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               placeholder="e.g., A"
             />
-            {errors.zone && <p className="mt-1 text-sm text-red-400">{errors.zone}</p>}
+            {errors.zone && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.zone}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Aisle *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aisle *</label>
             <input
               name="aisle"
               type="text"
               required
               value={formData.aisle}
               onChange={handleChange}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 ${
-                errors.aisle ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                errors.aisle ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               placeholder="e.g., 12"
             />
-            {errors.aisle && <p className="mt-1 text-sm text-red-400">{errors.aisle}</p>}
+            {errors.aisle && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.aisle}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Shelf *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Shelf *</label>
             <input
               name="shelf"
               type="text"
               required
               value={formData.shelf}
               onChange={handleChange}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 ${
-                errors.shelf ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                errors.shelf ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
               placeholder="e.g., 03"
             />
-            {errors.shelf && <p className="mt-1 text-sm text-red-400">{errors.shelf}</p>}
+            {errors.shelf && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shelf}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Type *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type *</label>
             <select
               name="type"
               required
               value={formData.type}
               onChange={handleChange}
-              className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-white focus:ring-2 focus:ring-blue-500 ${
-                errors.type ? 'border-red-500' : 'border-gray-700'
+              className={`w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 ${
+                errors.type ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
             >
               <option value={BinType.SHELF}>Shelf</option>
@@ -224,7 +224,7 @@ function BinLocationModal({
               <option value={BinType.RACK}>Rack</option>
               <option value={BinType.BIN}>Bin</option>
             </select>
-            {errors.type && <p className="mt-1 text-sm text-red-400">{errors.type}</p>}
+            {errors.type && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type}</p>}
           </div>
 
           {isEdit && (
@@ -234,19 +234,19 @@ function BinLocationModal({
                 id="active"
                 checked={formData.active}
                 onChange={e => setFieldValue('active', e.target.checked)}
-                className="h-4 w-4 text-blue-600 rounded bg-gray-800 border-gray-700 focus:ring-blue-500"
+                className="h-4 w-4 text-blue-600 rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:ring-blue-500"
               />
-              <label htmlFor="active" className="ml-2 text-sm text-gray-300">
+              <label htmlFor="active" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Active
               </label>
             </div>
           )}
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -338,17 +338,17 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 my-8">
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">Batch Create Bin Locations</h2>
-          <p className="text-sm text-gray-400 mt-1">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full mx-4 my-8">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Batch Create Bin Locations</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Enter one bin ID per line (format: Z-A-S, e.g., A-12-03)
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Bin IDs (one per line)
             </label>
             <textarea
@@ -358,20 +358,20 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                 parseInput();
               }}
               rows={10}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-mono text-sm focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-blue-500"
               placeholder="A-01-01&#10;A-01-02&#10;A-01-03&#10;B-01-01&#10;..."
             />
           </div>
 
           {parsed.length > 0 && (
             <div>
-              <p className="text-sm text-gray-400 mb-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Parsed {parsed.length} location{parsed.length > 1 ? 's' : ''}:
               </p>
-              <div className="max-h-40 overflow-y-auto bg-gray-800 rounded-lg p-3">
+              <div className="max-h-40 overflow-y-auto bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
                 <div className="grid grid-cols-4 gap-2 text-xs font-mono">
                   {parsed.map((loc, i) => (
-                    <div key={i} className="text-green-400">
+                    <div key={i} className="text-green-600 dark:text-green-400">
                       {loc.binId}
                     </div>
                   ))}
@@ -380,11 +380,11 @@ function BatchCreateModal({ onClose, onSuccess }: { onClose: () => void; onSucce
             </div>
           )}
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -499,15 +499,15 @@ export function BinLocationsPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Bin Locations</h1>
-                <p className="text-gray-400 mt-1">Manage warehouse bin locations</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bin Locations</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Manage warehouse bin locations</p>
               </div>
             </div>
             {canManageLocations && (
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowBatchModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-gray-500"
                 >
                   <PlusIcon className="h-5 w-5" />
                   Batch Create
@@ -536,13 +536,13 @@ export function BinLocationsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                   placeholder="Search by ID, zone, aisle..."
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
                   >
                     <XMarkIcon className="h-5 w-5" />
                   </button>
@@ -553,7 +553,7 @@ export function BinLocationsPage() {
               <select
                 value={filterZone}
                 onChange={e => setFilterZone(e.target.value)}
-                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white"
               >
                 <option value="">All Zones</option>
                 {zones.map((zone: string) => (
@@ -567,7 +567,7 @@ export function BinLocationsPage() {
               <select
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
-                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white"
               >
                 <option value="">All Types</option>
                 <option value={BinType.SHELF}>Shelf</option>
@@ -583,7 +583,7 @@ export function BinLocationsPage() {
                   const val = e.target.value;
                   setFilterActive(val === '' ? undefined : val === 'true');
                 }}
-                className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white"
               >
                 <option value="">All Status</option>
                 <option value="true">Active</option>
@@ -598,7 +598,7 @@ export function BinLocationsPage() {
                     setFilterType('');
                     setFilterActive(undefined);
                   }}
-                  className="px-3 py-2 text-gray-400 hover:text-white"
+                  className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 >
                   Clear filters
                 </button>
@@ -609,31 +609,31 @@ export function BinLocationsPage() {
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="glass-card rounded-lg p-4">
-              <div className="text-sm text-gray-400">Total Locations</div>
-              <div className="text-2xl font-bold text-white">{locationsData?.total || 0}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Locations</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{locationsData?.total || 0}</div>
             </div>
             <div className="glass-card rounded-lg p-4">
-              <div className="text-sm text-gray-400">Active</div>
-              <div className="text-2xl font-bold text-green-400">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Active</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {locations.filter((l: BinLocation) => l.active).length}
               </div>
             </div>
             <div className="glass-card rounded-lg p-4">
-              <div className="text-sm text-gray-400">Inactive</div>
-              <div className="text-2xl font-bold text-gray-400">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Inactive</div>
+              <div className="text-2xl font-bold text-gray-500 dark:text-gray-400">
                 {locations.filter((l: BinLocation) => !l.active).length}
               </div>
             </div>
             <div className="glass-card rounded-lg p-4">
-              <div className="text-sm text-gray-400">Zones</div>
-              <div className="text-2xl font-bold text-blue-400">{zones.length}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Zones</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{zones.length}</div>
             </div>
           </div>
 
           {/* Locations by Zone */}
           {Object.keys(locationsByZone).length === 0 ? (
-            <div className="glass-card rounded-lg p-12 text-center">
-              <p className="text-gray-400">
+            <div className="glass-card rounded-lg p-12 text-center bg-gray-100/60 dark:bg-gray-800/60">
+              <p className="text-gray-700 dark:text-gray-300">
                 {searchQuery || filterZone || filterType || filterActive !== undefined
                   ? 'No locations match your filters'
                   : 'No bin locations found. Create your first location to get started.'}
@@ -643,65 +643,65 @@ export function BinLocationsPage() {
             <div className="space-y-6">
               {Object.entries(locationsByZone).map(([zone, zoneLocations]) => (
                 <div key={zone} className="glass-card rounded-lg">
-                  <div className="px-6 py-4 border-b border-gray-800">
-                    <h3 className="text-lg font-semibold text-white">Zone {zone}</h3>
-                    <p className="text-sm text-gray-400">
+                  <div className="px-6 py-4 border-b border-blue-500/30 bg-blue-500/20">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Zone {zone}</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-100">
                       {zoneLocations.length} location{zoneLocations.length > 1 ? 's' : ''}
                     </p>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-800">
-                      <thead className="bg-gray-900/50">
+                    <table className="min-w-full divide-y divide-blue-500/20">
+                      <thead className="bg-blue-500/20">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                             Bin ID
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                             Zone
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                             Aisle
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                             Shelf
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                             Type
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                             Status
                           </th>
                           {canManageLocations && (
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-right text-xs font-medium text-blue-800 dark:text-blue-100 uppercase">
                               Actions
                             </th>
                           )}
                         </tr>
                       </thead>
-                      <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                      <tbody className="bg-blue-500/10 divide-y divide-blue-500/20">
                         {zoneLocations.map((location: BinLocation) => (
-                          <tr key={location.binId} className="hover:bg-gray-800/50">
+                          <tr key={location.binId} className="hover:bg-blue-500/25">
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-white">{location.binId}</div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">{location.binId}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">{location.zone}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">{location.zone}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">{location.aisle}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">{location.aisle}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">{location.shelf}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">{location.shelf}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">{location.type}</div>
+                              <div className="text-sm text-gray-800 dark:text-white">{location.type}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span
                                 className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   location.active
-                                    ? 'bg-green-900/50 text-green-300'
-                                    : 'bg-gray-900/50 text-gray-300'
+                                    ? 'bg-green-600 dark:bg-green-700 text-green-100 dark:text-green-100'
+                                    : 'bg-gray-500 dark:bg-gray-700 text-gray-100 dark:text-gray-300'
                                 }`}
                               >
                                 {location.active ? 'Active' : 'Inactive'}
@@ -714,14 +714,14 @@ export function BinLocationsPage() {
                                     setSelectedLocation(location);
                                     setShowModal(true);
                                   }}
-                                  className="text-blue-400 hover:text-blue-300 mr-3"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mr-3"
                                   title="Edit"
                                 >
                                   <PencilIcon className="h-4 w-4 inline" />
                                 </button>
                                 <button
                                   onClick={() => handleDelete(location.binId)}
-                                  className="text-red-400 hover:text-red-300"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
                                   title="Delete"
                                 >
                                   <TrashIcon className="h-4 w-4 inline" />

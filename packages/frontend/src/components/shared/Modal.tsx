@@ -292,10 +292,10 @@ export function FormTextarea({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-300">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
         {required && (
-          <span className="text-error-400 ml-1" aria-hidden="true">
+          <span className="text-red-500 dark:text-error-400 ml-1" aria-hidden="true">
             *
           </span>
         )}
@@ -314,24 +314,24 @@ export function FormTextarea({
         aria-invalid={!!error}
         aria-describedby={cn(error && errorId, hint && hintId).trim() || undefined}
         className={cn(
-          'w-full px-4 py-3 md:py-2.5 bg-white/[0.05] border rounded-lg text-white placeholder-gray-500',
+          'w-full px-4 py-3 md:py-2.5 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-lg text-gray-900 dark:text-white placeholder-gray-400',
           // 16px minimum to prevent iOS zoom
           'text-base',
           'focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50',
           'transition-all duration-200 resize-none',
           error
-            ? 'border-error-500/50 focus:ring-error-500/50 focus:border-error-500/50'
-            : 'border-white/[0.08]',
+            ? 'border-red-500 dark:border-error-500/50 focus:ring-red-500/50 dark:focus:ring-error-500/50 focus:border-red-500 dark:focus:border-error-500/50'
+            : 'focus:border-primary-500/50',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       />
       {hint && !error && (
-        <p id={hintId} className="text-sm text-gray-500">
+        <p id={hintId} className="text-sm text-gray-500 dark:text-gray-400">
           {hint}
         </p>
       )}
       {error && (
-        <p id={errorId} className="text-sm text-error-400" role="alert" aria-live="polite">
+        <p id={errorId} className="text-sm text-red-500 dark:text-error-400" role="alert" aria-live="polite">
           {error}
         </p>
       )}

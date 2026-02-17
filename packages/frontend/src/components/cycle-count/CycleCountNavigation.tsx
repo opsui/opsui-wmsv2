@@ -61,23 +61,22 @@ export function CycleCountNavigation({ activePage, onLocalTabChange }: CycleCoun
     // For local tabs (counts/analytics on same page), use callback if provided
     if (onLocalTabChange && (page === 'counts' || page === 'analytics')) {
       onLocalTabChange(page as 'counts' | 'analytics');
-      return;
-    }
-
-    // Otherwise navigate to the page
-    switch (page) {
-      case 'counts':
-        navigate('/cycle-counting');
-        break;
-      case 'analytics':
-        navigate('/cycle-counting?tab=analytics');
-        break;
-      case 'root-cause':
-        navigate('/cycle-counting/root-cause');
-        break;
-      case 'schedules':
-        navigate('/cycle-counting/schedules');
-        break;
+    } else {
+      // Otherwise navigate to the page
+      switch (page) {
+        case 'counts':
+          navigate('/cycle-counting');
+          break;
+        case 'analytics':
+          navigate('/cycle-counting?tab=analytics');
+          break;
+        case 'root-cause':
+          navigate('/cycle-counting/root-cause');
+          break;
+        case 'schedules':
+          navigate('/cycle-counting/schedules');
+          break;
+      }
     }
   };
 

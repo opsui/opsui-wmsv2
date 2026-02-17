@@ -311,19 +311,33 @@ function MobileMenu({
                   <div className="space-y-1">
                     {group.items.map(item => {
                       const ItemIcon = item.icon;
-                      // Check if this item is active (matches pathname, and query params if specified)
-                      const itemUrl = new URL(item.path, 'http://dummy');
-                      let isActive = itemUrl.pathname === currentPath;
-                      // If item has query params, verify they match
-                      if (isActive && itemUrl.search) {
-                        const currentUrl = new URL(currentPath + currentSearch, 'http://dummy');
-                        const itemParams = new URLSearchParams(itemUrl.search);
-                        const currentParams = new URLSearchParams(currentUrl.search);
-                        for (const [key, value] of itemParams.entries()) {
-                          if (currentParams.get(key) !== value) {
-                            isActive = false;
-                            break;
+                      // Check if this item is active - EXACT path match only
+                      const itemPathname = item.path.split('?')[0];
+                      let isActive = itemPathname === currentPath;
+
+                      // If there are query params, verify they match exactly
+                      if (isActive) {
+                        const itemQuery = item.path.includes('?') ? item.path.split('?')[1] : '';
+                        if (itemQuery) {
+                          const itemParams = new URLSearchParams(itemQuery);
+                          const currentParams = new URLSearchParams(currentSearch);
+                          // All item params must match
+                          for (const [key, value] of itemParams.entries()) {
+                            if (currentParams.get(key) !== value) {
+                              isActive = false;
+                              break;
+                            }
                           }
+                          // No extra params allowed
+                          for (const [key] of currentParams.entries()) {
+                            if (!itemParams.has(key)) {
+                              isActive = false;
+                              break;
+                            }
+                          }
+                        } else if (currentSearch) {
+                          // Item has no query params but current URL does
+                          isActive = false;
                         }
                       }
                       return (
@@ -428,19 +442,33 @@ const NavDropdown = memo(function NavDropdown({
   const navigate = useNavigate();
 
   // Helper to check if a nav item is active
-  // Matches if: pathname matches AND (item has no query params OR item's query params are present in current URL)
+  // Matches ONLY exact path - no parent/child relationship matching
   const isItemActive = (itemPath: string): boolean => {
-    const itemUrl = new URL(itemPath, 'http://dummy');
-    if (itemUrl.pathname !== currentPath) return false;
-    // If item has no query params, just match pathname
-    if (!itemUrl.search) return true;
-    // If item has query params, check if they're present in current URL
-    const currentUrl = new URL(currentPath + currentSearch, 'http://dummy');
-    const itemParams = new URLSearchParams(itemUrl.search);
-    const currentParams = new URLSearchParams(currentUrl.search);
+    // Direct string comparison for pathnames - no URL parsing ambiguity
+    const itemPathname = itemPath.split('?')[0];
+    const currentPathname = currentPath;
+
+    // Parent paths MUST NOT match child paths
+    // /accounting does NOT match /accounting/chart-of-accounts
+    if (itemPathname !== currentPathname) return false;
+
+    // Handle query params if present
+    const itemQuery = itemPath.includes('?') ? itemPath.split('?')[1] : '';
+    if (!itemQuery) return true;
+
+    // Parse and compare query parameters
+    const itemParams = new URLSearchParams(itemQuery);
+    const currentParams = new URLSearchParams(currentSearch);
+
+    // All item params must match
     for (const [key, value] of itemParams.entries()) {
       if (currentParams.get(key) !== value) return false;
     }
+    // No extra params allowed
+    for (const [key] of currentParams.entries()) {
+      if (!itemParams.has(key)) return false;
+    }
+
     return true;
   };
 
@@ -458,7 +486,7 @@ const NavDropdown = memo(function NavDropdown({
     // Quick close when leaving to prevent overlap with other dropdowns
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-    }, 50);
+    }, 25);
   };
 
   const handleItemClick = (item: { path: string; requiredRole?: UserRole }) => {
@@ -773,7 +801,7 @@ function NotificationPanel() {
     // Delay before closing to allow mouse to reach the dropdown
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-    }, 150);
+    }, 50);
   };
 
   return (
@@ -1028,10 +1056,10 @@ function RoleViewDropdown({ userName, userEmail, availableViews }: RoleViewDropd
   };
 
   const handleMouseLeave = () => {
-    // 150ms delay before closing to allow mouse to move to dropdown content
+    // Short delay before closing to allow mouse to move to dropdown content
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-    }, 150);
+    }, 50);
   };
 
   // Filter role views based on visibility settings

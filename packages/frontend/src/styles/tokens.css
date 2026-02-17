@@ -414,11 +414,11 @@ html.dark {
 
 /* Glass card with theme support */
 .glass-card {
-  @apply bg-blue-50/80 dark:bg-blue-900/40 backdrop-blur-md border border-blue-200/50 dark:border-blue-500/40 transition-all duration-300;
+  @apply bg-blue-50/80 dark:bg-blue-500/25 backdrop-blur-md border border-blue-200/50 dark:border-blue-400/50 transition-all duration-300;
 }
 
 .glass-card:hover {
-  @apply shadow-blue-500/30 shadow-lg;
+  @apply dark:bg-blue-500/35 dark:shadow-blue-500/30 shadow-lg;
 }
 
 /* Table styling with theme support */

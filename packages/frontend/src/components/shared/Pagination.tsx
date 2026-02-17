@@ -92,20 +92,20 @@ export function Pagination({
     <div className={cn('flex flex-col sm:flex-row items-center justify-between gap-4', className)}>
       {/* Page info and size selector */}
       <div className="flex items-center gap-4 text-sm">
-        <span className="text-gray-400">
+        <span className="text-gray-600 dark:text-gray-400">
           Showing {startItem}-{endItem} of {totalItems}
         </span>
 
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <label htmlFor="page-size" className="text-gray-400">
+            <label htmlFor="page-size" className="text-gray-600 dark:text-gray-400">
               Per page:
             </label>
             <select
               id="page-size"
               value={pageSize}
               onChange={e => onPageSizeChange(Number(e.target.value))}
-              className="px-3 py-1.5 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-white focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.08] transition-all duration-300 [&_option]:bg-gray-900 [&_option]:text-gray-100 [&_option]:cursor-pointer"
+              className="px-3 py-1.5 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500/50 focus:bg-gray-50 dark:focus:bg-white/[0.08] transition-all duration-300 [&_option]:bg-white [&_option]:text-gray-900 dark:[&_option]:bg-gray-900 dark:[&_option]:text-gray-100 [&_option]:cursor-pointer"
             >
               {pageSizeOptions.map(size => (
                 <option key={size} value={size}>
@@ -128,8 +128,8 @@ export function Pagination({
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
             'disabled:pointer-events-none disabled:opacity-50',
             currentPage === 1
-              ? 'bg-white/[0.03] text-gray-500 cursor-not-allowed'
-              : 'bg-white/[0.05] text-gray-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+              ? 'bg-gray-100 dark:bg-white/[0.03] text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              : 'bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-white/[0.08]'
           )}
           aria-label="Previous page"
         >
@@ -149,7 +149,7 @@ export function Pagination({
             page === -1 ? (
               <span
                 key={`ellipsis-${idx}`}
-                className="w-9 h-9 flex items-center justify-center text-gray-500"
+                className="w-9 h-9 flex items-center justify-center text-gray-500 dark:text-gray-500"
               >
                 ...
               </span>
@@ -162,7 +162,7 @@ export function Pagination({
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
                   page === currentPage
                     ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25'
-                    : 'bg-white/[0.05] text-gray-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+                    : 'bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-white/[0.08]'
                 )}
                 aria-label={`Page ${page}`}
                 aria-current={page === currentPage ? 'page' : undefined}
@@ -174,7 +174,7 @@ export function Pagination({
         </div>
 
         {/* Mobile: Current page / Total */}
-        <div className="sm:hidden px-3 py-1.5 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-gray-400">
+        <div className="sm:hidden px-3 py-1.5 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-lg text-sm text-gray-600 dark:text-gray-400">
           {currentPage} / {totalPages}
         </div>
 
@@ -187,8 +187,8 @@ export function Pagination({
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
             'disabled:pointer-events-none disabled:opacity-50',
             currentPage === totalPages
-              ? 'bg-white/[0.03] text-gray-500 cursor-not-allowed'
-              : 'bg-white/[0.05] text-gray-400 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]'
+              ? 'bg-gray-100 dark:bg-white/[0.03] text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              : 'bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-white/[0.08]'
           )}
           aria-label="Next page"
         >

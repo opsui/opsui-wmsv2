@@ -62,7 +62,7 @@ function CapacityBar({
 
   return (
     <div className="relative">
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-300 dark:bg-gray-200 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${
             isCritical ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-green-500'
@@ -70,7 +70,7 @@ function CapacityBar({
           style={{ width: `${Math.min(percent, 100)}%` }}
         />
       </div>
-      <div className="flex justify-between mt-1 text-xs text-gray-500">
+      <div className="flex justify-between mt-1 text-xs text-gray-600 dark:text-gray-500">
         <span>
           {utilization.toFixed(1)} / {maximum} {utilization > maximum ? '⚠' : ''}
         </span>
@@ -186,7 +186,7 @@ function CapacityRuleModal({
           <button
             type="button"
             onClick={handleModalClose}
-            className="px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             disabled={isSubmitting}
           >
             Cancel
@@ -362,9 +362,9 @@ function CapacityRuleModal({
               checked={values.allowOverfill}
               onChange={handleChange}
               name="allowOverfill"
-              className="h-4 w-4 text-blue-600 rounded bg-gray-800 border-gray-700 focus:ring-blue-500"
+              className="h-4 w-4 text-blue-600 rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:ring-blue-500"
             />
-            <label htmlFor="allowOverfill" className="ml-2 text-sm text-gray-300">
+            <label htmlFor="allowOverfill" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
               Allow Overfill
             </label>
           </div>
@@ -533,8 +533,8 @@ export function LocationCapacityPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Location Capacity</h1>
-                <p className="text-gray-400 mt-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Location Capacity</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Monitor and manage bin location capacity constraints
                 </p>
               </div>
@@ -555,14 +555,14 @@ export function LocationCapacityPage() {
 
           {/* Tabs */}
           <div className="glass-card rounded-lg">
-            <div className="border-b border-gray-800">
+            <div className="border-b border-gray-300 dark:border-gray-800">
               <nav className="flex -mb-px">
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`px-6 py-4 border-b-2 font-medium text-sm ${
                     activeTab === 'overview'
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-700'
                   }`}
                 >
                   <CubeIcon className="h-5 w-5 inline mr-2" />
@@ -572,8 +572,8 @@ export function LocationCapacityPage() {
                   onClick={() => setActiveTab('rules')}
                   className={`px-6 py-4 border-b-2 font-medium text-sm ${
                     activeTab === 'rules'
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-700'
                   }`}
                 >
                   Rules
@@ -582,8 +582,8 @@ export function LocationCapacityPage() {
                   onClick={() => setActiveTab('alerts')}
                   className={`px-6 py-4 border-b-2 font-medium text-sm ${
                     activeTab === 'alerts'
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-400 dark:hover:border-gray-700'
                   }`}
                 >
                   Alerts
@@ -607,33 +607,33 @@ export function LocationCapacityPage() {
                   <>
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                      <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-4">
-                        <div className="text-sm text-blue-300 font-medium">Total Locations</div>
-                        <div className="text-2xl font-bold text-blue-100 mt-1">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-800 rounded-lg p-4">
+                        <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">Total Locations</div>
+                        <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">
                           {capacities.length}
                         </div>
                       </div>
-                      <div className="bg-green-900/30 border border-green-800 rounded-lg p-4">
-                        <div className="text-sm text-green-300 font-medium">Total Capacity</div>
-                        <div className="text-2xl font-bold text-green-100 mt-1">
+                      <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800 rounded-lg p-4">
+                        <div className="text-sm text-green-700 dark:text-green-300 font-medium">Total Capacity</div>
+                        <div className="text-2xl font-bold text-green-900 dark:text-green-100 mt-1">
                           {totalCapacity.toFixed(0)}
                         </div>
                       </div>
-                      <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
-                        <div className="text-sm text-yellow-300 font-medium">Utilization</div>
-                        <div className="text-2xl font-bold text-yellow-100 mt-1">
+                      <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
+                        <div className="text-sm text-yellow-700 dark:text-yellow-300 font-medium">Utilization</div>
+                        <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mt-1">
                           {overallUtilization.toFixed(1)}%
                         </div>
                       </div>
-                      <div className="bg-red-900/30 border border-red-800 rounded-lg p-4">
-                        <div className="text-sm text-red-300 font-medium">Active Alerts</div>
-                        <div className="text-2xl font-bold text-red-100 mt-1">{alerts.length}</div>
+                      <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg p-4">
+                        <div className="text-sm text-red-700 dark:text-red-300 font-medium">Active Alerts</div>
+                        <div className="text-2xl font-bold text-red-900 dark:text-red-100 mt-1">{alerts.length}</div>
                       </div>
                     </div>
 
                     {/* Overall Utilization Bar */}
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-white mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                         Overall Capacity Utilization
                       </h3>
                       <CapacityBar
@@ -646,7 +646,7 @@ export function LocationCapacityPage() {
                     {/* Capacities by Location */}
                     <div>
                       <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-lg font-semibold text-white">Location Capacities</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Location Capacities</h3>
                         <div className="flex gap-2">
                           <div className="relative">
                             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -658,25 +658,25 @@ export function LocationCapacityPage() {
                                 setCurrentPage(1);
                               }}
                               placeholder="Search locations..."
-                              className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
                           </div>
                           <select
                             value={filterType}
                             onChange={e => setFilterType(e.target.value)}
-                            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white"
+                            className="px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white"
                           >
                             <option value="">All Types</option>
                             <option value={CapacityType.QUANTITY}>Quantity</option>
                             <option value={CapacityType.WEIGHT}>Weight</option>
                             <option value={CapacityType.VOLUME}>Volume</option>
                           </select>
-                          <label className="flex items-center gap-2 text-sm text-gray-300">
+                          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                             <input
                               type="checkbox"
                               checked={showAlertsOnly}
                               onChange={e => setShowAlertsOnly(e.target.checked)}
-                              className="rounded bg-gray-800 border-gray-700"
+                              className="rounded bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                             />
                             Alerts Only
                           </label>
@@ -684,43 +684,43 @@ export function LocationCapacityPage() {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-800">
-                          <thead className="bg-gray-900/50">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                          <thead className="bg-gray-100 dark:bg-gray-900/50">
                             <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                                 Location
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                                 Type
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                                 Utilization
                               </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                                 Status
                               </th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                                 Actions
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                          <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                             {paginatedCapacities.length === 0 ? (
                               <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                <td colSpan={5} className="px-6 py-12 text-center text-gray-600 dark:text-gray-400">
                                   No location capacities found.
                                 </td>
                               </tr>
                             ) : (
                               paginatedCapacities.map((capacity: any) => (
-                                <tr key={capacity.capacityId} className="hover:bg-gray-800/50">
+                                <tr key={capacity.capacityId} className="hover:bg-gray-100 dark:hover:bg-gray-800/50">
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-white">
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
                                       {capacity.binLocation}
                                     </div>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-white">
+                                    <div className="text-sm text-gray-800 dark:text-white">
                                       {capacity.capacityType}
                                     </div>
                                   </td>
@@ -737,10 +737,10 @@ export function LocationCapacityPage() {
                                     <span
                                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                                         capacity.status === CapacityRuleStatus.EXCEEDED
-                                          ? 'bg-red-900/50 text-red-300'
+                                          ? 'bg-red-200 dark:bg-red-900/50 text-red-800 dark:text-red-300'
                                           : capacity.status === CapacityRuleStatus.WARNING
-                                            ? 'bg-yellow-900/50 text-yellow-300'
-                                            : 'bg-green-900/50 text-green-300'
+                                            ? 'bg-yellow-200 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300'
+                                            : 'bg-green-200 dark:bg-green-900/50 text-green-800 dark:text-green-300'
                                       }`}
                                     >
                                       {capacity.status}
@@ -749,7 +749,7 @@ export function LocationCapacityPage() {
                                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                     <button
                                       onClick={() => handleRecalculate(capacity.binLocation)}
-                                      className="text-blue-400 hover:text-blue-300 mr-3"
+                                      className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mr-3"
                                       title="Recalculate"
                                       disabled={recalculateMutation.isPending}
                                     >
@@ -801,41 +801,41 @@ export function LocationCapacityPage() {
                             setRulesPage(1);
                           }}
                           placeholder="Search rules..."
-                          className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-800">
-                        <thead className="bg-gray-900/50">
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                        <thead className="bg-gray-100 dark:bg-gray-900/50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Rule Name
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Type
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Applies To
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Max Capacity
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Warning %
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Priority
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
                               Actions
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-gray-900/30 divide-y divide-gray-800">
+                        <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                           {paginatedRules.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                              <td colSpan={7} className="px-6 py-12 text-center text-gray-600 dark:text-gray-400">
                                 {searchTerm
                                   ? 'No rules match your search.'
                                   : 'No capacity rules configured. Create a rule to get started.'}
@@ -843,21 +843,21 @@ export function LocationCapacityPage() {
                             </tr>
                           ) : (
                             paginatedRules.map((rule: any) => (
-                              <tr key={rule.ruleId} className="hover:bg-gray-800/50">
+                              <tr key={rule.ruleId} className="hover:bg-gray-100 dark:hover:bg-gray-800/50">
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-white">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white">
                                     {rule.ruleName}
                                   </div>
                                   {rule.description && (
-                                    <div className="text-xs text-gray-400">{rule.description}</div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">{rule.description}</div>
                                   )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-white">{rule.capacityType}</div>
-                                  <div className="text-xs text-gray-400">{rule.capacityUnit}</div>
+                                  <div className="text-sm text-gray-800 dark:text-white">{rule.capacityType}</div>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">{rule.capacityUnit}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-white">
+                                  <div className="text-sm text-gray-800 dark:text-white">
                                     {rule.appliesTo === 'ALL' && 'All Locations'}
                                     {rule.appliesTo === 'ZONE' && `Zone: ${rule.zone}`}
                                     {rule.appliesTo === 'LOCATION_TYPE' &&
@@ -866,13 +866,13 @@ export function LocationCapacityPage() {
                                       `Location: ${rule.specificLocation}`}
                                   </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-white">
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-800 dark:text-white">
                                   {rule.maximumCapacity}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-white">
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-800 dark:text-white">
                                   {rule.warningThreshold}%
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-white">
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-800 dark:text-white">
                                   {rule.priority}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -883,13 +883,13 @@ export function LocationCapacityPage() {
                                           setSelectedRule(rule);
                                           setShowRuleModal(true);
                                         }}
-                                        className="text-blue-400 hover:text-blue-300 mr-3"
+                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 mr-3"
                                       >
                                         <PencilIcon className="h-4 w-4 inline" />
                                       </button>
                                       <button
                                         onClick={() => handleDeleteRule(rule.ruleId)}
-                                        className="text-red-400 hover:text-red-300"
+                                        className="text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
                                       >
                                         <TrashIcon className="h-4 w-4 inline" />
                                       </button>
@@ -927,8 +927,8 @@ export function LocationCapacityPage() {
                   </div>
                 ) : paginatedAlerts.length === 0 ? (
                   <div className="text-center py-12">
-                    <CheckIcon className="h-12 w-12 mx-auto mb-4 text-green-600" />
-                    <p className="text-gray-400">
+                    <CheckIcon className="h-12 w-12 mx-auto mb-4 text-green-600 dark:text-green-600" />
+                    <p className="text-gray-600 dark:text-gray-400">
                       {searchTerm ? 'No alerts match your search.' : 'No active capacity alerts'}
                     </p>
                   </div>
@@ -945,7 +945,7 @@ export function LocationCapacityPage() {
                             setAlertsPage(1);
                           }}
                           placeholder="Search alerts..."
-                          className="pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full max-w-md"
+                          className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full max-w-md"
                         />
                       </div>
                     </div>
@@ -955,8 +955,8 @@ export function LocationCapacityPage() {
                           key={alert.alertId}
                           className={`border rounded-lg p-4 ${
                             alert.alertType === 'EXCEEDED' || alert.alertType === 'CRITICAL'
-                              ? 'border-red-900 bg-red-900/20'
-                              : 'border-yellow-900 bg-yellow-900/20'
+                              ? 'border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-900/20'
+                              : 'border-yellow-300 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/20'
                           }`}
                         >
                           <div className="flex items-start justify-between">
@@ -964,24 +964,24 @@ export function LocationCapacityPage() {
                               <ExclamationTriangleIcon
                                 className={`h-6 w-6 mr-3 ${
                                   alert.alertType === 'EXCEEDED' || alert.alertType === 'CRITICAL'
-                                    ? 'text-red-400'
-                                    : 'text-yellow-400'
+                                    ? 'text-red-600 dark:text-red-400'
+                                    : 'text-yellow-600 dark:text-yellow-400'
                                 }`}
                               />
                               <div>
                                 <h4
                                   className={`font-semibold ${
                                     alert.alertType === 'EXCEEDED' || alert.alertType === 'CRITICAL'
-                                      ? 'text-red-200'
-                                      : 'text-yellow-200'
+                                      ? 'text-red-900 dark:text-red-200'
+                                      : 'text-yellow-900 dark:text-yellow-200'
                                   }`}
                                 >
                                   {alert.binLocation} - {alert.capacityType} Capacity{' '}
                                   {alert.alertType}
                                 </h4>
-                                <p className="text-sm mt-1 text-gray-300">{alert.alertMessage}</p>
-                                <div className="text-sm mt-2 text-gray-300">
-                                  <span className="font-medium text-white">Current: </span>
+                                <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">{alert.alertMessage}</p>
+                                <div className="text-sm mt-2 text-gray-700 dark:text-gray-300">
+                                  <span className="font-medium text-gray-900 dark:text-white">Current: </span>
                                   {alert.currentUtilization.toFixed(1)} / {alert.maximumCapacity} (
                                   {alert.utilizationPercent.toFixed(1)}%)
                                 </div>
@@ -990,7 +990,7 @@ export function LocationCapacityPage() {
                             <button
                               onClick={() => handleAcknowledgeAlert(alert.alertId)}
                               disabled={acknowledgeMutation.isPending}
-                              className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:bg-gray-700 disabled:opacity-50"
+                              className="px-3 py-1 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 disabled:opacity-50"
                             >
                               {acknowledgeMutation.isPending ? 'Acknowledging...' : 'Acknowledge'}
                             </button>

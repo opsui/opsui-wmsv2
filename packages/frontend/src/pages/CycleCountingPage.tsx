@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useCycleCountPlans,
   useCreateCycleCountPlan,
@@ -560,12 +560,33 @@ export function CycleCountingPage() {
   const { showToast: _showToast } = useToast();
   const { user, getEffectiveRole } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<CycleCountStatus | ''>('');
-  const [activeTab, setActiveTab] = useState<'counts' | 'analytics' | 'schedules'>('counts');
+  const [activeTab, setActiveTab] = useState<'counts' | 'analytics'>('counts');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Sync activeTab with URL query param
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'analytics') {
+      setActiveTab('analytics');
+    } else {
+      setActiveTab('counts');
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: 'counts' | 'analytics') => {
+    setActiveTab(tab);
+    if (tab === 'analytics') {
+      navigate('/cycle-counting?tab=analytics', { replace: true });
+    } else {
+      navigate('/cycle-counting', { replace: true });
+    }
+  };
 
   const {
     data: plansData,
@@ -647,8 +668,8 @@ export function CycleCountingPage() {
             </div>
             <div className="flex items-center gap-3">
               <CycleCountNavigation
-                activePage={activeTab === 'analytics' ? 'analytics' : 'counts'}
-                onLocalTabChange={tab => setActiveTab(tab)}
+                activePage={activeTab}
+                onLocalTabChange={handleTabChange}
               />
               <button
                 onClick={() => setShowCreateModal(true)}
