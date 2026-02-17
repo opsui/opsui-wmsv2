@@ -223,7 +223,9 @@ function FixedAssetsPage() {
             <div className="grid grid-cols-4 gap-6">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Assets</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{mockAssets.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {mockAssets.length}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Original Cost</p>

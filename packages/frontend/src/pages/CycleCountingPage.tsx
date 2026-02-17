@@ -667,10 +667,7 @@ export function CycleCountingPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <CycleCountNavigation
-                activePage={activeTab}
-                onLocalTabChange={handleTabChange}
-              />
+              <CycleCountNavigation activePage={activeTab} onLocalTabChange={handleTabChange} />
               <button
                 onClick={() => setShowCreateModal(true)}
                 disabled={!canCreatePlan || activeTab !== 'counts'}

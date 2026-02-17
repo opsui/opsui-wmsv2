@@ -55,10 +55,13 @@ type ReturnStatus = ReturnAuthorization['status'];
 function InspectionStatusBadge({ status }: { status: InspectionStatus }) {
   const styles: Record<InspectionStatus, string> = {
     [InspectionStatus.PENDING]: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
-    [InspectionStatus.IN_PROGRESS]: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-    [InspectionStatus.PASSED]: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    [InspectionStatus.IN_PROGRESS]:
+      'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+    [InspectionStatus.PASSED]:
+      'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
     [InspectionStatus.FAILED]: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    [InspectionStatus.CONDITIONAL_PASSED]: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+    [InspectionStatus.CONDITIONAL_PASSED]:
+      'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
     [InspectionStatus.CANCELLED]: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
   };
 
@@ -229,7 +232,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 <option value={InspectionType.EXPIRATION}>Expiration</option>
               </select>
               {errors.inspectionType && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.inspectionType}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.inspectionType}
+                </p>
               )}
             </div>
 
@@ -253,12 +258,16 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 <option value="RETURN">Return</option>
               </select>
               {errors.referenceType && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.referenceType}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.referenceType}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reference ID *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Reference ID *
+              </label>
               <input
                 type="text"
                 name="referenceId"
@@ -276,7 +285,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SKU *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                SKU *
+              </label>
               <input
                 type="text"
                 name="sku"
@@ -288,7 +299,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
                 placeholder="Enter SKU"
               />
-              {errors.sku && <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.sku}</p>}
+              {errors.sku && (
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.sku}</p>
+              )}
             </div>
 
             <div>
@@ -303,16 +316,22 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
                 value={formData.quantityInspected}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.quantityInspected ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  errors.quantityInspected
+                    ? 'border-red-500'
+                    : 'border-gray-300 dark:border-gray-600'
                 } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
               />
               {errors.quantityInspected && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.quantityInspected}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.quantityInspected}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Location
+              </label>
               <input
                 type="text"
                 name="location"
@@ -324,7 +343,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lot Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Lot Number
+              </label>
               <input
                 type="text"
                 name="lotNumber"
@@ -337,7 +358,9 @@ function InspectionModal({ inspection, onClose, onSuccess }: InspectionModalProp
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Notes
+            </label>
             <textarea
               rows={3}
               name="notes"
@@ -521,7 +544,9 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Description
+            </label>
             <textarea
               rows={2}
               value={formData.description}
@@ -533,7 +558,9 @@ function ChecklistModal({ checklist, onClose, onSuccess }: ChecklistModalProps) 
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Checklist Items</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Checklist Items
+              </label>
               <button
                 type="button"
                 onClick={handleAddItem}
@@ -730,7 +757,8 @@ export function QualityControlPage() {
       inspectorId: 'user-003',
       createdAt: '2024-01-18T11:15:00Z',
       updatedAt: '2024-01-18T12:30:00Z',
-      notes: 'Passed with conditions. Minor cosmetic defects on 5% of items approved for discount sale.',
+      notes:
+        'Passed with conditions. Minor cosmetic defects on 5% of items approved for discount sale.',
     },
     {
       inspectionId: 'QI-2024-005',
@@ -1601,7 +1629,9 @@ export function QualityControlPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quality Control</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Quality Control
+                </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Manage inspections, checklists, and returns
                 </p>
@@ -1671,7 +1701,9 @@ export function QualityControlPage() {
               {/* Filter and Search */}
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Filter by Status:
+                  </label>
                   <select
                     value={inspectionFilter}
                     onChange={e => setInspectionFilter(e.target.value)}
@@ -1725,7 +1757,10 @@ export function QualityControlPage() {
                   <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                     {paginatedInspections.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <td
+                          colSpan={6}
+                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
                           {searchedInspections.length === 0
                             ? 'No inspections found'
                             : 'No inspections on this page'}
@@ -1733,7 +1768,10 @@ export function QualityControlPage() {
                       </tr>
                     ) : (
                       paginatedInspections.map((inspection: QualityInspection) => (
-                        <tr key={inspection.inspectionId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <tr
+                          key={inspection.inspectionId}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             {inspection.inspectionId}
                           </td>
@@ -1823,7 +1861,10 @@ export function QualityControlPage() {
                   <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                     {paginatedChecklists.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <td
+                          colSpan={5}
+                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
                           {searchedChecklists.length === 0
                             ? 'No checklists found'
                             : 'No checklists on this page'}
@@ -1831,7 +1872,10 @@ export function QualityControlPage() {
                       </tr>
                     ) : (
                       paginatedChecklists.map((checklist: InspectionChecklist) => (
-                        <tr key={checklist.checklistId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <tr
+                          key={checklist.checklistId}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             {checklist.checklistId}
                           </td>
@@ -1882,7 +1926,9 @@ export function QualityControlPage() {
               {/* Filter and Search */}
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center space-x-4">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Filter by Status:
+                  </label>
                   <select
                     value={returnFilter}
                     onChange={e => setReturnFilter(e.target.value)}
@@ -1941,7 +1987,10 @@ export function QualityControlPage() {
                   <tbody className="bg-white dark:bg-gray-900/30 divide-y divide-gray-200 dark:divide-gray-800">
                     {paginatedReturns.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <td
+                          colSpan={7}
+                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
                           {searchedReturns.length === 0
                             ? 'No returns found'
                             : 'No returns on this page'}
@@ -1949,7 +1998,10 @@ export function QualityControlPage() {
                       </tr>
                     ) : (
                       paginatedReturns.map((returnAuth: ReturnAuthorization) => (
-                        <tr key={returnAuth.returnId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <tr
+                          key={returnAuth.returnId}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                             {returnAuth.returnId}
                           </td>

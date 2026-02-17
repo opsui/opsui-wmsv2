@@ -295,7 +295,9 @@ function BudgetingPage() {
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Budgeting & Forecasting
                 </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Manage budgets and analyze variances</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Manage budgets and analyze variances
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -323,7 +325,10 @@ function BudgetingPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <label htmlFor="budget-select" className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                <label
+                  htmlFor="budget-select"
+                  className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                >
                   Select Budget
                 </label>
                 <select
@@ -378,7 +383,9 @@ function BudgetingPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Under/Over Budget</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Under/Over Budget
+                    </p>
                     <p
                       className={`text-2xl font-bold ${
                         mockBudgetLines.reduce((sum, l) => sum + l.variance, 0) >= 0
@@ -430,7 +437,10 @@ function BudgetingPage() {
                     </thead>
                     <tbody>
                       {mockBudgetLines.map((line, index) => (
-                        <tr key={index} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-white/[0.02]">
+                        <tr
+                          key={index}
+                          className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-white/[0.02]"
+                        >
                           <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
                             {line.accountName}
                           </td>
@@ -445,7 +455,9 @@ function BudgetingPage() {
                           </td>
                           <td
                             className={`py-3 px-4 text-sm text-right font-medium ${
-                              line.variance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                              line.variance >= 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-rose-600 dark:text-rose-400'
                             }`}
                           >
                             {line.variance >= 0 ? '+' : ''}
@@ -453,7 +465,9 @@ function BudgetingPage() {
                           </td>
                           <td
                             className={`py-3 px-4 text-sm text-right ${
-                              line.variancePercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                              line.variancePercent >= 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-rose-600 dark:text-rose-400'
                             }`}
                           >
                             {line.variancePercent >= 0 ? '+' : ''}
@@ -464,17 +478,23 @@ function BudgetingPage() {
                               {Math.abs(line.variancePercent) <= 5 ? (
                                 <div className="flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-500/20 rounded-full">
                                   <ArrowTrendingUpIcon className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                                  <span className="text-xs text-emerald-600 dark:text-emerald-400">On Track</span>
+                                  <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                                    On Track
+                                  </span>
                                 </div>
                               ) : Math.abs(line.variancePercent) <= 10 ? (
                                 <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-500/20 rounded-full">
                                   <ArrowTrendingDownIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                                  <span className="text-xs text-amber-600 dark:text-amber-400">Watch</span>
+                                  <span className="text-xs text-amber-600 dark:text-amber-400">
+                                    Watch
+                                  </span>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-1 px-2 py-1 bg-rose-100 dark:bg-rose-500/20 rounded-full">
                                   <ArrowTrendingDownIcon className="h-3 w-3 text-rose-600 dark:text-rose-400" />
-                                  <span className="text-xs text-rose-600 dark:text-rose-400">Alert</span>
+                                  <span className="text-xs text-rose-600 dark:text-rose-400">
+                                    Alert
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -493,7 +513,9 @@ function BudgetingPage() {
           <Card variant="glass">
             <CardContent className="p-12 text-center">
               <ChartBarIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">Select a budget to view variance analysis</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                Select a budget to view variance analysis
+              </p>
             </CardContent>
           </Card>
         )}
@@ -506,7 +528,9 @@ function BudgetingPage() {
                 <CardTitle>Create New Budget</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-gray-600 dark:text-gray-400 mb-4">Budget creation form would go here...</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Budget creation form would go here...
+                </p>
                 <div className="flex justify-end gap-3">
                   <Button variant="secondary" onClick={() => setShowAddBudgetModal(false)}>
                     Cancel
