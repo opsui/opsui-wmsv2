@@ -817,6 +817,12 @@
    ============================================ */
 
 /* Mobile menu glassmorphism - Apple-style frosted glass effect */
+/* Smooth backdrop-filter transition for menu backdrop */
+.backdrop-blur-sm,
+.backdrop-blur-none {
+  transition: opacity 0.3s ease-out, backdrop-filter 0.3s ease-out, -webkit-backdrop-filter 0.3s ease-out, background-color 0.3s ease-out !important;
+}
+
 /* Floating hamburger button - safe area support */
 .fixed.top-4.left-4 {
   padding-top: max(env(safe-area-inset-top, 0px), 16px) !important;

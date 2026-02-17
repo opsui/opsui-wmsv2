@@ -222,11 +222,18 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop with blur */}
+      {/* Backdrop with blur - smooth transition for both opacity and backdrop-filter */}
       <div
-        className={`fixed inset-0 z-[105] bg-black/20 dark:bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          isClosing || !isVisible ? 'opacity-0' : 'opacity-100'
+        className={`fixed inset-0 z-[105] transition-all duration-300 ease-out ${
+          isClosing || !isVisible 
+            ? 'opacity-0 backdrop-blur-none' 
+            : 'opacity-100 backdrop-blur-sm'
         }`}
+        style={{
+          backgroundColor: isClosing || !isVisible 
+            ? 'transparent' 
+            : 'rgba(0, 0, 0, 0.2)',
+        }}
         onClick={() => onHoverOff?.()}
       />
 
