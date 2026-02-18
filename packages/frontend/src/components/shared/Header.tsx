@@ -52,6 +52,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import GlobalSearch from './GlobalSearch';
 import { UserRoleBadge } from './index';
 
 // ============================================================================
@@ -1192,6 +1193,8 @@ export function Header() {
   const setActiveRole = useAuthStore(state => state.setActiveRole);
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  /** True while the global search is expanded on mobile – hides other toolbar icons */
+  const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
 
   // Listen for role color changes
   useEffect(() => {
@@ -1322,22 +1325,18 @@ export function Header() {
         path: string;
         icon: React.ComponentType<{ className?: string }>;
         requiredRole?: UserRole;
-      }> = [
-        { key: 'sales', label: 'Sales Dashboard', path: '/sales', icon: CurrencyDollarIcon },
-        {
+      }> = [{ key: 'sales', label: 'Sales Dashboard', path: '/sales', icon: CurrencyDollarIcon }];
+
+      // Only show Order Queue for non-admin roles (admin accesses it via role view switcher)
+      if (effectiveRole !== UserRole.ADMIN) {
+        salesItems.splice(1, 0, {
           key: 'order-queue',
           label: 'Order Queue',
           path: '/orders',
           icon: QueueListIcon,
           requiredRole: UserRole.PICKER,
-        },
-        {
-          key: 'shipped-orders',
-          label: 'Shipped Orders',
-          path: '/shipped-orders',
-          icon: TruckIcon,
-        },
-      ];
+        });
+      }
 
       // Add customer-related items for admins and supervisors
       if (effectiveRole === UserRole.ADMIN || effectiveRole === UserRole.SUPERVISOR) {
@@ -1947,35 +1946,41 @@ export function Header() {
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
             <div className="flex items-center justify-center gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-full shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
-              {/* Theme Toggle */}
-              <ThemeToggle />
+              {/* Global Search — passes callback so it can hide sibling icons on mobile */}
+              <GlobalSearch onMobileSearchActive={setIsMobileSearchActive} />
 
-              {/* Notification Panel */}
-              <NotificationPanel />
+              {/* Other toolbar icons: hidden on mobile while search is expanded */}
+              <div className={isMobileSearchActive ? 'hidden md:contents' : 'contents'}>
+                {/* Theme Toggle */}
+                <ThemeToggle />
 
-              {/* Divider */}
-              <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+                {/* Notification Panel */}
+                <NotificationPanel />
 
-              {/* Settings button */}
-              <button
-                onClick={() => navigate('/role-settings?section=role-switcher')}
-                className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg transition-colors"
-                title="Settings"
-                aria-label="Settings"
-              >
-                <CogIcon className="h-5 w-5" />
-              </button>
+                {/* Divider */}
+                <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
 
-              {/* Logout button */}
-              <button
-                onClick={handleLogout}
-                disabled={logoutMutation.isPending}
-                className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
-                title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-              >
-                <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-              </button>
+                {/* Settings button */}
+                <button
+                  onClick={() => navigate('/role-settings?section=role-switcher')}
+                  className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg transition-colors"
+                  title="Settings"
+                  aria-label="Settings"
+                >
+                  <CogIcon className="h-5 w-5" />
+                </button>
+
+                {/* Logout button */}
+                <button
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                  className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                  title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                >
+                  <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
