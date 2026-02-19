@@ -16,11 +16,12 @@ export function jsonToCsv<T extends Record<string, any>>(
   // Determine columns
   let cols: Array<{ key: string; label: string }> = [];
   if (columns) {
-    cols = columns.map(col =>
-      typeof col === 'string'
-        ? { key: col, label: String(col) }
-        : { key: String(col.key), label: col.label }
-    );
+    cols = columns.map(col => {
+      if (typeof col === 'string' || typeof col === 'number' || typeof col === 'symbol') {
+        return { key: String(col), label: String(col) };
+      }
+      return { key: String(col.key), label: col.label };
+    });
   } else {
     cols = Object.keys(data[0]).map(key => ({ key, label: key }));
   }

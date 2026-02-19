@@ -4,6 +4,8 @@
  * API client for organization management endpoints.
  */
 
+import { apiClient } from '@/lib/api-client';
+
 import type {
   AssignOrganizationUserDTO,
   CreateInvitationDTO,
