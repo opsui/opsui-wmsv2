@@ -457,10 +457,7 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
               className="font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-slate-900 border-0 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] transition-all duration-300"
             >
               {order.status === 'PICKING' ? (
-                <span className="flex items-center gap-2">
-                  <SparklesIcon className="h-5 w-5" />
-                  Continue
-                </span>
+                'Continue'
               ) : (
                 <span className="flex items-center gap-2">
                   <BoltIcon className="h-5 w-5" />
@@ -754,14 +751,14 @@ export function OrderQueuePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900/20 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Diagonal scan lines */}
-        <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_100px,rgba(192,132,252,0.02)_100px,rgba(192,132,252,0.02)_200px)]" />
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_100px,rgba(192,132,252,0.015)_100px,rgba(192,132,252,0.015)_200px)]" />
         {/* Corner accents */}
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl" />
       </div>
 
       <Header />

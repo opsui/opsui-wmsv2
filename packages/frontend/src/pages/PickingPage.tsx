@@ -1057,8 +1057,8 @@ export function PickingPage() {
                       />
                       <defs>
                         <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#3b82f6" />
-                          <stop offset="100%" stopColor="#60a5fa" />
+                          <stop offset="0%" stopColor="#a855f7" />
+                          <stop offset="100%" stopColor="#c084fc" />
                         </linearGradient>
                       </defs>
                     </svg>

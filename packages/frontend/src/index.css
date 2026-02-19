@@ -1328,13 +1328,13 @@ html.performance-mode .indicator-pulse {
 /* Beacon pulse for bin location */
 @keyframes beacon-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 20px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 20px rgba(168, 85, 247, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0);
   }
 }
 
@@ -1401,7 +1401,7 @@ html.performance-mode .indicator-pulse {
   content: '';
   position: absolute;
   inset: -4px;
-  border: 2px solid rgba(59, 130, 246, 0.5);
+  border: 2px solid rgba(168, 85, 247, 0.5);
   border-radius: inherit;
   animation: scanner-reticle 2s ease-in-out infinite;
 }
@@ -1410,7 +1410,7 @@ html.performance-mode .indicator-pulse {
   content: '';
   position: absolute;
   inset: -8px;
-  border: 1px dashed rgba(59, 130, 246, 0.3);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
   border-radius: inherit;
   animation: scanner-reticle 2s ease-in-out infinite reverse;
 }
@@ -1504,12 +1504,12 @@ html.performance-mode .indicator-pulse {
 
 /* Distinctive picking card */
 .picking-card {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 75, 0.9) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(76, 29, 149, 0.9) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   box-shadow: 
     0 4px 20px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 40px rgba(59, 130, 246, 0.1);
+    0 0 40px rgba(168, 85, 247, 0.1);
 }
 
 /* Hero number display (for progress, quantities) */
