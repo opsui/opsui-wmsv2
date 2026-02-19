@@ -15,16 +15,18 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: [
-          'Inter',
-          'system-ui',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'sans-serif',
+        // Distinctive fonts - Industrial/Technical aesthetic
+        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Archivo', 'system-ui', 'sans-serif'],
+        mono: [
+          'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          'monospace',
         ],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       colors: {
         primary: {
@@ -101,6 +103,22 @@ export default {
         shimmer: 'shimmer 2s infinite',
         'spin-slow': 'spin 3s linear infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        // Staggered reveal animations
+        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+        'fade-in-scale': 'fadeInScale 0.4s ease-out forwards',
+        'slide-in-right': 'slideInRight 0.4s ease-out forwards',
+        'slide-in-left': 'slideInLeft 0.4s ease-out forwards',
+        // Celebration animations
+        celebrate: 'celebrate 0.6s ease-out forwards',
+        confetti: 'confetti 1s ease-out forwards',
+        'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+        'bounce-in': 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
+        // Scanning feedback
+        'scan-success': 'scanSuccess 0.5s ease-out forwards',
+        'scan-pulse': 'scanPulse 1.5s ease-in-out infinite',
+        // Progress animations
+        'progress-fill': 'progressFill 0.8s ease-out forwards',
+        'glow-pulse': 'glowPulse 2s ease-in-out infinite',
       },
       keyframes: {
         pulseGlow: {
@@ -126,6 +144,69 @@ export default {
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
+        },
+        // Staggered reveal keyframes
+        fadeInUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        fadeInScale: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        slideInRight: {
+          '0%': { transform: 'translateX(-20px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        slideInLeft: {
+          '0%': { transform: 'translateX(20px)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        // Celebration keyframes
+        celebrate: {
+          '0%': { transform: 'scale(1)' },
+          '25%': { transform: 'scale(1.1) rotate(-3deg)' },
+          '50%': { transform: 'scale(1.1) rotate(3deg)' },
+          '75%': { transform: 'scale(1.05) rotate(-1deg)' },
+          '100%': { transform: 'scale(1) rotate(0)' },
+        },
+        confetti: {
+          '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
+          '100%': { transform: 'translateY(-100px) rotate(720deg)', opacity: '0' },
+        },
+        popIn: {
+          '0%': { transform: 'scale(0)', opacity: '0' },
+          '70%': { transform: 'scale(1.1)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        bounceIn: {
+          '0%': { transform: 'scale(0.3)', opacity: '0' },
+          '50%': { transform: 'scale(1.05)' },
+          '70%': { transform: 'scale(0.9)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        // Scanning feedback keyframes
+        scanSuccess: {
+          '0%': { backgroundColor: 'rgba(34, 197, 94, 0.3)', transform: 'scale(1)' },
+          '50%': { backgroundColor: 'rgba(34, 197, 94, 0.5)', transform: 'scale(1.02)' },
+          '100%': { backgroundColor: 'transparent', transform: 'scale(1)' },
+        },
+        scanPulse: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)' },
+          '50%': { boxShadow: '0 0 0 10px rgba(59, 130, 246, 0)' },
+        },
+        // Progress keyframes
+        progressFill: {
+          '0%': { width: '0%' },
+          '100%': { width: 'var(--progress-width, 100%)' },
+        },
+        glowPulse: {
+          '0%, 100%': {
+            boxShadow: '0 0 5px rgba(59, 130, 246, 0.5), 0 0 10px rgba(59, 130, 246, 0.3)',
+          },
+          '50%': {
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 25px rgba(59, 130, 246, 0.5)',
+          },
         },
       },
       backgroundImage: {

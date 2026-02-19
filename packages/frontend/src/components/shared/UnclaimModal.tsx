@@ -288,7 +288,7 @@ export function UnclaimModal({
         ></div>
 
         {/* Modal panel */}
-        <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-scale-in bg-white dark:bg-gray-900">
+        <div className="inline-block align-bottom rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-scale-in bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
           {/* Modal header */}
           <div className="px-6 py-4 sm:px-6 flex items-center justify-between border-b border-gray-200 dark:border-white/[0.08]">
             <div className="flex items-center gap-3">

@@ -2,6 +2,11 @@
  * Sales page
  *
  * Sales & CRM module for customer management, leads, opportunities, and quotes
+ *
+ * Design Direction: "Luxe Pipeline" - A refined, premium aesthetic with warm amber/gold accents
+ * Typography: Space Grotesk (display) + Inter var (body) for modern sophistication
+ * Motion: Staggered reveals, elegant transitions, micro-interactions
+ * Layout: Asymmetric hero, overlapping elements, broken grid cards
  */
 
 import { CreateCustomerModal } from '@/components/sales/CreateCustomerModal';
@@ -38,9 +43,12 @@ import {
   TrophyIcon,
   UserGroupIcon,
   UserPlusIcon,
+  SparklesIcon,
+  ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================================================
 // TYPES
@@ -94,27 +102,58 @@ interface Quote {
 }
 
 // ============================================================================
+// ANIMATION VARIANTS
+// ============================================================================
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+  },
+};
+
+const cardHover = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.02, y: -4, transition: { duration: 0.3, ease: 'easeOut' } },
+};
+
+const shimmerVariants = {
+  animate: {
+    backgroundPosition: ['200% 0', '-200% 0'],
+    transition: { duration: 3, repeat: Infinity, ease: 'linear' },
+  },
+};
+
+// ============================================================================
 // SUBCOMPONENTS
 // ============================================================================
 
 function CustomerStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     PROSPECT:
-      'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
+      'bg-gradient-to-r from-violet-100 to-purple-100 dark:from-violet-900/40 dark:to-purple-900/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30',
     ACTIVE:
-      'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
+      'bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
     INACTIVE:
-      'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-500/30',
+      'bg-gradient-to-r from-slate-100 to-gray-100 dark:from-slate-800/40 dark:to-gray-800/40 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-500/30',
     BLOCKED:
-      'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
+      'bg-gradient-to-r from-rose-100 to-red-100 dark:from-rose-900/40 dark:to-red-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30',
   };
 
   return (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold ${styles[status] || styles.PROSPECT}`}
+    <motion.span
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${styles[status] || styles.PROSPECT}`}
     >
       {status}
-    </span>
+    </motion.span>
   );
 }
 
@@ -680,137 +719,229 @@ function SalesPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-amber-950/20 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-amber-200/20 to-orange-200/10 dark:from-amber-500/10 dark:to-orange-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-60 h-60 bg-gradient-to-br from-violet-200/20 to-purple-200/10 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-40 h-40 bg-gradient-to-br from-teal-200/20 to-emerald-200/10 dark:from-teal-500/10 dark:to-emerald-500/5 rounded-full blur-3xl" />
+      </div>
+
       <Header />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Breadcrumb Navigation */}
-        <Breadcrumb />
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            Sales & CRM
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Customer relationships, leads, opportunities, and quotes
-          </p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Breadcrumb />
+        </motion.div>
 
-        {/* Loading Spinner */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 dark:border-primary-500"></div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Loading sales data...</p>
-            </div>
+        {/* Page Header - Premium Design */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="mb-10 relative"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <motion.div variants={fadeInUp} className="relative">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 dark:from-amber-500 dark:via-orange-500 dark:to-amber-600 rounded-full"
+              />
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 dark:from-white dark:via-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                Sales & CRM
+              </h1>
+              <p className="mt-3 text-lg text-gray-600 dark:text-gray-400 max-w-xl">
+                Nurture relationships, close deals, and grow your pipeline with elegance
+              </p>
+            </motion.div>
+            <motion.div
+              variants={fadeInUp}
+              className="flex items-center gap-3 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-full border border-amber-200 dark:border-amber-500/30"
+            >
+              <SparklesIcon className="h-4 w-4" />
+              <span className="font-medium">Pipeline Intelligence</span>
+              <ArrowTrendingUpIcon className="h-4 w-4" />
+            </motion.div>
           </div>
-        )}
+        </motion.div>
 
-        {/* Tab Navigation */}
-        {!isLoading && (
-          <div className="flex gap-2 mb-8 border-b border-gray-200 dark:border-white/10 pb-4">
-            {[
-              { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
-              { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
-              { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
-              { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
-              { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
-            ].map(tab => {
-              const Icon = tab.icon;
-              const isActive = currentTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setTab(tab.key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary-50 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-500/30'
-                      : 'bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Loading State - Premium Skeleton */}
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-20"
+            >
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full border-2 border-amber-200 dark:border-amber-800" />
+                <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-transparent border-t-amber-500 dark:border-t-amber-400 animate-spin" />
+              </div>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-6 text-gray-500 dark:text-gray-400 text-sm font-medium"
+              >
+                Loading your pipeline...
+              </motion.p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Tab Navigation - Premium Pills */}
+        <AnimatePresence>
+          {!isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="flex gap-2 mb-10"
+            >
+              {[
+                { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
+                { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
+                { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
+                { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
+                { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
+              ].map((tab, index) => {
+                const Icon = tab.icon;
+                const isActive = currentTab === tab.key;
+                return (
+                  <motion.button
+                    key={tab.key}
+                    onClick={() => setTab(tab.key)}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                      isActive
+                        ? 'text-amber-700 dark:text-amber-300'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 rounded-xl border border-amber-200 dark:border-amber-500/30"
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                    <Icon className="h-4 w-4 relative z-10" />
+                    <span className="relative z-10">{tab.label}</span>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Dashboard Tab */}
         {!isLoading && currentTab === 'dashboard' && (
-          <div className="space-y-8">
-            {/* Overview Stats */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+            className="space-y-8"
+          >
+            {/* Overview Stats - Premium Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <Card
-                variant="glass"
-                className="p-6 border-l-4 border-l-purple-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Customers</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                      {dashboard.totalCustomers}
-                    </p>
-                  </div>
-                  <UserGroupIcon className="h-8 w-8 text-purple-500 dark:text-purple-400" />
-                </div>
-              </Card>
-              <Card
-                variant="glass"
-                className="p-6 border-l-4 border-l-yellow-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Active Leads</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                      {dashboard.activeLeads}
-                    </p>
-                  </div>
-                  <UserPlusIcon className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
-                </div>
-              </Card>
-              <Card
-                variant="glass"
-                className="p-6 border-l-4 border-l-orange-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Open Opportunities</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                      {dashboard.openOpportunities}
-                    </p>
-                  </div>
-                  <TrophyIcon className="h-8 w-8 text-orange-500 dark:text-orange-400" />
-                </div>
-              </Card>
-              <Card
-                variant="glass"
-                className="p-6 border-l-4 border-l-blue-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Pending Quotes</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-                      {dashboard.pendingQuotes}
-                    </p>
-                  </div>
-                  <DocumentTextIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />
-                </div>
-              </Card>
-              <Card
-                variant="glass"
-                className="p-6 border-l-4 border-l-green-500 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-0"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Total Pipeline</p>
-                    <p className="mt-2 text-xl font-bold text-gray-900 dark:text-white">
-                      ${dashboard.totalPipeline.toLocaleString()}
-                    </p>
-                  </div>
-                  <CurrencyDollarIcon className="h-8 w-8 text-green-500 dark:text-green-400" />
-                </div>
-              </Card>
+              {[
+                {
+                  label: 'Total Customers',
+                  value: dashboard.totalCustomers,
+                  icon: UserGroupIcon,
+                  gradient: 'from-violet-500 to-purple-600',
+                  bgGradient:
+                    'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
+                },
+                {
+                  label: 'Active Leads',
+                  value: dashboard.activeLeads,
+                  icon: UserPlusIcon,
+                  gradient: 'from-amber-500 to-yellow-600',
+                  bgGradient:
+                    'from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20',
+                },
+                {
+                  label: 'Open Opportunities',
+                  value: dashboard.openOpportunities,
+                  icon: TrophyIcon,
+                  gradient: 'from-orange-500 to-red-500',
+                  bgGradient: 'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20',
+                },
+                {
+                  label: 'Pending Quotes',
+                  value: dashboard.pendingQuotes,
+                  icon: DocumentTextIcon,
+                  gradient: 'from-blue-500 to-cyan-500',
+                  bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
+                },
+                {
+                  label: 'Total Pipeline',
+                  value: `$${dashboard.totalPipeline.toLocaleString()}`,
+                  icon: CurrencyDollarIcon,
+                  gradient: 'from-emerald-500 to-teal-500',
+                  bgGradient:
+                    'from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20',
+                  isLargeText: true,
+                },
+              ].map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <motion.div
+                    key={stat.label}
+                    variants={fadeInUp}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className="group relative"
+                  >
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 rounded-2xl transition-opacity duration-300`}
+                    />
+                    <Card
+                      variant="glass"
+                      className={`relative p-6 bg-gradient-to-br ${stat.bgGradient} border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden`}
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/50 to-transparent dark:from-white/5 dark:to-transparent rounded-bl-full" />
+                      <div className="relative z-10">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                              {stat.label}
+                            </p>
+                            <motion.p
+                              initial={{ opacity: 0, scale: 0.5 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                              className={`mt-2 font-bold text-gray-900 dark:text-white ${stat.isLargeText ? 'text-2xl' : 'text-3xl'}`}
+                            >
+                              {stat.value}
+                            </motion.p>
+                          </div>
+                          <motion.div
+                            initial={{ rotate: -10 }}
+                            animate={{ rotate: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
+                          >
+                            <Icon className="h-5 w-5 text-white" />
+                          </motion.div>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
 
             {/* Quick Actions */}
@@ -862,7 +993,7 @@ function SalesPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         )}
 
         {/* Customers Tab */}

@@ -1693,6 +1693,72 @@ export const useUnclaimOrder = () => {
 };
 
 // ============================================================================
+// SKIP ITEM HOOK
+// ============================================================================
+
+export const useSkipItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      pickTaskId,
+      reason,
+    }: {
+      orderId: string;
+      pickTaskId: string;
+      reason: string;
+    }) => {
+      const response = await apiClient.post(`/orders/${orderId}/skip-item`, {
+        pickTaskId,
+        reason,
+      });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['orders', variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
+      queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
+    },
+  });
+};
+
+// ============================================================================
+// MANUAL OVERRIDE HOOK
+// ============================================================================
+
+export const useManualOverride = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      pickTaskId,
+      newQuantity,
+      reason,
+      notes,
+    }: {
+      orderId: string;
+      pickTaskId: string;
+      newQuantity: number;
+      reason: string;
+      notes?: string;
+    }) => {
+      const response = await apiClient.post(`/orders/${orderId}/manual-override`, {
+        pickTaskId,
+        newQuantity,
+        reason,
+        notes,
+      });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['orders', variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'my'] });
+      queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
+    },
+  });
+};
+
+// ============================================================================
 // STOCK CONTROL API
 // ============================================================================
 

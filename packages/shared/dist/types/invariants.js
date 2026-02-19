@@ -11,7 +11,7 @@
  *
  * If an invariant is violated, data corruption has occurred.
  */
-import { OrderStatus } from './index.js';
+import { OrderStatus } from './index';
 // ============================================================================
 // INVARIANT VALIDATION FUNCTIONS
 // ============================================================================

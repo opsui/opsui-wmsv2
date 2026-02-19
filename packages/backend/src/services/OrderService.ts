@@ -341,6 +341,146 @@ export class OrderService {
   }
 
   // --------------------------------------------------------------------------
+  // MANUAL OVERRIDE
+  // --------------------------------------------------------------------------
+
+  async manualOverride(
+    pickTaskId: string,
+    newQuantity: number,
+    reason: string,
+    notes: string | undefined,
+    userId: string
+  ): Promise<{ success: boolean; order: Order; exception: any }> {
+    logger.info('Processing manual override', { pickTaskId, newQuantity, reason, userId });
+
+    return orderRepository.withTransaction(async client => {
+      // Get pick task
+      const pickTaskResult = await client.query(
+        `SELECT pt.*, o.order_id, o.status as order_status
+         FROM pick_tasks pt
+         JOIN orders o ON pt.order_id = o.order_id
+         WHERE pt.pick_task_id = $1 FOR UPDATE`,
+        [pickTaskId]
+      );
+
+      if (pickTaskResult.rows.length === 0) {
+        throw new NotFoundError('PickTask', pickTaskId);
+      }
+
+      const pickTask = pickTaskResult.rows[0];
+      const orderId = pickTask.order_id;
+
+      // Validate order is in PICKING status
+      if (pickTask.order_status !== OrderStatus.PICKING) {
+        throw new ValidationError(
+          `Order is not in PICKING status. Current status: ${pickTask.order_status}`
+        );
+      }
+
+      // Validate new quantity doesn't exceed required quantity (unless override)
+      if (newQuantity > pickTask.quantity) {
+        throw new ValidationError(
+          `New quantity (${newQuantity}) exceeds required quantity (${pickTask.quantity}). Over-scanning is not allowed.`
+        );
+      }
+
+      const previousPickedQty = pickTask.picked_quantity;
+
+      // Generate exception ID
+      const exceptionId = `PEX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Log to picking_exceptions table
+      await client.query(
+        `INSERT INTO picking_exceptions (
+          exception_id, order_id, order_item_id, pick_task_id, user_id, sku,
+          exception_type, original_qty, new_qty, previous_picked_qty, reason, notes, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+        [
+          exceptionId,
+          orderId,
+          pickTask.order_item_id,
+          pickTaskId,
+          userId,
+          pickTask.sku,
+          'MANUAL_OVERRIDE',
+          pickTask.quantity,
+          newQuantity,
+          previousPickedQty,
+          reason,
+          notes || null,
+        ]
+      );
+
+      // Update pick task
+      const isComplete = newQuantity >= pickTask.quantity;
+      await client.query(
+        `UPDATE pick_tasks
+         SET picked_quantity = $1,
+             status = CASE WHEN $1 >= quantity THEN 'COMPLETED'::task_status ELSE 'IN_PROGRESS'::task_status END,
+             completed_at = CASE WHEN $1 >= quantity THEN NOW() ELSE completed_at END
+         WHERE pick_task_id = $2`,
+        [newQuantity, pickTaskId]
+      );
+
+      // Update order item
+      const itemStatus =
+        newQuantity >= pickTask.quantity
+          ? 'FULLY_PICKED'
+          : newQuantity > 0
+            ? 'PARTIAL_PICKED'
+            : 'PENDING';
+
+      await client.query(
+        `UPDATE order_items
+         SET picked_quantity = $1,
+             status = $2::order_item_status
+         WHERE order_item_id = $3`,
+        [newQuantity, itemStatus, pickTask.order_item_id]
+      );
+
+      // Recalculate order progress
+      await client.query(
+        `UPDATE orders
+         SET progress = (
+           SELECT FLOOR(
+             (CAST(COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') AS NUMERIC) /
+              NULLIF(COUNT(*), 0)) * 100 + 0.5
+           )
+           FROM pick_tasks pt
+           WHERE pt.order_id = $1
+         )
+         WHERE order_id = $1`,
+        [orderId]
+      );
+
+      // Fetch updated order
+      const updatedOrder = await this.getOrder(orderId);
+
+      logger.info('Manual override completed', {
+        pickTaskId,
+        orderId,
+        previousPickedQty,
+        newQuantity,
+        exceptionId,
+      });
+
+      return {
+        success: true,
+        order: updatedOrder,
+        exception: {
+          exceptionId,
+          orderId,
+          sku: pickTask.sku,
+          originalQty: pickTask.quantity,
+          newQty: newQuantity,
+          previousPickedQty,
+          reason,
+        },
+      };
+    });
+  }
+
+  // --------------------------------------------------------------------------
   // UNDO PICK (DECREMENT PICKED QUANTITY)
   // --------------------------------------------------------------------------
 

@@ -525,6 +525,128 @@ router.put(
 );
 
 /**
+ * POST /api/orders/:orderId/manual-override
+ * Manual override of picked quantity for an item
+ */
+router.post(
+  '/:orderId/manual-override',
+  authorize(UserRole.PICKER, UserRole.ADMIN, UserRole.SUPERVISOR),
+  validate.orderId,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { pickTaskId, newQuantity, reason, notes } = req.body;
+
+    // Validate required fields
+    if (!pickTaskId) {
+      res.status(400).json({
+        error: 'pickTaskId is required',
+        code: 'MISSING_PICK_TASK_ID',
+      });
+      return;
+    }
+
+    if (newQuantity === undefined || newQuantity === null) {
+      res.status(400).json({
+        error: 'newQuantity is required',
+        code: 'MISSING_QUANTITY',
+      });
+      return;
+    }
+
+    if (!reason || !reason.trim()) {
+      res.status(400).json({
+        error: 'Reason is required for manual override',
+        code: 'MISSING_REASON',
+      });
+      return;
+    }
+
+    try {
+      const result = await orderService.manualOverride(
+        pickTaskId,
+        newQuantity,
+        reason.trim(),
+        notes,
+        req.user.userId
+      );
+      res.json(result);
+    } catch (error: any) {
+      if (error?.message?.includes('not found')) {
+        res.status(404).json({
+          error: error.message,
+          code: 'PICK_TASK_NOT_FOUND',
+        });
+        return;
+      }
+      if (error?.message?.includes('exceeds required')) {
+        res.status(400).json({
+          error: error.message,
+          code: 'QUANTITY_EXCEEDS_REQUIRED',
+        });
+        return;
+      }
+      throw error;
+    }
+  })
+);
+
+/**
+ * POST /api/orders/:orderId/skip-item
+ * Temporary skip for an item
+ */
+router.post(
+  '/:orderId/skip-item',
+  authorize(UserRole.PICKER, UserRole.ADMIN),
+  validate.orderId,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { pickTaskId, reason } = req.body;
+
+    if (!pickTaskId) {
+      res.status(400).json({
+        error: 'pickTaskId is required',
+        code: 'MISSING_PICK_TASK_ID',
+      });
+      return;
+    }
+
+    if (!reason || !reason.trim()) {
+      res.status(400).json({
+        error: 'Reason is required for skipping an item',
+        code: 'MISSING_REASON',
+      });
+      return;
+    }
+
+    try {
+      const order = await orderService.skipPickTask(
+        pickTaskId,
+        `TEMP_SKIP: ${reason.trim()}`,
+        req.user.userId
+      );
+      res.json(order);
+    } catch (error: any) {
+      if (error?.message?.includes('not found')) {
+        res.status(404).json({
+          error: error.message,
+          code: 'PICK_TASK_NOT_FOUND',
+        });
+        return;
+      }
+      throw error;
+    }
+  })
+);
+
+/**
  * POST /api/orders/:orderId/undo-pick
  * Undo a pick action (decrement picked quantity)
  */

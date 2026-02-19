@@ -266,7 +266,7 @@ export function UndoPickModal({
         ></div>
 
         {/* Modal panel */}
-        <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-scale-in">
+        <div className="inline-block align-bottom bg-slate-900 rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full animate-scale-in border border-slate-700">
           {/* Modal header */}
           <div className="bg-white/[0.02] px-6 py-4 sm:px-6 flex items-center justify-between border-b border-white/[0.08]">
             <div className="flex items-center gap-3">

@@ -2,6 +2,12 @@
  * Picking page
  *
  * Main picking interface for scanning and picking items
+ *
+ * Design: Scanner-First Industrial Aesthetic
+ * - Bold typography with Archivo display font
+ * - Technical monospace for codes/locations
+ * - Industrial corner accents and beacon effects
+ * - Distinctive visual hierarchy
  */
 
 import {
@@ -33,6 +39,8 @@ import {
   MinusCircleIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
+  ForwardIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import { ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -58,9 +66,27 @@ export function PickingPage() {
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [scanError, setScanError] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [scanSuccess, setScanSuccess] = useState(false);
 
   // Exception modal state
   const [showExceptionModal, setShowExceptionModal] = useState(false);
+
+  // Manual override modal state
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [overrideItemIndex, setOverrideItemIndex] = useState<number | null>(null);
+  const [overrideQuantity, setOverrideQuantity] = useState<string>('0');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideNotes, setOverrideNotes] = useState('');
+  const [isOverriding, setIsOverriding] = useState(false);
+
+  // Skip modal state
+  const [showSkipModal, setShowSkipModal] = useState(false);
+  const [skipItemIndex, setSkipItemIndex] = useState<number | null>(null);
+  const [skipReason, setSkipReason] = useState('');
+  const [isSkipping, setIsSkipping] = useState(false);
+
+  // Track skipped items for blocking completion
+  const [skippedItemIds, setSkippedItemIds] = useState<Set<string>>(new Set());
   const [exceptionType, setExceptionType] = useState<ExceptionType>(ExceptionType.OUT_OF_STOCK);
   const [exceptionReason, setExceptionReason] = useState('');
   const [exceptionQuantity, setExceptionQuantity] = useState(0);
@@ -415,17 +441,24 @@ export function PickingPage() {
     return <div>No order ID provided</div>;
   }
 
-  // Show claim loading state
+  // Show claim loading state - Distinctive warehouse loading animation
   if (claimMutation.isPending) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card>
-          <CardContent className="p-6 text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
-            <p className="text-gray-600">Claiming order...</p>
-            <p className="text-sm text-gray-500">Please wait while we assign this order to you</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="warehouse-loading">
+          <div className="warehouse-loading-icon" />
+          <div className="warehouse-loading-bars">
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+          </div>
+          <div className="text-center">
+            <p className="picking-title text-white text-xl mb-2">Claiming Order</p>
+            <p className="picking-subtitle text-gray-400 text-sm">Preparing your pick list...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -433,76 +466,140 @@ export function PickingPage() {
   // Show claim error
   if (claimError) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="border-danger-500 border-2">
-          <CardContent className="p-6 text-center space-y-4">
-            <ExclamationCircleIcon className="h-12 w-12 text-danger-600 mx-auto" />
-            <h2 className="text-xl font-bold text-gray-900">Cannot Start Picking</h2>
-            <p className="text-gray-600">{claimError}</p>
-            <div className="flex gap-2 justify-center">
-              <Button variant="secondary" onClick={() => navigate('/orders')}>
-                Back to Order Queue
-              </Button>
-              <Button
-                onClick={() => {
-                  setClaimError(null);
-                  claimMutation.mutate(orderId!);
-                }}
-              >
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-error-500/20 flex items-center justify-center">
+            <ExclamationCircleIcon className="h-8 w-8 text-error-400" />
+          </div>
+          <h2 className="picking-title text-2xl text-white mb-3">Cannot Start Picking</h2>
+          <p className="picking-subtitle text-gray-400 mb-6">{claimError}</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="secondary" onClick={() => navigate('/orders')}>
+              Back to Queue
+            </Button>
+            <Button
+              onClick={() => {
+                setClaimError(null);
+                claimMutation.mutate(orderId!);
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading order...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="warehouse-loading">
+          <div className="warehouse-loading-icon" />
+          <div className="warehouse-loading-bars">
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+          </div>
+          <div className="text-center">
+            <p className="picking-title text-white text-xl mb-2">Loading Order</p>
+            <p className="picking-subtitle text-gray-400 text-sm">Retrieving pick details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card variant="glass">
-          <CardContent className="p-8 text-center">
-            <p className="text-gray-400">Order not found</p>
-            <Button onClick={() => navigate('/orders')} className="mt-4">
-              Back to Queue
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
+          <p className="picking-subtitle text-gray-400 mb-6">Order not found</p>
+          <Button onClick={() => navigate('/orders')}>Back to Queue</Button>
+        </div>
       </div>
     );
   }
 
-  const handleScan = async (value: string) => {
-    if (!currentTask) {
-      showToast('No current task to pick', 'error');
-      return;
+  // ==========================================================================
+  // ANY-ORDER SCANNING LOGIC
+  // ==========================================================================
+
+  /**
+   * Find an item matching the scanned barcode/SKU that is not yet fully picked
+   * This allows scanning items in any order
+   */
+  const findMatchingItem = (scannedValue: string): { item: any; index: number } | null => {
+    if (!order?.items) return null;
+
+    for (let i = 0; i < order.items.length; i++) {
+      const item = order.items[i];
+      const isCompleted = item.pickedQuantity >= item.quantity;
+      const isSkipped = item.status === 'SKIPPED';
+
+      // Skip completed or skipped items
+      if (isCompleted || isSkipped) continue;
+
+      // Check if scanned value matches barcode or SKU
+      const matchesBarcode = item.barcode && scannedValue === item.barcode;
+      const matchesSku = scannedValue === item.sku;
+
+      if (matchesBarcode || matchesSku) {
+        return { item, index: i };
+      }
     }
 
+    return null;
+  };
+
+  const handleScan = async (value: string) => {
     setScanError(null);
 
     // Use barcode if available, otherwise use SKU
-    const scanValue = value.trim();
+    const scanValueTrimmed = value.trim();
 
-    // Validate scan matches either barcode OR SKU
-    // This allows scanning either the barcode or SKU code
-    const isValidScan =
-      (currentTask.barcode && scanValue === currentTask.barcode) || scanValue === currentTask.sku;
+    // ANY-ORDER SCANNING: Find any item that matches the scanned value
+    const matchResult = findMatchingItem(scanValueTrimmed);
 
-    if (!isValidScan) {
-      // Show barcode as primary expected value, with SKU as subtle alternative
-      const expectedBarcodes = currentTask.barcode ? currentTask.barcode : currentTask.sku;
-      setScanError(`Wrong scan! Expected: ${expectedBarcodes}, scanned: ${scanValue}`);
-      showToast(`Wrong barcode scanned`, 'error');
+    if (!matchResult) {
+      // Check if it matches a completed or skipped item for better error message
+      if (order?.items) {
+        for (const item of order.items) {
+          const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
+          const matchesSku = scanValueTrimmed === item.sku;
+          if (matchesBarcode || matchesSku) {
+            if (item.status === 'SKIPPED') {
+              setScanError(`Item was skipped: ${item.name}. Revert the skip to pick it.`);
+            } else if (item.pickedQuantity >= item.quantity) {
+              setScanError(`Item already fully picked: ${item.name}`);
+            }
+            showToast('Item already processed', 'warning');
+            return;
+          }
+        }
+      }
+
+      setScanError(
+        `Invalid scan: "${scanValueTrimmed}" does not match any unpicked item in this order.`
+      );
+      showToast('Invalid barcode or SKU', 'error');
       return;
+    }
+
+    const { item: matchedItem, index: matchedIndex } = matchResult;
+
+    // Check for over-scanning
+    if (matchedItem.pickedQuantity >= matchedItem.quantity) {
+      setScanError(`Item already fully picked: ${matchedItem.name}`);
+      showToast('Item already fully picked', 'warning');
+      return;
+    }
+
+    // Switch to the matched item's task if different from current
+    if (matchedIndex !== currentTaskIndex) {
+      setCurrentTaskIndex(matchedIndex);
     }
 
     // Perform pick - backend already handles both barcode and SKU validation
@@ -510,29 +607,21 @@ export function PickingPage() {
       await pickMutation.mutateAsync({
         orderId,
         dto: {
-          sku: currentTask.barcode || currentTask.sku, // Send barcode (preferred) or SKU
-          quantity: 1, // Pick one at a time for simplicity
-          binLocation: currentTask.binLocation,
-          pickTaskId: currentTask.orderItemId,
+          sku: matchedItem.barcode || matchedItem.sku,
+          quantity: 1,
+          binLocation: matchedItem.binLocation,
+          pickTaskId: matchedItem.orderItemId,
         },
       });
 
-      showToast('Item picked!', 'success');
+      // Show success feedback
+      setScanSuccess(true);
+      setTimeout(() => setScanSuccess(false), 600);
+
+      showToast(`${matchedItem.name} picked!`, 'success');
 
       // Refetch order data to get updated state
       await refetch();
-
-      // Move to next task or complete order
-      const remaining = currentTask.quantity - currentTask.pickedQuantity - 1;
-      if (remaining <= 0) {
-        // Task complete, move to next
-        if (currentTaskIndex < totalTasks - 1) {
-          setCurrentTaskIndex(currentTaskIndex + 1);
-        } else {
-          // All tasks complete
-          await handleCompleteOrder();
-        }
-      }
     } catch (error) {
       setScanError(error instanceof Error ? error.message : 'Pick failed');
       showToast(error instanceof Error ? error.message : 'Failed to pick item', 'error');
@@ -711,6 +800,100 @@ export function PickingPage() {
     setSubstituteSku('');
   };
 
+  // ==========================================================================
+  // SKIP ITEM FUNCTIONALITY
+  // ==========================================================================
+
+  const handleSkipItem = (index: number) => {
+    const item = order?.items?.[index];
+    if (!item) return;
+
+    setSkipItemIndex(index);
+    setSkipReason('');
+    setShowSkipModal(true);
+  };
+
+  const handleConfirmSkip = async () => {
+    if (skipItemIndex === null || !order?.items?.[skipItemIndex]) return;
+
+    const item = order.items[skipItemIndex];
+    setIsSkipping(true);
+
+    try {
+      await apiClient.post(`/orders/${orderId}/skip-item`, {
+        pickTaskId: item.orderItemId,
+        reason: skipReason || 'No reason provided',
+      });
+
+      showToast('Item skipped!', 'warning');
+      setShowSkipModal(false);
+      setSkipItemIndex(null);
+      setSkipReason('');
+
+      // Track skipped item for completion blocking
+      setSkippedItemIds(prev => new Set(prev).add(item.orderItemId));
+
+      // Refetch order data
+      await refetch();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to skip item', 'error');
+    } finally {
+      setIsSkipping(false);
+    }
+  };
+
+  // ==========================================================================
+  // MANUAL OVERRIDE FUNCTIONALITY
+  // ==========================================================================
+
+  const handleManualOverride = (index: number) => {
+    const item = order?.items?.[index];
+    if (!item) return;
+
+    setOverrideItemIndex(index);
+    setOverrideQuantity(String(item.pickedQuantity));
+    setOverrideReason('');
+    setOverrideNotes('');
+    setShowOverrideModal(true);
+  };
+
+  const handleConfirmOverride = async () => {
+    if (overrideItemIndex === null || !order?.items?.[overrideItemIndex]) return;
+
+    const item = order.items[overrideItemIndex];
+    const quantity = parseInt(overrideQuantity, 10) || 0;
+
+    // Validate quantity
+    if (quantity < 0 || quantity > item.quantity) {
+      showToast(`Quantity must be between 0 and ${item.quantity}`, 'error');
+      return;
+    }
+
+    setIsOverriding(true);
+
+    try {
+      await apiClient.post(`/orders/${orderId}/manual-override`, {
+        pickTaskId: item.orderItemId,
+        newQuantity: quantity,
+        reason: overrideReason || 'Manual override',
+        notes: overrideNotes || undefined,
+      });
+
+      showToast('Manual override applied!', 'success');
+      setShowOverrideModal(false);
+      setOverrideItemIndex(null);
+      setOverrideReason('');
+      setOverrideNotes('');
+
+      // Refetch order data
+      await refetch();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to apply override', 'error');
+    } finally {
+      setIsOverriding(false);
+    }
+  };
+
   const handleLogException = async () => {
     if (!currentTask || !currentUser) return;
 
@@ -788,546 +971,600 @@ export function PickingPage() {
       order.status === 'PICKED' ||
       order.status === 'SHIPPED');
 
+  // Calculate progress percentage for ring
+  const progressPercent = order?.progress || 0;
+  const circumference = 2 * Math.PI * 45; // radius = 45
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
   return (
     <div className="min-h-screen">
+      {/* Industrial grid background texture - fixed position to not affect scroll */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+        style={{
+          backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.12) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(59, 130, 246, 0.12) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+          opacity: 0.4,
+          maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+        }}
+      />
+
       <Header />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+      <main className="relative z-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
+
         {/* View Mode Banner */}
         {isViewMode && (
-          <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 sm:p-5 flex items-center gap-4 card-hover">
-            <ExclamationCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-400 flex-shrink-0" />
+          <div className="picking-card rounded-xl p-4 sm:p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center flex-shrink-0">
+              <ExclamationCircleIcon className="h-5 w-5 text-primary-400" />
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white">
+              <p className="picking-title text-white">
                 {order.status === 'PICKED' || order.status === 'SHIPPED'
                   ? 'Viewing completed order'
                   : "Viewing this picker's work in real-time"}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="picking-subtitle text-gray-400 text-sm mt-0.5">
                 You are in view-only mode. Interactions are disabled.
               </p>
             </div>
           </div>
         )}
 
-        {/* Order Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight truncate">
-                {order.orderId}
-              </h1>
-              <p className="mt-2 text-gray-400 text-sm truncate">{order.customerName}</p>
+        {/* Main Content Grid - Progress on left, Current Task on right */}
+        <div className="lg:flex lg:gap-6">
+          {/* Progress Sidebar - Left side - Sticky on desktop */}
+          <div className="lg:w-1/4 lg:flex-shrink-0 mb-6 lg:mb-0">
+            <div className="picking-card rounded-2xl lg:sticky lg:top-20 industrial-corners">
+              <div className="p-6">
+                {/* Order Info */}
+                <div className="mb-6 pb-6 border-b border-white/[0.08]">
+                  <h1 className="picking-title text-xl text-white truncate">{order.orderId}</h1>
+                  <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
+                    {order.customerName}
+                  </p>
+                </div>
+
+                {/* Progress Ring */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative picking-reticle rounded-full">
+                    <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+                      {/* Background circle */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        stroke="rgba(59, 130, 246, 0.2)"
+                        strokeWidth="6"
+                        fill="none"
+                      />
+                      {/* Progress circle */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        stroke="url(#progress-gradient)"
+                        strokeWidth="6"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        className="transition-all duration-700 ease-out"
+                      />
+                      <defs>
+                        <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#3b82f6" />
+                          <stop offset="100%" stopColor="#60a5fa" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="hero-number text-3xl">{order.progress}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="picking-subtitle text-gray-400 text-sm">Completed</span>
+                    <span className="hero-number text-lg text-success-400">{completedTasks}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="picking-subtitle text-gray-400 text-sm">Remaining</span>
+                    <span className="hero-number text-lg text-warning-400">
+                      {totalTasks - completedTasks}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="picking-subtitle text-gray-400 text-sm">Total</span>
+                    <span className="hero-number text-lg text-white">{totalTasks}</span>
+                  </div>
+                </div>
+
+                {isOrderComplete && (
+                  <Button
+                    size="lg"
+                    variant="success"
+                    onClick={handleCompleteOrder}
+                    isLoading={completeMutation.isPending}
+                    disabled={isViewMode ? true : undefined}
+                    className="w-full action-button-enhanced touch-target"
+                  >
+                    Complete Order
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            {!isViewMode && (
-              <>
-                <Button
-                  variant="danger"
-                  onClick={handleUnclaimOrder}
-                  disabled={order.status !== OrderStatus.PICKING}
-                  className="touch-target"
-                >
-                  Unclaim Order
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate('/orders')}
-                  className="touch-target"
-                >
-                  Exit
-                </Button>
-              </>
+
+          {/* Current Task - Right side */}
+          <div className="flex-1 min-w-0">
+            {isOrderComplete ? (
+              /* Complete Order Card with Celebration Animation */
+              <div className="picking-card rounded-2xl border-success-500/50 border-2 overflow-hidden relative celebration-container industrial-corners">
+                {/* Confetti particles */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {[...Array(30)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="confetti-piece"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${100 + Math.random() * 20}%`,
+                        backgroundColor:
+                          i % 4 === 0
+                            ? '#22c55e'
+                            : i % 4 === 1
+                              ? '#3b82f6'
+                              : i % 4 === 2
+                                ? '#f59e0b'
+                                : '#8b5cf6',
+                        animationDelay: `${Math.random() * 0.8}s`,
+                        borderRadius: i % 2 === 0 ? '50%' : '2px',
+                        width: `${6 + Math.random() * 8}px`,
+                        height: `${6 + Math.random() * 8}px`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="p-8 sm:p-12 text-center relative z-10">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success-500/20 flex items-center justify-center animate-bounce-in">
+                    <CheckIcon className="h-10 w-10 text-success-400" />
+                  </div>
+                  <h2 className="picking-title text-3xl text-white mb-3 animate-celebrate">
+                    All Items Picked!
+                  </h2>
+                  <p className="picking-subtitle text-gray-400 mb-8">
+                    Order is ready to be completed and sent to packing.
+                  </p>
+                  <Button
+                    size="lg"
+                    variant="success"
+                    onClick={handleCompleteOrder}
+                    isLoading={completeMutation.isPending}
+                    disabled={isViewMode ? true : undefined}
+                    className="action-button-enhanced touch-target animate-pop-in"
+                  >
+                    Complete Order
+                  </Button>
+                </div>
+              </div>
+            ) : currentTask ? (
+              /* Current Task Card */
+              <div
+                className={`picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners ${scanSuccess ? 'item-flash' : ''}`}
+              >
+                <div className="p-6 border-b border-white/[0.08]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                        Current Pick Task
+                      </p>
+                      <h2 className="picking-title text-xl text-white">{currentTask.name}</h2>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {!isViewMode && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={handleUnclaimOrder}
+                          disabled={order.status !== OrderStatus.PICKING}
+                        >
+                          Unclaim
+                        </Button>
+                      )}
+                      <TaskStatusBadge
+                        status={
+                          currentTask.pickedQuantity > 0
+                            ? TaskStatus.IN_PROGRESS
+                            : TaskStatus.PENDING
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 space-y-6">
+                  {/* Barcode Display */}
+                  <div>
+                    {currentTask.barcode ? (
+                      <div className="barcode-display rounded-xl px-5 py-4">
+                        <p className="text-primary-400 text-xs uppercase tracking-wider mb-2">
+                          Scan Barcode
+                        </p>
+                        <p className="text-2xl text-white tracking-widest font-mono">
+                          {currentTask.barcode}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-warning-500/10 border border-warning-500/30 rounded-xl px-5 py-4">
+                        <p className="text-warning-400 text-sm">
+                          No barcode assigned - scan or enter item code manually
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity Display */}
+                  <div className="flex items-center justify-center gap-8 py-6">
+                    <div className="text-center">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        Picked
+                      </p>
+                      <p className="quantity-display text-primary-400">
+                        {currentTask.pickedQuantity}
+                      </p>
+                    </div>
+                    <div className="text-5xl text-gray-600 font-light">/</div>
+                    <div className="text-center">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        Needed
+                      </p>
+                      <p className="quantity-display text-white">{currentTask.quantity}</p>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="bin-location-display rounded-xl p-5 text-center bin-beacon">
+                    <p className="text-white/70 text-xs uppercase tracking-wider mb-2">
+                      Go to bin location
+                    </p>
+                    <p className="text-3xl text-white font-bold tracking-widest">
+                      {formatBinLocation(currentTask.binLocation)}
+                    </p>
+                  </div>
+
+                  {/* Items in Order - Integrated into Current Pick Task */}
+                  <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.08]">
+                    <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-4">
+                      Items in Order ({order.items?.length || 0})
+                    </p>
+                    <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                      {order.items?.map((item, index) => {
+                        const isCompleted = item.pickedQuantity >= item.quantity;
+                        const isSkipped = item.status === 'SKIPPED';
+                        const isCurrent = index === currentTaskIndex;
+
+                        return (
+                          <div
+                            key={item.orderItemId}
+                            onClick={() => {
+                              // Allow clicking on any incomplete/non-skipped item to select it
+                              if (!isCompleted && !isSkipped && !isViewMode) {
+                                setCurrentTaskIndex(index);
+                              }
+                            }}
+                            className={`pick-item-card flex items-center justify-between p-3 rounded-xl transition-all duration-200 animate-fade-in-up ${
+                              isCurrent
+                                ? 'active'
+                                : isCompleted
+                                  ? 'completed'
+                                  : isSkipped
+                                    ? 'skipped'
+                                    : ''
+                            } ${!isCompleted && !isSkipped && !isViewMode ? 'cursor-pointer' : ''}`}
+                            style={{
+                              animationDelay: `${index * 30}ms`,
+                              animationFillMode: 'backwards',
+                            }}
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {/* Status Icon */}
+                              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                                {isCompleted && (
+                                  <div className="w-6 h-6 rounded-full bg-success-500/20 flex items-center justify-center">
+                                    <CheckIcon className="h-4 w-4 text-success-400" />
+                                  </div>
+                                )}
+                                {isSkipped && !isViewMode && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleUnskipItem(index);
+                                    }}
+                                    className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 hover:bg-warning-500/30 transition-colors touch-target"
+                                    title="Revert skip"
+                                  >
+                                    <ArrowPathIcon className="h-4 w-4" />
+                                  </button>
+                                )}
+                                {isSkipped && isViewMode && (
+                                  <div className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center">
+                                    <ExclamationTriangleIcon className="h-4 w-4 text-warning-400" />
+                                  </div>
+                                )}
+                                {!isCompleted && !isSkipped && (
+                                  <div
+                                    className={`w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-primary-400 status-badge-glow' : 'bg-gray-500'}`}
+                                  />
+                                )}
+                              </div>
+
+                              {/* Item Info */}
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className={`font-medium text-sm truncate ${
+                                    isCompleted
+                                      ? 'text-success-300 line-through'
+                                      : isSkipped
+                                        ? 'text-warning-300'
+                                        : isCurrent
+                                          ? 'text-white'
+                                          : 'text-gray-300'
+                                  }`}
+                                >
+                                  {item.name}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs text-gray-500 font-mono truncate">
+                                    {item.binLocation}
+                                  </p>
+                                  {isSkipped && item.skipReason && (
+                                    <p className="text-xs text-warning-300 truncate">
+                                      ({item.skipReason})
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Quantity & Actions */}
+                            <div className="text-right flex-shrink-0 ml-2 flex items-center gap-2">
+                              <p
+                                className={`font-semibold text-sm font-mono ${
+                                  isCompleted
+                                    ? 'text-success-300'
+                                    : isSkipped
+                                      ? 'text-warning-300'
+                                      : isCurrent
+                                        ? 'text-primary-400'
+                                        : 'text-gray-300'
+                                }`}
+                              >
+                                {isSkipped ? 'Skipped' : `${item.pickedQuantity}/${item.quantity}`}
+                              </p>
+
+                              {/* Action buttons - only show for current/selected item */}
+                              {isCurrent && !isViewMode && !isCompleted && !isSkipped && (
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    handleSkipItem(index);
+                                  }}
+                                  className="text-warning-400 hover:text-warning-300 hover:bg-warning-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                  title="Skip this item"
+                                >
+                                  <ForwardIcon className="h-4 w-4" />
+                                </button>
+                              )}
+                              {isCurrent &&
+                                !isViewMode &&
+                                !isCompleted &&
+                                !isSkipped &&
+                                (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleManualOverride(index);
+                                    }}
+                                    className="text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                    title="Manual override"
+                                  >
+                                    <PencilSquareIcon className="h-4 w-4" />
+                                  </button>
+                                )}
+                              {(!isViewMode || userRole === 'ADMIN' || userRole === 'SUPERVISOR') &&
+                                item.pickedQuantity > 0 &&
+                                !isSkipped && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleUndoPick(index);
+                                    }}
+                                    className="text-error-400 hover:text-error-300 hover:bg-error-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                    title="Undo pick"
+                                  >
+                                    <MinusCircleIcon className="h-4 w-4" />
+                                  </button>
+                                )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Scan Input */}
+                  <div className="scanner-active rounded-xl">
+                    <ScanInput
+                      value={scanValue}
+                      onChange={setScanValue}
+                      onScan={handleScan}
+                      placeholder={
+                        currentTask.barcode ? 'Scan barcode...' : 'Scan or enter item code...'
+                      }
+                      error={scanError || undefined}
+                      disabled={isViewMode ? true : undefined}
+                    />
+                  </div>
+
+                  {/* Scan Instruction */}
+                  {currentTask.barcode && (
+                    <div className="scan-instruction">
+                      <p className="text-gray-400 text-sm">
+                        Scan this barcode:{' '}
+                        <span className="font-mono font-semibold text-primary-400">
+                          {currentTask.barcode}
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {!isViewMode && (
+                    <div className="flex gap-3">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        onClick={handleReportException}
+                        disabled={pickMutation.isPending}
+                        className="w-full action-button-enhanced touch-target"
+                      >
+                        <WrenchScrewdriverIcon className="h-5 w-5 mr-2" />
+                        Report Exception
+                      </Button>
+                    </div>
+                  )}
+                  {isViewMode && (
+                    <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
+                      <p className="picking-subtitle text-primary-300 text-sm">
+                        Interactions are disabled in view-only mode
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* No Current Task */
+              <div className="picking-card rounded-2xl p-8 text-center industrial-corners">
+                <p className="picking-subtitle text-gray-400">No items to pick</p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Progress */}
-        <Card variant="glass" className="card-hover">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                Progress: {completedTasks} / {totalTasks} items
-              </span>
-              <span className="text-xl sm:text-2xl font-bold text-white">{order.progress}%</span>
-            </div>
-            <div className="w-full bg-white/[0.05] rounded-full h-2 sm:h-3 overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-primary-500 to-primary-400 h-full rounded-full transition-all duration-500 shadow-glow"
-                style={{ width: `${order.progress}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {isOrderComplete ? (
-          /* Complete Order Card */
-          <Card variant="glass" className="border-success-500/50 border-2 card-hover">
-            <CardContent className="p-6 sm:p-10 text-center space-y-4 sm:space-y-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-success-500/20 flex items-center justify-center animate-scale-in">
-                <CheckIcon className="h-8 w-8 sm:h-10 sm:w-10 text-success-400" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">All Items Picked!</h2>
-              <p className="text-gray-400 text-sm sm:text-base mb-6 sm:mb-8">
-                Order is ready to be completed and sent to packing.
-              </p>
-              <Button
-                size="lg"
-                variant="success"
-                onClick={handleCompleteOrder}
-                isLoading={completeMutation.isPending}
-                disabled={isViewMode ? true : undefined}
-                className="shadow-glow touch-target"
-              >
-                Complete Order
-              </Button>
-            </CardContent>
-          </Card>
-        ) : currentTask ? (
-          /* Current Task Card */
-          <Card variant="glass" className="border-primary-500/50 border-2 shadow-glow card-hover">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between text-base sm:text-lg">
-                <span className="text-white">Current Pick Task</span>
-                <TaskStatusBadge
-                  status={
-                    currentTask.pickedQuantity > 0 ? TaskStatus.IN_PROGRESS : TaskStatus.PENDING
-                  }
-                />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6">
-              {/* Item Info */}
-              <div className="flex items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                    {currentTask.name}
-                  </h3>
-                  {currentTask.barcode && (
-                    <p className="text-lg sm:text-2xl font-mono text-gray-300 mt-3 tracking-wider bg-white/[0.02] inline-block px-3 sm:px-4 py-2 rounded-lg border border-white/[0.08] text-sm sm:text-base break-all">
-                      {currentTask.barcode}
-                    </p>
-                  )}
-                  {!currentTask.barcode && (
-                    <p className="text-base sm:text-lg text-warning-400 mt-3 font-mono bg-warning-500/10 inline-block px-3 sm:px-4 py-2 rounded-lg border border-warning-500/30">
-                      No barcode assigned
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Quantity */}
-              <div className="flex items-center justify-center gap-4 sm:gap-6 py-4 sm:py-6 bg-white/[0.02] rounded-xl border border-white/[0.08]">
-                <div className="text-center">
-                  <p className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider mb-2">
-                    Picked
-                  </p>
-                  <p className="text-3xl sm:text-4xl font-bold text-primary-400">
-                    {currentTask.pickedQuantity}
-                  </p>
-                </div>
-                <div className="text-4xl sm:text-5xl text-gray-600">/</div>
-                <div className="text-center">
-                  <p className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider mb-2">
-                    Needed
-                  </p>
-                  <p className="text-3xl sm:text-4xl font-bold text-white">
-                    {currentTask.quantity}
-                  </p>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="bg-primary-500/10 rounded-xl p-4 sm:p-5 border border-primary-500/30">
-                <p className="text-xs sm:text-sm text-gray-400 mb-2 uppercase tracking-wider">
-                  Go to bin location:
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary-400 font-mono tracking-wider break-all">
-                  {formatBinLocation(currentTask.binLocation)}
-                </p>
-              </div>
-
-              {/* Scan Input */}
-              <div>
-                <ScanInput
-                  value={scanValue}
-                  onChange={setScanValue}
-                  onScan={handleScan}
-                  placeholder={
-                    currentTask.barcode ? 'Scan barcode...' : 'Scan or enter item code...'
-                  }
-                  error={scanError || undefined}
-                  disabled={isViewMode ? true : undefined}
-                />
-                {currentTask.barcode && (
-                  <p className="mt-3 text-sm text-gray-400 bg-white/[0.02] inline-block px-3 sm:px-4 py-2 rounded-lg border border-white/[0.08]">
-                    Scan this barcode:{' '}
-                    <span className="font-mono font-semibold text-primary-400 break-all">
-                      {currentTask.barcode}
-                    </span>
-                  </p>
-                )}
-                {!currentTask.barcode && (
-                  <p className="mt-3 text-sm text-gray-400 bg-white/[0.02] inline-block px-3 sm:px-4 py-2 rounded-lg border border-white/[0.08]">
-                    No barcode assigned - scan or enter item code manually
-                  </p>
-                )}
-              </div>
-
-              {/* Actions */}
-              {!isViewMode && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="warning"
-                    size="lg"
-                    onClick={handleReportException}
-                    disabled={pickMutation.isPending}
-                    className="w-full shadow-lg touch-target"
-                  >
-                    <WrenchScrewdriverIcon className="h-5 w-5 mr-2" />
-                    Report Exception
-                  </Button>
-                </div>
-              )}
-              {isViewMode && (
-                <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                  <p className="text-sm text-primary-300">
-                    Interactions are disabled in view-only mode
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          /* No Current Task */
-          <Card>
-            <CardContent className="p-6 sm:p-8 text-center">
-              <p className="text-gray-600">No items to pick</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Remaining Items List */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
-            <CardTitle>Items in Order</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {order.items?.map((item, index) => {
-                const isCompleted = item.pickedQuantity >= item.quantity;
-                const isSkipped = item.status === 'SKIPPED';
-                const isCurrent = index === currentTaskIndex;
-
-                return (
-                  <div
-                    key={item.orderItemId}
-                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-xl border transition-all duration-300 gap-3 ${
-                      isCompleted
-                        ? 'border-success-500/50 bg-success-500/10 shadow-glow'
-                        : isSkipped
-                          ? 'border-warning-500/50 bg-warning-500/10'
-                          : isCurrent
-                            ? 'border-primary-500/50 bg-primary-500/10 shadow-glow'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05]'
-                    } ${isCurrent ? 'ring-2 ring-primary-500/30' : ''}`}
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                      {/* Status Icon */}
-                      <div className="flex-shrink-0">
-                        {isCompleted && (
-                          <CheckIcon className="h-5 w-5 sm:h-6 sm:w-6 text-success-400" />
-                        )}
-                        {isSkipped && (
-                          <div className="flex items-center gap-2">
-                            <ExclamationTriangleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-warning-400" />
-                            {!isViewMode && (
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  handleUnskipItem(index);
-                                }}
-                                className="text-warning-400 hover:text-warning-300 transition-colors p-1 hover:bg-warning-500/20 rounded-lg touch-target"
-                                title="Revert skip"
-                              >
-                                <ArrowPathIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Item Info */}
-                      <div className="flex-1 min-w-0">
-                        <div>
-                          <p
-                            className={`font-semibold text-base sm:text-lg ${
-                              isCompleted
-                                ? 'text-success-300'
-                                : isSkipped
-                                  ? 'text-warning-300'
-                                  : 'text-white'
-                            }`}
-                          >
-                            {item.name}
-                          </p>
-                          {!item.barcode && (
-                            <p className="text-xs text-warning-400 font-mono mt-1">
-                              No barcode assigned
-                            </p>
-                          )}
-                          {item.barcode && (
-                            <p className="text-xs sm:text-sm text-gray-500 font-mono truncate">
-                              {item.barcode}
-                            </p>
-                          )}
-                          {isSkipped && item.skipReason && (
-                            <p className="text-xs sm:text-sm text-warning-300 mt-2 bg-warning-500/10 inline-block px-2 py-1 rounded">
-                              {item.skipReason}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Quantity */}
-                      <div className="text-right flex-shrink-0">
-                        <p
-                          className={`font-semibold text-base sm:text-lg ${
-                            isCompleted
-                              ? 'text-success-300'
-                              : isSkipped
-                                ? 'text-warning-300'
-                                : 'text-white'
-                          }`}
-                        >
-                          {isSkipped ? 'Skipped' : `${item.pickedQuantity} / ${item.quantity}`}
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-500 font-mono">
-                          {item.binLocation}
-                        </p>
-
-                        {/* Undo Pick button */}
-                        {item.pickedQuantity > 0 && !isSkipped && !isViewMode && (
-                          <button
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleUndoPick(index);
-                            }}
-                            className="mt-2 text-error-400 hover:text-error-300 transition-colors flex items-center gap-1 justify-end hover:bg-error-500/10 px-2 py-1 rounded-lg touch-target"
-                            title="Remove last picked item"
-                          >
-                            <MinusCircleIcon className="h-4 w-4" />
-                            <span className="text-xs">Undo Pick</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Exception Modal */}
         {showExceptionModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-            <div className="glass-card shadow-xl max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-xl">
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="scanner-modal-content max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl">
               {/* Header */}
-              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-t-xl">
+              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-4 sm:px-6 py-4 rounded-t-2xl">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <WrenchScrewdriverIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <h2 className="text-lg sm:text-xl font-bold">Report Exception</h2>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                      <WrenchScrewdriverIcon className="h-5 w-5" />
+                    </div>
+                    <h2 className="picking-title text-xl">Report Exception</h2>
                   </div>
                   <button
                     onClick={() => setShowExceptionModal(false)}
                     className="text-white hover:text-warning-200 transition-colors touch-target p-1"
                   >
-                    <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <XMarkIcon className="h-6 w-6" />
                   </button>
                 </div>
               </div>
 
               {/* Step Indicator */}
-              <div className="px-4 sm:px-6 py-2 sm:py-3 bg-white/[0.05] border-b border-white/[0.08]">
+              <div className="px-6 py-4 border-b border-white/[0.08]">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="step-indicator flex items-center gap-2">
                     <div
-                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
-                        exceptionStep === 'type'
-                          ? 'bg-warning-500 text-white'
-                          : exceptionStep === 'details' || exceptionStep === 'confirm'
-                            ? 'bg-success-500 text-white'
-                            : 'bg-gray-600 text-gray-400'
-                      }`}
-                    >
-                      {exceptionStep === 'type' ? '1' : '✓'}
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-white hidden xs:inline">
-                      Type
-                    </span>
+                      className={`step-indicator-dot ${exceptionStep === 'type' ? 'active' : exceptionStep !== 'type' ? 'completed' : ''}`}
+                    />
+                    <span className="text-xs font-medium text-white hidden xs:inline">Type</span>
                   </div>
                   <div
-                    className={`h-0.5 w-6 sm:w-12 ${
-                      exceptionStep === 'details' || exceptionStep === 'confirm'
-                        ? 'bg-success-500'
-                        : 'bg-gray-600'
-                    }`}
-                  ></div>
-                  <div className="flex items-center gap-1 sm:gap-2">
+                    className={`step-indicator-line flex-1 mx-2 ${exceptionStep !== 'type' ? 'completed' : ''}`}
+                  />
+                  <div className="step-indicator flex items-center gap-2">
                     <div
-                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
-                        exceptionStep === 'details'
-                          ? 'bg-warning-500 text-white'
-                          : exceptionStep === 'confirm'
-                            ? 'bg-success-500 text-white'
-                            : 'bg-gray-600 text-gray-400'
-                      }`}
-                    >
-                      {exceptionStep === 'details' ? '2' : exceptionStep === 'confirm' ? '✓' : '2'}
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-white hidden sm:inline">
-                      Details
-                    </span>
+                      className={`step-indicator-dot ${exceptionStep === 'details' ? 'active' : exceptionStep === 'confirm' ? 'completed' : ''}`}
+                    />
+                    <span className="text-xs font-medium text-white hidden sm:inline">Details</span>
                   </div>
                   <div
-                    className={`h-0.5 w-6 sm:w-12 ${exceptionStep === 'confirm' ? 'bg-success-500' : 'bg-gray-600'}`}
-                  ></div>
-                  <div className="flex items-center gap-1 sm:gap-2">
+                    className={`step-indicator-line flex-1 mx-2 ${exceptionStep === 'confirm' ? 'completed' : ''}`}
+                  />
+                  <div className="step-indicator flex items-center gap-2">
                     <div
-                      className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
-                        exceptionStep === 'confirm'
-                          ? 'bg-warning-500 text-white'
-                          : 'bg-gray-600 text-gray-400'
-                      }`}
-                    >
-                      3
-                    </div>
-                    <span className="text-xs sm:text-sm font-medium text-white hidden sm:inline">
-                      Confirm
-                    </span>
+                      className={`step-indicator-dot ${exceptionStep === 'confirm' ? 'active' : ''}`}
+                    />
+                    <span className="text-xs font-medium text-white hidden sm:inline">Confirm</span>
                   </div>
                 </div>
               </div>
 
               {/* Content */}
-              <div className="p-4 sm:p-6">
+              <div className="p-6">
                 {exceptionStep === 'type' && (
                   <div>
-                    <p className="text-white mb-4 text-sm sm:text-base">
-                      Select type of exception:
-                    </p>
+                    <p className="picking-subtitle text-white mb-4">Select type of exception:</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.OUT_OF_STOCK)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.OUT_OF_STOCK
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Out of Stock</div>
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          Item not available in bin
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.DAMAGE)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.DAMAGE
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Damaged</div>
-                        <div className="text-xs sm:text-sm text-gray-400">Item is damaged</div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.DEFECTIVE)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.DEFECTIVE
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Defective</div>
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          Item has quality issues
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.WRONG_ITEM)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.WRONG_ITEM
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Wrong Item</div>
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          Incorrect item in bin
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.SHORT_PICK)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.SHORT_PICK
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Short Pick</div>
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          Insufficient quantity
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.BIN_MISMATCH)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.BIN_MISMATCH
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Bin Mismatch</div>
-                        <div className="text-xs sm:text-sm text-gray-400">Item in wrong bin</div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.SUBSTITUTION)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.SUBSTITUTION
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Substitution</div>
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          Customer accepts substitute
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setExceptionType(ExceptionType.BARCODE_MISMATCH)}
-                        className={`p-3 sm:p-4 rounded-lg border-2 text-left transition-all touch-target ${
-                          exceptionType === ExceptionType.BARCODE_MISMATCH
-                            ? 'border-primary-500 bg-primary-500/20'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                        }`}
-                      >
-                        <div className="font-semibold text-white text-sm">Barcode Issue</div>
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          Barcode doesn't match
-                        </div>
-                      </button>
+                      {[
+                        {
+                          type: ExceptionType.OUT_OF_STOCK,
+                          label: 'Out of Stock',
+                          desc: 'Item not available in bin',
+                        },
+                        { type: ExceptionType.DAMAGE, label: 'Damaged', desc: 'Item is damaged' },
+                        {
+                          type: ExceptionType.DEFECTIVE,
+                          label: 'Defective',
+                          desc: 'Item has quality issues',
+                        },
+                        {
+                          type: ExceptionType.WRONG_ITEM,
+                          label: 'Wrong Item',
+                          desc: 'Incorrect item in bin',
+                        },
+                        {
+                          type: ExceptionType.SHORT_PICK,
+                          label: 'Short Pick',
+                          desc: 'Insufficient quantity',
+                        },
+                        {
+                          type: ExceptionType.BIN_MISMATCH,
+                          label: 'Bin Mismatch',
+                          desc: 'Item in wrong bin',
+                        },
+                        {
+                          type: ExceptionType.SUBSTITUTION,
+                          label: 'Substitution',
+                          desc: 'Customer accepts substitute',
+                        },
+                        {
+                          type: ExceptionType.BARCODE_MISMATCH,
+                          label: 'Barcode Issue',
+                          desc: "Barcode doesn't match",
+                        },
+                      ].map(({ type, label, desc }) => (
+                        <button
+                          key={type}
+                          onClick={() => setExceptionType(type)}
+                          className={`p-4 rounded-xl border-2 text-left transition-all touch-target ${
+                            exceptionType === type
+                              ? 'border-primary-500 bg-primary-500/20'
+                              : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
+                          }`}
+                        >
+                          <div className="picking-title text-white text-sm">{label}</div>
+                          <div className="picking-subtitle text-xs text-gray-400 mt-1">{desc}</div>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -1335,21 +1572,21 @@ export function PickingPage() {
                 {exceptionStep === 'details' && (
                   <div>
                     <div className="mb-4">
-                      <div className="inline-block px-3 py-1 bg-primary-500/20 text-primary-300 rounded-full text-sm font-medium">
+                      <div className="inline-block px-3 py-1.5 bg-primary-500/20 text-primary-300 rounded-lg text-sm font-medium">
                         {exceptionType.replace(/_/g, ' ')}
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-white mb-1">
-                          Reason <span className="text-danger-400">*</span>
+                        <label className="block text-sm font-medium text-white mb-2">
+                          Reason <span className="text-error-400">*</span>
                         </label>
                         <textarea
                           value={exceptionReason}
                           onChange={e => setExceptionReason(e.target.value)}
                           rows={3}
-                          className="mobile-input w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                          className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
                           placeholder="Provide details about the exception..."
                           required
                         />
@@ -1357,14 +1594,14 @@ export function PickingPage() {
 
                       {exceptionType === ExceptionType.SUBSTITUTION && (
                         <div>
-                          <label className="block text-sm font-medium text-white mb-1">
+                          <label className="block text-sm font-medium text-white mb-2">
                             Substitute SKU
                           </label>
                           <input
                             type="text"
                             value={substituteSku}
                             onChange={e => setSubstituteSku(e.target.value.toUpperCase())}
-                            className="mobile-input w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono"
                             placeholder="Enter substitute SKU..."
                           />
                         </div>
@@ -1372,7 +1609,7 @@ export function PickingPage() {
 
                       {exceptionType === ExceptionType.SHORT_PICK && (
                         <div>
-                          <label className="block text-sm font-medium text-white mb-1">
+                          <label className="block text-sm font-medium text-white mb-2">
                             Actual Quantity Available
                           </label>
                           <input
@@ -1380,7 +1617,7 @@ export function PickingPage() {
                             min={0}
                             value={exceptionQuantity}
                             onChange={e => setExceptionQuantity(parseInt(e.target.value) || 0)}
-                            className="mobile-input w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono"
                             placeholder="Enter actual quantity..."
                           />
                         </div>
@@ -1391,11 +1628,11 @@ export function PickingPage() {
 
                 {exceptionStep === 'confirm' && (
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-4">Confirm Exception</h3>
+                    <h3 className="picking-title text-lg text-white mb-4">Confirm Exception</h3>
 
-                    <div className="bg-white/[0.05] rounded-lg p-4 space-y-3 border border-white/[0.08]">
+                    <div className="bg-white/[0.05] rounded-xl p-4 space-y-3 border border-white/[0.08]">
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-400">Type:</span>
+                        <span className="picking-subtitle text-gray-400 text-sm">Type:</span>
                         <span className="text-sm font-semibold text-white">
                           {exceptionType.replace(/_/g, ' ')}
                         </span>
@@ -1404,14 +1641,16 @@ export function PickingPage() {
                       {currentTask && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-sm font-medium text-gray-400">SKU:</span>
-                            <span className="text-sm font-semibold text-white">
+                            <span className="picking-subtitle text-gray-400 text-sm">SKU:</span>
+                            <span className="text-sm font-semibold text-white font-mono">
                               {currentTask.sku}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-sm font-medium text-gray-400">Expected Qty:</span>
-                            <span className="text-sm font-semibold text-white">
+                            <span className="picking-subtitle text-gray-400 text-sm">
+                              Expected Qty:
+                            </span>
+                            <span className="text-sm font-semibold text-white font-mono">
                               {currentTask.quantity}
                             </span>
                           </div>
@@ -1420,15 +1659,17 @@ export function PickingPage() {
 
                       {exceptionReason && (
                         <div>
-                          <span className="text-sm font-medium text-gray-400">Reason:</span>
+                          <span className="picking-subtitle text-gray-400 text-sm">Reason:</span>
                           <p className="text-sm text-white mt-1">{exceptionReason}</p>
                         </div>
                       )}
 
                       {exceptionType === ExceptionType.SUBSTITUTION && substituteSku && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-400">Substitute SKU:</span>
-                          <span className="text-sm font-semibold text-primary-400">
+                          <span className="picking-subtitle text-gray-400 text-sm">
+                            Substitute SKU:
+                          </span>
+                          <span className="text-sm font-semibold text-primary-400 font-mono">
                             {substituteSku}
                           </span>
                         </div>
@@ -1436,16 +1677,18 @@ export function PickingPage() {
 
                       {exceptionType === ExceptionType.SHORT_PICK && exceptionQuantity > 0 && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-400">Actual Qty:</span>
-                          <span className="text-sm font-semibold text-white">
+                          <span className="picking-subtitle text-gray-400 text-sm">
+                            Actual Qty:
+                          </span>
+                          <span className="text-sm font-semibold text-white font-mono">
                             {exceptionQuantity}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-4 p-3 bg-primary-500/20 border border-primary-500/30 rounded-lg">
-                      <p className="text-sm text-primary-300">
+                    <div className="mt-4 p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                      <p className="picking-subtitle text-primary-300 text-sm">
                         <strong>Note:</strong> This exception will be logged and the item will be
                         skipped. A supervisor will review and resolve this exception.
                       </p>
@@ -1455,7 +1698,7 @@ export function PickingPage() {
               </div>
 
               {/* Footer */}
-              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white/[0.02] border-t border-white/[0.08] rounded-b-xl flex flex-col sm:flex-row justify-between gap-3">
+              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex flex-col sm:flex-row justify-between gap-3">
                 {exceptionStep === 'type' && (
                   <>
                     <Button
@@ -1580,6 +1823,169 @@ export function PickingPage() {
           cancelText="Cancel"
           variant="success"
         />
+
+        {/* Skip Item Modal */}
+        {showSkipModal && skipItemIndex !== null && order?.items?.[skipItemIndex] && (
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
+            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="picking-title text-lg">Skip Item</h2>
+                  <button
+                    onClick={() => setShowSkipModal(false)}
+                    className="text-white hover:text-warning-200 transition-colors"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
+                  <p className="picking-title text-white">{order.items[skipItemIndex].name}</p>
+                  <p className="text-sm text-gray-400 font-mono mt-1">
+                    {order.items[skipItemIndex].sku}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
+                    {order.items[skipItemIndex].binLocation}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Reason for skipping <span className="text-error-400">*</span>
+                  </label>
+                  <textarea
+                    value={skipReason}
+                    onChange={e => setSkipReason(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 text-white placeholder-gray-500"
+                    placeholder="e.g., Item not found in bin, Damaged, etc."
+                  />
+                </div>
+
+                <div className="p-4 bg-warning-500/10 border border-warning-500/30 rounded-xl">
+                  <p className="picking-subtitle text-warning-300 text-sm">
+                    <strong>Warning:</strong> Skipping this item will mark it as skipped. You can
+                    revert this later if needed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="warning"
+                  onClick={handleConfirmSkip}
+                  isLoading={isSkipping}
+                  disabled={!skipReason.trim()}
+                >
+                  Skip Item
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Manual Override Modal */}
+        {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
+            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+              <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="picking-title text-lg">Manual Override</h2>
+                  <button
+                    onClick={() => setShowOverrideModal(false)}
+                    className="text-white hover:text-primary-200 transition-colors"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
+                  <p className="picking-title text-white">{order.items[overrideItemIndex].name}</p>
+                  <p className="text-sm text-gray-400 font-mono mt-1">
+                    {order.items[overrideItemIndex].sku}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Required: {order.items[overrideItemIndex].quantity} | Currently Picked:{' '}
+                    {order.items[overrideItemIndex].pickedQuantity}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    New Picked Quantity <span className="text-error-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={order.items[overrideItemIndex].quantity}
+                    value={overrideQuantity}
+                    onChange={e => setOverrideQuantity(e.target.value)}
+                    onFocus={e => e.target.select()}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Max: {order.items[overrideItemIndex].quantity} (cannot exceed required quantity)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Reason <span className="text-error-400">*</span>
+                  </label>
+                  <textarea
+                    value={overrideReason}
+                    onChange={e => setOverrideReason(e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                    placeholder="e.g., Found damaged item, Correcting count, etc."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Additional Notes (optional)
+                  </label>
+                  <textarea
+                    value={overrideNotes}
+                    onChange={e => setOverrideNotes(e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                    placeholder="Any additional details..."
+                  />
+                </div>
+
+                <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                  <p className="picking-subtitle text-primary-300 text-sm">
+                    <strong>Note:</strong> This action will be logged and audited. Supervisors will
+                    be able to review this override.
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleConfirmOverride}
+                  isLoading={isOverriding}
+                  disabled={!overrideReason.trim() || overrideQuantity < 0}
+                >
+                  Apply Override
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

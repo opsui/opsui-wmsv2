@@ -462,9 +462,22 @@ export function ProductSearchPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Industrial grid background texture */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.12) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(59, 130, 246, 0.12) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          opacity: 0.2,
+          maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 80%)',
+        }}
+      />
+
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in-up z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
 
@@ -487,7 +500,9 @@ export function ProductSearchPage() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Product Search</h1>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
+              Product Search
+            </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Browse and filter products by SKU, name, barcode, or category
             </p>
@@ -894,17 +909,18 @@ export function ProductSearchPage() {
             ) : (
               /* Grid View */
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {data.data.map(sku => {
+                {data.data.map((sku, index) => {
                   const status = getStockStatusBadge(sku.totalQuantity || 0);
                   const StatusIcon = status.icon;
                   return (
                     <div
                       key={sku.sku}
-                      className={`p-4 rounded-lg border dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer ${
+                      className={`p-4 rounded-lg border dark:border-gray-700 hover:shadow-lg transition-all duration-200 cursor-pointer animate-fade-in-up ${
                         selectedSkus.has(sku.sku)
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:bg-gray-800'
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-glow'
+                          : 'border-gray-200 dark:bg-gray-800 hover:border-primary-300'
                       }`}
+                      style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'backwards' }}
                       onClick={() => selectSKU(sku)}
                     >
                       {/* Image */}

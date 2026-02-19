@@ -114,7 +114,12 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
+    "@opentelemetry/resources": "2.4.0",
+    "@opentelemetry/sdk-metrics": "2.4.0",
+    "@opentelemetry/sdk-trace-node": "2.4.0",
+    "@opentelemetry/semantic-conventions": "1.39.0",
     "dotenv": "^17.2.3",
+    "framer-motion": "12.34.0",
     "recharts": "^3.6.0",
     "uuid": "^13.0.0"
   }

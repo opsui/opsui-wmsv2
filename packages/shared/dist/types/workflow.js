@@ -7,7 +7,7 @@
  * CRITICAL: These rules must match the database constraints and triggers.
  * See: packages/backend/src/db/schema.sql
  */
-import { OrderStatus } from './index.js';
+import { OrderStatus } from './index';
 /**
  * Valid state transitions for orders.
  *

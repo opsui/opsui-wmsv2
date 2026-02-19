@@ -1,7 +1,12 @@
 /**
- * Order queue page - Premium dark theme
+ * Order queue page - "Industrial Velocity" Design
  *
- * Lists available orders for pickers to claim
+ * A high-energy, industrial aesthetic for warehouse operations
+ * Features: Diagonal scan lines, electric accents, momentum animations
+ *
+ * Design Direction: Industrial/Utilitarian with high-energy twist
+ * Typography: Bold condensed headers, refined body
+ * Color: Deep slate base with electric lime/emerald accents
  */
 
 import {
@@ -17,23 +22,63 @@ import {
 } from '@/components/shared';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
-import { formatDate } from '@/lib/utils';
 import { useClaimOrder, useContinueOrder, useOrderQueue } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
+  BoltIcon,
   ChartBarIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
   ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
   QueueListIcon,
   ShoppingBagIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// ============================================================================
+// ANIMATION VARIANTS
+// ============================================================================
+
+const pageVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 100, damping: 15 },
+  },
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' },
+  },
+};
+
+const pulseVariants = {
+  animate: {
+    scale: [1, 1.05, 1],
+    opacity: [0.7, 1, 0.7],
+    transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+  },
+};
 
 // ============================================================================
 // FILTER DROPDOWN COMPONENTS
@@ -49,8 +94,13 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const options = [
-    { value: 'PENDING' as OrderStatus, label: 'Pending', icon: ShoppingBagIcon },
-    { value: 'PICKING' as OrderStatus, label: 'Tote', icon: ClipboardDocumentListIcon },
+    { value: 'PENDING' as OrderStatus, label: 'Pending', icon: ShoppingBagIcon, color: 'emerald' },
+    {
+      value: 'PICKING' as OrderStatus,
+      label: 'Tote',
+      icon: ClipboardDocumentListIcon,
+      color: 'lime',
+    },
   ];
 
   const selectedOption = options.find(opt => opt.value === value);
@@ -67,62 +117,70 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
 
   return (
     <div className="relative z-40" ref={dropdownRef}>
-      <button
+      <motion.button
+        whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-touch ${
+        className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 min-h-touch border-2 ${
           isOpen
-            ? 'bg-primary-600 text-white shadow-lg'
-            : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.08] hover:bg-gray-200 dark:hover:text-white hover:text-gray-900 dark:border-white/[0.08] border-gray-300'
+            ? 'bg-purple-400 text-slate-900 border-purple-400 shadow-[0_0_20px_rgba(192,132,252,0.4)]'
+            : 'bg-slate-800/80 text-slate-200 border-slate-700 hover:border-purple-500/50 hover:text-purple-400'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`Status filter: ${selectedOption?.label}`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
-        <span>{selectedOption?.label}</span>
+        <span className="uppercase">{selectedOption?.label}</span>
         <ChevronDownIcon
-          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
-      </button>
+      </motion.button>
 
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in"
-          role="listbox"
-        >
-          <div className="py-1">
-            {options.map(option => {
-              const OptionIcon = option.icon;
-              const isActive = option.value === value;
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group min-h-touch ${
-                    isActive
-                      ? 'text-white bg-primary-600'
-                      : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100'
-                  }`}
-                  role="option"
-                  aria-selected={isActive}
-                >
-                  <OptionIcon
-                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+            role="listbox"
+          >
+            <div className="py-2">
+              {options.map(option => {
+                const OptionIcon = option.icon;
+                const isActive = option.value === value;
+                return (
+                  <motion.button
+                    key={option.value}
+                    whileHover={{ x: 4 }}
+                    onClick={() => {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
                       isActive
-                        ? 'text-white'
-                        : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-gray-600'
+                        ? 'bg-purple-400 text-slate-900'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
                     }`}
-                  />
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                    role="option"
+                    aria-selected={isActive}
+                  >
+                    <OptionIcon className="h-4 w-4 flex-shrink-0" />
+                    {option.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="ml-auto w-2 h-2 rounded-full bg-slate-900"
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -138,10 +196,15 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
 
   const options = [
     { value: undefined as OrderPriority | undefined, label: 'All Priority', icon: QueueListIcon },
-    { value: 'URGENT' as OrderPriority, label: 'Urgent', icon: ExclamationTriangleIcon },
-    { value: 'HIGH' as OrderPriority, label: 'High', icon: ChartBarIcon },
-    { value: 'NORMAL' as OrderPriority, label: 'Normal', icon: ClipboardDocumentListIcon },
-    { value: 'LOW' as OrderPriority, label: 'Low', icon: ArrowPathIcon },
+    {
+      value: 'URGENT' as OrderPriority,
+      label: 'Urgent',
+      icon: ExclamationTriangleIcon,
+      color: 'red',
+    },
+    { value: 'HIGH' as OrderPriority, label: 'High', icon: BoltIcon, color: 'orange' },
+    { value: 'NORMAL' as OrderPriority, label: 'Normal', icon: ChartBarIcon, color: 'blue' },
+    { value: 'LOW' as OrderPriority, label: 'Low', icon: ArrowPathIcon, color: 'gray' },
   ];
 
   const selectedOption = options.find(opt => opt.value === value);
@@ -158,61 +221,257 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
 
   return (
     <div className="relative z-40" ref={dropdownRef}>
-      <button
+      <motion.button
+        whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 min-h-touch ${
+        className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 min-h-touch border-2 ${
           isOpen
-            ? 'bg-primary-600 text-white shadow-lg'
-            : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.08] hover:bg-gray-200 dark:hover:text-white hover:text-gray-900 dark:border-white/[0.08] border-gray-300'
+            ? 'bg-purple-400 text-slate-900 border-purple-400 shadow-[0_0_20px_rgba(192,132,252,0.4)]'
+            : 'bg-slate-800/80 text-slate-200 border-slate-700 hover:border-purple-500/50 hover:text-purple-400'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={`Priority filter: ${selectedOption?.label}`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
-        <span>{selectedOption?.label}</span>
+        <span className="uppercase">{selectedOption?.label}</span>
         <ChevronDownIcon
-          className={`h-3 w-3 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
-      </button>
+      </motion.button>
 
-      {isOpen && (
-        <div
-          className="absolute top-full left-0 mt-2 w-48 dark:bg-gray-900 bg-white dark:border-white/[0.08] border-gray-200 rounded-lg shadow-2xl animate-fade-in"
-          role="listbox"
-        >
-          <div className="py-1">
-            {options.map(option => {
-              const OptionIcon = option.icon;
-              const isActive = option.value === value;
-              return (
-                <button
-                  key={option.label}
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
-                    isActive
-                      ? 'text-white bg-primary-600'
-                      : 'dark:text-gray-300 text-gray-700 dark:hover:text-white hover:text-gray-900 dark:hover:bg-white/[0.05] hover:bg-gray-100'
-                  }`}
-                >
-                  <OptionIcon
-                    className={`h-4 w-4 flex-shrink-0 transition-colors duration-200 ${
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+            role="listbox"
+          >
+            <div className="py-2">
+              {options.map(option => {
+                const OptionIcon = option.icon;
+                const isActive = option.value === value;
+                return (
+                  <motion.button
+                    key={option.label}
+                    whileHover={{ x: 4 }}
+                    onClick={() => {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
                       isActive
-                        ? 'text-white'
-                        : 'dark:text-gray-500 text-gray-500 dark:group-hover:text-gray-400 group-hover:text-gray-600'
+                        ? 'bg-purple-400 text-slate-900'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
                     }`}
-                  />
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                  >
+                    <OptionIcon className="h-4 w-4 flex-shrink-0" />
+                    {option.label}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+// ============================================================================
+// ORDER CARD COMPONENT
+// ============================================================================
+
+interface OrderCardProps {
+  order: any;
+  onClaim: (orderId: string, status: OrderStatus) => void;
+  isClaiming: boolean;
+  claimingOrderId: string | null;
+}
+
+function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardProps) {
+  const isUrgent = order.priority === 'URGENT' || order.priority === 'HIGH';
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      layout
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="relative group"
+    >
+      {/* Urgent glow effect */}
+      {isUrgent && (
+        <motion.div
+          variants={pulseVariants}
+          animate="animate"
+          className="absolute -inset-1 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 rounded-2xl blur-lg"
+        />
+      )}
+
+      <Card
+        variant="glass"
+        className={`relative flex flex-col h-full bg-slate-900/95 border-2 transition-all duration-300 ${
+          isUrgent
+            ? 'border-orange-500/50 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
+            : 'border-slate-700/50 hover:border-purple-500/30'
+        }`}
+      >
+        {/* Scan line effect */}
+        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+          <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(192,132,252,0.02)_10px,rgba(192,132,252,0.02)_20px)]" />
+        </div>
+
+        <CardContent className="p-5 flex-1 flex flex-col relative z-10">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">
+                  {order.orderId}
+                </h3>
+                {isUrgent && (
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    <BoltIcon className="h-5 w-5 text-orange-400" />
+                  </motion.div>
+                )}
+              </div>
+              <p className="text-sm text-slate-400 mt-1 truncate">{order.customerName}</p>
+            </div>
+            <div className="flex flex-col gap-2 ml-2">
+              <OrderPriorityBadge priority={order.priority} />
+              <OrderStatusBadge status={order.status} />
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-700/50">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Items</p>
+              <p className="text-xl font-black text-white">{order.items?.length || 0}</p>
+            </div>
+            <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-700/50">
+              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Total</p>
+              <p className="text-xl font-black text-purple-400">
+                ${Number(order.totalAmount || 0).toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                Progress
+              </span>
+              <span className="text-sm font-black text-purple-400">{order.progress}%</span>
+            </div>
+            <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${order.progress}%` }}
+                transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400 relative"
+              >
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.3)_50%,transparent_100%)] animate-[shimmer_2s_infinite]" />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Items List */}
+          {order.items && order.items.length > 0 && (
+            <div className="flex-1 overflow-y-auto space-y-2 mb-4 max-h-48">
+              {order.items.map((item: any, itemIdx: number) => {
+                const isCompleted =
+                  item.status === 'COMPLETED' ||
+                  item.status === 'FULLY_PICKED' ||
+                  item.pickedQuantity >= item.quantity;
+                const isSkipped = item.status === 'SKIPPED';
+                const isPartial =
+                  !isCompleted &&
+                  !isSkipped &&
+                  item.pickedQuantity > 0 &&
+                  item.pickedQuantity < item.quantity;
+
+                const statusStyles = isCompleted
+                  ? 'border-purple-500/50 bg-purple-500/10'
+                  : isSkipped
+                    ? 'border-orange-500/50 bg-orange-500/10'
+                    : isPartial
+                      ? 'border-blue-500/50 bg-blue-500/10'
+                      : 'border-slate-700/50 bg-slate-800/50';
+
+                return (
+                  <motion.div
+                    key={`${order.orderId}-item-${itemIdx}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: itemIdx * 0.05 }}
+                    className={`text-xs p-3 rounded-lg border-l-4 ${statusStyles}`}
+                  >
+                    <div className="flex items-start gap-2 mb-1">
+                      <span className="font-bold text-slate-200 text-xs">{item.sku}</span>
+                      <span className="text-slate-500">·</span>
+                      <span className="text-slate-400 flex-1 truncate">{item.name}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 text-[10px]">
+                        LOC: <span className="text-slate-300 font-bold">{item.binLocation}</span>
+                      </span>
+                      <span
+                        className={`font-bold text-sm ${
+                          isCompleted
+                            ? 'text-purple-400'
+                            : isSkipped
+                              ? 'text-orange-400'
+                              : 'text-slate-300'
+                        }`}
+                      >
+                        {isSkipped ? 'SKIPPED' : `${item.pickedQuantity || 0}/${item.quantity}`}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Claim Button */}
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <Button
+              fullWidth
+              size="lg"
+              variant="primary"
+              onClick={() => onClaim(order.orderId, order.status)}
+              disabled={
+                isClaiming ||
+                (order.status !== 'PENDING' && order.status !== 'PICKING') ||
+                (order.status === 'PENDING' && claimingOrderId === order.orderId)
+              }
+              isLoading={order.status === 'PENDING' && claimingOrderId === order.orderId}
+              className="font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-slate-900 border-0 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] transition-all duration-300"
+            >
+              {order.status === 'PICKING' ? (
+                <span className="flex items-center gap-2">
+                  <SparklesIcon className="h-5 w-5" />
+                  Continue
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <BoltIcon className="h-5 w-5" />
+                  Claim
+                </span>
+              )}
+            </Button>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -224,7 +483,6 @@ export function OrderQueuePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
   const canPick = useAuthStore(state => state.canPick);
   const userId = useAuthStore(state => state.user?.userId);
   const { showToast } = useToast();
@@ -260,14 +518,12 @@ export function OrderQueuePage() {
   });
 
   // Separate query to check if user has PICKING orders (for auto-detect)
-  // This fetches ALL orders (no status filter) to check for PICKING status
-  // refetchOnMount: 'always' ensures fresh data after unclaim redirects
   const allOrdersQuery = useOrderQueue({
-    status: undefined as OrderStatus | undefined, // No status filter - get all orders
-    pickerId: userId, // Only this picker's orders
+    status: undefined as OrderStatus | undefined,
+    pickerId: userId,
     page: 1,
-    limit: 100, // Fetch enough orders to detect PICKING status
-    refetchOnMount: 'always', // Always refetch on mount to get fresh data after unclaim
+    limit: 100,
+    refetchOnMount: 'always',
   });
   const allOrdersData = allOrdersQuery.data;
 
@@ -276,7 +532,6 @@ export function OrderQueuePage() {
     setPage(1);
   }, [statusFilter, priorityFilter]);
 
-  // Debug: Log orders to see if items are included (must be before any conditional returns)
   const orders = queueData?.orders || [];
 
   // Filter orders based on search query
@@ -288,46 +543,30 @@ export function OrderQueuePage() {
     const query = searchQuery.toLowerCase().trim();
 
     return orders.filter(order => {
-      // Search in order ID
       if (order.orderId.toLowerCase().includes(query)) {
         return true;
       }
-
-      // Search in customer name
       if (order.customerName?.toLowerCase().includes(query)) {
         return true;
       }
-
-      // Search in items (SKU and name)
       if (order.items && order.items.length > 0) {
-        return order.items.some(item => {
-          // Search in SKU
+        return order.items.some((item: any) => {
           if (item.sku?.toLowerCase().includes(query)) {
             return true;
           }
-          // Search in item name
           if (item.name?.toLowerCase().includes(query)) {
             return true;
           }
           return false;
         });
       }
-
       return false;
     });
   }, [orders, searchQuery]);
+
   useEffect(() => {
     if (orders.length > 0) {
       console.log('[OrderQueue] Orders loaded:', orders);
-      console.log('[OrderQueue] First order:', orders[0]);
-      console.log('[OrderQueue] First order items:', orders[0].items);
-      console.log('[OrderQueue] First order items length:', orders[0].items?.length);
-      // Log all orders with their item counts
-      orders.forEach((order, idx) => {
-        console.log(
-          `[OrderQueue] Order ${idx + 1}: ${order.orderId}, Status: ${order.status}, Items: ${order.items?.length || 0}`
-        );
-      });
     }
   }, [orders]);
 
@@ -337,85 +576,50 @@ export function OrderQueuePage() {
   // Handler to update status filter and sync with URL
   const handleStatusFilterChange = (status: OrderStatus) => {
     setStatusFilter(status);
-    // Update URL params to reflect the change
     setSearchParams({ status });
-    // Mark as auto-detected since user manually changed it
     hasAutoDetectedRef.current = true;
   };
 
-  // Auto-detect which tab to show based on whether picker has items in tote
-  // Priority: 1) Explicit URL status (user intent), 2) PICKING orders (tote), 3) default to PENDING
+  // Auto-detect which tab to show - runs once on mount
   useEffect(() => {
-    // Skip if we already auto-detected or user manually navigated
     if (hasAutoDetectedRef.current) {
-      console.log('[OrderQueue] Skipping auto-detect - already done');
       return;
     }
 
     const urlStatus = searchParams.get('status') as OrderStatus | null;
     const hasExplicitUrlStatus = urlStatus && Object.values(OrderStatus).includes(urlStatus);
 
-    console.log(
-      '[OrderQueue] Auto-detect check - URL status:',
-      urlStatus,
-      'explicit:',
-      hasExplicitUrlStatus
-    );
-    console.log(
-      '[OrderQueue] allOrdersData:',
-      allOrdersData,
-      'isLoading:',
-      allOrdersQuery.isLoading
-    );
-
     if (allOrdersData?.orders) {
-      // If user explicitly navigated with a URL status (e.g., after unclaim), respect it
-      // This prevents orders from "reclaiming" when user just unclaimed them
       if (hasExplicitUrlStatus) {
-        console.log('[OrderQueue] Respecting explicit URL status:', urlStatus);
         setStatusFilter(urlStatus!);
         hasAutoDetectedRef.current = true;
         return;
       }
 
-      // No explicit URL - check for PICKING orders (tote)
       const allOrders = allOrdersData.orders || [];
       const pickingOrders = allOrders.filter(o => o.status === OrderStatus.PICKING);
-      console.log(
-        '[OrderQueue] Auto-detect: total orders:',
-        allOrders.length,
-        'PICKING orders:',
-        pickingOrders.length
-      );
 
       if (pickingOrders.length > 0) {
-        console.log('[OrderQueue] Picker has items in tote, showing TOTE tab');
         setStatusFilter(OrderStatus.PICKING);
-        // Update URL to show we're on TOTE tab (helps with back navigation)
-        setSearchParams({ status: OrderStatus.PICKING });
+        // Use replace to avoid adding to history
+        setSearchParams({ status: OrderStatus.PICKING }, { replace: true });
         hasAutoDetectedRef.current = true;
         return;
       }
 
-      // No PICKING orders and no URL status - default to PENDING
-      console.log('[OrderQueue] No items in tote and no URL status, defaulting to PENDING');
       setStatusFilter(OrderStatus.PENDING);
       hasAutoDetectedRef.current = true;
-    } else {
-      console.log('[OrderQueue] Waiting for data to load...');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrdersData, searchParams]);
+  }, [allOrdersData]); // Only depend on allOrdersData, not searchParams
 
-  // Refetch orders when component mounts or filter changes to get fresh progress data
+  // Refetch orders when component mounts or filter changes
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
   }, [queryClient, statusFilter, priorityFilter]);
 
-  // Polling fallback when WebSocket is not connected
-  // This ensures fresh data even when real-time updates aren't working
+  // Polling fallback
   useEffect(() => {
-    // Poll every 10 seconds to refresh order list
     const pollInterval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
     }, 10000);
@@ -423,21 +627,12 @@ export function OrderQueuePage() {
     return () => clearInterval(pollInterval);
   }, [queryClient]);
 
-  // ==========================================================================
-  // Real-time WebSocket Subscriptions
-  // ==========================================================================
-
-  // Subscribe to order updates for real-time queue updates
+  // WebSocket subscription
   useOrderUpdates(
     (data: { orderId: string; pickerId?: string; pickerName?: string; reason?: string }) => {
-      // Refresh order queue for all events
       queryClient.invalidateQueries({ queryKey: ['order-queue'] });
 
-      // CRITICAL: Only show toast for claim events NOT initiated by current user
-      // Don't show if we just claimed this order ourselves (prevents duplicate notifications)
       if (data.orderId === lastClaimedOrderIdRef.current) {
-        // We just claimed this order, don't show WebSocket toast
-        // Clear the ref after a short delay to allow for future updates
         setTimeout(() => {
           if (lastClaimedOrderIdRef.current === data.orderId) {
             lastClaimedOrderIdRef.current = null;
@@ -446,11 +641,10 @@ export function OrderQueuePage() {
         return;
       }
 
-      // Only show toast for claims by other users, not for unclaims
       const isOtherUsersClaim = data.pickerId && data.pickerId !== userId;
       if (isOtherUsersClaim) {
         showToast(
-          `Order ${data.orderId} has been claimed by ${data.pickerName || data.pickerId}`,
+          `Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`,
           'success',
           3000
         );
@@ -467,40 +661,30 @@ export function OrderQueuePage() {
       return;
     }
 
-    // For PICKING orders, call continue endpoint to log the action
     if (orderStatus === OrderStatus.PICKING) {
       try {
         await continueMutation.mutateAsync({ orderId });
       } catch {
-        // Silently ignore errors - continue is just for audit logging
+        // Silently ignore errors
       }
-      // Invalidate picker activity cache so admin dashboard shows this as current order
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
       navigate(`/orders/${orderId}/pick`);
       return;
     }
 
-    // For PENDING orders, claim the order
-    // CRITICAL: Synchronous check to prevent multiple simultaneous claims
-    // Use ref for immediate check before async operations
     if (isClaimingRef.current) {
-      console.log('[OrderQueue] Already claiming an order, ignoring click');
       return;
     }
 
-    // Also check the state-based lock (redundant but safe)
     if (claimingOrderId === orderId) {
       return;
     }
 
-    // Set both ref and state for maximum protection
     isClaimingRef.current = true;
     setClaimingOrderId(orderId);
-    lastClaimedOrderIdRef.current = orderId; // Track this order as just claimed
+    lastClaimedOrderIdRef.current = orderId;
 
     try {
-      // Refetch orders right before claiming to ensure we have fresh data
-      // This helps prevent 409 conflicts from stale cache when WebSocket is down
       await queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
 
       await claimMutation.mutateAsync({
@@ -508,25 +692,18 @@ export function OrderQueuePage() {
         dto: { pickerId: userId },
       });
       showToast(`Order ${orderId} claimed successfully`, 'success');
-
-      // Navigate to picking page for the claimed order
       navigate(`/orders/${orderId}/pick`);
     } catch (error: any) {
-      // Handle specific error messages based on response
       if (error?.response?.data?.error) {
         const backendError = error.response.data.error;
 
         if (backendError.includes('already claimed')) {
           showToast('Order is already claimed by another picker', 'error');
-          // Refresh the order list to show updated status
           queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
         } else if (backendError.includes('status')) {
           showToast(`Order cannot be claimed: ${backendError}`, 'error');
         } else if (backendError.includes('too many active orders')) {
-          showToast(
-            'You have reached the maximum of 5 active orders. Please complete some orders before claiming more.',
-            'error'
-          );
+          showToast('Maximum of 5 active orders reached. Complete some orders first.', 'error');
         } else {
           showToast(backendError, 'error');
         }
@@ -541,12 +718,13 @@ export function OrderQueuePage() {
 
   if (!canPick) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card variant="glass" className="max-w-md">
-          <CardContent className="p-6 text-center">
-            <p className="dark:text-gray-400 text-gray-600">
-              You need picker privileges to view this page.
-            </p>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Card variant="glass" className="max-w-md bg-slate-900 border-2 border-slate-700">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
+              <ShoppingBagIcon className="h-8 w-8 text-slate-500" />
+            </div>
+            <p className="text-slate-400 font-medium">Picker privileges required</p>
           </CardContent>
         </Card>
       </div>
@@ -555,244 +733,145 @@ export function OrderQueuePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="dark:text-gray-400 text-gray-600">Loading order queue...</div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-slate-800" />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-t-purple-400"
+            />
+          </div>
+          <p className="text-slate-500 font-bold uppercase tracking-wider text-sm">Loading Queue</p>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Diagonal scan lines */}
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_100px,rgba(192,132,252,0.02)_100px,rgba(192,132,252,0.02)_200px)]" />
+        {/* Corner accents */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl" />
+      </div>
+
       <Header />
+
       <main
         id="main-content"
-        className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in overflow-x-hidden"
-        // Safe area padding for notched devices
+        className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
         tabIndex={-1}
       >
-        {/* Breadcrumb Navigation */}
+        {/* Breadcrumb */}
         <Breadcrumb />
-        {/* Page Header - Centered */}
-        <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
+
+        {/* Page Header */}
+        <motion.div
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+          className="text-center relative"
+        >
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: '100%' }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent max-w-xs"
+          />
+          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">
             Order Queue
           </h1>
-          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
-            {queueData?.total || 0} order{(queueData?.total || 0) !== 1 ? 's' : ''} available
+          <p className="mt-4 text-slate-400 text-sm font-medium uppercase tracking-widest">
+            {queueData?.total || 0} orders available
           </p>
-        </div>
+        </motion.div>
 
-        {/* Filter Bar - Status and Priority filters */}
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        {/* Filter Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap items-center justify-center gap-4"
+        >
           <StatusFilterDropdown value={statusFilter} onChange={handleStatusFilterChange} />
           <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
-        </div>
+        </motion.div>
 
-        {/* Search Bar - Below Header */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-2xl relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 dark:text-gray-400 text-gray-500 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search order"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              style={{ fontSize: '16px' }}
-              className="w-full pl-11 pr-4 py-2.5 dark:bg-white/[0.05] bg-gray-100 dark:border-white/[0.08] border-gray-300 rounded-xl text-sm dark:text-white text-gray-900 dark:placeholder-gray-500 placeholder-gray-400 focus:outline-none dark:focus:border-primary-500/50 focus:border-primary-500 dark:focus:bg-white/[0.08] focus:bg-white transition-all duration-300"
-            />
-          </div>
-        </div>
-
-        {/* Order List - Centered */}
-        {filteredOrders.length === 0 ? (
-          <Card variant="glass" className="card-hover">
-            <CardContent className="p-8 sm:p-16 text-center">
-              <ShoppingBagIcon className="h-12 w-12 sm:h-16 sm:w-16 dark:text-gray-600 text-gray-400 mx-auto mb-4" />
-              <p className="dark:text-gray-400 text-gray-600 text-responsive-sm">
-                {searchQuery ? 'No orders match your search' : 'No orders available'}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 justify-center">
-            {filteredOrders.map(order => (
-              <Card key={order.orderId} variant="glass" className="card-hover group flex flex-col">
-                <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold dark:text-white text-gray-900 text-base sm:text-lg tracking-tight truncate">
-                        {order.orderId}
-                      </h3>
-                      <p className="text-sm dark:text-gray-400 text-gray-600 mt-1 truncate">
-                        {order.customerName}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2 ml-2">
-                      <OrderPriorityBadge priority={order.priority} />
-                      <OrderStatusBadge status={order.status} />
-                    </div>
+        {/* Order Grid */}
+        <AnimatePresence mode="wait">
+          {filteredOrders.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
+                <CardContent className="p-16 text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
+                    <ShoppingBagIcon className="h-10 w-10 text-slate-600" />
                   </div>
-
-                  {/* Scrollable content area */}
-                  <div className="flex-1 overflow-y-auto space-y-3 text-sm dark:text-gray-400 text-gray-600 overflow-x-hidden">
-                    <div className="flex items-center justify-between">
-                      <span>Items:</span>
-                      <span className="dark:text-white text-gray-900 font-medium">
-                        {order.items?.length || 0}
-                      </span>
-                    </div>
-                    {order.totalAmount != null && (
-                      <div className="flex items-center justify-between">
-                        <span>Total:</span>
-                        <span className="dark:text-white text-gray-900 font-medium">
-                          {order.currency || 'NZD'} ${Number(order.totalAmount).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span>Progress:</span>
-                        <span className="dark:text-white text-gray-900 font-medium">
-                          {order.progress}%
-                        </span>
-                      </div>
-                      {/* Progress bar */}
-                      <div className="w-full dark:bg-white/[0.05] bg-gray-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-gradient-to-r from-primary-500 to-primary-400 h-full rounded-full transition-all duration-500"
-                          style={{ width: `${order.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Created:</span>
-                      <span className="dark:text-white text-gray-900 font-medium text-xs sm:text-sm">
-                        {formatDate(order.createdAt)}
-                      </span>
-                    </div>
-
-                    {/* Show items with details - always visible */}
-                    {order.items && order.items.length > 0 ? (
-                      <div className="mt-4 pt-4 dark:border-white/[0.08] border-gray-200">
-                        <p className="font-medium dark:text-gray-300 text-gray-700 mb-3 text-xs uppercase tracking-wider">
-                          Items to Pick:
-                        </p>
-                        <div className="space-y-2">
-                          {order.items.map((item, itemIdx) => {
-                            // Check if item is completed (COMPLETED for pick_tasks, FULLY_PICKED for order_items)
-                            const isCompleted =
-                              item.status === 'COMPLETED' ||
-                              item.status === 'FULLY_PICKED' ||
-                              item.pickedQuantity >= item.quantity;
-                            const isSkipped = item.status === 'SKIPPED';
-                            const isPartial =
-                              !isCompleted &&
-                              !isSkipped &&
-                              item.pickedQuantity > 0 &&
-                              item.pickedQuantity < item.quantity;
-                            const itemStatusColor = isCompleted
-                              ? 'dark:text-success-400 text-green-700 dark:bg-success-500/10 bg-green-100 dark:border-success-500/20 border-green-300'
-                              : isSkipped
-                                ? 'dark:text-warning-400 text-amber-700 dark:bg-warning-500/10 bg-amber-100 dark:border-warning-500/20 border-amber-300'
-                                : isPartial
-                                  ? 'dark:text-primary-400 text-blue-700 dark:bg-primary-500/10 bg-blue-100 dark:border-primary-500/20 border-blue-300'
-                                  : 'dark:text-gray-400 text-gray-600 dark:bg-white/[0.02] bg-gray-100 dark:border-white/[0.05] border-gray-200';
-
-                            return (
-                              <div
-                                key={`${order.orderId}-item-${itemIdx}`}
-                                className={`text-xs p-2.5 rounded-lg border ${itemStatusColor}`}
-                              >
-                                {/* First row: SKU and Name */}
-                                <div className="flex items-start gap-2 mb-1.5">
-                                  <span className="font-semibold text-xs break-all">
-                                    {item.sku}
-                                  </span>
-                                  <span className="dark:text-gray-500 text-gray-400 flex-shrink-0">
-                                    "
-                                  </span>
-                                  <span className="dark:text-gray-300 text-gray-700 break-all">
-                                    {item.name}
-                                  </span>
-                                </div>
-                                {/* Second row: Location and Quantity */}
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="dark:text-gray-400 text-gray-500 text-xs">
-                                    Loc:{' '}
-                                    <span className="dark:text-white text-gray-900 font-medium">
-                                      {item.binLocation}
-                                    </span>
-                                  </span>
-                                  <span className="font-semibold text-sm">
-                                    {isSkipped
-                                      ? 'Skipped'
-                                      : `${item.pickedQuantity || 0}/${item.quantity}`}
-                                  </span>
-                                </div>
-                                {/* Third row: Pricing (if available) */}
-                                {item.unitPrice != null && (
-                                  <div className="flex items-center justify-between text-xs border-t dark:border-white/[0.05] border-gray-200 pt-1 mt-1">
-                                    <span className="dark:text-gray-500 text-gray-500">
-                                      {item.currency || 'NZD'} ${Number(item.unitPrice).toFixed(2)}
-                                      /ea
-                                    </span>
-                                    {item.lineTotal != null && (
-                                      <span className="dark:text-white text-gray-900 font-medium">
-                                        {item.currency || 'NZD'} $
-                                        {Number(item.lineTotal).toFixed(2)}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-4 pt-4 dark:border-white/[0.08] border-gray-200 text-xs dark:text-gray-500 text-gray-400">
-                        No items available
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Claim button - always at the bottom */}
-                  <div className="mt-4 pt-4 dark:border-white/[0.08] border-gray-200">
-                    <Button
-                      fullWidth
-                      size="sm"
-                      variant="primary"
-                      onClick={() => handleClaimOrder(order.orderId, order.status)}
-                      disabled={
-                        claimMutation.isPending ||
-                        (order.status !== 'PENDING' && order.status !== 'PICKING') ||
-                        (order.status === 'PENDING' && claimingOrderId === order.orderId)
-                      }
-                      isLoading={order.status === 'PENDING' && claimingOrderId === order.orderId}
-                      className="group-hover:shadow-glow transition-all duration-300 touch-target"
-                    >
-                      {order.status === 'PICKING' ? 'Continue' : 'Claim'}
-                    </Button>
-                  </div>
+                  <p className="text-slate-500 font-bold uppercase tracking-wider">
+                    {searchQuery ? 'No matching orders' : 'No orders available'}
+                  </p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            </motion.div>
+          ) : (
+            <motion.div
+              variants={pageVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
+              {filteredOrders.map(order => (
+                <OrderCard
+                  key={order.orderId}
+                  order={order}
+                  onClaim={handleClaimOrder}
+                  isClaiming={claimMutation.isPending}
+                  claimingOrderId={claimingOrderId}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Pagination */}
         {queueData?.total && queueData.total > 0 && (
-          <Pagination
-            currentPage={page}
-            totalItems={queueData.total}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[10, 20, 50, 100]}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Pagination
+              currentPage={page}
+              totalItems={queueData.total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[10, 20, 50, 100]}
+            />
+          </motion.div>
         )}
       </main>
+
+      {/* Custom keyframes */}
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 }
