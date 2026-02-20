@@ -35,7 +35,7 @@
   html.light {
     color-scheme: light;
     /* Fix: Light background on html for light mode */
-    background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 50%, #cffafe 100%);
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 50%, #faf5ff 100%);
     background-attachment: fixed;
   }
 
@@ -50,16 +50,16 @@
   }
 
   /* ============================================
-     LIGHT MODE - Spinning effect on blue background
+     LIGHT MODE - Spinning effect on purple background
      ============================================ */
   html.light body {
     @apply text-gray-800;
-    /* Light blue background - behind everything */
-    background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 50%, #cffafe 100%);
+    /* Light purple background - behind everything */
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 50%, #faf5ff 100%);
     background-attachment: fixed;
   }
 
-  /* Spinning rectangle effect layer - light mode with blue colors */
+  /* Spinning rectangle effect layer - light mode with purple colors */
   html.light body::before {
     content: '';
     position: fixed;
@@ -69,10 +69,10 @@
     width: 100%;
     min-height: 100vh;
     height: 100%;
-    background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 60% 70%, rgba(99, 102, 241, 0.12) 0%, transparent 50%);
+    background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(192, 132, 252, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(216, 180, 254, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 60% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 50%);
     z-index: -1;
     pointer-events: none;
     animation: backgroundShift 20s ease-in-out infinite;
@@ -142,9 +142,9 @@
     width: 100%;
     min-height: 100vh;
     height: 100%;
-    background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.18) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+    background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.18) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(192, 132, 252, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
     z-index: -1;
     pointer-events: none;
     animation: backgroundShift 20s ease-in-out infinite;
@@ -261,18 +261,18 @@
      GLASSMORPHISM CARD
      ============================================ */
   .glass-card {
-    background: rgba(59, 130, 246, 0.25);
+    background: rgba(168, 85, 247, 0.25);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(96, 165, 250, 0.4);
+    border: 1px solid rgba(192, 132, 252, 0.4);
     box-shadow: none;
     transition: all 0.3s ease;
   }
 
   .glass-card:hover {
-    background: rgba(59, 130, 246, 0.3);
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.25), inset 0 1px 0 rgba(96, 165, 250, 0.25);
-    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(192, 132, 252, 0.25);
+    border-color: rgba(192, 132, 252, 0.5);
   }
 
   html.light .glass-card {
@@ -284,8 +284,8 @@
   }
 
   html.light .glass-card:hover {
-    border-color: rgba(59, 130, 246, 0.2);
-    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+    border-color: rgba(168, 85, 247, 0.2);
+    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
   }
 
   /* ============================================
@@ -1102,7 +1102,7 @@ html.light .hover-bg-default:hover {
 }
 
 html.light .hover-bg-accent:hover {
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(168, 85, 247, 0.08);
 }
 
 /* Light mode disabled states */
@@ -1115,7 +1115,7 @@ html.light select:disabled {
 
 /* Light mode selection color */
 html.light ::selection {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(168, 85, 247, 0.2);
   color: #0f172a;
 }
 
@@ -1143,7 +1143,7 @@ html.light .icon-default {
 }
 
 html.light .icon-accent {
-  color: #3b82f6;
+  color: #a855f7;
 }
 
 /* Light mode divider/border colors */
@@ -1192,7 +1192,7 @@ html.performance-mode body::after {
 html.performance-mode .glass-card {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: rgba(59, 130, 246, 0.08) !important;
+  background: rgba(168, 85, 247, 0.08) !important;
 }
 
 html.light.performance-mode .glass-card {
@@ -1202,7 +1202,7 @@ html.light.performance-mode .glass-card {
 /* Reduce shadow complexity */
 html.performance-mode .glass-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  border-color: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(168, 85, 247, 0.2) !important;
 }
 
 /* Disable mobile header blur */
@@ -1447,7 +1447,7 @@ html.performance-mode .indicator-pulse {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.8), transparent);
   animation: scan-beam 2s ease-in-out infinite;
 }
 
@@ -1462,7 +1462,7 @@ html.performance-mode .indicator-pulse {
   position: absolute;
   width: 20px;
   height: 20px;
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(168, 85, 247, 0.5);
   border-style: solid;
 }
 
@@ -1494,9 +1494,9 @@ html.performance-mode .indicator-pulse {
   content: '';
   position: fixed;
   inset: 0;
-  background: 
-    radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(96, 165, 250, 0.08) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(192, 132, 252, 0.08) 0%, transparent 50%);
   pointer-events: none;
   animation: warehouse-pulse 4s ease-in-out infinite;
   z-index: 0;
@@ -1521,7 +1521,7 @@ html.performance-mode .indicator-pulse {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+  text-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
 }
 
 /* Bin location display - industrial signage style */
@@ -1530,13 +1530,13 @@ html.performance-mode .indicator-pulse {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
+  background: linear-gradient(135deg, #6b21a8 0%, #a855f7 50%, #6b21a8 100%);
   background-size: 200% 200%;
   animation: gradientShift 3s ease infinite;
-  text-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
-  border: 2px solid rgba(96, 165, 250, 0.5);
-  box-shadow: 
-    0 0 20px rgba(59, 130, 246, 0.3),
+  text-shadow: 0 2px 10px rgba(168, 85, 247, 0.5);
+  border: 2px solid rgba(192, 132, 252, 0.5);
+  box-shadow:
+    0 0 20px rgba(168, 85, 247, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -1544,7 +1544,7 @@ html.performance-mode .indicator-pulse {
 .scan-instruction {
   font-family: 'Plus Jakarta Sans', sans-serif;
   letter-spacing: 0.05em;
-  border-left: 3px solid rgba(59, 130, 246, 0.5);
+  border-left: 3px solid rgba(168, 85, 247, 0.5);
   padding-left: 1rem;
 }
 
@@ -1554,7 +1554,7 @@ html.performance-mode .indicator-pulse {
   font-weight: 500;
   letter-spacing: 0.15em;
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   position: relative;
 }
 
@@ -1566,7 +1566,7 @@ html.performance-mode .indicator-pulse {
   transform: translateY(-50%);
   width: 4px;
   height: 60%;
-  background: rgba(59, 130, 246, 0.6);
+  background: rgba(168, 85, 247, 0.6);
   border-radius: 0 2px 2px 0;
 }
 
@@ -1579,13 +1579,13 @@ html.performance-mode .indicator-pulse {
 
 .pick-item-card:hover {
   background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 .pick-item-card.active {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 .pick-item-card.completed {
@@ -1606,10 +1606,10 @@ html.performance-mode .indicator-pulse {
 
 .scanner-modal-content {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow:
     0 25px 50px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(59, 130, 246, 0.1);
+    0 0 100px rgba(168, 85, 247, 0.1);
 }
 
 /* Prevent horizontal scroll globally - use overflow-x clip which doesn't create new containing block */
@@ -1656,7 +1656,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  border: 3px solid rgba(59, 130, 246, 0.2);
+  border: 3px solid rgba(168, 85, 247, 0.2);
   border-radius: 50%;
 }
 
@@ -1665,7 +1665,7 @@ body {
   position: absolute;
   inset: 0;
   border: 3px solid transparent;
-  border-top-color: #3b82f6;
+  border-top-color: #a855f7;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1679,7 +1679,7 @@ body {
 
 .warehouse-loading-bar {
   width: 6px;
-  background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%);
+  background: linear-gradient(180deg, #a855f7 0%, #6b21a8 100%);
   border-radius: 3px;
   animation: warehouse-bar-bounce 1s ease-in-out infinite;
 }
@@ -1805,13 +1805,13 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(168, 85, 247, 0.3);
   transition: all 0.3s ease;
 }
 
 .step-indicator-dot.active {
-  background: #3b82f6;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  background: #a855f7;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
 }
 
 .step-indicator-dot.completed {
@@ -1821,7 +1821,7 @@ body {
 
 .step-indicator-line {
   height: 2px;
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(168, 85, 247, 0.2);
   transition: background 0.3s ease;
 }
 
@@ -1886,7 +1886,7 @@ html.dark .toolbar-logo {
 
 /* Logo accent part */
 .toolbar-logo-accent {
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #a855f7 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1905,7 +1905,7 @@ html.dark .toolbar-logo {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -1970,7 +1970,7 @@ html.dark .dropdown-menu-enhanced {
 }
 
 .hamburger-btn:hover {
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(168, 85, 247, 0.08);
 }
 
 .hamburger-btn:active {
@@ -1979,7 +1979,7 @@ html.dark .dropdown-menu-enhanced {
 
 /* Theme toggle enhanced glow */
 .theme-toggle-btn:hover {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.dark .theme-toggle-btn:hover {
@@ -2032,8 +2032,8 @@ html.dark .mobile-menu-enhanced {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
 }
 
 /* Divider with gradient */
@@ -2068,15 +2068,15 @@ html.dark .toolbar-divider {
   font-size: 0.65rem;
   padding: 2px 6px;
   border-radius: 4px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  color: #a855f7;
 }
 
 html.dark .role-badge-enhanced {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: #60a5fa;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #c084fc;
 }
 
 /* Search input enhanced */
@@ -2088,9 +2088,9 @@ html.dark .role-badge-enhanced {
 
 .search-input-enhanced:focus {
   background: rgba(255, 255, 255, 1);
-  border-color: rgba(59, 130, 246, 0.3);
-  box-shadow: 
-    0 0 0 3px rgba(59, 130, 246, 0.1),
+  border-color: rgba(168, 85, 247, 0.3);
+  box-shadow:
+    0 0 0 3px rgba(168, 85, 247, 0.1),
     0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
@@ -2101,9 +2101,9 @@ html.dark .search-input-enhanced {
 
 html.dark .search-input-enhanced:focus {
   background: rgba(30, 41, 59, 1);
-  border-color: rgba(59, 130, 246, 0.4);
-  box-shadow: 
-    0 0 0 3px rgba(59, 130, 246, 0.15),
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow:
+    0 0 0 3px rgba(168, 85, 247, 0.15),
     0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -2128,4 +2128,476 @@ html.dark .search-input-enhanced:focus {
 
 .icon-spin {
   animation: icon-spin 1s linear infinite;
+}
+
+/* ============================================
+   LOGIN PAGE STYLES - Purple Theme
+   ============================================ */
+
+/* Login container background */
+.login-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+}
+
+html.light .login-container {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 50%, #faf5ff 100%);
+}
+
+/* Grid background effect */
+.login-grid-bg {
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+html.light .login-grid-bg {
+  background-image:
+    linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+}
+
+/* Login title - distinctive gradient */
+.login-title {
+  font-family: 'Space Grotesk', sans-serif;
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* Login card - glassmorphism */
+.login-card {
+  background: rgba(168, 85, 247, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(192, 132, 252, 0.2);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.2),
+    0 0 60px rgba(168, 85, 247, 0.1);
+}
+
+html.light .login-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 0 40px rgba(168, 85, 247, 0.05);
+}
+
+/* Login input fields */
+.login-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  transition: all 0.3s ease;
+}
+
+.login-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+html.light .login-input {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+html.light .login-input:focus {
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+/* Login button */
+.login-btn {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Login corners - decorative brackets */
+.login-corners {
+  position: relative;
+}
+
+.login-corners::before,
+.login-corners::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: rgba(168, 85, 247, 0.4);
+  border-style: solid;
+}
+
+.login-corners::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+  border-radius: 8px 0 0 0;
+}
+
+.login-corners::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 8px 0;
+}
+
+/* Login animation keyframes */
+@keyframes login-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   ACCOUNTING PAGE - LEDGER NOIR AESTHETIC
+   Refined, editorial financial command center
+   ============================================ */
+
+/* Orchestrated stagger animation for cards */
+@keyframes ledger-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Number slide up animation */
+@keyframes number-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle glow pulse for profit indicators */
+@keyframes ledger-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  }
+}
+
+/* Gentle float for decorative elements */
+@keyframes ledger-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+/* Art Deco line reveal */
+@keyframes deco-line-reveal {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+/* Number counting animation preparation */
+@keyframes count-up-ready {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shimmer effect for loading states */
+@keyframes ledger-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Accounting page container */
+.accounting-page-container {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Ledger hero section - asymmetric */
+.ledger-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.ledger-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Accounting card - enhanced glassmorphism */
+.accounting-card {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.8) 0%,
+    rgba(30, 41, 59, 0.6) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: ledger-stagger-in 0.5s ease-out backwards;
+}
+
+.accounting-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(16, 185, 129, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+html.light .accounting-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+html.light .accounting-card:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.08);
+}
+
+/* Stagger delays for cards */
+.accounting-card:nth-child(1) { animation-delay: 0.05s; }
+.accounting-card:nth-child(2) { animation-delay: 0.1s; }
+.accounting-card:nth-child(3) { animation-delay: 0.15s; }
+.accounting-card:nth-child(4) { animation-delay: 0.2s; }
+.accounting-card:nth-child(5) { animation-delay: 0.25s; }
+.accounting-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Hero metric - large featured number */
+.hero-metric {
+  position: relative;
+  padding: 2rem;
+}
+
+.hero-metric::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.5), transparent);
+  animation: deco-line-reveal 1s ease-out 0.3s backwards;
+}
+
+/* Ledger title - DM Serif Display */
+.ledger-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+/* Ledger currency - IBM Plex Mono */
+.ledger-currency {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  animation: number-slide-up 0.6s ease-out backwards;
+}
+
+/* Profit indicator with glow */
+.profit-indicator {
+  animation: ledger-glow-pulse 2s ease-in-out infinite;
+}
+
+/* Ledger tabs - refined */
+.ledger-tab {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.ledger-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.ledger-tab.active::after {
+  width: 80%;
+}
+
+/* Floating decorative element */
+.ledger-float-element {
+  animation: ledger-float 6s ease-in-out infinite;
+}
+
+/* Ledger shimmer for loading */
+.ledger-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(16, 185, 129, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ledger-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Art Deco corner accents */
+.deco-corner {
+  position: relative;
+}
+
+.deco-corner::before,
+.deco-corner::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(16, 185, 129, 0.4);
+  border-style: solid;
+}
+
+.deco-corner::before {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+  border-radius: 4px 0 0 0;
+}
+
+.deco-corner::after {
+  bottom: 0;
+  right: 0;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 4px 0;
+}
+
+/* Transaction row styling */
+.transaction-row {
+  transition: all 0.2s ease;
+}
+
+.transaction-row:hover {
+  background: rgba(16, 185, 129, 0.05);
+  transform: translateX(4px);
+}
+
+/* Status badge with glow */
+.status-badge-ledger {
+  position: relative;
+}
+
+.status-badge-ledger.completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge-ledger.pending {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.status-badge-ledger.cancelled {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* Number animation class */
+.animate-number {
+  animation: count-up-ready 0.4s ease-out backwards;
+}
+
+/* Atmospheric background elements for accounting page */
+.accounting-atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.accounting-atmosphere::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  right: 5%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+  filter: blur(40px);
+}
+
+.accounting-atmosphere::after {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 10%;
+  width: 30%;
+  height: 30%;
+  background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.06) 0%, transparent 60%);
+  filter: blur(40px);
+}
+
+/* Light mode adjustments for accounting page */
+html.light .accounting-atmosphere::before {
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.12) 0%, transparent 60%);
+}
+
+html.light .accounting-atmosphere::after {
+  background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
 }

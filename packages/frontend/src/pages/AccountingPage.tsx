@@ -5,19 +5,20 @@
  * vendor performance, and customer financial summaries
  *
  * ============================================================================
- * AESTHETIC DIRECTION: EMERALD LEDGER
+ * AESTHETIC DIRECTION: LEDGER NOIR
  * ============================================================================
- * A precision-focused financial command center:
- * - Dark theme with emerald green accents for financial health
- * - Monospace currency displays with subtle glow effects
- * - Staggered entrance animations for metric cards
- * - Ledger-style row highlighting on hover
- * - Pulsing glow for profit/positive indicators
- * - Clean, professional typography with Space Grotesk headers
+ * A refined, editorial financial command center:
+ * - Dark, luxurious background with layered depth
+ * - DM Serif Display for headlines (editorial, refined)
+ * - IBM Plex Mono for numbers (precise, professional)
+ * - Asymmetric hero section with signature visual
+ * - Art Deco-inspired geometric accents
+ * - Emerald/teal accent highlights
+ * - Orchestrated entrance animations
  * ============================================================================
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -41,9 +42,53 @@ import {
   FunnelIcon,
   TruckIcon,
   ChevronDownIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { useFinancialMetrics, useProfitLossStatement, useInventoryValuation } from '@/services/api';
 import { AccountingPeriod, CostCategory } from '@opsui/shared';
+
+// ============================================================================
+// NUMBER COUNTER HOOK - Animates number counting
+// ============================================================================
+
+function useCountUp(end: number, duration: number = 1000, startOnMount: boolean = true) {
+  const [count, setCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const startAnimation = () => {
+    setIsAnimating(true);
+    const startTime = performance.now();
+    const startValue = 0;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function - ease-out cubic
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const currentValue = startValue + (end - startValue) * easeOut;
+
+      setCount(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setIsAnimating(false);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  };
+
+  useEffect(() => {
+    if (startOnMount && end > 0) {
+      startAnimation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [end, startOnMount]);
+
+  return { count, isAnimating, startAnimation };
+}
 
 // ============================================================================
 // HELPER COMPONENTS
@@ -59,6 +104,8 @@ interface MetricCardProps {
   };
   isLoading?: boolean;
   variant?: 'default' | 'success' | 'warning' | 'danger';
+  delay?: number;
+  isHero?: boolean;
 }
 
 function MetricCard({
@@ -68,19 +115,28 @@ function MetricCard({
   trend,
   isLoading,
   variant = 'default',
+  delay = 0,
+  isHero = false,
 }: MetricCardProps) {
   const variantColors = {
-    default: 'from-gray-500/20 to-gray-600/20 border-gray-500/30',
-    success: 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30',
-    warning: 'from-amber-500/20 to-amber-600/20 border-amber-500/30',
-    danger: 'from-rose-500/20 to-rose-600/20 border-rose-500/30',
+    default: 'border-slate-600/30',
+    success: 'border-emerald-500/30',
+    warning: 'border-amber-500/30',
+    danger: 'border-rose-500/30',
   };
 
   const iconColors = {
-    default: 'text-gray-400',
+    default: 'text-slate-400',
     success: 'text-emerald-400',
     warning: 'text-amber-400',
     danger: 'text-rose-400',
+  };
+
+  const glowColors = {
+    default: '',
+    success: 'profit-indicator',
+    warning: '',
+    danger: '',
   };
 
   if (isLoading) {
@@ -88,37 +144,53 @@ function MetricCard({
   }
 
   return (
-    <Card variant="glass" className={`accounting-card bg-gradient-to-br ${variantColors[variant]}`}>
-      <CardContent className="p-6">
+    <div
+      className={`accounting-card rounded-2xl deco-corner ${variantColors[variant]} ${isHero ? 'col-span-full lg:col-span-2' : ''}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className={`p-6 ${isHero ? 'lg:p-8' : ''}`}>
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-white font-['JetBrains_Mono',monospace]">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-slate-400 mb-2 tracking-wide uppercase">
+              {title}
+            </p>
+            <p
+              className={`ledger-currency text-white ${
+                isHero ? 'text-4xl lg:text-5xl' : 'text-2xl lg:text-3xl'
+              } ${variant === 'success' ? 'text-emerald-400' : ''} ${variant === 'danger' ? 'text-rose-400' : ''}`}
+              style={{ animationDelay: `${delay + 100}ms` }}
+            >
               {value}
             </p>
             {trend && (
-              <div className="flex items-center gap-1 mt-2">
-                {trend.isPositive ? (
-                  <ArrowTrendingUpIcon className="h-4 w-4 text-emerald-400" />
-                ) : (
-                  <ArrowTrendingDownIcon className="h-4 w-4 text-rose-400" />
-                )}
+              <div className="flex items-center gap-2 mt-3">
                 <span
-                  className={`text-sm ${trend.isPositive ? 'text-emerald-400' : 'text-rose-400'}`}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${
+                    trend.isPositive
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'bg-rose-500/20 text-rose-400'
+                  }`}
                 >
+                  {trend.isPositive ? (
+                    <ArrowTrendingUpIcon className="h-4 w-4" />
+                  ) : (
+                    <ArrowTrendingDownIcon className="h-4 w-4" />
+                  )}
                   {trend.isPositive ? '+' : ''}
-                  {trend.value}%
+                  {trend.value.toFixed(1)}%
                 </span>
-                <span className="text-xs text-gray-500">vs last period</span>
+                <span className="text-xs text-slate-500">vs last period</span>
               </div>
             )}
           </div>
-          <div className={`p-3 rounded-xl bg-white/5`}>
+          <div
+            className={`p-3 rounded-xl bg-white/5 ${glowColors[variant]} transition-all duration-300`}
+          >
             <Icon className={`h-6 w-6 ${iconColors[variant]}`} />
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -134,44 +206,61 @@ function CostBreakdown({ costByCategory, isLoading }: CostBreakdownProps) {
 
   if (isLoading) {
     return (
-      <Card variant="glass">
-        <CardContent className="p-6">
+      <div className="accounting-card rounded-2xl">
+        <div className="p-6">
           <Skeleton variant="rounded" className="h-48" />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   const totalCost = Object.values(costByCategory).reduce((sum, val) => sum + val, 0);
 
+  const categoryColors: Record<string, string> = {
+    LABOR: 'bg-emerald-500',
+    MATERIALS: 'bg-cyan-500',
+    SHIPPING: 'bg-amber-500',
+    STORAGE: 'bg-violet-500',
+    OVERHEAD: 'bg-slate-500',
+    EXCEPTIONS: 'bg-rose-500',
+    QUALITY_CONTROL: 'bg-teal-500',
+    MAINTENANCE: 'bg-orange-500',
+  };
+
   return (
-    <Card variant="glass">
-      <CardHeader>
-        <CardTitle>Cost Breakdown</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="accounting-card rounded-2xl" style={{ animationDelay: '300ms' }}>
+      <div className="p-6">
+        <h3 className="ledger-title text-xl text-white mb-6">Cost Breakdown</h3>
         <div className="space-y-4">
-          {categories.map(([category, amount]) => {
+          {categories.map(([category, amount], index) => {
             const percentage = totalCost > 0 ? (amount / totalCost) * 100 : 0;
             return (
-              <div key={category}>
+              <div key={category} style={{ animationDelay: `${350 + index * 50}ms` }}>
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-300 capitalize">{category.replace(/_/g, ' ')}</span>
-                  <span className="text-white font-medium">${amount.toFixed(2)}</span>
+                  <span className="text-slate-300 capitalize tracking-wide">
+                    {category.replace(/_/g, ' ').toLowerCase()}
+                  </span>
+                  <span className="ledger-currency text-white font-medium">
+                    ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-primary-500 h-2 rounded-full transition-all"
-                    style={{ width: `${percentage}%` }}
-                  />
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${categoryColors[category] || 'bg-slate-500'} rounded-full transition-all duration-700 ease-out`}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-slate-500 w-12 text-right">
+                    {percentage.toFixed(1)}%
+                  </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{percentage.toFixed(1)}% of total</p>
               </div>
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -196,7 +285,6 @@ function PeriodDropdown({ selectedPeriod, onSelectPeriod }: PeriodDropdownProps)
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -219,16 +307,16 @@ function PeriodDropdown({ selectedPeriod, onSelectPeriod }: PeriodDropdownProps)
         variant="secondary"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 min-w-[140px] justify-between"
+        className="flex items-center gap-2 min-w-[140px] justify-between bg-slate-800/50 border-slate-600/30 hover:bg-slate-700/50 hover:border-emerald-500/30"
       >
-        <span>{selectedLabel}</span>
+        <span className="text-slate-300">{selectedLabel}</span>
         <ChevronDownIcon
-          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </Button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 min-w-[140px] dark:bg-gray-900 bg-white dark:border-white/[0.1] border-gray-200 rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute top-full left-0 mt-2 min-w-[140px] bg-slate-800/95 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-xl overflow-hidden z-50">
           {PERIOD_OPTIONS.map(option => (
             <button
               key={option.value}
@@ -236,10 +324,10 @@ function PeriodDropdown({ selectedPeriod, onSelectPeriod }: PeriodDropdownProps)
                 onSelectPeriod(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-4 py-2 text-sm text-left transition-colors ${
+              className={`w-full px-4 py-2.5 text-sm text-left transition-all duration-150 ${
                 option.value === selectedPeriod
-                  ? 'dark:bg-white/[0.1] bg-gray-300 dark:text-white text-gray-900 font-medium'
-                  : 'dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-200'
+                  ? 'bg-emerald-500/20 text-emerald-400 font-medium'
+                  : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
               }`}
             >
               {option.label}
@@ -533,6 +621,8 @@ function AccountingPage() {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
@@ -558,12 +648,13 @@ function AccountingPage() {
   ];
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative accounting-page-container">
       {/* Atmospheric background elements */}
+      <div className="accounting-atmosphere" />
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl" />
+        <div className="ledger-float-element absolute top-20 right-20 w-64 h-64 border border-emerald-500/10 rounded-full" style={{ animationDelay: '0s' }} />
+        <div className="ledger-float-element absolute bottom-40 left-20 w-48 h-48 border border-cyan-500/10 rounded-full" style={{ animationDelay: '2s' }} />
+        <div className="ledger-float-element absolute top-1/3 left-1/4 w-32 h-32 border border-emerald-500/5 rotate-45" style={{ animationDelay: '4s' }} />
       </div>
 
       <Header />
@@ -571,25 +662,27 @@ function AccountingPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        {/* Page Header */}
-        <div className="mb-8" style={{ animation: 'accounting-stagger-in 0.4s ease-out' }}>
-          <div className="flex items-center gap-4 mb-4"></div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+        {/* Page Header - Asymmetric Hero */}
+        <div className="mb-10 ledger-hero">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            {/* Left side - Title and description */}
+            <div className="flex items-start gap-5" style={{ animation: 'ledger-stagger-in 0.5s ease-out' }}>
+              <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 rounded-2xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
                 <CurrencyDollarIcon className="h-8 w-8 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight font-['Space_Grotesk',sans-serif]">
+                <h1 className="ledger-title text-3xl lg:text-4xl text-white mb-2">
                   Accounting & Financials
                 </h1>
-                <p className="mt-2 text-gray-400">
-                  Financial metrics, profit/loss, and inventory valuation
+                <p className="text-slate-400 max-w-md">
+                  Financial metrics, profit & loss analysis, and inventory valuation
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Right side - Controls */}
+            <div className="flex items-center gap-3" style={{ animation: 'ledger-stagger-in 0.5s ease-out 100ms backwards' }}>
               <PeriodDropdown
                 selectedPeriod={selectedPeriod}
                 onSelectPeriod={period => {
@@ -601,7 +694,7 @@ function AccountingPage() {
                 size="sm"
                 onClick={() => refetchMetrics()}
                 disabled={isLoadingMetrics}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-slate-800/50 border-slate-600/30 hover:bg-slate-700/50 hover:border-emerald-500/30"
               >
                 <FunnelIcon className={`h-4 w-4 ${isLoadingMetrics ? 'animate-spin' : ''}`} />
                 Refresh
@@ -610,10 +703,10 @@ function AccountingPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
-            {tabs.map(tab => {
+        {/* Tabs - Refined */}
+        <div className="mb-8">
+          <div className="flex items-center gap-1 overflow-x-auto pb-2">
+            {tabs.map((tab, index) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
@@ -624,17 +717,15 @@ function AccountingPage() {
                   aria-selected={isActive}
                   aria-controls={`panel-${tab.id}`}
                   id={`tab-${tab.id}`}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border-2 ${
+                  className={`ledger-tab flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 border-transparent'
+                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
                   }`}
+                  style={{ animationDelay: `${150 + index * 50}ms` }}
                 >
-                  <Icon
-                    className={`h-4 w-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : ''}`}
-                    aria-hidden="true"
-                  />
-                  {tab.label}
+                  <Icon className={`h-4 w-4 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
@@ -643,16 +734,30 @@ function AccountingPage() {
 
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-8">
+            {/* Hero Metric + Key Metrics Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Hero Metric - Net Profit */}
+              <MetricCard
+                title="Net Profit"
+                value={formatCurrency(sampleMetrics?.netProfit || 0)}
+                icon={SparklesIcon}
+                trend={profitTrend}
+                isLoading={isLoadingMetrics}
+                variant={sampleMetrics?.netProfit >= 0 ? 'success' : 'danger'}
+                delay={0}
+                isHero
+              />
+
+              {/* Supporting metrics */}
               <MetricCard
                 title="Total Revenue"
                 value={formatCurrency(sampleMetrics?.totalRevenue || 0)}
                 icon={ChartBarIcon}
                 trend={revenueTrend}
                 isLoading={isLoadingMetrics}
-                variant="success"
+                variant="default"
+                delay={50}
               />
               <MetricCard
                 title="Total Cost"
@@ -660,14 +765,7 @@ function AccountingPage() {
                 icon={ArrowTrendingDownIcon}
                 isLoading={isLoadingMetrics}
                 variant="warning"
-              />
-              <MetricCard
-                title="Net Profit"
-                value={formatCurrency(sampleMetrics?.netProfit || 0)}
-                icon={CurrencyDollarIcon}
-                trend={profitTrend}
-                isLoading={isLoadingMetrics}
-                variant={sampleMetrics?.netProfit >= 0 ? 'success' : 'danger'}
+                delay={100}
               />
               <MetricCard
                 title="Profit Margin"
@@ -675,28 +773,32 @@ function AccountingPage() {
                 icon={ArrowTrendingUpIcon}
                 isLoading={isLoadingMetrics}
                 variant="default"
+                delay={150}
               />
             </div>
 
-            {/* Additional Metrics */}
+            {/* Secondary Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <MetricCard
                 title="Inventory Value"
                 value={formatCurrency(sampleMetrics?.inventoryValue || 0)}
                 icon={CubeIcon}
                 isLoading={isLoadingMetrics}
+                delay={200}
               />
               <MetricCard
                 title="Orders Processed"
                 value={sampleMetrics?.ordersProcessed || 0}
                 icon={DocumentTextIcon}
                 isLoading={isLoadingMetrics}
+                delay={250}
               />
               <MetricCard
                 title="Avg Order Value"
                 value={formatCurrency(sampleMetrics?.averageOrderValue || 0)}
                 icon={ChartBarIcon}
                 isLoading={isLoadingMetrics}
+                delay={300}
               />
               <MetricCard
                 title="Exception Costs"
@@ -704,6 +806,7 @@ function AccountingPage() {
                 icon={ArrowTrendingDownIcon}
                 isLoading={isLoadingMetrics}
                 variant="danger"
+                delay={350}
               />
             </div>
 
@@ -715,6 +818,7 @@ function AccountingPage() {
                 icon={UserGroupIcon}
                 isLoading={isLoadingMetrics}
                 variant="warning"
+                delay={400}
               />
               <MetricCard
                 title="Outstanding Payables"
@@ -722,6 +826,7 @@ function AccountingPage() {
                 icon={TruckIcon}
                 isLoading={isLoadingMetrics}
                 variant="warning"
+                delay={450}
               />
               <MetricCard
                 title="Overdue Receivables"
@@ -729,6 +834,7 @@ function AccountingPage() {
                 icon={ArrowTrendingDownIcon}
                 isLoading={isLoadingMetrics}
                 variant="danger"
+                delay={500}
               />
             </div>
 
@@ -748,162 +854,137 @@ function AccountingPage() {
             ) : sampleProfitLoss ? (
               <>
                 {/* Revenue Section */}
-                <Card variant="glass">
-                  <CardHeader>
-                    <CardTitle className="text-emerald-600 dark:text-emerald-400">
-                      Revenue
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="accounting-card rounded-2xl" style={{ animationDelay: '50ms' }}>
+                  <div className="p-6">
+                    <h3 className="ledger-title text-xl text-emerald-400 mb-6">Revenue</h3>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">Gross Revenue</span>
-                        <span className="text-gray-900 dark:text-white font-semibold">
+                      <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
+                        <span className="text-slate-400">Gross Revenue</span>
+                        <span className="ledger-currency text-white font-medium">
                           {formatCurrency(sampleProfitLoss.grossRevenue)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">Returns & Refunds</span>
-                        <span className="text-rose-600 dark:text-rose-400 font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
+                        <span className="text-slate-400">Returns & Refunds</span>
+                        <span className="ledger-currency text-rose-400 font-medium">
                           ({formatCurrency(sampleProfitLoss.returns)})
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg px-4 border border-emerald-200 dark:border-emerald-500/20">
-                        <span className="text-gray-900 dark:text-white font-semibold">
-                          Net Revenue
-                        </span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">
+                      <div className="flex justify-between items-center py-4 bg-emerald-500/10 rounded-xl px-4 border border-emerald-500/20">
+                        <span className="text-white font-medium">Net Revenue</span>
+                        <span className="ledger-currency text-emerald-400 text-lg">
                           {formatCurrency(sampleProfitLoss.netRevenue)}
                         </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Cost of Goods Sold */}
-                <Card variant="glass">
-                  <CardHeader>
-                    <CardTitle className="text-rose-600 dark:text-rose-400">
-                      Cost of Goods Sold
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="accounting-card rounded-2xl" style={{ animationDelay: '100ms' }}>
+                  <div className="p-6">
+                    <h3 className="ledger-title text-xl text-rose-400 mb-6">Cost of Goods Sold</h3>
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">Material Costs</span>
-                        <span className="text-gray-900 dark:text-white font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
+                        <span className="text-slate-400">Material Costs</span>
+                        <span className="ledger-currency text-white font-medium">
                           {formatCurrency(sampleProfitLoss.materialCosts)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">Labor Costs</span>
-                        <span className="text-gray-900 dark:text-white font-medium">
+                      <div className="flex justify-between items-center py-3 border-b border-slate-700/50">
+                        <span className="text-slate-400">Labor Costs</span>
+                        <span className="ledger-currency text-white font-medium">
                           {formatCurrency(sampleProfitLoss.laborCosts)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-4 bg-rose-50 dark:bg-rose-500/10 rounded-lg px-4 border border-rose-200 dark:border-rose-500/20">
-                        <span className="text-gray-900 dark:text-white font-semibold">
-                          Total COGS
-                        </span>
-                        <span className="text-rose-600 dark:text-rose-400 font-bold text-lg">
+                      <div className="flex justify-between items-center py-4 bg-rose-500/10 rounded-xl px-4 border border-rose-500/20">
+                        <span className="text-white font-medium">Total COGS</span>
+                        <span className="ledger-currency text-rose-400 text-lg">
                           {formatCurrency(sampleProfitLoss.totalCOGS)}
                         </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Gross Profit */}
-                <Card
-                  variant="glass"
-                  className="border-l-4 border-l-emerald-500 bg-emerald-50 dark:bg-emerald-500/5"
-                >
-                  <CardContent className="p-6">
+                <div className="accounting-card rounded-2xl border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent" style={{ animationDelay: '150ms' }}>
+                  <div className="p-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Gross Profit
-                        </p>
-                        <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                        <p className="text-sm text-slate-400 mb-2">Gross Profit</p>
+                        <p className="ledger-currency text-3xl text-emerald-400">
                           {formatCurrency(sampleProfitLoss.grossProfit)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          Gross Margin
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <p className="text-sm text-slate-400 mb-2">Gross Margin</p>
+                        <p className="ledger-currency text-2xl text-white">
                           {sampleProfitLoss.grossProfitMargin.toFixed(1)}%
                         </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Operating Expenses */}
-                <Card variant="glass">
-                  <CardHeader>
-                    <CardTitle className="text-amber-600 dark:text-amber-400">
-                      Operating Expenses
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="accounting-card rounded-2xl" style={{ animationDelay: '200ms' }}>
+                  <div className="p-6">
+                    <h3 className="ledger-title text-xl text-amber-400 mb-6">Operating Expenses</h3>
                     <div className="space-y-4">
-                      {Object.entries(profitLoss.operatingExpenses).map(
+                      {Object.entries(sampleProfitLoss.operatingExpenses).map(
                         ([key, value]) =>
                           typeof value === 'number' &&
                           value > 0 && (
                             <div
                               key={key}
-                              className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700"
+                              className="flex justify-between items-center py-3 border-b border-slate-700/50"
                             >
-                              <span className="text-gray-600 dark:text-gray-400 capitalize">
-                                {key.replace(/_/g, ' ')}
+                              <span className="text-slate-400 capitalize">
+                                {key.replace(/_/g, ' ').toLowerCase()}
                               </span>
-                              <span className="text-gray-900 dark:text-white font-medium">
+                              <span className="ledger-currency text-white font-medium">
                                 {formatCurrency(value as number)}
                               </span>
                             </div>
                           )
                       )}
-                      <div className="flex justify-between items-center py-4 bg-amber-50 dark:bg-amber-500/10 rounded-lg px-4 border border-amber-200 dark:border-amber-500/20">
-                        <span className="text-gray-900 dark:text-white font-semibold">
-                          Total Operating Expenses
-                        </span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold text-lg">
+                      <div className="flex justify-between items-center py-4 bg-amber-500/10 rounded-xl px-4 border border-amber-500/20">
+                        <span className="text-white font-medium">Total Operating Expenses</span>
+                        <span className="ledger-currency text-amber-400 text-lg">
                           {formatCurrency(sampleProfitLoss.totalOperatingExpenses)}
                         </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* Net Income */}
-                <Card
-                  variant="glass"
-                  className={`border-l-4 ${sampleProfitLoss.netIncome >= 0 ? 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-500/5' : 'border-l-rose-500 bg-rose-50 dark:bg-rose-500/5'}`}
+                <div
+                  className={`accounting-card rounded-2xl border-l-4 ${sampleProfitLoss.netIncome >= 0 ? 'border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent' : 'border-l-rose-500 bg-gradient-to-r from-rose-500/10 to-transparent'}`}
+                  style={{ animationDelay: '250ms' }}
                 >
-                  <CardContent className="p-6">
+                  <div className="p-6">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Income</p>
+                        <p className="text-sm text-slate-400 mb-2">Net Income</p>
                         <p
-                          className={`text-3xl font-bold ${sampleProfitLoss.netIncome >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                          className={`ledger-currency text-3xl ${sampleProfitLoss.netIncome >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
                         >
                           {formatCurrency(sampleProfitLoss.netIncome)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Margin</p>
+                        <p className="text-sm text-slate-400 mb-2">Net Margin</p>
                         <p
-                          className={`text-2xl font-bold ${sampleProfitLoss.netMargin >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                          className={`ledger-currency text-2xl text-white`}
                         >
                           {sampleProfitLoss.netMargin.toFixed(1)}%
                         </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </>
             ) : null}
           </div>
@@ -921,85 +1002,87 @@ function AccountingPage() {
             ) : (
               <>
                 {/* Total Inventory Value */}
-                <Card variant="glass" className="border-l-4 border-l-primary-500">
-                  <CardContent className="p-6">
+                <div className="accounting-card rounded-2xl border-l-4 border-l-cyan-500 bg-gradient-to-r from-cyan-500/10 to-transparent" style={{ animationDelay: '50ms' }}>
+                  <div className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                          Total Inventory Value
-                        </p>
-                        <p className="text-4xl font-bold text-gray-900 dark:text-white">
+                        <p className="text-sm text-slate-400 mb-2">Total Inventory Value</p>
+                        <p className="ledger-currency text-4xl text-white">
                           {formatCurrency(sampleInventoryData?.totalValue || 0)}
                         </p>
                       </div>
-                      <CubeIcon className="h-12 w-12 text-primary-500 dark:text-primary-400" />
+                      <div className="p-4 bg-cyan-500/20 rounded-2xl">
+                        <CubeIcon className="h-10 w-10 text-cyan-400" />
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* By Category */}
-                <Card variant="glass">
-                  <CardHeader>
-                    <CardTitle>Inventory Value by Category</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="accounting-card rounded-2xl" style={{ animationDelay: '100ms' }}>
+                  <div className="p-6">
+                    <h3 className="ledger-title text-xl text-white mb-6">Inventory Value by Category</h3>
                     <div className="space-y-4">
                       {Object.entries(sampleInventoryData?.byCategory || {}).map(
-                        ([category, value]) => (
-                          <div key={category}>
+                        ([category, value], index) => (
+                          <div key={category} style={{ animationDelay: `${150 + index * 50}ms` }}>
                             <div className="flex items-center justify-between text-sm mb-2">
-                              <span className="text-gray-700 dark:text-gray-300 font-medium">
-                                {category}
-                              </span>
-                              <span className="text-gray-900 dark:text-white font-bold">
+                              <span className="text-slate-300 font-medium">{category}</span>
+                              <span className="ledger-currency text-white font-medium">
                                 {formatCurrency(value as number)}
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                              <div
-                                className="bg-primary-500 h-3 rounded-full"
-                                style={{
-                                  width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
-                                }}
-                              />
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full transition-all duration-700"
+                                  style={{
+                                    width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-slate-500 w-12 text-right">
+                                {(((value as number) / (sampleInventoryData?.totalValue || 1)) * 100).toFixed(1)}%
+                              </span>
                             </div>
                           </div>
                         )
                       )}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
 
                 {/* By Zone */}
-                <Card variant="glass">
-                  <CardHeader>
-                    <CardTitle>Inventory Value by Zone</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <div className="accounting-card rounded-2xl" style={{ animationDelay: '150ms' }}>
+                  <div className="p-6">
+                    <h3 className="ledger-title text-xl text-white mb-6">Inventory Value by Zone</h3>
                     <div className="space-y-4">
-                      {Object.entries(sampleInventoryData?.byZone || {}).map(([zone, value]) => (
-                        <div key={zone}>
+                      {Object.entries(sampleInventoryData?.byZone || {}).map(([zone, value], index) => (
+                        <div key={zone} style={{ animationDelay: `${200 + index * 50}ms` }}>
                           <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-gray-700 dark:text-gray-300 font-medium">
-                              {zone}
-                            </span>
-                            <span className="text-gray-900 dark:text-white font-bold">
+                            <span className="text-slate-300 font-medium">{zone}</span>
+                            <span className="ledger-currency text-white font-medium">
                               {formatCurrency(value as number)}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                            <div
-                              className="bg-emerald-500 h-3 rounded-full"
-                              style={{
-                                width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
-                              }}
-                            />
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full transition-all duration-700"
+                                style={{
+                                  width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-xs text-slate-500 w-12 text-right">
+                              {(((value as number) / (sampleInventoryData?.totalValue || 1)) * 100).toFixed(1)}%
+                            </span>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </>
             )}
           </div>
@@ -1009,20 +1092,19 @@ function AccountingPage() {
         {activeTab === 'transactions' && (
           <div className="space-y-6">
             {/* Transaction Filters */}
-            <Card variant="glass">
-              <CardContent className="p-6">
+            <div className="accounting-card rounded-2xl" style={{ animationDelay: '50ms' }}>
+              <div className="p-6">
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="flex-1 min-w-[200px]">
                     <label
                       htmlFor="transaction-type-filter"
-                      className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                      className="text-sm text-slate-400 mb-2 block"
                     >
                       Transaction Type
                     </label>
                     <select
                       id="transaction-type-filter"
-                      className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      aria-label="Filter by transaction type"
+                      className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All Types</option>
                       <option value="REVENUE">Revenue</option>
@@ -1034,14 +1116,13 @@ function AccountingPage() {
                   <div className="flex-1 min-w-[200px]">
                     <label
                       htmlFor="reference-type-filter"
-                      className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
+                      className="text-sm text-slate-400 mb-2 block"
                     >
                       Reference Type
                     </label>
                     <select
                       id="reference-type-filter"
-                      className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      aria-label="Filter by reference type"
+                      className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All References</option>
                       <option value="ORDER">Order</option>
@@ -1050,16 +1131,12 @@ function AccountingPage() {
                     </select>
                   </div>
                   <div className="flex-1 min-w-[200px]">
-                    <label
-                      htmlFor="status-filter"
-                      className="text-sm text-gray-600 dark:text-gray-400 mb-2 block"
-                    >
+                    <label htmlFor="status-filter" className="text-sm text-slate-400 mb-2 block">
                       Status
                     </label>
                     <select
                       id="status-filter"
-                      className="w-full px-4 py-2 bg-gray-100 dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      aria-label="Filter by transaction status"
+                      className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All Statuses</option>
                       <option value="PENDING">Pending</option>
@@ -1068,174 +1145,128 @@ function AccountingPage() {
                     </select>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Transactions List */}
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="accounting-card rounded-2xl" style={{ animationDelay: '100ms' }}>
+              <div className="p-6">
+                <h3 className="ledger-title text-xl text-white mb-6">Recent Transactions</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full" role="table" aria-label="Transaction history">
+                  <table className="w-full" role="table">
                     <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th
-                          scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
-                        >
+                      <tr className="border-b border-slate-700/50">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">
                           Date
                         </th>
-                        <th
-                          scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">
                           Type
                         </th>
-                        <th
-                          scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">
                           Description
                         </th>
-                        <th
-                          scope="col"
-                          className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">
                           Reference
                         </th>
-                        <th
-                          scope="col"
-                          className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <th className="text-right py-3 px-4 text-sm font-medium text-slate-400">
                           Amount
                         </th>
-                        <th
-                          scope="col"
-                          className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400"
-                        >
+                        <th className="text-center py-3 px-4 text-sm font-medium text-slate-400">
                           Status
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
-                          2024-02-07
-                        </td>
-                        <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      <tr className="transaction-row border-b border-slate-700/30">
+                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-07</td>
+                        <td className="py-4 px-4">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             REVENUE
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
-                          Order SO0001 - Shipment
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                        <td className="py-4 px-4 text-sm text-white">Order SO0001 - Shipment</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
                           ORD-12345678-1234
                         </td>
-                        <td className="py-4 px-4 text-sm text-emerald-600 dark:text-emerald-400 text-right">
+                        <td className="py-4 px-4 text-sm text-emerald-400 text-right ledger-currency">
                           +$1,250.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
-                          2024-02-07
-                        </td>
-                        <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-rose-500/20 text-rose-600 dark:text-rose-400">
+                      <tr className="transaction-row border-b border-slate-700/30">
+                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-07</td>
+                        <td className="py-4 px-4">
+                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30">
                             EXPENSE
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
-                          Inventory - SKU10050
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
-                          RCP-001
-                        </td>
-                        <td className="py-4 px-4 text-sm text-rose-600 dark:text-rose-400 text-right">
+                        <td className="py-4 px-4 text-sm text-white">Inventory - SKU10050</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">RCP-001</td>
+                        <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
                           -$450.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
-                          2024-02-06
-                        </td>
-                        <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      <tr className="transaction-row border-b border-slate-700/30">
+                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-06</td>
+                        <td className="py-4 px-4">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             REVENUE
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
-                          Order SO0002 - Shipment
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                        <td className="py-4 px-4 text-sm text-white">Order SO0002 - Shipment</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
                           ORD-12345678-5678
                         </td>
-                        <td className="py-4 px-4 text-sm text-emerald-600 dark:text-emerald-400 text-right">
+                        <td className="py-4 px-4 text-sm text-emerald-400 text-right ledger-currency">
                           +$3,200.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
-                          2024-02-06
-                        </td>
-                        <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                      <tr className="transaction-row border-b border-slate-700/30">
+                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-06</td>
+                        <td className="py-4 px-4">
+                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30">
                             PAYMENT
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
-                          Vendor Payment - Acme Corp
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
-                          PAY-001
-                        </td>
-                        <td className="py-4 px-4 text-sm text-rose-600 dark:text-rose-400 text-right">
+                        <td className="py-4 px-4 text-sm text-white">Vendor Payment - Acme Corp</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">PAY-001</td>
+                        <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
                           -$2,800.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             COMPLETED
                           </span>
                         </td>
                       </tr>
-                      <tr className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
-                        <td className="py-4 px-4 text-sm text-gray-700 dark:text-gray-300">
-                          2024-02-05
-                        </td>
-                        <td className="py-4 px-4 text-sm">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-600 dark:text-purple-400">
+                      <tr className="transaction-row">
+                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-05</td>
+                        <td className="py-4 px-4">
+                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-violet-500/15 text-violet-400 border border-violet-500/30">
                             REFUND
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-white">
-                          Order SO0003 - Customer Return
-                        </td>
-                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
-                          RET-001
-                        </td>
-                        <td className="py-4 px-4 text-sm text-rose-600 dark:text-rose-400 text-right">
+                        <td className="py-4 px-4 text-sm text-white">Order SO0003 - Customer Return</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">RET-001</td>
+                        <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
                           -$185.00
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
                             COMPLETED
                           </span>
                         </td>
@@ -1243,19 +1274,26 @@ function AccountingPage() {
                     </tbody>
                   </table>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Showing 1-5 of 128 transactions
-              </p>
+              <p className="text-sm text-slate-400">Showing 1-5 of 128 transactions</p>
               <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" disabled>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled
+                  className="bg-slate-800/50 border-slate-600/30"
+                >
                   Previous
                 </Button>
-                <Button variant="primary" size="sm">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30"
+                >
                   Next
                 </Button>
               </div>
