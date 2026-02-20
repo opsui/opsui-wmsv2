@@ -267,32 +267,41 @@ export function Breadcrumb({
   // If items are provided, use them directly
   if (items) {
     return (
-      <nav className={`flex items-center gap-2 text-sm ${className}`}>
+      <nav
+        className={`flex items-center gap-1.5 text-sm ${className}`}
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      >
         {isAdminInRoleView && (
           <>
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
             >
-              <UserCircleIcon className="h-4 w-4" />
-              <span>Admin Dashboard</span>
+              <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+              <span className="font-medium">Admin Dashboard</span>
             </button>
-            <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+            <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
           </>
         )}
         {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            {index > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />}
+          <div key={index} className="flex items-center gap-1.5">
+            {index > 0 && (
+              <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+            )}
             {item.path ? (
               <button
                 onClick={() => navigate(item.path!)}
-                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
               >
-                {item.icon && <item.icon className="h-4 w-4" />}
-                <span>{item.label}</span>
+                {item.icon && (
+                  <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                )}
+                <span className="font-medium">{item.label}</span>
               </button>
             ) : (
-              <span className="text-gray-900 dark:text-white font-medium">{item.label}</span>
+              <span className="px-2 py-1 text-gray-900 dark:text-white font-semibold bg-gray-100 dark:bg-gray-800 rounded-lg">
+                {item.label}
+              </span>
             )}
           </div>
         ))}
@@ -351,28 +360,33 @@ export function Breadcrumb({
     const accountingConfig = TAB_PAGE_CONFIG['/accounting'];
     if (accountingConfig.tabLabels[subPath]) {
       return (
-        <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+        <nav
+          className={`mb-6 flex items-center gap-1.5 text-sm ${className}`}
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
           {isAdminInRoleView && (
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
-                <UserCircleIcon className="h-4 w-4" />
-                <span>Admin Dashboard</span>
+                <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                <span className="font-medium">Admin Dashboard</span>
               </button>
-              <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+              <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
             </>
           )}
           <button
             onClick={() => navigate('/accounting')}
-            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
           >
-            {showHomeIcon && <HomeIcon className="h-4 w-4" />}
-            <span>{homeLabel || accountingConfig.homeLabel}</span>
+            {showHomeIcon && (
+              <HomeIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+            )}
+            <span className="font-medium">{homeLabel || accountingConfig.homeLabel}</span>
           </button>
-          <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
-          <span className="text-gray-900 dark:text-white font-medium">
+          <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+          <span className="px-2 py-1 text-gray-900 dark:text-white font-semibold bg-gray-100 dark:bg-gray-800 rounded-lg">
             {currentLabel || accountingConfig.tabLabels[subPath]}
           </span>
         </nav>
@@ -384,28 +398,33 @@ export function Breadcrumb({
   if (nestedRouteMatch) {
     const config = TAB_PAGE_CONFIG[nestedRouteMatch.basePath];
     return (
-      <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+      <nav
+        className={`mb-6 flex items-center gap-1.5 text-sm ${className}`}
+        style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+      >
         {isAdminInRoleView && (
           <>
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
             >
-              <UserCircleIcon className="h-4 w-4" />
-              <span>Admin Dashboard</span>
+              <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+              <span className="font-medium">Admin Dashboard</span>
             </button>
-            <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+            <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
           </>
         )}
         <button
           onClick={() => navigate(nestedRouteMatch!.basePath)}
-          className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
         >
-          {showHomeIcon && <HomeIcon className="h-4 w-4" />}
-          <span>{homeLabel || config?.homeLabel || 'Overview'}</span>
+          {showHomeIcon && (
+            <HomeIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+          )}
+          <span className="font-medium">{homeLabel || config?.homeLabel || 'Overview'}</span>
         </button>
-        <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
-        <span className="text-gray-900 dark:text-white font-medium">
+        <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+        <span className="px-2 py-1 text-gray-900 dark:text-white font-semibold bg-gray-100 dark:bg-gray-800 rounded-lg">
           {currentLabel || nestedRouteMatch.currentLabel}
         </span>
       </nav>
@@ -431,16 +450,19 @@ export function Breadcrumb({
       if (!currentTab || currentTab === 'dashboard' || currentTab === 'overview') {
         if (isAdminInRoleView) {
           return (
-            <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+            <nav
+              className={`mb-6 flex items-center gap-1.5 text-sm ${className}`}
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            >
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
-                <UserCircleIcon className="h-4 w-4" />
-                <span>Admin Dashboard</span>
+                <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                <span className="font-medium">Admin Dashboard</span>
               </button>
-              <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
-              <span className="text-gray-500 dark:text-gray-400">{config.homeLabel}</span>
+              <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+              <span className="px-2 py-1 text-gray-500 dark:text-gray-400">{config.homeLabel}</span>
             </nav>
           );
         }
@@ -448,17 +470,20 @@ export function Breadcrumb({
       }
 
       return (
-        <nav className={`mb-6 flex items-center gap-2 text-sm ${className}`}>
+        <nav
+          className={`mb-6 flex items-center gap-1.5 text-sm ${className}`}
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
           {isAdminInRoleView && (
             <>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
-                <UserCircleIcon className="h-4 w-4" />
-                <span>Admin Dashboard</span>
+                <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                <span className="font-medium">Admin Dashboard</span>
               </button>
-              <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
+              <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
             </>
           )}
           <button
@@ -466,13 +491,15 @@ export function Breadcrumb({
               // Clear tab parameter to return to overview/dashboard
               navigate(path);
             }}
-            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
           >
-            {showHomeIcon && <HomeIcon className="h-4 w-4" />}
-            <span>{homeLabel || config.homeLabel}</span>
+            {showHomeIcon && (
+              <HomeIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+            )}
+            <span className="font-medium">{homeLabel || config.homeLabel}</span>
           </button>
-          <ChevronRightIcon className="h-4 w-4 text-gray-400 dark:text-gray-600" />
-          <span className="text-gray-900 dark:text-white font-medium">
+          <ChevronRightIcon className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
+          <span className="px-2 py-1 text-gray-900 dark:text-white font-semibold bg-gray-100 dark:bg-gray-800 rounded-lg">
             {currentLabel || (currentTab && config.tabLabels[currentTab]) || currentTab}
           </span>
         </nav>

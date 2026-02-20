@@ -825,17 +825,31 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-96 dark:bg-gray-800 bg-white dark:border-gray-700 border-primary-200 rounded-xl shadow-xl animate-fade-in">
-          {/* Header */}
-          <div className="px-5 py-3.5 dark:border-b border-b dark:border-gray-700 border-primary-200 flex items-center justify-between">
-            <p className="text-sm font-semibold dark:text-white text-gray-900">Notifications</p>
-            <span className="text-xs dark:text-primary-300 text-primary-600">
-              {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
-            </span>
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced">
+          {/* Header with gradient accent */}
+          <div className="relative px-5 py-4 border-b border-gray-100 dark:border-gray-700/50">
+            {/* Gradient accent line at top */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-400 via-purple-400 to-primary-400" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BellIcon className="h-4 w-4 text-primary-500 dark:text-primary-400" />
+                <p
+                  className="text-sm font-semibold dark:text-white text-gray-900"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  Notifications
+                </p>
+              </div>
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 notification-badge-enhanced">
+                  {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Notification Preview - show recent notifications */}
-          <div className="py-2 max-h-[400px] overflow-y-auto">
+          <div className="py-1 max-h-[400px] overflow-y-auto">
             <NotificationPreview
               limit={5}
               onNotificationClick={() => setIsOpen(false)}
@@ -843,28 +857,32 @@ function NotificationPanel() {
             />
           </div>
 
-          {/* Footer */}
-          <div className="dark:border-t border-t dark:border-gray-700 border-primary-200 px-5 py-3 flex gap-3">
-            <button
-              onClick={() => {
-                navigate('/notifications');
-                setIsOpen(false);
-              }}
-              className="flex-1 text-xs font-medium dark:text-primary-300 text-primary-600 dark:hover:text-primary-200 hover:text-primary-800 transition-colors"
-            >
-              View All Notifications
-            </button>
-            {canSupervise() && (
+          {/* Footer with enhanced styling */}
+          <div className="border-t border-gray-100 dark:border-gray-700/50 px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="flex gap-2">
               <button
                 onClick={() => {
-                  navigate('/dashboard');
+                  navigate('/notifications');
                   setIsOpen(false);
                 }}
-                className="flex-1 text-xs font-medium dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-primary-700 transition-colors"
+                className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 text-white transition-all duration-200 hover:shadow-lg hover:shadow-primary-500/25"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
-                Dashboard
+                View All
               </button>
-            )}
+              {canSupervise() && (
+                <button
+                  onClick={() => {
+                    navigate('/dashboard');
+                    setIsOpen(false);
+                  }}
+                  className="flex-1 text-xs font-medium px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  Dashboard
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1934,11 +1952,18 @@ export function Header() {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-xl font-semibold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0"
-                style={{ fontFamily: "'Inter', sans-serif" }}
+                className="text-xl font-bold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0 relative group"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
-                OpsUI
+                <span className="relative">
+                  Ops
+                  <span className="text-primary-500 dark:text-primary-400 group-hover:text-primary-400 dark:group-hover:text-primary-300 transition-colors">
+                    UI
+                  </span>
+                </span>
+                {/* Subtle glow effect on hover */}
+                <span className="absolute inset-0 blur-sm bg-primary-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
               </button>
               {/* Spacer for mobile to balance hamburger */}
               <div className="w-10 md:hidden"></div>
