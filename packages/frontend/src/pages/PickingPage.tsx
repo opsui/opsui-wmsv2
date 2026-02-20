@@ -1225,6 +1225,46 @@ export function PickingPage() {
                       </p>
                       <p className="quantity-display text-white">{currentTask.quantity}</p>
                     </div>
+                    <div className="text-5xl text-gray-600 font-light hidden sm:block">|</div>
+                    <div className="text-center hidden sm:block">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        On Hand
+                      </p>
+                      <p
+                        className={`quantity-display ${
+                          (currentTask.onHandQuantity ?? 0) >= currentTask.quantity
+                            ? 'text-success-400'
+                            : (currentTask.onHandQuantity ?? 0) > 0
+                              ? 'text-warning-400'
+                              : 'text-error-400'
+                        }`}
+                      >
+                        {currentTask.onHandQuantity ?? 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* On Hand indicator for mobile */}
+                  <div className="sm:hidden flex items-center justify-center gap-2 mb-4">
+                    <span className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
+                      On Hand:
+                    </span>
+                    <span
+                      className={`font-bold text-lg ${
+                        (currentTask.onHandQuantity ?? 0) >= currentTask.quantity
+                          ? 'text-success-400'
+                          : (currentTask.onHandQuantity ?? 0) > 0
+                            ? 'text-warning-400'
+                            : 'text-error-400'
+                      }`}
+                    >
+                      {currentTask.onHandQuantity ?? 0}
+                    </span>
+                    {(currentTask.onHandQuantity ?? 0) < currentTask.quantity && (
+                      <span className="text-xs text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
+                        Low Stock
+                      </span>
+                    )}
                   </div>
 
                   {/* Location */}
