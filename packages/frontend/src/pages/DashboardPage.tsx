@@ -146,10 +146,10 @@ const MetricCard = memo(function MetricCard({
   // Distinctive color schemes with depth
   const colorStyles = {
     primary: {
-      bg: 'bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-indigo-500/20 dark:from-blue-500/20 dark:via-blue-600/10 dark:to-indigo-500/20',
-      icon: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-500/40',
-      border: 'border-blue-400/30 dark:border-blue-500/20',
-      glow: 'hover:shadow-blue-500/20',
+      bg: 'bg-gradient-to-br from-purple-500/20 via-violet-600/10 to-purple-500/20 dark:from-purple-500/20 dark:via-violet-600/10 dark:to-purple-500/20',
+      icon: 'bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-purple-500/40',
+      border: 'border-purple-400/30 dark:border-purple-500/20',
+      glow: 'hover:shadow-purple-500/20',
     },
     success: {
       bg: 'bg-gradient-to-br from-emerald-500/20 via-green-600/10 to-teal-500/20 dark:from-emerald-500/20 dark:via-green-600/10 dark:to-teal-500/20',
@@ -297,7 +297,7 @@ function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700"
               />
             </div>
           </div>
@@ -734,7 +734,7 @@ export function DashboardPage() {
         {/* Hero Section - Asymmetric Layout */}
         <div className="dashboard-stagger-1 relative">
           {/* Decorative background elements */}
-          <div className="absolute -left-4 -top-4 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-4 -top-4 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -right-4 -bottom-4 w-40 h-40 bg-gradient-to-tl from-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
           {/* Main header */}
@@ -843,7 +843,7 @@ export function DashboardPage() {
                   onClick={() => setActivityView('role-activity')}
                   className={`px-4 py-3 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-touch whitespace-nowrap flex-shrink-0 ${
                     activityView === 'role-activity'
-                      ? 'dark:bg-blue-600 bg-blue-600 text-white shadow-lg dark:shadow-blue-500/30 shadow-blue-500/20'
+                      ? 'dark:bg-purple-600 bg-purple-600 text-white shadow-lg dark:shadow-purple-500/30 shadow-purple-500/20'
                       : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200 dark:hover:text-gray-300 hover:text-gray-900'
                   }`}
                 >
@@ -854,7 +854,7 @@ export function DashboardPage() {
                   onClick={() => setActivityView('audit-logs')}
                   className={`px-4 py-3 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-touch whitespace-nowrap flex-shrink-0 ${
                     activityView === 'audit-logs'
-                      ? 'dark:bg-blue-600 bg-blue-600 text-white shadow-lg dark:shadow-blue-500/30 shadow-blue-500/20'
+                      ? 'dark:bg-purple-600 bg-purple-600 text-white shadow-lg dark:shadow-purple-500/30 shadow-purple-500/20'
                       : 'dark:bg-white/[0.05] bg-gray-100 dark:text-gray-400 text-gray-700 dark:hover:bg-white/[0.1] hover:bg-gray-200 dark:hover:text-gray-300 hover:text-gray-900'
                   }`}
                 >

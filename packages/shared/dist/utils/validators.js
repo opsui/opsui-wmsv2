@@ -3,7 +3,7 @@
  *
  * These validators are shared between frontend and backend
  */
-import { ValidationError } from '../types';
+import { ValidationError } from '../types/index.js';
 // ============================================================================
 // SKU VALIDATION
 // ============================================================================

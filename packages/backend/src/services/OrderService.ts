@@ -196,12 +196,12 @@ export class OrderService {
       );
 
       // Recalculate and update order progress in database
-      // Use FLOOR(x + 0.5) to match JavaScript's Math.round() behavior (round half up)
+      // SKIPPED items count as complete for progress purposes
       await client.query(
         `UPDATE orders
          SET progress = (
            SELECT FLOOR(
-             (CAST(COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') AS NUMERIC) /
+             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
               NULLIF(COUNT(*), 0)) * 100 + 0.5
            )
            FROM pick_tasks pt
@@ -438,12 +438,12 @@ export class OrderService {
         [newQuantity, itemStatus, pickTask.order_item_id]
       );
 
-      // Recalculate order progress
+      // Recalculate order progress (SKIPPED counts as complete)
       await client.query(
         `UPDATE orders
          SET progress = (
            SELECT FLOOR(
-             (CAST(COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') AS NUMERIC) /
+             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
               NULLIF(COUNT(*), 0)) * 100 + 0.5
            )
            FROM pick_tasks pt
@@ -577,12 +577,12 @@ export class OrderService {
     });
 
     // Recalculate and update order progress in database
-    // Use FLOOR(x + 0.5) to match JavaScript's Math.round() behavior (round half up)
+    // SKIPPED items count as complete for progress purposes
     await query(
       `UPDATE orders
          SET progress = (
            SELECT FLOOR(
-             (CAST(COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') AS NUMERIC) /
+             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
               NULLIF(COUNT(*), 0)) * 100 + 0.5
            )
            FROM pick_tasks pt

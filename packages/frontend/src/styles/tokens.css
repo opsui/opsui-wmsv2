@@ -16,17 +16,17 @@
      COLOR PALETTE - BASE VALUES
      ============================================ */
   
-  /* Primary - Blue */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Primary - Purple */
+  --color-primary-50: #faf5ff;
+  --color-primary-100: #f3e8ff;
+  --color-primary-200: #e9d5ff;
+  --color-primary-300: #d8b4fe;
+  --color-primary-400: #c084fc;
+  --color-primary-500: #a855f7;
+  --color-primary-600: #9333ea;
+  --color-primary-700: #7c3aed;
+  --color-primary-800: #6b21a8;
+  --color-primary-900: #581c87;
 
   /* Success - Green */
   --color-success-50: #f0fdf4;
@@ -83,7 +83,7 @@
 :root,
 html.light {
   /* Background Colors */
-  --bg-base: #e8f4fc;           /* Main page background - light blue */
+  --bg-base: #f3e8ff;           /* Main page background - light purple */
   --bg-surface: #ffffff;         /* Card/component background - white */
   --bg-surface-elevated: #ffffff; /* Elevated surfaces (modals, dropdowns) - white */
   --bg-surface-hover: #f1f5f9;   /* Hover state for surfaces */
@@ -169,7 +169,7 @@ html.light {
 
   /* Badge Colors */
   --badge-primary-bg: #eff6ff;
-  --badge-primary-text: #1d4ed8;
+  --badge-primary-text: #9333ea;
   --badge-primary-border: #bfdbfe;
   
   --badge-success-bg: #f0fdf4;
@@ -195,14 +195,14 @@ html.light {
   --nav-item-text-hover: var(--text-primary);
   --nav-item-bg-hover: #f1f5f9;
   --nav-item-active-text: var(--color-primary-600);
-  --nav-item-active-bg: #eff6ff;
+  --nav-item-active-bg: #faf5ff;
 
   /* Dropdown Colors */
   --dropdown-bg: #ffffff;
   --dropdown-border: #e2e8f0;
   --dropdown-shadow: var(--shadow-lg);
   --dropdown-item-hover: #f1f5f9;
-  --dropdown-item-active: #eff6ff;
+  --dropdown-item-active: #faf5ff;
 
   /* Modal Colors */
   --modal-bg: #ffffff;
@@ -337,14 +337,14 @@ html.dark {
   --nav-item-text-hover: var(--text-primary);
   --nav-item-bg-hover: rgba(255, 255, 255, 0.05);
   --nav-item-active-text: var(--color-primary-400);
-  --nav-item-active-bg: rgba(59, 130, 246, 0.1);
+  --nav-item-active-bg: rgba(168, 85, 247, 0.15);
 
   /* Dropdown Colors */
   --dropdown-bg: #1e293b;
   --dropdown-border: rgba(255, 255, 255, 0.1);
   --dropdown-shadow: var(--shadow-xl);
   --dropdown-item-hover: rgba(255, 255, 255, 0.05);
-  --dropdown-item-active: rgba(59, 130, 246, 0.15);
+  --dropdown-item-active: rgba(168, 85, 247, 0.15);
 
   /* Modal Colors */
   --modal-bg: #1e293b;
@@ -358,8 +358,8 @@ html.dark {
 
   /* Scrollbar Colors */
   --scrollbar-track: rgba(255, 255, 255, 0.02);
-  --scrollbar-thumb: rgba(59, 130, 246, 0.5);
-  --scrollbar-thumb-hover: rgba(59, 130, 246, 0.7);
+  --scrollbar-thumb: rgba(168, 85, 247, 0.5);
+  --scrollbar-thumb-hover: rgba(168, 85, 247, 0.7);
 }
 
 /* ============================================
@@ -414,11 +414,11 @@ html.dark {
 
 /* Glass card with theme support */
 .glass-card {
-  @apply bg-blue-50/80 dark:bg-blue-500/25 backdrop-blur-md border border-blue-200/50 dark:border-blue-400/50 transition-all duration-300;
+  @apply bg-purple-50/80 dark:bg-purple-500/25 backdrop-blur-md border border-purple-200/50 dark:border-purple-400/50 transition-all duration-300;
 }
 
 .glass-card:hover {
-  @apply dark:bg-blue-500/35 dark:shadow-blue-500/30 shadow-lg;
+  @apply dark:bg-purple-500/35 dark:shadow-purple-500/30 shadow-lg;
 }
 
 /* Table styling with theme support */
@@ -432,12 +432,12 @@ html.dark {
   @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700;
   @apply text-gray-900 dark:text-white;
   @apply placeholder-gray-400 dark:placeholder-gray-500;
-  @apply focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  @apply focus:ring-2 focus:ring-purple-500 focus:border-purple-500;
 }
 
 /* Badge color variants with theme support */
 .badge-gray { @apply bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500/30; }
-.badge-blue { @apply bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30; }
+.badge-blue { @apply bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30; }
 .badge-green { @apply bg-green-50 dark:bg-green-500/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-500/30; }
 .badge-yellow { @apply bg-amber-50 dark:bg-yellow-500/20 text-amber-700 dark:text-yellow-400 border border-amber-200 dark:border-yellow-500/30; }
 .badge-red { @apply bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30; }

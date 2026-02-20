@@ -3,6 +3,11 @@
  *
  * Displays activity for any role with a dropdown selector
  * Dynamic component that adapts to all available roles in the system
+ *
+ * Design: Industrial Command Center aesthetic
+ * - Distinctive card styling with decorative accents
+ * - Enhanced table design with hover states
+ * - Glowing status indicators
  */
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/shared';
@@ -437,16 +442,113 @@ export function RoleActivityCard({
     }
   };
 
+  // Get role color theme
+  const getRoleTheme = (userRole: UserRole) => {
+    const themes: Record<
+      UserRole,
+      { gradient: string; iconBg: string; accent: string; glow: string }
+    > = {
+      [UserRole.PICKER]: {
+        gradient: 'from-blue-500/10 to-cyan-500/5',
+        iconBg: 'from-blue-500/30 to-cyan-500/20',
+        accent: 'blue',
+        glow: 'shadow-blue-500/20',
+      },
+      [UserRole.PACKER]: {
+        gradient: 'from-emerald-500/10 to-green-500/5',
+        iconBg: 'from-emerald-500/30 to-green-500/20',
+        accent: 'emerald',
+        glow: 'shadow-emerald-500/20',
+      },
+      [UserRole.STOCK_CONTROLLER]: {
+        gradient: 'from-violet-500/10 to-purple-500/5',
+        iconBg: 'from-violet-500/30 to-purple-500/20',
+        accent: 'violet',
+        glow: 'shadow-violet-500/20',
+      },
+      [UserRole.INWARDS]: {
+        gradient: 'from-amber-500/10 to-orange-500/5',
+        iconBg: 'from-amber-500/30 to-orange-500/20',
+        accent: 'amber',
+        glow: 'shadow-amber-500/20',
+      },
+      [UserRole.DISPATCH]: {
+        gradient: 'from-cyan-500/10 to-teal-500/5',
+        iconBg: 'from-cyan-500/30 to-teal-500/20',
+        accent: 'cyan',
+        glow: 'shadow-cyan-500/20',
+      },
+      [UserRole.PRODUCTION]: {
+        gradient: 'from-rose-500/10 to-pink-500/5',
+        iconBg: 'from-rose-500/30 to-pink-500/20',
+        accent: 'rose',
+        glow: 'shadow-rose-500/20',
+      },
+      [UserRole.SALES]: {
+        gradient: 'from-indigo-500/10 to-blue-500/5',
+        iconBg: 'from-indigo-500/30 to-blue-500/20',
+        accent: 'indigo',
+        glow: 'shadow-indigo-500/20',
+      },
+      [UserRole.MAINTENANCE]: {
+        gradient: 'from-red-500/10 to-rose-500/5',
+        iconBg: 'from-red-500/30 to-rose-500/20',
+        accent: 'red',
+        glow: 'shadow-red-500/20',
+      },
+      [UserRole.RMA]: {
+        gradient: 'from-fuchsia-500/10 to-pink-500/5',
+        iconBg: 'from-fuchsia-500/30 to-pink-500/20',
+        accent: 'fuchsia',
+        glow: 'shadow-fuchsia-500/20',
+      },
+      [UserRole.SUPERVISOR]: {
+        gradient: 'from-sky-500/10 to-blue-500/5',
+        iconBg: 'from-sky-500/30 to-blue-500/20',
+        accent: 'sky',
+        glow: 'shadow-sky-500/20',
+      },
+      [UserRole.ADMIN]: {
+        gradient: 'from-slate-500/10 to-gray-500/5',
+        iconBg: 'from-slate-500/30 to-gray-500/20',
+        accent: 'slate',
+        glow: 'shadow-slate-500/20',
+      },
+      [UserRole.ACCOUNTING]: {
+        gradient: 'from-green-500/10 to-emerald-500/5',
+        iconBg: 'from-green-500/30 to-emerald-500/20',
+        accent: 'green',
+        glow: 'shadow-green-500/20',
+      },
+      [UserRole.HR_MANAGER]: {
+        gradient: 'from-teal-500/10 to-cyan-500/5',
+        iconBg: 'from-teal-500/30 to-cyan-500/20',
+        accent: 'teal',
+        glow: 'shadow-teal-500/20',
+      },
+      [UserRole.HR_ADMIN]: {
+        gradient: 'from-cyan-500/10 to-sky-500/5',
+        iconBg: 'from-cyan-500/30 to-sky-500/20',
+        accent: 'cyan',
+        glow: 'shadow-cyan-500/20',
+      },
+    };
+    return themes[userRole] || themes[UserRole.PICKER];
+  };
+
   // Render activity table for a specific role
   const renderActivityTable = (userRole: UserRole, data: any[]) => {
     const config = ROLE_CONFIG[userRole];
     const Icon = config.icon;
+    const theme = getRoleTheme(userRole);
 
     if (!data || data.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-16">
-          <Icon className="h-16 w-16 dark:text-gray-600 text-gray-400 mb-4" />
-          <p className="text-sm dark:text-gray-400 text-gray-600">
+          <div className={`p-4 rounded-2xl bg-gradient-to-br ${theme.iconBg} mb-4`}>
+            <Icon className="h-12 w-12 dark:text-white/60 text-gray-500" />
+          </div>
+          <p className="text-sm dark:text-gray-400 text-gray-600 font-medium">
             No active {config.label.toLowerCase()}
           </p>
           <p className="text-xs dark:text-gray-500 text-gray-500 mt-2">
@@ -457,10 +559,10 @@ export function RoleActivityCard({
     }
 
     return (
-      <div className="mobile-table-container">
-        <table className="min-w-full dark:divide-y dark:divide-white/[0.08] divide-y divide-gray-200">
+      <div className="mobile-table-container rounded-xl dark:bg-white/[0.01] bg-gray-50/50 overflow-hidden border dark:border-white/[0.05] border-gray-200">
+        <table className="min-w-full">
           <thead>
-            <tr>
+            <tr className="dark:bg-white/[0.02] bg-gray-100/50">
               <th className="w-48 px-2 sm:px-4 py-3 text-left text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider">
                 {config.label.slice(0, -1)} {/* Remove 's' */}
               </th>
@@ -492,16 +594,38 @@ export function RoleActivityCard({
                 member.currentOrderId
               );
               const statusBadge = getStatusBadge(member.status);
+              const isActive =
+                member.status === 'ACTIVE' ||
+                member.status === 'PICKING' ||
+                member.status === 'PACKING';
 
               return (
                 <tr
                   key={`${userRole}-${memberId}`}
-                  className="dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-colors"
+                  className={`
+                    dark:hover:bg-white/[0.03] hover:bg-white transition-all duration-200
+                    ${isActive ? 'dark:bg-white/[0.01] bg-white/50' : ''}
+                  `}
                 >
-                  <td className="w-48 px-2 sm:px-4 py-3 text-sm dark:text-white text-gray-900">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{memberName}</span>
-                      <span className="text-xs dark:text-gray-500 text-gray-500">({memberId})</span>
+                  <td className="w-48 px-2 sm:px-4 py-3 text-sm">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`
+                        w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
+                        bg-gradient-to-br ${theme.iconBg}
+                        dark:text-white text-gray-700
+                      `}
+                      >
+                        {memberName?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium dark:text-white text-gray-900">
+                          {memberName}
+                        </span>
+                        <span className="text-xs dark:text-gray-500 text-gray-500 font-mono">
+                          {memberId}
+                        </span>
+                      </div>
                     </div>
                   </td>
                   <td className="w-32 px-2 sm:px-4 py-3 text-sm text-center">
@@ -509,7 +633,7 @@ export function RoleActivityCard({
                       size="sm"
                       variant="secondary"
                       onClick={() => handleViewOrders(memberId, memberName, userRole)}
-                      className="text-xs touch-target"
+                      className="text-xs touch-target hover:scale-105 transition-transform"
                     >
                       {userRole === UserRole.STOCK_CONTROLLER ? (
                         <>
@@ -524,22 +648,72 @@ export function RoleActivityCard({
                       )}
                     </Button>
                   </td>
-                  <td className="w-40 px-2 sm:px-4 py-3 text-sm text-center dark:text-white text-gray-900 font-medium">
-                    <span className={viewLabel}>{displayView}</span>
+                  <td className="w-40 px-2 sm:px-4 py-3 text-sm text-center">
+                    <span
+                      className={`
+                      inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium
+                      dark:bg-white/[0.05] bg-gray-100 dark:text-gray-300 text-gray-700
+                      border dark:border-white/[0.08] border-gray-200
+                    `}
+                    >
+                      {displayView}
+                    </span>
                   </td>
                   {/* Progress column - always shown, with data for picker/packer */}
-                  <td className="w-24 px-2 sm:px-4 py-3 text-sm text-center dark:text-white text-gray-900">
-                    {userRole === UserRole.PICKER || userRole === UserRole.PACKER
-                      ? member.currentOrderId
-                        ? `${member.orderProgress}%`
-                        : '-'
-                      : '-'}
+                  <td className="w-24 px-2 sm:px-4 py-3 text-sm text-center">
+                    {(userRole === UserRole.PICKER || userRole === UserRole.PACKER) &&
+                    member.currentOrderId ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-xs font-mono dark:text-white text-gray-900">
+                          {member.orderProgress}%
+                        </span>
+                        <div className="w-12 h-1.5 rounded-full dark:bg-white/[0.1] bg-gray-200 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full bg-gradient-to-r from-${theme.accent}-400 to-${theme.accent}-500 transition-all duration-500`}
+                            style={{ width: `${member.orderProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="dark:text-gray-600 text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="w-28 px-2 sm:px-4 py-3 text-center">
-                    <span className={statusBadge}>{member.status || 'IDLE'}</span>
+                    <span
+                      className={`
+                      inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                      ${
+                        member.status === 'ACTIVE' ||
+                        member.status === 'PICKING' ||
+                        member.status === 'PACKING'
+                          ? 'dark:bg-emerald-500/20 bg-emerald-100 dark:text-emerald-400 text-emerald-700'
+                          : member.status === 'INACTIVE'
+                            ? 'dark:bg-red-500/20 bg-red-100 dark:text-red-400 text-red-700'
+                            : 'dark:bg-gray-500/20 bg-gray-100 dark:text-gray-400 text-gray-600'
+                      }
+                    `}
+                    >
+                      <span
+                        className={`
+                        w-1.5 h-1.5 rounded-full
+                        ${
+                          member.status === 'ACTIVE' ||
+                          member.status === 'PICKING' ||
+                          member.status === 'PACKING'
+                            ? 'bg-emerald-500 animate-pulse'
+                            : member.status === 'INACTIVE'
+                              ? 'bg-red-500'
+                              : 'bg-gray-400'
+                        }
+                      `}
+                      />
+                      {member.status || 'IDLE'}
+                    </span>
                   </td>
-                  <td className="w-32 px-2 sm:px-4 py-3 text-sm text-center dark:text-gray-400 text-gray-600">
-                    {formatTimeAgo(member.lastViewedAt)}
+                  <td className="w-32 px-2 sm:px-4 py-3 text-sm text-center">
+                    <span className="dark:text-gray-400 text-gray-600 text-xs font-mono">
+                      {formatTimeAgo(member.lastViewedAt)}
+                    </span>
                   </td>
                 </tr>
               );
@@ -763,10 +937,37 @@ export function RoleActivityCard({
 
   return (
     <>
-      <Card variant="glass" className="card-hover">
-        <CardHeader>
+      <Card
+        variant="glass"
+        className="
+          card-hover 
+          shadow-xl 
+          dark:shadow-blue-500/5 
+          shadow-gray-200/50
+          overflow-hidden
+          relative
+        "
+      >
+        {/* Decorative corner accents */}
+        <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-transparent rounded-bl-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-violet-500/10 to-transparent rounded-tr-full pointer-events-none" />
+
+        <CardHeader className="relative">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle>Role Activity</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-violet-500/15 border border-blue-400/20">
+                <UsersIcon className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold tracking-tight">
+                  <span className="hero-title-gradient">Role</span>
+                  <span className="dark:text-white text-gray-900"> Activity</span>
+                </CardTitle>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 hidden sm:block">
+                  Real-time staff monitoring
+                </p>
+              </div>
+            </div>
             <RoleSelectorDropdown value={role} onChange={onRoleChange} />
           </div>
         </CardHeader>
@@ -786,16 +987,60 @@ export function RoleActivityCard({
                 </p>
               </div>
             ) : (
-              <div className="space-y-8">
-                {rolesToDisplay.map(userRole => {
+              <div className="space-y-6">
+                {rolesToDisplay.map((userRole, roleIndex) => {
                   const config = ROLE_CONFIG[userRole];
+                  const theme = getRoleTheme(userRole);
+                  const Icon = config.icon;
+                  const activityCount = (activities[userRole] || []).length;
+
                   return (
-                    <div key={userRole}>
-                      <h3 className="text-lg font-semibold dark:text-white text-gray-900 mb-4 flex items-center gap-2">
-                        <config.icon className={`h-5 w-5 text-${config.color}-400`} />
-                        {config.label}
-                      </h3>
-                      {renderActivityTable(userRole, activities[userRole] || [])}
+                    <div
+                      key={userRole}
+                      className={`
+                        relative overflow-hidden rounded-2xl 
+                        bg-gradient-to-br ${theme.gradient}
+                        border dark:border-white/[0.05] border-gray-200
+                        animate-fade-in
+                      `}
+                      style={{ animationDelay: `${roleIndex * 100}ms` }}
+                    >
+                      {/* Role header */}
+                      <div className="flex items-center justify-between p-4 border-b dark:border-white/[0.05] border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`
+                            p-2.5 rounded-xl bg-gradient-to-br ${theme.iconBg}
+                            shadow-lg ${theme.glow}
+                          `}
+                          >
+                            <Icon className="h-5 w-5 dark:text-white text-gray-700" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold dark:text-white text-gray-900">
+                              {config.label}
+                            </h3>
+                            <p className="text-xs dark:text-gray-400 text-gray-500">
+                              {activityCount} active {activityCount === 1 ? 'member' : 'members'}
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className={`
+                          px-3 py-1.5 rounded-full text-xs font-medium
+                          dark:bg-white/[0.05] bg-white/50
+                          dark:text-gray-300 text-gray-600
+                          border dark:border-white/[0.08] border-gray-200
+                        `}
+                        >
+                          {userRole}
+                        </div>
+                      </div>
+
+                      {/* Activity table */}
+                      <div className="p-2">
+                        {renderActivityTable(userRole, activities[userRole] || [])}
+                      </div>
                     </div>
                   );
                 })}

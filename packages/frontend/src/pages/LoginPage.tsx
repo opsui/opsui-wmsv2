@@ -106,9 +106,9 @@ export function LoginPage() {
     <div className="login-container login-grid-bg min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
       {/* Decorative blur elements for atmospheric depth */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="max-w-md w-full space-y-8 relative z-10">
@@ -129,9 +129,9 @@ export function LoginPage() {
           <div className="login-card login-corners rounded-2xl p-8 sm:p-10 space-y-6">
             {/* Security badge */}
             <div className="flex justify-center mb-6">
-              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20">
                 <svg
-                  className="w-4 h-4 text-blue-400"
+                  className="w-4 h-4 text-purple-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -143,7 +143,7 @@ export function LoginPage() {
                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                   />
                 </svg>
-                <span className="text-xs font-medium text-blue-400 tracking-wide uppercase">
+                <span className="text-xs font-medium text-purple-400 tracking-wide uppercase">
                   Secure Access
                 </span>
               </div>

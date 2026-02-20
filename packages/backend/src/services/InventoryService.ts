@@ -341,17 +341,65 @@ export class InventoryService {
       category: string;
       barcode: string;
       binLocations: string[];
+      unitPrice?: number;
+      unitCost?: number;
+      currency?: string;
+      image?: string;
+      description?: string;
+      totalQuantity?: number;
+      totalAvailable?: number;
+      locationCount?: number;
     }>
   > {
     const results = await skuRepository.getAllSKUs(true, limit);
 
-    return results.map(sku => ({
-      sku: sku.sku,
-      name: sku.name,
-      category: sku.category,
-      barcode: sku.barcode || '',
-      binLocations: sku.binLocations || [],
-    }));
+    // Get inventory quantities for each SKU
+    const skusWithInventory = await Promise.all(
+      results.map(async sku => {
+        try {
+          const availableInventory = await inventoryRepository.getAvailableInventory(sku.sku);
+          const totalAvailable = availableInventory.reduce((sum, inv) => sum + inv.available, 0);
+          const totalQuantity = availableInventory.reduce(
+            (sum, inv) => sum + (sum + inv.available),
+            0
+          );
+
+          return {
+            sku: sku.sku,
+            name: sku.name,
+            category: sku.category || '',
+            barcode: sku.barcode || '',
+            binLocations: sku.binLocations || [],
+            unitPrice: (sku as any).unitPrice,
+            unitCost: (sku as any).unitCost,
+            currency: (sku as any).currency || 'NZD',
+            image: (sku as any).image,
+            description: (sku as any).description,
+            totalQuantity: totalAvailable, // Use available as approximation
+            totalAvailable: totalAvailable,
+            locationCount: availableInventory.length,
+          };
+        } catch {
+          return {
+            sku: sku.sku,
+            name: sku.name,
+            category: sku.category || '',
+            barcode: sku.barcode || '',
+            binLocations: sku.binLocations || [],
+            unitPrice: (sku as any).unitPrice,
+            unitCost: (sku as any).unitCost,
+            currency: (sku as any).currency || 'NZD',
+            image: (sku as any).image,
+            description: (sku as any).description,
+            totalQuantity: 0,
+            totalAvailable: 0,
+            locationCount: 0,
+          };
+        }
+      })
+    );
+
+    return skusWithInventory;
   }
 
   // --------------------------------------------------------------------------

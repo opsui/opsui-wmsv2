@@ -40,7 +40,6 @@ import {
   ScaleIcon,
   ServerIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   SunIcon,
   TagIcon,
   TruckIcon,
@@ -74,8 +73,8 @@ const MOBILE_MENU_STYLES = `
   }
   
   @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
-    50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.6); }
+    0%, 100% { box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
+    50% { box-shadow: 0 0 16px rgba(168, 85, 247, 0.6); }
   }
   
   @keyframes shimmerMove {
@@ -120,9 +119,9 @@ const MOBILE_MENU_STYLES = `
 // Section color themes for visual differentiation
 const SECTION_THEMES: Record<string, { accent: string; gradient: string; iconBg: string }> = {
   dashboard: {
-    accent: 'from-blue-500 to-cyan-400',
-    gradient: 'from-blue-500/10 to-cyan-400/5',
-    iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-400',
+    accent: 'from-purple-500 to-violet-400',
+    gradient: 'from-purple-500/10 to-violet-400/5',
+    iconBg: 'bg-gradient-to-br from-purple-500 to-violet-400',
   },
   sales: {
     accent: 'from-emerald-500 to-green-400',
@@ -160,9 +159,9 @@ const SECTION_THEMES: Record<string, { accent: string; gradient: string; iconBg:
     iconBg: 'bg-gradient-to-br from-slate-500 to-gray-400',
   },
   reports: {
-    accent: 'from-indigo-500 to-blue-400',
-    gradient: 'from-indigo-500/10 to-blue-400/5',
-    iconBg: 'bg-gradient-to-br from-indigo-500 to-blue-400',
+    accent: 'from-violet-500 to-purple-400',
+    gradient: 'from-violet-500/10 to-purple-400/5',
+    iconBg: 'bg-gradient-to-br from-violet-500 to-purple-400',
   },
   admin: {
     accent: 'from-fuchsia-500 to-pink-400',
@@ -390,7 +389,7 @@ function MobileMenu({
           style={{
             background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
             boxShadow:
-              '20px 0 60px -15px rgba(0, 0, 0, 0.5), 0 0 100px -20px rgba(59, 130, 246, 0.15)',
+              '20px 0 60px -15px rgba(0, 0, 0, 0.5), 0 0 100px -20px rgba(168, 85, 247, 0.15)',
           }}
         >
           {/* Animated background gradient mesh */}
@@ -398,7 +397,7 @@ function MobileMenu({
             <div
               className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
               style={{
-                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)',
                 transform: 'translate(-50%, -50%)',
               }}
             />
@@ -439,10 +438,10 @@ function MobileMenu({
             <div className="flex items-center gap-4">
               {/* Avatar with gradient border */}
               <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-0.5 shadow-lg shadow-blue-500/20">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 p-0.5 shadow-lg shadow-purple-500/20">
                   <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center">
                     <span
-                      className="text-lg font-bold bg-gradient-to-br from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                      className="text-lg font-bold bg-gradient-to-br from-purple-400 to-violet-400 bg-clip-text text-transparent"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       {userName.charAt(0).toUpperCase()}
@@ -467,9 +466,6 @@ function MobileMenu({
                   {userEmail}
                 </p>
               </div>
-
-              {/* Sparkle icon for premium feel */}
-              <SparklesIcon className="w-5 h-5 text-amber-400/60" />
             </div>
           </div>
 
@@ -480,10 +476,10 @@ function MobileMenu({
               <div className="mobile-menu-item" style={{ animationDelay: '50ms' }}>
                 <button
                   onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 group"
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-gradient-to-r from-purple-500/10 to-violet-500/10 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
                       <CogIcon className="w-4 h-4 text-white" />
                     </div>
                     <div className="text-left">
@@ -494,7 +490,7 @@ function MobileMenu({
                         Switch Role
                       </p>
                       <p
-                        className="text-xs text-blue-300"
+                        className="text-xs text-purple-300"
                         style={{ fontFamily: "'Inter', sans-serif" }}
                       >
                         {getEffectiveRole() || userRole}
@@ -502,7 +498,7 @@ function MobileMenu({
                     </div>
                   </div>
                   <ChevronDownIcon
-                    className={`w-5 h-5 text-blue-400 transition-transform duration-300 ${showRoleSwitcher ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 text-purple-400 transition-transform duration-300 ${showRoleSwitcher ? 'rotate-180' : ''}`}
                   />
                 </button>
 
@@ -535,7 +531,7 @@ function MobileMenu({
                             {view.label}
                           </span>
                           {isActive && (
-                            <span className="ml-auto w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 active-indicator-glow" />
+                            <span className="ml-auto w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-violet-400 active-indicator-glow" />
                           )}
                         </button>
                       );
@@ -643,7 +639,7 @@ function MobileMenu({
           {/* Footer - Settings and Logout */}
           <div className="relative border-t border-white/10 px-4 py-4 space-y-2">
             {/* Gradient line accent */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
 
             <div className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-white/5">
               <span
@@ -937,10 +933,10 @@ function NotificationPreview({
   }
 
   const typeColors: Record<string, string> = {
-    ORDER_CLAIMED: 'text-blue-400',
+    ORDER_CLAIMED: 'text-purple-400',
     ORDER_COMPLETED: 'text-green-400',
     ORDER_CANCELLED: 'text-red-400',
-    ORDER_SHIPPED: 'text-purple-400',
+    ORDER_SHIPPED: 'text-violet-400',
     PICK_UPDATED: 'text-yellow-400',
     PICK_COMPLETED: 'text-green-400',
     INVENTORY_LOW: 'text-orange-400',
@@ -948,9 +944,9 @@ function NotificationPreview({
     EXCEPTION_RESOLVED: 'text-green-400',
     QUALITY_FAILED: 'text-red-400',
     QUALITY_APPROVED: 'text-green-400',
-    WAVE_CREATED: 'text-blue-400',
+    WAVE_CREATED: 'text-purple-400',
     WAVE_COMPLETED: 'text-green-400',
-    ZONE_ASSIGNED: 'text-purple-400',
+    ZONE_ASSIGNED: 'text-violet-400',
     SYSTEM_ALERT: 'text-yellow-400',
   };
 
@@ -2250,59 +2246,70 @@ export function Header() {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-xl font-bold tracking-tight dark:text-white text-gray-900 hover:text-primary-500 dark:hover:text-primary-400 active:text-primary-600 dark:active:text-primary-300 transition-colors duration-150 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0 relative group"
+                className="text-xl font-bold tracking-tight dark:text-white text-gray-900 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0 relative group overflow-hidden"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
-                <span className="relative">
+                <span className="relative z-10 transition-all duration-300 group-hover:text-white dark:group-hover:text-white">
                   Ops
-                  <span className="text-primary-500 dark:text-primary-400 group-hover:text-primary-400 dark:group-hover:text-primary-300 transition-colors">
+                  <span className="text-purple-500 dark:text-purple-400 group-hover:text-purple-300 transition-colors">
                     UI
                   </span>
                 </span>
-                {/* Subtle glow effect on hover */}
-                <span className="absolute inset-0 blur-sm bg-primary-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+                {/* Animated background reveal on hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-purple-600 to-violet-500 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-lg" />
+                {/* Glow pulse effect */}
+                <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <span className="absolute inset-0 animate-pulse bg-purple-500/30 blur-md" />
+                </span>
               </button>
               {/* Spacer for mobile to balance hamburger */}
               <div className="w-10 md:hidden"></div>
             </div>
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
-            <div className="flex items-center justify-center gap-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-full shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-1.5 sm:p-1 sm:rounded-xl sm:shadow-sm mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
-              {/* Global Search — passes callback so it can hide sibling icons on mobile */}
-              <GlobalSearch onMobileSearchActive={setIsMobileSearchActive} />
+            <div className="relative flex items-center justify-center gap-1 p-1.5 sm:p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+              {/* Animated gradient border */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-60 animate-gradient-shift bg-[length:200%_100%]" />
+              {/* Inner container with glass effect */}
+              <div className="relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-full px-2 py-1 sm:py-0.5">
+                {/* Subtle purple glow on hover - pointer-events-none to not block clicks */}
+                <div className="absolute inset-0 rounded-full bg-purple-500/0 hover:bg-purple-500/10 transition-colors duration-300 pointer-events-none" />
+                {/* Global Search — passes callback so it can hide sibling icons on mobile */}
+                <GlobalSearch onMobileSearchActive={setIsMobileSearchActive} />
 
-              {/* Other toolbar icons: hidden on mobile while search is expanded */}
-              <div className={isMobileSearchActive ? 'hidden md:contents' : 'contents'}>
-                {/* Theme Toggle */}
-                <ThemeToggle />
+                {/* Other toolbar icons: hidden on mobile while search is expanded */}
+                <div className={isMobileSearchActive ? 'hidden md:contents' : 'contents'}>
+                  {/* Theme Toggle */}
+                  <ThemeToggle />
 
-                {/* Notification Panel */}
-                <NotificationPanel />
+                  {/* Notification Panel */}
+                  <NotificationPanel />
 
-                {/* Divider */}
-                <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+                  {/* Divider */}
+                  <div className="w-px h-5 bg-gradient-to-b from-transparent via-purple-400/50 to-transparent mx-1" />
 
-                {/* Settings button */}
-                <button
-                  onClick={() => navigate('/role-settings?section=role-switcher')}
-                  className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-lg transition-colors"
-                  title="Settings"
-                  aria-label="Settings"
-                >
-                  <CogIcon className="h-5 w-5" />
-                </button>
+                  {/* Settings button */}
+                  <button
+                    onClick={() => navigate('/role-settings?section=role-switcher')}
+                    className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-purple-300 hover:text-purple-700 dark:hover:bg-purple-500/10 hover:bg-purple-50 rounded-lg transition-colors"
+                    title="Settings"
+                    aria-label="Settings"
+                  >
+                    <CogIcon className="h-5 w-5" />
+                  </button>
 
-                {/* Logout button */}
-                <button
-                  onClick={handleLogout}
-                  disabled={logoutMutation.isPending}
-                  className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
-                  title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                  aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                >
-                  <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-                </button>
+                  {/* Logout button */}
+                  <button
+                    onClick={handleLogout}
+                    disabled={logoutMutation.isPending}
+                    className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                    title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                    aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                  >
+                    <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

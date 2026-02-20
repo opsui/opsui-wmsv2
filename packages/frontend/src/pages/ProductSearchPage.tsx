@@ -724,7 +724,7 @@ export function ProductSearchPage() {
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CubeIcon className="h-5 w-5 text-blue-600" />
-                Products ({data?.pagination.totalItems || 0})
+                Products ({data?.pagination?.totalItems || 0})
               </div>
               {data?.pagination && (
                 <span className="text-sm font-normal text-gray-500">

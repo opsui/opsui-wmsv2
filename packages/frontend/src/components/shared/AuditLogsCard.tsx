@@ -3,6 +3,11 @@
  *
  * Displays comprehensive audit logs for SOC2/ISO27001 compliance
  * Shows all system activity regardless of role or user
+ *
+ * Design: Industrial Command Center aesthetic
+ * - Distinctive card styling with decorative accents
+ * - Enhanced log entry design with hover states
+ * - Action-specific color coding with glowing icons
  */
 
 import { useState, useMemo } from 'react';
@@ -274,26 +279,41 @@ export function AuditLogsCard({
   };
 
   return (
-    <Card variant="glass" className="card-hover">
-      <CardHeader>
+    <Card
+      variant="glass"
+      className="
+        card-hover 
+        shadow-xl 
+        dark:shadow-blue-500/5 
+        shadow-gray-200/50
+        overflow-hidden
+        relative
+      "
+    >
+      {/* Decorative corner accents */}
+      <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-transparent rounded-bl-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-violet-500/10 to-transparent rounded-tr-full pointer-events-none" />
+
+      <CardHeader className="relative">
         <div className="flex flex-col gap-4">
           {/* Title Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle>
-              <div className="flex items-center gap-2">
-                <DocumentTextIcon className="h-5 w-5" />
-                <span>Audit Logs</span>
-                <Badge variant="info" className="ml-2">
-                  {filteredLogs.length}
-                </Badge>
-                {hasActiveFilters && (
-                  <Badge variant="warning" className="ml-1">
-                    Filtered
-                  </Badge>
-                )}
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/15 border border-emerald-400/20">
+                <ShieldCheckIcon className="w-5 h-5 text-emerald-400" />
               </div>
-            </CardTitle>
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold tracking-tight">
+                  <span className="hero-title-gradient">Audit</span>
+                  <span className="dark:text-white text-gray-900"> Logs</span>
+                </CardTitle>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 hidden sm:block">
+                  SOC2/ISO27001 compliance tracking
+                </p>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
+              {hasActiveFilters && <Badge variant="warning">Filtered</Badge>}
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
@@ -459,8 +479,8 @@ export function AuditLogsCard({
             </p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {filteredLogs.map(log => {
+          <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+            {filteredLogs.map((log, logIndex) => {
               const isExpanded = expandedLog === log.id;
               const desc = log.actionDescription?.toLowerCase() || '';
               const actionType = log.actionType;
@@ -468,126 +488,198 @@ export function AuditLogsCard({
               // Determine icon based on action type and description
               let ActionIcon: any;
               let iconColor: string = 'purple';
+              let iconGradient: string = 'from-violet-500/30 to-purple-500/20';
+              let borderAccent: string = 'dark:border-violet-500/20 border-violet-200';
 
               // Check action type first (more reliable)
               if (actionType === 'ITEM_SCANNED') {
                 // Individual item scan during picking
                 ActionIcon = CheckIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-cyan-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'PICK_CONFIRMED') {
                 if (desc.includes('unverified')) {
                   // Undo-pick
                   ActionIcon = ArrowUturnLeftIcon;
                   iconColor = 'amber';
+                  iconGradient = 'from-amber-500/30 to-orange-500/20';
+                  borderAccent = 'dark:border-amber-500/20 border-amber-200';
                 } else {
                   // Regular pick - box icon (order list)
                   ActionIcon = CubeIcon;
                   iconColor = 'purple';
+                  iconGradient = 'from-violet-500/30 to-purple-500/20';
+                  borderAccent = 'dark:border-violet-500/20 border-violet-200';
                 }
               } else if (actionType === 'PACK_COMPLETED') {
                 // Check if it's packing/verifying vs shipping
                 if (desc.includes('Packed') || desc.includes('packed')) {
                   ActionIcon = CheckIcon;
                   iconColor = 'green';
+                  iconGradient = 'from-emerald-500/30 to-green-500/20';
+                  borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
                 } else {
                   // Ship order
                   ActionIcon = TruckIcon;
                   iconColor = 'green';
+                  iconGradient = 'from-emerald-500/30 to-teal-500/20';
+                  borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
                 }
               } else if (actionType === 'ORDER_UPDATED') {
                 ActionIcon = CogIcon;
                 iconColor = 'gray';
+                iconGradient = 'from-slate-500/30 to-gray-500/20';
+                borderAccent = 'dark:border-slate-500/20 border-slate-200';
               } else if (actionType === 'ORDER_CLAIMED') {
                 ActionIcon = ShoppingCartIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-indigo-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'ORDER_UNCLAIMED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
+                iconGradient = 'from-red-500/30 to-rose-500/20';
+                borderAccent = 'dark:border-red-500/20 border-red-200';
               } else if (actionType === 'ORDER_CONTINUED') {
                 ActionIcon = PlayIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-cyan-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'WAVE_CREATED') {
                 ActionIcon = DocumentPlusIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-indigo-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'WAVE_RELEASED') {
                 ActionIcon = RocketLaunchIcon;
                 iconColor = 'green';
+                iconGradient = 'from-emerald-500/30 to-green-500/20';
+                borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
               } else if (actionType === 'WAVE_COMPLETED') {
                 ActionIcon = CheckCircleIcon;
                 iconColor = 'green';
+                iconGradient = 'from-green-500/30 to-emerald-500/20';
+                borderAccent = 'dark:border-green-500/20 border-green-200';
               } else if (actionType === 'SLOTTING_IMPLEMENTED') {
                 ActionIcon = AdjustmentsHorizontalIcon;
                 iconColor = 'purple';
+                iconGradient = 'from-violet-500/30 to-purple-500/20';
+                borderAccent = 'dark:border-violet-500/20 border-violet-200';
               } else if (actionType === 'ZONE_ASSIGNED') {
                 ActionIcon = MapPinIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-cyan-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'ZONE_RELEASED') {
                 ActionIcon = ArrowRightIcon;
                 iconColor = 'amber';
+                iconGradient = 'from-amber-500/30 to-yellow-500/20';
+                borderAccent = 'dark:border-amber-500/20 border-amber-200';
               } else if (actionType === 'ZONE_REBALANCED') {
                 ActionIcon = AdjustmentsHorizontalIcon;
                 iconColor = 'purple';
+                iconGradient = 'from-fuchsia-500/30 to-purple-500/20';
+                borderAccent = 'dark:border-fuchsia-500/20 border-fuchsia-200';
               } else if (actionType === 'PUTAWAY_COMPLETED') {
                 ActionIcon = InboxIcon;
                 iconColor = 'green';
+                iconGradient = 'from-teal-500/30 to-emerald-500/20';
+                borderAccent = 'dark:border-teal-500/20 border-teal-200';
               } else if (actionType === 'CYCLE_COUNT_PLAN_CREATED') {
                 ActionIcon = DocumentPlusIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-indigo-500/30 to-blue-500/20';
+                borderAccent = 'dark:border-indigo-500/20 border-indigo-200';
               } else if (actionType === 'CYCLE_COUNT_STARTED') {
                 ActionIcon = PlayIcon;
                 iconColor = 'green';
+                iconGradient = 'from-emerald-500/30 to-green-500/20';
+                borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
               } else if (actionType === 'CYCLE_COUNT_COMPLETED') {
                 ActionIcon = CheckCircleIcon;
                 iconColor = 'green';
+                iconGradient = 'from-green-500/30 to-emerald-500/20';
+                borderAccent = 'dark:border-green-500/20 border-green-200';
               } else if (actionType === 'CYCLE_COUNT_RECONCILED') {
                 ActionIcon = ShieldCheckIcon;
                 iconColor = 'purple';
+                iconGradient = 'from-violet-500/30 to-indigo-500/20';
+                borderAccent = 'dark:border-violet-500/20 border-violet-200';
               } else if (actionType === 'BIN_LOCATION_CREATED') {
                 ActionIcon = MapPinIcon;
                 iconColor = 'green';
+                iconGradient = 'from-green-500/30 to-emerald-500/20';
+                borderAccent = 'dark:border-green-500/20 border-green-200';
               } else if (actionType === 'BIN_LOCATION_UPDATED') {
                 ActionIcon = CogIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-sky-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'BIN_LOCATION_DELETED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
+                iconGradient = 'from-red-500/30 to-rose-500/20';
+                borderAccent = 'dark:border-red-500/20 border-red-200';
               } else if (actionType === 'CUSTOM_ROLE_CREATED') {
                 ActionIcon = DocumentPlusIcon;
                 iconColor = 'green';
+                iconGradient = 'from-emerald-500/30 to-green-500/20';
+                borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
               } else if (actionType === 'CUSTOM_ROLE_UPDATED') {
                 ActionIcon = CogIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-indigo-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               } else if (actionType === 'CUSTOM_ROLE_DELETED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
+                iconGradient = 'from-red-500/30 to-rose-500/20';
+                borderAccent = 'dark:border-red-500/20 border-red-200';
               } else if (actionType === 'ORDER_CANCELLED') {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
+                iconGradient = 'from-red-500/30 to-orange-500/20';
+                borderAccent = 'dark:border-red-500/20 border-red-200';
               } else if (actionType === 'ROLE_GRANTED') {
                 ActionIcon = ShieldCheckIcon;
                 iconColor = 'green';
+                iconGradient = 'from-emerald-500/30 to-green-500/20';
+                borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
               } else if (actionType === 'ROLE_REVOKED') {
                 ActionIcon = ShieldCheckIcon;
                 iconColor = 'amber';
+                iconGradient = 'from-amber-500/30 to-orange-500/20';
+                borderAccent = 'dark:border-amber-500/20 border-amber-200';
               }
               // Fallback to description-based checks for unknown action types
               else if (desc.includes('shipped order')) {
                 ActionIcon = TruckIcon;
                 iconColor = 'green';
+                iconGradient = 'from-emerald-500/30 to-teal-500/20';
+                borderAccent = 'dark:border-emerald-500/20 border-emerald-200';
               } else if (desc.includes('cancelled order')) {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
+                iconGradient = 'from-red-500/30 to-rose-500/20';
+                borderAccent = 'dark:border-red-500/20 border-red-200';
               } else if (desc.includes('unclaimed order')) {
                 ActionIcon = XCircleIcon;
                 iconColor = 'red';
+                iconGradient = 'from-red-500/30 to-orange-500/20';
+                borderAccent = 'dark:border-red-500/20 border-red-200';
               } else if (desc.includes('claimed order')) {
                 ActionIcon = ShoppingCartIcon;
                 iconColor = 'blue';
+                iconGradient = 'from-blue-500/30 to-indigo-500/20';
+                borderAccent = 'dark:border-blue-500/20 border-blue-200';
               }
               // Default
               else {
                 ActionIcon = CogIcon;
                 iconColor = 'gray';
+                iconGradient = 'from-slate-500/30 to-gray-500/20';
+                borderAccent = 'dark:border-slate-500/20 border-slate-200';
               }
 
               const colors = ACTION_COLOR_MAP[iconColor] || ACTION_COLOR_MAP.gray;
@@ -595,21 +687,37 @@ export function AuditLogsCard({
               return (
                 <div
                   key={log.id}
-                  className={`dark:border dark:border-white/[0.08] border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 ${
-                    isExpanded
-                      ? 'dark:bg-white/[0.04] bg-gray-50'
-                      : 'dark:hover:bg-white/[0.02] hover:bg-gray-50'
-                  }`}
+                  className={`
+                    group relative overflow-hidden rounded-xl border
+                    ${borderAccent}
+                    ${
+                      isExpanded
+                        ? 'dark:bg-white/[0.04] bg-gray-50 shadow-lg'
+                        : 'dark:bg-white/[0.01] bg-white/50 dark:hover:bg-white/[0.03] hover:bg-gray-50'
+                    }
+                    transition-all duration-300 animate-fade-in
+                  `}
+                  style={{ animationDelay: `${logIndex * 30}ms` }}
                 >
+                  {/* Accent line on left */}
+                  <div
+                    className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${iconGradient.replace('/30', '').replace('/20', '')}`}
+                  />
+
                   {/* Main row - always visible */}
                   <div
-                    className="p-4 cursor-pointer"
+                    className="p-4 cursor-pointer pl-5"
                     onClick={() => setExpandedLog(isExpanded ? null : log.id || 0)}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-4">
                       {/* Action Icon - different icons for different actions */}
                       <div
-                        className={`flex-shrink-0 w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}
+                        className={`
+                          flex-shrink-0 w-11 h-11 rounded-xl 
+                          bg-gradient-to-br ${iconGradient}
+                          flex items-center justify-center
+                          shadow-lg group-hover:scale-105 transition-transform duration-300
+                        `}
                       >
                         <ActionIcon className={`h-5 w-5 ${colors.icon}`} />
                       </div>

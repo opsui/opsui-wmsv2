@@ -652,9 +652,18 @@ function AccountingPage() {
       {/* Atmospheric background elements */}
       <div className="accounting-atmosphere" />
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="ledger-float-element absolute top-20 right-20 w-64 h-64 border border-emerald-500/10 rounded-full" style={{ animationDelay: '0s' }} />
-        <div className="ledger-float-element absolute bottom-40 left-20 w-48 h-48 border border-cyan-500/10 rounded-full" style={{ animationDelay: '2s' }} />
-        <div className="ledger-float-element absolute top-1/3 left-1/4 w-32 h-32 border border-emerald-500/5 rotate-45" style={{ animationDelay: '4s' }} />
+        <div
+          className="ledger-float-element absolute top-20 right-20 w-64 h-64 border border-emerald-500/10 rounded-full"
+          style={{ animationDelay: '0s' }}
+        />
+        <div
+          className="ledger-float-element absolute bottom-40 left-20 w-48 h-48 border border-cyan-500/10 rounded-full"
+          style={{ animationDelay: '2s' }}
+        />
+        <div
+          className="ledger-float-element absolute top-1/3 left-1/4 w-32 h-32 border border-emerald-500/5 rotate-45"
+          style={{ animationDelay: '4s' }}
+        />
       </div>
 
       <Header />
@@ -667,7 +676,10 @@ function AccountingPage() {
         <div className="mb-10 ledger-hero">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             {/* Left side - Title and description */}
-            <div className="flex items-start gap-5" style={{ animation: 'ledger-stagger-in 0.5s ease-out' }}>
+            <div
+              className="flex items-start gap-5"
+              style={{ animation: 'ledger-stagger-in 0.5s ease-out' }}
+            >
               <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 rounded-2xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
                 <CurrencyDollarIcon className="h-8 w-8 text-emerald-400" />
               </div>
@@ -682,7 +694,10 @@ function AccountingPage() {
             </div>
 
             {/* Right side - Controls */}
-            <div className="flex items-center gap-3" style={{ animation: 'ledger-stagger-in 0.5s ease-out 100ms backwards' }}>
+            <div
+              className="flex items-center gap-3"
+              style={{ animation: 'ledger-stagger-in 0.5s ease-out 100ms backwards' }}
+            >
               <PeriodDropdown
                 selectedPeriod={selectedPeriod}
                 onSelectPeriod={period => {
@@ -724,7 +739,9 @@ function AccountingPage() {
                   }`}
                   style={{ animationDelay: `${150 + index * 50}ms` }}
                 >
-                  <Icon className={`h-4 w-4 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                  <Icon
+                    className={`h-4 w-4 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}
+                  />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -908,7 +925,10 @@ function AccountingPage() {
                 </div>
 
                 {/* Gross Profit */}
-                <div className="accounting-card rounded-2xl border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent" style={{ animationDelay: '150ms' }}>
+                <div
+                  className="accounting-card rounded-2xl border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent"
+                  style={{ animationDelay: '150ms' }}
+                >
                   <div className="p-6">
                     <div className="flex justify-between items-center">
                       <div>
@@ -976,9 +996,7 @@ function AccountingPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-slate-400 mb-2">Net Margin</p>
-                        <p
-                          className={`ledger-currency text-2xl text-white`}
-                        >
+                        <p className={`ledger-currency text-2xl text-white`}>
                           {sampleProfitLoss.netMargin.toFixed(1)}%
                         </p>
                       </div>
@@ -1002,7 +1020,10 @@ function AccountingPage() {
             ) : (
               <>
                 {/* Total Inventory Value */}
-                <div className="accounting-card rounded-2xl border-l-4 border-l-cyan-500 bg-gradient-to-r from-cyan-500/10 to-transparent" style={{ animationDelay: '50ms' }}>
+                <div
+                  className="accounting-card rounded-2xl border-l-4 border-l-cyan-500 bg-gradient-to-r from-cyan-500/10 to-transparent"
+                  style={{ animationDelay: '50ms' }}
+                >
                   <div className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -1021,7 +1042,9 @@ function AccountingPage() {
                 {/* By Category */}
                 <div className="accounting-card rounded-2xl" style={{ animationDelay: '100ms' }}>
                   <div className="p-6">
-                    <h3 className="ledger-title text-xl text-white mb-6">Inventory Value by Category</h3>
+                    <h3 className="ledger-title text-xl text-white mb-6">
+                      Inventory Value by Category
+                    </h3>
                     <div className="space-y-4">
                       {Object.entries(sampleInventoryData?.byCategory || {}).map(
                         ([category, value], index) => (
@@ -1042,7 +1065,11 @@ function AccountingPage() {
                                 />
                               </div>
                               <span className="text-xs text-slate-500 w-12 text-right">
-                                {(((value as number) / (sampleInventoryData?.totalValue || 1)) * 100).toFixed(1)}%
+                                {(
+                                  ((value as number) / (sampleInventoryData?.totalValue || 1)) *
+                                  100
+                                ).toFixed(1)}
+                                %
                               </span>
                             </div>
                           </div>
@@ -1055,31 +1082,39 @@ function AccountingPage() {
                 {/* By Zone */}
                 <div className="accounting-card rounded-2xl" style={{ animationDelay: '150ms' }}>
                   <div className="p-6">
-                    <h3 className="ledger-title text-xl text-white mb-6">Inventory Value by Zone</h3>
+                    <h3 className="ledger-title text-xl text-white mb-6">
+                      Inventory Value by Zone
+                    </h3>
                     <div className="space-y-4">
-                      {Object.entries(sampleInventoryData?.byZone || {}).map(([zone, value], index) => (
-                        <div key={zone} style={{ animationDelay: `${200 + index * 50}ms` }}>
-                          <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-slate-300 font-medium">{zone}</span>
-                            <span className="ledger-currency text-white font-medium">
-                              {formatCurrency(value as number)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-3 bg-slate-700/50 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full transition-all duration-700"
-                                style={{
-                                  width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
-                                }}
-                              />
+                      {Object.entries(sampleInventoryData?.byZone || {}).map(
+                        ([zone, value], index) => (
+                          <div key={zone} style={{ animationDelay: `${200 + index * 50}ms` }}>
+                            <div className="flex items-center justify-between text-sm mb-2">
+                              <span className="text-slate-300 font-medium">{zone}</span>
+                              <span className="ledger-currency text-white font-medium">
+                                {formatCurrency(value as number)}
+                              </span>
                             </div>
-                            <span className="text-xs text-slate-500 w-12 text-right">
-                              {(((value as number) / (sampleInventoryData?.totalValue || 1)) * 100).toFixed(1)}%
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full transition-all duration-700"
+                                  style={{
+                                    width: `${((value as number) / (sampleInventoryData?.totalValue || 1)) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-slate-500 w-12 text-right">
+                                {(
+                                  ((value as number) / (sampleInventoryData?.totalValue || 1)) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1205,7 +1240,9 @@ function AccountingPage() {
                           </span>
                         </td>
                         <td className="py-4 px-4 text-sm text-white">Inventory - SKU10050</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">RCP-001</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
+                          RCP-001
+                        </td>
                         <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
                           -$450.00
                         </td>
@@ -1243,7 +1280,9 @@ function AccountingPage() {
                           </span>
                         </td>
                         <td className="py-4 px-4 text-sm text-white">Vendor Payment - Acme Corp</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">PAY-001</td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
+                          PAY-001
+                        </td>
                         <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
                           -$2,800.00
                         </td>
@@ -1260,8 +1299,12 @@ function AccountingPage() {
                             REFUND
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-white">Order SO0003 - Customer Return</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">RET-001</td>
+                        <td className="py-4 px-4 text-sm text-white">
+                          Order SO0003 - Customer Return
+                        </td>
+                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
+                          RET-001
+                        </td>
                         <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
                           -$185.00
                         </td>

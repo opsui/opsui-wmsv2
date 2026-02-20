@@ -15,23 +15,80 @@ router.use(authenticate);
 
 /**
  * GET /api/skus
- * Get all or search SKUs
+ * Get all or search SKUs with pagination
  */
 router.get(
   '/',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const searchTerm = req.query.q as string;
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = Math.min(parseInt(req.query.pageSize as string) || 20, 100);
+    const sortBy = (req.query.sortBy as string) || 'sku';
+    const sortOrder = (req.query.sortOrder as string) || 'asc';
+    const category = req.query.category as string;
+    const stockStatus = req.query.stockStatus as string;
 
-    // If no search term, return all SKUs
-    if (!searchTerm) {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
-      const results = await inventoryService.getAllSKUs(Math.min(limit, 500));
-      res.json(results);
-      return;
+    // Get all SKUs first
+    let allSKUs = searchTerm
+      ? await inventoryService.searchSKUs(searchTerm)
+      : await inventoryService.getAllSKUs(1000);
+
+    // Apply category filter
+    if (category && category !== 'all') {
+      allSKUs = allSKUs.filter((sku: any) => sku.category === category);
     }
 
-    const results = await inventoryService.searchSKUs(searchTerm);
-    res.json(results);
+    // Apply stock status filter
+    if (stockStatus && stockStatus !== 'all') {
+      allSKUs = allSKUs.filter((sku: any) => {
+        const qty = sku.totalQuantity || 0;
+        switch (stockStatus) {
+          case 'in-stock':
+            return qty > 10;
+          case 'low-stock':
+            return qty > 0 && qty <= 10;
+          case 'out-of-stock':
+            return qty === 0;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply sorting
+    allSKUs.sort((a: any, b: any) => {
+      let aVal = a[sortBy] ?? '';
+      let bVal = b[sortBy] ?? '';
+
+      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    // Get unique categories for filter
+    const categories = [...new Set(allSKUs.map((sku: any) => sku.category).filter(Boolean))];
+
+    // Apply pagination
+    const totalItems = allSKUs.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const paginatedData = allSKUs.slice(startIndex, startIndex + pageSize);
+
+    res.json({
+      data: paginatedData,
+      pagination: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages,
+      },
+      filters: {
+        categories,
+      },
+    });
   })
 );
 

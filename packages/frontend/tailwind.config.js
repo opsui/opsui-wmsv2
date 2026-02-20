@@ -30,20 +30,20 @@ export default {
       },
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          DEFAULT: '#3b82f6',
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#a855f7',
+          600: '#9333ea',
+          700: '#7c3aed',
+          800: '#6b21a8',
+          900: '#581c87',
+          DEFAULT: '#a855f7',
         },
-        secondary: '#1e40af',
-        accent: '#60a5fa',
+        secondary: '#6b21a8',
+        accent: '#c084fc',
         dark: {
           50: '#1a1a1a',
           100: '#171717',
@@ -122,8 +122,8 @@ export default {
       },
       keyframes: {
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' },
-          '50%': { boxShadow: '0 0 40px rgba(59, 130, 246, 0.8)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)' },
+          '50%': { boxShadow: '0 0 40px rgba(168, 85, 247, 0.8)' },
         },
         slideIn: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
@@ -192,8 +192,8 @@ export default {
           '100%': { backgroundColor: 'transparent', transform: 'scale(1)' },
         },
         scanPulse: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(59, 130, 246, 0.4)' },
-          '50%': { boxShadow: '0 0 0 10px rgba(59, 130, 246, 0)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(168, 85, 247, 0.4)' },
+          '50%': { boxShadow: '0 0 0 10px rgba(168, 85, 247, 0)' },
         },
         // Progress keyframes
         progressFill: {
@@ -202,21 +202,21 @@ export default {
         },
         glowPulse: {
           '0%, 100%': {
-            boxShadow: '0 0 5px rgba(59, 130, 246, 0.5), 0 0 10px rgba(59, 130, 246, 0.3)',
+            boxShadow: '0 0 5px rgba(168, 85, 247, 0.5), 0 0 10px rgba(168, 85, 247, 0.3)',
           },
           '50%': {
-            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), 0 0 25px rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 0 15px rgba(168, 85, 247, 0.8), 0 0 25px rgba(168, 85, 247, 0.5)',
           },
         },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-premium': 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
+        'gradient-premium': 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)',
         'gradient-dark': 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)',
       },
       boxShadow: {
-        glow: '0 0 20px rgba(59, 130, 246, 0.5)',
-        'glow-lg': '0 0 40px rgba(59, 130, 246, 0.8)',
+        glow: '0 0 20px rgba(168, 85, 247, 0.5)',
+        'glow-lg': '0 0 40px rgba(168, 85, 247, 0.8)',
         premium: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
         'premium-lg': '0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
       },
