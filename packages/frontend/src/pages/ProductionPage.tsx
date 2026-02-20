@@ -7,6 +7,17 @@
  * - Analytics: OEE, performance trends, detailed reports
  * - Work Centers: Equipment status and capacity
  * - BOMs: Bill of materials management
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: FACTORY FLOOR
+ * ============================================================================
+ * Manufacturing execution system aesthetic:
+ * - Dark theme with yellow/gold accents for manufacturing energy
+ * - Vertical slide-up entrance animations
+ * - Kanban board with production flow visualization
+ * - Work center status with capacity indicators
+ * - OEE metrics with performance dashboards
+ * ============================================================================
  */
 
 import { useSearchParams } from 'react-router-dom';

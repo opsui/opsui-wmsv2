@@ -3,6 +3,17 @@
  *
  * Handles customer returns, warranty claims, and refurbishments
  * - Unique design: Returns pipeline layout with stage-based navigation
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: RETURNS PIPELINE
+ * ============================================================================
+ * Flowing returns management with pipeline visualization:
+ * - Dark theme with rose/pink accents for returns flow
+ * - Right-to-left entrance animations (reverse flow for returns)
+ * - Pipeline stage progression visualization
+ * - Status flow indicators with connecting lines
+ * - Clear disposition tracking
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';

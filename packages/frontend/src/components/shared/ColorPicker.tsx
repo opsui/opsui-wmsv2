@@ -17,15 +17,15 @@ export interface ColorOption {
 
 // Predefined color options - curated for good visibility and accessibility
 export const ROLE_COLORS: ColorOption[] = [
+  // Purple tones (primary theme)
+  { name: 'Purple', value: '#a855f7' },
+  { name: 'Violet', value: '#8b5cf6' },
+  { name: 'Fuchsia', value: '#d946ef' },
+
   // Blue tones
   { name: 'Blue', value: '#3b82f6' },
   { name: 'Sky', value: '#0ea5e9' },
   { name: 'Cyan', value: '#06b6d4' },
-
-  // Purple tones
-  { name: 'Purple', value: '#8b5cf6' },
-  { name: 'Violet', value: '#7c3aed' },
-  { name: 'Fuchsia', value: '#d946ef' },
 
   // Red/Pink tones
   { name: 'Red', value: '#ef4444' },

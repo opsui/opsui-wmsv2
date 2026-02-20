@@ -3,6 +3,17 @@
  *
  * Admin interface for managing module subscriptions and billing
  * Follows SaaS subscription management best practices
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: SYSTEM CORE
+ * ============================================================================
+ * Enterprise subscription aesthetic:
+ * - Dark theme with slate/gray accents for professionalism
+ * - Module card flip entrance animations
+ * - Subscription status with tiered indicators
+ * - Cost visualization with progress bars
+ * - Category organization with expansion states
+ * ============================================================================
  */
 
 import {

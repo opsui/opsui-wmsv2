@@ -3,6 +3,17 @@
  *
  * Analytics page for variance root cause categorization with Pareto analysis,
  * category breakdown, trending analysis, and drill-down capabilities by SKU and zone.
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: INVESTIGATION LAB
+ * ============================================================================
+ * Forensic analysis aesthetic:
+ * - Dark theme with magenta/purple accents for investigation
+ * - Animated variance bars with staggered reveals
+ * - Trend indicators with direction arrows
+ * - Pareto chart with cumulative percentage visualization
+ * - Category color coding for quick identification
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';

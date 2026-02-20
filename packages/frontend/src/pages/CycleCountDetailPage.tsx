@@ -3,6 +3,17 @@
  *
  * Dedicated page for viewing and managing a single cycle count plan
  * @updated 2025-01-26
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: COUNT FOCUS
+ * ============================================================================
+ * Precision counting aesthetic:
+ * - Dark theme with deep teal accents for focus
+ * - Status-driven color progression
+ * - Real-time variance highlighting
+ * - Quick count panel with barcode scanning
+ * - Progress indicators with completion states
+ * ============================================================================
  */
 
 import { useState } from 'react';

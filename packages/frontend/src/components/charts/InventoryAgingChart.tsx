@@ -32,7 +32,7 @@ interface InventoryAgingChartProps {
 
 const AGING_COLORS: Record<string, string> = {
   '0-30 days': '#10b981', // success - fresh
-  '31-60 days': '#3b82f6', // primary - normal
+  '31-60 days': '#a855f7', // primary - normal
   '61-90 days': '#f59e0b', // warning - aging
   '91-180 days': '#f97316', // orange - old
   '180+ days': '#ef4444', // error - obsolete

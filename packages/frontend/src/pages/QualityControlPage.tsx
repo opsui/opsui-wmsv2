@@ -3,6 +3,16 @@
  *
  * Manages quality inspections, inspection checklists, and return authorizations.
  * Provides tabbed interface for different quality control workflows.
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: INSPECTION LAB
+ * ============================================================================
+ * Precision-focused quality assurance interface:
+ * - Dark theme with cyan/teal accents for technical precision
+ * - Scale-in entrance animations for inspection cards
+ * - Clean status badges with gradient fills
+ * - High-contrast pass/fail indicators
+ * ============================================================================
  */
 
 import React, { useState, useEffect } from 'react';

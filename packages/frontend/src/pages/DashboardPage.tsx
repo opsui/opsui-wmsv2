@@ -2,6 +2,13 @@
  * Dashboard page
  *
  * Supervisor dashboard showing real-time warehouse metrics
+ *
+ * Design: Industrial Command Center aesthetic
+ * - Bold typography with Clash Display-inspired headers
+ * - Deep space gradients with electric blue accents
+ * - Staggered entrance animations
+ * - Asymmetric hero layout for visual impact
+ * - Atmospheric depth with layered glass effects
  */
 
 import {
@@ -60,7 +67,62 @@ import {
 } from '@heroicons/react/24/outline';
 import { OrderStatus, UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useEffect } from 'react';
+
+// ============================================================================
+// ANIMATION STYLES (injected for staggered reveals)
+// ============================================================================
+
+const staggerStyles = `
+  @keyframes dashboard-stagger-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  @keyframes metric-pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+    }
+  }
+  
+  @keyframes hero-gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  
+  .dashboard-stagger-1 { animation: dashboard-stagger-in 0.6s ease-out 0.1s both; }
+  .dashboard-stagger-2 { animation: dashboard-stagger-in 0.6s ease-out 0.2s both; }
+  .dashboard-stagger-3 { animation: dashboard-stagger-in 0.6s ease-out 0.3s both; }
+  .dashboard-stagger-4 { animation: dashboard-stagger-in 0.6s ease-out 0.4s both; }
+  .dashboard-stagger-5 { animation: dashboard-stagger-in 0.6s ease-out 0.5s both; }
+  .dashboard-stagger-6 { animation: dashboard-stagger-in 0.6s ease-out 0.6s both; }
+  
+  .metric-card-glow {
+    animation: metric-pulse-glow 3s ease-in-out infinite;
+  }
+  
+  .hero-title-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: hero-gradient-shift 8s ease infinite;
+  }
+`;
 
 // ============================================================================
 // SUBCOMPONENTS
@@ -72,42 +134,112 @@ const MetricCard = memo(function MetricCard({
   icon: Icon,
   color = 'primary',
   onClick,
+  index = 0,
 }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   color?: 'primary' | 'success' | 'warning' | 'error';
   onClick?: () => void;
+  index?: number;
 }) {
+  // Distinctive color schemes with depth
   const colorStyles = {
-    primary:
-      'dark:bg-primary-500/15 bg-primary-500/15 dark:text-primary-400 text-primary-600 dark:border-primary-500/20 border-primary-500/30',
-    success:
-      'dark:bg-success-500/15 bg-success-500/15 dark:text-success-400 text-success-600 dark:border-success-500/20 border-success-500/30',
-    warning:
-      'dark:bg-warning-500/15 bg-warning-500/15 dark:text-warning-400 text-warning-600 dark:border-warning-500/20 border-warning-500/30',
-    error:
-      'dark:bg-error-500/15 bg-error-500/15 dark:text-error-400 text-error-600 dark:border-error-500/20 border-error-500/30',
+    primary: {
+      bg: 'bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-indigo-500/20 dark:from-blue-500/20 dark:via-blue-600/10 dark:to-indigo-500/20',
+      icon: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-500/40',
+      border: 'border-blue-400/30 dark:border-blue-500/20',
+      glow: 'hover:shadow-blue-500/20',
+    },
+    success: {
+      bg: 'bg-gradient-to-br from-emerald-500/20 via-green-600/10 to-teal-500/20 dark:from-emerald-500/20 dark:via-green-600/10 dark:to-teal-500/20',
+      icon: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/40',
+      border: 'border-emerald-400/30 dark:border-emerald-500/20',
+      glow: 'hover:shadow-emerald-500/20',
+    },
+    warning: {
+      bg: 'bg-gradient-to-br from-amber-500/20 via-orange-600/10 to-yellow-500/20 dark:from-amber-500/20 dark:via-orange-600/10 dark:to-yellow-500/20',
+      icon: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-amber-500/40',
+      border: 'border-amber-400/30 dark:border-amber-500/20',
+      glow: 'hover:shadow-amber-500/20',
+    },
+    error: {
+      bg: 'bg-gradient-to-br from-red-500/20 via-rose-600/10 to-pink-500/20 dark:from-red-500/20 dark:via-rose-600/10 dark:to-pink-500/20',
+      icon: 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-red-500/40',
+      border: 'border-red-400/30 dark:border-red-500/20',
+      glow: 'hover:shadow-red-500/20',
+    },
   };
 
+  const style = colorStyles[color];
+
   return (
-    <div onClick={onClick} className={`${onClick ? 'cursor-pointer' : ''}`}>
+    <div
+      onClick={onClick}
+      className={`${onClick ? 'cursor-pointer' : ''} dashboard-stagger-${index + 1}`}
+    >
       <Card
         variant="glass"
-        className="card-hover shadow-lg dark:shadow-blue-500/5 shadow-gray-200/50 group h-full"
+        className={`
+          relative overflow-hidden
+          ${style.bg} ${style.border}
+          border backdrop-blur-xl
+          transition-all duration-500 ease-out
+          hover:scale-[1.02] hover:-translate-y-1
+          hover:shadow-2xl ${style.glow}
+          group h-full
+          before:absolute before:inset-0 
+          before:bg-gradient-to-br before:from-white/10 before:to-transparent
+          before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
+        `}
       >
-        <CardContent className="p-4 sm:p-5 lg:p-6">
+        {/* Decorative corner accent */}
+        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-white/5 to-transparent rounded-bl-full opacity-50" />
+
+        <CardContent className="p-4 sm:p-5 lg:p-6 relative">
           <div className="flex flex-col items-center text-center gap-3">
+            {/* Icon with enhanced styling */}
             <div
-              className={`p-3 sm:p-4 rounded-xl ${colorStyles[color]} transition-all duration-300 group-hover:scale-110 shadow-lg dark:shadow-none shrink-0`}
+              className={`
+                p-3 sm:p-4 rounded-2xl 
+                ${style.icon}
+                shadow-lg
+                transition-all duration-500 
+                group-hover:scale-110 group-hover:rotate-3
+                group-hover:shadow-xl
+                shrink-0
+                relative
+                after:absolute after:inset-0 after:rounded-2xl
+                after:bg-gradient-to-br after:from-white/30 after:to-transparent
+              `}
             >
-              <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+              <Icon className="h-6 w-6 sm:h-7 sm:w-7 relative z-10" />
             </div>
-            <div className="flex flex-col items-center">
-              <p className="text-xs sm:text-sm md:text-base font-semibold dark:text-gray-300 text-gray-700 uppercase tracking-tight leading-tight text-center">
+
+            {/* Content */}
+            <div className="flex flex-col items-center gap-1">
+              <p
+                className="
+                text-xs sm:text-sm font-bold 
+                text-gray-600 dark:text-gray-400
+                uppercase tracking-widest
+                leading-tight text-center
+                transition-colors duration-300
+                group-hover:text-gray-700 dark:group-hover:text-gray-300
+              "
+              >
                 {title}
               </p>
-              <p className="mt-1 text-2xl sm:text-3xl md:text-4xl font-bold dark:text-white text-gray-900 tracking-tight group-hover:scale-105 transition-transform duration-300 text-center">
+              <p
+                className="
+                text-3xl sm:text-4xl lg:text-5xl font-black 
+                text-gray-900 dark:text-white
+                tracking-tight 
+                transition-all duration-300
+                group-hover:scale-105
+                font-['JetBrains_Mono',monospace]
+              "
+              >
                 {value}
               </p>
             </div>
@@ -529,6 +661,17 @@ export function DashboardPage() {
     !!selectedMember
   );
 
+  // Inject stagger animation styles on mount
+  useEffect(() => {
+    const styleId = 'dashboard-stagger-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = staggerStyles;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   if (!canSupervise) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -587,29 +730,60 @@ export function DashboardPage() {
       >
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        {/* Page Header */}
-        <div className="animate-in">
-          <h1 className="text-2xl sm:text-3xl font-bold dark:text-white text-gray-900 tracking-tight">
-            Dashboard
-          </h1>
-          <p className="mt-1 sm:mt-2 dark:text-gray-400 text-gray-600 text-sm sm:text-base">
-            Real-time warehouse operations overview
-          </p>
+
+        {/* Hero Section - Asymmetric Layout */}
+        <div className="dashboard-stagger-1 relative">
+          {/* Decorative background elements */}
+          <div className="absolute -left-4 -top-4 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -right-4 -bottom-4 w-40 h-40 bg-gradient-to-tl from-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+          {/* Main header */}
+          <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div>
+              <h1
+                className="
+                text-4xl sm:text-5xl lg:text-6xl 
+                font-black 
+                tracking-tight
+                font-['Archivo',sans-serif]
+              "
+              >
+                <span className="hero-title-gradient">Command</span>
+                <span className="dark:text-white text-gray-900"> Center</span>
+              </h1>
+              <p className="mt-2 sm:mt-3 text-base sm:text-lg dark:text-gray-400 text-gray-600 max-w-xl">
+                Business operations at a glance
+              </p>
+            </div>
+
+            {/* Status indicator */}
+            <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                Live
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Key Metrics - Responsive grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
+        {/* Key Metrics - Responsive grid with staggered animations */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
           <MetricCard
             title="Active Staff"
             value={metrics.activePickers}
             icon={UserGroupIcon}
             color="primary"
+            index={0}
           />
           <MetricCard
             title="Orders/Hour"
             value={metrics.ordersPickedPerHour}
             icon={ArrowTrendingUpIcon}
             color="success"
+            index={1}
           />
           <MetricCard
             title="Queue Depth"
@@ -617,6 +791,7 @@ export function DashboardPage() {
             icon={QueueListIcon}
             color="warning"
             onClick={() => setShowAdminOrders(true)}
+            index={2}
           />
           <MetricCard
             title="Exceptions"
@@ -624,6 +799,7 @@ export function DashboardPage() {
             icon={ExclamationTriangleIcon}
             color={metrics.exceptions > 0 ? 'error' : 'success'}
             onClick={() => (window.location.href = '/exceptions')}
+            index={3}
           />
         </div>
 

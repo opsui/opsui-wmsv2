@@ -3,6 +3,17 @@
  *
  * Admin interface for managing automated recurring cycle count schedules.
  * Allows creating, editing, and viewing recurring count schedules.
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: TIME GRID
+ * ============================================================================
+ * Scheduling automation aesthetic:
+ * - Dark theme with bronze/amber accents for time management
+ * - Card-based schedule display with status indicators
+ * - Calendar visualization with next run highlighting
+ * - Play/pause toggle for schedule activation
+ * - Frequency display with intuitive intervals
+ * ============================================================================
  */
 
 import { useState } from 'react';

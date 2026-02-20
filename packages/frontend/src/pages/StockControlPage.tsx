@@ -3,6 +3,18 @@
  *
  * Comprehensive stock management interface for stock controllers
  * Features: inventory overview, stock counts, transfers, adjustments, reports
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: INVENTORY COMMAND
+ * ============================================================================
+ * An industrial command center for stock management:
+ * - Dark theme with blue accents for operational focus
+ * - Pulsing indicators for live inventory data
+ * - Staggered entrance animations for cards and metrics
+ * - Low stock warning animations with amber highlights
+ * - Monospace SKU displays with subtle glow effects
+ * - Professional layout with clear action hierarchy
+ * ============================================================================
  */
 
 import { useState } from 'react';
@@ -99,7 +111,7 @@ function MetricCard({
   return (
     <Card
       variant="glass"
-      className="card-hover group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+      className="stock-control-card card-hover group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
     >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
@@ -107,7 +119,7 @@ function MetricCard({
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               {title}
             </p>
-            <p className="mt-3 text-4xl font-bold text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300">
+            <p className="mt-3 text-4xl font-bold text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300 font-['JetBrains_Mono',monospace]">
               {value}
             </p>
             {trend && (
@@ -1718,19 +1730,33 @@ export function StockControlPage() {
     ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl" />
+      </div>
+
       <Header />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         {/* Page Header */}
-        <div className="animate-in">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            Stock Control
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage inventory, stock counts, transfers, and adjustments
-          </p>
+        <div style={{ animation: 'inventory-stagger-in 0.4s ease-out' }}>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-500/20 rounded-xl border border-blue-500/30 shadow-lg shadow-blue-500/10">
+              <CubeIcon className="h-8 w-8 text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-['Space_Grotesk',sans-serif]">
+                Stock Control
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage inventory, stock counts, transfers, and adjustments
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Quick Search */}

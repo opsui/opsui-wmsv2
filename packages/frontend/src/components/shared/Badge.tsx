@@ -36,7 +36,7 @@ export interface RoleColorSetting {
 
 // Default role colors - these can be overridden in settings
 const DEFAULT_ROLE_COLORS: Record<UserRole, RoleColorSetting> = {
-  [UserRole.PICKER]: { role: UserRole.PICKER, color: '#3b82f6', variant: 'info' }, // Blue
+  [UserRole.PICKER]: { role: UserRole.PICKER, color: '#a855f7', variant: 'info' }, // Purple
   [UserRole.PACKER]: { role: UserRole.PACKER, color: '#8b5cf6', variant: 'info' }, // Purple
   [UserRole.STOCK_CONTROLLER]: {
     role: UserRole.STOCK_CONTROLLER,

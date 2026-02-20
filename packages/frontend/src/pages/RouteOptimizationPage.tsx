@@ -3,6 +3,17 @@
  *
  * Provides UI for optimizing warehouse picking routes
  * Visualizes routes and compares different optimization strategies
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: PATH FINDER
+ * ============================================================================
+ * Navigation-focused optimization interface:
+ * - Dark theme with green/lime accents for path finding
+ * - Scale-in entrance animations
+ * - Route visualization with path tracing
+ * - Algorithm comparison with performance metrics
+ * - Location grid with waypoint markers
+ * ============================================================================
  */
 
 import { useState } from 'react';

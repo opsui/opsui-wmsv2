@@ -2,6 +2,17 @@
  * Exceptions Management Page
  *
  * Supervisor dashboard for viewing and resolving order exceptions
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: ALERT OPS
+ * ============================================================================
+ * Industrial alert center with urgency-driven design:
+ * - Dark theme with red/amber accents for urgency levels
+ * - Left-to-right staggered entrance animations
+ * - Pulsing indicators for open exceptions
+ * - Status-based color coding with glow effects
+ * - High contrast for quick scanning
+ * ============================================================================
  */
 
 import {

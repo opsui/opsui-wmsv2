@@ -682,7 +682,7 @@ function RoleSettingsPage() {
                 <div key={role} className="border border-white/[0.08] rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <Badge size="md" customColor={roleColors[role] || '#3b82f6'}>
+                      <Badge size="md" customColor={roleColors[role] || '#a855f7'}>
                         {role}
                       </Badge>
                       <span className="text-sm text-gray-400">
@@ -699,7 +699,7 @@ function RoleSettingsPage() {
                       '#84cc16',
                       '#10b981',
                       '#06b6d4',
-                      '#3b82f6',
+                      '#a855f7',
                       '#6366f1',
                       '#8b5cf6',
                       '#d946ef',

@@ -2,6 +2,17 @@
  * Slotting Optimization Page
  *
  * ABC analysis and slotting recommendations for warehouse optimization
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: OPTIMIZATION HUB
+ * ============================================================================
+ * Efficiency-focused optimization interface:
+ * - Dark theme with teal/mint accents for efficiency
+ * - Left-to-right slide entrance animations
+ * - ABC analysis visualization with priority tiers
+ * - Recommendation cards with benefit indicators
+ * - Zone heatmap for slotting visualization
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';

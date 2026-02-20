@@ -2,6 +2,18 @@
  * Login page
  *
  * User authentication form
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: SECURE GATEWAY
+ * ============================================================================
+ * A bold, secure entrance with industrial tech aesthetic:
+ * - Dark theme with security-focused blue accents
+ * - Animated grid background suggesting data infrastructure
+ * - Staggered entrance animations for visual impact
+ * - Decorative corner brackets suggesting secure containment
+ * - Gradient title with Space Grotesk font for distinctive branding
+ * - Subtle security pulse animation on the login card
+ * ============================================================================
  */
 
 import { Button } from '@/components/shared';
@@ -91,21 +103,52 @@ export function LoginPage() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-responsive-xl font-bold dark:text-white text-gray-900 tracking-tight">
-            OpsUI
-          </h1>
-          <p className="mt-2 dark:text-gray-400 text-gray-600 text-responsive-sm">
+    <div className="login-container login-grid-bg min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
+      {/* Decorative blur elements for atmospheric depth */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="max-w-md w-full space-y-8 relative z-10">
+        {/* Header with staggered animation */}
+        <div className="text-center" style={{ animation: 'login-stagger-in 0.4s ease-out' }}>
+          <h1 className="login-title text-4xl sm:text-5xl font-bold tracking-tight">OpsUI</h1>
+          <p className="mt-3 dark:text-gray-400 text-gray-600 text-sm font-medium tracking-wide uppercase">
             Warehouse Management System
           </p>
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="glass-card rounded-xl p-6 sm:p-8 space-y-6 card-hover">
+        {/* Login Form with security aesthetic */}
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 space-y-6"
+          style={{ animation: 'login-stagger-in 0.5s ease-out 0.1s backwards' }}
+        >
+          <div className="login-card login-corners rounded-2xl p-8 sm:p-10 space-y-6">
+            {/* Security badge */}
+            <div className="flex justify-center mb-6">
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+                <svg
+                  className="w-4 h-4 text-blue-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                <span className="text-xs font-medium text-blue-400 tracking-wide uppercase">
+                  Secure Access
+                </span>
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="email"
@@ -121,10 +164,8 @@ export function LoginPage() {
                 onChange={handleChange}
                 autoComplete="email"
                 required
-                className={`mobile-input block w-full px-4 py-3 border rounded-xl dark:bg-white/[0.05] bg-gray-50 dark:text-white text-gray-900 placeholder:text-gray-500 dark:focus:bg-white/[0.08] focus:bg-gray-100 focus:shadow-glow transition-all duration-300 ${
-                  errors.email
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'dark:border-white/[0.08] border-gray-300 focus:border-primary-500/50'
+                className={`login-input block w-full px-4 py-3.5 rounded-xl dark:text-white text-gray-900 placeholder:text-gray-500 transition-all duration-300 ${
+                  errors.email ? 'border-red-500 focus:border-red-500' : ''
                 }`}
                 placeholder="Enter your email"
               />
@@ -146,10 +187,8 @@ export function LoginPage() {
                 onChange={handleChange}
                 autoComplete="current-password"
                 required
-                className={`mobile-input block w-full px-4 py-3 border rounded-xl dark:bg-white/[0.05] bg-gray-50 dark:text-white text-gray-900 placeholder:text-gray-500 dark:focus:bg-white/[0.08] focus:bg-gray-100 focus:shadow-glow transition-all duration-300 ${
-                  errors.password
-                    ? 'border-red-500 focus:border-red-500'
-                    : 'dark:border-white/[0.08] border-gray-300 focus:border-primary-500/50'
+                className={`login-input block w-full px-4 py-3.5 rounded-xl dark:text-white text-gray-900 placeholder:text-gray-500 transition-all duration-300 ${
+                  errors.password ? 'border-red-500 focus:border-red-500' : ''
                 }`}
                 placeholder="Enter your password"
               />
@@ -163,16 +202,22 @@ export function LoginPage() {
               fullWidth
               isLoading={isLoading || isSubmitting}
               disabled={loginMutation.isPending || isSubmitting}
-              className="shadow-glow touch-target"
+              className="login-btn touch-target h-12 text-base font-semibold rounded-xl"
             >
               Sign In
             </Button>
           </div>
         </form>
 
-        {/* Mobile-specific help text */}
-        <div className="text-center sm:hidden">
+        {/* Footer help text */}
+        <div
+          className="text-center space-y-2"
+          style={{ animation: 'login-stagger-in 0.6s ease-out 0.2s backwards' }}
+        >
           <p className="text-xs text-gray-500">Use your warehouse credentials to sign in</p>
+          <p className="text-xs text-gray-600 dark:text-gray-500">
+            Contact your administrator for access
+          </p>
         </div>
       </div>
     </div>

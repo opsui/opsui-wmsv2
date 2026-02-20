@@ -2,6 +2,17 @@
  * User Roles Management page
  *
  * Admin page for managing user role assignments and creating users
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: ACCESS CONTROL
+ * ============================================================================
+ * Identity and access management aesthetic:
+ * - Dark theme with indigo/violet accents for trust/authority
+ * - Scale-up entrance animations
+ * - Role toggle grid with clear state indicators
+ * - User card hierarchy with status badges
+ * - Permission matrix visualization
+ * ============================================================================
  */
 
 import {

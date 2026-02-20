@@ -3,6 +3,17 @@
  *
  * Equipment maintenance and service request management
  * - Industry-standard CMMS functionality
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: WORKSHOP
+ * ============================================================================
+ * Industrial workshop aesthetic with equipment focus:
+ * - Dark theme with gray/steel accents for industrial feel
+ * - Subtle rotation entrance animations
+ * - Priority-based color indicators
+ * - Equipment status visualization
+ * - Work order tracking with timeline
+ * ============================================================================
  */
 
 import { useSearchParams } from 'react-router-dom';

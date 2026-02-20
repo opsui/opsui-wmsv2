@@ -10,6 +10,17 @@
  * - Receiving exception handling (short/over/damaged)
  * - Serial/Lot number capture
  * - Smart putaway with location suggestions
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: RECEIVING DOCK
+ * ============================================================================
+ * Industrial receiving dock with workflow-driven design:
+ * - Dark theme with orange/amber accents for receiving activity
+ * - Slide-up entrance animations for workflow cards
+ * - Pulsing dock activity indicators
+ * - Workflow progress visualization
+ * - Clear stage-based navigation
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';

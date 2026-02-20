@@ -6,6 +6,13 @@
  * - Display & Appearance
  * - Notifications & Sounds
  * - Account Settings
+ *
+ * Design: Refined Control Panel aesthetic
+ * - Clean, precise typography with strong hierarchy
+ * - Subtle depth through layered cards and soft shadows
+ * - Smooth micro-interactions on all interactive elements
+ * - Orchestrated entrance animations
+ * - Thoughtful spacing and visual rhythm
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -45,6 +52,68 @@ import {
   KeyIcon,
 } from '@heroicons/react/24/outline';
 import { useUIStore, playSound } from '@/stores';
+
+// ============================================================================
+// ANIMATION STYLES
+// ============================================================================
+
+const settingsAnimationStyles = `
+  @keyframes settings-stagger-in {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes settings-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes title-gradient-flow {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  
+  .settings-stagger-1 { animation: settings-stagger-in 0.5s ease-out 0.1s both; }
+  .settings-stagger-2 { animation: settings-stagger-in 0.5s ease-out 0.15s both; }
+  .settings-stagger-3 { animation: settings-stagger-in 0.5s ease-out 0.2s both; }
+  .settings-stagger-4 { animation: settings-stagger-in 0.5s ease-out 0.25s both; }
+  
+  .settings-fade-up { animation: settings-fade-up 0.6s ease-out both; }
+  
+  .settings-title-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 50%, #ec4899 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: title-gradient-flow 6s ease infinite;
+  }
+  
+  .settings-card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .settings-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(168, 85, 247, 0.1);
+  }
+`;
 
 // ============================================================================
 // TYPES
@@ -464,7 +533,7 @@ function AdminSettingsPage() {
       // Reset to the original color
       setRoleColors(prev => ({
         ...prev,
-        [role]: originalRoleColors[role] || '#3b82f6',
+        [role]: originalRoleColors[role] || '#a855f7',
       }));
     }
   };
@@ -473,26 +542,77 @@ function AdminSettingsPage() {
     return roleColors[role] !== originalRoleColors[role];
   };
 
+  // Inject animation styles on mount
+  useEffect(() => {
+    const styleId = 'admin-settings-animation-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = settingsAnimationStyles;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Header />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4"></div>
+        {/* Hero Header - Refined Control Panel aesthetic */}
+        <div className="mb-10 relative">
+          {/* Decorative elements */}
+          <div className="absolute -left-4 -top-4 w-40 h-40 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -right-4 bottom-0 w-32 h-32 bg-gradient-to-tl from-pink-500/5 to-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary-500/20 rounded-xl">
-              <CogIcon className="h-8 w-8 text-primary-400" />
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-5 settings-fade-up">
+              {/* Icon with gradient background */}
+              <div
+                className="
+                relative p-4 rounded-2xl
+                bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-pink-500/10
+                border border-blue-400/20
+                shadow-lg shadow-blue-500/10
+              "
+              >
+                <CogIcon className="h-9 w-9 text-blue-400" />
+                {/* Animated ring */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-blue-400/30 animate-pulse" />
+              </div>
+
+              <div>
+                <h1
+                  className="
+                  text-4xl sm:text-5xl font-black tracking-tight
+                  font-['Archivo',sans-serif]
+                "
+                >
+                  <span className="settings-title-gradient">Settings</span>
+                </h1>
+                <p className="mt-2 text-base text-gray-600 dark:text-gray-400 max-w-md">
+                  Personalize your workspace and preferences
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                Admin Settings
-              </h1>
-              <p className="mt-3 text-lg text-gray-700 dark:text-gray-300">
-                Customize your admin experience
-              </p>
+
+            {/* Quick actions */}
+            <div
+              className="flex items-center gap-3 settings-fade-up"
+              style={{ animationDelay: '0.2s' }}
+            >
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-800/30 border border-gray-200 dark:border-gray-700/50">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Theme:</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
+                  {theme}
+                </span>
+                {theme === 'dark' ? (
+                  <MoonIcon className="h-4 w-4 text-purple-400" />
+                ) : theme === 'light' ? (
+                  <SunIcon className="h-4 w-4 text-amber-500" />
+                ) : (
+                  <ComputerDesktopIcon className="h-4 w-4 text-blue-400" />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -564,7 +684,7 @@ function AdminSettingsPage() {
                       </p>
                       <div className="space-y-6">
                         {roles.map(role => {
-                          const currentColor = roleColors[role.role] || '#3b82f6';
+                          const currentColor = roleColors[role.role] || '#a855f7';
                           const hasChange = hasColorChange(role.role);
                           const isBaseRole = role.role === user?.role;
 
@@ -619,7 +739,7 @@ function AdminSettingsPage() {
                                   '#84cc16',
                                   '#10b981',
                                   '#06b6d4',
-                                  '#3b82f6',
+                                  '#a855f7',
                                   '#6366f1',
                                   '#8b5cf6',
                                   '#d946ef',

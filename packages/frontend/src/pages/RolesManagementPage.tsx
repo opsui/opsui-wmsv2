@@ -2,6 +2,17 @@
  * Custom Roles Management page
  *
  * Admin page for creating and managing custom roles with granular permissions
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: PERMISSION VAULT
+ * ============================================================================
+ * Security-focused role management:
+ * - Dark theme with violet/deep purple accents for security
+ * - 3D perspective entrance animations
+ * - Permission group visualization with toggles
+ * - Shield/key iconography for access control
+ * - Clear role hierarchy display
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';

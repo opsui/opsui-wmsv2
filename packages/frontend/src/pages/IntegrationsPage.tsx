@@ -3,6 +3,18 @@
  *
  * Manages external system integrations (ERP, e-commerce, carriers)
  * Provides interface for configuring, testing, and monitoring integrations
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: CONNECTION HUB
+ * ============================================================================
+ * A tech-focused command center for system integrations:
+ * - Blue/purple gradient accents for connectivity theme
+ * - Connection status indicators with pulse animations
+ * - Staggered card entrance animations
+ * - Provider icons with subtle glow effects
+ * - Monospace timestamps for sync data
+ * - Visual hierarchy showing connection health
+ * ============================================================================
  */
 
 import { useState, useEffect } from 'react';
@@ -149,26 +161,43 @@ export function IntegrationsPage() {
   }, [filter, searchTerm]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+      </div>
+
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4"></div>
-          <h1 className="text-3xl font-bold text-white">Integrations</h1>
-          <p className="mt-2 text-gray-400">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Header with distinctive styling */}
+        <div className="mb-8" style={{ animation: 'integration-stagger-in 0.4s ease-out' }}>
+          <div className="flex items-center gap-4 mb-4">
+            {/* Connection accent */}
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-8 bg-blue-500 rounded-full" />
+              <div className="w-1 h-8 bg-purple-500 rounded-full" />
+            </div>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white font-['Space_Grotesk',sans-serif]">
+            Integrations
+          </h1>
+          <p className="mt-2 text-gray-400 font-medium">
             Connect and manage external systems (ERP, e-commerce, carriers)
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6 border-b border-gray-800">
+        {/* Tabs with enhanced styling */}
+        <div
+          className="mb-6 border-b border-white/[0.08]"
+          style={{ animation: 'integration-stagger-in 0.5s ease-out 0.1s backwards' }}
+        >
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('integrations')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'integrations'
                   ? 'border-blue-500 text-blue-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
@@ -178,7 +207,7 @@ export function IntegrationsPage() {
             </button>
             <button
               onClick={() => setActiveTab('sync-jobs')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'sync-jobs'
                   ? 'border-blue-500 text-blue-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
@@ -188,7 +217,7 @@ export function IntegrationsPage() {
             </button>
             <button
               onClick={() => setActiveTab('webhooks')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'webhooks'
                   ? 'border-blue-500 text-blue-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
@@ -393,19 +422,25 @@ function IntegrationsTab({
         </button>
       </div>
 
-      {/* Integrations Grid */}
+      {/* Integrations Grid with staggered animation */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {integrations.map(integration => {
+        {integrations.map((integration, index) => {
           const ProviderIcon = getProviderIcon(integration.type);
 
           return (
-            <IntegrationCard
+            <div
               key={integration.integrationId}
-              integration={integration}
-              ProviderIcon={ProviderIcon}
-              onSelect={onSelectIntegration}
-              onDelete={handleDeleteIntegration}
-            />
+              style={{
+                animation: `integration-stagger-in 0.4s ease-out ${0.1 + index * 0.05}s backwards`,
+              }}
+            >
+              <IntegrationCard
+                integration={integration}
+                ProviderIcon={ProviderIcon}
+                onSelect={onSelectIntegration}
+                onDelete={handleDeleteIntegration}
+              />
+            </div>
           );
         })}
       </div>
@@ -496,19 +531,37 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
     );
   };
 
+  // Determine connection status class
+  const getConnectionStatusClass = () => {
+    if (!integration.enabled) return 'disconnected';
+    switch (integration.status) {
+      case IntegrationStatus.CONNECTED:
+        return 'connected';
+      case IntegrationStatus.CONNECTING:
+        return 'connecting';
+      default:
+        return 'disconnected';
+    }
+  };
+
   return (
-    <div className="glass-card rounded-lg p-6">
+    <div className="integration-card-enhanced rounded-xl p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">
-          <div className="p-2 bg-blue-900/50 rounded-lg border border-blue-700">
+          <div className="provider-icon-container p-3 rounded-xl">
             <ProviderIcon className="h-6 w-6 text-blue-400" />
           </div>
-          <div className="ml-3">
-            <h3 className="text-lg font-semibold text-white">{integration.name}</h3>
+          <div className="ml-4">
+            <h3 className="text-lg font-semibold text-white font-['Space_Grotesk',sans-serif]">
+              {integration.name}
+            </h3>
             <p className="text-sm text-gray-400">{integration.provider}</p>
           </div>
         </div>
-        <StatusBadge status={integration.status} enabled={integration.enabled} />
+        <div className="flex items-center gap-2">
+          <div className={`connection-status ${getConnectionStatusClass()} w-2 h-2 rounded-full`} />
+          <StatusBadge status={integration.status} enabled={integration.enabled} />
+        </div>
       </div>
 
       <div className="space-y-2 mb-4">
@@ -518,7 +571,7 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-400">Last Sync:</span>
-          <span className="font-medium text-white">
+          <span className="font-medium text-white font-['JetBrains_Mono',monospace] text-xs">
             {integration.lastSyncAt ? new Date(integration.lastSyncAt).toLocaleString() : 'Never'}
           </span>
         </div>
@@ -532,20 +585,22 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
 
       {testResult && (
         <div
-          className={`mb-4 p-2 rounded text-sm ${
-            testResult.success ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'
+          className={`mb-4 p-3 rounded-lg text-sm ${
+            testResult.success
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+              : 'bg-red-500/20 text-red-400 border border-red-500/30'
           }`}
         >
           {testResult.message}
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+      <div className="flex items-center justify-between pt-4 border-t border-white/[0.05]">
         <div className="flex space-x-2">
           <button
             onClick={handleTestConnection}
             disabled={testing}
-            className="p-2 text-green-400 hover:text-green-300 rounded hover:bg-green-900/30"
+            className="p-2 text-green-400 hover:text-green-300 rounded-lg hover:bg-green-500/10 transition-all"
             title="Test Connection"
           >
             {testing ? (
@@ -556,14 +611,14 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
           </button>
           <button
             onClick={() => onSelect(integration)}
-            className="p-2 text-blue-400 hover:text-blue-300 rounded hover:bg-blue-900/30"
+            className="p-2 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-blue-500/10 transition-all"
             title="Edit Integration"
           >
             <PencilIcon className="h-5 w-5" />
           </button>
           <button
             onClick={() => onDelete(integration.integrationId)}
-            className="p-2 text-red-400 hover:text-red-300 rounded hover:bg-red-900/30"
+            className="p-2 text-red-400 hover:text-red-300 rounded-lg hover:bg-red-500/10 transition-all"
             title="Delete Integration"
           >
             <TrashIcon className="h-5 w-5" />
@@ -572,10 +627,10 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
         <button
           onClick={handleToggleEnabled}
           className={cn(
-            'px-3 py-1 rounded text-sm font-medium',
+            'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
             integration.enabled
-              ? 'bg-green-900/50 text-green-300 border border-green-700'
-              : 'bg-gray-800 text-gray-400 border border-gray-700'
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+              : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
           )}
         >
           {integration.enabled ? 'Enabled' : 'Disabled'}

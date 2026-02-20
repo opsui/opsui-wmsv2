@@ -6,6 +6,17 @@
  * - Per-type preferences
  * - Quiet hours configuration
  * - Phone number for SMS
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: ALERT CENTER
+ * ============================================================================
+ * Communication hub aesthetic:
+ * - Dark theme with lavender/purple accents for notifications
+ * - Toggle switches with smooth state transitions
+ * - Channel icons with color-coded states
+ * - Quiet hours timeline visualization
+ * - Per-type preference matrix grid
+ * ============================================================================
  */
 
 import { useState } from 'react';

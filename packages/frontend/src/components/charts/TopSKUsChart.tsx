@@ -3,6 +3,11 @@
  *
  * Horizontal bar chart showing most frequently scanned SKUs
  * with dropdown selector for scan type
+ *
+ * Design: Data visualization with distinctive styling
+ * - Gradient bars with glow effects
+ * - Animated hover states
+ * - Elegant card with decorative accents
  */
 
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
@@ -55,7 +60,7 @@ const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string; days: number }[] 
 
 // Color palette for bars
 const BAR_COLORS = [
-  '#3b82f6', // blue-500
+  '#a855f7', // blue-500
   '#10b981', // green-500
   '#8b5cf6', // purple-500
   '#f59e0b', // amber-500
@@ -173,66 +178,179 @@ export function TopSKUsChart({
 
   const valueLabel = getLabel();
 
+  // Calculate totals
+  const totalScans = chartData.reduce((sum, item) => sum + (item.value || 0), 0);
+
   return (
     <Card
       variant="glass"
-      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50"
+      className="
+        card-hover 
+        shadow-xl 
+        dark:shadow-blue-500/5 
+        shadow-gray-200/50
+        overflow-hidden
+        relative
+        dashboard-stagger-4
+      "
     >
-      <CardHeader className="!flex-row !items-center !justify-between !space-y-0 sm:justify-start flex-col sm:flex-row flex-wrap sm:gap-2 gap-2">
-        <CardTitle className="w-full text-center sm:w-auto sm:text-left">
-          Top {limit} SKUs by Scan Frequency ({periodLabel})
-        </CardTitle>
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+      {/* Decorative corner accents */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent rounded-bl-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-amber-500/10 to-transparent rounded-tr-full pointer-events-none" />
+
+      <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-3 relative">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-amber-500/15 border border-indigo-400/20">
+            <svg
+              className="w-5 h-5 text-indigo-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          </div>
+          <div>
+            <CardTitle className="text-base sm:text-lg font-bold tracking-tight">
+              <span className="hero-title-gradient">Top {limit}</span>
+              <span className="dark:text-white text-gray-900"> SKUs</span>
+            </CardTitle>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 hidden sm:block">
+              By {valueLabel.toLowerCase()} • {periodLabel}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <TimePeriodSelector value={selectedTimePeriod} onChange={handleTimePeriodChange} />
           <ScanTypeSelector value={selectedScanType} onChange={handleScanTypeChange} />
         </div>
       </CardHeader>
-      <CardContent>
-        <div ref={containerRef} className="relative w-full flex justify-center">
-          {/* Subtle glow effect behind the chart */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-2xl" />
+
+      <CardContent className="p-3 sm:p-6 relative">
+        {/* Quick stats row */}
+        <div className="flex gap-4 mb-4 pb-4 border-b border-gray-200/50 dark:border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+            <span className="text-xs text-gray-500 dark:text-gray-400">Total</span>
+            <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 font-['JetBrains_Mono',monospace]">
+              {totalScans.toLocaleString()}
+            </span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+            <span className="text-xs text-gray-500 dark:text-gray-400">Top</span>
+            <span className="text-sm font-bold text-amber-600 dark:text-amber-400 font-['JetBrains_Mono',monospace]">
+              {chartData[0]?.value?.toLocaleString() || 0}
+            </span>
+          </div>
+        </div>
+
+        <div ref={containerRef} className="relative w-full flex justify-center">
+          {/* Atmospheric glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div
+              className="w-72 h-56 rounded-full bg-gradient-to-br from-indigo-500/8 via-purple-500/8 to-amber-500/5 blur-3xl animate-pulse"
+              style={{ animationDuration: '4.5s' }}
+            />
+          </div>
+
           {containerWidth > 0 && (
             <ResponsiveContainer width={containerWidth} height={280}>
               <BarChart
                 data={chartData}
                 layout="vertical"
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
               >
+                {/* Gradient definitions for bars */}
+                <defs>
+                  {chartData.map((entry, index) => (
+                    <linearGradient
+                      key={`barGradient-${index}`}
+                      id={`barGradient-${index}`}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stopColor={entry.color} stopOpacity={0.8} />
+                      <stop offset="50%" stopColor={entry.color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={entry.color} stopOpacity={0.6} />
+                    </linearGradient>
+                  ))}
+                  {/* Bar glow filter */}
+                  <filter id="barGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  className="dark:stroke-white/[0.08] stroke-gray-200"
+                  className="dark:stroke-white/[0.06] stroke-gray-200/60"
+                  horizontal={true}
+                  vertical={false}
                 />
                 <XAxis
                   type="number"
                   className="dark:fill-gray-500 fill-gray-600"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
                   domain={[0, Math.ceil(maxValue * 1.1)]}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
                   type="category"
-                  dataKey="displayName"
+                  dataKey="sku"
                   className="dark:fill-gray-500 fill-gray-600"
-                  tick={{ fontSize: 10 }}
-                  width={200}
+                  tick={{ fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
+                  width={90}
                   tickLine={false}
+                  axisLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.96)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
+                    borderRadius: '16px',
                     color: '#fff',
                     fontSize: '13px',
-                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+                    padding: '12px 16px',
                   }}
-                  itemStyle={{ color: '#fff' }}
-                  formatter={(value: any) => [`${value || 0}`, valueLabel]}
+                  itemStyle={{ color: '#fff', padding: '4px 0' }}
+                  formatter={(value: any, _name: any, props: any) => {
+                    const item = props.payload;
+                    return [
+                      <span key="value">
+                        <span className="font-bold font-['JetBrains_Mono',monospace]">{value}</span>
+                        <span className="text-gray-400 ml-1">{valueLabel.toLowerCase()}</span>
+                        <div className="text-xs text-gray-500 mt-1">{item.name}</div>
+                      </span>,
+                      valueLabel,
+                    ];
+                  }}
                 />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: 'transparent' }}>
+                <Bar dataKey="value" radius={[0, 8, 8, 0]} background={{ fill: 'transparent' }}>
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`url(#barGradient-${index})`}
+                      stroke={entry.color}
+                      strokeWidth={1}
+                      strokeOpacity={0.5}
+                      style={{
+                        filter: `drop-shadow(0 4px 12px ${entry.color}50)`,
+                      }}
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -240,23 +358,19 @@ export function TopSKUsChart({
           )}
         </div>
 
-        {/* Summary stats */}
-        <div className="mt-4 flex items-center justify-between p-3 rounded-xl dark:bg-white/[0.03] bg-gray-50/80 dark:border dark:border-white/[0.06] border-gray-200 shadow-sm dark:shadow-none">
-          <div className="dark:text-gray-400 text-gray-600 text-sm">
-            <span className="dark:text-gray-200 text-gray-900 font-semibold">
-              {chartData[0]?.value || 0}
-            </span>{' '}
-            {valueLabel.toLowerCase()} for top SKU
-            {chartData[0] && (
-              <span className="ml-2 dark:text-gray-500 text-gray-500">({chartData[0].sku})</span>
-            )}
-          </div>
-          <div className="dark:text-gray-400 text-gray-600 text-sm">
-            Total:{' '}
-            <span className="dark:text-gray-200 text-gray-900 font-semibold">
-              {chartData.reduce((sum, item) => sum + (item.value || 0), 0)}
-            </span>{' '}
-            {valueLabel.toLowerCase()}
+        {/* Bottom ranking indicator */}
+        <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-white/5">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 dark:text-gray-400">#1</span>
+              <span className="font-mono font-bold text-gray-900 dark:text-white">
+                {chartData[0]?.sku}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-gray-400 dark:text-gray-500">
+              <span className="font-mono">{chartData[0]?.value?.toLocaleString() || 0}</span>
+              <span>{valueLabel.toLowerCase()}</span>
+            </div>
           </div>
         </div>
       </CardContent>

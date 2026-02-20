@@ -156,9 +156,9 @@ export function TurnoverChart({ data, isLoading }: TurnoverChartProps) {
                 <Line
                   type="monotone"
                   dataKey="turnoverCount"
-                  stroke="#3b82f6"
+                  stroke="#a855f7"
                   strokeWidth={2}
-                  dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2 }}
+                  dot={{ r: 5, fill: '#a855f7', strokeWidth: 2 }}
                   activeDot={{ r: 7 }}
                   name="Turnover Rate"
                 />

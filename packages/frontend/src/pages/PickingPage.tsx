@@ -982,8 +982,8 @@ export function PickingPage() {
       <div
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.12) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(59, 130, 246, 0.12) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.12) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(168, 85, 247, 0.12) 1px, transparent 1px)`,
           backgroundSize: '60px 60px',
           opacity: 0.4,
           maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
@@ -1038,7 +1038,7 @@ export function PickingPage() {
                         cx="50"
                         cy="50"
                         r="45"
-                        stroke="rgba(59, 130, 246, 0.2)"
+                        stroke="rgba(168, 85, 247, 0.2)"
                         strokeWidth="6"
                         fill="none"
                       />
@@ -1119,7 +1119,7 @@ export function PickingPage() {
                           i % 4 === 0
                             ? '#22c55e'
                             : i % 4 === 1
-                              ? '#3b82f6'
+                              ? '#a855f7'
                               : i % 4 === 2
                                 ? '#f59e0b'
                                 : '#8b5cf6',

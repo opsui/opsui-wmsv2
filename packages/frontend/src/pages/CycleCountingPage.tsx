@@ -3,6 +3,18 @@
  *
  * Interface for scheduling and performing cycle counts
  * Theme-aware: Supports both light and dark modes
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: PRECISION COUNT
+ * ============================================================================
+ * A focused counting command center with precision aesthetics:
+ * - Dark theme with purple/indigo accents for accuracy focus
+ * - Staggered entrance animations for count cards
+ * - Pulsing status indicators for in-progress counts
+ * - Accuracy progress bars with gradient fills
+ * - Monospace displays for count values
+ * - Clean hierarchy with Space Grotesk headers
+ * ============================================================================
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -650,17 +662,32 @@ export function CycleCountingPage() {
     getEffectiveRole() === UserRole.SUPERVISOR || getEffectiveRole() === UserRole.ADMIN;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl" />
+      </div>
+
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex justify-between items-center">
+          <div
+            className="flex justify-between items-center"
+            style={{ animation: 'precision-stagger-in 0.4s ease-out' }}
+          >
             <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                <ClipboardDocumentListIcon className="h-8 w-8 text-purple-400" />
+              </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Cycle Counting</h1>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-['Space_Grotesk',sans-serif]">
+                  Cycle Counting
+                </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   Manage scheduled and ad-hoc inventory cycle counts
                 </p>

@@ -16,6 +16,17 @@
  * - Empty states with helpful guidance
  * - Keyboard shortcuts for navigation
  * - Recent searches with local storage
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: DISCOVERY ENGINE
+ * ============================================================================
+ * Product exploration aesthetic:
+ * - Dark theme with bright cyan accents for search focus
+ * - Industrial grid background texture
+ * - Staggered card reveal animations
+ * - Grid/table view toggle with smooth transitions
+ * - Stock status badges with visual urgency
+ * ============================================================================
  */
 
 import {
@@ -467,8 +478,8 @@ export function ProductSearchPage() {
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
-          backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.12) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(59, 130, 246, 0.12) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.12) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(168, 85, 247, 0.12) 1px, transparent 1px)`,
           backgroundSize: '40px 40px',
           opacity: 0.2,
           maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 80%)',

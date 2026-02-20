@@ -32,7 +32,7 @@ interface PickerPerformanceChartProps {
 }
 
 const COLORS = {
-  tasksCompleted: '#3b82f6', // blue-500
+  tasksCompleted: '#a855f7', // blue-500
   ordersCompleted: '#10b981', // green-500
   itemsPicked: '#8b5cf6', // purple-500
 };

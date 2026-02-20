@@ -249,7 +249,7 @@ export function LotExpirationChart({ data, isLoading }: LotExpirationChartProps)
                         ? '#ef4444'
                         : item.urgency === 'WARNING'
                           ? '#f59e0b'
-                          : '#3b82f6',
+                          : '#a855f7',
                   }}
                   title={`${item.sku} - ${item.daysUntilExpiration} days`}
                 />

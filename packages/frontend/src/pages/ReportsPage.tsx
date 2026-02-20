@@ -3,6 +3,18 @@
  *
  * Advanced reporting interface for creating custom reports,
  * viewing dashboards, and exporting data.
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: ANALYTICS COMMAND
+ * ============================================================================
+ * A data-focused command center for reporting and analytics:
+ * - Indigo/blue color palette for data visualization context
+ * - Space Grotesk font for titles, JetBrains Mono for data
+ * - Staggered card entrance animations
+ * - Subtle data scan gradient effects on cards
+ * - Grid-based layouts suggesting structured data
+ * - Metric glow effects on interactive elements
+ * ============================================================================
  */
 
 // @ts-nocheck - TODO: Investigate deep type inference issue with JSX in this file
@@ -225,29 +237,35 @@ export function ReportsPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="reports-container min-h-screen">
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4"></div>
-          <h1 className="text-3xl font-bold text-white">Reports & Analytics</h1>
-          <p className="mt-2 text-gray-400">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Header with distinctive styling */}
+        <div className="mb-8" style={{ animation: 'reports-stagger-in 0.4s ease-out' }}>
+          <div className="flex items-center gap-4 mb-4">
+            {/* Decorative accent */}
+            <div className="w-1.5 h-12 bg-gradient-to-b from-indigo-500 to-blue-500 rounded-full" />
+          </div>
+          <h1 className="reports-title text-3xl sm:text-4xl text-white">Reports & Analytics</h1>
+          <p className="mt-2 text-gray-400 font-medium">
             Create custom reports, view dashboards, and export data
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6 border-b border-white/[0.08]">
+        {/* Tabs with enhanced styling */}
+        <div
+          className="mb-6 border-b border-white/[0.08]"
+          style={{ animation: 'reports-stagger-in 0.5s ease-out 0.1s backwards' }}
+        >
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('reports')}
               className={cn(
-                'py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2',
+                'reports-tab py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 flex items-center gap-2',
                 activeTab === 'reports'
-                  ? 'border-primary-500 text-primary-400'
+                  ? 'border-indigo-500 text-indigo-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200'
               )}
             >
@@ -257,9 +275,9 @@ export function ReportsPage() {
             <button
               onClick={() => setActiveTab('dashboards')}
               className={cn(
-                'py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2',
+                'reports-tab py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 flex items-center gap-2',
                 activeTab === 'dashboards'
-                  ? 'border-primary-500 text-primary-400'
+                  ? 'border-indigo-500 text-indigo-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200'
               )}
             >
@@ -269,9 +287,9 @@ export function ReportsPage() {
             <button
               onClick={() => setActiveTab('exports')}
               className={cn(
-                'py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2',
+                'reports-tab py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 flex items-center gap-2',
                 activeTab === 'exports'
-                  ? 'border-primary-500 text-primary-400'
+                  ? 'border-indigo-500 text-indigo-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200'
               )}
             >
@@ -523,26 +541,31 @@ function ReportsTab({
         </div>
       )}
 
-      {/* Reports Grid */}
+      {/* Reports Grid with enhanced styling */}
       {!isLoading && !error && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reports.map(report => (
+          {reports.map((report, index) => (
             <div
               key={report.reportId}
-              className="glass-card rounded-lg p-6 hover:shadow-lg transition-shadow"
+              className="reports-card rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+              style={{
+                animation: `reports-stagger-in 0.4s ease-out ${0.1 + index * 0.05}s backwards`,
+              }}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white">{report.name}</h3>
+                  <h3 className="text-lg font-semibold text-white font-['Space_Grotesk',sans-serif]">
+                    {report.name}
+                  </h3>
                   <p className="text-sm text-gray-400 mt-1">{report.description}</p>
                 </div>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-900/50 text-blue-300 border border-blue-700">
+                <span className="data-mono px-2 py-1 text-xs font-medium rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                   {report.reportType}
                 </span>
               </div>
 
               <div className="mb-4">
-                <div className="flex items-center text-sm text-gray-400">
+                <div className="flex items-center text-sm text-gray-400 data-mono">
                   <span>Created by {report.createdBy}</span>
                   <span className="mx-2">•</span>
                   <span>{new Date(report.createdAt).toLocaleDateString()}</span>
@@ -553,27 +576,27 @@ function ReportsTab({
                 <div className="flex gap-2">
                   <button
                     onClick={() => onSelectReport(report)}
-                    className="text-green-400 hover:text-green-300 transition-colors"
+                    className="p-2 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all"
                     title="Run Report"
                   >
                     <PlayIcon className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => onEditReport(report)}
-                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                    className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
                     title="Edit Report"
                   >
                     <PencilIcon className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => onDeleteReport(report.reportId)}
-                    className="text-red-400 hover:text-red-300 transition-colors"
+                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
                     title="Delete Report"
                   >
                     <TrashIcon className="h-5 w-5" />
                   </button>
                 </div>
-                <div className="flex gap-2 text-xs text-gray-400">
+                <div className="flex gap-2 text-xs text-gray-400 data-mono">
                   {report.chartConfig.enabled && <span>{report.chartConfig.chartType}</span>}
                   <span>{report.defaultFormat}</span>
                 </div>

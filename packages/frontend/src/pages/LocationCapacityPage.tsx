@@ -2,6 +2,17 @@
  * Location Capacity Page
  *
  * Interface for managing location capacity rules and viewing alerts
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: STORAGE GRID
+ * ============================================================================
+ * Warehouse capacity visualization aesthetic:
+ * - Dark theme with sky/blue accents for spatial awareness
+ * - Horizontal slide-in entrance animations
+ * - Capacity bars with gradient fill states
+ * - Grid layout for location monitoring
+ * - Alert indicators with pulse animations
+ * ============================================================================
  */
 
 import { useState } from 'react';

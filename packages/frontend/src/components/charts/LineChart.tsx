@@ -32,9 +32,9 @@ type ColorMap = {
 
 const colorMap: Record<string, ColorMap> = {
   blue: {
-    stroke: '#3b82f6',
-    fill: 'rgba(59, 130, 246, 0.1)',
-    gradient: ['rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0)'],
+    stroke: '#a855f7',
+    fill: 'rgba(168, 85, 247, 0.1)',
+    gradient: ['rgba(168, 85, 247, 0.3)', 'rgba(168, 85, 247, 0)'],
   },
   green: {
     stroke: '#10b981',

@@ -49,7 +49,7 @@ function getUtilizationColor(percent: number, status: string): string {
   if (status === 'WARNING') return 'rgba(245, 158, 11, 0.8)'; // amber
   if (percent >= 80) return 'rgba(251, 191, 36, 0.8)'; // yellow
   if (percent >= 60) return 'rgba(16, 185, 129, 0.8)'; // emerald
-  if (percent >= 40) return 'rgba(59, 130, 246, 0.8)'; // blue
+  if (percent >= 40) return 'rgba(168, 85, 247, 0.8)'; // purple
   return 'rgba(107, 114, 128, 0.8)'; // gray (empty)
 }
 
@@ -200,7 +200,7 @@ export function BinUtilizationHeatmap({
           <div className="flex items-center gap-1">
             <div
               className="w-4 h-4 rounded"
-              style={{ backgroundColor: 'rgba(59, 130, 246, 0.8)' }}
+              style={{ backgroundColor: 'rgba(168, 85, 247, 0.8)' }}
             />
             <span className="dark:text-gray-400 text-gray-600">Low (40-60%)</span>
           </div>

@@ -3,6 +3,17 @@
  *
  * View and manage all shipped orders with tracking details,
  * filtering, and export capabilities.
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: DISPATCH COMPLETE
+ * ============================================================================
+ * Logistics completion aesthetic:
+ * - Dark theme with navy/cobalt accents for shipping trust
+ * - Smooth slide-up entrance animations
+ * - Table rows with selection states
+ * - Tracking number highlighting
+ * - Delivery status badges with color coding
+ * ============================================================================
  */
 
 import { useState, useMemo } from 'react';

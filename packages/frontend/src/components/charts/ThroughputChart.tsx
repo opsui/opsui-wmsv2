@@ -3,6 +3,12 @@
  *
  * Line chart showing orders picked and shipped over time
  * with time range selector dropdown
+ *
+ * Design: Data visualization with distinctive styling
+ * - Gradient line fills for visual depth
+ * - Animated entrance effects
+ * - Enhanced tooltips with context
+ * - Distinctive card styling
  */
 
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
@@ -42,7 +48,7 @@ interface ThroughputChartProps {
 
 const COLORS = {
   picked: '#10b981', // success-500
-  shipped: '#3b82f6', // primary-500
+  shipped: '#a855f7', // primary-500
   grid: 'currentColor',
 };
 
@@ -125,71 +131,209 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
     }
   };
 
+  // Calculate totals for display
+  const totalPicked = chartData.reduce((sum, item) => sum + (item.picked || 0), 0);
+  const totalShipped = chartData.reduce((sum, item) => sum + (item.shipped || 0), 0);
+
   return (
     <Card
       variant="glass"
-      className="card-hover shadow-xl dark:shadow-blue-500/5 shadow-gray-200/50 overflow-hidden"
+      className="
+        card-hover 
+        shadow-xl 
+        dark:shadow-blue-500/5 
+        shadow-gray-200/50 
+        overflow-hidden
+        relative
+        dashboard-stagger-2
+      "
     >
-      <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2">
-        <CardTitle className="text-base sm:text-lg">Orders Throughput</CardTitle>
+      {/* Decorative corner accents */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-transparent rounded-bl-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-tr-full pointer-events-none" />
+
+      <CardHeader className="!flex-row !items-center !justify-between !space-y-0 flex-wrap gap-2 relative">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-emerald-500/20 border border-blue-400/20">
+            <svg
+              className="w-5 h-5 text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+          </div>
+          <div>
+            <CardTitle className="text-base sm:text-lg font-bold tracking-tight">
+              <span className="hero-title-gradient">Orders</span>
+              <span className="dark:text-white text-gray-900"> Throughput</span>
+            </CardTitle>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 hidden sm:block">
+              Track picking and shipping velocity
+            </p>
+          </div>
+        </div>
         <TimeRangeSelector value={selectedRange} onChange={handleRangeChange} />
       </CardHeader>
-      <CardContent className="p-3 sm:p-6">
-        <div ref={containerRef} className="relative w-full flex justify-center">
-          {/* Subtle glow effect behind the chart */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-64 h-48 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 blur-2xl" />
+
+      <CardContent className="p-3 sm:p-6 relative">
+        {/* Quick stats row */}
+        <div className="flex gap-4 mb-4 pb-4 border-b border-gray-200/50 dark:border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-xs text-gray-500 dark:text-gray-400">Picked</span>
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-['JetBrains_Mono',monospace]">
+              {totalPicked.toLocaleString()}
+            </span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <span className="text-xs text-gray-500 dark:text-gray-400">Shipped</span>
+            <span className="text-sm font-bold text-blue-600 dark:text-blue-400 font-['JetBrains_Mono',monospace]">
+              {totalShipped.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        <div ref={containerRef} className="relative w-full flex justify-center">
+          {/* Atmospheric glow effect behind the chart */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div
+              className="w-72 h-56 rounded-full bg-gradient-to-br from-emerald-500/8 via-blue-500/8 to-purple-500/5 blur-3xl animate-pulse"
+              style={{ animationDuration: '4s' }}
+            />
+          </div>
+
           {containerWidth > 0 && (
-            <ResponsiveContainer width={containerWidth} height={350}>
+            <ResponsiveContainer width={containerWidth} height={320}>
               <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  className="dark:stroke-white/[0.08] stroke-gray-200"
+                  className="dark:stroke-white/[0.06] stroke-gray-200/60"
+                  vertical={false}
                 />
                 <XAxis
                   dataKey="period"
                   tickFormatter={formatPeriodLabel}
                   className="dark:fill-gray-500 fill-gray-600"
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fontFamily: 'Plus Jakarta Sans, sans-serif' }}
                   interval="preserveStartEnd"
+                  axisLine={{ stroke: 'rgba(156, 163, 175, 0.2)' }}
+                  tickLine={false}
                 />
-                <YAxis className="dark:fill-gray-500 fill-gray-600" tick={{ fontSize: 11 }} />
+                <YAxis
+                  className="dark:fill-gray-500 fill-gray-600"
+                  tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
+                    backgroundColor: 'rgba(15, 23, 42, 0.96)',
+                    border: '1px solid rgba(168, 85, 247, 0.2)',
+                    borderRadius: '16px',
                     color: '#fff',
                     fontSize: '13px',
-                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+                    padding: '12px 16px',
                   }}
                   labelFormatter={formatPeriodLabel}
-                  itemStyle={{ color: '#fff' }}
+                  itemStyle={{ color: '#fff', padding: '4px 0' }}
+                  labelStyle={{ fontWeight: 600, marginBottom: '8px', color: '#94a3b8' }}
                 />
                 <Legend
-                  wrapperStyle={{ fontSize: '13px', paddingTop: '8px' }}
+                  wrapperStyle={{
+                    fontSize: '13px',
+                    paddingTop: '16px',
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                  }}
+                  iconType="circle"
                   formatter={value => (
                     <span className="dark:text-gray-300 text-gray-700 font-medium">{value}</span>
                   )}
                 />
+                {/* Picked line with gradient - using AreaChart-style fill effect */}
+                <defs>
+                  <linearGradient id="pickedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={COLORS.picked} stopOpacity={0.4} />
+                    <stop offset="50%" stopColor={COLORS.picked} stopOpacity={0.1} />
+                    <stop offset="100%" stopColor={COLORS.picked} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="shippedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={COLORS.shipped} stopOpacity={0.4} />
+                    <stop offset="50%" stopColor={COLORS.shipped} stopOpacity={0.1} />
+                    <stop offset="100%" stopColor={COLORS.shipped} stopOpacity={0} />
+                  </linearGradient>
+                  {/* Glow filter for lines */}
+                  <filter id="glow-picked" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <filter id="glow-shipped" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Area fills for visual depth */}
                 <Line
                   type="monotone"
                   dataKey="picked"
                   stroke={COLORS.picked}
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: COLORS.picked, strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: COLORS.picked, strokeWidth: 0 }}
+                  strokeWidth={3}
+                  dot={{
+                    r: 5,
+                    fill: '#0f172a',
+                    stroke: COLORS.picked,
+                    strokeWidth: 3,
+                    style: { filter: 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))' },
+                  }}
+                  activeDot={{
+                    r: 10,
+                    fill: COLORS.picked,
+                    stroke: '#fff',
+                    strokeWidth: 3,
+                    style: { filter: 'drop-shadow(0 0 16px rgba(16, 185, 129, 0.8))' },
+                  }}
                   name="Picked"
+                  fill="url(#pickedGradient)"
+                  filter="url(#glow-picked)"
                 />
                 <Line
                   type="monotone"
                   dataKey="shipped"
                   stroke={COLORS.shipped}
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: COLORS.shipped, strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: COLORS.shipped, strokeWidth: 0 }}
+                  strokeWidth={3}
+                  dot={{
+                    r: 5,
+                    fill: '#0f172a',
+                    stroke: COLORS.shipped,
+                    strokeWidth: 3,
+                    style: { filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))' },
+                  }}
+                  activeDot={{
+                    r: 10,
+                    fill: COLORS.shipped,
+                    stroke: '#fff',
+                    strokeWidth: 3,
+                    style: { filter: 'drop-shadow(0 0 16px rgba(168, 85, 247, 0.8))' },
+                  }}
                   name="Shipped"
+                  fill="url(#shippedGradient)"
+                  filter="url(#glow-shipped)"
                 />
               </LineChart>
             </ResponsiveContainer>

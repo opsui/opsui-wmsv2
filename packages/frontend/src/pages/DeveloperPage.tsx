@@ -3,6 +3,17 @@
  *
  * Comprehensive developer tools with tabbed interface
  * Only available in development environment
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: CODE LAB
+ * ============================================================================
+ * Developer/hacker aesthetic:
+ * - Dark theme with terminal green accents
+ * - Matrix-style scan-line entrance animations
+ * - Monospace typography for code elements
+ * - Glowing terminal-like UI elements
+ * - Debug-focused visual indicators
+ * ============================================================================
  */
 
 import { useState } from 'react';

@@ -3,6 +3,17 @@
  *
  * Manages business rules for the warehouse management system.
  * Provides interface for creating, editing, testing, and activating rules.
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: LOGIC ENGINE
+ * ============================================================================
+ * Code-like configuration interface:
+ * - Dark theme with cyan/slate accents for logic focus
+ * - Scale-down entrance animations from top
+ * - Rule builder with condition/action visualization
+ * - Status indicators with toggle animations
+ * - Testing sandbox with live feedback
+ * ============================================================================
  */
 
 import { useState } from 'react';

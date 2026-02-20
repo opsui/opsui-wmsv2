@@ -3,6 +3,18 @@
  *
  * Displays financial metrics, profit/loss statements, inventory valuation,
  * vendor performance, and customer financial summaries
+ *
+ * ============================================================================
+ * AESTHETIC DIRECTION: EMERALD LEDGER
+ * ============================================================================
+ * A precision-focused financial command center:
+ * - Dark theme with emerald green accents for financial health
+ * - Monospace currency displays with subtle glow effects
+ * - Staggered entrance animations for metric cards
+ * - Ledger-style row highlighting on hover
+ * - Pulsing glow for profit/positive indicators
+ * - Clean, professional typography with Space Grotesk headers
+ * ============================================================================
  */
 
 import React, { useState } from 'react';
@@ -76,12 +88,14 @@ function MetricCard({
   }
 
   return (
-    <Card variant="glass" className={`bg-gradient-to-br ${variantColors[variant]}`}>
+    <Card variant="glass" className={`accounting-card bg-gradient-to-br ${variantColors[variant]}`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-white">{value}</p>
+            <p className="text-3xl font-bold text-white font-['JetBrains_Mono',monospace]">
+              {value}
+            </p>
             {trend && (
               <div className="flex items-center gap-1 mt-2">
                 {trend.isPositive ? (
@@ -544,23 +558,30 @@ function AccountingPage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl" />
+      </div>
+
       <Header />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-8" style={{ animation: 'accounting-stagger-in 0.4s ease-out' }}>
           <div className="flex items-center gap-4 mb-4"></div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/20 rounded-xl">
+              <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
                 <CurrencyDollarIcon className="h-8 w-8 text-emerald-400" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">
+                <h1 className="text-3xl font-bold text-white tracking-tight font-['Space_Grotesk',sans-serif]">
                   Accounting & Financials
                 </h1>
                 <p className="mt-2 text-gray-400">
