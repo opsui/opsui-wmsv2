@@ -11,6 +11,12 @@
 /**
  * Query to fetch pick tasks for PICKING orders
  * Used in: getOrderWithItems, getOrderQueue, getOrdersWithItemsByStatus
+ * Includes on-hand inventory quantity for each item
+ *
+ * On-hand priority:
+ * 1. inventory_units.available for the specific bin (if exists)
+ * 2. Sum of all inventory_units.available for this SKU (if no bin match)
+ * 3. 0 as final fallback
  */
 export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
   SELECT
@@ -24,9 +30,21 @@ export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
     0 as verified_quantity,
     pt.status,
     pt.completed_at,
-    s.barcode
+    pt.skip_reason,
+    s.barcode,
+    COALESCE(
+      i_specific.available,
+      i_total.total_available,
+      0
+    ) as on_hand_quantity
   FROM pick_tasks pt
   LEFT JOIN skus s ON pt.sku = s.sku
+  LEFT JOIN inventory_units i_specific ON pt.sku = i_specific.sku AND pt.target_bin = i_specific.bin_location
+  LEFT JOIN (
+    SELECT sku, SUM(available) as total_available
+    FROM inventory_units
+    GROUP BY sku
+  ) i_total ON pt.sku = i_total.sku
   WHERE pt.order_id = $1
   ORDER BY pt.pick_task_id ASC
 `;
@@ -59,14 +77,15 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
 
 /**
  * Common CASE expression for calculating order progress
- * Returns progress percentage based on completed pick tasks
+ * Returns progress percentage based on completed OR skipped pick tasks
+ * SKIPPED items count as complete for progress purposes
  */
 export const PROGRESS_CALCULATION = `
   CASE
     WHEN o.status = 'PICKING'
     THEN ROUND(
       CAST(
-        (SELECT COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') FROM pick_tasks pt WHERE pt.order_id = o.order_id) AS FLOAT
+        (SELECT COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) FROM pick_tasks pt WHERE pt.order_id = o.order_id) AS FLOAT
       ) / NULLIF(
         (SELECT COUNT(*) FROM pick_tasks pt WHERE pt.order_id = o.order_id),
         0
@@ -78,12 +97,13 @@ export const PROGRESS_CALCULATION = `
 
 /**
  * Query to update order progress based on pick task completion
+ * SKIPPED items count as complete for progress purposes
  */
 export const UPDATE_ORDER_PROGRESS_QUERY = `
   UPDATE orders
   SET progress = (
     SELECT FLOOR(
-      (CAST(COUNT(*) FILTER (WHERE pt.status = 'COMPLETED') AS NUMERIC) /
+      (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
        NULLIF(COUNT(*), 0)) * 100 + 0.5
     )
     FROM pick_tasks pt
@@ -114,6 +134,7 @@ export function mapOrderItem(row: any): any {
     skipReason: row.skip_reason || row.skipReason,
     completedAt: row.completed_at || row.completedAt,
     barcode: row.barcode || null,
+    onHandQuantity: row.on_hand_quantity ?? row.onHandQuantity ?? 0,
   };
 }
 
