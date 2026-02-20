@@ -40,6 +40,7 @@ import {
   ScaleIcon,
   ServerIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   SunIcon,
   TagIcon,
   TruckIcon,
@@ -56,8 +57,127 @@ import GlobalSearch from './GlobalSearch';
 import { UserRoleBadge } from './index';
 
 // ============================================================================
-// MOBILE MENU COMPONENT
+// MOBILE MENU COMPONENT - Enhanced with distinctive design
+// Following frontend skill guidelines for bold, memorable aesthetics
 // ============================================================================
+
+// Custom CSS keyframes for animations (injected once)
+const MOBILE_MENU_STYLES = `
+  @keyframes mobileMenuSlideIn {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes staggerFadeIn {
+    from { opacity: 0; transform: translateX(-12px) scale(0.98); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+    50% { box-shadow: 0 0 16px rgba(59, 130, 246, 0.6); }
+  }
+  
+  @keyframes shimmerMove {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  @keyframes iconBounce {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.15) rotate(-5deg); }
+  }
+  
+  @keyframes floatParticle {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+    50% { transform: translateY(-8px) rotate(180deg); opacity: 0.6; }
+  }
+  
+  .mobile-menu-item {
+    animation: staggerFadeIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    opacity: 0;
+  }
+  
+  .mobile-menu-item:hover .nav-icon {
+    animation: iconBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .active-indicator-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  
+  .shimmer-text {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmerMove 3s ease-in-out infinite;
+  }
+  
+  .floating-particle {
+    animation: floatParticle 4s ease-in-out infinite;
+  }
+`;
+
+// Section color themes for visual differentiation
+const SECTION_THEMES: Record<string, { accent: string; gradient: string; iconBg: string }> = {
+  dashboard: {
+    accent: 'from-blue-500 to-cyan-400',
+    gradient: 'from-blue-500/10 to-cyan-400/5',
+    iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-400',
+  },
+  sales: {
+    accent: 'from-emerald-500 to-green-400',
+    gradient: 'from-emerald-500/10 to-green-400/5',
+    iconBg: 'bg-gradient-to-br from-emerald-500 to-green-400',
+  },
+  finance: {
+    accent: 'from-amber-500 to-yellow-400',
+    gradient: 'from-amber-500/10 to-yellow-400/5',
+    iconBg: 'bg-gradient-to-br from-amber-500 to-yellow-400',
+  },
+  inventory: {
+    accent: 'from-violet-500 to-purple-400',
+    gradient: 'from-violet-500/10 to-purple-400/5',
+    iconBg: 'bg-gradient-to-br from-violet-500 to-purple-400',
+  },
+  hr: {
+    accent: 'from-rose-500 to-pink-400',
+    gradient: 'from-rose-500/10 to-pink-400/5',
+    iconBg: 'bg-gradient-to-br from-rose-500 to-pink-400',
+  },
+  production: {
+    accent: 'from-orange-500 to-red-400',
+    gradient: 'from-orange-500/10 to-red-400/5',
+    iconBg: 'bg-gradient-to-br from-orange-500 to-red-400',
+  },
+  warehouse: {
+    accent: 'from-teal-500 to-cyan-400',
+    gradient: 'from-teal-500/10 to-cyan-400/5',
+    iconBg: 'bg-gradient-to-br from-teal-500 to-cyan-400',
+  },
+  support: {
+    accent: 'from-slate-500 to-gray-400',
+    gradient: 'from-slate-500/10 to-gray-400/5',
+    iconBg: 'bg-gradient-to-br from-slate-500 to-gray-400',
+  },
+  reports: {
+    accent: 'from-indigo-500 to-blue-400',
+    gradient: 'from-indigo-500/10 to-blue-400/5',
+    iconBg: 'bg-gradient-to-br from-indigo-500 to-blue-400',
+  },
+  admin: {
+    accent: 'from-fuchsia-500 to-pink-400',
+    gradient: 'from-fuchsia-500/10 to-pink-400/5',
+    iconBg: 'bg-gradient-to-br from-fuchsia-500 to-pink-400',
+  },
+};
+
+// Inject styles once
+if (typeof document !== 'undefined' && !document.getElementById('mobile-menu-styles')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'mobile-menu-styles';
+  styleSheet.textContent = MOBILE_MENU_STYLES;
+  document.head.appendChild(styleSheet);
+}
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -116,12 +236,12 @@ function MobileMenu({
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle open/close animations
   useEffect(() => {
     if (isOpen) {
-      // Small delay to ensure transition plays on open
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 10);
@@ -159,31 +279,22 @@ function MobileMenu({
   const scrollPositionRef = useRef(0);
 
   useEffect(() => {
-    // Prevent body scroll when menu is open - mobile-friendly approach
     if (isOpen) {
-      // Store current scroll position
       scrollPositionRef.current = window.scrollY;
-
-      // Use position: fixed for mobile - this is the only reliable way to prevent scroll on iOS
-      // This also works on desktop and prevents all background scrolling
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
     } else {
-      // Restore body styles
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
       document.body.style.overflow = '';
-
-      // Restore scroll position
       window.scrollTo(0, scrollPositionRef.current);
     }
     return () => {
-      // Cleanup on unmount
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
@@ -192,7 +303,6 @@ function MobileMenu({
     };
   }, [isOpen]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (closeTimeoutRef.current) {
@@ -217,82 +327,216 @@ function MobileMenu({
     handleClose();
   };
 
+  // Get theme for a section
+  const getSectionTheme = (key: string) => SECTION_THEMES[key] || SECTION_THEMES.dashboard;
+
+  // Check if an item is active
+  const isItemActive = (itemPath: string): { isActive: boolean; itemPathname: string } => {
+    const itemPathname = itemPath.split('?')[0];
+    let isActive = itemPathname === currentPath;
+
+    if (isActive) {
+      const itemQuery = itemPath.includes('?') ? itemPath.split('?')[1] : '';
+      if (itemQuery) {
+        const itemParams = new URLSearchParams(itemQuery);
+        const currentParams = new URLSearchParams(currentSearch);
+        for (const [key, value] of itemParams.entries()) {
+          if (currentParams.get(key) !== value) {
+            isActive = false;
+            break;
+          }
+        }
+        for (const [key] of currentParams.entries()) {
+          if (!itemParams.has(key)) {
+            isActive = false;
+            break;
+          }
+        }
+      } else if (currentSearch) {
+        isActive = false;
+      }
+    }
+    return { isActive, itemPathname };
+  };
+
   if (!isOpen && !isClosing) return null;
 
   return (
     <>
-      {/* Backdrop overlay - no blur to preserve background gradient */}
+      {/* Backdrop overlay with gradient and blur */}
       <div
-        className={`fixed inset-0 z-[105] transition-opacity duration-300 ease-out ${
-          isClosing || !isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        className={`fixed inset-0 z-[105] transition-all duration-500 ease-out ${
+          isClosing || !isVisible
+            ? 'opacity-0 pointer-events-none backdrop-blur-0'
+            : 'opacity-100 backdrop-blur-sm'
         }`}
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          background:
+            'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(0, 0, 0, 0.8) 100%)',
         }}
         onClick={() => onHoverOff?.()}
       />
 
-      {/* Menu Drawer */}
+      {/* Menu Drawer with enhanced styling */}
       <div
-        className={`fixed inset-y-0 left-0 z-[110] w-80 max-w-[85vw] transform transition-transform duration-300 ease-out ${
-          isClosing || !isVisible ? '-translate-x-full' : 'translate-x-0'
+        className={`fixed inset-y-0 left-0 z-[110] w-[340px] max-w-[90vw] transform transition-all duration-500 ease-out ${
+          isClosing || !isVisible ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'
         }`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="bg-white dark:bg-gray-900 h-full flex flex-col shadow-2xl border-r border-gray-200 dark:border-gray-700">
-          {/* Header */}
-          <div className="border-b border-gray-200 dark:border-white/[0.08] px-6 py-4">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                {userName}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
+        <div
+          className="h-full flex flex-col relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+            boxShadow:
+              '20px 0 60px -15px rgba(0, 0, 0, 0.5), 0 0 100px -20px rgba(59, 130, 246, 0.15)',
+          }}
+        >
+          {/* Animated background gradient mesh */}
+          <div className="absolute inset-0 opacity-30 pointer-events-none">
+            <div
+              className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl"
+              style={{
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+            <div
+              className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl"
+              style={{
+                background: 'radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, transparent 70%)',
+                transform: 'translate(50%, 50%)',
+              }}
+            />
+          </div>
+
+          {/* Noise texture overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            }}
+          />
+
+          {/* Floating particles decoration */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 rounded-full bg-white/20 floating-particle"
+                style={{
+                  left: `${10 + i * 15}%`,
+                  top: `${20 + (i % 3) * 25}%`,
+                  animationDelay: `${i * 0.5}s`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Header with user info */}
+          <div className="relative border-b border-white/10 px-6 py-5">
+            <div className="flex items-center gap-4">
+              {/* Avatar with gradient border */}
+              <div className="relative">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-0.5 shadow-lg shadow-blue-500/20">
+                  <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center">
+                    <span
+                      className="text-lg font-bold bg-gradient-to-br from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                      style={{ fontFamily: "'Outfit', sans-serif" }}
+                    >
+                      {userName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                {/* Online indicator */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-lg shadow-emerald-500/50" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2
+                  className="text-base font-semibold text-white truncate tracking-tight"
+                  style={{ fontFamily: "'Outfit', sans-serif" }}
+                >
+                  {userName}
+                </h2>
+                <p
+                  className="text-sm text-slate-400 truncate"
+                  style={{ fontFamily: "'Inter', sans-serif" }}
+                >
+                  {userEmail}
+                </p>
+              </div>
+
+              {/* Sparkle icon for premium feel */}
+              <SparklesIcon className="w-5 h-5 text-amber-400/60" />
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 overscroll-contain">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {/* Role Switcher Section for users with multiple roles */}
             {hasRoleSwitcher && (
-              <div>
+              <div className="mobile-menu-item" style={{ animationDelay: '50ms' }}>
                 <button
                   onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-                  className="w-full flex items-center justify-between px-4 py-3 mb-4 rounded-lg dark:bg-primary-500/10 dark:border-primary-500/20 border border-primary-500/30 touch-target"
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 group"
                 >
                   <div className="flex items-center gap-3">
-                    <CogIcon className="h-5 w-5 dark:text-primary-400 text-primary-600" />
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                      <CogIcon className="w-4 h-4 text-white" />
+                    </div>
                     <div className="text-left">
-                      <p className="text-sm font-semibold dark:text-white text-gray-900">
+                      <p
+                        className="text-sm font-semibold text-white"
+                        style={{ fontFamily: "'Outfit', sans-serif" }}
+                      >
                         Switch Role
                       </p>
-                      <p className="text-xs dark:text-primary-300 text-primary-700">
+                      <p
+                        className="text-xs text-blue-300"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
                         {getEffectiveRole() || userRole}
                       </p>
                     </div>
                   </div>
                   <ChevronDownIcon
-                    className={`h-5 w-5 dark:text-primary-400 text-primary-600 transition-transform duration-300 ${showRoleSwitcher ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 text-blue-400 transition-transform duration-300 ${showRoleSwitcher ? 'rotate-180' : ''}`}
                   />
                 </button>
 
                 {showRoleSwitcher && (
-                  <div className="ml-4 space-y-2 mb-4">
-                    {allRoleViews.map(view => {
+                  <div className="mt-3 ml-2 space-y-1.5 overflow-hidden">
+                    {allRoleViews.map((view, index) => {
                       const ViewIcon = view.icon;
                       const isActive = view.role === getEffectiveRole();
+                      const theme = getSectionTheme(view.key);
                       return (
                         <button
                           key={view.key}
                           onClick={() => handleRoleClick(view.role, view.path)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 touch-target ${
+                          className={`mobile-menu-item w-full flex items-center gap-3 px-4 py-2.5 text-left rounded-lg transition-all duration-300 group ${
                             isActive
-                              ? 'dark:bg-primary-600 bg-primary-600 text-white'
-                              : 'dark:bg-white/[0.05] dark:hover:bg-white/[0.08] bg-gray-100 dark:text-white text-gray-900 hover:bg-gray-200'
+                              ? `bg-gradient-to-r ${theme.gradient} border border-white/20`
+                              : 'hover:bg-white/5 border border-transparent'
                           }`}
+                          style={{ animationDelay: `${100 + index * 30}ms` }}
                         >
-                          <ViewIcon className="h-5 w-5 flex-shrink-0" />
-                          <span className="font-medium text-sm">{view.label}</span>
+                          <div
+                            className={`w-7 h-7 rounded-lg ${theme.iconBg} flex items-center justify-center shadow-lg`}
+                          >
+                            <ViewIcon className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <span
+                            className={`font-medium text-sm ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}
+                            style={{ fontFamily: "'Inter', sans-serif" }}
+                          >
+                            {view.label}
+                          </span>
+                          {isActive && (
+                            <span className="ml-auto w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 active-indicator-glow" />
+                          )}
                         </button>
                       );
                     })}
@@ -301,62 +545,91 @@ function MobileMenu({
               </div>
             )}
 
-            {navGroups.map(group => {
+            {/* Navigation Groups */}
+            {navGroups.map((group, groupIndex) => {
               const GroupIcon = group.icon;
-              return (
-                <div key={group.key}>
-                  <h3 className="flex items-center gap-2 text-xs font-semibold dark:text-gray-500 text-gray-600 uppercase tracking-wider mb-3 px-2">
-                    <GroupIcon className="h-4 w-4" />
-                    {group.label}
-                  </h3>
-                  <div className="space-y-1">
-                    {group.items.map(item => {
-                      const ItemIcon = item.icon;
-                      // Check if this item is active - EXACT path match only
-                      const itemPathname = item.path.split('?')[0];
-                      let isActive = itemPathname === currentPath;
+              const theme = getSectionTheme(group.key);
 
-                      // If there are query params, verify they match exactly
-                      if (isActive) {
-                        const itemQuery = item.path.includes('?') ? item.path.split('?')[1] : '';
-                        if (itemQuery) {
-                          const itemParams = new URLSearchParams(itemQuery);
-                          const currentParams = new URLSearchParams(currentSearch);
-                          // All item params must match
-                          for (const [key, value] of itemParams.entries()) {
-                            if (currentParams.get(key) !== value) {
-                              isActive = false;
-                              break;
-                            }
-                          }
-                          // No extra params allowed
-                          for (const [key] of currentParams.entries()) {
-                            if (!itemParams.has(key)) {
-                              isActive = false;
-                              break;
-                            }
-                          }
-                        } else if (currentSearch) {
-                          // Item has no query params but current URL does
-                          isActive = false;
-                        }
-                      }
+              return (
+                <div
+                  key={group.key}
+                  className="mobile-menu-item"
+                  style={{ animationDelay: `${100 + groupIndex * 80}ms` }}
+                >
+                  {/* Section Header */}
+                  <div
+                    className={`flex items-center gap-2.5 px-3 py-2 mb-2 rounded-lg bg-gradient-to-r ${theme.gradient}`}
+                  >
+                    <div
+                      className={`w-6 h-6 rounded-md ${theme.iconBg} flex items-center justify-center shadow-md`}
+                    >
+                      <GroupIcon className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <h3
+                      className="text-xs font-bold uppercase tracking-widest text-slate-300"
+                      style={{ fontFamily: "'Outfit', sans-serif" }}
+                    >
+                      {group.label}
+                    </h3>
+                  </div>
+
+                  {/* Navigation Items */}
+                  <div className="space-y-1 pl-2">
+                    {group.items.map((item, itemIndex) => {
+                      const ItemIcon = item.icon;
+                      const { isActive } = isItemActive(item.path);
+                      const isHovered = hoveredItem === item.key;
+
                       return (
                         <button
                           key={item.key}
                           onClick={() => handleNavigate(item.path, item.requiredRole)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-all duration-200 touch-target ${
+                          onMouseEnter={() => setHoveredItem(item.key)}
+                          onMouseLeave={() => setHoveredItem(null)}
+                          className={`relative w-full flex items-center gap-3 px-4 py-2.5 text-left rounded-xl transition-all duration-300 group overflow-hidden ${
                             isActive
-                              ? 'dark:text-white text-primary-700 dark:bg-primary-600/20 bg-primary-100 dark:border-primary-500/30 border-primary-300 border'
-                              : 'dark:text-gray-300 text-gray-700 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 border border-transparent'
+                              ? `bg-gradient-to-r ${theme.gradient} border border-white/20 shadow-lg`
+                              : 'hover:bg-white/5 border border-transparent'
                           }`}
+                          style={{
+                            transitionDelay: `${groupIndex * 80 + itemIndex * 40}ms`,
+                          }}
                         >
-                          <ItemIcon
-                            className={`h-5 w-5 flex-shrink-0 ${isActive ? 'dark:text-primary-400 text-primary-600' : 'dark:text-gray-500 text-gray-500'}`}
+                          {/* Hover shimmer effect */}
+                          <div
+                            className={`absolute inset-0 shimmer-text transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                           />
-                          <span className="font-medium">{item.label}</span>
+
+                          {/* Icon */}
+                          <div
+                            className={`nav-icon relative z-10 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                              isActive
+                                ? `${theme.iconBg} shadow-lg`
+                                : 'bg-white/5 group-hover:bg-white/10'
+                            }`}
+                          >
+                            <ItemIcon
+                              className={`w-4 h-4 transition-colors duration-300 ${
+                                isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                              }`}
+                            />
+                          </div>
+
+                          {/* Label */}
+                          <span
+                            className={`relative z-10 font-medium text-sm tracking-wide transition-colors duration-300 ${
+                              isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                            }`}
+                            style={{ fontFamily: "'Inter', sans-serif" }}
+                          >
+                            {item.label}
+                          </span>
+
+                          {/* Active indicator */}
                           {isActive && (
-                            <span className="ml-auto w-1.5 h-1.5 rounded-full dark:bg-primary-400 bg-primary-600 indicator-pulse" />
+                            <span
+                              className={`relative z-10 ml-auto w-2 h-2 rounded-full bg-gradient-to-r ${theme.accent} active-indicator-glow`}
+                            />
                           )}
                         </button>
                       );
@@ -368,28 +641,53 @@ function MobileMenu({
           </div>
 
           {/* Footer - Settings and Logout */}
-          <div className="dark:border-t dark:border-white/[0.08] border-t border-gray-200 px-4 py-4 space-y-2">
-            <div className="flex items-center justify-between px-2 py-2">
-              <span className="text-sm dark:text-gray-400 text-gray-600">Current Role</span>
+          <div className="relative border-t border-white/10 px-4 py-4 space-y-2">
+            {/* Gradient line accent */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-white/5">
+              <span
+                className="text-sm text-slate-400"
+                style={{ fontFamily: "'Inter', sans-serif" }}
+              >
+                Current Role
+              </span>
               <UserRoleBadge role={(getEffectiveRole() || userRole) as UserRole} userId={userId} />
             </div>
-            {/* Settings button - accessible to all authenticated users */}
+
+            {/* Settings button */}
             <button
               onClick={() => {
                 setShowRoleSwitcher(false);
                 handleNavigate('/role-settings?section=role-switcher');
               }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-gray-400 text-gray-600 dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:hover:text-white hover:text-gray-900 transition-all duration-200 touch-target"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-300 group"
             >
-              <CogIcon className="h-5 w-5" />
-              <span className="font-medium text-sm">Settings</span>
+              <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
+                <CogIcon className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+              </div>
+              <span
+                className="font-medium text-sm text-slate-300 group-hover:text-white transition-colors"
+                style={{ fontFamily: "'Inter', sans-serif" }}
+              >
+                Settings
+              </span>
             </button>
+
+            {/* Logout button */}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg dark:text-error-400 text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 dark:hover:text-error-300 hover:text-error-700 transition-all duration-200 touch-target"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 transition-all duration-300 group"
             >
-              <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
-              <span className="font-medium">Logout</span>
+              <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-colors">
+                <ArrowRightStartOnRectangleIcon className="w-4 h-4 text-red-400 group-hover:text-red-300 transition-colors" />
+              </div>
+              <span
+                className="font-medium text-sm text-red-400 group-hover:text-red-300 transition-colors"
+                style={{ fontFamily: "'Inter', sans-serif" }}
+              >
+                Logout
+              </span>
             </button>
           </div>
         </div>
