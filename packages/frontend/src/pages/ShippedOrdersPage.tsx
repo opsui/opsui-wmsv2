@@ -4,10 +4,10 @@
  * Displays shipped orders and exports
  *
  * ============================================================================
- * AESTHETIC DIRECTION: SHIPPING STATION - ORANGE/AMBER FULFILLMENT
+ * AESTHETIC DIRECTION: SHIPPING STATION - PURPLE FULFILLMENT
  * ============================================================================
  * Fulfillment-focused shipping interface:
- * - Orange/amber accent color system for logistics
+ * - Purple accent color system for brand consistency
  * - Staggered entrance animations for order cards
  * - Export functionality with status indicators
  * - Order timeline with tracking visualization
@@ -215,9 +215,7 @@ export function ShippedOrdersPage() {
                 Live Tracking
               </div>
             </div>
-            <h1 className="shipping-title">
-              Shipped Orders
-            </h1>
+            <h1 className="shipping-title">Shipped Orders</h1>
             <p className="shipping-subtitle">
               Track and manage all shipped orders with real-time status updates
             </p>
@@ -280,7 +278,11 @@ export function ShippedOrdersPage() {
           <div className="shipping-loading">
             <div className="shipping-loading-bars">
               {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="shipping-loading-bar" style={{ animationDelay: `${i * 0.1}s` }} />
+                <div
+                  key={i}
+                  className="shipping-loading-bar"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
               ))}
             </div>
             <p className="shipping-loading-text">Loading shipments...</p>
@@ -347,7 +349,9 @@ export function ShippedOrdersPage() {
                       <div className="shipping-timeline-dot shipping-timeline-start" />
                       <div className="shipping-timeline-content">
                         <span className="shipping-timeline-label">Shipped</span>
-                        <span className="shipping-timeline-time">{formatDate(order.shippedAt)}</span>
+                        <span className="shipping-timeline-time">
+                          {formatDate(order.shippedAt)}
+                        </span>
                       </div>
                     </div>
                     <div className="shipping-timeline-line" />
@@ -355,14 +359,18 @@ export function ShippedOrdersPage() {
                       <div
                         className={cn(
                           'shipping-timeline-dot',
-                          order.status === 'delivered' ? 'shipping-timeline-end' : 'shipping-timeline-pending'
+                          order.status === 'delivered'
+                            ? 'shipping-timeline-end'
+                            : 'shipping-timeline-pending'
                         )}
                       />
                       <div className="shipping-timeline-content">
                         <span className="shipping-timeline-label">
                           {order.status === 'delivered' ? 'Delivered' : 'Est. Delivery'}
                         </span>
-                        <span className="shipping-timeline-time">{formatDate(order.estimatedDelivery)}</span>
+                        <span className="shipping-timeline-time">
+                          {formatDate(order.estimatedDelivery)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -377,13 +385,17 @@ export function ShippedOrdersPage() {
                             <div className="shipping-history-content">
                               <span className="shipping-history-status">Package shipped</span>
                               <span className="shipping-history-location">Origin facility</span>
-                              <span className="shipping-history-time">{formatDate(order.shippedAt)}</span>
+                              <span className="shipping-history-time">
+                                {formatDate(order.shippedAt)}
+                              </span>
                             </div>
                           </div>
                           <div className="shipping-history-item">
                             <div className="shipping-history-dot" />
                             <div className="shipping-history-content">
-                              <span className="shipping-history-status">In transit to destination</span>
+                              <span className="shipping-history-status">
+                                In transit to destination
+                              </span>
                               <span className="shipping-history-location">Regional hub</span>
                             </div>
                           </div>

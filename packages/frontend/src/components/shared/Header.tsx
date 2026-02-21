@@ -116,8 +116,9 @@ const MOBILE_MENU_STYLES = `
   }
 `;
 
-// Section color themes for visual differentiation
+// Section color themes for visual differentiation - each role has unique colors
 const SECTION_THEMES: Record<string, { accent: string; gradient: string; iconBg: string }> = {
+  // Navigation sections
   dashboard: {
     accent: 'from-purple-500 to-violet-400',
     gradient: 'from-purple-500/10 to-violet-400/5',
@@ -159,14 +160,65 @@ const SECTION_THEMES: Record<string, { accent: string; gradient: string; iconBg:
     iconBg: 'bg-gradient-to-br from-slate-500 to-gray-400',
   },
   reports: {
-    accent: 'from-violet-500 to-purple-400',
-    gradient: 'from-violet-500/10 to-purple-400/5',
-    iconBg: 'bg-gradient-to-br from-violet-500 to-purple-400',
+    accent: 'from-indigo-500 to-blue-400',
+    gradient: 'from-indigo-500/10 to-blue-400/5',
+    iconBg: 'bg-gradient-to-br from-indigo-500 to-blue-400',
   },
   admin: {
     accent: 'from-fuchsia-500 to-pink-400',
     gradient: 'from-fuchsia-500/10 to-pink-400/5',
     iconBg: 'bg-gradient-to-br from-fuchsia-500 to-pink-400',
+  },
+  // Role view themes - each role has a unique color scheme
+  'role-admin': {
+    accent: 'from-fuchsia-500 to-pink-400',
+    gradient: 'from-fuchsia-500/10 to-pink-400/5',
+    iconBg: 'bg-gradient-to-br from-fuchsia-500 to-pink-400',
+  },
+  'role-sales': {
+    accent: 'from-emerald-500 to-green-400',
+    gradient: 'from-emerald-500/10 to-green-400/5',
+    iconBg: 'bg-gradient-to-br from-emerald-500 to-green-400',
+  },
+  'role-accounting': {
+    accent: 'from-amber-500 to-yellow-400',
+    gradient: 'from-amber-500/10 to-yellow-400/5',
+    iconBg: 'bg-gradient-to-br from-amber-500 to-yellow-400',
+  },
+  'role-stock-control': {
+    accent: 'from-violet-500 to-purple-400',
+    gradient: 'from-violet-500/10 to-purple-400/5',
+    iconBg: 'bg-gradient-to-br from-violet-500 to-purple-400',
+  },
+  'role-inwards': {
+    accent: 'from-cyan-500 to-teal-400',
+    gradient: 'from-cyan-500/10 to-teal-400/5',
+    iconBg: 'bg-gradient-to-br from-cyan-500 to-teal-400',
+  },
+  'role-production': {
+    accent: 'from-orange-500 to-red-400',
+    gradient: 'from-orange-500/10 to-red-400/5',
+    iconBg: 'bg-gradient-to-br from-orange-500 to-red-400',
+  },
+  'role-picking': {
+    accent: 'from-blue-500 to-indigo-400',
+    gradient: 'from-blue-500/10 to-indigo-400/5',
+    iconBg: 'bg-gradient-to-br from-blue-500 to-indigo-400',
+  },
+  'role-packing': {
+    accent: 'from-teal-500 to-emerald-400',
+    gradient: 'from-teal-500/10 to-emerald-400/5',
+    iconBg: 'bg-gradient-to-br from-teal-500 to-emerald-400',
+  },
+  'role-rma': {
+    accent: 'from-rose-500 to-red-400',
+    gradient: 'from-rose-500/10 to-red-400/5',
+    iconBg: 'bg-gradient-to-br from-rose-500 to-red-400',
+  },
+  'role-maintenance': {
+    accent: 'from-slate-500 to-zinc-400',
+    gradient: 'from-slate-500/10 to-zinc-400/5',
+    iconBg: 'bg-gradient-to-br from-slate-500 to-zinc-400',
   },
 };
 
@@ -436,114 +488,147 @@ function MobileMenu({
             ))}
           </div>
 
-          {/* Header with user info */}
-          <div className="relative border-b border-white/10 px-6 py-5">
-            <div className="flex items-center gap-4">
-              {/* Avatar with gradient border */}
-              <div className="relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 p-0.5 shadow-lg shadow-purple-500/20">
-                  <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center">
-                    <span
-                      className="text-lg font-bold bg-gradient-to-br from-purple-400 to-violet-400 bg-clip-text text-transparent"
+          {/* Header with user info - clickable to show role switcher */}
+          {hasRoleSwitcher ? (
+            <button
+              onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
+              className="relative border-b border-white/10 px-6 py-5 w-full text-left hover:bg-white/[0.02] transition-colors duration-200"
+            >
+              <div className="flex items-center gap-4">
+                {/* Avatar with gradient border */}
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 p-0.5 shadow-lg shadow-purple-500/20">
+                    <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center">
+                      <span
+                        className="text-lg font-bold bg-gradient-to-br from-purple-400 to-violet-400 bg-clip-text text-transparent"
+                        style={{ fontFamily: "'Outfit', sans-serif" }}
+                      >
+                        {userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Online indicator */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-lg shadow-emerald-500/50" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2
+                      className="text-base font-semibold text-white truncate tracking-tight"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
-                      {userName.charAt(0).toUpperCase()}
-                    </span>
+                      {userName}
+                    </h2>
+                    <UserRoleBadge
+                      role={(getEffectiveRole() || userRole) as UserRole}
+                      userId={userId}
+                    />
                   </div>
+                  <p
+                    className="text-sm text-purple-300 truncate flex items-center gap-1"
+                    style={{ fontFamily: "'Inter', sans-serif" }}
+                  >
+                    Switch Role View
+                    <ChevronDownIcon
+                      className={`w-4 h-4 transition-transform duration-300 ${showRoleSwitcher ? 'rotate-180' : ''}`}
+                    />
+                  </p>
                 </div>
-                {/* Online indicator */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-lg shadow-emerald-500/50" />
               </div>
+            </button>
+          ) : (
+            <div className="relative border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-4">
+                {/* Avatar with gradient border */}
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 p-0.5 shadow-lg shadow-purple-500/20">
+                    <div className="w-full h-full rounded-[10px] bg-slate-900 flex items-center justify-center">
+                      <span
+                        className="text-lg font-bold bg-gradient-to-br from-purple-400 to-violet-400 bg-clip-text text-transparent"
+                        style={{ fontFamily: "'Outfit', sans-serif" }}
+                      >
+                        {userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Online indicator */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 shadow-lg shadow-emerald-500/50" />
+                </div>
 
-              <div className="flex-1 min-w-0">
-                <h2
-                  className="text-base font-semibold text-white truncate tracking-tight"
-                  style={{ fontFamily: "'Outfit', sans-serif" }}
-                >
-                  {userName}
-                </h2>
-                <p
-                  className="text-sm text-slate-400 truncate"
-                  style={{ fontFamily: "'Inter', sans-serif" }}
-                >
-                  {userEmail}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2
+                      className="text-base font-semibold text-white truncate tracking-tight"
+                      style={{ fontFamily: "'Outfit', sans-serif" }}
+                    >
+                      {userName}
+                    </h2>
+                    <UserRoleBadge
+                      role={(getEffectiveRole() || userRole) as UserRole}
+                      userId={userId}
+                    />
+                  </div>
+                  <p
+                    className="text-sm text-slate-400 truncate"
+                    style={{ fontFamily: "'Inter', sans-serif" }}
+                  >
+                    {userEmail}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Role Switcher Dropdown - shown when header is clicked */}
+          {hasRoleSwitcher && showRoleSwitcher && (
+            <div className="border-b border-white/10 px-4 py-3 bg-white/[0.02]">
+              <p
+                className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 px-2"
+                style={{ fontFamily: "'Outfit', sans-serif" }}
+              >
+                Switch Role View
+              </p>
+              <div className="space-y-1">
+                {allRoleViews.map((view, index) => {
+                  const ViewIcon = view.icon;
+                  const isActive = view.role === getEffectiveRole();
+                  // Use role-specific theme for unique colors
+                  const theme = getSectionTheme(`role-${view.key}`);
+                  return (
+                    <button
+                      key={view.key}
+                      onClick={() => handleRoleClick(view.role, view.path)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg transition-all duration-200 group ${
+                        isActive
+                          ? `bg-gradient-to-r ${theme.gradient} border border-white/20`
+                          : 'hover:bg-white/5 border border-transparent'
+                      }`}
+                    >
+                      <div
+                        className={`w-6 h-6 rounded-md ${theme.iconBg} flex items-center justify-center shadow-md`}
+                      >
+                        <ViewIcon className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <span
+                        className={`font-medium text-sm ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
+                        {view.label}
+                      </span>
+                      {isActive && (
+                        <span
+                          className={`ml-auto w-1.5 h-1.5 rounded-full bg-gradient-to-r ${theme.accent} active-indicator-glow`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Navigation */}
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            {/* Role Switcher Section for users with multiple roles */}
-            {hasRoleSwitcher && (
-              <div className="mobile-menu-item" style={{ animationDelay: '50ms' }}>
-                <button
-                  onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl bg-gradient-to-r from-purple-500/10 to-violet-500/10 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                      <CogIcon className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="text-left">
-                      <p
-                        className="text-sm font-semibold text-white"
-                        style={{ fontFamily: "'Outfit', sans-serif" }}
-                      >
-                        Switch Role
-                      </p>
-                      <p
-                        className="text-xs text-purple-300"
-                        style={{ fontFamily: "'Inter', sans-serif" }}
-                      >
-                        {getEffectiveRole() || userRole}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronDownIcon
-                    className={`w-5 h-5 text-purple-400 transition-transform duration-300 ${showRoleSwitcher ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {showRoleSwitcher && (
-                  <div className="mt-3 ml-2 space-y-1.5 overflow-hidden">
-                    {allRoleViews.map((view, index) => {
-                      const ViewIcon = view.icon;
-                      const isActive = view.role === getEffectiveRole();
-                      const theme = getSectionTheme(view.key);
-                      return (
-                        <button
-                          key={view.key}
-                          onClick={() => handleRoleClick(view.role, view.path)}
-                          className={`mobile-menu-item w-full flex items-center gap-3 px-4 py-2.5 text-left rounded-lg transition-all duration-300 group ${
-                            isActive
-                              ? `bg-gradient-to-r ${theme.gradient} border border-white/20`
-                              : 'hover:bg-white/5 border border-transparent'
-                          }`}
-                          style={{ animationDelay: `${100 + index * 30}ms` }}
-                        >
-                          <div
-                            className={`w-7 h-7 rounded-lg ${theme.iconBg} flex items-center justify-center shadow-lg`}
-                          >
-                            <ViewIcon className="w-3.5 h-3.5 text-white" />
-                          </div>
-                          <span
-                            className={`font-medium text-sm ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}
-                            style={{ fontFamily: "'Inter', sans-serif" }}
-                          >
-                            {view.label}
-                          </span>
-                          {isActive && (
-                            <span className="ml-auto w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-violet-400 active-indicator-glow" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Navigation Groups */}
             {navGroups.map((group, groupIndex) => {
               const GroupIcon = group.icon;
@@ -643,16 +728,6 @@ function MobileMenu({
           <div className="relative border-t border-white/10 px-4 py-4 space-y-2">
             {/* Gradient line accent */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
-
-            <div className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-white/5">
-              <span
-                className="text-sm text-slate-400"
-                style={{ fontFamily: "'Inter', sans-serif" }}
-              >
-                Current Role
-              </span>
-              <UserRoleBadge role={(getEffectiveRole() || userRole) as UserRole} userId={userId} />
-            </div>
 
             {/* Settings button */}
             <button
@@ -1609,6 +1684,10 @@ export function Header() {
       }>;
     }> = [];
 
+    // Check if admin is in their base Admin view (not switched to another role)
+    // In this case, show minimal navigation - other role views should be accessed via role switcher
+    const isAdminInBaseView = user?.role === UserRole.ADMIN && effectiveRole === UserRole.ADMIN;
+
     // =========================================================================
     // 1. DASHBOARD - Central Overview (Highest Priority)
     // =========================================================================
@@ -1633,10 +1712,12 @@ export function Header() {
     // =========================================================================
     // 2. SALES & CRM - Revenue Generation (Critical for Business)
     // =========================================================================
+    // Hide from admin base view - they should use role switcher to access this
     if (
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === ('SALES' as UserRole)
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.ADMIN ||
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === ('SALES' as UserRole))
     ) {
       const salesItems: Array<{
         key: string;
@@ -1678,7 +1759,11 @@ export function Header() {
     // =========================================================================
     // 3. FINANCE & ACCOUNTING - Financial Management
     // =========================================================================
-    if (effectiveRole === UserRole.ADMIN || effectiveRole === ('ACCOUNTING' as UserRole)) {
+    // Hide from admin base view - they should use role switcher to access this
+    if (
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.ADMIN || effectiveRole === ('ACCOUNTING' as UserRole))
+    ) {
       groups.push({
         key: 'finance',
         label: 'Finance',
@@ -1757,12 +1842,14 @@ export function Header() {
     // =========================================================================
     // 4. INVENTORY - Stock Management
     // =========================================================================
+    // Hide from admin base view - they should use role switcher to access this
     if (
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.STOCK_CONTROLLER ||
-      effectiveRole === UserRole.PICKER ||
-      effectiveRole === ('INWARDS' as UserRole)
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === UserRole.ADMIN ||
+        effectiveRole === UserRole.STOCK_CONTROLLER ||
+        effectiveRole === UserRole.PICKER ||
+        effectiveRole === ('INWARDS' as UserRole))
     ) {
       const inventoryItems: Array<{
         key: string;
@@ -1806,6 +1893,34 @@ export function Header() {
         icon: InboxIcon,
       });
 
+      // Slotting - available to stock controllers, supervisors and admins
+      if (
+        effectiveRole === UserRole.STOCK_CONTROLLER ||
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === UserRole.ADMIN
+      ) {
+        inventoryItems.push({
+          key: 'slotting',
+          label: 'Slotting',
+          path: '/slotting',
+          icon: TagIcon,
+        });
+      }
+
+      // Route Optimization - available to stock controllers, supervisors and admins
+      if (
+        effectiveRole === UserRole.STOCK_CONTROLLER ||
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === UserRole.ADMIN
+      ) {
+        inventoryItems.push({
+          key: 'route-optimization',
+          label: 'Route Optimization',
+          path: '/route-optimization',
+          icon: MapIcon,
+        });
+      }
+
       // Advanced inventory features for supervisors and admins
       if (effectiveRole === UserRole.SUPERVISOR || effectiveRole === UserRole.ADMIN) {
         inventoryItems.push(
@@ -1841,10 +1956,12 @@ export function Header() {
     // =========================================================================
     // 5. HR & PAYROLL - Human Resources
     // =========================================================================
+    // Hide from admin base view - they should use role switcher to access this
     if (
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === ('HR_MANAGER' as UserRole) ||
-      effectiveRole === ('HR_ADMIN' as UserRole)
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.ADMIN ||
+        effectiveRole === ('HR_MANAGER' as UserRole) ||
+        effectiveRole === ('HR_ADMIN' as UserRole))
     ) {
       groups.push({
         key: 'hr',
@@ -1885,10 +2002,12 @@ export function Header() {
     // =========================================================================
     // 6. PRODUCTION - Manufacturing Operations
     // =========================================================================
+    // Hide from admin base view - they should use role switcher to access this
     if (
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === ('PRODUCTION' as UserRole)
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.ADMIN ||
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === ('PRODUCTION' as UserRole))
     ) {
       const productionItems: Array<{
         key: string;
@@ -1926,12 +2045,14 @@ export function Header() {
     // =========================================================================
     // 7. WAREHOUSE OPERATIONS - Fulfillment & Logistics
     // =========================================================================
+    // Hide from admin base view - they should use role switcher to access this
     // For pickers, packers, and warehouse staff
     if (
-      effectiveRole === UserRole.PICKER ||
-      effectiveRole === UserRole.PACKER ||
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === UserRole.ADMIN
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.PICKER ||
+        effectiveRole === UserRole.PACKER ||
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === UserRole.ADMIN)
     ) {
       const warehouseItems: Array<{
         key: string;
@@ -2065,10 +2186,12 @@ export function Header() {
     // =========================================================================
     // 9. REPORTS - Business Intelligence
     // =========================================================================
+    // Hide from admin base view - they should use role switcher to access this
     if (
-      effectiveRole === UserRole.ADMIN ||
-      effectiveRole === UserRole.SUPERVISOR ||
-      effectiveRole === ('ACCOUNTING' as UserRole)
+      !isAdminInBaseView &&
+      (effectiveRole === UserRole.ADMIN ||
+        effectiveRole === UserRole.SUPERVISOR ||
+        effectiveRole === ('ACCOUNTING' as UserRole))
     ) {
       groups.push({
         key: 'reports',
@@ -2088,20 +2211,41 @@ export function Header() {
       effectiveRole === ('HR_MANAGER' as UserRole) ||
       effectiveRole === ('HR_ADMIN' as UserRole)
     ) {
+      const adminItems: Array<{
+        key: string;
+        label: string;
+        path: string;
+        icon: React.ComponentType<{ className?: string }>;
+        requiredRole?: UserRole;
+      }> = [];
+
+      // For admin base view, add quick access to essential tools
+      if (isAdminInBaseView) {
+        adminItems.push({
+          key: 'search',
+          label: 'Product Search',
+          path: '/search',
+          icon: MagnifyingGlassIcon,
+        });
+      }
+
+      // Standard admin items
+      adminItems.push(
+        { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
+        {
+          key: 'business-rules',
+          label: 'Business Rules',
+          path: '/business-rules',
+          icon: CogIcon,
+        },
+        { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon }
+      );
+
       groups.push({
         key: 'admin',
         label: 'Admin',
         icon: CogIcon,
-        items: [
-          { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
-          {
-            key: 'business-rules',
-            label: 'Business Rules',
-            path: '/business-rules',
-            icon: CogIcon,
-          },
-          { key: 'integrations', label: 'Integrations', path: '/integrations', icon: ServerIcon },
-        ],
+        items: adminItems,
       });
     }
 
@@ -2112,11 +2256,18 @@ export function Header() {
   const navGroups = useMemo(() => getNavGroups(), [effectiveRole, additionalRoles]);
 
   // Define all available role views with their paths and icons
+  // Each role has a UNIQUE icon for easy visual identification
   // Organized by ERP business priority: Admin -> Sales -> Finance -> Inventory -> HR -> Production -> Warehouse -> Support
   const allAvailableRoleViews = [
-    // 1. Admin - System oversight
-    { key: 'admin', label: 'Admin View', path: '/dashboard', icon: CogIcon, role: UserRole.ADMIN },
-    // 2. Sales - Revenue generation
+    // 1. Admin - System oversight (Shield icon for security/control)
+    {
+      key: 'admin',
+      label: 'Admin View',
+      path: '/dashboard',
+      icon: ShieldCheckIcon,
+      role: UserRole.ADMIN,
+    },
+    // 2. Sales - Revenue generation (Dollar icon for sales/revenue)
     {
       key: 'sales',
       label: 'Sales View',
@@ -2124,7 +2275,7 @@ export function Header() {
       icon: CurrencyDollarIcon,
       role: 'SALES' as UserRole,
     },
-    // 3. Finance - Financial management
+    // 3. Finance - Financial management (Banknotes icon for finance)
     {
       key: 'accounting',
       label: 'Finance View',
@@ -2132,7 +2283,7 @@ export function Header() {
       icon: BanknotesIcon,
       role: 'ACCOUNTING' as UserRole,
     },
-    // 4. Inventory - Stock management
+    // 4. Inventory - Stock management (Cube icon for inventory items)
     {
       key: 'stock-control',
       label: 'Inventory View',
@@ -2140,6 +2291,7 @@ export function Header() {
       icon: CubeIcon,
       role: UserRole.STOCK_CONTROLLER,
     },
+    // Receiving - Inbound goods (Inbox icon for receiving)
     {
       key: 'inwards',
       label: 'Receiving View',
@@ -2147,7 +2299,7 @@ export function Header() {
       icon: InboxIcon,
       role: 'INWARDS' as UserRole,
     },
-    // 5. Production - Manufacturing
+    // 5. Production - Manufacturing (Cog icon for production machinery)
     {
       key: 'production',
       label: 'Production View',
@@ -2156,6 +2308,7 @@ export function Header() {
       role: 'PRODUCTION' as UserRole,
     },
     // 6. Warehouse - Fulfillment operations
+    // Picking - Order fulfillment (Clipboard list icon for pick lists)
     {
       key: 'picking',
       label: 'Picking View',
@@ -2163,14 +2316,16 @@ export function Header() {
       icon: ClipboardDocumentListIcon,
       role: UserRole.PICKER,
     },
+    // Packing - Package preparation (Tag icon for packing labels)
     {
       key: 'packing',
       label: 'Packing View',
       path: '/packing',
-      icon: CubeIcon,
+      icon: TagIcon,
       role: UserRole.PACKER,
     },
     // 7. Support - Returns & Maintenance
+    // RMA - Returns processing (Arrow path icon for returns cycle)
     {
       key: 'rma',
       label: 'Returns View',
@@ -2178,6 +2333,7 @@ export function Header() {
       icon: ArrowPathIcon,
       role: 'RMA' as UserRole,
     },
+    // Maintenance - Equipment upkeep (Wrench icon for maintenance)
     {
       key: 'maintenance',
       label: 'Maintenance View',

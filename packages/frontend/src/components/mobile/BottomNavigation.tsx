@@ -363,6 +363,43 @@ export function BottomNavigation({
 // Default navigation items by role using Heroicons
 // Each role has a distinct color theme
 export const DEFAULT_NAV_ITEMS: Record<string, NavItem[]> = {
+  'stock-controller': [
+    {
+      id: 'stock-control',
+      label: 'Stock',
+      icon: <CubeIcon className="w-6 h-6" />,
+      path: '/stock-control',
+      theme: 'violet',
+    },
+    {
+      id: 'cycle-counting',
+      label: 'Counts',
+      icon: <ClipboardDocumentListIcon className="w-6 h-6" />,
+      path: '/cycle-counting',
+      theme: 'blue',
+    },
+    {
+      id: 'slotting',
+      label: 'Slotting',
+      icon: <SparklesIcon className="w-6 h-6" />,
+      path: '/slotting',
+      theme: 'emerald',
+    },
+    {
+      id: 'route-optimization',
+      label: 'Routes',
+      icon: <ChartBarIcon className="w-6 h-6" />,
+      path: '/route-optimization',
+      theme: 'amber',
+    },
+    {
+      id: 'more',
+      label: 'More',
+      icon: <Bars3Icon className="w-6 h-6" />,
+      path: '/more',
+      theme: 'rose',
+    },
+  ],
   picker: [
     {
       id: 'orders',

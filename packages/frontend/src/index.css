@@ -1041,7 +1041,7 @@
 
 /* ============================================
    SLOTTING PAGE - OPTIMIZATION HUB AESTHETIC
-   Teal/Mint efficiency-focused design
+   Purple/brand-focused design (consistent with brand identity)
    ============================================ */
 
 /* Staggered entrance animation */
@@ -1059,10 +1059,10 @@
 /* Pulse glow for badges */
 @keyframes slotting-badge-glow {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(20, 184, 166, 0.3);
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px rgba(20, 184, 166, 0.5);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
   }
 }
 
@@ -1095,13 +1095,13 @@
 .slotting-page-container {
   position: relative;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #134e4a 50%, #0f172a 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
 }
 
 html.light .slotting-page-container {
-  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 50%, #f0fdfa 100%);
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #faf5ff 100%);
 }
 
 /* Atmospheric background */
@@ -1120,7 +1120,7 @@ html.light .slotting-page-container {
   right: 5%;
   width: 40%;
   height: 40%;
-  background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.15) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.15) 0%, transparent 60%);
   filter: blur(60px);
   animation: slotting-float 8s ease-in-out infinite;
 }
@@ -1132,17 +1132,17 @@ html.light .slotting-page-container {
   left: 10%;
   width: 30%;
   height: 30%;
-  background: radial-gradient(ellipse at center, rgba(45, 212, 191, 0.1) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.1) 0%, transparent 60%);
   filter: blur(50px);
   animation: slotting-float 12s ease-in-out infinite reverse;
 }
 
 html.light .slotting-atmosphere::before {
-  background: radial-gradient(ellipse at center, rgba(20, 184, 166, 0.2) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.2) 0%, transparent 60%);
 }
 
 html.light .slotting-atmosphere::after {
-  background: radial-gradient(ellipse at center, rgba(45, 212, 191, 0.15) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.15) 0%, transparent 60%);
 }
 
 /* Hero section */
@@ -1154,7 +1154,7 @@ html.light .slotting-atmosphere::after {
   animation: slotting-stagger-in 0.5s ease-out 0.1s backwards;
 }
 
-/* Icon wrapper with teal glow */
+/* Icon wrapper with purple glow */
 .slotting-icon-wrapper {
   display: flex;
   align-items: center;
@@ -1162,15 +1162,15 @@ html.light .slotting-atmosphere::after {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(45, 212, 191, 0.1) 100%);
-  border: 1px solid rgba(20, 184, 166, 0.3);
-  color: #14b8a6;
-  box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.light .slotting-icon-wrapper {
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(45, 212, 191, 0.1) 100%);
-  box-shadow: 0 0 15px rgba(20, 184, 166, 0.15);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
 }
 
 /* Badge with pulse */
@@ -1179,9 +1179,9 @@ html.light .slotting-icon-wrapper {
   align-items: center;
   padding: 4px 10px;
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(45, 212, 191, 0.15) 100%);
-  border: 1px solid rgba(20, 184, 166, 0.3);
-  color: #14b8a6;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.15) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   font-weight: 600;
@@ -1191,8 +1191,8 @@ html.light .slotting-icon-wrapper {
 }
 
 html.light .slotting-badge-pulse {
-  background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(45, 212, 191, 0.1) 100%);
-  color: #0d9488;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+  color: #9333ea;
 }
 
 /* Slotting title - distinctive display font */
@@ -1202,14 +1202,14 @@ html.light .slotting-badge-pulse {
   font-size: 2.5rem;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  background: linear-gradient(135deg, #ffffff 0%, #14b8a6 50%, #5eead4 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #a855f7 50%, #c084fc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 html.light .slotting-title {
-  background: linear-gradient(135deg, #134e4a 0%, #14b8a6 50%, #0d9488 100%);
+  background: linear-gradient(135deg, #581c87 0%, #a855f7 50%, #9333ea 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2284,13 +2284,13 @@ html.light .slotting-btn-cancel:hover:not(:disabled) {
 .route-page-container {
   position: relative;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #14532d 50%, #0f172a 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
 }
 
 html.light .route-page-container {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #faf5ff 100%);
 }
 
 /* Atmospheric background */
@@ -2309,7 +2309,7 @@ html.light .route-page-container {
   right: 10%;
   width: 35%;
   height: 35%;
-  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.12) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.12) 0%, transparent 60%);
   filter: blur(50px);
 }
 
@@ -2320,16 +2320,16 @@ html.light .route-page-container {
   left: 5%;
   width: 25%;
   height: 25%;
-  background: radial-gradient(ellipse at center, rgba(132, 204, 22, 0.1) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.1) 0%, transparent 60%);
   filter: blur(40px);
 }
 
 html.light .route-atmosphere::before {
-  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.15) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.15) 0%, transparent 60%);
 }
 
 html.light .route-atmosphere::after {
-  background: radial-gradient(ellipse at center, rgba(132, 204, 22, 0.12) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.12) 0%, transparent 60%);
 }
 
 /* Hero section */
@@ -2346,7 +2346,7 @@ html.light .route-atmosphere::after {
   animation: route-stagger-in 0.4s ease-out 0.1s backwards;
 }
 
-/* Icon wrapper with green glow */
+/* Icon wrapper with purple glow */
 .route-icon-wrapper {
   display: flex;
   align-items: center;
@@ -2354,15 +2354,15 @@ html.light .route-atmosphere::after {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(132, 204, 22, 0.1) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.light .route-icon-wrapper {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(132, 204, 22, 0.1) 100%);
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.15);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
 }
 
 /* Badge with intelligent routing */
@@ -2371,9 +2371,9 @@ html.light .route-icon-wrapper {
   align-items: center;
   padding: 4px 10px;
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(132, 204, 22, 0.15) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.15) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   font-weight: 600;
@@ -2382,8 +2382,8 @@ html.light .route-icon-wrapper {
 }
 
 html.light .route-badge-intelligent {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(132, 204, 22, 0.1) 100%);
-  color: #16a34a;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+  color: #9333ea;
 }
 
 /* Route title - distinctive display font */
@@ -2393,14 +2393,14 @@ html.light .route-badge-intelligent {
   font-size: 2.5rem;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  background: linear-gradient(135deg, #ffffff 0%, #22c55e 50%, #84cc16 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #a855f7 50%, #c084fc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 html.light .route-title {
-  background: linear-gradient(135deg, #14532d 0%, #22c55e 50%, #16a34a 100%);
+  background: linear-gradient(135deg, #581c87 0%, #a855f7 50%, #9333ea 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2551,24 +2551,24 @@ html.light .route-card-header {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(132, 204, 22, 0.1) 100%);
-  color: #22c55e;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
+  color: #a855f7;
   flex-shrink: 0;
 }
 
 .route-card-icon-alt {
-  background: linear-gradient(135deg, rgba(132, 204, 22, 0.2) 0%, rgba(163, 230, 53, 0.1) 100%);
-  color: #84cc16;
+  background: linear-gradient(135deg, rgba(192, 132, 252, 0.2) 0%, rgba(216, 180, 254, 0.1) 100%);
+  color: #c084fc;
 }
 
 .route-card-icon-compare {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.1) 100%);
-  color: #3b82f6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+  color: #8b5cf6;
 }
 
 .route-card-icon-success {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
-  color: #22c55e;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+  color: #a855f7;
 }
 
 .route-card-title {
@@ -3263,7 +3263,7 @@ html.light .route-comparison-name {
 
 /* ============================================
    SHIPPED ORDERS PAGE - SHIPPING STATION AESTHETIC
-   Orange/Amber fulfillment-focused design
+   Purple fulfillment-focused design (brand consistent)
    ============================================ */
 
 /* Staggered entrance animation */
@@ -3312,13 +3312,13 @@ html.light .route-comparison-name {
 .shipping-page-container {
   position: relative;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #7c2d12 50%, #0f172a 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
 }
 
 html.light .shipping-page-container {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fff7ed 100%);
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #faf5ff 100%);
 }
 
 /* Atmospheric background */
@@ -3337,7 +3337,7 @@ html.light .shipping-page-container {
   right: 8%;
   width: 35%;
   height: 35%;
-  background: radial-gradient(ellipse at center, rgba(251, 146, 60, 0.12) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.12) 0%, transparent 60%);
   filter: blur(50px);
 }
 
@@ -3348,16 +3348,16 @@ html.light .shipping-page-container {
   left: 5%;
   width: 30%;
   height: 30%;
-  background: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.1) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.1) 0%, transparent 60%);
   filter: blur(40px);
 }
 
 html.light .shipping-atmosphere::before {
-  background: radial-gradient(ellipse at center, rgba(251, 146, 60, 0.15) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.15) 0%, transparent 60%);
 }
 
 html.light .shipping-atmosphere::after {
-  background: radial-gradient(ellipse at center, rgba(249, 115, 22, 0.12) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(192, 132, 252, 0.12) 0%, transparent 60%);
 }
 
 /* Hero section */
@@ -3374,7 +3374,7 @@ html.light .shipping-atmosphere::after {
   animation: shipping-stagger-in 0.4s ease-out 0.1s backwards;
 }
 
-/* Icon wrapper with orange glow */
+/* Icon wrapper with purple glow */
 .shipping-icon-wrapper {
   display: flex;
   align-items: center;
@@ -3382,15 +3382,15 @@ html.light .shipping-atmosphere::after {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%);
-  border: 1px solid rgba(251, 146, 60, 0.3);
-  color: #fb923c;
-  box-shadow: 0 0 20px rgba(251, 146, 60, 0.2);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.light .shipping-icon-wrapper {
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(249, 115, 22, 0.1) 100%);
-  box-shadow: 0 0 15px rgba(251, 146, 60, 0.15);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
 }
 
 /* Live badge */
@@ -3399,9 +3399,9 @@ html.light .shipping-icon-wrapper {
   align-items: center;
   padding: 4px 10px;
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(249, 115, 22, 0.15) 100%);
-  border: 1px solid rgba(251, 146, 60, 0.3);
-  color: #fb923c;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.15) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   font-weight: 600;
@@ -3411,8 +3411,8 @@ html.light .shipping-icon-wrapper {
 }
 
 html.light .shipping-badge-live {
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(249, 115, 22, 0.1) 100%);
-  color: #ea580c;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+  color: #9333ea;
 }
 
 /* Shipping title - distinctive display font */
@@ -3429,7 +3429,7 @@ html.light .shipping-badge-live {
 }
 
 html.light .shipping-title {
-  background: linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #c2410c 100%);
+  background: linear-gradient(135deg, #581c87 0%, #9333ea 50%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -3591,7 +3591,7 @@ html.light .shipping-filter-select {
 }
 
 .shipping-export-btn:hover {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
   box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
 }
 
@@ -3870,8 +3870,8 @@ html.light .shipping-order-timeline {
 }
 
 .shipping-timeline-start {
-  background: #f97316;
-  box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  background: #a855f7;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
 }
 
 .shipping-timeline-end {
@@ -4704,20 +4704,20 @@ body {
 /* Metric card pulse for live data */
 @keyframes metric-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 8px rgba(168, 85, 247, 0);
   }
 }
 
 /* SKU glow effect */
 @keyframes sku-glow {
   0%, 100% {
-    text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
   }
   50% {
-    text-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+    text-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
   }
 }
 
@@ -4787,7 +4787,7 @@ body {
   position: absolute;
   width: 24px;
   height: 24px;
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(168, 85, 247, 0.5);
   border-style: solid;
 }
 
@@ -4810,10 +4810,10 @@ body {
   position: relative;
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.1) 0%,
-    rgba(59, 130, 246, 0.05) 100%
+    rgba(168, 85, 247, 0.1) 0%,
+    rgba(168, 85, 247, 0.05) 100%
   );
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 .hero-metric-stock::before {
@@ -4823,7 +4823,7 @@ body {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
 }
 
 /* Stock control page title - distinctive */
@@ -4840,13 +4840,13 @@ body {
   font-weight: 800;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
+  background: linear-gradient(135deg, #6b21a8 0%, #a855f7 50%, #6b21a8 100%);
   background-size: 200% 200%;
   animation: gradientShift 3s ease infinite;
-  text-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
-  border: 2px solid rgba(59, 130, 246, 0.4);
+  text-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
+  border: 2px solid rgba(168, 85, 247, 0.4);
   box-shadow:
-    0 0 20px rgba(59, 130, 246, 0.2),
+    0 0 20px rgba(168, 85, 247, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -4881,7 +4881,7 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.8), transparent);
   animation: scan-beam 2s ease-in-out infinite;
 }
 
@@ -4910,8 +4910,8 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  background: #a855f7;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
 }
 
 /* Confetti enhanced with more colors and spread */
