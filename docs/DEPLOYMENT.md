@@ -1,6 +1,6 @@
-# WMS Deployment Guide
+# ERP Deployment Guide
 
-This guide covers deploying the Warehouse Management System to various environments.
+This guide covers deploying the Enterprise Resource Planning System to various environments.
 
 **Production Server:** `ssh root@103.208.85.233`
 

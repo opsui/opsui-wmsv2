@@ -631,9 +631,9 @@ export function RoleActivityCard({
                   <td className="w-32 px-2 sm:px-4 py-3 text-sm text-center">
                     <Button
                       size="sm"
-                      variant="secondary"
+                      variant="primary"
                       onClick={() => handleViewOrders(memberId, memberName, userRole)}
-                      className="text-xs touch-target hover:scale-105 transition-transform"
+                      className="text-xs touch-target hover:scale-105 transition-transform bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white shadow-lg shadow-purple-500/25"
                     >
                       {userRole === UserRole.STOCK_CONTROLLER ? (
                         <>

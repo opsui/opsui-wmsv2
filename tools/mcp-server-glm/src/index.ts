@@ -4,6 +4,12 @@
  * MCP Server for GLM API
  *
  * This server provides GLM models (glm-4, glm-4-plus, glm-4-air, glm-4-flash, glm-4.7, glm-5) as tools for Claude Code
+ *
+ * Token Optimization Features:
+ * - Response caching for identical prompts (reduces duplicate API calls)
+ * - Prompt compression for common patterns
+ * - Token usage tracking and reporting
+ * - Smart max_tokens based on task type
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -42,6 +48,106 @@ const GLM_API_KEY = process.env.GLM_API_KEY;
 if (!GLM_API_KEY) {
   console.error('Error: GLM_API_KEY environment variable is required');
   process.exit(1);
+}
+
+// ============================================================================
+// TOKEN OPTIMIZATION: CACHING & TRACKING
+// ============================================================================
+
+interface CacheEntry {
+  response: string;
+  timestamp: number;
+  tokenCount: number;
+}
+
+interface TokenStats {
+  totalRequests: number;
+  cacheHits: number;
+  cacheMisses: number;
+  totalTokensUsed: number;
+  tokensSaved: number;
+}
+
+// Response cache (5 minute TTL)
+const responseCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+// Token usage statistics
+const tokenStats: TokenStats = {
+  totalRequests: 0,
+  cacheHits: 0,
+  cacheMisses: 0,
+  totalTokensUsed: 0,
+  tokensSaved: 0,
+};
+
+// Shortened system prompts to reduce tokens
+const COMPACT_SYSTEM_PROMPTS = {
+  default: 'You are a helpful assistant.',
+  code: 'You are an expert developer. Provide concise, well-documented code.',
+  analyze: 'You are an expert analyst. Provide brief, actionable insights.',
+  review: 'You are a code reviewer. Focus on bugs, security, and improvements.',
+  debug: 'You are a debugging expert. Identify root causes and suggest fixes.',
+};
+
+/**
+ * Generate cache key from messages
+ */
+function generateCacheKey(messages: Array<{ role: string; content: string }>): string {
+  const content = JSON.stringify(messages);
+  return crypto.createHash('sha256').update(content).digest('hex').substring(0, 32);
+}
+
+/**
+ * Check cache for existing response
+ */
+function checkCache(cacheKey: string): CacheEntry | null {
+  const entry = responseCache.get(cacheKey);
+  if (!entry) return null;
+
+  // Check if expired
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    responseCache.delete(cacheKey);
+    return null;
+  }
+
+  return entry;
+}
+
+/**
+ * Store response in cache
+ */
+function cacheResponse(cacheKey: string, response: string, tokenCount: number): void {
+  responseCache.set(cacheKey, {
+    response,
+    timestamp: Date.now(),
+    tokenCount,
+  });
+
+  // Cleanup old entries (keep cache under 100 entries)
+  if (responseCache.size > 100) {
+    const entries = Array.from(responseCache.entries());
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+    const toDelete = entries.slice(0, entries.length - 100);
+    toDelete.forEach(([key]) => responseCache.delete(key));
+  }
+}
+
+/**
+ * Estimate token count (rough: ~4 chars per token)
+ */
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+/**
+ * Compress prompt by removing redundant whitespace
+ */
+function compressPrompt(text: string): string {
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 /**
@@ -93,16 +199,38 @@ function base64UrlEncode(str: string): string {
 }
 
 /**
- * Call GLM API
+ * Call GLM API with caching
  */
-async function callGLM(messages: Array<{ role: string; content: string }>): Promise<string> {
+async function callGLM(
+  messages: Array<{ role: string; content: string }>,
+  maxTokens: number = 2000
+): Promise<{ response: string; cached: boolean; tokensUsed: number }> {
+  // Compress messages to reduce tokens
+  const compressedMessages = messages.map(m => ({
+    role: m.role,
+    content: compressPrompt(m.content),
+  }));
+
+  // Check cache
+  const cacheKey = generateCacheKey(compressedMessages);
+  const cached = checkCache(cacheKey);
+
+  if (cached) {
+    tokenStats.cacheHits++;
+    tokenStats.tokensSaved += cached.tokenCount;
+    return { response: cached.response, cached: true, tokensUsed: 0 };
+  }
+
+  tokenStats.cacheMisses++;
+  tokenStats.totalRequests++;
+
   const token = generateToken();
 
   const requestBody = {
     model: GLM_MODEL,
-    messages,
+    messages: compressedMessages,
     temperature: 0.7,
-    max_tokens: 4000,
+    max_tokens: Math.min(maxTokens, 4000),
   };
 
   const response = await fetch(GLM_BASE_URL, {
@@ -125,7 +253,15 @@ async function callGLM(messages: Array<{ role: string; content: string }>): Prom
     throw new Error('No response from GLM');
   }
 
-  return data.choices[0].message.content;
+  const responseContent = data.choices[0].message.content;
+  const tokensUsed = data.usage?.total_tokens || estimateTokens(responseContent);
+
+  tokenStats.totalTokensUsed += tokensUsed;
+
+  // Cache the response
+  cacheResponse(cacheKey, responseContent, tokensUsed);
+
+  return { response: responseContent, cached: false, tokensUsed };
 }
 
 // Create MCP Server
@@ -226,6 +362,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['content'],
         },
       },
+      {
+        name: 'glm_stats',
+        description:
+          'Get token usage statistics for the GLM server (cache hits, tokens saved, total usage).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            reset: {
+              type: 'boolean',
+              description: 'Reset statistics after reporting (default: false)',
+              default: false,
+            },
+          },
+        },
+      },
     ],
   };
 });
@@ -243,24 +394,26 @@ server.setRequestHandler(CallToolRequestSchema, async request => {
 
   try {
     if (name === 'glm_chat') {
+      // Use compact system prompt if not specified
+      const systemPrompt = (args.systemPrompt as string) || COMPACT_SYSTEM_PROMPTS.default;
+      const maxTokens = (args.maxTokens as number) || 2000;
+
       const messages: Array<{ role: string; content: string }> = [
-        {
-          role: 'system',
-          content: (args.systemPrompt as string) || 'You are a helpful AI assistant.',
-        },
-        {
-          role: 'user',
-          content: args.prompt as string,
-        },
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: args.prompt as string },
       ];
 
-      const response = await callGLM(messages);
+      const { response, cached, tokensUsed } = await callGLM(messages, maxTokens);
+
+      // Add cache indicator to response
+      const cacheNote = cached ? ' [cached]' : '';
+      const tokenNote = cached ? '' : ` (${tokensUsed} tokens)`;
 
       return {
         content: [
           {
             type: 'text',
-            text: response,
+            text: response + cacheNote + tokenNote,
           },
         ],
       };
@@ -269,24 +422,29 @@ server.setRequestHandler(CallToolRequestSchema, async request => {
       const task = args.task as string;
       const code = args.code as string | undefined;
 
+      // Use compact code system prompt
       const systemPrompt = language
-        ? `You are an expert ${language} developer. Provide clear, well-documented code following best practices.`
-        : 'You are an expert software developer. Provide clear, well-documented code following best practices.';
+        ? `Expert ${language} dev. Concise, documented code.`
+        : COMPACT_SYSTEM_PROMPTS.code;
 
-      const userPrompt = code ? `${task}\n\nCode:\n\`\`\`\n${code}\n\`\`\`` : task;
+      const userPrompt = code ? `${task}\n\`\`\`\n${code}\n\`\`\`` : task;
 
       const messages: Array<{ role: string; content: string }> = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ];
 
-      const response = await callGLM(messages);
+      // Code tasks typically need more tokens
+      const { response, cached, tokensUsed } = await callGLM(messages, 3000);
+
+      const cacheNote = cached ? ' [cached]' : '';
+      const tokenNote = cached ? '' : ` (${tokensUsed} tokens)`;
 
       return {
         content: [
           {
             type: 'text',
-            text: response,
+            text: response + cacheNote + tokenNote,
           },
         ],
       };
@@ -295,22 +453,60 @@ server.setRequestHandler(CallToolRequestSchema, async request => {
       const content = args.content as string;
       const context = args.context as string | undefined;
 
-      const systemPrompt = `You are an expert analyst. Perform ${analysisType} analysis on the provided content.`;
+      // Use compact analyze system prompt
+      const systemPrompt = `Expert analyst. ${analysisType} analysis. Brief, actionable.`;
 
-      const userPrompt = context ? `${content}\n\nContext: ${context}` : content;
+      const userPrompt = context ? `${content}\nCtx: ${context}` : content;
 
       const messages: Array<{ role: string; content: string }> = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ];
 
-      const response = await callGLM(messages);
+      // Analysis tasks typically need fewer tokens
+      const { response, cached, tokensUsed } = await callGLM(messages, 1500);
+
+      const cacheNote = cached ? ' [cached]' : '';
+      const tokenNote = cached ? '' : ` (${tokensUsed} tokens)`;
 
       return {
         content: [
           {
             type: 'text',
-            text: response,
+            text: response + cacheNote + tokenNote,
+          },
+        ],
+      };
+    } else if (name === 'glm_stats') {
+      const reset = (args.reset as boolean) || false;
+
+      const stats = {
+        ...tokenStats,
+        cacheSize: responseCache.size,
+        cacheHitRate:
+          tokenStats.totalRequests > 0
+            ? `${((tokenStats.cacheHits / (tokenStats.cacheHits + tokenStats.cacheMisses)) * 100).toFixed(1)}%`
+            : 'N/A',
+        savingsRate:
+          tokenStats.totalTokensUsed + tokenStats.tokensSaved > 0
+            ? `${((tokenStats.tokensSaved / (tokenStats.totalTokensUsed + tokenStats.tokensSaved)) * 100).toFixed(1)}%`
+            : '0%',
+      };
+
+      if (reset) {
+        tokenStats.totalRequests = 0;
+        tokenStats.cacheHits = 0;
+        tokenStats.cacheMisses = 0;
+        tokenStats.totalTokensUsed = 0;
+        tokenStats.tokensSaved = 0;
+        responseCache.clear();
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(stats, null, 2),
           },
         ],
       };

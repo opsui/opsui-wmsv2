@@ -47,14 +47,17 @@ router.post(
 
 /**
  * POST /api/auth/logout
- * Logout current user
+ * Logout current user and blacklist their token
  */
 router.post(
   '/logout',
   authenticate,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (req.user) {
-      await authService.logout(req.user.userId);
+      // Create token ID and pass expiration for blacklisting
+      const tokenId = `${req.user.userId}:${req.user.iat}`;
+      const expiresAt = req.user.exp ? req.user.exp * 1000 : Date.now() + 8 * 60 * 60 * 1000; // Default 8h
+      await authService.logout(req.user.userId, tokenId, expiresAt);
     }
     res.json({ message: 'Logged out successfully' });
   })

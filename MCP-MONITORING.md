@@ -33,7 +33,7 @@ npm run mcp:monitor
 
 This will:
 
-- Start the WMS MCP server automatically
+- Start the ERP MCP server automatically
 - Monitor it every 5 seconds
 - Restart it if it crashes
 - Display a live dashboard
@@ -53,7 +53,7 @@ The monitoring dashboard displays:
 
 Last Update: 1/14/2026, 2:30:45 PM
 
-WMS MCP (Local)
+ERP MCP (Local)
   Status: ● RUNNING
   PID: 12345
   Uptime: 2h 15m 30s
@@ -91,7 +91,7 @@ Edit `scripts/mcp-health-monitor.js` and add servers to the `mcpServers` array:
 const mcpServers = [
   {
     name: 'wms-mcp-local',
-    displayName: 'WMS MCP (Local)',
+    displayName: 'ERP MCP (Local)',
     command: 'node',
     args: ['tools/mcp-server/dist/index.js'],
     cwd: path.join(__dirname, '..'),
@@ -266,14 +266,14 @@ The health monitor ensures MCP tools are always available:
 const mcpServers = [
   {
     name: 'wms-mcp-local',
-    displayName: 'WMS MCP (Local Dev)',
+    displayName: 'ERP MCP (Local Dev)',
     command: 'node',
     args: ['tools/mcp-server/dist/index.js'],
     // ... config
   },
   {
     name: 'wms-mcp-staging',
-    displayName: 'WMS MCP (Staging)',
+    displayName: 'ERP MCP (Staging)',
     command: 'ssh',
     args: ['staging.example.com', 'node', '/opt/mcp-server/index.js'],
     // ... config
@@ -307,7 +307,7 @@ const isDev = process.env.NODE_ENV !== 'production';
 const mcpServers = [
   {
     name: 'wms-mcp',
-    displayName: 'WMS MCP',
+    displayName: 'ERP MCP',
     command: 'node',
     args: isDev
       ? ['tools/mcp-server/dist/index.js']

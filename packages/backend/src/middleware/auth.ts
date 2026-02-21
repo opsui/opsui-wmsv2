@@ -9,6 +9,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config';
 import { logger } from '../config/logger';
+import { tokenBlacklistService } from '../services/TokenBlacklistService';
 
 // ============================================================================
 // TYPES
@@ -25,6 +26,46 @@ export interface JWTPayload {
   organizationRole?: string | null; // User's role in the organization
   iat?: number;
   exp?: number;
+}
+
+/**
+ * Compact JWT payload for optimized token size (~40% smaller)
+ * Uses shortened field names to reduce token payload
+ */
+export interface CompactJWTPayload {
+  uid: string; // userId
+  eml: string; // email
+  r: UserRole; // role (base role)
+  ar?: UserRole | null; // activeRole
+  oid?: string | null; // organizationId
+  or?: string | null; // organizationRole
+  iat?: number;
+  exp?: number;
+}
+
+/**
+ * Expand compact JWT payload to full format for backward compatibility
+ */
+function expandPayload(compact: CompactJWTPayload): JWTPayload {
+  return {
+    userId: compact.uid,
+    email: compact.eml,
+    role: compact.r,
+    baseRole: compact.r, // Computed: same as role
+    activeRole: compact.ar ?? null,
+    effectiveRole: compact.ar ?? compact.r, // Computed: activeRole || role
+    organizationId: compact.oid ?? null,
+    organizationRole: compact.or ?? null,
+    iat: compact.iat,
+    exp: compact.exp,
+  };
+}
+
+/**
+ * Check if payload is in compact format
+ */
+function isCompactPayload(payload: unknown): payload is CompactJWTPayload {
+  return typeof payload === 'object' && payload !== null && 'uid' in payload;
 }
 
 // AuthenticatedRequest extends Request with typed user property and request ID
@@ -89,27 +130,44 @@ export function authenticate(req: AuthenticatedRequest, _res: Response, next: Ne
     const token = authHeader.substring(7);
 
     // Verify token with proper type checking
-    const decoded = jwt.verify(token, config.jwt.secret) as JWTPayload;
+    const decoded = jwt.verify(token, config.jwt.secret);
+
+    // Handle both compact (new) and legacy (old) token formats
+    let payload: JWTPayload;
+    if (isCompactPayload(decoded)) {
+      // New compact format - expand to full format
+      payload = expandPayload(decoded);
+    } else {
+      // Legacy format - use as-is for backward compatibility
+      payload = decoded as JWTPayload;
+    }
+
+    // Check if token is blacklisted
+    const tokenId = `${payload.userId}:${payload.iat}`;
+    if (tokenBlacklistService.isBlacklisted(tokenId)) {
+      throw new UnauthorizedError('Token has been revoked');
+    }
 
     // Determine effective role (active role or base role)
-    const effectiveRole = decoded.activeRole || decoded.role;
+    const effectiveRole = payload.activeRole || payload.role;
 
     // Attach user to request with all role information
     req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
+      userId: payload.userId,
+      email: payload.email,
       role: effectiveRole as UserRole,
-      baseRole: decoded.role as UserRole,
-      activeRole: decoded.activeRole || null,
+      baseRole: payload.role as UserRole,
+      activeRole: payload.activeRole || null,
       effectiveRole: effectiveRole as UserRole,
     };
 
     logger.debug('User authenticated', {
-      userId: decoded.userId,
-      email: decoded.email,
-      baseRole: decoded.role,
-      activeRole: decoded.activeRole,
+      userId: payload.userId,
+      email: payload.email,
+      baseRole: payload.role,
+      activeRole: payload.activeRole,
       effectiveRole,
+      tokenFormat: isCompactPayload(decoded) ? 'compact' : 'legacy',
     });
 
     next();
@@ -210,7 +268,8 @@ export function requirePicker(req: AuthenticatedRequest, _res: Response, next: N
 // ============================================================================
 
 /**
- * Generate JWT token for user
+ * Generate JWT token for user (compact format)
+ * Uses shortened field names for ~40% smaller token size
  */
 export function generateToken(user: {
   userId: string;
@@ -218,14 +277,11 @@ export function generateToken(user: {
   role: UserRole;
   activeRole?: UserRole | null;
 }): string {
-  const effectiveRole = user.activeRole || user.role;
-  const payload: JWTPayload = {
-    userId: user.userId,
-    email: user.email,
-    role: user.role,
-    baseRole: user.role,
-    activeRole: user.activeRole,
-    effectiveRole: effectiveRole,
+  const payload: CompactJWTPayload = {
+    uid: user.userId,
+    eml: user.email,
+    r: user.role,
+    ar: user.activeRole,
   };
 
   return jwt.sign(payload, config.jwt.secret, {
@@ -234,7 +290,7 @@ export function generateToken(user: {
 }
 
 /**
- * Generate refresh token (longer-lived)
+ * Generate refresh token (longer-lived, compact format)
  */
 export function generateRefreshToken(user: {
   userId: string;
@@ -242,14 +298,11 @@ export function generateRefreshToken(user: {
   role: UserRole;
   activeRole?: UserRole | null;
 }): string {
-  const effectiveRole = user.activeRole || user.role;
-  const payload: JWTPayload = {
-    userId: user.userId,
-    email: user.email,
-    role: user.role,
-    baseRole: user.role,
-    activeRole: user.activeRole,
-    effectiveRole: effectiveRole,
+  const payload: CompactJWTPayload = {
+    uid: user.userId,
+    eml: user.email,
+    r: user.role,
+    ar: user.activeRole,
   };
 
   return jwt.sign(payload, config.jwt.secret, {
@@ -259,7 +312,13 @@ export function generateRefreshToken(user: {
 
 /**
  * Verify and decode JWT token
+ * Handles both compact (new) and legacy (old) token formats
  */
 export function verifyToken(token: string): JWTPayload {
-  return jwt.verify(token, config.jwt.secret) as JWTPayload;
+  const decoded = jwt.verify(token, config.jwt.secret);
+
+  if (isCompactPayload(decoded)) {
+    return expandPayload(decoded);
+  }
+  return decoded as JWTPayload;
 }

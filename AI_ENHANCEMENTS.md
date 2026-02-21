@@ -28,7 +28,7 @@ Create reusable prompt templates that include full project context.
 ### File: `prompts/CONTEXT_HEADER.md`
 
 ````markdown
-# Warehouse Management System - AI Context
+# Enterprise Resource Planning (ERP) System - AI Context
 
 ## Project Overview
 

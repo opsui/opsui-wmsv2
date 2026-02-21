@@ -1,18 +1,18 @@
 @echo off
 REM =============================================================================
-REM WMS Services - Graceful Shutdown Script
+REM ERP Services - Graceful Shutdown Script
 REM =============================================================================
-REM This script properly shuts down all WMS services in the correct order
+REM This script properly shuts down all ERP services in the correct order
 REM ensuring clean termination of all resources
 REM =============================================================================
 
 SETLOCAL EnableDelayedExpansion
 SET "PROJECT_ROOT=C:\Users\Heinricht\Documents\Warehouse Management System"
-SET "LOG_FILE=%TEMP%\wms-shutdown.log"
+SET "LOG_FILE=%TEMP%\erp-shutdown.log"
 
 echo.
 echo ==============================================================================
-echo WMS Services - Graceful Shutdown
+echo ERP Services - Graceful Shutdown
 echo ==============================================================================
 echo.
 echo Log: %LOG_FILE%
@@ -221,7 +221,7 @@ REM ============================================================================
 echo.
 echo ==============================================================================
 if !REMAINING! EQU 0 (
-    echo [SUCCESS] All WMS services shut down cleanly
+    echo [SUCCESS] All ERP services shut down cleanly
     echo ==============================================================================
     echo.
     [%DATE% %TIME%] All services shut down successfully >> "%LOG_FILE%"

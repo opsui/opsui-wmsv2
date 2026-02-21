@@ -238,17 +238,23 @@ function MobileMenu({
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle open/close animations
+  // Handle open/close animations with proper exit timing
   useEffect(() => {
     if (isOpen) {
+      // Opening: show immediately, animate in
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 10);
       setIsClosing(false);
       return () => clearTimeout(timer);
     } else {
-      setIsVisible(false);
-      setIsClosing(false);
+      // Closing: start exit animation, then unmount after transition completes
+      setIsVisible(false); // Trigger fade out
+      setIsClosing(true); // Keep mounted during exit animation
+      const timer = setTimeout(() => {
+        setIsClosing(false); // Now unmount
+      }, 500); // Match the CSS transition duration
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -362,16 +368,13 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop overlay with gradient and blur */}
+      {/* Backdrop overlay - simple dark overlay without blur to avoid color distortion */}
       <div
-        className={`fixed inset-0 z-[105] transition-all duration-500 ease-out ${
-          isClosing || !isVisible
-            ? 'opacity-0 pointer-events-none backdrop-blur-0'
-            : 'opacity-100 backdrop-blur-sm'
+        className={`fixed inset-0 z-[105] transition-opacity duration-500 ease-out ${
+          isClosing || !isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
         style={{
-          background:
-            'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(0, 0, 0, 0.8) 100%)',
+          background: 'rgba(0, 0, 0, 0.85)',
         }}
         onClick={() => onHoverOff?.()}
       />

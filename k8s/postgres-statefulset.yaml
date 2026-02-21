@@ -45,17 +45,17 @@ spec:
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
-              name: wms-config
+              name: erp-config
               key: DB_NAME
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: wms-secrets
+              name: erp-secrets
               key: DB_USER
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: wms-secrets
+              name: erp-secrets
               key: DB_PASSWORD
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata

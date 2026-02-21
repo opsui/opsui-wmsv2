@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright configuration for WMS crawler
+ * Playwright configuration for ERP crawler
  *
  * Industry-standard configuration following Playwright best practices:
  * - Proper output directories

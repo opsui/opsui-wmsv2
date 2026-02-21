@@ -1,8 +1,8 @@
-# WMS Backend API Documentation
+# ERP Backend API Documentation
 
 ## Overview
 
-This document describes the REST API endpoints for the Warehouse Management System (WMS) backend. The API is built with Node.js, Express, and TypeScript.
+This document describes the REST API endpoints for the Enterprise Resource Planning (ERP) System backend. The API is built with Node.js, Express, and TypeScript.
 
 **Base URL:** `http://localhost:3001/api`
 

@@ -179,9 +179,9 @@ Provide intelligent fix grouping and prioritization.`,
 async function generateFixPrompt(report: ErrorReport, aiAnalysis: AIAnalysis): Promise<string> {
   const { errors, apiIssues, quickFix, summary } = report;
 
-  let prompt = `# WMS Error Fix Request - AI-Optimized
+  let prompt = `# ERP Error Fix Request - AI-Optimized
 
-You are fixing a production React/TypeScript Warehouse Management System.
+You are fixing a production React/TypeScript Enterprise Resource Planning System.
 This fix request has been **AI-analyzed** for optimal prioritization and grouping.
 
 ## 🎯 AI-Recommended Fix Order

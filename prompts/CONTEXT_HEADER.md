@@ -1,4 +1,4 @@
-# Warehouse Management System - AI Context Template
+# Enterprise Resource Planning (ERP) System - AI Context Template
 
 **This header is automatically prepended to all AI agent conversations.**
 
@@ -22,7 +22,7 @@
 
 ## Project Overview
 
-**Project**: Warehouse Management System (WMS)
+**Project**: Enterprise Resource Planning (ERP) System
 **Type**: Monorepo (npm workspaces)
 **Domain**: Order fulfillment workflow
 **Stack**: Node.js/Express + React + PostgreSQL + TypeScript

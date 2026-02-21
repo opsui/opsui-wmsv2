@@ -6,7 +6,7 @@
       "event": "file_change",
       "pattern": "packages/backend/prisma/schema.prisma",
       "debounce": 2000,
-      "action": "ralph run wms-prisma-workflow --auto",
+      "action": "ralph run erp-prisma-workflow --auto",
       "enabled": true
     },
     {
@@ -14,7 +14,7 @@
       "event": "file_save",
       "pattern": "packages/backend/src/**/*.ts",
       "debounce": 5000,
-      "action": "ralph run wms-code-quality-check --projectPath=./packages/backend",
+      "action": "ralph run erp-code-quality-check --projectPath=./packages/backend",
       "enabled": true,
       "notifyOnError": true
     },
@@ -22,14 +22,14 @@
       "name": "auto-api-sync",
       "event": "controller_change",
       "pattern": "packages/backend/src/**/*Controller.ts",
-      "action": "ralph run wms-api-contract-validator",
+      "action": "ralph run erp-api-contract-validator",
       "enabled": true
     },
     {
       "name": "auto-warehouse-opt",
       "event": "inventory_change",
       "pattern": "packages/backend/src/entities/inventory*.ts",
-      "action": "ralph run wms-warehouse-optimizer --analyze=true",
+      "action": "ralph run erp-warehouse-optimizer --analyze=true",
       "enabled": false
     }
   ],
@@ -37,19 +37,19 @@
     {
       "name": "nightly-quality-audit",
       "cron": "0 2 * * *",
-      "action": "ralph run wms-code-quality-check --fixIssues=true --generateReport=true",
+      "action": "ralph run erp-code-quality-check --fixIssues=true --generateReport=true",
       "enabled": true
     },
     {
       "name": "weekly-security-scan",
       "cron": "0 3 * * 0",
-      "action": "ralph run wms-full-feature-workflow --securityOnly=true --deepScan=true",
+      "action": "ralph run erp-full-feature-workflow --securityOnly=true --deepScan=true",
       "enabled": true
     },
     {
       "name": "daily-warehouse-analysis",
       "cron": "0 6 * * *",
-      "action": "ralph run wms-warehouse-optimizer --fullAnalysis=true",
+      "action": "ralph run erp-warehouse-optimizer --fullAnalysis=true",
       "enabled": true
     }
   ]

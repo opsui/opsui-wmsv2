@@ -1,7 +1,11 @@
 /**
- * Modal Component
+ * Modal Component - Distinctive Purple Industrial Theme
  *
- * Reusable modal dialog for forms and content
+ * Features:
+ * - Glassmorphism backdrop with blur
+ * - Smooth entrance/exit animations
+ * - Industrial corner accents
+ * - Purple glow effects
  * - Focus trap for keyboard accessibility
  * - Proper ARIA attributes (WCAG 2.1 compliant)
  * - Mobile-responsive with safe area support
@@ -79,12 +83,16 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" role="presentation">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 overflow-y-auto animate-fade-in" role="presentation">
+      {/* Backdrop with purple tint */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
+        style={{
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(76, 29, 149, 0.3) 100%)',
+          backdropFilter: 'blur(8px)',
+        }}
       />
 
       {/* Modal Container */}
@@ -96,7 +104,12 @@ export function Modal({
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
           className={cn(
-            'relative w-full bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 transform transition-all',
+            'relative w-full rounded-2xl transform transition-all duration-300 ease-out',
+            'animate-in fade-in-0 zoom-in-95',
+            // Dark mode support via Tailwind
+            'bg-white dark:bg-slate-800',
+            'border border-purple-500/15 dark:border-purple-500/30',
+            'shadow-2xl',
             sizeClasses[size],
             // Mobile-responsive
             'mx-auto',
@@ -105,11 +118,32 @@ export function Modal({
           )}
           onClick={e => e.stopPropagation()}
         >
+          {/* Industrial corner accents */}
+          <div
+            className="absolute top-0 left-0 w-8 h-8"
+            style={{
+              borderLeft: '2px solid rgba(168, 85, 247, 0.3)',
+              borderTop: '2px solid rgba(168, 85, 247, 0.3)',
+              borderRadius: '16px 0 0 0',
+            }}
+          />
+          <div
+            className="absolute bottom-0 right-0 w-8 h-8"
+            style={{
+              borderRight: '2px solid rgba(168, 85, 247, 0.3)',
+              borderBottom: '2px solid rgba(168, 85, 247, 0.3)',
+              borderRadius: '0 0 16px 0',
+            }}
+          />
+
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-4 md:px-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between px-4 py-4 md:px-6 border-b border-purple-500/10 dark:border-purple-500/20">
             <h2
               id={titleId}
-              className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white pr-8"
+              className="text-lg md:text-xl font-semibold pr-8 text-gray-900 dark:text-white"
+              style={{
+                fontFamily: "'Archivo', sans-serif",
+              }}
             >
               {title}
             </h2>
@@ -118,11 +152,13 @@ export function Modal({
                 onClick={onClose}
                 className={cn(
                   'absolute top-4 right-4',
-                  'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors',
-                  'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05]',
+                  'transition-all duration-200',
+                  'p-2 rounded-lg',
+                  'text-gray-500 dark:text-gray-400',
+                  'hover:bg-gray-100 dark:hover:bg-white/5',
                   // Touch-friendly target size
                   'min-w-touch min-h-touch flex items-center justify-center',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500/50'
+                  'focus:outline-none focus:ring-2 focus:ring-purple-500/50'
                 )}
                 aria-label="Close dialog"
                 type="button"
@@ -146,7 +182,7 @@ export function Modal({
 
           {/* Footer */}
           {footer && (
-            <div className="px-4 py-4 md:px-6 border-t border-white/[0.08] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+            <div className="px-4 py-4 md:px-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 border-t border-purple-500/10 dark:border-purple-500/20">
               {footer}
             </div>
           )}

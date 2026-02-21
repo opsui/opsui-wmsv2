@@ -32,6 +32,7 @@ import {
 } from './utils/gracefulShutdown';
 import wsServer from './websocket';
 import { recurringScheduleService } from './services/RecurringScheduleService';
+import { tokenBlacklistService } from './services/TokenBlacklistService';
 
 // Export shutdown check for health endpoints
 export const isShuttingDown = checkIfShuttingDown;
@@ -113,6 +114,10 @@ async function main() {
     wsServer.initialize(server);
     logger.info('WebSocket server initialized');
 
+    // 6.5. Initialize token blacklist service
+    tokenBlacklistService.initialize();
+    logger.info('Token blacklist service initialized');
+
     // 7. Setup cron job for recurring count schedules
     // Run every hour to check for due schedules and generate cycle counts
     const RECURRING_SCHEDULE_INTERVAL = 60 * 60 * 1000; // 1 hour
@@ -160,6 +165,12 @@ async function main() {
         }
         wsServer.close();
         logger.info('✅ WebSocket server closed');
+      },
+
+      // 2.5. Shutdown token blacklist service
+      async () => {
+        tokenBlacklistService.shutdown();
+        logger.info('✅ Token blacklist service shutdown');
       },
 
       // 3. Close database connections

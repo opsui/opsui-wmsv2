@@ -1,4 +1,4 @@
-# Ralph Integration for WMS
+# Ralph Integration for ERP
 
 Automated workflows combining Anthropic Ralph + Cline + GLM 4.7 + MCP Dev Accelerator
 
@@ -18,7 +18,7 @@ Automated workflows combining Anthropic Ralph + Cline + GLM 4.7 + MCP Dev Accele
 │  ┌───────────────────────────────────────────────────────────┐ │
 │  │              MCP Servers (Auto-restart)                   │ │
 │  │  ┌──────────────────┐  ┌──────────────────────────────┐ │ │
-│  │  │ WMS Accelerator  │  │  Context7, Firecrawl, etc.   │ │ │
+│  │  │ ERP Accelerator  │  │  Context7, Firecrawl, etc.   │ │ │
 │  │  │  (15 Tools)      │  │                              │ │ │
 │  │  └──────────────────┘  └──────────────────────────────┘ │ │
 │  └───────────────────────────────────────────────────────────┘ │
@@ -32,14 +32,14 @@ Automated workflows combining Anthropic Ralph + Cline + GLM 4.7 + MCP Dev Accele
 
 ## Available Ralph Skills
 
-### 1. **wms-entity-generator**
+### 1. **erp-entity-generator**
 
-Generate complete CRUD stack (entity, service, controller, DTOs) for any WMS entity.
+Generate complete CRUD stack (entity, service, controller, DTOs) for any ERP entity.
 
 **Usage:**
 
 ```
-ralph run wms-entity-generator \
+ralph run erp-entity-generator \
   --entityName="Product" \
   --fields='[
     {"name": "sku", "type": "string", "required": true},
@@ -55,14 +55,14 @@ ralph run wms-entity-generator \
 - REST controller with endpoints
 - TypeScript validation
 
-### 2. **wms-prisma-workflow**
+### 2. **erp-prisma-workflow**
 
 Complete Prisma database workflow automation.
 
 **Usage:**
 
 ```
-ralph run wms-prisma-workflow \
+ralph run erp-prisma-workflow \
   --migrationName="add_inventory_table" \
   --schemaPath="./packages/backend/prisma/schema.prisma"
 ```
@@ -75,14 +75,14 @@ ralph run wms-prisma-workflow \
 - Database seeding
 - Type checking
 
-### 3. **wms-api-contract-validator**
+### 3. **erp-api-contract-validator**
 
 Validate and sync API contracts between frontend/backend.
 
 **Usage:**
 
 ```
-ralph run wms-api-contract-validator \
+ralph run erp-api-contract-validator \
   --backendPath="./packages/backend/src" \
   --frontendPath="./packages/frontend/src"
 ```
@@ -93,14 +93,14 @@ ralph run wms-api-contract-validator \
 - TypeScript type sync
 - OpenAPI spec generation
 
-### 4. **wms-warehouse-optimizer**
+### 4. **erp-warehouse-optimizer**
 
 Optimize warehouse operations with domain-specific tools.
 
 **Usage:**
 
 ```
-ralph run wms-warehouse-optimizer \
+ralph run erp-warehouse-optimizer \
   --locations='["A-01-01", "B-05-03", "C-12-01"]' \
   --sku="PROD-12345" \
   --pickFrequency=25
@@ -112,14 +112,14 @@ ralph run wms-warehouse-optimizer \
 - Bin location optimization
 - Performance analysis
 
-### 5. **wms-code-quality-check**
+### 5. **erp-code-quality-check**
 
 Comprehensive code quality analysis.
 
 **Usage:**
 
 ```
-ralph run wms-code-quality-check \
+ralph run erp-code-quality-check \
   --projectPath="./packages/backend" \
   --fixIssues=true
 ```
@@ -132,14 +132,14 @@ ralph run wms-code-quality-check \
 - Duplicate code detection
 - Project structure validation
 
-### 6. **wms-full-feature-workflow** ⭐
+### 6. **erp-full-feature-workflow** ⭐
 
 End-to-end feature creation from concept to deployment.
 
 **Usage:**
 
 ```
-ralph run wms-full-feature-workflow \
+ralph run erp-full-feature-workflow \
   --featureName="inventory-tracking" \
   --entities='[
     {
@@ -186,12 +186,12 @@ Create `.ralph/triggers.json`:
     {
       "event": "file_change",
       "pattern": "prisma/schema.prisma",
-      "action": "ralph run wms-prisma-workflow --auto"
+      "action": "ralph run erp-prisma-workflow --auto"
     },
     {
       "event": "file_create",
       "pattern": "src/entities/*.ts",
-      "action": "ralph run wms-entity-generator --fromFile"
+      "action": "ralph run erp-entity-generator --fromFile"
     }
   ]
 }
@@ -205,12 +205,12 @@ Create `.ralph/triggers.json`:
     {
       "name": "nightly-quality-check",
       "cron": "0 2 * * *",
-      "action": "ralph run wms-code-quality-check --fixIssues=true"
+      "action": "ralph run erp-code-quality-check --fixIssues=true"
     },
     {
       "name": "weekly-security-audit",
       "cron": "0 3 * * 0",
-      "action": "ralph run wms-full-feature-workflow --securityOnly=true"
+      "action": "ralph run erp-full-feature-workflow --securityOnly=true"
     }
   ]
 }
@@ -316,7 +316,7 @@ ralph restart
 
 ```bash
 # Run with verbose logging
-ralph run wms-entity-generator --verbose
+ralph run erp-entity-generator --verbose
 
 # Check MCP server status
 ralph mcp:list

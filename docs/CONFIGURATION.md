@@ -1,6 +1,6 @@
-# WMS Configuration Guide
+# ERP Configuration Guide
 
-This guide explains all configuration options for the Warehouse Management System.
+This guide explains all configuration options for the Enterprise Resource Planning System.
 
 ## Table of Contents
 

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { gracefulShutdownPlugin } from './shutdown-plugin';
@@ -17,89 +17,94 @@ import { resolve } from 'path';
 
 const FRONTEND_PORT = 5173; // 🔒 LOCKED - Frontend Dev Server (never change)
 
-// Backend API target - default to remote production server
-// For local backend development: set VITE_API_PROXY_TARGET=http://localhost:3001
-const API_PROXY_TARGET = process.env.VITE_API_PROXY_TARGET || 'http://103.208.85.233:3001';
+export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
 
-export default defineConfig({
-  plugins: [
-    react({
-      // Fast Refresh is automatically enabled by @vitejs/plugin-react
-      // No manual babel configuration needed
-    }),
-    gracefulShutdownPlugin({
-      timeout: 10000, // 10 second shutdown timeout
-      logShutdown: true,
-    }),
-    visualizer({
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-      filename: 'stats.html',
-    }),
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    port: FRONTEND_PORT,
-    host: true, // Listen on all addresses (0.0.0.0)
-    strictPort: true, // ✅ CRITICAL: Exit if port is in use (prevents duplicates)
-    // SPA fallback - all requests return index.html for client-side routing
-    open: false, // Don't open browser automatically
-    hmr: {
-      overlay: true, // Show error overlay
-      protocol: 'ws', // Use WebSocket for HMR
-      host: 'localhost', // HMR host
-      port: 5174, // Separate port for HMR WebSocket
-    },
-    watch: {
-      usePolling: true, // Use polling instead of file system events (more reliable)
-      interval: 1000, // Poll every 1 second
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/dist/**',
-        '**/coverage/**',
-        '**/.vscode/**',
-      ],
-    },
-    proxy: {
-      '/api': {
-        target: API_PROXY_TARGET,
-        changeOrigin: true,
-        timeout: 60000, // 60 second timeout
-        proxyTimeout: 60000, // 60 second proxy timeout
-        ws: true, // Proxy WebSocket connections
+  // Backend API target - default to local backend for development
+  // For production, set VITE_API_PROXY_TARGET in .env file
+  const API_PROXY_TARGET = env.VITE_API_PROXY_TARGET || 'http://localhost:3001';
+
+  return {
+    plugins: [
+      react({
+        // Fast Refresh is automatically enabled by @vitejs/plugin-react
+        // No manual babel configuration needed
+      }),
+      gracefulShutdownPlugin({
+        timeout: 10000, // 10 second shutdown timeout
+        logShutdown: true,
+      }),
+      visualizer({
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        filename: 'stats.html',
+      }),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Core React ecosystem
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // Data fetching
-          'query-vendor': ['@tanstack/react-query'],
-          // Charts (large library ~200KB)
-          'recharts-vendor': ['recharts'],
-          // Date utilities
-          'date-fns-vendor': ['date-fns'],
-          // State management
-          'zustand-vendor': ['zustand'],
-          // Shared utilities
-          'shared-vendor': ['@opsui/shared'],
+    server: {
+      port: FRONTEND_PORT,
+      host: true, // Listen on all addresses (0.0.0.0)
+      strictPort: true, // ✅ CRITICAL: Exit if port is in use (prevents duplicates)
+      // SPA fallback - all requests return index.html for client-side routing
+      open: false, // Don't open browser automatically
+      hmr: {
+        overlay: true, // Show error overlay
+        protocol: 'ws', // Use WebSocket for HMR
+        host: 'localhost', // HMR host
+        port: 5174, // Separate port for HMR WebSocket
+      },
+      watch: {
+        usePolling: true, // Use polling instead of file system events (more reliable)
+        interval: 1000, // Poll every 1 second
+        ignored: [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/dist/**',
+          '**/coverage/**',
+          '**/.vscode/**',
+        ],
+      },
+      proxy: {
+        '/api': {
+          target: API_PROXY_TARGET,
+          changeOrigin: true,
+          timeout: 60000, // 60 second timeout
+          proxyTimeout: 60000, // 60 second proxy timeout
+          ws: true, // Proxy WebSocket connections
         },
       },
     },
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', '@opsui/shared'],
-    force: false, // Don't force optimization on every start
-  },
+    build: {
+      outDir: 'dist',
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Core React ecosystem
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            // Data fetching
+            'query-vendor': ['@tanstack/react-query'],
+            // Charts (large library ~200KB)
+            'recharts-vendor': ['recharts'],
+            // Date utilities
+            'date-fns-vendor': ['date-fns'],
+            // State management
+            'zustand-vendor': ['zustand'],
+            // Shared utilities
+            'shared-vendor': ['@opsui/shared'],
+          },
+        },
+      },
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', '@opsui/shared'],
+      force: false, // Don't force optimization on every start
+    },
+  };
 });

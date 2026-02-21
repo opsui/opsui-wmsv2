@@ -1,8 +1,8 @@
-# WMS Database Schema Documentation
+# ERP Database Schema Documentation
 
 ## Overview
 
-The Warehouse Management System uses PostgreSQL as its database. This document describes all tables, relationships, indexes, and constraints.
+The Enterprise Resource Planning (ERP) System uses PostgreSQL as its database. This document describes all tables, relationships, indexes, and constraints.
 
 **Database:** PostgreSQL 14+
 **Schema Version:** 38 migrations

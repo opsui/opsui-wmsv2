@@ -1,17 +1,17 @@
 /**
  * Login page
  *
- * User authentication form
+ * User authentication form for ERP business operations
  *
  * ============================================================================
  * AESTHETIC DIRECTION: SECURE GATEWAY
  * ============================================================================
  * A bold, secure entrance with industrial tech aesthetic:
- * - Dark theme with security-focused blue accents
+ * - Dark theme with security-focused purple accents
  * - Animated grid background suggesting data infrastructure
  * - Staggered entrance animations for visual impact
  * - Decorative corner brackets suggesting secure containment
- * - Gradient title with Space Grotesk font for distinctive branding
+ * - Gradient title with distinctive branding
  * - Subtle security pulse animation on the login card
  * ============================================================================
  */
@@ -114,9 +114,12 @@ export function LoginPage() {
       <div className="max-w-md w-full space-y-8 relative z-10">
         {/* Header with staggered animation */}
         <div className="text-center" style={{ animation: 'login-stagger-in 0.4s ease-out' }}>
-          <h1 className="login-title text-4xl sm:text-5xl font-bold tracking-tight">OpsUI</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+            <span className="login-title-ops">Ops</span>
+            <span className="login-title-ui">UI</span>
+          </h1>
           <p className="mt-3 dark:text-gray-400 text-gray-600 text-sm font-medium tracking-wide uppercase">
-            Warehouse Management System
+            Enterprise Resource Planning
           </p>
         </div>
 
@@ -144,7 +147,7 @@ export function LoginPage() {
                   />
                 </svg>
                 <span className="text-xs font-medium text-purple-400 tracking-wide uppercase">
-                  Secure Access
+                  Business Portal
                 </span>
               </div>
             </div>
@@ -154,7 +157,7 @@ export function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-semibold dark:text-gray-300 text-gray-700 mb-2"
               >
-                Email
+                Business Email
               </label>
               <input
                 id="email"
@@ -167,7 +170,7 @@ export function LoginPage() {
                 className={`login-input block w-full px-4 py-3.5 rounded-xl dark:text-white text-gray-900 placeholder:text-gray-500 transition-all duration-300 ${
                   errors.email ? 'border-red-500 focus:border-red-500' : ''
                 }`}
-                placeholder="Enter your email"
+                placeholder="your.email@company.com"
               />
               {errors.email && <p className="mt-2 text-sm text-red-400">{errors.email}</p>}
             </div>
@@ -204,7 +207,7 @@ export function LoginPage() {
               disabled={loginMutation.isPending || isSubmitting}
               className="login-btn touch-target h-12 text-base font-semibold rounded-xl"
             >
-              Sign In
+              Sign In to Portal
             </Button>
           </div>
         </form>
@@ -214,9 +217,11 @@ export function LoginPage() {
           className="text-center space-y-2"
           style={{ animation: 'login-stagger-in 0.6s ease-out 0.2s backwards' }}
         >
-          <p className="text-xs text-gray-500">Use your warehouse credentials to sign in</p>
+          <p className="text-xs text-gray-500">
+            Use your business credentials to access the platform
+          </p>
           <p className="text-xs text-gray-600 dark:text-gray-500">
-            Contact your administrator for access
+            Contact your system administrator for access requests
           </p>
         </div>
       </div>

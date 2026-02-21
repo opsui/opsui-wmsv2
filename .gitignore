@@ -63,7 +63,7 @@ nul
 %USERPROFILE%/
 
 # Cache directories
-.wms-cache/
+.erp-cache/
 .ai-loop/.ai-cache/
 
 # Test results

@@ -1,4 +1,4 @@
-name: WMS Crawler Tests
+name: ERP Crawler Tests
 
 on:
   push:
@@ -142,7 +142,7 @@ jobs:
             const fs = require('fs');
             const reportPath = 'ai-loop/normalized-errors.json';
 
-            let comment = '## 🕷️ WMS Crawler Results\n\n';
+            let comment = '## 🕷️ ERP Crawler Results\n\n';
 
             if (fs.existsSync(reportPath)) {
               const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));

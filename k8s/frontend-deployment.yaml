@@ -1,5 +1,5 @@
 # Frontend Deployment
-# Warehouse Management System Frontend (React SPA)
+# Enterprise Resource Planning (ERP) System Frontend (React SPA)
 
 apiVersion: apps/v1
 kind: Deployment
@@ -42,7 +42,7 @@ spec:
         - name: VITE_API_URL
           valueFrom:
             configMapKeyRef:
-              name: wms-config
+              name: erp-config
               key: API_URL
         resources:
           requests:

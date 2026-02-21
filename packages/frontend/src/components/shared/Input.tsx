@@ -1,9 +1,12 @@
 /**
- * Input component - Theme-aware (light/dark mode)
+ * Input component - Distinctive Purple Industrial Theme
  *
- * Uses CSS custom properties from tokens.css for consistent theming.
- * Light mode: White background with subtle border
- * Dark mode: Subtle transparent background with light border
+ * Features:
+ * - Gradient focus states with purple glow
+ * - Smooth hover and focus transitions
+ * - Distinctive typography with JetBrains Mono
+ * - Animated focus ring effect
+ * - Full dark mode support via Tailwind classes
  */
 
 import { InputHTMLAttributes, forwardRef } from 'react';
@@ -14,7 +17,7 @@ import { cn } from '@/lib/utils';
 // ============================================================================
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  variant?: 'default' | 'filled';
+  variant?: 'default' | 'filled' | 'industrial';
   inputSize?: 'sm' | 'md' | 'lg';
 }
 
@@ -25,26 +28,20 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, type = 'text', variant = 'default', inputSize = 'md', ...props }, ref) => {
     const baseStyles = [
-      'flex w-full rounded-xl border transition-all duration-200',
-      'text-gray-900 dark:text-white',
-      'placeholder:text-gray-400 dark:placeholder:text-gray-500',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-      'focus-visible:ring-blue-500 dark:focus-visible:ring-blue-400',
-      'focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900',
+      'flex w-full rounded-xl border transition-all duration-300 ease-out',
+      'focus-visible:outline-none',
       'disabled:cursor-not-allowed disabled:opacity-50',
+      'relative',
     ].join(' ');
 
-    const variantStyles = {
-      default: [
-        'bg-white dark:bg-gray-800',
-        'border-gray-300 dark:border-gray-700',
-        'hover:border-gray-400 dark:hover:border-gray-600',
-      ].join(' '),
-      filled: [
-        'bg-gray-100 dark:bg-gray-800',
-        'border-transparent dark:border-gray-700',
-        'hover:bg-gray-200 dark:hover:bg-gray-750',
-      ].join(' '),
+    // Tailwind-based variant classes for proper dark mode support
+    const variantClasses: Record<string, string> = {
+      default:
+        'bg-white dark:bg-slate-800 border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500',
+      filled:
+        'bg-gray-100 dark:bg-slate-700/50 border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500',
+      industrial:
+        'bg-gradient-to-br from-slate-900 to-slate-800 border-purple-500/30 text-slate-100 placeholder:text-slate-400',
     };
 
     const sizeStyles = {
@@ -53,11 +50,35 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       lg: 'h-13 px-5 text-lg',
     };
 
+    // Focus classes for purple glow effect
+    const focusClasses = [
+      'focus:border-purple-400',
+      'focus:ring-2',
+      'focus:ring-purple-500/20',
+      'focus:shadow-[0_0_0_3px_rgba(168,85,247,0.1),0_0_20px_rgba(168,85,247,0.1)]',
+    ].join(' ');
+
+    // Hover classes
+    const hoverClasses = 'hover:border-purple-300 dark:hover:border-purple-500/40';
+
     return (
       <input
         type={type}
-        className={cn(baseStyles, variantStyles[variant], sizeStyles[inputSize], className)}
         ref={ref}
+        className={cn(
+          baseStyles,
+          variantClasses[variant],
+          sizeStyles[inputSize],
+          focusClasses,
+          hoverClasses,
+          className
+        )}
+        style={{
+          fontFamily:
+            type === 'text' || type === 'search'
+              ? "'Plus Jakarta Sans', sans-serif"
+              : "'JetBrains Mono', monospace",
+        }}
         {...props}
       />
     );

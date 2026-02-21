@@ -1,13 +1,13 @@
-# ConfigMap for WMS Application
+# ConfigMap for ERP Application
 # Non-sensitive configuration values
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: wms-config
+  name: erp-config
   namespace: production
   labels:
-    app: wms
+    app: erp
 data:
   # Database Configuration
   DB_HOST: "postgres"

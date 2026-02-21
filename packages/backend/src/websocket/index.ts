@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import { logger } from '../config/logger';
 import { WebSocketBroadcaster, broadcastEvent } from './broadcaster';
+import { verifyToken } from '../middleware/auth';
 
 // ============================================================================
 // TYPES
@@ -67,9 +68,19 @@ interface ClientToServerEvents {
 // WEBSOCKET SERVER CLASS
 // ============================================================================
 
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
 class WebSocketServer {
   private io: SocketIOServer<ServerToClientEvents, ClientToServerEvents> | null = null;
   private broadcaster: WebSocketBroadcaster | null = null;
+
+  // Rate limiting configuration
+  private rateLimiters = new Map<string, RateLimitEntry>();
+  private readonly rateLimitWindowMs = 1000; // 1 second window
+  private readonly rateLimitMaxRequests = 20; // Max 20 events per second per user
 
   /**
    * Initialize WebSocket server with HTTP server
@@ -80,7 +91,7 @@ class WebSocketServer {
       return;
     }
 
-    // Create Socket.IO server with CORS configuration
+    // Create Socket.IO server with CORS configuration and compression
     this.io = new SocketIOServer<ServerToClientEvents, ClientToServerEvents>(httpServer, {
       cors: {
         origin: config.cors.origin,
@@ -89,6 +100,13 @@ class WebSocketServer {
       transports: ['websocket', 'polling'],
       pingTimeout: 60000,
       pingInterval: 25000,
+      // Enable per-message compression for messages > 256 bytes
+      perMessageDeflate: {
+        threshold: 256,
+        zlibDeflateOptions: {
+          level: 3, // Fast compression
+        },
+      },
     });
 
     // Initialize broadcaster
@@ -99,16 +117,76 @@ class WebSocketServer {
       this.authenticateSocket(socket as AuthenticatedSocket, next);
     });
 
+    // Set up rate limiting middleware
+    this.io.use((socket, next) => {
+      this.checkRateLimit(socket as AuthenticatedSocket, next);
+    });
+
     // Set up connection handling
     this.io.on('connection', (socket: AuthenticatedSocket) => {
       this.handleConnection(socket);
     });
 
-    logger.info('WebSocket server initialized');
+    // Start periodic cleanup of rate limiters
+    this.startRateLimitCleanup();
+
+    logger.info('WebSocket server initialized', {
+      compression: 'enabled (threshold: 256 bytes)',
+      rateLimit: `${this.rateLimitMaxRequests} events/${this.rateLimitWindowMs}ms per user`,
+    });
+  }
+
+  /**
+   * Check rate limit for a socket connection
+   */
+  private checkRateLimit(socket: AuthenticatedSocket, next: (err?: Error) => void): void {
+    const userId = socket.userId;
+    if (!userId) {
+      return next();
+    }
+
+    const now = Date.now();
+    const limiter = this.rateLimiters.get(userId);
+
+    if (!limiter || limiter.resetAt < now) {
+      // New window
+      this.rateLimiters.set(userId, { count: 1, resetAt: now + this.rateLimitWindowMs });
+      return next();
+    }
+
+    if (limiter.count >= this.rateLimitMaxRequests) {
+      logger.warn('WebSocket rate limit exceeded', { userId, count: limiter.count });
+      return next(new Error('Rate limit exceeded. Please slow down.'));
+    }
+
+    limiter.count++;
+    next();
+  }
+
+  /**
+   * Periodic cleanup of stale rate limiters
+   */
+  private startRateLimitCleanup(): void {
+    setInterval(() => {
+      const now = Date.now();
+      let cleaned = 0;
+      // Use Array.from to avoid iterator issues
+      const entries = Array.from(this.rateLimiters.entries());
+      for (const [userId, limiter] of entries) {
+        if (limiter.resetAt < now) {
+          this.rateLimiters.delete(userId);
+          cleaned++;
+        }
+      }
+      if (cleaned > 0) {
+        logger.debug('Rate limiter cleanup', { cleaned, remaining: this.rateLimiters.size });
+      }
+    }, 60000); // Cleanup every minute
   }
 
   /**
    * Authenticate WebSocket connection using JWT
+   * Handles both compact (new) and legacy (old) token formats
    */
   private authenticateSocket(socket: AuthenticatedSocket, next: (err?: Error) => void): void {
     try {
@@ -120,12 +198,8 @@ class WebSocketServer {
         return next(new Error('Authentication error: No token provided'));
       }
 
-      // Verify JWT token
-      const decoded = jwt.verify(token, config.jwt.secret) as {
-        userId: string;
-        email: string;
-        role: string;
-      };
+      // Verify JWT token (handles both compact and legacy formats)
+      const decoded = verifyToken(token);
 
       socket.userId = decoded.userId;
       socket.userRole = decoded.role;

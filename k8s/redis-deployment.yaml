@@ -55,7 +55,7 @@ spec:
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: wms-secrets
+              name: erp-secrets
               key: REDIS_PASSWORD
         args:
         - redis-server

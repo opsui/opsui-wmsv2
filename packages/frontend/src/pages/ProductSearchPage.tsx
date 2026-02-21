@@ -18,14 +18,16 @@
  * - Recent searches with local storage
  *
  * ============================================================================
- * AESTHETIC DIRECTION: DISCOVERY ENGINE
+ * AESTHETIC DIRECTION: DISCOVERY ENGINE - PURPLE INDUSTRIAL
  * ============================================================================
- * Product exploration aesthetic:
- * - Dark theme with bright cyan accents for search focus
- * - Industrial grid background texture
- * - Staggered card reveal animations
- * - Grid/table view toggle with smooth transitions
- * - Stock status badges with visual urgency
+ * Product exploration aesthetic with distinctive design:
+ * - Deep purple gradients with electric violet accents
+ * - Industrial grid background with grain texture overlay
+ * - Staggered card reveal animations with spring physics
+ * - Grid/table view toggle with smooth morph transitions
+ * - Stock status badges with pulsing urgency indicators
+ * - Distinctive typography: Archivo for headings, JetBrains Mono for data
+ * - Atmospheric depth with layered gradients and ambient glow
  * ============================================================================
  */
 
@@ -487,6 +489,36 @@ export function ProductSearchPage() {
         }}
       />
 
+      {/* Grain texture overlay for atmospheric depth */}
+      <div
+        className="fixed inset-0 pointer-events-none z-[1]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          opacity: 0.03,
+          mixBlendMode: 'overlay',
+        }}
+      />
+
+      {/* Ambient glow effects */}
+      <div className="fixed inset-0 pointer-events-none z-[1] overflow-hidden">
+        <div
+          className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.15) 0%, transparent 60%)',
+            filter: 'blur(60px)',
+          }}
+        />
+        <div
+          className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(139, 92, 246, 0.1) 0%, transparent 60%)',
+            filter: 'blur(60px)',
+          }}
+        />
+      </div>
+
       <Header />
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-fade-in-up z-10">
         {/* Breadcrumb Navigation */}
@@ -508,25 +540,52 @@ export function ProductSearchPage() {
           </div>
         )}
 
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
-              Product Search
+        {/* Page Header - Distinctive Typography */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative">
+          {/* Decorative corner accent */}
+          <div className="absolute -top-2 -left-2 w-8 h-8 border-l-2 border-t-2 border-purple-500/30 rounded-tl-lg" />
+
+          <div className="pl-4">
+            <h1
+              className="text-2xl sm:text-3xl font-bold tracking-tight"
+              style={{
+                fontFamily: "'Archivo', sans-serif",
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              <span className="bg-gradient-to-r from-purple-400 via-violet-400 to-purple-500 bg-clip-text text-transparent dark:from-purple-300 dark:via-violet-300 dark:to-purple-400">
+                Product
+              </span>
+              <span className="text-gray-900 dark:text-white ml-2">Search</span>
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Browse and filter products by SKU, name, barcode, or category
+            <p className="text-sm mt-1.5" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <span className="text-gray-500 dark:text-gray-400">
+                Browse and filter products by
+              </span>
+              <span className="text-purple-600 dark:text-purple-400 font-medium ml-1">SKU</span>
+              <span className="text-gray-400 dark:text-gray-500 mx-1">•</span>
+              <span className="text-purple-600 dark:text-purple-400 font-medium">name</span>
+              <span className="text-gray-400 dark:text-gray-500 mx-1">•</span>
+              <span className="text-purple-600 dark:text-purple-400 font-medium">barcode</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle - Enhanced */}
+            <div
+              className="flex items-center rounded-lg p-1 relative"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                border: '1px solid rgba(168, 85, 247, 0.2)',
+              }}
+            >
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-2 rounded-md transition-all duration-200 relative z-10 ${
                   viewMode === 'table'
-                    ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    ? 'text-white'
+                    : 'text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400'
                 }`}
                 title="Table view"
               >
@@ -534,15 +593,24 @@ export function ProductSearchPage() {
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-2 rounded-md transition-all duration-200 relative z-10 ${
                   viewMode === 'grid'
-                    ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    ? 'text-white'
+                    : 'text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400'
                 }`}
                 title="Grid view"
               >
                 <Squares2X2Icon className="h-5 w-5" />
               </button>
+              {/* Sliding indicator */}
+              <div
+                className="absolute top-1 bottom-1 w-9 rounded-md transition-all duration-200 ease-out"
+                style={{
+                  background: 'linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)',
+                  boxShadow: '0 2px 8px rgba(168, 85, 247, 0.4)',
+                  transform: viewMode === 'table' ? 'translateX(4px)' : 'translateX(40px)',
+                }}
+              />
             </div>
 
             {/* Export Button */}
@@ -918,59 +986,100 @@ export function ProductSearchPage() {
                 </table>
               </div>
             ) : (
-              /* Grid View */
+              /* Grid View - Enhanced Purple Theme */
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {data.data.map((sku, index) => {
                   const status = getStockStatusBadge(sku.totalQuantity || 0);
                   const StatusIcon = status.icon;
+                  const isSelected = selectedSkus.has(sku.sku);
                   return (
                     <div
                       key={sku.sku}
-                      className={`p-4 rounded-lg border dark:border-gray-700 hover:shadow-lg transition-all duration-200 cursor-pointer animate-fade-in-up ${
-                        selectedSkus.has(sku.sku)
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-glow'
-                          : 'border-gray-200 dark:bg-gray-800 hover:border-primary-300'
+                      className={`group relative p-4 rounded-xl transition-all duration-300 cursor-pointer animate-fade-in-up overflow-hidden ${
+                        isSelected
+                          ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-transparent dark:ring-offset-gray-900 bg-gradient-to-br from-purple-500/15 to-violet-500/10 border border-purple-500/40 shadow-lg shadow-purple-500/20'
+                          : 'bg-white dark:bg-gray-800/80 border border-gray-200/60 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
-                      style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'backwards' }}
+                      style={{
+                        animationDelay: `${index * 30}ms`,
+                        animationFillMode: 'backwards',
+                      }}
                       onClick={() => selectSKU(sku)}
                     >
+                      {/* Hover glow effect */}
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                        style={{
+                          background:
+                            'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.08) 0%, transparent 70%)',
+                        }}
+                      />
+
+                      {/* Corner accent */}
+                      <div
+                        className="absolute top-0 right-0 w-12 h-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, transparent 50%, rgba(168, 85, 247, 0.1) 50%)',
+                          borderRadius: '0 12px 0 0',
+                        }}
+                      />
+
                       {/* Image */}
                       {sku.image ? (
                         <img
                           src={sku.image}
                           alt={sku.name}
-                          className="w-full h-32 object-cover rounded-lg mb-3"
+                          className="w-full h-32 object-cover rounded-lg mb-3 ring-1 ring-black/5"
                         />
                       ) : (
-                        <div className="w-full h-32 bg-gray-100 dark:bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                          <CubeIcon className="h-12 w-12 text-gray-400" />
+                        <div
+                          className="w-full h-32 rounded-lg mb-3 flex items-center justify-center"
+                          style={{
+                            background:
+                              'linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%)',
+                          }}
+                        >
+                          <CubeIcon
+                            className="h-12 w-12 transition-transform duration-300 group-hover:scale-110"
+                            style={{ color: 'rgba(168, 85, 247, 0.4)' }}
+                          />
                         </div>
                       )}
 
                       {/* Info */}
-                      <div className="space-y-2">
+                      <div className="space-y-2 relative">
                         <div className="flex items-start justify-between">
-                          <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">
-                            {sku.sku}
+                          <span className="text-sm font-medium font-mono">
+                            <span
+                              className={
+                                isSelected ? 'text-purple-500' : 'text-gray-700 dark:text-gray-300'
+                              }
+                            >
+                              {sku.sku}
+                            </span>
                           </span>
                           <input
                             type="checkbox"
-                            checked={selectedSkus.has(sku.sku)}
+                            checked={isSelected}
                             onChange={e => {
                               e.stopPropagation();
                               handleSelectSku(sku.sku);
                             }}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 transition-all"
+                            style={{
+                              accentColor: '#a855f7',
+                            }}
                           />
                         </div>
-                        <h3 className="font-medium text-gray-900 dark:text-white line-clamp-2">
+                        <h3 className="font-medium line-clamp-2 text-gray-900 dark:text-white">
                           {sku.name}
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {sku.category || 'Uncategorized'}
                         </p>
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-gray-900 dark:text-white">
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+                          <span className="font-semibold font-mono text-emerald-600 dark:text-emerald-400">
                             {sku.unitPrice != null
                               ? `${sku.currency || 'NZD'} $${Number(sku.unitPrice).toFixed(2)}`
                               : '-'}

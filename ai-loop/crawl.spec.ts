@@ -8,7 +8,7 @@ import { ContinuouslyLearningModel } from './continuous-learning';
 import { VisualAIRegression } from './visual-regression';
 
 /**
- * AI-ENHANCED WMS CRAWLER v5.0
+ * AI-ENHANCED ERP CRAWLER v5.0
  *
  * State-of-the-art AI-powered testing with 10 advanced features:
  *
@@ -1744,7 +1744,7 @@ async function testRoute(
 /**
  * MAIN TEST
  */
-test.describe('AI-Enhanced WMS Crawler v5', () => {
+test.describe('AI-Enhanced ERP Crawler v5', () => {
   let collector: CrawlerResults;
   let glmClient: GLMClient | null = null;
   let aiFeatures: AIFeatures | null = null;

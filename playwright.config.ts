@@ -1,5 +1,5 @@
 /**
- * Playwright configuration for WMS E2E tests
+ * Playwright configuration for ERP E2E tests
  *
  * Tests cover:
  * - Business Rules UI (Sprint 3)

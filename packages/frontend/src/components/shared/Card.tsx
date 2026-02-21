@@ -1,12 +1,16 @@
 /**
- * Card component - Theme-aware (light/dark mode)
+ * Card component - Distinctive Purple Industrial Theme
  *
- * Uses CSS custom properties from tokens.css for consistent theming.
- * Light mode: Clean white cards with subtle shadows
- * Dark mode: Glassmorphism effect with subtle transparency
+ * Features:
+ * - Gradient backgrounds with atmospheric depth
+ * - Subtle glow effects on hover
+ * - Industrial corner accents option
+ * - Distinctive typography for titles
+ * - Grain texture overlay for depth
+ * - Full dark mode support via CSS custom properties
  */
 
-import { type HTMLAttributes } from 'react';
+import { type HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
@@ -14,74 +18,109 @@ import { cn } from '@/lib/utils';
 // ============================================================================
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'bordered' | 'elevated' | 'glass';
+  variant?: 'default' | 'bordered' | 'elevated' | 'glass' | 'industrial';
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hover?: boolean;
+  accent?: boolean; // Show industrial corner accents
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function Card({
-  variant = 'default',
-  padding = 'md',
-  hover = false,
-  className,
-  children,
-  ...props
-}: CardProps) {
-  const baseStyles = 'rounded-xl transition-all duration-200';
+export const Card = forwardRef<HTMLDivElement, CardProps>(
+  (
+    {
+      variant = 'default',
+      padding = 'md',
+      hover = false,
+      accent = false,
+      className,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const baseStyles = [
+      'rounded-xl transition-all duration-300 ease-out',
+      'relative overflow-hidden',
+    ].join(' ');
 
-  const variantStyles = {
-    default: [
-      // Light mode: white background with subtle border and shadow
-      'bg-white dark:bg-white/[0.03]',
-      'border border-gray-100 dark:border-white/[0.08]',
-      'shadow-sm dark:shadow-none',
-    ].join(' '),
-    bordered: [
-      // Light mode: white with more prominent border
-      'bg-white dark:bg-white/[0.03]',
-      'border-2 border-gray-200 dark:border-white/[0.12]',
-      'shadow-sm dark:shadow-none',
-    ].join(' '),
-    elevated: [
-      // Light mode: white with nice shadow
-      'bg-white dark:bg-white/[0.03]',
-      'border border-gray-100 dark:border-white/[0.08]',
-      'shadow-lg dark:shadow-premium',
-    ].join(' '),
-    glass: [
-      // Glass effect - different for light/dark
-      'glass-card',
-    ].join(' '),
-  };
+    // Tailwind-based variant classes for proper dark mode support
+    const variantClasses: Record<string, string> = {
+      default:
+        'bg-white dark:bg-slate-800/95 border border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none',
+      bordered:
+        'bg-white dark:bg-slate-800/95 border-2 border-purple-300/50 dark:border-purple-500/30 shadow-sm dark:shadow-none',
+      elevated:
+        'bg-white dark:bg-slate-800/95 border border-gray-100 dark:border-white/10 shadow-lg dark:shadow-2xl',
+      glass: 'glass-card',
+      industrial:
+        'bg-gradient-to-br from-slate-900 to-purple-900/80 border border-purple-500/30 shadow-xl',
+    };
 
-  const paddingStyles = {
-    none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-  };
+    const paddingStyles = {
+      none: '',
+      sm: 'p-4',
+      md: 'p-6',
+      lg: 'p-8',
+    };
 
-  const hoverStyles = hover ? 'card-hover cursor-pointer' : '';
+    const hoverClasses = hover
+      ? 'cursor-pointer hover:shadow-purple-500/10 hover:-translate-y-1 dark:hover:shadow-purple-500/20'
+      : '';
 
-  return (
-    <div
-      className={cn(
-        baseStyles,
-        variantStyles[variant],
-        paddingStyles[padding],
-        hoverStyles,
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          baseStyles,
+          variantClasses[variant],
+          paddingStyles[padding],
+          hoverClasses,
+          className
+        )}
+        {...props}
+      >
+        {/* Grain texture overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.02] dark:opacity-[0.03]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
+          }}
+        />
+
+        {/* Industrial corner accents */}
+        {accent && (
+          <>
+            <div
+              className="absolute top-0 left-0 w-6 h-6"
+              style={{
+                borderLeft: '2px solid rgba(168, 85, 247, 0.4)',
+                borderTop: '2px solid rgba(168, 85, 247, 0.4)',
+                borderRadius: '12px 0 0 0',
+              }}
+            />
+            <div
+              className="absolute bottom-0 right-0 w-6 h-6"
+              style={{
+                borderRight: '2px solid rgba(168, 85, 247, 0.4)',
+                borderBottom: '2px solid rgba(168, 85, 247, 0.4)',
+                borderRadius: '0 0 12px 0',
+              }}
+            />
+          </>
+        )}
+
+        {/* Content */}
+        <div className="relative">{children}</div>
+      </div>
+    );
+  }
+);
+
+Card.displayName = 'Card';
 
 // ============================================================================
 // CARD SUBCOMPONENTS

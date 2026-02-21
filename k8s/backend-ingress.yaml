@@ -4,10 +4,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: wms-ingress
+  name: erp-ingress
   namespace: production
   labels:
-    app: wms
+    app: erp
   annotations:
     # SSL/TLS Configuration
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -38,7 +38,7 @@ metadata:
 
     # CORS
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://wms.example.com"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://erp.example.com"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, X-Requested-With"
 
@@ -46,12 +46,12 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - wms.example.com
-    - api.wms.example.com
-    secretName: wms-tls
+    - erp.example.com
+    - api.erp.example.com
+    secretName: erp-tls
   rules:
   # Frontend
-  - host: wms.example.com
+  - host: erp.example.com
     http:
       paths:
       - path: /
@@ -63,7 +63,7 @@ spec:
               number: 80
 
   # Backend API
-  - host: api.wms.example.com
+  - host: api.erp.example.com
     http:
       paths:
       - path: /api
@@ -75,7 +75,7 @@ spec:
               number: 80
 
   # Health Endpoint (from any host)
-  - host: api.wms.example.com
+  - host: api.erp.example.com
     http:
       paths:
       - path: /health
@@ -87,7 +87,7 @@ spec:
               number: 80
 
   # WebSocket
-  - host: api.wms.example.com
+  - host: api.erp.example.com
     http:
       paths:
       - path: /socket.io
@@ -105,12 +105,12 @@ metadata:
   name: wms-tls
   namespace: production
 spec:
-  secretName: wms-tls
+  secretName: erp-tls
   duration: 2160h # 90 days
   renewBefore: 360h # 15 days before expiration
   dnsNames:
-  - wms.example.com
-  - api.wms.example.com
+  - erp.example.com
+  - api.erp.example.com
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer

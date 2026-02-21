@@ -317,17 +317,73 @@ export class InventoryService {
       sku: string;
       name: string;
       category: string;
+      barcode: string;
       binLocations: string[];
+      unitPrice?: number;
+      unitCost?: number;
+      currency?: string;
+      image?: string;
+      description?: string;
+      totalQuantity?: number;
+      totalAvailable?: number;
+      locationCount?: number;
     }>
   > {
     const results = await skuRepository.search(searchTerm);
 
-    return results.map(sku => ({
-      sku: sku.sku,
-      name: sku.name,
-      category: sku.category,
-      binLocations: sku.binLocations,
-    }));
+    // Get inventory quantities for each SKU
+    const skusWithInventory = await Promise.all(
+      results.map(async sku => {
+        try {
+          // Get inventory with both quantity and available
+          // Note: Repository returns raw database rows with snake_case columns
+          const inventoryData = await inventoryRepository.findBySKU(sku.sku);
+          // Map snake_case to camelCase for type safety
+          const inventory = inventoryData.map((inv: any) => ({
+            quantity: inv.quantity ?? 0,
+            available: inv.available ?? 0,
+            binLocation: inv.bin_location || inv.binLocation,
+          }));
+          const totalQuantity = inventory.reduce((sum, inv) => sum + inv.quantity, 0);
+          const totalAvailable = inventory.reduce((sum, inv) => sum + inv.available, 0);
+
+          return {
+            sku: sku.sku,
+            name: sku.name,
+            category: sku.category || '',
+            barcode: (sku as any).barcode || '',
+            binLocations: (sku as any).binLocations || [],
+            // Use selling_price as unitPrice (the selling price to customers)
+            unitPrice: (sku as any).selling_price || (sku as any).unitPrice || 0,
+            unitCost: (sku as any).unit_cost || (sku as any).unitCost || 0,
+            currency: (sku as any).currency || 'NZD',
+            image: (sku as any).image,
+            description: (sku as any).description,
+            totalQuantity: totalQuantity,
+            totalAvailable: totalAvailable,
+            locationCount: inventoryData.length,
+          };
+        } catch {
+          return {
+            sku: sku.sku,
+            name: sku.name,
+            category: sku.category || '',
+            barcode: (sku as any).barcode || '',
+            binLocations: (sku as any).binLocations || [],
+            unitPrice: (sku as any).selling_price || (sku as any).unitPrice || 0,
+            unitCost: (sku as any).unit_cost || (sku as any).unitCost || 0,
+            currency: (sku as any).currency || 'NZD',
+            image: (sku as any).image,
+            description: (sku as any).description,
+            totalQuantity: 0,
+            totalAvailable: 0,
+            locationCount: 0,
+          };
+        }
+      })
+    );
+
+    return skusWithInventory;
   }
 
   // --------------------------------------------------------------------------
@@ -357,37 +413,43 @@ export class InventoryService {
     const skusWithInventory = await Promise.all(
       results.map(async sku => {
         try {
-          const availableInventory = await inventoryRepository.getAvailableInventory(sku.sku);
-          const totalAvailable = availableInventory.reduce((sum, inv) => sum + inv.available, 0);
-          const totalQuantity = availableInventory.reduce(
-            (sum, inv) => sum + (sum + inv.available),
-            0
-          );
+          // Get inventory with both quantity and available
+          // Note: Repository returns raw database rows with snake_case columns
+          const inventoryData = await inventoryRepository.findBySKU(sku.sku);
+          // Map snake_case to camelCase for type safety
+          const inventory = inventoryData.map((inv: any) => ({
+            quantity: inv.quantity ?? 0,
+            available: inv.available ?? 0,
+            binLocation: inv.bin_location || inv.binLocation,
+          }));
+          const totalQuantity = inventory.reduce((sum, inv) => sum + inv.quantity, 0);
+          const totalAvailable = inventory.reduce((sum, inv) => sum + inv.available, 0);
 
           return {
             sku: sku.sku,
             name: sku.name,
             category: sku.category || '',
-            barcode: sku.barcode || '',
-            binLocations: sku.binLocations || [],
-            unitPrice: (sku as any).unitPrice,
-            unitCost: (sku as any).unitCost,
+            barcode: (sku as any).barcode || '',
+            binLocations: (sku as any).binLocations || [],
+            // Use selling_price as unitPrice (the selling price to customers)
+            unitPrice: (sku as any).selling_price || (sku as any).unitPrice || 0,
+            unitCost: (sku as any).unit_cost || (sku as any).unitCost || 0,
             currency: (sku as any).currency || 'NZD',
             image: (sku as any).image,
             description: (sku as any).description,
-            totalQuantity: totalAvailable, // Use available as approximation
+            totalQuantity: totalQuantity,
             totalAvailable: totalAvailable,
-            locationCount: availableInventory.length,
+            locationCount: inventoryData.length,
           };
         } catch {
           return {
             sku: sku.sku,
             name: sku.name,
             category: sku.category || '',
-            barcode: sku.barcode || '',
-            binLocations: sku.binLocations || [],
-            unitPrice: (sku as any).unitPrice,
-            unitCost: (sku as any).unitCost,
+            barcode: (sku as any).barcode || '',
+            binLocations: (sku as any).binLocations || [],
+            unitPrice: (sku as any).selling_price || (sku as any).unitPrice || 0,
+            unitCost: (sku as any).unit_cost || (sku as any).unitCost || 0,
             currency: (sku as any).currency || 'NZD',
             image: (sku as any).image,
             description: (sku as any).description,

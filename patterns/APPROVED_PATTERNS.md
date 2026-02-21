@@ -1,4 +1,4 @@
-# Approved Code Patterns for WMS Development
+# Approved Code Patterns for ERP Development
 
 **Purpose**: Library of approved patterns that AI agents should follow.
 

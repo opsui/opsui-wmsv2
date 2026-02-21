@@ -1699,6 +1699,236 @@ body {
   }
 }
 
+/* ============================================
+   STOCK CONTROL PAGE - INVENTORY COMMAND AESTHETIC
+   Industrial command center with distinctive design
+   ============================================ */
+
+/* Staggered entrance animation for stock control cards */
+@keyframes inventory-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Metric card pulse for live data */
+@keyframes metric-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+/* SKU glow effect */
+@keyframes sku-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* Low stock warning pulse */
+@keyframes low-stock-pulse {
+  0%, 100% {
+    background-color: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    background-color: rgba(251, 191, 36, 0.2);
+    border-color: rgba(251, 191, 36, 0.5);
+  }
+}
+
+/* Stock control card base */
+.stock-control-card {
+  animation: inventory-stagger-in 0.5s ease-out backwards;
+}
+
+.stock-control-card:nth-child(1) { animation-delay: 0.05s; }
+.stock-control-card:nth-child(2) { animation-delay: 0.1s; }
+.stock-control-card:nth-child(3) { animation-delay: 0.15s; }
+.stock-control-card:nth-child(4) { animation-delay: 0.2s; }
+.stock-control-card:nth-child(5) { animation-delay: 0.25s; }
+.stock-control-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Live metric indicator */
+.metric-live {
+  animation: metric-pulse 2s ease-in-out infinite;
+}
+
+/* SKU display with subtle glow */
+.sku-display {
+  font-family: 'JetBrains Mono', monospace;
+  animation: sku-glow 3s ease-in-out infinite;
+}
+
+/* Low stock warning animation */
+.low-stock-warning {
+  animation: low-stock-pulse 2s ease-in-out infinite;
+}
+
+/* Industrial grain texture overlay */
+.stock-control-grain {
+  position: relative;
+}
+
+.stock-control-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Industrial corner accents for featured sections */
+.industrial-frame {
+  position: relative;
+}
+
+.industrial-frame::before,
+.industrial-frame::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: rgba(59, 130, 246, 0.5);
+  border-style: solid;
+}
+
+.industrial-frame::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+  border-radius: 6px 0 0 0;
+}
+
+.industrial-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 6px 0;
+}
+
+/* Hero metric - large featured number */
+.hero-metric-stock {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.05) 100%
+  );
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.hero-metric-stock::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+}
+
+/* Stock control page title - distinctive */
+.stock-control-title {
+  font-family: 'Archivo Black', 'Archivo', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* Bin location display - industrial signage */
+.bin-location-industrial {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+  text-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Quantity hero display */
+.quantity-hero-stock {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 3.5rem;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (max-width: 640px) {
+  .quantity-hero-stock {
+    font-size: 2.5rem;
+  }
+}
+
+/* Scan line effect for active inputs */
+.scan-line-active {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line-active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), transparent);
+  animation: scan-beam 2s ease-in-out infinite;
+}
+
+/* Status badge industrial */
+.status-badge-industrial {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Tab active indicator */
+.stock-tab-active {
+  position: relative;
+}
+
+.stock-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+}
+
 /* Confetti enhanced with more colors and spread */
 @keyframes confetti-fall {
   0% {
@@ -2168,6 +2398,26 @@ html.light .login-grid-bg {
   animation: gradientShift 4s ease infinite;
 }
 
+/* Login title - "Ops" in white */
+.login-title-ops {
+  font-family: 'Space Grotesk', sans-serif;
+  color: #ffffff;
+}
+
+html.light .login-title-ops {
+  color: #1e293b;
+}
+
+/* Login title - "UI" in purple */
+.login-title-ui {
+  font-family: 'Space Grotesk', sans-serif;
+  color: #a855f7;
+}
+
+html.light .login-title-ui {
+  color: #9333ea;
+}
+
 /* Login card - glassmorphism */
 .login-card {
   background: rgba(168, 85, 247, 0.08);
@@ -2261,6 +2511,151 @@ html.light .login-input:focus {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ============================================
+   ERP LOGIN PAGE - ENTERPRISE GATEWAY AESTHETIC
+   Professional, refined business portal design
+   ============================================ */
+
+/* ERP Login container */
+.erp-login-container {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+}
+
+html.light .erp-login-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+}
+
+/* ERP Login header animation */
+.erp-login-header {
+  animation: erp-login-stagger 0.4s ease-out;
+}
+
+@keyframes erp-login-stagger {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ERP Login title - distinctive serif font */
+.erp-login-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 50%, #f8fafc 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite;
+}
+
+html.light .erp-login-title {
+  background: linear-gradient(135deg, #1e293b 0%, #475569 50%, #1e293b 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ERP Login card - refined glassmorphism */
+.erp-login-card {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.9) 0%,
+    rgba(30, 41, 59, 0.7) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 60px rgba(251, 191, 36, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+html.light .erp-login-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 0 40px rgba(251, 191, 36, 0.03);
+}
+
+/* ERP Login input fields */
+.erp-login-input {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #f8fafc;
+}
+
+.erp-login-input::placeholder {
+  color: #64748b;
+}
+
+.erp-login-input:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.erp-login-input:focus {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+html.light .erp-login-input {
+  background: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #1e293b;
+}
+
+html.light .erp-login-input::placeholder {
+  color: #94a3b8;
+}
+
+html.light .erp-login-input:focus {
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
+}
+
+/* ERP Login button - refined gold accent */
+.erp-login-btn {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #d97706 100%);
+  background-size: 200% 200%;
+  color: #0f172a;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  animation: gradientShift 4s ease infinite;
+}
+
+.erp-login-btn:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%);
+  box-shadow:
+    0 4px 20px rgba(251, 191, 36, 0.3),
+    0 0 40px rgba(251, 191, 36, 0.1);
+  transform: translateY(-1px);
+}
+
+.erp-login-btn:active {
+  transform: translateY(0);
+}
+
+.erp-login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ============================================

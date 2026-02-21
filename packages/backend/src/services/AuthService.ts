@@ -38,6 +38,7 @@ import { User, UserRole, UnauthorizedError } from '@opsui/shared';
 import { userRepository } from '../repositories/UserRepository';
 import { generateToken, generateRefreshToken, JWTPayload } from '../middleware/auth';
 import { logger } from '../config/logger';
+import { tokenBlacklistService } from './TokenBlacklistService';
 import bcrypt from 'bcrypt';
 
 // ============================================================================
@@ -209,11 +210,14 @@ export class AuthService {
   // LOGOUT
   // --------------------------------------------------------------------------
 
-  async logout(userId: string): Promise<void> {
+  async logout(userId: string, tokenId?: string, expiresAt?: number): Promise<void> {
     const { query } = await import('../db/client');
 
-    // In a stateless JWT setup, logout is handled client-side by discarding tokens
-    // If we had a token blacklist (Redis), we'd add the token here
+    // Blacklist the current token if provided
+    if (tokenId && expiresAt) {
+      tokenBlacklistService.blacklistToken(tokenId, expiresAt);
+      logger.info('Token blacklisted on logout', { userId, tokenId });
+    }
 
     logger.info('User logged out', { userId });
 

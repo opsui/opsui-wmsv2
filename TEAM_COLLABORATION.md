@@ -1,6 +1,6 @@
 # Team Collaboration Guide
 
-This guide explains how to work effectively as a team on this WMS project without causing merge conflicts or file corruption.
+This guide explains how to work effectively as a team on this ERP project without causing merge conflicts or file corruption.
 
 ## Repository Information
 

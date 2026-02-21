@@ -52,6 +52,9 @@ class WebSocketService {
   // Track active connections to handle React StrictMode double-invocation
   private connectionId = 0;
   private activeConnectionId = 0;
+  // Singleton connection tracking - prevents multiple connections across the app
+  private static isConnecting = false;
+  private static connectionPromise: Promise<void> | null = null;
 
   /**
    * Connect to WebSocket server
@@ -66,6 +69,12 @@ class WebSocketService {
       return;
     }
 
+    // Prevent duplicate connection attempts (handles React StrictMode)
+    if (WebSocketService.isConnecting) {
+      console.log('[WebSocket] Connection already in progress, skipping duplicate attempt');
+      return;
+    }
+
     const token = useAuthStore.getState().accessToken;
     if (!token) {
       console.warn('[WebSocket] No auth token available');
@@ -76,11 +85,13 @@ class WebSocketService {
     this.hasLoggedMaxAttempts = false;
     // Reset manual disconnect flag when connecting
     this.isManualDisconnect = false;
+    // Mark as connecting
+    WebSocketService.isConnecting = true;
 
     try {
-      const wsUrl =
-        import.meta.env.VITE_WS_URL ||
-        `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname}`;
+      // Use the same origin for WebSocket - it will be proxied through Vite
+      // In production, WebSocket connects to the same server
+      const wsUrl = import.meta.env.VITE_WS_URL || window.location.origin;
 
       this.socket = io(wsUrl, {
         auth: { token },
@@ -90,12 +101,18 @@ class WebSocketService {
         reconnectionDelayMax: 10000,
         reconnectionAttempts: 5,
         timeout: 10000,
+        path: '/socket.io', // Standard socket.io path
+        // Enable per-message compression
+        perMessageDeflate: {
+          threshold: 256, // Only compress messages > 256 bytes
+        },
       });
 
       this.setupEventHandlers();
       console.log('[WebSocket] Connecting...', { url: wsUrl, connectionId: currentConnectionId });
     } catch (error) {
       console.error('[WebSocket] Connection error', error);
+      WebSocketService.isConnecting = false;
     }
   }
 
@@ -108,6 +125,7 @@ class WebSocketService {
     // Connection established
     this.socket.on('connect', () => {
       console.log('[WebSocket] Connected', { socketId: this.socket?.id });
+      WebSocketService.isConnecting = false;
       this.hasLoggedMaxAttempts = false;
       this.triggerHandlers('connected' as const, [{ message: 'Connected' }]);
     });
@@ -115,11 +133,13 @@ class WebSocketService {
     // Disconnection
     this.socket.on('disconnect', reason => {
       console.log('[WebSocket] Disconnected', { reason });
+      WebSocketService.isConnecting = false;
       // Socket.io handles reconnection automatically when reconnection: true
     });
 
     // Connection error - socket.io handles reconnection, we just log
     this.socket.on('connect_error', error => {
+      WebSocketService.isConnecting = false;
       // Only log once when max attempts reached to avoid console spam
       if (!this.hasLoggedMaxAttempts) {
         console.warn('[WebSocket] Connection failed, will retry...', error.message);
@@ -269,6 +289,7 @@ class WebSocketService {
           this.socket.disconnect();
           this.socket = null;
           this.eventHandlers.clear();
+          WebSocketService.isConnecting = false;
         }
       }, 100);
       return;
@@ -276,6 +297,7 @@ class WebSocketService {
 
     this.isManualDisconnect = true;
     this.hasLoggedMaxAttempts = false;
+    WebSocketService.isConnecting = false;
 
     if (this.socket) {
       this.socket.disconnect();

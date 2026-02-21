@@ -1,5 +1,11 @@
 /**
- * Badge component - Premium dark theme
+ * Badge component - Distinctive Purple Industrial Theme
+ *
+ * Features:
+ * - Gradient backgrounds with depth
+ * - Subtle glow effects for emphasis
+ * - Smooth hover animations
+ * - Distinctive typography with JetBrains Mono
  */
 
 import { type HTMLAttributes, useState, useEffect } from 'react';
@@ -183,15 +189,25 @@ export function Badge({
   children,
   ...props
 }: BadgeProps) {
-  const baseStyles = 'badge';
+  // Distinctive base styles with JetBrains Mono font
+  const baseStyles = [
+    'inline-flex items-center gap-1.5 font-medium rounded-lg',
+    'transition-all duration-200 ease-out',
+  ].join(' ');
 
-  const variantStyles: Record<string, string> = {
-    default: 'badge-info',
-    success: 'badge-success',
-    warning: 'badge-warning',
-    error: 'badge-error',
-    info: 'badge-info',
-    primary: 'badge-primary',
+  // Tailwind-based variant classes for proper dark mode support
+  const variantClasses: Record<string, string> = {
+    default:
+      'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600',
+    success:
+      'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30',
+    warning:
+      'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30',
+    error:
+      'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30',
+    info: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30',
+    primary:
+      'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30',
   };
 
   const sizeStyles = {
@@ -200,22 +216,30 @@ export function Badge({
     lg: 'px-4 py-2 text-base',
   };
 
-  // If customColor is provided, use inline styles for dynamic color
+  // Custom color style (for role badges)
   const customStyle = customColor
     ? {
-        backgroundColor: customColor,
-        color: 'white',
-        border: 'none',
+        background: `linear-gradient(135deg, ${customColor}20 0%, ${customColor}10 100%)`,
+        color: customColor,
+        borderColor: `${customColor}40`,
       }
     : undefined;
 
-  // When using custom color, skip variant class and use inline style
-  const finalClassName = customColor
-    ? cn(baseStyles, sizeStyles[size], className)
-    : cn(baseStyles, variantStyles[variant], sizeStyles[size], className);
-
   return (
-    <span className={finalClassName} style={customStyle} {...props}>
+    <span
+      className={cn(
+        baseStyles,
+        sizeStyles[size],
+        !customColor && variantClasses[variant],
+        className
+      )}
+      style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        letterSpacing: '0.02em',
+        ...customStyle,
+      }}
+      {...props}
+    >
       {children}
     </span>
   );

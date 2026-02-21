@@ -1,8 +1,11 @@
 /**
- * Pagination component - Premium dark theme
+ * Pagination component - Distinctive Purple Industrial Theme
  *
- * Provides pagination controls for list pages with support for
- * page numbers, previous/next buttons, and page size selection
+ * Features:
+ * - Gradient backgrounds with purple accents
+ * - Smooth hover and focus transitions
+ * - Glow effects on active page
+ * - Distinctive typography with JetBrains Mono
  */
 
 import { useMemo } from 'react';
@@ -89,26 +92,36 @@ export function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className={cn('flex flex-col sm:flex-row items-center justify-between gap-4', className)}>
+    <div
+      className={cn('flex flex-col sm:flex-row items-center justify-between gap-4', className)}
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+    >
       {/* Page info and size selector */}
       <div className="flex items-center gap-4 text-sm">
-        <span className="text-gray-600 dark:text-gray-400">
-          Showing {startItem}-{endItem} of {totalItems}
+        <span className="font-medium text-slate-500 dark:text-slate-400">
+          Showing{' '}
+          <span className="text-purple-500 dark:text-purple-400 font-mono">{startItem}</span>-
+          <span className="text-purple-500 dark:text-purple-400 font-mono">{endItem}</span> of{' '}
+          <span className="font-mono">{totalItems}</span>
         </span>
 
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <label htmlFor="page-size" className="text-gray-600 dark:text-gray-400">
+            <label htmlFor="page-size" className="text-slate-500 dark:text-slate-400">
               Per page:
             </label>
             <select
               id="page-size"
               value={pageSize}
               onChange={e => onPageSizeChange(Number(e.target.value))}
-              className="px-3 py-1.5 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500/50 focus:bg-gray-50 dark:focus:bg-white/[0.08] transition-all duration-300 [&_option]:bg-white [&_option]:text-gray-900 dark:[&_option]:bg-gray-900 dark:[&_option]:text-gray-100 [&_option]:cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 bg-white dark:bg-slate-800 border border-purple-500/15 dark:border-purple-500/30 text-gray-900 dark:text-white"
             >
               {pageSizeOptions.map(size => (
-                <option key={size} value={size}>
+                <option
+                  key={size}
+                  value={size}
+                  className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+                >
                   {size}
                 </option>
               ))}
@@ -125,11 +138,12 @@ export function Pagination({
           disabled={currentPage === 1}
           className={cn(
             'min-w-[36px] h-9 px-3 rounded-lg font-medium text-sm transition-all duration-300',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50',
             'disabled:pointer-events-none disabled:opacity-50',
+            'active:scale-95',
             currentPage === 1
-              ? 'bg-gray-100 dark:bg-white/[0.03] text-gray-400 dark:text-gray-500 cursor-not-allowed'
-              : 'bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-white/[0.08]'
+              ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+              : 'bg-white dark:bg-slate-800 border border-purple-500/15 dark:border-purple-500/30 text-gray-600 dark:text-gray-300 hover:border-purple-300 dark:hover:border-purple-500/50'
           )}
           aria-label="Previous page"
         >
@@ -149,7 +163,7 @@ export function Pagination({
             page === -1 ? (
               <span
                 key={`ellipsis-${idx}`}
-                className="w-9 h-9 flex items-center justify-center text-gray-500 dark:text-gray-500"
+                className="w-9 h-9 flex items-center justify-center text-slate-400 dark:text-slate-500"
               >
                 ...
               </span>
@@ -159,10 +173,11 @@ export function Pagination({
                 onClick={() => onPageChange(page)}
                 className={cn(
                   'min-w-[36px] h-9 px-3 rounded-lg font-medium text-sm transition-all duration-300',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50',
+                  'active:scale-95 font-mono',
                   page === currentPage
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25'
-                    : 'bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-white/[0.08]'
+                    ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/30'
+                    : 'bg-white dark:bg-slate-800 border border-purple-500/15 dark:border-purple-500/30 text-gray-600 dark:text-gray-300 hover:border-purple-300 dark:hover:border-purple-500/50'
                 )}
                 aria-label={`Page ${page}`}
                 aria-current={page === currentPage ? 'page' : undefined}
@@ -174,7 +189,7 @@ export function Pagination({
         </div>
 
         {/* Mobile: Current page / Total */}
-        <div className="sm:hidden px-3 py-1.5 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-lg text-sm text-gray-600 dark:text-gray-400">
+        <div className="sm:hidden px-3 py-1.5 rounded-lg text-sm font-medium font-mono bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 dark:border-purple-500/30 text-purple-600 dark:text-purple-400">
           {currentPage} / {totalPages}
         </div>
 
@@ -184,11 +199,12 @@ export function Pagination({
           disabled={currentPage === totalPages}
           className={cn(
             'min-w-[36px] h-9 px-3 rounded-lg font-medium text-sm transition-all duration-300',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50',
             'disabled:pointer-events-none disabled:opacity-50',
+            'active:scale-95',
             currentPage === totalPages
-              ? 'bg-gray-100 dark:bg-white/[0.03] text-gray-400 dark:text-gray-500 cursor-not-allowed'
-              : 'bg-white dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-white/[0.08]'
+              ? 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+              : 'bg-white dark:bg-slate-800 border border-purple-500/15 dark:border-purple-500/30 text-gray-600 dark:text-gray-300 hover:border-purple-300 dark:hover:border-purple-500/50'
           )}
           aria-label="Next page"
         >

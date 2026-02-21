@@ -13,7 +13,9 @@
  * - Staggered entrance animations for cards and metrics
  * - Low stock warning animations with amber highlights
  * - Monospace SKU displays with subtle glow effects
- * - Professional layout with clear action hierarchy
+ * - Industrial corner accents and grain texture
+ * - Distinctive typography with Archivo Black for titles
+ * - JetBrains Mono for data/metrics
  * ============================================================================
  */
 
@@ -90,48 +92,69 @@ function MetricCard({
   icon: Icon,
   color = 'primary',
   trend,
+  featured = false,
 }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   color?: 'primary' | 'success' | 'warning' | 'error';
   trend?: { value: number; isPositive: boolean };
+  featured?: boolean;
 }) {
   const colorStyles = {
     primary:
-      'bg-blue-100 dark:bg-primary-500/10 text-blue-600 dark:text-primary-400 border border-blue-200 dark:border-primary-500/20',
+      'bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-500/20 dark:to-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30',
     success:
-      'bg-green-100 dark:bg-success-500/10 text-green-600 dark:text-success-400 border border-green-200 dark:border-success-500/20',
+      'bg-gradient-to-br from-green-100 to-green-50 dark:from-green-500/20 dark:to-green-500/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/30',
     warning:
-      'bg-amber-100 dark:bg-warning-500/10 text-amber-600 dark:text-warning-400 border border-amber-200 dark:border-warning-500/20',
+      'bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-500/20 dark:to-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30',
     error:
-      'bg-red-100 dark:bg-error-500/10 text-red-600 dark:text-error-400 border border-red-200 dark:border-error-500/20',
+      'bg-gradient-to-br from-red-100 to-red-50 dark:from-red-500/20 dark:to-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30',
+  };
+
+  const glowStyles = {
+    primary: 'shadow-blue-500/20 dark:shadow-blue-500/30',
+    success: 'shadow-green-500/20 dark:shadow-green-500/30',
+    warning: 'shadow-amber-500/20 dark:shadow-amber-500/30',
+    error: 'shadow-red-500/20 dark:shadow-red-500/30',
   };
 
   return (
     <Card
       variant="glass"
-      className="stock-control-card card-hover group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+      className={`stock-control-card card-hover group relative overflow-hidden bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 ${featured ? 'md:col-span-2' : ''}`}
     >
+      {/* Top accent line */}
+      <div
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-${color === 'primary' ? 'blue' : color === 'success' ? 'green' : color === 'warning' ? 'amber' : 'red'}-500/50 to-transparent`}
+      />
+
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.15em] mb-2">
               {title}
             </p>
-            <p className="mt-3 text-4xl font-bold text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300 font-['JetBrains_Mono',monospace]">
+            <p
+              className={`font-bold text-gray-900 dark:text-white tracking-tight group-hover:scale-105 transition-transform duration-300 font-['JetBrains_Mono',monospace] ${featured ? 'text-5xl' : 'text-4xl'}`}
+            >
               {value}
             </p>
             {trend && (
               <p
-                className={`mt-2 text-sm ${trend.isPositive ? 'text-green-600 dark:text-success-400' : 'text-red-600 dark:text-error-400'}`}
+                className={`mt-2 text-sm font-medium flex items-center gap-1 ${trend.isPositive ? 'text-green-600 dark:text-success-400' : 'text-red-600 dark:text-error-400'}`}
               >
+                <span
+                  className={`inline-block w-0 h-0 border-l-[4px] border-r-[4px] ${trend.isPositive ? 'border-b-[6px] border-b-green-500 border-l-transparent border-r-transparent' : 'border-t-[6px] border-t-red-500 border-l-transparent border-r-transparent rotate-180'}`}
+                />
                 {trend.isPositive ? '+' : ''}
                 {trend.value}% from last week
               </p>
             )}
           </div>
-          <div className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300`}>
+          <div
+            className={`p-4 rounded-2xl ${colorStyles[color]} transition-all duration-300 shadow-lg ${glowStyles[color]} group-hover:scale-110`}
+          >
             <Icon className="h-7 w-7" />
           </div>
         </div>
@@ -1730,31 +1753,63 @@ export function StockControlPage() {
     ];
 
   return (
-    <div className="min-h-screen relative">
-      {/* Atmospheric background elements */}
+    <div className="min-h-screen relative stock-control-grain">
+      {/* Atmospheric background elements - industrial blue theme */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/6 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-cyan-500/4 rounded-full blur-3xl" />
+        {/* Industrial grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
       </div>
 
       <Header />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        {/* Page Header */}
-        <div style={{ animation: 'inventory-stagger-in 0.4s ease-out' }}>
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/20 rounded-xl border border-blue-500/30 shadow-lg shadow-blue-500/10">
-              <CubeIcon className="h-8 w-8 text-blue-400" />
+
+        {/* Page Header - Asymmetric Industrial Design */}
+        <div className="inventory-stagger-in">
+          <div className="flex flex-col md:flex-row md:items-end gap-6">
+            {/* Left side - Icon and Title */}
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                {/* Outer ring animation */}
+                <div className="absolute inset-0 bg-blue-500/20 rounded-2xl animate-pulse" />
+                {/* Main icon container */}
+                <div className="relative p-4 bg-gradient-to-br from-blue-500/25 to-blue-600/15 rounded-2xl border border-blue-500/40 shadow-lg shadow-blue-500/20 backdrop-blur-sm">
+                  <CubeIcon className="h-9 w-9 text-blue-400" />
+                </div>
+                {/* Corner accent */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
+              </div>
+              <div>
+                <h1 className="stock-control-title text-3xl md:text-4xl text-gray-900 dark:text-white">
+                  Stock Control
+                </h1>
+                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                  Inventory Command Center
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-['Space_Grotesk',sans-serif]">
-                Stock Control
-              </h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Manage inventory, stock counts, transfers, and adjustments
-              </p>
+
+            {/* Right side - Live indicator */}
+            <div className="md:ml-auto flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
+              <div className="relative">
+                <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+                <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                Live Inventory Data
+              </span>
             </div>
           </div>
         </div>
