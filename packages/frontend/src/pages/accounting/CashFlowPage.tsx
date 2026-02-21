@@ -3,9 +3,15 @@
  *
  * Displays the cash flow statement showing cash inflows and outflows
  * from operating, investing, and financing activities.
+ *
+ * Design: Ledger Noir Aesthetic
+ * - DM Serif Display for elegant headings
+ * - IBM Plex Mono for precise financial figures
+ * - Staggered entrance animations
+ * - Atmospheric depth with subtle glows
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -18,12 +24,12 @@ import {
   Breadcrumb,
 } from '@/components/shared';
 import {
-  ArrowLeftIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   PrinterIcon,
   ArrowDownTrayIcon,
   CurrencyDollarIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useCashFlowStatement } from '@/services/api';
 import { type CashFlowStatement } from '@opsui/shared';
@@ -39,6 +45,7 @@ interface CashFlowSectionProps {
   totalLabel: string;
   total: number;
   isInflow?: boolean;
+  animationDelay?: number;
 }
 
 function CashFlowSection({
@@ -48,6 +55,7 @@ function CashFlowSection({
   totalLabel,
   total,
   isInflow = true,
+  animationDelay = 0,
 }: CashFlowSectionProps) {
   const formatCurrency = (value: number): string => {
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -58,22 +66,25 @@ function CashFlowSection({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" style={{ animationDelay: `${animationDelay}ms` }}>
       <div>
-        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+        <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700/50 pb-2">
           {title}
         </h4>
-        {subtitle && <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{subtitle}</p>}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {items.map((item, index) => (
           <div
             key={index}
-            className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-800"
+            className="group flex items-center justify-between py-2.5 px-3 -mx-3 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-200 cursor-default"
+            style={{ animationDelay: `${animationDelay + index * 50}ms` }}
           >
-            <span className="text-sm text-gray-700 dark:text-gray-300">{item.name}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+              {item.name}
+            </span>
             <span
-              className={`text-sm font-medium ${item.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+              className={`ledger-currency text-sm font-medium ${item.amount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
             >
               {item.amount >= 0 ? '+' : ''}
               {formatCurrency(item.amount)}
@@ -81,11 +92,13 @@ function CashFlowSection({
           </div>
         ))}
         <div
-          className={`flex items-center justify-between py-2 bg-gray-100 dark:bg-white/[0.03] px-3 rounded-lg border-l-4 ${isInflow ? 'border-l-emerald-500' : 'border-l-rose-500'}`}
+          className={`flex items-center justify-between py-3 px-4 bg-gray-100 dark:bg-white/[0.03] rounded-xl border-l-4 ${isInflow ? 'border-l-emerald-500 dark:border-l-emerald-400' : 'border-l-rose-500 dark:border-l-rose-400'}`}
         >
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-400">{totalLabel}</span>
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+            {totalLabel}
+          </span>
           <span
-            className={`text-sm font-bold ${total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+            className={`ledger-currency text-sm font-bold ${total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
           >
             {total >= 0 ? '+' : ''}
             {formatCurrency(total)}
@@ -93,6 +106,66 @@ function CashFlowSection({
         </div>
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// ANIMATED NUMBER COMPONENT
+// ============================================================================
+
+interface AnimatedNumberProps {
+  value: number;
+  className?: string;
+  prefix?: string;
+  delay?: number;
+  showSign?: boolean;
+}
+
+function AnimatedNumber({
+  value,
+  className = '',
+  prefix = '$',
+  delay = 0,
+  showSign = false,
+}: AnimatedNumberProps) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 1000;
+    const steps = 60;
+    const increment = value / steps;
+    let current = 0;
+
+    const timeout = setTimeout(() => {
+      const interval = setInterval(() => {
+        current += increment;
+        if (current >= value) {
+          setDisplayValue(value);
+          clearInterval(interval);
+        } else {
+          setDisplayValue(Math.floor(current * 100) / 100);
+        }
+      }, duration / steps);
+
+      return () => clearInterval(interval);
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [value, delay]);
+
+  const formattedValue = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(displayValue));
+
+  const sign = showSign && value >= 0 ? '+' : value < 0 ? '-' : '';
+
+  return (
+    <span className={`ledger-currency ${className}`}>
+      {sign}
+      {prefix}
+      {formattedValue}
+    </span>
   );
 }
 
@@ -222,107 +295,183 @@ function CashFlowPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen accounting-page-container">
       <Header />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      {/* Atmospheric background */}
+      <div className="accounting-atmosphere" aria-hidden="true" />
+
+      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/20 rounded-xl">
-                <CurrencyDollarIcon className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+        {/* Page Header - Editorial Style */}
+        <header className="mb-10 ledger-hero">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            {/* Title Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full" />
+                  <div className="relative p-3 bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 rounded-2xl border border-cyan-500/20">
+                    <CurrencyDollarIcon className="h-7 w-7 text-cyan-500 dark:text-cyan-400" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                    Financial Statement
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                  Cash Flow Statement
-                </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Cash inflows and outflows from operating, investing, and financing activities
+
+              <h1 className="ledger-title text-4xl sm:text-5xl text-gray-900 dark:text-white">
+                Cash Flow Statement
+              </h1>
+
+              <p className="text-gray-600 dark:text-gray-400 max-w-xl text-lg leading-relaxed">
+                Cash inflows and outflows from operating, investing, and financing activities
+              </p>
+            </div>
+
+            {/* Actions & Date */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {/* Date Filters */}
+              <div className="flex items-center gap-3">
+                <div className="relative group">
+                  <label
+                    htmlFor="start-date"
+                    className="absolute -top-2 left-3 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-900 px-2 rounded"
+                  >
+                    Start Date
+                  </label>
+                  <input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30"
+                  />
+                </div>
+                <div className="relative group">
+                  <label
+                    htmlFor="end-date"
+                    className="absolute -top-2 left-3 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-900 px-2 rounded"
+                  >
+                    End Date
+                  </label>
+                  <input
+                    id="end-date"
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={exportToCSV}
+                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-500/30"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handlePrint}
+                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-500/30"
+                >
+                  <PrinterIcon className="h-4 w-4" />
+                  <span className="hidden sm:inline">Print</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Period indicator */}
+          {displayCashFlow && (
+            <div className="mt-6 flex items-center gap-3">
+              <div className="px-4 py-2 bg-gray-100 dark:bg-white/[0.03] rounded-xl border border-gray-200 dark:border-gray-700/30">
+                <p className="text-xs text-gray-500 dark:text-gray-500">Period</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {getPeriodLabel()}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" onClick={exportToCSV} className="flex items-center gap-2">
-                <ArrowDownTrayIcon className="h-4 w-4" />
-                Export CSV
-              </Button>
-              <Button variant="secondary" onClick={handlePrint} className="flex items-center gap-2">
-                <PrinterIcon className="h-4 w-4" />
-                Print
-              </Button>
-            </div>
-          </div>
-        </div>
+          )}
 
-        {/* Filters */}
-        <Card variant="glass" className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <label
-                  htmlFor="start-date"
-                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
-                >
-                  Start Date
-                </label>
-                <input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              </div>
-              <div className="flex-1 min-w-[200px]">
-                <label
-                  htmlFor="end-date"
-                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
-                >
-                  End Date
-                </label>
-                <input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              </div>
-              {(cashFlow || sampleCashFlow) && (
-                <div className="px-4 py-2 bg-gray-100 dark:bg-white/[0.03] rounded-xl">
-                  <p className="text-xs text-gray-500 dark:text-gray-500">Period</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {getPeriodLabel()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Decorative line */}
+          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+        </header>
 
         {/* Cash Flow Statement */}
         {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton variant="rounded" className="h-64" />
+          <div className="space-y-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="accounting-card rounded-2xl p-6">
+                <Skeleton variant="text" className="h-6 w-32 mb-4" />
+                <Skeleton variant="rounded" className="h-40" />
+              </div>
+            ))}
           </div>
         ) : displayCashFlow ? (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Net Cash Flow Header */}
+            <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 text-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Net Cash Flow</span>
+                  <span
+                    className={`text-3xl font-bold ledger-currency ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                  >
+                    <AnimatedNumber value={displayCashFlow.netCashFlow} delay={200} showSign />
+                  </span>
+                </div>
+                <ArrowPathIcon className="h-5 w-5 text-gray-400 dark:text-gray-500 rotate-90" />
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Opening</span>
+                    <span className="ledger-currency text-lg font-bold text-gray-600 dark:text-gray-400">
+                      $0.00
+                    </span>
+                  </div>
+                  <span className="text-xl text-gray-400 dark:text-gray-500">→</span>
+                  <div className="text-center">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Closing</span>
+                    <span
+                      className={`ledger-currency text-lg font-bold ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                    >
+                      {formatCurrency(Math.abs(displayCashFlow.netCashFlow))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Three Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
               {/* Operating Activities */}
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="p-2 bg-emerald-500/20 rounded-lg">
-                      <CurrencyDollarIcon className="h-5 w-5 text-emerald-400" />
+              <div
+                className="accounting-card deco-corner rounded-2xl overflow-hidden"
+                style={{ animationDelay: '100ms' }}
+              >
+                <div className="bg-gradient-to-r from-emerald-100 dark:from-emerald-500/10 to-emerald-50 dark:to-emerald-600/5 px-6 py-5 border-b border-emerald-200 dark:border-emerald-500/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-emerald-200 dark:bg-emerald-500/20 rounded-xl">
+                        <CurrencyDollarIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <h2 className="ledger-title text-xl text-gray-900 dark:text-white">
+                        Operating
+                      </h2>
                     </div>
-                    Operating Activities
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                  </div>
+                </div>
+
+                <div className="p-6">
                   <CashFlowSection
                     title="Cash from Operations"
                     subtitle="Primary business activities"
@@ -330,21 +479,48 @@ function CashFlowPage() {
                     totalLabel="Net Cash from Operations"
                     total={displayCashFlow.operating?.total || 0}
                     isInflow={(displayCashFlow.operating?.total || 0) >= 0}
+                    animationDelay={150}
                   />
-                </CardContent>
-              </Card>
+
+                  {/* Total */}
+                  <div className="pt-6 mt-6 border-t-2 border-emerald-200 dark:border-emerald-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                        Net Operating
+                      </span>
+                      <span
+                        className={`ledger-currency text-2xl font-bold ${(displayCashFlow.operating?.total || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      >
+                        <AnimatedNumber
+                          value={displayCashFlow.operating?.total || 0}
+                          delay={200}
+                          showSign
+                        />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Investing Activities */}
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <ArrowTrendingUpIcon className="h-5 w-5 text-blue-400" />
+              <div
+                className="accounting-card deco-corner rounded-2xl overflow-hidden"
+                style={{ animationDelay: '200ms' }}
+              >
+                <div className="bg-gradient-to-r from-blue-100 dark:from-blue-500/10 to-blue-50 dark:to-blue-600/5 px-6 py-5 border-b border-blue-200 dark:border-blue-500/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-blue-200 dark:bg-blue-500/20 rounded-xl">
+                        <ArrowTrendingUpIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <h2 className="ledger-title text-xl text-gray-900 dark:text-white">
+                        Investing
+                      </h2>
                     </div>
-                    Investing Activities
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                  </div>
+                </div>
+
+                <div className="p-6">
                   <CashFlowSection
                     title="Cash from Investments"
                     subtitle="Asset purchases and sales"
@@ -352,21 +528,48 @@ function CashFlowPage() {
                     totalLabel="Net Cash from Investing"
                     total={displayCashFlow.investing?.total || 0}
                     isInflow={(displayCashFlow.investing?.total || 0) >= 0}
+                    animationDelay={250}
                   />
-                </CardContent>
-              </Card>
+
+                  {/* Total */}
+                  <div className="pt-6 mt-6 border-t-2 border-blue-200 dark:border-blue-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                        Net Investing
+                      </span>
+                      <span
+                        className={`ledger-currency text-2xl font-bold ${(displayCashFlow.investing?.total || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      >
+                        <AnimatedNumber
+                          value={displayCashFlow.investing?.total || 0}
+                          delay={400}
+                          showSign
+                        />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Financing Activities */}
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <ArrowTrendingDownIcon className="h-5 w-5 text-purple-400" />
+              <div
+                className="accounting-card deco-corner rounded-2xl overflow-hidden"
+                style={{ animationDelay: '300ms' }}
+              >
+                <div className="bg-gradient-to-r from-purple-100 dark:from-purple-500/10 to-purple-50 dark:to-purple-600/5 px-6 py-5 border-b border-purple-200 dark:border-purple-500/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-purple-200 dark:bg-purple-500/20 rounded-xl">
+                        <ArrowTrendingDownIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <h2 className="ledger-title text-xl text-gray-900 dark:text-white">
+                        Financing
+                      </h2>
                     </div>
-                    Financing Activities
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                  </div>
+                </div>
+
+                <div className="p-6">
                   <CashFlowSection
                     title="Cash from Financing"
                     subtitle="Debt and equity transactions"
@@ -374,124 +577,194 @@ function CashFlowPage() {
                     totalLabel="Net Cash from Financing"
                     total={displayCashFlow.financing?.total || 0}
                     isInflow={(displayCashFlow.financing?.total || 0) >= 0}
+                    animationDelay={350}
                   />
-                </CardContent>
-              </Card>
+
+                  {/* Total */}
+                  <div className="pt-6 mt-6 border-t-2 border-purple-200 dark:border-purple-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                        Net Financing
+                      </span>
+                      <span
+                        className={`ledger-currency text-2xl font-bold ${(displayCashFlow.financing?.total || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      >
+                        <AnimatedNumber
+                          value={displayCashFlow.financing?.total || 0}
+                          delay={600}
+                          showSign
+                        />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Summary Card */}
-            <Card variant="glass" className="mt-6">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <CurrencyDollarIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                      <p className="text-xs text-gray-500 dark:text-gray-500">Operating</p>
+            <div
+              className="mt-10 accounting-card rounded-2xl overflow-hidden"
+              style={{ animationDelay: '400ms' }}
+            >
+              <div className="p-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  {/* Operating */}
+                  <div className="text-center space-y-3">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 mb-2">
+                      <CurrencyDollarIcon className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
                     </div>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                      Operating
+                    </p>
                     <p
-                      className={`text-xl font-bold ${displayCashFlow.operating.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-2xl sm:text-3xl font-bold ${displayCashFlow.operating.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
                       {displayCashFlow.operating.total >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.operating.total)}
                     </p>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <ArrowTrendingUpIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      <p className="text-xs text-gray-500 dark:text-gray-500">Investing</p>
+
+                  {/* Investing */}
+                  <div className="text-center space-y-3">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 mb-2">
+                      <ArrowTrendingUpIcon className="h-7 w-7 text-blue-600 dark:text-blue-400" />
                     </div>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                      Investing
+                    </p>
                     <p
-                      className={`text-xl font-bold ${displayCashFlow.investing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-2xl sm:text-3xl font-bold ${displayCashFlow.investing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
                       {displayCashFlow.investing.total >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.investing.total)}
                     </p>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <ArrowTrendingDownIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      <p className="text-xs text-gray-500 dark:text-gray-500">Financing</p>
+
+                  {/* Financing */}
+                  <div className="text-center space-y-3">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 mb-2">
+                      <ArrowTrendingDownIcon className="h-7 w-7 text-purple-600 dark:text-purple-400" />
                     </div>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                      Financing
+                    </p>
                     <p
-                      className={`text-xl font-bold ${displayCashFlow.financing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-2xl sm:text-3xl font-bold ${displayCashFlow.financing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
                       {displayCashFlow.financing.total >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.financing.total)}
                     </p>
                   </div>
-                  <div className="text-center border-l border-gray-300 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">Net Cash Flow</p>
+
+                  {/* Net Cash Flow */}
+                  <div className="text-center space-y-3 border-l border-gray-200 dark:border-gray-700">
+                    <div
+                      className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-2 ${displayCashFlow.netCashFlow >= 0 ? 'bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20' : 'bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20'}`}
+                    >
+                      <ArrowPathIcon
+                        className={`h-7 w-7 ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      />
+                    </div>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                      Net Cash Flow
+                    </p>
                     <p
-                      className={`text-2xl font-bold ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-3xl sm:text-4xl font-bold ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
                       {displayCashFlow.netCashFlow >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.netCashFlow)}
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+
+                {/* Decorative footer line */}
+                <div className="mt-8 flex items-center justify-center">
+                  <div className="h-px w-24 bg-gradient-to-r from-transparent to-gray-200 dark:to-gray-700/30" />
+                  <div className="px-4">
+                    <div
+                      className={`w-2 h-2 rounded-full ${displayCashFlow.netCashFlow >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                    />
+                  </div>
+                  <div className="h-px w-24 bg-gradient-to-l from-transparent to-gray-200 dark:to-gray-700/30" />
+                </div>
+              </div>
+            </div>
+
             {/* Reconciliation Card */}
-            <Card variant="glass" className="mt-6">
-              <CardHeader>
-                <CardTitle>Cash Flow Reconciliation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+            <div
+              className="mt-6 accounting-card rounded-2xl overflow-hidden"
+              style={{ animationDelay: '500ms' }}
+            >
+              <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700/50">
+                <h3 className="ledger-title text-lg text-gray-900 dark:text-white">
+                  Cash Flow Reconciliation
+                </h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-800">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       Net cash from operating activities
                     </span>
                     <span
-                      className={`text-sm font-medium ${displayCashFlow.operating.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-sm font-medium ${displayCashFlow.operating.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
+                      {displayCashFlow.operating.total >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.operating.total)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-800">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       Net cash from investing activities
                     </span>
                     <span
-                      className={`text-sm font-medium ${displayCashFlow.investing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-sm font-medium ${displayCashFlow.investing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
+                      {displayCashFlow.investing.total >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.investing.total)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-800">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       Net cash from financing activities
                     </span>
                     <span
-                      className={`text-sm font-medium ${displayCashFlow.financing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-sm font-medium ${displayCashFlow.financing.total >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
+                      {displayCashFlow.financing.total >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.financing.total)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-3 bg-gray-100 dark:bg-white/[0.03] px-3 rounded-lg">
+                  <div
+                    className={`flex items-center justify-between py-4 px-4 rounded-xl mt-2 ${displayCashFlow.netCashFlow >= 0 ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-rose-50 dark:bg-rose-500/10'}`}
+                  >
                     <span className="text-base font-bold text-gray-900 dark:text-white">
                       Net change in cash
                     </span>
                     <span
-                      className={`text-xl font-bold ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
+                      className={`ledger-currency text-xl font-bold ${displayCashFlow.netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                     >
                       {displayCashFlow.netCashFlow >= 0 ? '+' : ''}
                       {formatCurrency(displayCashFlow.netCashFlow)}
                     </span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </>
         ) : (
-          <Card variant="glass">
-            <CardContent className="p-12 text-center">
-              <CurrencyDollarIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
-                No cash flow data available for the selected period
-              </p>
-            </CardContent>
-          </Card>
+          <div className="accounting-card rounded-2xl p-16 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gray-100 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/30 mb-6">
+              <CurrencyDollarIcon className="h-10 w-10 text-gray-400 dark:text-gray-500" />
+            </div>
+            <h3 className="ledger-title text-xl text-gray-800 dark:text-gray-200 mb-2">
+              No Data Available
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+              No cash flow data available for the selected period. Try selecting a different date
+              range.
+            </p>
+          </div>
         )}
       </main>
     </div>

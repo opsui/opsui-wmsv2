@@ -2996,3 +2996,221 @@ html.light .accounting-atmosphere::before {
 html.light .accounting-atmosphere::after {
   background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
 }
+
+/* ============================================
+   HEADER TOOLBAR ANIMATIONS
+   Distinctive, spring-based micro-interactions
+   ============================================ */
+
+/* Custom spring easing for organic motion */
+:root {
+  --toolbar-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --toolbar-duration: 400ms;
+}
+
+/* Toolbar button container with unified hover state */
+.toolbar-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glow effect on hover - subtle but noticeable */
+.toolbar-btn::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 8px;
+  background: radial-gradient(circle at center, var(--glow-color, rgba(168, 85, 247, 0.15)) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toolbar-btn:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Icon-specific animations */
+
+/* Search icon - spotlight expand effect */
+@keyframes search-glow {
+  0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0 transparent); }
+  50% { transform: scale(1.1) rotate(6deg); filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.4)); }
+  100% { transform: scale(1) rotate(12deg); filter: drop-shadow(0 0 0 transparent); }
+}
+
+.toolbar-icon-search {
+  transition: transform var(--toolbar-duration) var(--toolbar-easing),
+              filter var(--toolbar-duration) ease;
+}
+
+.toolbar-btn:hover .toolbar-icon-search {
+  animation: search-glow 0.6s ease-out;
+}
+
+/* Notification bell - ring shake effect */
+@keyframes bell-ring {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(-8deg); }
+  30% { transform: rotate(8deg); }
+  45% { transform: rotate(-4deg); }
+  60% { transform: rotate(4deg); }
+  75% { transform: rotate(-2deg); }
+  90% { transform: rotate(2deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.toolbar-icon-bell {
+  transition: transform var(--toolbar-duration) var(--toolbar-easing);
+  transform-origin: top center;
+}
+
+.toolbar-btn:hover .toolbar-icon-bell {
+  animation: bell-ring 0.5s ease-out;
+}
+
+/* Theme toggle - orbit effect */
+@keyframes sun-orbit {
+  0% { transform: rotate(0deg) scale(1); }
+  100% { transform: rotate(360deg) scale(1.05); }
+}
+
+@keyframes moon-swing {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-15deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.toolbar-icon-sun {
+  transition: transform var(--toolbar-duration) var(--toolbar-easing);
+}
+
+.toolbar-btn:hover .toolbar-icon-sun {
+  animation: sun-orbit 0.8s ease-in-out;
+}
+
+.toolbar-icon-moon {
+  transition: transform var(--toolbar-duration) var(--toolbar-easing);
+}
+
+.toolbar-btn:hover .toolbar-icon-moon {
+  animation: moon-swing 0.6s ease-in-out;
+}
+
+/* Settings cog - acceleration spin */
+@keyframes cog-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  70% { transform: rotate(270deg) scale(1.1); }
+  85% { transform: rotate(315deg) scale(0.95); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.toolbar-icon-cog {
+  transition: transform var(--toolbar-duration) var(--toolbar-easing);
+}
+
+.toolbar-btn:hover .toolbar-icon-cog {
+  animation: cog-spin 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Logout arrow - gentle scale pulse */
+@keyframes exit-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.toolbar-icon-exit {
+  transition: transform var(--toolbar-duration) var(--toolbar-easing);
+  transform-origin: center;
+}
+
+.toolbar-btn:hover .toolbar-icon-exit {
+  animation: exit-pulse 0.4s ease-in-out;
+}
+
+/* Badge pulse for notification count */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(244, 63, 94, 0); }
+}
+
+.notification-badge {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   GLOBAL SEARCH TRANSITIONS - Seamless expand/collapse
+   ============================================ */
+
+/* Search container - smooth width transition */
+.global-search-container {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Search button - fade in/out */
+.global-search-btn {
+  transition: opacity 0.25s ease-in-out,
+              transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.global-search-btn.fade-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.global-search-btn.fade-out {
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+/* Search input wrapper - expand/collapse */
+.global-search-input-wrapper {
+  transition: opacity 0.2s ease-in-out,
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.global-search-input-wrapper.entering {
+  opacity: 0;
+  transform: scaleX(0.9) scaleY(0.95);
+  transform-origin: left center;
+}
+
+.global-search-input-wrapper.visible {
+  opacity: 1;
+  transform: scaleX(1) scaleY(1);
+}
+
+.global-search-input-wrapper.exiting {
+  opacity: 0;
+  /* No scale on exit to prevent container size change */
+  transform: none;
+}
+
+/* Search input text - subtle fade */
+.global-search-input {
+  transition: opacity 0.15s ease-out;
+}
+
+/* ============================================
+   GLOBAL SEARCH INPUT - Remove blue focus ring
+   ============================================ */
+
+/* Remove all focus rings from global search input */
+.global-search-input:focus,
+.global-search-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: textfield !important;
+}
+
+/* Override Tailwind's default focus:ring classes on search input */
+.global-search-input.focus\\:ring-0,
+.global-search-input.focus\\:ring-2 {
+  outline: none !important;
+  box-shadow: none !important;
+}

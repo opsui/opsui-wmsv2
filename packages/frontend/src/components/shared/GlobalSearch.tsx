@@ -248,13 +248,18 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 interface GlobalSearchProps {
   /** Called when mobile search expands (true) or collapses (false) */
   onMobileSearchActive?: (active: boolean) => void;
+  /** Called when desktop search expands (true) or collapses (false) */
+  onDesktopSearchActive?: (active: boolean) => void;
 }
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive }) => {
+export const GlobalSearch: React.FC<GlobalSearchProps> = ({
+  onMobileSearchActive,
+  onDesktopSearchActive,
+}) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -271,6 +276,19 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   /** Ref mirror of isMobileExpanded to avoid stale closures in event handlers */
   const isMobileExpandedRef = useRef(false);
+  /** Animation state for mobile input */
+  const [mobileInputAnimState, setMobileInputAnimState] = useState<
+    'hidden' | 'entering' | 'visible' | 'exiting'
+  >('hidden');
+
+  /** Whether the search input is expanded on desktop */
+  const [isDesktopExpanded, setIsDesktopExpanded] = useState(false);
+  /** Ref mirror of isDesktopExpanded to avoid stale closures in event handlers */
+  const isDesktopExpandedRef = useRef(false);
+  /** Animation state for desktop input */
+  const [desktopInputAnimState, setDesktopInputAnimState] = useState<
+    'hidden' | 'entering' | 'visible' | 'exiting'
+  >('hidden');
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -283,22 +301,63 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
 
   const expandMobile = () => {
     isMobileExpandedRef.current = true;
+    setMobileInputAnimState('entering');
     setIsMobileExpanded(true);
     onMobileSearchActive?.(true);
-    // Small delay so the input is visible before we focus it
-    setTimeout(() => inputRef.current?.focus(), 50);
+    // Transition to visible after entering animation starts
+    setTimeout(() => {
+      setMobileInputAnimState('visible');
+      inputRef.current?.focus();
+    }, 50);
   };
 
   const collapseMobile = useCallback(() => {
-    isMobileExpandedRef.current = false;
-    setIsMobileExpanded(false);
-    setIsOpen(false);
-    setQuery('');
-    setResults({ orders: [], skus: [], users: [], pages: [] });
-    setTotalItems(0);
-    onMobileSearchActive?.(false);
-    inputRef.current?.blur();
+    setMobileInputAnimState('exiting');
+    // Wait for exit animation to complete before hiding
+    setTimeout(() => {
+      isMobileExpandedRef.current = false;
+      setMobileInputAnimState('hidden');
+      setIsMobileExpanded(false);
+      setIsOpen(false);
+      setQuery('');
+      setResults({ orders: [], skus: [], users: [], pages: [] });
+      setTotalItems(0);
+      onMobileSearchActive?.(false);
+      inputRef.current?.blur();
+    }, 200);
   }, [onMobileSearchActive]);
+
+  // -------------------------------------------------------------------------
+  // Desktop expand / collapse helpers
+  // -------------------------------------------------------------------------
+
+  const expandDesktop = () => {
+    isDesktopExpandedRef.current = true;
+    setDesktopInputAnimState('entering');
+    setIsDesktopExpanded(true);
+    onDesktopSearchActive?.(true);
+    // Transition to visible after entering animation starts
+    setTimeout(() => {
+      setDesktopInputAnimState('visible');
+      inputRef.current?.focus();
+    }, 50);
+  };
+
+  const collapseDesktop = useCallback(() => {
+    setDesktopInputAnimState('exiting');
+    // Wait for exit animation to complete before hiding
+    setTimeout(() => {
+      isDesktopExpandedRef.current = false;
+      setDesktopInputAnimState('hidden');
+      setIsDesktopExpanded(false);
+      setIsOpen(false);
+      setQuery('');
+      setResults({ orders: [], skus: [], users: [], pages: [] });
+      setTotalItems(0);
+      onDesktopSearchActive?.(false);
+      inputRef.current?.blur();
+    }, 200);
+  }, [onDesktopSearchActive]);
 
   // -------------------------------------------------------------------------
   // Debounced search
@@ -354,7 +413,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
   }, [query, performSearch]);
 
   // -------------------------------------------------------------------------
-  // Click outside → close dropdown (and collapse mobile if expanded)
+  // Click outside → close dropdown (and collapse mobile/desktop if expanded)
   // -------------------------------------------------------------------------
 
   useEffect(() => {
@@ -364,12 +423,15 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
         if (isMobileExpandedRef.current) {
           collapseMobile();
         }
+        if (isDesktopExpandedRef.current) {
+          collapseDesktop();
+        }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [collapseMobile]);
+  }, [collapseMobile, collapseDesktop]);
 
   // -------------------------------------------------------------------------
   // Keyboard navigation
@@ -377,7 +439,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen && !isMobileExpandedRef.current) return;
+      if (!isOpen && !isMobileExpandedRef.current && !isDesktopExpandedRef.current) return;
 
       switch (e.key) {
         case 'ArrowDown':
@@ -400,6 +462,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
           setIsOpen(false);
           if (isMobileExpandedRef.current) {
             collapseMobile();
+          } else if (isDesktopExpandedRef.current) {
+            collapseDesktop();
           } else {
             inputRef.current?.blur();
           }
@@ -409,7 +473,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, selectedIndex, totalItems, results, collapseMobile]);
+  }, [isOpen, selectedIndex, totalItems, results, collapseMobile, collapseDesktop]);
 
   // -------------------------------------------------------------------------
   // Result selection helpers
@@ -446,6 +510,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
       onMobileSearchActive?.(false);
     }
 
+    // Collapse desktop search after navigating
+    if (isDesktopExpandedRef.current) {
+      isDesktopExpandedRef.current = false;
+      setIsDesktopExpanded(false);
+      onDesktopSearchActive?.(false);
+    }
+
     switch (type) {
       case 'page':
         navigate((item as { path: string }).path);
@@ -478,44 +549,67 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onMobileSearchActive
   // -------------------------------------------------------------------------
 
   return (
-    <div ref={containerRef} className={`relative ${isMobileExpanded ? 'flex-1 min-w-0' : ''}`}>
-      {/* ── Mobile: icon-only button (hidden once expanded) ── */}
-      <button
-        className={`md:hidden p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors ${
-          isMobileExpanded ? 'hidden' : 'flex items-center justify-center'
-        }`}
-        onClick={expandMobile}
-        aria-label="Open search"
+    <div
+      ref={containerRef}
+      className={`relative ${isMobileExpanded || isDesktopExpanded ? 'flex-1 min-w-0' : ''}`}
+    >
+      {/* ── Mobile: icon-only button (completely removed from DOM when expanded) ── */}
+      {mobileInputAnimState === 'hidden' && (
+        <button
+          className="global-search-btn fade-in toolbar-btn md:hidden p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors flex items-center justify-center"
+          onClick={expandMobile}
+          aria-label="Open search"
+          style={{ '--glow-color': 'rgba(168, 85, 247, 0.15)' }}
+        >
+          <MagnifyingGlassIcon className="toolbar-icon-search h-5 w-5" />
+        </button>
+      )}
+
+      {/* ── Desktop: icon-only button (completely removed from DOM when expanded) ── */}
+      {desktopInputAnimState === 'hidden' && (
+        <button
+          className="global-search-btn fade-in toolbar-btn hidden md:flex p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] rounded-lg transition-colors items-center justify-center"
+          onClick={expandDesktop}
+          aria-label="Open search"
+          style={{ '--glow-color': 'rgba(168, 85, 247, 0.15)' }}
+        >
+          <MagnifyingGlassIcon className="toolbar-icon-search h-5 w-5" />
+        </button>
+      )}
+
+      {/* ── Input: visible when expanded (mobile or desktop) ── */}
+      <div
+        className={`relative ${mobileInputAnimState !== 'hidden' ? 'md:hidden' : 'hidden'} ${desktopInputAnimState !== 'hidden' ? 'hidden md:flex' : 'hidden'}`}
       >
-        <MagnifyingGlassIcon className="h-5 w-5" />
-      </button>
+        <div
+          className={`global-search-input-wrapper w-full ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''} ${desktopInputAnimState === 'entering' ? 'entering' : desktopInputAnimState === 'visible' ? 'visible' : ''}`}
+        >
+          {/* Search icon inside input - only ONE source of truth */}
+          <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={handleFocus}
+            placeholder="Search..."
+            className="global-search-input w-full pl-8 pr-7 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+          />
 
-      {/* ── Input: always visible on md+, only visible when expanded on mobile ── */}
-      <div className={`relative ${isMobileExpanded ? 'flex w-full' : 'hidden md:flex'}`}>
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          onFocus={handleFocus}
-          placeholder="Search orders, items, users..."
-          className={`pl-9 pr-8 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/80 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 dark:focus:border-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all duration-200 ${
-            isMobileExpanded ? 'w-full' : 'w-56 lg:w-72'
-          }`}
-          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-        />
-
-        {/* Right action button — only shown when there is a query to clear */}
-        {query && (
-          <button
-            onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label="Clear search"
-          >
-            <XMarkIcon className="h-4 w-4 text-gray-400" />
-          </button>
-        )}
+          {/* Right action button — only shown when there is a query to clear */}
+          {query && (
+            <button
+              onClick={handleClear}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+              aria-label="Clear search"
+            >
+              <XMarkIcon className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Results dropdown ── */}

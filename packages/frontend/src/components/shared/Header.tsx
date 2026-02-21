@@ -1023,14 +1023,15 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group"
+      className="toolbar-btn p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      style={{ '--glow-color': 'rgba(168, 85, 247, 0.15)' }}
     >
       {isDark ? (
-        <SunIcon className="h-5 w-5 flex-shrink-0 group-hover:rotate-90 transition-transform duration-300" />
+        <SunIcon className="toolbar-icon-sun h-5 w-5 flex-shrink-0" />
       ) : (
-        <MoonIcon className="h-5 w-5 flex-shrink-0 group-hover:-rotate-12 transition-transform duration-300" />
+        <MoonIcon className="toolbar-icon-moon h-5 w-5 flex-shrink-0" />
       )}
     </button>
   );
@@ -1110,12 +1111,13 @@ function NotificationPanel() {
       onMouseLeave={handleMouseLeave}
     >
       <button
-        className="relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200 group hover:scale-110"
+        className="toolbar-btn relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
         aria-label={`Notifications: ${unreadCount} unread`}
+        style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
       >
-        <BellIcon className="h-5 w-5 flex-shrink-0 transition-transform duration-200" />
+        <BellIcon className="toolbar-icon-bell h-5 w-5 flex-shrink-0" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
+          <span className="notification-badge absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -1510,6 +1512,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   /** True while the global search is expanded on mobile – hides other toolbar icons */
   const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
+  /** True while the global search is expanded on desktop – hides other toolbar icons */
+  const [isDesktopSearchActive, setIsDesktopSearchActive] = useState(false);
 
   // Listen for role color changes
   useEffect(() => {
@@ -2278,11 +2282,22 @@ export function Header() {
               <div className="relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-full px-2 py-1 sm:py-0.5">
                 {/* Subtle purple glow on hover - pointer-events-none to not block clicks */}
                 <div className="absolute inset-0 rounded-full bg-purple-500/0 hover:bg-purple-500/10 transition-colors duration-300 pointer-events-none" />
-                {/* Global Search — passes callback so it can hide sibling icons on mobile */}
-                <GlobalSearch onMobileSearchActive={setIsMobileSearchActive} />
+                {/* Global Search — passes callback so it can hide sibling icons on mobile and desktop */}
+                <GlobalSearch
+                  onMobileSearchActive={setIsMobileSearchActive}
+                  onDesktopSearchActive={setIsDesktopSearchActive}
+                />
 
-                {/* Other toolbar icons: hidden on mobile while search is expanded */}
-                <div className={isMobileSearchActive ? 'hidden md:contents' : 'contents'}>
+                {/* Other toolbar icons: hidden on mobile while search is expanded, hidden on desktop while search is expanded */}
+                <div
+                  className={
+                    isMobileSearchActive
+                      ? 'hidden md:contents'
+                      : isDesktopSearchActive
+                        ? 'hidden'
+                        : 'contents'
+                  }
+                >
                   {/* Theme Toggle */}
                   <ThemeToggle />
 
@@ -2295,22 +2310,24 @@ export function Header() {
                   {/* Settings button */}
                   <button
                     onClick={() => navigate('/role-settings?section=role-switcher')}
-                    className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-purple-300 hover:text-purple-700 dark:hover:bg-purple-500/10 hover:bg-purple-50 rounded-lg transition-colors"
+                    className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-purple-300 hover:text-purple-700 dark:hover:bg-purple-500/10 hover:bg-purple-50 rounded-lg transition-colors"
                     title="Settings"
                     aria-label="Settings"
+                    style={{ '--glow-color': 'rgba(168, 85, 247, 0.15)' }}
                   >
-                    <CogIcon className="h-5 w-5" />
+                    <CogIcon className="toolbar-icon-cog h-5 w-5" />
                   </button>
 
                   {/* Logout button */}
                   <button
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}
-                    className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                    className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
                     title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
                     aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                    style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
                   >
-                    <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                    <ArrowRightStartOnRectangleIcon className="toolbar-icon-exit h-5 w-5" />
                   </button>
                 </div>
               </div>
