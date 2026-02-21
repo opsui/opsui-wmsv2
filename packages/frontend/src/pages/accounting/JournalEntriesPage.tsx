@@ -3,9 +3,15 @@
  *
  * Create and manage journal entries for double-entry bookkeeping.
  * Each entry must balance (debits = credits).
+ *
+ * Design: Ledger Noir Aesthetic
+ * - Refined, editorial financial command center
+ * - DM Serif Display for headings, IBM Plex Mono for numbers
+ * - Emerald/gold accent palette
+ * - Staggered animations and micro-interactions
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -23,7 +29,6 @@ import {
   Breadcrumb,
 } from '@/components/shared';
 import {
-  ArrowLeftIcon,
   PlusIcon,
   EyeIcon,
   CheckIcon,
@@ -31,6 +36,10 @@ import {
   XMarkIcon,
   TrashIcon,
   ChevronDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  CalculatorIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline';
 import {
   useJournalEntries,
@@ -64,7 +73,56 @@ interface JournalEntryFormData {
 }
 
 // ============================================================================
-// CUSTOM DROPDOWN COMPONENT
+// ANIMATED COUNTER COMPONENT
+// ============================================================================
+
+function AnimatedCounter({
+  value,
+  duration = 1000,
+  prefix = '$',
+  decimals = 2,
+}: {
+  value: number;
+  duration?: number;
+  prefix?: string;
+  decimals?: number;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
+  const startTime = useRef<number | null>(null);
+  const startValue = useRef(0);
+
+  useEffect(() => {
+    startValue.current = displayValue;
+    startTime.current = null;
+
+    const animate = (currentTime: number) => {
+      if (!startTime.current) startTime.current = currentTime;
+      const progress = Math.min((currentTime - startTime.current) / duration, 1);
+
+      // Easing function for smooth animation
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const currentValue = startValue.current + (value - startValue.current) * easeOutQuart;
+
+      setDisplayValue(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [value, duration]);
+
+  return (
+    <span className="ledger-currency">
+      {prefix}
+      {displayValue.toFixed(decimals)}
+    </span>
+  );
+}
+
+// ============================================================================
+// CUSTOM DROPDOWN COMPONENT - Refined
 // ============================================================================
 
 interface CustomDropdownProps {
@@ -77,35 +135,34 @@ interface CustomDropdownProps {
 
 function CustomDropdown({ label, value, onChange, options, placeholder }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-
   const selectedOption = options.find(opt => opt.value === value);
 
   return (
-    <div className="relative flex-1 min-w-[200px]">
-      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+    <div className="relative flex-1 min-w-[200px] group">
+      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">
         {label}
       </label>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-3 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border-2 ${
+        className={`w-full px-4 py-3.5 bg-white dark:bg-slate-800/80 border-2 rounded-xl text-sm transition-all duration-300 flex items-center justify-between ${
           isOpen
-            ? 'border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/20'
-            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-        } rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all duration-200 flex items-center justify-between shadow-sm`}
+            ? 'border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/10 shadow-lg shadow-emerald-500/5'
+            : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600'
+        } text-slate-900 dark:text-white focus:outline-none`}
       >
-        <span className={value === '' ? 'text-gray-500 dark:text-gray-400' : 'font-medium'}>
+        <span className={value === '' ? 'text-slate-400 dark:text-slate-500' : 'font-medium'}>
           {selectedOption?.label || placeholder || 'Select...'}
         </span>
         <ChevronDownIcon
-          className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-emerald-500' : ''}`}
         />
       </button>
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-10 animate-in fade-in" onClick={() => setIsOpen(false)} />
-          <div className="absolute z-20 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-xl animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-20 w-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl shadow-black/10 overflow-hidden animate-in slide-in-from-top-2 duration-200">
             {options.map((option, index) => (
               <button
                 key={option.value}
@@ -114,10 +171,10 @@ function CustomDropdown({ label, value, onChange, options, placeholder }: Custom
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`w-full px-4 py-3 text-sm text-left transition-all duration-200 border-b last:border-b-0 border-gray-100 dark:border-gray-700 ${
+                className={`w-full px-4 py-3 text-sm text-left transition-all duration-200 border-b border-slate-100 dark:border-slate-700 last:border-0 ${
                   value === option.value
-                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white font-semibold shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-100/80 hover:to-teal-100/80 dark:hover:from-emerald-900/40 dark:hover:to-teal-900/40 hover:pl-2 hover:scale-[1.02]'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:pl-6'
                 }`}
                 style={{ animationDelay: `${index * 25}ms` }}
               >
@@ -141,7 +198,6 @@ interface InlineDropdownProps {
 
 function InlineDropdown({ value, onChange, options, placeholder }: InlineDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-
   const selectedOption = options.find(opt => opt.value === value);
 
   return (
@@ -149,24 +205,24 @@ function InlineDropdown({ value, onChange, options, placeholder }: InlineDropdow
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-2 py-1.5 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 border ${
+        className={`w-full px-3 py-2 bg-white dark:bg-slate-800/50 border rounded-lg text-sm transition-all duration-200 flex items-center justify-between ${
           isOpen
-            ? 'border-emerald-500 dark:border-emerald-400 ring-2 ring-emerald-500/20'
-            : 'border-gray-400 dark:border-white/[0.08] hover:border-gray-500 dark:hover:border-gray-600'
-        } rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none transition-all duration-200 flex items-center justify-between`}
+            ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+            : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400'
+        } text-slate-900 dark:text-white focus:outline-none`}
       >
-        <span className={value === '' ? 'text-gray-500 dark:text-gray-400' : 'truncate'}>
+        <span className={`truncate ${value === '' ? 'text-slate-400' : ''}`}>
           {selectedOption?.label || placeholder || 'Select...'}
         </span>
         <ChevronDownIcon
-          className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 flex-shrink-0 ml-1 ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-slate-400 flex-shrink-0 ml-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-10 animate-in fade-in" onClick={() => setIsOpen(false)} />
-          <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl animate-in slide-in-from-top-1 duration-200 overflow-hidden">
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute z-20 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-xl overflow-hidden max-h-48 overflow-y-auto">
             {options.map(option => (
               <button
                 key={option.value}
@@ -175,10 +231,10 @@ function InlineDropdown({ value, onChange, options, placeholder }: InlineDropdow
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`w-full px-3 py-2 text-sm text-left transition-all duration-200 border-b last:border-b-0 border-gray-100 dark:border-gray-700 ${
+                className={`w-full px-3 py-2 text-sm text-left transition-all duration-150 ${
                   value === option.value
-                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 text-white font-semibold'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-emerald-100/80 hover:to-teal-100/80 dark:hover:from-emerald-900/40 dark:hover:to-teal-900/40'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                 }`}
               >
                 {option.label}
@@ -192,34 +248,43 @@ function InlineDropdown({ value, onChange, options, placeholder }: InlineDropdow
 }
 
 // ============================================================================
-// STATUS BADGE COMPONENT
+// STATUS BADGE COMPONENT - Refined
 // ============================================================================
 
 function JournalEntryStatusBadge({ status }: { status: JournalEntryStatus }) {
-  const statusConfig: Record<JournalEntryStatus, { label: string; variant: any }> = {
-    [JournalEntryStatus.DRAFT]: { label: 'Draft', variant: 'default' },
-    [JournalEntryStatus.SUBMITTED]: { label: 'Submitted', variant: 'info' },
-    [JournalEntryStatus.APPROVED]: { label: 'Approved', variant: 'success' },
-    [JournalEntryStatus.POSTED]: { label: 'Posted', variant: 'success' },
-    [JournalEntryStatus.REVERSED]: { label: 'Reversed', variant: 'danger' },
+  const config: Record<JournalEntryStatus, { label: string; className: string }> = {
+    [JournalEntryStatus.DRAFT]: {
+      label: 'Draft',
+      className:
+        'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600',
+    },
+    [JournalEntryStatus.SUBMITTED]: {
+      label: 'Submitted',
+      className:
+        'bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-sky-200 dark:border-sky-700',
+    },
+    [JournalEntryStatus.APPROVED]: {
+      label: 'Approved',
+      className:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700',
+    },
+    [JournalEntryStatus.POSTED]: {
+      label: 'Posted',
+      className:
+        'bg-emerald-100 text-emerald-800 dark:bg-emerald-800/40 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600',
+    },
+    [JournalEntryStatus.REVERSED]: {
+      label: 'Reversed',
+      className:
+        'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-700',
+    },
   };
 
-  const config = statusConfig[status];
+  const { label, className } = config[status];
+
   return (
-    <span
-      className={`px-2 py-1 rounded-full text-xs font-medium ${
-        status === JournalEntryStatus.DRAFT
-          ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
-          : status === JournalEntryStatus.SUBMITTED
-            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-            : status === JournalEntryStatus.APPROVED || status === JournalEntryStatus.POSTED
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-              : status === JournalEntryStatus.REVERSED
-                ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                : 'bg-gray-100 text-gray-700'
-      }`}
-    >
-      {config.label}
+    <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${className}`}>
+      {label}
     </span>
   );
 }
@@ -306,11 +371,20 @@ function JournalEntryForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4 bg-gray-100 dark:bg-transparent p-4 rounded-xl"
-    >
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header Section with Art Deco Accent */}
+      <div className="relative pb-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="absolute top-0 left-0 w-16 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-3 ledger-title">
+          {entry ? 'Edit Journal Entry' : 'New Journal Entry'}
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Each entry must balance — debits must equal credits
+        </p>
+      </div>
+
+      {/* Entry Details Grid */}
+      <div className="grid grid-cols-2 gap-6">
         <FormField label="Entry Number" required>
           <Input
             type="text"
@@ -319,6 +393,7 @@ function JournalEntryForm({
             placeholder="JE-2024-001"
             required
             disabled={!!entry}
+            className="font-mono"
           />
         </FormField>
 
@@ -332,13 +407,14 @@ function JournalEntryForm({
         </FormField>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-6">
         <FormField label="Fiscal Period" required>
           <Input
             type="month"
             value={formData.fiscalPeriod}
             onChange={e => setFormData({ ...formData, fiscalPeriod: e.target.value })}
             required
+            className="font-mono"
           />
         </FormField>
       </div>
@@ -353,46 +429,57 @@ function JournalEntryForm({
         />
       </FormField>
 
+      {/* Entry Lines Section */}
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-medium text-gray-900 dark:text-gray-300">
-            Entry Lines
-          </label>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+              <CalculatorIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">
+              Entry Lines
+            </label>
+          </div>
           <Button
             type="button"
             variant="secondary"
             size="sm"
             onClick={addLine}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1.5"
           >
-            <PlusIcon className="h-3 w-3" />
+            <PlusIcon className="h-3.5 w-3.5" />
             Add Line
           </Button>
         </div>
 
-        <div className="border border-gray-300 dark:border-white/[0.08] rounded-xl overflow-hidden">
+        {/* Ledger-style Table */}
+        <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800/50">
           <table className="w-full">
-            <thead className="bg-gray-200 dark:bg-white/[0.03]">
-              <tr>
-                <th className="text-left py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Account
                 </th>
-                <th className="text-left py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400">
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Description
                 </th>
-                <th className="text-right py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400 w-28">
+                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
                   Debit
                 </th>
-                <th className="text-right py-2 px-3 text-xs font-medium text-gray-900 dark:text-gray-400 w-28">
+                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
                   Credit
                 </th>
-                <th className="w-10" />
+                <th className="w-12" />
               </tr>
             </thead>
             <tbody>
               {formData.lines.map((line, index) => (
-                <tr key={index} className="border-t border-gray-400 dark:border-white/[0.05]">
-                  <td className="py-2 px-3">
+                <tr
+                  key={index}
+                  className="border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition-colors"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <td className="py-3 px-4">
                     <InlineDropdown
                       value={line.accountId}
                       onChange={val => updateLine(index, 'accountId', val)}
@@ -406,7 +493,7 @@ function JournalEntryForm({
                       ]}
                     />
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-3 px-4">
                     <Input
                       type="text"
                       value={line.description}
@@ -415,63 +502,73 @@ function JournalEntryForm({
                       className="text-sm"
                     />
                   </td>
-                  <td className="py-2 px-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={line.debitAmount || ''}
-                      onChange={e =>
-                        updateLine(index, 'debitAmount', parseFloat(e.target.value) || 0)
-                      }
-                      placeholder="0.00"
-                      className="text-right text-sm"
-                    />
+                  <td className="py-3 px-4">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                        $
+                      </span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={line.debitAmount || ''}
+                        onChange={e =>
+                          updateLine(index, 'debitAmount', parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="0.00"
+                        className="text-right text-sm font-mono pl-6"
+                      />
+                    </div>
                   </td>
-                  <td className="py-2 px-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={line.creditAmount || ''}
-                      onChange={e =>
-                        updateLine(index, 'creditAmount', parseFloat(e.target.value) || 0)
-                      }
-                      placeholder="0.00"
-                      className="text-right text-sm"
-                    />
+                  <td className="py-3 px-4">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                        $
+                      </span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={line.creditAmount || ''}
+                        onChange={e =>
+                          updateLine(index, 'creditAmount', parseFloat(e.target.value) || 0)
+                        }
+                        placeholder="0.00"
+                        className="text-right text-sm font-mono pl-6"
+                      />
+                    </div>
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-3 px-4">
                     <button
                       type="button"
                       onClick={() => removeLine(index)}
                       disabled={formData.lines.length <= 2}
-                      className="p-1 hover:bg-gray-300 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-30"
+                      className="p-2 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed group"
                     >
-                      <TrashIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <TrashIcon className="h-4 w-4 text-slate-400 group-hover:text-rose-500 transition-colors" />
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
-            <tfoot className="bg-gray-200 dark:bg-white/[0.03] border-t border-gray-400 dark:border-white/[0.08]">
+            {/* Totals Footer */}
+            <tfoot className="bg-slate-50 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
               <tr>
-                <td
-                  colSpan={2}
-                  className="py-2 px-3 text-sm font-medium text-gray-900 dark:text-gray-400 text-right"
-                >
-                  Totals:
+                <td colSpan={2} className="py-3 px-4 text-right">
+                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    Totals
+                  </span>
                 </td>
-                <td className="py-2 px-3 text-right">
+                <td className="py-3 px-4 text-right">
                   <span
-                    className={`text-sm font-medium ${totalDebits > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}
+                    className={`text-sm font-mono font-semibold ${totalDebits > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}
                   >
                     ${totalDebits.toFixed(2)}
                   </span>
                 </td>
-                <td className="py-2 px-3 text-right">
+                <td className="py-3 px-4 text-right">
                   <span
-                    className={`text-sm font-medium ${totalCredits > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500'}`}
+                    className={`text-sm font-mono font-semibold ${totalCredits > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}
                   >
                     ${totalCredits.toFixed(2)}
                   </span>
@@ -482,36 +579,48 @@ function JournalEntryForm({
           </table>
         </div>
 
-        {!isBalanced && (
-          <p className="text-sm text-rose-600 dark:text-rose-400 mt-2 flex items-center gap-1">
-            <XMarkIcon className="h-4 w-4" />
-            Entry must balance (debits = credits)
-          </p>
-        )}
-
-        {isBalanced && (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1">
-            <CheckIcon className="h-4 w-4" />
-            Entry is balanced
-          </p>
-        )}
+        {/* Balance Indicator */}
+        <div className="mt-4 flex items-center gap-3">
+          {isBalanced ? (
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+              <CheckIcon className="h-5 w-5 text-emerald-500" />
+              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                Entry is balanced
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg">
+              <XMarkIcon className="h-5 w-5 text-rose-500" />
+              <span className="text-sm font-medium text-rose-700 dark:text-rose-400">
+                Entry must balance (difference: ${Math.abs(totalDebits - totalCredits).toFixed(2)})
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Notes */}
       <FormField label="Notes (optional)">
         <textarea
           value={formData.notes}
           onChange={e => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Additional notes..."
           rows={2}
-          className="w-full px-4 py-2 bg-gray-200 dark:bg-white/[0.05] border border-gray-400 dark:border-white/[0.08] rounded-xl text-sm text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+          className="w-full px-4 py-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
         />
       </FormField>
 
-      <div className="flex items-center gap-3 justify-end pt-4 border-t border-gray-200 dark:border-white/[0.08]">
+      {/* Actions */}
+      <div className="flex items-center gap-3 justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isLoading}>
           Cancel
         </Button>
-        <Button type="submit" variant="primary" disabled={isLoading || !isBalanced}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isLoading || !isBalanced}
+          className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+        >
           {entry ? 'Update' : 'Create'} Entry
         </Button>
       </div>
@@ -564,88 +673,131 @@ function ViewEntryModal({ entryId, onClose, onApprove, onPost, onReverse }: View
     <Modal isOpen={true} onClose={onClose} title="Journal Entry" size="lg">
       <div className="p-6">
         {isLoading ? (
-          <Skeleton variant="rounded" className="h-64" />
+          <div className="space-y-4">
+            <Skeleton variant="rounded" className="h-20" />
+            <Skeleton variant="rounded" className="h-48" />
+          </div>
         ) : entry ? (
           <div className="space-y-6">
-            {/* Header Info */}
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Entry Number</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {entry.entryNumber}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {new Date(entry.entryDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Period</p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">{entry.fiscalPeriod}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+            {/* Art Deco Header */}
+            <div className="relative pb-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="absolute top-0 left-0 w-20 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
+              <div className="flex items-start justify-between mt-3">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white ledger-title">
+                    {entry.entryNumber}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    {entry.description}
+                  </p>
+                </div>
                 <JournalEntryStatusBadge status={entry.status} />
               </div>
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Description</p>
-              <p className="text-sm text-gray-900 dark:text-white">{entry.description}</p>
+            {/* Entry Meta Grid */}
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Date
+                </p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  {new Date(entry.entryDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Period
+                </p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white font-mono">
+                  {entry.fiscalPeriod}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Total
+                </p>
+                <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                  ${entry.totalDebit.toFixed(2)}
+                </p>
+              </div>
             </div>
 
-            {/* Lines */}
-            <div className="border border-gray-200 dark:border-white/[0.08] rounded-xl overflow-hidden">
+            {/* Lines Table */}
+            <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-white/[0.03]">
-                  <tr>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                    <th className="text-left py-2.5 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Account
                     </th>
-                    <th className="text-left py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400">
+                    <th className="text-left py-2.5 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Description
                     </th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-28">
+                    <th className="text-right py-2.5 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
                       Debit
                     </th>
-                    <th className="text-right py-2 px-3 text-xs font-medium text-gray-600 dark:text-gray-400 w-28">
+                    <th className="text-right py-2.5 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
                       Credit
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {entry.lines?.map((line, index) => (
-                    <tr key={index} className="border-t border-gray-200 dark:border-white/[0.05]">
-                      <td className="py-2 px-3 text-sm text-gray-900 dark:text-white">
-                        {line.accountCode}
+                    <tr
+                      key={index}
+                      className="border-b border-slate-100 dark:border-slate-700/50 last:border-0"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <td className="py-3 px-4">
+                        <span className="text-sm font-mono font-medium text-slate-900 dark:text-white">
+                          {line.accountCode}
+                        </span>
                       </td>
-                      <td className="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
-                        {line.description || '-'}
+                      <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
+                        {line.description || '—'}
                       </td>
-                      <td className="py-2 px-3 text-sm text-right text-blue-600 dark:text-blue-400">
-                        {line.debitAmount > 0 ? `${line.debitAmount.toFixed(2)}` : '-'}
+                      <td className="py-3 px-4 text-right">
+                        {line.debitAmount > 0 ? (
+                          <span className="text-sm font-mono font-medium text-emerald-600 dark:text-emerald-400">
+                            ${line.debitAmount.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-slate-300 dark:text-slate-600">—</span>
+                        )}
                       </td>
-                      <td className="py-2 px-3 text-sm text-right text-rose-600 dark:text-rose-400">
-                        {line.creditAmount > 0 ? `$${line.creditAmount.toFixed(2)}` : '-'}
+                      <td className="py-3 px-4 text-right">
+                        {line.creditAmount > 0 ? (
+                          <span className="text-sm font-mono font-medium text-amber-600 dark:text-amber-400">
+                            ${line.creditAmount.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-slate-300 dark:text-slate-600">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-white/[0.03] border-t border-white/[0.08]">
+                <tfoot className="bg-slate-50 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
                   <tr>
-                    <td
-                      colSpan={2}
-                      className="py-2 px-3 text-sm font-medium text-gray-400 text-right"
-                    >
-                      Totals:
+                    <td colSpan={2} className="py-2.5 px-4 text-right">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Totals
+                      </span>
                     </td>
-                    <td className="py-2 px-3 text-sm text-right font-medium text-blue-400">
-                      ${entry.totalDebit.toFixed(2)}
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="text-sm font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                        ${entry.totalDebit.toFixed(2)}
+                      </span>
                     </td>
-                    <td className="py-2 px-3 text-sm text-right font-medium text-rose-400">
-                      ${entry.totalCredit.toFixed(2)}
+                    <td className="py-2.5 px-4 text-right">
+                      <span className="text-sm font-mono font-semibold text-amber-600 dark:text-amber-400">
+                        ${entry.totalCredit.toFixed(2)}
+                      </span>
                     </td>
                   </tr>
                 </tfoot>
@@ -653,14 +805,16 @@ function ViewEntryModal({ entryId, onClose, onApprove, onPost, onReverse }: View
             </div>
 
             {entry.notes && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Notes</p>
-                <p className="text-sm text-gray-300">{entry.notes}</p>
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  Notes
+                </p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{entry.notes}</p>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-3 justify-end pt-4 border-t border-white/[0.08]">
+            <div className="flex items-center gap-3 justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
               <Button variant="secondary" onClick={onClose}>
                 Close
               </Button>
@@ -674,7 +828,12 @@ function ViewEntryModal({ entryId, onClose, onApprove, onPost, onReverse }: View
                 </Button>
               )}
               {canPost && (
-                <Button variant="success" onClick={handlePost} disabled={postMutation.isPending}>
+                <Button
+                  variant="success"
+                  onClick={handlePost}
+                  disabled={postMutation.isPending}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500"
+                >
                   Post Entry
                 </Button>
               )}
@@ -683,6 +842,7 @@ function ViewEntryModal({ entryId, onClose, onApprove, onPost, onReverse }: View
                   variant="primary"
                   onClick={handleApprove}
                   disabled={approveMutation.isPending}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500"
                 >
                   Approve
                 </Button>
@@ -710,6 +870,7 @@ function JournalEntriesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [viewEntryId, setViewEntryId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(true);
   const pageSize = 20;
 
   // API hooks
@@ -727,6 +888,12 @@ function JournalEntriesPage() {
 
   const { data: accounts = [] } = useChartOfAccounts();
   const createMutation = useCreateJournalEntry();
+
+  // Entrance animation
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAnimating(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Sample data for demonstration
   const sampleEntries = [
@@ -862,11 +1029,18 @@ function JournalEntriesPage() {
     },
   ];
 
-  // Use API data or fall back to sample data for demonstration
+  // Use API data or fall back to sample data
   const apiEntries = entriesData?.entries || [];
   const entries = apiEntries.length > 0 ? apiEntries : sampleEntries;
   const totalEntries = entriesData?.total || sampleEntries.length;
   const totalPages = Math.ceil(totalEntries / pageSize);
+
+  // Calculate summary metrics
+  const totalDebits = entries.reduce((sum: number, e: JournalEntry) => sum + e.totalDebit, 0);
+  const totalCredits = entries.reduce((sum: number, e: JournalEntry) => sum + e.totalCredit, 0);
+  const postedCount = entries.filter(
+    (e: JournalEntry) => e.status === JournalEntryStatus.POSTED
+  ).length;
 
   // Format currency
   const formatCurrency = (value: number): string => {
@@ -888,39 +1062,105 @@ function JournalEntriesPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric Background */}
+      <div className="accounting-atmosphere" />
+
       <Header />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+        {/* Hero Section - Asymmetric Layout */}
+        <div className="mb-8 relative">
+          {/* Decorative Element */}
+          <div className="absolute -top-4 -left-4 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            {/* Title Area */}
+            <div
+              className={`transition-all duration-700 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  <BookOpenIcon className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                  Double-Entry Bookkeeping
+                </span>
+              </div>
+              <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white tracking-tight ledger-title">
                 Journal Entries
               </h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Create and manage double-entry journal entries
+              <p className="mt-3 text-lg text-slate-600 dark:text-slate-400 max-w-xl">
+                Create and manage accounting entries with automatic debit-credit balancing
               </p>
             </div>
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2"
+
+            {/* Summary Metrics - Floating Cards */}
+            <div
+              className={`flex flex-wrap gap-4 transition-all duration-700 delay-150 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
             >
-              <PlusIcon className="h-4 w-4" />
-              New Entry
-            </Button>
+              {/* Total Debits */}
+              <div className="px-5 py-4 bg-white dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-900/5 min-w-[160px]">
+                <div className="flex items-center gap-2 mb-1">
+                  <ArrowTrendingUpIcon className="h-4 w-4 text-emerald-500" />
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Total Debits
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 ledger-currency">
+                  {formatCurrency(totalDebits)}
+                </p>
+              </div>
+
+              {/* Total Credits */}
+              <div className="px-5 py-4 bg-white dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-900/5 min-w-[160px]">
+                <div className="flex items-center gap-2 mb-1">
+                  <ArrowTrendingDownIcon className="h-4 w-4 text-amber-500" />
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Total Credits
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 ledger-currency">
+                  {formatCurrency(totalCredits)}
+                </p>
+              </div>
+
+              {/* Posted Count */}
+              <div className="px-5 py-4 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl shadow-xl shadow-emerald-500/20 min-w-[120px]">
+                <div className="text-xs font-semibold text-emerald-100 uppercase tracking-wider mb-1">
+                  Posted
+                </div>
+                <p className="text-2xl font-bold text-white ledger-currency">{postedCount}</p>
+              </div>
+
+              {/* New Entry Button */}
+              <Button
+                variant="primary"
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 h-auto px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/20 rounded-2xl"
+              >
+                <PlusIcon className="h-5 w-5" />
+                <span className="font-semibold">New Entry</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Filters */}
-        <Card variant="glass" className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 flex-wrap">
+        {/* Filters Section */}
+        <div
+          className={`mb-6 transition-all duration-700 delay-300 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
+        >
+          <div className="bg-white dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-xl shadow-slate-900/5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1.5 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full" />
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Filter Entries
+              </h3>
+            </div>
+            <div className="flex items-end gap-4 flex-wrap">
               <CustomDropdown
                 label="Status"
                 value={filterStatus}
@@ -935,10 +1175,10 @@ function JournalEntriesPage() {
                   { value: JournalEntryStatus.REVERSED, label: 'Reversed' },
                 ]}
               />
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-[180px]">
                 <label
                   htmlFor="date-from"
-                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
+                  className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider"
                 >
                   From Date
                 </label>
@@ -947,13 +1187,13 @@ function JournalEntriesPage() {
                   type="date"
                   value={dateFrom}
                   onChange={e => setDateFrom(e.target.value)}
-                  className="bg-white dark:bg-gray-800"
+                  className="font-mono"
                 />
               </div>
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1 min-w-[180px]">
                 <label
                   htmlFor="date-to"
-                  className="text-sm text-gray-700 dark:text-gray-400 mb-2 block font-medium"
+                  className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider"
                 >
                   To Date
                 </label>
@@ -962,133 +1202,180 @@ function JournalEntriesPage() {
                   type="date"
                   value={dateTo}
                   onChange={e => setDateTo(e.target.value)}
-                  className="bg-white dark:bg-gray-800"
+                  className="font-mono"
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Entries Table */}
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle>Entries ({totalEntries})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton variant="rounded" className="h-16" />
-                <Skeleton variant="rounded" className="h-16" />
-                <Skeleton variant="rounded" className="h-16" />
+        <div
+          className={`transition-all duration-700 delay-500 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
+        >
+          <div className="bg-white dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl shadow-slate-900/5 overflow-hidden">
+            {/* Table Header */}
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full" />
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Entries
+                </h3>
+                <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full">
+                  {totalEntries}
+                </span>
               </div>
-            ) : entries.length === 0 ? (
-              <div className="text-center py-12">
-                <DocumentTextIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">No journal entries found</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full" role="table" aria-label="Journal entries">
-                    <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Entry Number
-                        </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Date
-                        </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Description
-                        </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28">
-                          Period
-                        </th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28">
-                          Status
-                        </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-28">
-                          Total
-                        </th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400 w-24">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {entries.map((entry: JournalEntry) => (
-                        <tr
-                          key={entry.journalEntryId}
-                          className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                        >
-                          <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">
-                            {entry.entryNumber}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
-                            {new Date(entry.entryDate).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
-                            {entry.description}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-500 dark:text-gray-400">
-                            {entry.fiscalPeriod}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <JournalEntryStatusBadge status={entry.status} />
-                          </td>
-                          <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-white font-medium">
-                            {formatCurrency(entry.totalDebit)}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <button
-                              onClick={() => setViewEntryId(entry.journalEntryId)}
-                              className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors"
-                              title="View Entry"
-                            >
-                              <EyeIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Showing {currentPage * pageSize + 1}-
-                      {Math.min((currentPage + 1) * pageSize, totalEntries)} of {totalEntries}{' '}
-                      entries
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                        disabled={currentPage === 0}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-sm text-gray-400 px-2">
-                        Page {currentPage + 1} of {totalPages}
-                      </span>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                        disabled={currentPage >= totalPages - 1}
-                      >
-                        Next
-                      </Button>
-                    </div>
+            {/* Table Content */}
+            <div className="p-6">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-16 bg-slate-100 dark:bg-slate-700/50 rounded-xl animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : entries.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center">
+                    <DocumentTextIcon className="h-10 w-10 text-slate-400 dark:text-slate-500" />
                   </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+                  <p className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    No journal entries found
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-500">
+                    Create your first entry to get started
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full" role="table" aria-label="Journal entries">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-700">
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Entry #
+                          </th>
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Description
+                          </th>
+                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
+                            Period
+                          </th>
+                          <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
+                            Status
+                          </th>
+                          <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
+                            Total
+                          </th>
+                          <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entries.map((entry: JournalEntry, index: number) => (
+                          <tr
+                            key={entry.journalEntryId}
+                            className="border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 group cursor-pointer"
+                            onClick={() => setViewEntryId(entry.journalEntryId)}
+                            style={{
+                              animationDelay: `${index * 50}ms`,
+                            }}
+                          >
+                            <td className="py-4 px-4">
+                              <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                {entry.entryNumber}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="text-sm text-slate-600 dark:text-slate-300 font-mono">
+                                {new Date(entry.entryDate).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="text-sm text-slate-700 dark:text-slate-300 line-clamp-1">
+                                {entry.description}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="text-sm text-slate-500 dark:text-slate-400 font-mono">
+                                {entry.fiscalPeriod}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <JournalEntryStatusBadge status={entry.status} />
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white">
+                                {formatCurrency(entry.totalDebit)}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-center">
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  setViewEntryId(entry.journalEntryId);
+                                }}
+                                className="p-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors"
+                                title="View Entry"
+                              >
+                                <EyeIcon className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Showing {currentPage * pageSize + 1}–
+                        {Math.min((currentPage + 1) * pageSize, totalEntries)} of {totalEntries}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                          disabled={currentPage === 0}
+                          className="px-4"
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-sm text-slate-400 px-3 font-mono">
+                          {currentPage + 1} / {totalPages}
+                        </span>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                          disabled={currentPage >= totalPages - 1}
+                          className="px-4"
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Create Entry Modal */}
         <Modal
