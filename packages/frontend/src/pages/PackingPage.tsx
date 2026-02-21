@@ -2,22 +2,25 @@
  * Packing page
  *
  * Main packing interface for verifying and packing orders
+ *
+ * Design: Scanner-First Industrial Aesthetic (Matches PickingPage)
+ * - Bold typography with Archivo display font
+ * - Technical monospace for codes/locations
+ * - Industrial corner accents and beacon effects
+ * - Distinctive visual hierarchy
  */
 
 import {
   Breadcrumb,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   ConfirmDialog,
   Header,
   ScanInput,
+  TaskStatusBadge,
   UnclaimModal,
   useToast,
 } from '@/components/shared';
-import { usePageTracking } from '@/hooks/usePageTracking';
+import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
 import { nzcApi, useCompletePacking, useOrder } from '@/services/api';
@@ -25,12 +28,13 @@ import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
   CheckIcon,
-  CubeIcon,
+  ExclamationCircleIcon,
   ExclamationTriangleIcon,
   MinusCircleIcon,
   PrinterIcon,
+  ForwardIcon,
 } from '@heroicons/react/24/outline';
-import { Address, Carrier, NZCQuote } from '@opsui/shared';
+import { Address, Carrier, NZCQuote, OrderStatus } from '@opsui/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -55,6 +59,13 @@ export function PackingPage() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [scanSuccess, setScanSuccess] = useState(false);
+
+  // Skip modal state
+  const [showSkipModal, setShowSkipModal] = useState(false);
+  const [skipItemIndex, setSkipItemIndex] = useState<number | null>(null);
+  const [skipReason, setSkipReason] = useState('');
+  const [isSkipping, setIsSkipping] = useState(false);
 
   // Unclaim modal state
   const [showUnclaimModal, setShowUnclaimModal] = useState(false);
@@ -179,7 +190,6 @@ export function PackingPage() {
         console.log(`[PackingPage] Order already claimed or ready for packing: ${orderId}`);
         hasClaimedRef.current = true;
       } else if (order.status === 'PICKED') {
-        // Claim the order for packing
         if (order.packerId && order.packerId !== currentUserId) {
           console.log(
             `[PackingPage] Order claimed by another packer (${order.packerId}), skipping`
@@ -261,7 +271,6 @@ export function PackingPage() {
       console.log('[PackingPage] All items verified, auto-showing shipping form');
       setShowShippingForm(true);
     } else if (!allVerified && showShippingForm) {
-      // Hide shipping form if not all verified (user might have undone verification)
       setShowShippingForm(false);
     }
   }, [allVerified]);
@@ -315,7 +324,6 @@ export function PackingPage() {
 
         if (response.Quotes && response.Quotes.length > 0) {
           setNzcRates(response.Quotes);
-          // Auto-select the first quote
           setSelectedQuote(response.Quotes[0]);
         } else {
           setNzcRates([]);
@@ -333,7 +341,6 @@ export function PackingPage() {
       }
     };
 
-    // Debounce rate fetching
     const timeoutId = setTimeout(fetchNZCRates, 500);
     return () => clearTimeout(timeoutId);
   }, [selectedCarrierId, totalWeight, totalPackages, carriers, order]);
@@ -342,17 +349,24 @@ export function PackingPage() {
     return <div>No order ID provided</div>;
   }
 
-  // Show claim loading state
+  // Show claim loading state - Distinctive warehouse loading animation
   if (claimMutation.isPending) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card>
-          <CardContent className="p-6 text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
-            <p className="text-gray-600">Claiming order for packing...</p>
-            <p className="text-sm text-gray-500">Please wait while we assign this order to you</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="warehouse-loading">
+          <div className="warehouse-loading-icon" />
+          <div className="warehouse-loading-bars">
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+          </div>
+          <div className="text-center">
+            <p className="picking-title text-white text-xl mb-2">Claiming Order</p>
+            <p className="picking-subtitle text-gray-400 text-sm">Preparing your pack list...</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -360,147 +374,189 @@ export function PackingPage() {
   // Show claim error
   if (claimError) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="border-error-500 border-2">
-          <CardContent className="p-6 text-center space-y-4">
-            <ExclamationTriangleIcon className="h-12 w-12 text-error-600 mx-auto" />
-            <h2 className="text-xl font-bold text-gray-900">Cannot Start Packing</h2>
-            <p className="text-gray-600">{claimError}</p>
-            <div className="flex gap-2 justify-center">
-              <Button variant="secondary" onClick={() => navigate('/packing')}>
-                Back to Packing Queue
-              </Button>
-              <Button
-                onClick={() => {
-                  setClaimError(null);
-                  claimMutation.mutate(orderId!);
-                }}
-              >
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-error-500/20 flex items-center justify-center">
+            <ExclamationCircleIcon className="h-8 w-8 text-error-400" />
+          </div>
+          <h2 className="picking-title text-2xl text-white mb-3">Cannot Start Packing</h2>
+          <p className="picking-subtitle text-gray-400 mb-6">{claimError}</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="secondary" onClick={() => navigate('/packing')}>
+              Back to Queue
+            </Button>
+            <Button
+              onClick={() => {
+                setClaimError(null);
+                claimMutation.mutate(orderId!);
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-400">Loading order...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="warehouse-loading">
+          <div className="warehouse-loading-icon" />
+          <div className="warehouse-loading-bars">
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+          </div>
+          <div className="text-center">
+            <p className="picking-title text-white text-xl mb-2">Loading Order</p>
+            <p className="picking-subtitle text-gray-400 text-sm">Retrieving pack details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card variant="glass">
-          <CardContent className="p-8 text-center">
-            <p className="text-gray-400">Order not found</p>
-            <Button onClick={() => navigate('/packing')} className="mt-4">
-              Back to Queue
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
+          <p className="picking-subtitle text-gray-400 mb-6">Order not found</p>
+          <Button onClick={() => navigate('/packing')}>Back to Queue</Button>
+        </div>
       </div>
     );
   }
 
-  const handleScan = async (value: string) => {
-    if (!currentItem) {
-      showToast('No current item to verify', 'error');
-      return;
+  // ==========================================================================
+  // ANY-ORDER SCANNING LOGIC
+  // ==========================================================================
+
+  /**
+   * Find an item matching the scanned barcode/SKU that is not yet fully verified
+   * This allows scanning items in any order
+   */
+  const findMatchingItem = (scannedValue: string): { item: any; index: number } | null => {
+    if (!order?.items) return null;
+
+    for (let i = 0; i < order.items.length; i++) {
+      const item = order.items[i];
+      const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
+      const isSkipped = item.status === 'SKIPPED';
+
+      // Skip completed or skipped items
+      if (isCompleted || isSkipped) continue;
+
+      // Check if scanned value matches barcode or SKU
+      const matchesBarcode = item.barcode && scannedValue === item.barcode;
+      const matchesSku = scannedValue === item.sku;
+
+      if (matchesBarcode || matchesSku) {
+        return { item, index: i };
+      }
     }
 
-    // Prevent duplicate scans while verification is in progress
+    return null;
+  };
+
+  const handleScan = async (value: string) => {
     if (isVerifying) {
       console.log('[PackingPage] Scan ignored - verification in progress');
       return;
     }
 
     setScanError(null);
-    const scannedValue = value.trim();
+    const scanValueTrimmed = value.trim();
 
-    // Validate scan matches either barcode OR SKU
-    const isValidScan =
-      (currentItem.barcode && scannedValue === currentItem.barcode) ||
-      scannedValue === currentItem.sku;
+    // ANY-ORDER SCANNING: Find any item that matches the scanned value
+    const matchResult = findMatchingItem(scanValueTrimmed);
 
-    if (!isValidScan) {
-      const expectedBarcodes = currentItem.barcode ? currentItem.barcode : currentItem.sku;
-      setScanError(`Wrong scan! Expected: ${expectedBarcodes}, scanned: ${scannedValue}`);
-      showToast(`Wrong barcode scanned`, 'error');
+    if (!matchResult) {
+      // Check if it matches a completed or skipped item for better error message
+      if (order?.items) {
+        for (const item of order.items) {
+          const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
+          const matchesSku = scanValueTrimmed === item.sku;
+          if (matchesBarcode || matchesSku) {
+            if (item.status === 'SKIPPED') {
+              setScanError(`Item was skipped: ${item.name}. Revert the skip to verify it.`);
+            } else if ((item.verifiedQuantity || 0) >= item.quantity) {
+              setScanError(`Item already fully verified: ${item.name}`);
+            }
+            showToast('Item already processed', 'warning');
+            return;
+          }
+        }
+      }
+
+      setScanError(
+        `Invalid scan: "${scanValueTrimmed}" does not match any unverified item in this order.`
+      );
+      showToast('Invalid barcode or SKU', 'error');
       return;
     }
 
-    // Check if already fully verified
-    const currentVerified = currentItem.verifiedQuantity || 0;
-    if (currentVerified >= currentItem.quantity) {
-      showToast('This item is already fully verified', 'success');
-      setScanValue('');
+    const { item: matchedItem, index: matchedIndex } = matchResult;
+
+    // Check for over-scanning
+    const currentVerified = matchedItem.verifiedQuantity || 0;
+    if (currentVerified >= matchedItem.quantity) {
+      setScanError(`Item already fully verified: ${matchedItem.name}`);
+      showToast('Item already fully verified', 'warning');
       return;
+    }
+
+    // Switch to the matched item's task if different from current
+    if (matchedIndex !== currentItemIndex) {
+      setCurrentItemIndex(matchedIndex);
     }
 
     // Verify packing item via API
     setIsVerifying(true);
     try {
       await apiClient.post(`/orders/${orderId}/verify-packing`, {
-        order_item_id: currentItem.orderItemId,
+        order_item_id: matchedItem.orderItemId,
         quantity: 1,
       });
 
-      showToast('Item verified!', 'success');
+      // Show success feedback
+      setScanSuccess(true);
+      setTimeout(() => setScanSuccess(false), 600);
+
+      showToast(`${matchedItem.name} verified!`, 'success');
       setScanValue('');
 
-      // Calculate the new verified quantity (current + 1)
+      // Optimistically update the cache
       const newVerified = currentVerified + 1;
-
-      // Optimistically update the cache to show immediate UI feedback
       queryClient.setQueryData(['orders', orderId], (oldData: any) => {
         if (!oldData?.items) return oldData;
 
         const updatedItems = oldData.items.map((item: any, idx: number) =>
-          idx === currentItemIndex && item.orderItemId === currentItem.orderItemId
+          idx === matchedIndex && item.orderItemId === matchedItem.orderItemId
             ? { ...item, verifiedQuantity: newVerified }
             : item
         );
-
-        console.log('[PackingPage] Optimistic update:', {
-          itemIndex: currentItemIndex,
-          oldVerified: currentVerified,
-          newVerified,
-          sku: currentItem.sku,
-        });
 
         return { ...oldData, items: updatedItems };
       });
 
       // Check if item is now complete and move to next
-      if (newVerified >= currentItem.quantity) {
-        // Find next incomplete item using the optimistically updated data
+      if (newVerified >= matchedItem.quantity) {
         const orderData = queryClient.getQueryData(['orders', orderId]) as any;
         if (!orderData?.items) return;
 
         const nextIncompleteIndex = orderData.items.findIndex(
           (item: any, idx: number) =>
-            idx > currentItemIndex &&
+            idx > matchedIndex &&
             (item.verifiedQuantity || 0) < item.quantity &&
             item.status !== 'SKIPPED'
         );
 
-        console.log('[PackingPage] Item complete, finding next:', {
-          currentItemIndex,
-          nextIncompleteIndex,
-          totalItems: orderData.items.length,
-        });
-
         if (nextIncompleteIndex !== -1) {
-          console.log('[PackingPage] Moving to next item:', nextIncompleteIndex);
           setCurrentItemIndex(nextIncompleteIndex);
-        } else {
-          console.log('[PackingPage] No more incomplete items');
         }
       }
     } catch (error) {
@@ -511,49 +567,42 @@ export function PackingPage() {
     }
   };
 
-  const handleSkipItem = async () => {
-    if (!currentItem) {
-      showToast('No current item to report', 'error');
-      return;
-    }
+  // ==========================================================================
+  // SKIP ITEM FUNCTIONALITY
+  // ==========================================================================
 
-    // Confirm before reporting problem
-    const reason = prompt('Report a Problem\n\nPlease provide a reason for reporting this item:');
-    if (!reason || !reason.trim()) {
-      showToast('Reason is required', 'error');
-      return;
-    }
+  const handleSkipItem = (index: number) => {
+    const item = order?.items?.[index];
+    if (!item) return;
+
+    setSkipItemIndex(index);
+    setSkipReason('');
+    setShowSkipModal(true);
+  };
+
+  const handleConfirmSkip = async () => {
+    if (skipItemIndex === null || !order?.items?.[skipItemIndex]) return;
+
+    const item = order.items[skipItemIndex];
+    setIsSkipping(true);
 
     try {
       await apiClient.post(`/orders/${orderId}/skip-packing-item`, {
-        order_item_id: currentItem.orderItemId,
-        reason: reason.trim(),
+        order_item_id: item.orderItemId,
+        reason: skipReason || 'No reason provided',
       });
 
-      showToast('Problem reported successfully!', 'success');
+      showToast('Item skipped!', 'warning');
+      setShowSkipModal(false);
+      setSkipItemIndex(null);
+      setSkipReason('');
 
-      // Refetch order data to get updated state
+      // Refetch order data
       await refetch();
-
-      // Move to next item
-      if (!order.items) return;
-      const nextIncompleteIndex = order.items.findIndex(
-        (item, idx) =>
-          idx > currentItemIndex &&
-          (item.verifiedQuantity || 0) < item.quantity &&
-          item.status !== 'SKIPPED'
-      );
-
-      if (nextIncompleteIndex !== -1) {
-        setCurrentItemIndex(nextIncompleteIndex);
-        setScanValue('');
-        setScanError(null);
-      } else {
-        // All tasks done or skipped, check if order is complete
-        refetch();
-      }
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to report problem', 'error');
+      showToast(error instanceof Error ? error.message : 'Failed to skip item', 'error');
+    } finally {
+      setIsSkipping(false);
     }
   };
 
@@ -569,7 +618,6 @@ export function PackingPage() {
     if (!item) return;
 
     try {
-      // Update item status back to PENDING
       await apiClient.put(`/orders/${orderId}/pick-task/${item.orderItemId}`, {
         status: 'PENDING',
       });
@@ -577,10 +625,8 @@ export function PackingPage() {
       showToast('Skip reverted successfully!', 'success');
       setUnskipConfirm({ isOpen: false, index: -1, item: null });
 
-      // Refetch order data to get updated state
       await refetch();
 
-      // Set this as current item if it's not completed
       if ((item.verifiedQuantity || 0) < item.quantity) {
         setCurrentItemIndex(index);
         setScanValue('');
@@ -592,7 +638,6 @@ export function PackingPage() {
   };
 
   const handleUndoVerification = async (index: number) => {
-    // Prevent multiple simultaneous undo operations on the same item
     if (undoLoading[index]) {
       console.log('[handleUndoVerification] Undo already in progress for item', index);
       return;
@@ -601,7 +646,6 @@ export function PackingPage() {
     try {
       setUndoLoading(prev => ({ ...prev, [index]: true }));
 
-      // Fetch latest order data directly from API to ensure fresh state
       const response = await apiClient.get(`/orders/${orderId}`);
       const latestOrder = response.data;
 
@@ -611,7 +655,6 @@ export function PackingPage() {
         return;
       }
 
-      // Can only undo if there's something verified
       const currentVerified = item.verifiedQuantity || 0;
       console.log('[handleUndoVerification] Current verified state:', {
         index,
@@ -625,11 +668,10 @@ export function PackingPage() {
           'No verified items to undo. The item may have already been undone or never verified.',
           'error'
         );
-        await refetch(); // Refresh to show current state
+        await refetch();
         return;
       }
 
-      // Ask for reason
       const reason =
         prompt(
           `Remove 1 verified item from ${item.name} (${item.sku})?\n\n` +
@@ -651,13 +693,9 @@ export function PackingPage() {
         });
 
         showToast('Verification undone!', 'success');
-
-        // Force invalidate query cache and refetch
         queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
         await refetch();
 
-        // If we undid current item, it stays current
-        // If we undid an item above current one, navigate to that item
         if (index < currentItemIndex) {
           setCurrentItemIndex(index);
           setScanValue('');
@@ -665,18 +703,15 @@ export function PackingPage() {
         }
       } catch (error: any) {
         console.error('Undo verification error:', error);
-
-        // Handle state mismatch gracefully
         const errorMsg =
           error.response?.data?.error || error.message || 'Failed to undo verification';
 
         if (errorMsg.includes('Cannot undo more items than verified')) {
-          // State changed between our fetch and the request - refresh and inform user
           await refetch();
           showToast('State has changed. Please try again.', 'warning');
         } else {
           showToast(errorMsg, 'error');
-          await refetch(); // Always refresh on error to sync state
+          await refetch();
         }
       }
     } catch (error) {
@@ -689,24 +724,19 @@ export function PackingPage() {
   };
 
   const handleCompletePacking = async () => {
-    // Show shipping form instead of completing directly
     setShowShippingForm(true);
   };
 
   const confirmCreateShipment = async () => {
-    // This is called after user confirms the skipped items dialog
-    // Continue with the actual shipment creation logic (skip the skipped items check)
     await handleCreateShipment(true);
   };
 
   const handleCreateShipment = async (skipConfirmCheck = false) => {
-    // Validate shipping details
     if (!selectedCarrierId) {
       showToast('Please select a carrier', 'error');
       return;
     }
 
-    // For NZC carrier, we need a selected quote
     const isNZCCarrier =
       carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
     if (isNZCCarrier && !selectedQuote) {
@@ -714,7 +744,6 @@ export function PackingPage() {
       return;
     }
 
-    // For non-NZC carriers, require manual tracking number
     if (!isNZCCarrier && !trackingNumber.trim()) {
       showToast('Please enter a tracking number', 'error');
       return;
@@ -730,12 +759,10 @@ export function PackingPage() {
       return;
     }
 
-    // Check for skipped items (unless skipConfirmCheck is true)
     if (!skipConfirmCheck) {
       const skippedItems = order?.items?.filter(item => item.status === 'SKIPPED');
 
       if (skippedItems && skippedItems.length > 0) {
-        // Show confirmation dialog for skipped items
         setCompleteShipmentConfirm({ isOpen: true, skippedItems });
         return;
       }
@@ -744,7 +771,6 @@ export function PackingPage() {
     setIsCreatingShipment(true);
 
     try {
-      // Default addresses (in real app, these would come from order/customer data)
       const shipFromAddress: Address = {
         name: 'Main Warehouse',
         company: 'Your Company',
@@ -765,7 +791,6 @@ export function PackingPage() {
       };
 
       if (isNZCCarrier) {
-        // NZC Flow: Create shipment via NZC API, get label, complete packing
         if (!selectedQuote) {
           showToast('Please select a shipping rate/quote', 'error');
           setIsCreatingShipment(false);
@@ -774,7 +799,6 @@ export function PackingPage() {
 
         const weightKg = lbsToKg(parseFloat(totalWeight));
 
-        // Create shipment with NZC
         const nzcShipment = await nzcApi.createShipment({
           destination: {
             name: shipToAddress.name,
@@ -787,7 +811,7 @@ export function PackingPage() {
           },
           packages: [
             {
-              length: 10, // Default package size - in production, get from order items
+              length: 10,
               width: 10,
               height: 10,
               weight: weightKg,
@@ -801,13 +825,11 @@ export function PackingPage() {
         setNzcConnote(connote);
         setShipmentCreated(true);
 
-        // Get label
         const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
         setNzcLabel(label);
 
         showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
 
-        // Create shipment record in database
         await apiClient.post('/shipping/shipments', {
           orderId,
           carrierId: selectedCarrierId,
@@ -820,7 +842,6 @@ export function PackingPage() {
           createdBy: currentUser?.userId,
         });
 
-        // Complete packing
         await completePackingMutation.mutateAsync({
           orderId,
           dto: {
@@ -831,7 +852,6 @@ export function PackingPage() {
 
         showToast('Order packed and shipped successfully!', 'success');
       } else {
-        // Standard Flow: Create shipment record with manual tracking number
         const shipmentResponse = await apiClient.post('/shipping/shipments', {
           orderId,
           carrierId: selectedCarrierId,
@@ -846,7 +866,6 @@ export function PackingPage() {
 
         const shipment = shipmentResponse.data;
 
-        // Add tracking number if provided
         if (trackingNumber.trim()) {
           await apiClient.post(`/shipping/shipments/${shipment.shipmentId}/tracking`, {
             trackingNumber: trackingNumber.trim(),
@@ -855,7 +874,6 @@ export function PackingPage() {
 
         showToast(`Shipment created! Tracking: ${trackingNumber || 'Pending'}`, 'success');
 
-        // Complete packing
         await completePackingMutation.mutateAsync({
           orderId,
           dto: {
@@ -893,7 +911,6 @@ export function PackingPage() {
       hasClaimedRef.current = false;
       isClaimingRef.current = false;
       setClaimError(null);
-      // Invalidate all relevant queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['orders', 'packing-queue'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -915,150 +932,163 @@ export function PackingPage() {
       order.status === 'PACKED' ||
       order.status === 'SHIPPED');
 
+  // Calculate progress percentage for ring
+  const progressPercent = Math.round((verifiedCount / totalItems) * 100) || 0;
+  const circumference = 2 * Math.PI * 45; // radius = 45
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
   return (
     <div className="min-h-screen">
+      {/* Industrial grid background texture - fixed position to not affect scroll */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+        style={{
+          backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.12) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(168, 85, 247, 0.12) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+          opacity: 0.4,
+          maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+        }}
+      />
+
       <Header />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in">
+      <main className="relative z-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
+
         {/* View Mode Banner */}
         {isViewMode && (
-          <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-5 flex items-center gap-4 card-hover">
-            <ExclamationTriangleIcon className="h-6 w-6 text-primary-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">
+          <div className="picking-card rounded-xl p-4 sm:p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center flex-shrink-0">
+              <ExclamationCircleIcon className="h-5 w-5 text-primary-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="picking-title text-white">
                 {order.status === 'PACKED' || order.status === 'SHIPPED'
                   ? 'Viewing completed order'
                   : "Viewing this packer's work in real-time"}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="picking-subtitle text-gray-400 text-sm mt-0.5">
                 You are in view-only mode. Interactions are disabled.
               </p>
             </div>
           </div>
         )}
 
-        {/* Order Header */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
-            <div>
-              <h1 className="text-3xl font-bold text-white tracking-tight">{order.orderId}</h1>
-              <p className="mt-2 text-gray-400">{order.customerName}</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            {!isViewMode && (
-              <>
-                <Button
-                  variant="danger"
-                  onClick={handleUnclaimOrder}
-                  disabled={order.status !== 'PACKING' && order.status !== 'PICKED'}
-                >
-                  Unclaim Order
-                </Button>
-                <Button variant="secondary" onClick={() => navigate('/packing')}>
-                  Exit
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Progress */}
-        <Card variant="glass" className="card-hover">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                Verified: {verifiedCount} / {totalItems} items
-              </span>
-              <span className="text-2xl font-bold text-white">
-                {Math.round((verifiedCount / totalItems) * 100) || 0}%
-              </span>
-            </div>
-            <div className="w-full bg-white/[0.05] rounded-full h-3 overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-success-500 to-success-400 h-full rounded-full transition-all duration-500 shadow-glow"
-                style={{ width: `${(verifiedCount / totalItems) * 100 || 0}%` }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Packing Instructions */}
-        {order.status === 'PICKED' && !allVerified && (
-          <Card variant="glass" className="border-primary-500/50 border-2 shadow-glow card-hover">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-start gap-4">
-                <CubeIcon className="h-8 w-8 text-primary-400 flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-2">Packing Instructions</h3>
-                  <ul className="space-y-2 text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary-400 mt-1">•</span>
-                      <span>
-                        Scan each item's barcode to verify it's present and in good condition
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary-400 mt-1">•</span>
-                      <span>Once all items are verified, complete the packing process</span>
-                    </li>
-                  </ul>
+        {/* Main Content Grid - Progress on left, Current Task on right */}
+        <div className="lg:flex lg:gap-6">
+          {/* Progress Sidebar - Left side - Sticky on desktop */}
+          <div className="lg:w-1/4 lg:flex-shrink-0 mb-6 lg:mb-0">
+            <div className="picking-card rounded-2xl lg:sticky lg:top-20 industrial-corners">
+              <div className="p-6">
+                {/* Order Info */}
+                <div className="mb-6 pb-6 border-b border-white/[0.08]">
+                  <h1 className="picking-title text-xl text-white truncate">{order.orderId}</h1>
+                  <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
+                    {order.customerName}
+                  </p>
                 </div>
+
+                {/* Progress Ring */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative picking-reticle rounded-full">
+                    <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+                      {/* Background circle */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        stroke="rgba(168, 85, 247, 0.2)"
+                        strokeWidth="6"
+                        fill="none"
+                      />
+                      {/* Progress circle */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        stroke="url(#progress-gradient)"
+                        strokeWidth="6"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        className="transition-all duration-700 ease-out"
+                      />
+                      <defs>
+                        <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#a855f7" />
+                          <stop offset="100%" stopColor="#c084fc" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="hero-number text-3xl">{progressPercent}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="picking-subtitle text-gray-400 text-sm">Verified</span>
+                    <span className="hero-number text-lg text-success-400">{verifiedCount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="picking-subtitle text-gray-400 text-sm">Remaining</span>
+                    <span className="hero-number text-lg text-warning-400">
+                      {totalItems - verifiedCount}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="picking-subtitle text-gray-400 text-sm">Total</span>
+                    <span className="hero-number text-lg text-white">{totalItems}</span>
+                  </div>
+                </div>
+
+                {allVerified && !showShippingForm && (
+                  <Button
+                    size="lg"
+                    variant="success"
+                    onClick={handleCompletePacking}
+                    disabled={isViewMode ? true : undefined}
+                    className="w-full action-button-enhanced touch-target"
+                  >
+                    Enter Shipping Details
+                  </Button>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </div>
 
-        {allVerified ? (
-          /* All Items Verified - Show Shipping Details Form or Completion */
-          !showShippingForm ? (
-            /* Step 1: Show completion button to proceed to shipping */
-            <Card variant="glass" className="border-success-500/50 border-2 card-hover">
-              <CardContent className="p-10 text-center space-y-6">
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-success-500/20 flex items-center justify-center animate-scale-in">
-                  <CheckIcon className="h-10 w-10 text-success-400" />
-                </div>
-                <h2 className="text-3xl font-bold text-white mb-3">All Items Verified!</h2>
-                <p className="text-gray-400 mb-8">
-                  Order is ready to be packed and shipped. Please enter shipping details.
-                </p>
-                <Button
-                  size="lg"
-                  variant="success"
-                  onClick={handleCompletePacking}
-                  disabled={isViewMode ? true : undefined}
-                  className="shadow-glow"
-                >
-                  Enter Shipping Details
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            /* Step 2: Shipping Details Form */
-            <div ref={shippingFormRef}>
-              <Card
-                variant="glass"
-                className="border-primary-500/50 border-2 shadow-glow card-hover"
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="text-white">Shipping Details</span>
-                    <span className="text-sm text-gray-400">Order: {order.orderId}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Current Task - Right side */}
+          <div className="flex-1 min-w-0">
+            {showShippingForm ? (
+              /* Shipping Details Form */
+              <div ref={shippingFormRef}>
+                <div className="picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners">
+                  <div className="p-6 border-b border-white/[0.08]">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                          Shipping Details
+                        </p>
+                        <h2 className="picking-title text-xl text-white">Create Shipment</h2>
+                      </div>
+                      <span className="text-sm text-gray-400 font-mono">{order.orderId}</span>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-6">
                     {/* Carrier Selection */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                        Carrier *
+                    <div>
+                      <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                        Carrier <span className="text-error-400">*</span>
                       </label>
                       <select
                         value={selectedCarrierId}
                         onChange={e => setSelectedCarrierId(e.target.value)}
                         disabled={isCreatingShipment || isViewMode}
-                        className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                        className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
                       >
                         <option value="">Select a carrier...</option>
                         {carriers.map((carrier: Carrier) => (
@@ -1069,18 +1099,18 @@ export function PackingPage() {
                       </select>
                     </div>
 
-                    {/* Service Type - Only show for non-NZC carriers */}
+                    {/* Service Type - Only for non-NZC carriers */}
                     {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)
                       ?.carrierCode !== 'NZC' && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                          Service Type *
+                      <div>
+                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                          Service Type <span className="text-error-400">*</span>
                         </label>
                         <select
                           value={serviceType}
                           onChange={e => setServiceType(e.target.value)}
                           disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
                         >
                           <option value="Ground">Ground</option>
                           <option value="Express">Express</option>
@@ -1090,11 +1120,11 @@ export function PackingPage() {
                       </div>
                     )}
 
-                    {/* Tracking Number - Only show for non-NZC carriers */}
+                    {/* Tracking Number - Only for non-NZC carriers */}
                     {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)
                       ?.carrierCode !== 'NZC' && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                      <div>
+                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
                           Tracking Number (Optional)
                         </label>
                         <input
@@ -1103,441 +1133,500 @@ export function PackingPage() {
                           onChange={e => setTrackingNumber(e.target.value)}
                           placeholder="Enter tracking number..."
                           disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                         />
                       </div>
                     )}
 
                     {/* Package Details */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                        Number of Packages *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={totalPackages}
-                        onChange={e => setTotalPackages(e.target.value)}
-                        disabled={isCreatingShipment || isViewMode}
-                        className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                          Packages <span className="text-error-400">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={totalPackages}
+                          onChange={e => setTotalPackages(e.target.value)}
+                          disabled={isCreatingShipment || isViewMode}
+                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                          Weight (lbs) <span className="text-error-400">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={totalWeight}
+                          onChange={e => setTotalWeight(e.target.value)}
+                          placeholder="Enter weight..."
+                          disabled={isCreatingShipment || isViewMode}
+                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                        />
+                      </div>
                     </div>
 
-                    {/* Weight */}
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                        Total Weight (lbs) *
-                      </label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={totalWeight}
-                        onChange={e => setTotalWeight(e.target.value)}
-                        placeholder="Enter total weight..."
-                        disabled={isCreatingShipment || isViewMode}
-                        className="w-full bg-white/[0.05] border border-white/[0.1] rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Shipping Address Info */}
-                  <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4 space-y-3">
-                    <h3 className="text-lg font-semibold text-white">Shipping To</h3>
-                    <div className="text-gray-300">
-                      <p className="font-semibold">{order.customerName}</p>
-                      <p className="text-sm mt-2">
+                    {/* Shipping Address Info */}
+                    <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
+                        Shipping To
+                      </p>
+                      <p className="text-white font-semibold">{order.customerName}</p>
+                      <p className="text-sm text-gray-400 mt-1">
                         In production, customer address will be loaded from order details
                       </p>
                     </div>
-                  </div>
 
-                  {/* NZC Rates Display */}
-                  {nzcRates.length > 0 && (
-                    <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
-                      <h3 className="text-lg font-semibold text-white">Available Shipping Rates</h3>
-                      {isFetchingRates && (
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
-                          <span className="text-sm">Fetching rates...</span>
-                        </div>
-                      )}
-                      {!isFetchingRates && (
-                        <div className="space-y-2">
-                          {nzcRates.map(quote => (
-                            <div
-                              key={quote.QuoteId}
-                              className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
-                                selectedQuote?.QuoteId === quote.QuoteId
-                                  ? 'bg-primary-500/20 border-primary-500'
-                                  : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05]'
-                              }`}
-                              onClick={() => setSelectedQuote(quote)}
-                            >
-                              <div className="flex-1">
-                                <p className="font-semibold text-white">{quote.Service}</p>
-                                {quote.TransitDays && (
-                                  <p className="text-sm text-gray-400">
-                                    {quote.TransitDays} days transit
+                    {/* NZC Rates Display */}
+                    {nzcRates.length > 0 && (
+                      <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
+                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
+                          Available Shipping Rates
+                        </p>
+                        {isFetchingRates && (
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
+                            <span className="text-sm">Fetching rates...</span>
+                          </div>
+                        )}
+                        {!isFetchingRates && (
+                          <div className="space-y-2">
+                            {nzcRates.map(quote => (
+                              <div
+                                key={quote.QuoteId}
+                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                  selectedQuote?.QuoteId === quote.QuoteId
+                                    ? 'bg-primary-500/20 border-primary-500'
+                                    : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05]'
+                                }`}
+                                onClick={() => setSelectedQuote(quote)}
+                              >
+                                <div className="flex-1">
+                                  <p className="picking-title text-white text-sm">
+                                    {quote.Service}
                                   </p>
-                                )}
+                                  {quote.TransitDays && (
+                                    <p className="text-sm text-gray-400">
+                                      {quote.TransitDays} days transit
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-primary-400">
+                                    ${quote.TotalPrice.toFixed(2)}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="text-lg font-bold text-primary-400">
-                                  ${quote.TotalPrice.toFixed(2)}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* NZC Label Display */}
-                  {nzcLabel && (
-                    <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-white">Shipping Label</h3>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-400">Connote:</span>
-                          <span className="font-mono text-primary-400">{nzcConnote}</span>
-                        </div>
-                      </div>
-                      <div className="bg-white rounded-lg p-2">
-                        <img
-                          src={`data:${nzcLabel.contentType};base64,${nzcLabel.data}`}
-                          alt="Shipping Label"
-                          className="w-full h-auto max-h-[400px] object-contain"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => {
-                            // Open label in new tab for printing
-                            const newWindow = window.open();
-                            if (newWindow) {
-                              newWindow.document.write(
-                                `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
-                                <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
-                              </body></html>`
-                              );
-                              newWindow.document.close();
-                            }
-                          }}
-                        >
-                          <PrinterIcon className="h-4 w-4 mr-2" />
-                          Print Label
-                        </Button>
-                        {shipmentCreated && (
-                          <Button variant="success" size="sm" onClick={() => navigate('/packing')}>
-                            Done
-                          </Button>
+                            ))}
+                          </div>
                         )}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Action Buttons */}
-                  {!shipmentCreated && (
-                    <Button
-                      variant="success"
-                      size="lg"
-                      fullWidth
-                      onClick={() => handleCreateShipment()}
-                      isLoading={isCreatingShipment}
-                      disabled={isCreatingShipment || isViewMode}
-                      className="shadow-glow"
-                    >
-                      <PrinterIcon className="h-5 w-5 mr-2" />
-                      Create Shipment & Complete
-                    </Button>
+                    {/* NZC Label Display */}
+                    {nzcLabel && (
+                      <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
+                            Shipping Label
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-400">Connote:</span>
+                            <span className="font-mono text-primary-400">{nzcConnote}</span>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2">
+                          <img
+                            src={`data:${nzcLabel.contentType};base64,${nzcLabel.data}`}
+                            alt="Shipping Label"
+                            className="w-full h-auto max-h-[400px] object-contain"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              const newWindow = window.open();
+                              if (newWindow) {
+                                newWindow.document.write(
+                                  `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
+                                  <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
+                                </body></html>`
+                                );
+                                newWindow.document.close();
+                              }
+                            }}
+                          >
+                            <PrinterIcon className="h-4 w-4 mr-2" />
+                            Print Label
+                          </Button>
+                          {shipmentCreated && (
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => navigate('/packing')}
+                            >
+                              Done
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    {!shipmentCreated && (
+                      <Button
+                        variant="success"
+                        size="lg"
+                        fullWidth
+                        onClick={() => handleCreateShipment()}
+                        isLoading={isCreatingShipment}
+                        disabled={isCreatingShipment || isViewMode}
+                        className="action-button-enhanced touch-target"
+                      >
+                        <PrinterIcon className="h-5 w-5 mr-2" />
+                        Create Shipment & Complete
+                      </Button>
+                    )}
+
+                    {isViewMode && (
+                      <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
+                        <p className="picking-subtitle text-primary-300 text-sm">
+                          Interactions are disabled in view-only mode
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : allVerified ? (
+              /* All Items Verified - Show completion card with celebration */
+              <div className="picking-card rounded-2xl border-success-500/50 border-2 overflow-hidden relative celebration-container industrial-corners">
+                {/* Confetti particles */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {[...Array(30)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="confetti-piece"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${100 + Math.random() * 20}%`,
+                        backgroundColor:
+                          i % 4 === 0
+                            ? '#22c55e'
+                            : i % 4 === 1
+                              ? '#a855f7'
+                              : i % 4 === 2
+                                ? '#f59e0b'
+                                : '#8b5cf6',
+                        animationDelay: `${Math.random() * 0.8}s`,
+                        borderRadius: i % 2 === 0 ? '50%' : '2px',
+                        width: `${6 + Math.random() * 8}px`,
+                        height: `${6 + Math.random() * 8}px`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="p-8 sm:p-12 text-center relative z-10">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success-500/20 flex items-center justify-center animate-bounce-in">
+                    <CheckIcon className="h-10 w-10 text-success-400" />
+                  </div>
+                  <h2 className="picking-title text-3xl text-white mb-3 animate-celebrate">
+                    All Items Verified!
+                  </h2>
+                  <p className="picking-subtitle text-gray-400 mb-8">
+                    Order is ready to be packed and shipped.
+                  </p>
+                  <Button
+                    size="lg"
+                    variant="success"
+                    onClick={handleCompletePacking}
+                    disabled={isViewMode ? true : undefined}
+                    className="action-button-enhanced touch-target animate-pop-in"
+                  >
+                    Enter Shipping Details
+                  </Button>
+                </div>
+              </div>
+            ) : currentItem ? (
+              /* Current Task Card */
+              <div
+                className={`picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners ${scanSuccess ? 'item-flash' : ''}`}
+              >
+                <div className="p-6 border-b border-white/[0.08]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                        Current Pack Task
+                      </p>
+                      <h2 className="picking-title text-xl text-white">{currentItem.name}</h2>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {!isViewMode && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={handleUnclaimOrder}
+                          disabled={order.status !== OrderStatus.PACKING}
+                        >
+                          Unclaim
+                        </Button>
+                      )}
+                      <TaskStatusBadge
+                        status={(currentItem.verifiedQuantity || 0) > 0 ? 'IN_PROGRESS' : 'PENDING'}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 space-y-6">
+                  {/* Barcode Display */}
+                  <div>
+                    {currentItem.barcode ? (
+                      <div className="barcode-display rounded-xl px-5 py-4">
+                        <p className="text-primary-400 text-xs uppercase tracking-wider mb-2">
+                          Scan Barcode
+                        </p>
+                        <p className="text-2xl text-white tracking-widest font-mono">
+                          {currentItem.barcode}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-warning-500/10 border border-warning-500/30 rounded-xl px-5 py-4">
+                        <p className="text-warning-400 text-sm">
+                          No barcode assigned - scan or enter item code manually
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity Display */}
+                  <div className="flex items-center justify-center gap-8 py-6">
+                    <div className="text-center">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        Verified
+                      </p>
+                      <p className="quantity-display text-primary-400">
+                        {currentItem.verifiedQuantity || 0}
+                      </p>
+                    </div>
+                    <div className="text-5xl text-gray-600 font-light">/</div>
+                    <div className="text-center">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        Needed
+                      </p>
+                      <p className="quantity-display text-white">{currentItem.quantity}</p>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="bin-location-display rounded-xl p-5 text-center bin-beacon">
+                    <p className="text-white/70 text-xs uppercase tracking-wider mb-2">
+                      From bin location
+                    </p>
+                    <p className="text-3xl text-white font-bold tracking-widest">
+                      {formatBinLocation(currentItem.binLocation)}
+                    </p>
+                  </div>
+
+                  {/* Items in Order - Integrated into Current Pack Task */}
+                  <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.08]">
+                    <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-4">
+                      Items in Order ({order.items?.length || 0})
+                    </p>
+                    <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                      {order.items?.map((item, index) => {
+                        const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
+                        const isSkipped = item.status === 'SKIPPED';
+                        const isCurrent = index === currentItemIndex;
+
+                        return (
+                          <div
+                            key={item.orderItemId}
+                            onClick={() => {
+                              // Allow clicking on any incomplete/non-skipped item to select it
+                              if (!isCompleted && !isSkipped && !isViewMode) {
+                                setCurrentItemIndex(index);
+                              }
+                            }}
+                            className={`pick-item-card flex items-center justify-between p-3 rounded-xl transition-all duration-200 animate-fade-in-up ${
+                              isCurrent
+                                ? 'active'
+                                : isCompleted
+                                  ? 'completed'
+                                  : isSkipped
+                                    ? 'skipped'
+                                    : ''
+                            } ${!isCompleted && !isSkipped && !isViewMode ? 'cursor-pointer' : ''}`}
+                            style={{
+                              animationDelay: `${index * 30}ms`,
+                              animationFillMode: 'backwards',
+                            }}
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {/* Status Icon */}
+                              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                                {isCompleted && (
+                                  <div className="w-6 h-6 rounded-full bg-success-500/20 flex items-center justify-center">
+                                    <CheckIcon className="h-4 w-4 text-success-400" />
+                                  </div>
+                                )}
+                                {isSkipped && !isViewMode && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleUnskipItem(index);
+                                    }}
+                                    className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 hover:bg-warning-500/30 transition-colors touch-target"
+                                    title="Revert skip"
+                                  >
+                                    <ArrowPathIcon className="h-4 w-4" />
+                                  </button>
+                                )}
+                                {isSkipped && isViewMode && (
+                                  <div className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center">
+                                    <ExclamationTriangleIcon className="h-4 w-4 text-warning-400" />
+                                  </div>
+                                )}
+                                {!isCompleted && !isSkipped && (
+                                  <div
+                                    className={`w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-primary-400 status-badge-glow' : 'bg-gray-500'}`}
+                                  />
+                                )}
+                              </div>
+
+                              {/* Item Info */}
+                              <div className="flex-1 min-w-0">
+                                <p
+                                  className={`font-medium text-sm truncate ${
+                                    isCompleted
+                                      ? 'text-success-300 line-through'
+                                      : isSkipped
+                                        ? 'text-warning-300'
+                                        : isCurrent
+                                          ? 'text-white'
+                                          : 'text-gray-300'
+                                  }`}
+                                >
+                                  {item.name}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs text-gray-500 font-mono truncate">
+                                    {item.binLocation}
+                                  </p>
+                                  {isSkipped && item.skipReason && (
+                                    <p className="text-xs text-warning-300 truncate">
+                                      ({item.skipReason})
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Quantity & Actions */}
+                            <div className="text-right flex-shrink-0 ml-2 flex items-center gap-2">
+                              <p
+                                className={`font-semibold text-sm font-mono ${
+                                  isCompleted
+                                    ? 'text-success-300'
+                                    : isSkipped
+                                      ? 'text-warning-300'
+                                      : isCurrent
+                                        ? 'text-primary-400'
+                                        : 'text-gray-300'
+                                }`}
+                              >
+                                {isSkipped
+                                  ? 'Skipped'
+                                  : `${item.verifiedQuantity || 0}/${item.quantity}`}
+                              </p>
+
+                              {/* Action buttons - only show for current/selected item */}
+                              {isCurrent && !isViewMode && !isCompleted && !isSkipped && (
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    handleSkipItem(index);
+                                  }}
+                                  className="text-warning-400 hover:text-warning-300 hover:bg-warning-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                  title="Skip this item"
+                                >
+                                  <ForwardIcon className="h-4 w-4" />
+                                </button>
+                              )}
+                              {(!isViewMode || userRole === 'ADMIN' || userRole === 'SUPERVISOR') &&
+                                (item.verifiedQuantity || 0) > 0 &&
+                                !isSkipped && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleUndoVerification(index);
+                                    }}
+                                    disabled={undoLoading[index]}
+                                    className="text-error-400 hover:text-error-300 hover:bg-error-500/10 p-1.5 rounded-lg transition-colors touch-target disabled:opacity-50"
+                                    title="Undo verification"
+                                  >
+                                    {undoLoading[index] ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                                    ) : (
+                                      <MinusCircleIcon className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Scan Input */}
+                  <div className="scanner-active rounded-xl">
+                    <ScanInput
+                      value={scanValue}
+                      onChange={setScanValue}
+                      onScan={handleScan}
+                      placeholder={
+                        currentItem.barcode ? 'Scan barcode...' : 'Scan or enter item code...'
+                      }
+                      error={scanError || undefined}
+                      disabled={isViewMode ? true : undefined}
+                    />
+                  </div>
+
+                  {/* Scan Instruction */}
+                  {currentItem.barcode && (
+                    <div className="scan-instruction">
+                      <p className="text-gray-400 text-sm">
+                        Scan this barcode:{' '}
+                        <span className="font-mono font-semibold text-primary-400">
+                          {currentItem.barcode}
+                        </span>
+                      </p>
+                    </div>
                   )}
 
                   {isViewMode && (
                     <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                      <p className="text-sm text-primary-300">
+                      <p className="picking-subtitle text-primary-300 text-sm">
                         Interactions are disabled in view-only mode
                       </p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          )
-        ) : currentItem ? (
-          /* Current Item to Scan */
-          <Card variant="glass" className="border-primary-500/50 border-2 shadow-glow card-hover">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="text-white">Current Item to Verify</span>
-                <span className="text-sm text-gray-400">
-                  {verifiedCount + 1} of {totalItems}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Item Info */}
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-white tracking-tight">
-                    {currentItem.name}
-                  </h3>
-                  {currentItem.barcode && (
-                    <p className="text-2xl font-mono text-gray-300 mt-3 tracking-wider bg-white/[0.02] inline-block px-4 py-2 rounded-lg border border-white/[0.08]">
-                      {currentItem.barcode}
-                    </p>
-                  )}
-                  {!currentItem.barcode && (
-                    <p className="text-lg text-warning-400 mt-3 font-mono bg-warning-500/10 inline-block px-4 py-2 rounded-lg border border-warning-500/30">
-                      No barcode assigned
-                    </p>
-                  )}
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="text-sm text-gray-400">Qty: {currentItem.quantity}</span>
-                    <span className="text-sm text-gray-400 font-mono">
-                      {formatBinLocation(currentItem.binLocation)}
-                    </span>
-                  </div>
                 </div>
               </div>
-
-              {/* Quantity */}
-              <div className="flex items-center justify-center gap-6 py-6 bg-white/[0.02] rounded-xl border border-white/[0.08]">
-                <div className="text-center">
-                  <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">Verified</p>
-                  <p className="text-4xl font-bold text-primary-400">
-                    {currentItem.verifiedQuantity || 0}
-                  </p>
-                </div>
-                <div className="text-5xl text-gray-600">/</div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">Needed</p>
-                  <p className="text-4xl font-bold text-white">{currentItem.quantity}</p>
-                </div>
+            ) : (
+              /* No Current Task */
+              <div className="picking-card rounded-2xl p-8 text-center industrial-corners">
+                <p className="picking-subtitle text-gray-400">No items to verify</p>
               </div>
-
-              {/* Scan Input */}
-              <div>
-                <ScanInput
-                  value={scanValue}
-                  onChange={setScanValue}
-                  onScan={handleScan}
-                  placeholder={
-                    currentItem.barcode ? 'Scan barcode...' : 'Scan or enter item code...'
-                  }
-                  error={scanError || undefined}
-                  disabled={isViewMode ? true : undefined}
-                />
-                {currentItem.barcode && (
-                  <p className="mt-3 text-sm text-gray-400 bg-white/[0.02] inline-block px-4 py-2 rounded-lg border border-white/[0.08]">
-                    Scan this barcode:{' '}
-                    <span className="font-mono font-semibold text-primary-400">
-                      {currentItem.barcode}
-                    </span>
-                  </p>
-                )}
-                {!currentItem.barcode && (
-                  <p className="mt-3 text-sm text-gray-400 bg-white/[0.02] inline-block px-4 py-2 rounded-lg border border-white/[0.08]">
-                    No barcode assigned - scan or enter item code manually
-                  </p>
-                )}
-              </div>
-
-              {/* Actions */}
-              {!isViewMode && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="danger"
-                    size="lg"
-                    fullWidth
-                    onClick={handleSkipItem}
-                    className="shadow-lg"
-                  >
-                    <ExclamationTriangleIcon className="h-5 w-5 mr-2" />
-                    Report a Problem
-                  </Button>
-                </div>
-              )}
-              {isViewMode && (
-                <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                  <p className="text-sm text-primary-300">
-                    Interactions are disabled in view-only mode
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {/* Items List */}
-        <Card variant="glass" className="card-hover">
-          <CardHeader>
-            <CardTitle>Items in Order</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {order.items?.map((item, index) => {
-                const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
-                const isSkipped = item.status === 'SKIPPED';
-                const isCurrent = index === currentItemIndex;
-
-                return (
-                  <div
-                    key={item.orderItemId}
-                    className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-                      isCompleted
-                        ? 'border-success-500/50 bg-success-500/10 shadow-glow'
-                        : isSkipped
-                          ? 'border-warning-500/50 bg-warning-500/10'
-                          : isCurrent
-                            ? 'border-primary-500/50 bg-primary-500/10 shadow-glow'
-                            : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.05]'
-                    } ${isCurrent ? 'ring-2 ring-primary-500/30' : ''}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Status Icon */}
-                      <div>
-                        {isCompleted && (
-                          <CheckIcon className="h-6 w-6 text-success-400 flex-shrink-0" />
-                        )}
-                        {isSkipped && (
-                          <div className="flex items-center gap-2">
-                            <ExclamationTriangleIcon className="h-6 w-6 text-warning-400 flex-shrink-0" />
-                            {!isViewMode && (
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  handleUnskipItem(index);
-                                }}
-                                className="text-warning-400 hover:text-warning-300 transition-colors p-1 hover:bg-warning-500/20 rounded-lg"
-                                title="Revert skip"
-                              >
-                                <ArrowPathIcon className="h-5 w-5" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Item Info */}
-                      <div className="flex-1">
-                        <p
-                          className={`font-semibold text-lg ${
-                            isCompleted
-                              ? 'text-success-300'
-                              : isSkipped
-                                ? 'text-warning-300'
-                                : 'text-white'
-                          }`}
-                        >
-                          {item.name}
-                        </p>
-                        {!item.barcode && (
-                          <p className="text-xs text-warning-400 font-mono mt-1">
-                            No barcode assigned
-                          </p>
-                        )}
-                        {item.barcode && (
-                          <p className="text-sm text-gray-500 font-mono">{item.barcode}</p>
-                        )}
-                        {isSkipped && item.skipReason && (
-                          <p className="text-sm text-warning-300 mt-2 bg-warning-500/10 inline-block px-2 py-1 rounded">
-                            {item.skipReason}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Quantity */}
-                      <div className="text-right">
-                        <p
-                          className={`font-semibold text-lg ${
-                            isCompleted
-                              ? 'text-success-300'
-                              : isSkipped
-                                ? 'text-warning-300'
-                                : 'text-white'
-                          }`}
-                        >
-                          {isSkipped
-                            ? 'Skipped'
-                            : `${item.verifiedQuantity || 0} / ${item.quantity}`}
-                        </p>
-                        <p className="text-sm text-gray-500 font-mono">{item.binLocation}</p>
-
-                        {/* Undo Verification button - only show if actually has verified items */}
-                        {(item.verifiedQuantity || 0) > 0 &&
-                          !isSkipped &&
-                          !isViewMode &&
-                          !undoLoading[index] && (
-                            <button
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleUndoVerification(index);
-                              }}
-                              disabled={undoLoading[index]}
-                              className={`mt-2 text-error-400 hover:text-error-300 transition-colors flex items-center gap-1 justify-end hover:bg-error-500/10 px-2 py-1 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
-                              title="Remove last verified item"
-                            >
-                              <MinusCircleIcon className="h-4 w-4" />
-                              <span className="text-xs">Undo Verify</span>
-                            </button>
-                          )}
-                        {undoLoading[index] && (
-                          <div className="mt-2 text-error-400 flex items-center gap-1 justify-end animate-pulse">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                            <span className="text-xs">Undoing...</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Complete Packing Button - Only show if not in shipping form mode */}
-        {!isViewMode && !showShippingForm && (
-          <Card
-            variant="glass"
-            className={`border-2 card-hover ${allVerified ? 'border-success-500/50 shadow-glow' : 'border-white/[0.08]'}`}
-          >
-            <CardContent className="p-6">
-              <Button
-                variant={allVerified ? 'success' : 'secondary'}
-                size="lg"
-                fullWidth
-                onClick={handleCompletePacking}
-                disabled={!allVerified}
-                className={!allVerified ? '' : 'shadow-glow'}
-              >
-                {allVerified
-                  ? 'Enter Shipping Details'
-                  : `Verify All Items First (${verifiedCount}/${totalItems})`}
-              </Button>
-              {!allVerified && (
-                <p className="text-center text-sm text-gray-400 mt-3">
-                  Please verify all items before entering shipping details
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* View Mode Message */}
-        {isViewMode && (
-          <Card variant="glass" className="border-primary-500/30 border">
-            <CardContent className="p-6 text-center">
-              <p className="text-sm text-primary-300">
-                Interactions are disabled in view-only mode
-              </p>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </div>
+        </div>
 
         {/* Unclaim Modal */}
         <UnclaimModal
@@ -1559,6 +1648,72 @@ export function PackingPage() {
           cancelText="Cancel"
           variant="success"
         />
+
+        {/* Skip Item Modal */}
+        {showSkipModal && skipItemIndex !== null && order?.items?.[skipItemIndex] && (
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
+            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="picking-title text-lg">Skip Item</h2>
+                  <button
+                    onClick={() => setShowSkipModal(false)}
+                    className="text-white hover:text-warning-200 transition-colors"
+                  >
+                    <ExclamationTriangleIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
+                  <p className="picking-title text-white">{order.items[skipItemIndex].name}</p>
+                  <p className="text-sm text-gray-400 font-mono mt-1">
+                    {order.items[skipItemIndex].sku}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
+                    {order.items[skipItemIndex].binLocation}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Reason for skipping <span className="text-error-400">*</span>
+                  </label>
+                  <textarea
+                    value={skipReason}
+                    onChange={e => setSkipReason(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 text-white placeholder-gray-500"
+                    placeholder="e.g., Item not found, Damaged, etc."
+                  />
+                </div>
+
+                <div className="p-4 bg-warning-500/10 border border-warning-500/30 rounded-xl">
+                  <p className="picking-subtitle text-warning-300 text-sm">
+                    <strong>Warning:</strong> Skipping this item will mark it as skipped. You can
+                    revert this later if needed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="warning"
+                  onClick={handleConfirmSkip}
+                  isLoading={isSkipping}
+                  disabled={!skipReason.trim()}
+                >
+                  Skip Item
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Complete Shipment with Skipped Items Confirmation Dialog */}
         <ConfirmDialog

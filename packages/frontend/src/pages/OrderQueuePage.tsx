@@ -1,5 +1,5 @@
 /**
- * Order queue page - "Industrial Velocity" Design
+ * Picking queue page - "Industrial Velocity" Design
  *
  * A high-energy, industrial aesthetic for warehouse operations
  * Features: Diagonal scan lines, electric accents, momentum animations
@@ -33,7 +33,6 @@ import {
   ExclamationTriangleIcon,
   QueueListIcon,
   ShoppingBagIcon,
-  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
@@ -786,7 +785,7 @@ export function OrderQueuePage() {
             className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent max-w-xs"
           />
           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">
-            Order Queue
+            Picking Queue
           </h1>
           <p className="mt-4 text-slate-400 text-sm font-medium uppercase tracking-widest">
             {queueData?.total || 0} orders available

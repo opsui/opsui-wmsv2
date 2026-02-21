@@ -1727,11 +1727,11 @@ export function Header() {
         requiredRole?: UserRole;
       }> = [{ key: 'sales', label: 'Sales Dashboard', path: '/sales', icon: CurrencyDollarIcon }];
 
-      // Only show Order Queue for non-admin roles (admin accesses it via role view switcher)
+      // Only show Picking Queue for non-admin roles (admin accesses it via role view switcher)
       if (effectiveRole !== UserRole.ADMIN) {
         salesItems.splice(1, 0, {
           key: 'order-queue',
-          label: 'Order Queue',
+          label: 'Picking Queue',
           path: '/orders',
           icon: QueueListIcon,
           requiredRole: UserRole.PICKER,
@@ -2066,7 +2066,7 @@ export function Header() {
       if (effectiveRole === UserRole.PICKER) {
         warehouseItems.push({
           key: 'order-queue',
-          label: 'Order Queue',
+          label: 'Picking Queue',
           path: '/orders',
           icon: QueueListIcon,
         });
