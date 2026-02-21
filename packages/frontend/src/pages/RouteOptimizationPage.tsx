@@ -5,10 +5,10 @@
  * Visualizes routes and compares different optimization strategies
  *
  * ============================================================================
- * AESTHETIC DIRECTION: PATH FINDER
+ * AESTHETIC DIRECTION: PATH FINDER - GREEN/LIME NAVIGATION
  * ============================================================================
  * Navigation-focused optimization interface:
- * - Dark theme with green/lime accents for path finding
+ * - Green/lime accent color system for path finding
  * - Scale-in entrance animations
  * - Route visualization with path tracing
  * - Algorithm comparison with performance metrics
@@ -26,6 +26,7 @@ import {
   ArrowsRightLeftIcon,
   CheckCircleIcon,
   XCircleIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 import { Header, Button, Breadcrumb } from '@/components/shared';
 import { cn } from '@/lib/utils';
@@ -166,14 +167,12 @@ export function RouteOptimizationPage() {
 
   const getZoneColor = (zone: string) => {
     const colors: Record<string, string> = {
-      A: 'bg-blue-100 dark:bg-blue-500/20 border-blue-300 dark:border-blue-500/30',
-      B: 'bg-green-100 dark:bg-green-500/20 border-green-300 dark:border-green-500/30',
-      C: 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-300 dark:border-yellow-500/30',
-      D: 'bg-purple-100 dark:bg-purple-500/20 border-purple-300 dark:border-purple-500/30',
+      A: 'route-zone-a',
+      B: 'route-zone-b',
+      C: 'route-zone-c',
+      D: 'route-zone-d',
     };
-    return (
-      colors[zone] || 'bg-gray-100 dark:bg-gray-500/20 border-gray-300 dark:border-gray-500/30'
-    );
+    return colors[zone] || 'route-zone-default';
   };
 
   const parseLocation = (loc: string): { zone: string; aisle: number; shelf: number } | null => {
@@ -187,40 +186,84 @@ export function RouteOptimizationPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen route-page-container">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+      {/* Atmospheric background */}
+      <div className="route-atmosphere" aria-hidden="true" />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Route Optimization</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Calculate optimal picking routes through warehouse locations
-          </p>
+        
+        {/* Hero Header */}
+        <div className="route-hero">
+          <div className="route-hero-content">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="route-icon-wrapper">
+                <MapIcon className="h-6 w-6" />
+              </div>
+              <div className="route-badge-intelligent">
+                <BoltIcon className="h-3 w-3 mr-1" />
+                Smart Routing
+              </div>
+            </div>
+            <h1 className="route-title">
+              Route Optimization
+            </h1>
+            <p className="route-subtitle">
+              Calculate optimal picking routes through warehouse locations
+            </p>
+          </div>
+          <div className="route-hero-visual hidden md:block">
+            <div className="route-path-visual">
+              <svg viewBox="0 0 200 100" className="w-full h-full">
+                <defs>
+                  <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="50%" stopColor="#84cc16" />
+                    <stop offset="100%" stopColor="#22c55e" />
+                  </linearGradient>
+                </defs>
+                {/* Animated path */}
+                <path
+                  d="M10,50 Q40,20 70,50 T130,50 T190,50"
+                  fill="none"
+                  stroke="url(#pathGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  className="route-animated-path"
+                />
+                {/* Waypoint markers */}
+                <circle cx="10" cy="50" r="6" className="route-waypoint route-waypoint-start" />
+                <circle cx="70" cy="50" r="4" className="route-waypoint" />
+                <circle cx="130" cy="50" r="4" className="route-waypoint" />
+                <circle cx="190" cy="50" r="6" className="route-waypoint route-waypoint-end" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         {/* View Toggle */}
-        <div className="mb-6 border-b border-gray-200 dark:border-gray-800">
-          <nav className="flex space-x-8">
+        <div className="route-tabs">
+          <nav className="route-tabs-nav">
             <button
               onClick={() => setView('optimize')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                view === 'optimize'
-                  ? 'border-blue-500 text-blue-500 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-700'
-              }`}
+              className={cn(
+                'route-tab',
+                view === 'optimize' && 'route-tab-active'
+              )}
             >
+              <PlayIcon className="h-4 w-4" />
               Optimize Route
             </button>
             <button
               onClick={() => setView('compare')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                view === 'compare'
-                  ? 'border-blue-500 text-blue-500 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-700'
-              }`}
+              className={cn(
+                'route-tab',
+                view === 'compare' && 'route-tab-active'
+              )}
             >
+              <ChartBarIcon className="h-4 w-4" />
               Compare Strategies
             </button>
           </nav>
@@ -228,124 +271,134 @@ export function RouteOptimizationPage() {
 
         {/* Optimize View */}
         {view === 'optimize' && (
-          <div className="space-y-6">
-            {/* Configuration */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="route-optimize-view">
+            <div className="route-grid-layout">
               {/* Location Input */}
-              <div className="lg:col-span-2 glass-card rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <MapIcon className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-                    Locations to Visit
-                  </h2>
+              <div className="route-card route-locations-card">
+                <div className="route-card-header">
+                  <div className="route-card-icon">
+                    <MapIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="route-card-title">Locations to Visit</h2>
+                    <p className="route-card-description">Add warehouse locations to optimize</p>
+                  </div>
                   <button
                     onClick={generateSampleLocations}
-                    className="text-sm text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
+                    className="route-generate-btn"
                   >
                     Generate Sample
                   </button>
                 </div>
-
-                <div className="space-y-2 mb-4">
-                  {(() => {
-                    const filteredLocations = locations;
-
-                    return filteredLocations.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                        No locations
+                
+                <div className="route-card-content">
+                  <div className="route-locations-list">
+                    {locations.length === 0 ? (
+                      <div className="route-locations-empty">
+                        <MapIcon className="h-8 w-8 mb-2" />
+                        <p>No locations added yet</p>
+                        <p className="text-xs">Click "Add Location" or "Generate Sample" to start</p>
                       </div>
                     ) : (
-                      filteredLocations.map(location => {
-                        const actualIndex = locations.indexOf(location);
+                      locations.map((location, index) => {
                         const parsed = parseLocation(location);
                         return (
-                          <div key={actualIndex} className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 dark:text-gray-500 w-6">
-                              {actualIndex + 1}.
-                            </span>
+                          <div
+                            key={index}
+                            className={cn(
+                              'route-location-item',
+                              parsed && getZoneColor(parsed.zone)
+                            )}
+                            style={{ animationDelay: `${index * 0.03}s` }}
+                          >
+                            <span className="route-location-index">{index + 1}</span>
                             <input
                               type="text"
                               value={location}
-                              onChange={e => handleLocationChange(actualIndex, e.target.value)}
+                              onChange={e => handleLocationChange(index, e.target.value)}
                               placeholder="A-01-01"
-                              className={cn(
-                                'flex-1 px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono',
-                                parsed
-                                  ? getZoneColor(parsed.zone)
-                                  : 'border-gray-200 dark:border-white/[0.08]'
-                              )}
+                              className="route-location-input"
                             />
                             <button
-                              onClick={() => handleRemoveLocation(actualIndex)}
-                              className="p-2 text-red-400 hover:text-red-300 rounded hover:bg-red-100 dark:hover:bg-red-900/30"
+                              onClick={() => handleRemoveLocation(index)}
+                              className="route-location-remove"
                             >
-                              <XCircleIcon className="h-5 w-5" />
+                              <XCircleIcon className="h-4 w-4" />
                             </button>
                           </div>
                         );
                       })
-                    );
-                  })()}
-                </div>
+                    )}
+                  </div>
 
-                <button
-                  onClick={handleAddLocation}
-                  className="w-full px-4 py-2 border border-dashed border-gray-300 dark:border-gray-700 rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600 text-sm"
-                >
-                  + Add Location
-                </button>
+                  <button
+                    onClick={handleAddLocation}
+                    className="route-add-location"
+                  >
+                    + Add Location
+                  </button>
+                </div>
               </div>
 
-              {/* Options */}
-              <div className="glass-card rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Options
-                </h2>
-
-                <div className="space-y-4">
+              {/* Options Panel */}
+              <div className="route-card route-options-card">
+                <div className="route-card-header">
+                  <div className="route-card-icon route-card-icon-alt">
+                    <BoltIcon className="h-5 w-5" />
+                  </div>
                   <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Start Point
-                    </label>
+                    <h2 className="route-card-title">Options</h2>
+                    <p className="route-card-description">Configure optimization parameters</p>
+                  </div>
+                </div>
+                
+                <div className="route-card-content">
+                  <div className="route-option-group">
+                    <label className="route-option-label">Start Point</label>
                     <input
                       type="text"
                       value={startPoint}
                       onChange={e => setStartPoint(e.target.value)}
                       placeholder="A-01-01"
-                      className="w-full px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                      className="route-option-input"
                     />
+                    <p className="route-option-hint">Default starting location in warehouse</p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Algorithm
-                    </label>
+                  <div className="route-option-group">
+                    <label className="route-option-label">Algorithm</label>
                     <select
                       value={algorithm}
                       onChange={e => setAlgorithm(e.target.value as typeof algorithm)}
-                      className="w-full px-3 py-2 rounded-md bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="route-option-select"
                     >
                       <option value="nearest">Nearest Neighbor (Fast)</option>
                       <option value="tsp">Traveling Salesman (Optimal)</option>
                       <option value="aisle">Aisle-by-Aisle (S-Shape)</option>
                       <option value="zone">Zone-Based (Multi-Zone)</option>
                     </select>
+                    <p className="route-option-hint">
+                      {algorithm === 'nearest' && 'Quick approximation, good for most cases'}
+                      {algorithm === 'tsp' && 'Most accurate, slower for large sets'}
+                      {algorithm === 'aisle' && 'Best for high-density picking'}
+                      {algorithm === 'zone' && 'Optimal for multi-zone warehouses'}
+                    </p>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+                  <div className="route-optimize-section">
                     <button
                       onClick={handleOptimize}
                       disabled={optimizing || locations.filter(l => l.trim()).length < 2}
                       className={cn(
-                        'w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
-                        !optimizing && locations.filter(l => l.trim()).length >= 2
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
+                        'route-optimize-btn',
+                        (!optimizing && locations.filter(l => l.trim()).length >= 2)
+                          ? 'route-optimize-btn-active'
+                          : 'route-optimize-btn-disabled'
                       )}
                     >
                       {optimizing ? (
                         <>
-                          <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                          <div className="route-spinner" />
                           Optimizing...
                         </>
                       ) : (
@@ -355,6 +408,11 @@ export function RouteOptimizationPage() {
                         </>
                       )}
                     </button>
+                    <p className="route-optimize-hint">
+                      {locations.filter(l => l.trim()).length < 2
+                        ? 'Add at least 2 locations to optimize'
+                        : `${locations.filter(l => l.trim()).length} locations ready`}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -373,37 +431,51 @@ export function RouteOptimizationPage() {
 
         {/* Compare View */}
         {view === 'compare' && (
-          <div className="space-y-6">
-            <div className="glass-card rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Compare Strategies
-                </h2>
+          <div className="route-compare-view">
+            <div className="route-card">
+              <div className="route-card-header">
+                <div className="route-card-icon route-card-icon-compare">
+                  <ChartBarIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="route-card-title">Compare Algorithms</h2>
+                  <p className="route-card-description">See how different strategies perform</p>
+                </div>
                 <button
                   onClick={handleCompare}
                   disabled={comparing || locations.filter(l => l.trim()).length < 2}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors',
-                    !comparing && locations.filter(l => l.trim()).length >= 2
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-400 cursor-not-allowed'
+                    'route-compare-btn',
+                    (!comparing && locations.filter(l => l.trim()).length >= 2)
+                      ? 'route-compare-btn-active'
+                      : 'route-compare-btn-disabled'
                   )}
                 >
                   {comparing ? (
                     <>
-                      <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                      <div className="route-spinner" />
                       Comparing...
                     </>
                   ) : (
                     <>
-                      <ChartBarIcon className="h-5 w-5" />
+                      <ChartBarIcon className="h-4 w-4" />
                       Compare All
                     </>
                   )}
                 </button>
               </div>
-
-              {comparison && <ComparisonResults comparison={comparison} />}
+              
+              <div className="route-card-content">
+                {comparison ? (
+                  <ComparisonResults comparison={comparison} />
+                ) : (
+                  <div className="route-compare-empty">
+                    <ChartBarIcon className="h-10 w-10 mb-3" />
+                    <p className="text-lg font-medium">No comparison yet</p>
+                    <p className="text-sm">Add locations and click "Compare All" to see algorithm performance</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -424,61 +496,84 @@ interface RouteResultProps {
 
 function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) {
   return (
-    <div className="glass-card rounded-lg p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Optimization Result</h2>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1 text-green-500 dark:text-green-400">
-            <ArrowsRightLeftIcon className="h-4 w-4" />
-            <span>{result.total_distance_meters}m</span>
+    <div className="route-result-section">
+      <div className="route-card">
+        <div className="route-card-header">
+          <div className="route-card-icon route-card-icon-success">
+            <CheckCircleIcon className="h-5 w-5" />
           </div>
-          <div className="flex items-center gap-1 text-blue-500 dark:text-blue-400">
-            <ClockIcon className="h-4 w-4" />
-            <span>{result.estimated_time_minutes}min</span>
+          <div>
+            <h2 className="route-card-title">Optimization Result</h2>
+            <p className="route-card-description">Optimized path calculated</p>
+          </div>
+          <div className="route-result-metrics">
+            <div className="route-metric route-metric-distance">
+              <ArrowsRightLeftIcon className="h-4 w-4" />
+              <span>{result.total_distance_meters}m</span>
+            </div>
+            <div className="route-metric route-metric-time">
+              <ClockIcon className="h-4 w-4" />
+              <span>{result.estimated_time_minutes}min</span>
+            </div>
           </div>
         </div>
-      </div>
+        
+        <div className="route-card-content">
+          {/* Optimized Path */}
+          <div className="route-path-section">
+            <h3 className="route-path-title">Optimized Path</h3>
+            <div className="route-path-flow">
+              {result.optimized_path.map((location, index) => {
+                const parsed = parseLocation(location);
+                return (
+                  <div key={location} className="route-path-item-wrapper">
+                    <div
+                      className={cn(
+                        'route-path-item',
+                        parsed && getZoneColor(parsed.zone)
+                      )}
+                    >
+                      <span className="route-path-index">{index + 1}</span>
+                      <span className="route-path-location">{location}</span>
+                    </div>
+                    {index < result.optimized_path.length - 1 && (
+                      <div className="route-path-arrow">→</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Optimized Path */}
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Optimized Path:</h3>
-        <div className="flex flex-wrap gap-2">
-          {result.optimized_path.map((location, index) => {
-            const parsed = parseLocation(location);
-            return (
-              <div
-                key={location}
-                className={cn(
-                  'px-3 py-1.5 rounded-md border text-sm font-mono',
-                  parsed ? getZoneColor(parsed.zone) : 'border-gray-300 dark:border-gray-700'
-                )}
-              >
-                <span className="text-gray-400 dark:text-gray-400 mr-1">{index + 1}.</span>
-                {location}
+          {/* Statistics */}
+          <div className="route-stats-grid">
+            <div className="route-stat-card">
+              <div className="route-stat-icon route-stat-icon-locations">
+                <MapIcon className="h-5 w-5" />
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Locations</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {result.locations.length}
-          </div>
-        </div>
-        <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Distance</div>
-          <div className="text-2xl font-bold text-green-500 dark:text-green-400">
-            {result.total_distance_meters}m
-          </div>
-        </div>
-        <div className="p-4 rounded-lg bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/[0.08]">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Est. Time</div>
-          <div className="text-2xl font-bold text-blue-500 dark:text-blue-400">
-            {result.estimated_time_minutes}m
+              <div className="route-stat-content">
+                <p className="route-stat-label">Total Locations</p>
+                <p className="route-stat-value">{result.locations.length}</p>
+              </div>
+            </div>
+            <div className="route-stat-card">
+              <div className="route-stat-icon route-stat-icon-distance">
+                <ArrowsRightLeftIcon className="h-5 w-5" />
+              </div>
+              <div className="route-stat-content">
+                <p className="route-stat-label">Total Distance</p>
+                <p className="route-stat-value route-stat-value-green">{result.total_distance_meters}m</p>
+              </div>
+            </div>
+            <div className="route-stat-card">
+              <div className="route-stat-icon route-stat-icon-time">
+                <ClockIcon className="h-5 w-5" />
+              </div>
+              <div className="route-stat-content">
+                <p className="route-stat-label">Est. Time</p>
+                <p className="route-stat-value route-stat-value-lime">{result.estimated_time_minutes}m</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -496,33 +591,32 @@ interface ComparisonResultsProps {
 
 function ComparisonResults({ comparison }: ComparisonResultsProps) {
   return (
-    <div className="space-y-6">
+    <div className="route-comparison-section">
       {/* Best Result Summary */}
       {comparison.best && (
-        <div className="p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30">
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
+        <div className="route-best-result">
+          <div className="route-best-icon">
             <CheckCircleIcon className="h-5 w-5" />
-            <span className="font-semibold">Best Strategy: {comparison.best}</span>
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-500 dark:text-gray-400">Distance: </span>
-              <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                {comparison.best_distance}m
-              </span>
+          <div className="route-best-content">
+            <span className="route-best-label">Best Strategy</span>
+            <span className="route-best-value">{comparison.best}</span>
+          </div>
+          <div className="route-best-metrics">
+            <div className="route-best-metric">
+              <span className="route-best-metric-value">{comparison.best_distance}m</span>
+              <span className="route-best-metric-label">Distance</span>
             </div>
-            <div>
-              <span className="text-gray-500 dark:text-gray-400">Time: </span>
-              <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                {comparison.best_time}m
-              </span>
+            <div className="route-best-metric">
+              <span className="route-best-metric-value">{comparison.best_time}m</span>
+              <span className="route-best-metric-label">Time</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Comparison Table */}
-      <div className="space-y-4">
+      {/* Comparison List */}
+      <div className="route-comparison-list">
         {comparison.comparison
           .filter(r => !r.error)
           .sort((a, b) => a.total_distance_meters - b.total_distance_meters)
@@ -530,43 +624,33 @@ function ComparisonResults({ comparison }: ComparisonResultsProps) {
             <div
               key={result.algorithm}
               className={cn(
-                'p-4 rounded-lg border transition-all',
-                result.algorithm === comparison.best
-                  ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
-                  : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/[0.08]'
+                'route-comparison-item',
+                result.algorithm === comparison.best && 'route-comparison-best'
               )}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
-                      result.algorithm === comparison.best
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                    )}
-                  >
-                    {index + 1}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white capitalize">
-                      {result.algorithm} Algorithm
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      {result.algorithm === 'tsp' && 'Optimal for small sets'}
-                      {result.algorithm === 'nearest' && 'Fast, good approximation'}
-                      {result.algorithm === 'aisle' && 'Best for high-density picking'}
-                      {result.algorithm === 'zone' && 'Optimal for multi-zone'}
-                    </p>
-                  </div>
+              <div className="route-comparison-rank">
+                <span className="route-comparison-rank-number">{index + 1}</span>
+              </div>
+              <div className="route-comparison-info">
+                <h3 className="route-comparison-name">
+                  {result.algorithm === 'tsp' && 'Traveling Salesman'}
+                  {result.algorithm === 'nearest' && 'Nearest Neighbor'}
+                  {result.algorithm === 'aisle' && 'Aisle-by-Aisle'}
+                  {result.algorithm === 'zone' && 'Zone-Based'}
+                </h3>
+                <p className="route-comparison-description">
+                  {result.algorithm === 'tsp' && 'Optimal for small sets'}
+                  {result.algorithm === 'nearest' && 'Fast, good approximation'}
+                  {result.algorithm === 'aisle' && 'Best for high-density picking'}
+                  {result.algorithm === 'zone' && 'Optimal for multi-zone'}
+                </p>
+              </div>
+              <div className="route-comparison-metrics">
+                <div className="route-comparison-metric route-comparison-distance">
+                  {result.total_distance_meters}m
                 </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="text-green-500 dark:text-green-400">
-                    {result.total_distance_meters}m
-                  </div>
-                  <div className="text-blue-500 dark:text-blue-400">
-                    {result.estimated_time_minutes}m
-                  </div>
+                <div className="route-comparison-metric route-comparison-time">
+                  {result.estimated_time_minutes}m
                 </div>
               </div>
             </div>

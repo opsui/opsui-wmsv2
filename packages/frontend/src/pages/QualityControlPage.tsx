@@ -23,6 +23,7 @@ import {
   TrashIcon,
   MagnifyingGlassIcon,
   ChevronLeftIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import {
   Pagination,
@@ -64,15 +65,15 @@ type ReturnStatus = ReturnAuthorization['status'];
 
 function InspectionStatusBadge({ status }: { status: InspectionStatus }) {
   const styles: Record<InspectionStatus, string> = {
-    [InspectionStatus.PENDING]: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
+    [InspectionStatus.PENDING]: 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600',
     [InspectionStatus.IN_PROGRESS]:
-      'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+      'bg-gradient-to-r from-cyan-100 to-teal-50 dark:from-cyan-900/30 dark:to-teal-900/20 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30',
     [InspectionStatus.PASSED]:
-      'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-    [InspectionStatus.FAILED]: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      'bg-gradient-to-r from-emerald-100 to-green-50 dark:from-emerald-900/30 dark:to-green-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
+    [InspectionStatus.FAILED]: 'bg-gradient-to-r from-red-100 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-500/30',
     [InspectionStatus.CONDITIONAL_PASSED]:
-      'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-    [InspectionStatus.CANCELLED]: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+      'bg-gradient-to-r from-amber-100 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
+    [InspectionStatus.CANCELLED]: 'bg-gradient-to-r from-gray-100 to-slate-50 dark:from-gray-700 dark:to-slate-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600',
   };
 
   const labels: Record<InspectionStatus, string> = {
@@ -85,7 +86,7 @@ function InspectionStatusBadge({ status }: { status: InspectionStatus }) {
   };
 
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>
       {labels[status]}
     </span>
   );
@@ -1628,44 +1629,90 @@ export function QualityControlPage() {
     returnsCurrentPage * returnsPerPage
   );
 
+  // Calculate pending inspections count
+  const pendingInspectionsCount = inspections.filter(
+    (i: QualityInspection) =>
+      i.status === InspectionStatus.PENDING || i.status === InspectionStatus.IN_PROGRESS
+  ).length;
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background - Inspection Lab theme */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-teal-600/6 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl" />
+        {/* Technical grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(6, 182, 212, 0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(6, 182, 212, 0.5) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="space-y-6">
-          {/* Header */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          {/* Header - Inspection Lab Design */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                {/* Outer ring animation */}
+                <div className="absolute inset-0 bg-cyan-500/20 rounded-2xl animate-pulse" />
+                {/* Main icon container */}
+                <div className="relative p-4 bg-gradient-to-br from-cyan-500/25 to-teal-500/15 rounded-2xl border border-cyan-500/40 shadow-lg shadow-cyan-500/20 backdrop-blur-sm">
+                  <ShieldCheckIcon className="h-9 w-9 text-cyan-400" />
+                </div>
+                {/* Corner accent */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Quality Control
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Manage inspections, checklists, and returns
+                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                  Inspection Lab
                 </p>
               </div>
             </div>
-            <div className="flex space-x-3">
-              {activeTab === 'inspections' && (
-                <button
-                  onClick={() => setInspectionModalOpen(true)}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  <DocumentPlusIcon className="h-5 w-5 mr-2" />
-                  New Inspection
-                </button>
-              )}
-              {activeTab === 'checklists' && (
-                <button
-                  onClick={() => setChecklistModalOpen(true)}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  <ClipboardDocumentCheckIcon className="h-5 w-5 mr-2" />
-                  New Checklist
-                </button>
-              )}
+
+            <div className="flex items-center gap-4">
+              {/* Active inspections indicator */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-transparent rounded-lg border border-cyan-500/20">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 bg-amber-400 rounded-full" />
+                  <div className="absolute inset-0 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  {pendingInspectionsCount} Pending
+                </span>
+              </div>
+
+              <div className="flex space-x-3">
+                {activeTab === 'inspections' && (
+                  <button
+                    onClick={() => setInspectionModalOpen(true)}
+                    className="flex items-center px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-lg hover:from-cyan-600 hover:to-teal-700 shadow-lg shadow-cyan-500/20"
+                  >
+                    <DocumentPlusIcon className="h-5 w-5 mr-2" />
+                    New Inspection
+                  </button>
+                )}
+                {activeTab === 'checklists' && (
+                  <button
+                    onClick={() => setChecklistModalOpen(true)}
+                    className="flex items-center px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white rounded-lg hover:from-cyan-600 hover:to-teal-700 shadow-lg shadow-cyan-500/20"
+                  >
+                    <ClipboardDocumentCheckIcon className="h-5 w-5 mr-2" />
+                    New Checklist
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

@@ -9,6 +9,7 @@
  * ============================================================================
  * Industrial workshop aesthetic with equipment focus:
  * - Dark theme with gray/steel accents for industrial feel
+ * - Archivo for headings (industrial, bold), JetBrains Mono for asset IDs
  * - Subtle rotation entrance animations
  * - Priority-based color indicators
  * - Equipment status visualization
@@ -137,7 +138,7 @@ function EquipmentStatusCard({
           <h3 className="text-lg font-semibold text-white group-hover:text-primary-400 transition-colors">
             {equipment.name}
           </h3>
-          <p className="text-sm text-gray-400 mt-1">{equipment.assetNumber}</p>
+          <p className="text-sm text-gray-400 mt-1 font-mono">{equipment.assetNumber}</p>
           {equipment.location && <p className="text-xs text-gray-500">{equipment.location}</p>}
         </div>
         <div className={`p-2 rounded-lg bg-${config.color}-500/10`}>
@@ -246,7 +247,7 @@ function MaintenanceRequestCard({
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm bg-white/5 p-3 rounded-lg">
           <div>
             <p className="text-gray-400 text-xs">Work Order ID</p>
-            <p className="text-white font-medium">{request.workOrderNumber}</p>
+            <p className="text-white font-medium font-['JetBrains_Mono',monospace]">{request.workOrderNumber}</p>
           </div>
           <div>
             <p className="text-gray-400 text-xs">Scheduled</p>
@@ -781,8 +782,8 @@ function MaintenancePage() {
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Equipment Maintenance</h1>
-            <p className="mt-2 text-gray-400">Manage service requests and equipment status</p>
+            <h1 className="text-3xl font-bold text-white tracking-tight font-display">Equipment Maintenance</h1>
+            <p className="mt-2 text-gray-400 font-sans">Manage service requests and equipment status</p>
           </div>
           <div className="flex gap-3">
             <Button

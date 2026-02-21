@@ -102,48 +102,51 @@ function WorkflowStep({
   isActive,
   isComplete,
   onClick,
+  index = 0,
 }: {
   label: string;
   count?: number;
   isActive: boolean;
   isComplete: boolean;
   onClick?: () => void;
+  index?: number;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 ${
+      className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all duration-200 animate-in slide-up ${
         isActive
-          ? 'bg-primary-500/20 border-2 border-primary-500'
+          ? 'bg-orange-500/20 border-2 border-orange-400 shadow-lg shadow-orange-500/20'
           : isComplete
-            ? 'bg-success-500/10 border-2 border-success-500/50 hover:border-success-500'
-            : 'bg-white/5 border-2 border-white/10'
+            ? 'bg-emerald-500/10 border-2 border-emerald-500/50 hover:border-emerald-400'
+            : 'bg-white/5 border-2 border-white/10 hover:border-white/20'
       } ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
+      style={{ animationDelay: `${index * 100}ms` }}
     >
       <div
         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
           isActive
-            ? 'bg-primary-500 text-white'
+            ? 'bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-lg shadow-orange-500/30'
             : isComplete
-              ? 'bg-success-500 text-white'
+              ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white'
               : 'bg-gray-700 text-gray-400'
         }`}
       >
         {isComplete ? (
           <CheckCircleIcon className="h-6 w-6" />
         ) : (
-          <span className="text-sm font-medium">{label[0]}</span>
+          <span className="text-sm font-semibold">{label[0]}</span>
         )}
       </div>
       <div className="text-center">
         <p
-          className={`text-xs font-medium ${isActive || isComplete ? 'text-white' : 'text-gray-400'}`}
+          className={`text-xs font-semibold tracking-wide uppercase ${isActive || isComplete ? 'text-white' : 'text-gray-400'}`}
         >
           {label}
         </p>
         {count !== undefined && (
-          <p className={`text-xs ${isActive || isComplete ? 'text-white/70' : 'text-gray-500'}`}>
-            {count} pending
+          <p className={`text-xs font-mono mt-0.5 ${isActive ? 'text-orange-300' : isComplete ? 'text-emerald-300' : 'text-gray-500'}`}>
+            {count}
           </p>
         )}
       </div>
@@ -179,7 +182,7 @@ function WorkflowProgress({
   const currentIndex = stageOrder.indexOf(currentStage);
 
   return (
-    <div className="bg-gray-800/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6">
+    <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 dark:from-gray-800/80 dark:to-gray-900/80 backdrop-blur-sm border border-orange-500/20 dark:border-orange-500/20 rounded-2xl p-6 shadow-lg shadow-orange-500/5">
       <div className="flex items-center justify-between gap-2 overflow-x-auto">
         {stages.map((stage, index) => {
           const isComplete = index < currentIndex;
@@ -193,10 +196,11 @@ function WorkflowProgress({
                 isActive={isActive}
                 isComplete={isComplete}
                 onClick={() => onStageClick(stage.key)}
+                index={index}
               />
               {index < stages.length - 1 && (
                 <ChevronRightIcon
-                  className={`h-5 w-5 ${isComplete ? 'text-success-500' : 'text-gray-600'}`}
+                  className={`h-5 w-5 transition-colors ${isComplete ? 'text-emerald-400' : 'text-gray-600'}`}
                 />
               )}
             </div>
@@ -1313,40 +1317,85 @@ function InwardsGoodsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background - Industrial dock theme */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-amber-600/6 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-orange-400/5 rounded-full blur-3xl" />
+        {/* Industrial grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(249, 115, 22, 0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(249, 115, 22, 0.5) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }}
+        />
+      </div>
+
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
 
-        {/* Page Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-              Inwards Goods
-            </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Manage receiving from ASN to putaway
-            </p>
+        {/* Page Header - Industrial Dock Design */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end gap-6">
+          {/* Left side - Icon and Title */}
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              {/* Outer ring animation */}
+              <div className="absolute inset-0 bg-orange-500/20 rounded-2xl animate-pulse" />
+              {/* Main icon container */}
+              <div className="relative p-4 bg-gradient-to-br from-orange-500/25 to-amber-500/15 rounded-2xl border border-orange-500/40 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
+                <TruckIcon className="h-9 w-9 text-orange-400" />
+              </div>
+              {/* Corner accent */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Inwards Goods
+              </h1>
+              <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                Receiving Dock
+              </p>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => setAsnModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <TruckIcon className="h-5 w-5" />
-              New ASN
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => setReceiptModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <InboxIcon className="h-5 w-5" />
-              New Receipt
-            </Button>
+
+          {/* Right side - Actions and live indicator */}
+          <div className="md:ml-auto flex items-center gap-4">
+            {/* Live dock activity indicator */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-transparent rounded-lg border border-orange-500/20">
+              <div className="relative">
+                <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+                <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+              </div>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                Dock Active
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setAsnModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <TruckIcon className="h-5 w-5" />
+                New ASN
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => setReceiptModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <InboxIcon className="h-5 w-5" />
+                New Receipt
+              </Button>
+            </div>
           </div>
         </div>
 

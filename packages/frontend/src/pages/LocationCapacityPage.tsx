@@ -73,19 +73,29 @@ function CapacityBar({
 
   return (
     <div className="relative">
-      <div className="h-2 bg-gray-300 dark:bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
         <div
-          className={`h-full rounded-full transition-all ${
-            isCritical ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-green-500'
+          className={`h-full rounded-full transition-all duration-500 ${
+            isCritical
+              ? 'bg-gradient-to-r from-red-400 to-red-600 shadow-sm shadow-red-500/50'
+              : isWarning
+                ? 'bg-gradient-to-r from-amber-400 to-amber-500 shadow-sm shadow-amber-500/50'
+                : 'bg-gradient-to-r from-emerald-400 to-sky-500 shadow-sm shadow-sky-500/30'
           }`}
           style={{ width: `${Math.min(percent, 100)}%` }}
         />
+        {isCritical && (
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+            style={{ width: `${Math.min(percent, 100)}%` }}
+          />
+        )}
       </div>
-      <div className="flex justify-between mt-1 text-xs text-gray-600 dark:text-gray-500">
+      <div className="flex justify-between mt-1 text-xs text-gray-600 dark:text-gray-400 font-mono">
         <span>
           {utilization.toFixed(1)} / {maximum} {utilization > maximum ? '⚠' : ''}
         </span>
-        <span>{percent.toFixed(1)}%</span>
+        <span className={isCritical ? 'text-red-500 font-semibold' : ''}>{percent.toFixed(1)}%</span>
       </div>
     </div>
   );
@@ -537,36 +547,76 @@ export function LocationCapacityPage() {
   const overallUtilization = totalCapacity > 0 ? (totalUtilization / totalCapacity) * 100 : 0;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      {/* Atmospheric background - Storage Grid theme */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-500/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/6 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl" />
+        {/* Grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(14, 165, 233, 0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(14, 165, 233, 0.5) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="space-y-6">
-          {/* Header */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          {/* Header - Storage Grid Design */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                {/* Outer ring animation */}
+                <div className="absolute inset-0 bg-sky-500/20 rounded-2xl animate-pulse" />
+                {/* Main icon container */}
+                <div className="relative p-4 bg-gradient-to-br from-sky-500/25 to-blue-500/15 rounded-2xl border border-sky-500/40 shadow-lg shadow-sky-500/20 backdrop-blur-sm">
+                  <CubeIcon className="h-9 w-9 text-sky-400" />
+                </div>
+                {/* Corner accent */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-sky-400 rounded-full shadow-lg shadow-sky-400/50" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
                   Location Capacity
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Monitor and manage bin location capacity constraints
+                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                  Storage Grid Monitor
                 </p>
               </div>
             </div>
-            {canManageRules && (
-              <button
-                onClick={() => {
-                  setSelectedRule(null);
-                  setShowRuleModal(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <PlusIcon className="h-5 w-5" />
-                New Rule
-              </button>
-            )}
+
+            <div className="flex items-center gap-4">
+              {/* Live monitoring indicator */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-sky-500/10 to-transparent rounded-lg border border-sky-500/20">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+                  <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Live Monitoring
+                </span>
+              </div>
+
+              {canManageRules && (
+                <button
+                  onClick={() => {
+                    setSelectedRule(null);
+                    setShowRuleModal(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Rule
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Tabs */}
@@ -623,36 +673,51 @@ export function LocationCapacityPage() {
                   <>
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                      <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-800 rounded-lg p-4">
-                        <div className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                          Total Locations
-                        </div>
-                        <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">
-                          {capacities.length}
-                        </div>
-                      </div>
-                      <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-800 rounded-lg p-4">
-                        <div className="text-sm text-green-700 dark:text-green-300 font-medium">
-                          Total Capacity
-                        </div>
-                        <div className="text-2xl font-bold text-green-900 dark:text-green-100 mt-1">
-                          {totalCapacity.toFixed(0)}
+                      <div className="relative overflow-hidden bg-gradient-to-br from-sky-100 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/20 border border-sky-200 dark:border-sky-500/30 rounded-xl p-5 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20 transition-shadow animate-in slide-in" style={{ animationDelay: '0ms' }}>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-sky-400/10 rounded-full -translate-y-8 translate-x-8" />
+                        <div className="relative">
+                          <div className="text-xs font-semibold text-sky-600 dark:text-sky-300 uppercase tracking-wider">
+                            Total Locations
+                          </div>
+                          <div className="mt-2 text-3xl font-bold text-sky-900 dark:text-sky-100 font-mono">
+                            {capacities.length}
+                          </div>
                         </div>
                       </div>
-                      <div className="bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-800 rounded-lg p-4">
-                        <div className="text-sm text-yellow-700 dark:text-yellow-300 font-medium">
-                          Utilization
-                        </div>
-                        <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mt-1">
-                          {overallUtilization.toFixed(1)}%
+                      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-100 to-green-50 dark:from-emerald-900/30 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-5 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-shadow animate-in slide-in" style={{ animationDelay: '100ms' }}>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-400/10 rounded-full -translate-y-8 translate-x-8" />
+                        <div className="relative">
+                          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 uppercase tracking-wider">
+                            Total Capacity
+                          </div>
+                          <div className="mt-2 text-3xl font-bold text-emerald-900 dark:text-emerald-100 font-mono">
+                            {totalCapacity.toFixed(0)}
+                          </div>
                         </div>
                       </div>
-                      <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg p-4">
-                        <div className="text-sm text-red-700 dark:text-red-300 font-medium">
-                          Active Alerts
+                      <div className={`relative overflow-hidden border rounded-xl p-5 shadow-lg transition-shadow animate-in slide-in ${overallUtilization >= 80 ? 'bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 border-amber-200 dark:border-amber-500/30 shadow-amber-500/10 hover:shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-100 to-sky-50 dark:from-cyan-900/30 dark:to-sky-900/20 border-cyan-200 dark:border-cyan-500/30 shadow-cyan-500/10 hover:shadow-cyan-500/20'}`} style={{ animationDelay: '200ms' }}>
+                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-8 translate-x-8 ${overallUtilization >= 80 ? 'bg-amber-400/10' : 'bg-cyan-400/10'}`} />
+                        <div className="relative">
+                          <div className={`text-xs font-semibold uppercase tracking-wider ${overallUtilization >= 80 ? 'text-amber-600 dark:text-amber-300' : 'text-cyan-600 dark:text-cyan-300'}`}>
+                            Utilization
+                          </div>
+                          <div className={`mt-2 text-3xl font-bold font-mono ${overallUtilization >= 80 ? 'text-amber-900 dark:text-amber-100' : 'text-cyan-900 dark:text-cyan-100'}`}>
+                            {overallUtilization.toFixed(1)}%
+                          </div>
                         </div>
-                        <div className="text-2xl font-bold text-red-900 dark:text-red-100 mt-1">
-                          {alerts.length}
+                      </div>
+                      <div className={`relative overflow-hidden border rounded-xl p-5 shadow-lg transition-shadow animate-in slide-in ${alerts.length > 0 ? 'bg-gradient-to-br from-red-100 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 border-red-200 dark:border-red-500/30 shadow-red-500/10 hover:shadow-red-500/20' : 'bg-gradient-to-br from-slate-100 to-gray-50 dark:from-slate-900/30 dark:to-gray-900/20 border-slate-200 dark:border-slate-500/30 shadow-slate-500/10 hover:shadow-slate-500/20'}`} style={{ animationDelay: '300ms' }}>
+                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-8 translate-x-8 ${alerts.length > 0 ? 'bg-red-400/10' : 'bg-slate-400/10'}`} />
+                        {alerts.length > 0 && (
+                          <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50" />
+                        )}
+                        <div className="relative">
+                          <div className={`text-xs font-semibold uppercase tracking-wider ${alerts.length > 0 ? 'text-red-600 dark:text-red-300' : 'text-slate-600 dark:text-slate-300'}`}>
+                            Active Alerts
+                          </div>
+                          <div className={`mt-2 text-3xl font-bold font-mono ${alerts.length > 0 ? 'text-red-900 dark:text-red-100' : 'text-slate-900 dark:text-slate-100'}`}>
+                            {alerts.length}
+                          </div>
                         </div>
                       </div>
                     </div>

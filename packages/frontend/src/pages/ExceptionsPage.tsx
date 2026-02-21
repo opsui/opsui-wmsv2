@@ -14,6 +14,17 @@
  * - Atmospheric depth with gradient overlays and grain texture
  * - Grid-breaking hero stat with asymmetric layout
  * ============================================================================
+ * MOBILE OPTIMIZATION: v2026.1
+ * ============================================================================
+ * - Single column layout under 768px
+ * - 44px minimum touch targets
+ * - 16px input font-size (iOS zoom prevention)
+ * - Active press states for all interactive elements
+ * - Skeleton loaders for async content
+ * - Safe area insets for notched devices
+ * - Reduced motion support
+ * - Primary CTA in thumb zone (bottom of screen)
+ * ============================================================================
  */
 
 import {
@@ -68,17 +79,19 @@ const exceptionThemeStyles = `
     --exception-glow-success: 0 0 30px rgba(34, 197, 94, 0.4);
     --exception-border-subtle: rgba(255, 255, 255, 0.06);
     --exception-border-accent: rgba(168, 85, 247, 0.3);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Staggered entrance animations */
+  /* Staggered entrance animations - 300ms max for mobile */
   @keyframes exception-stagger-in {
     0% {
       opacity: 0;
-      transform: translateX(-20px) scale(0.98);
+      transform: translateY(12px) scale(0.98);
     }
     100% {
       opacity: 1;
-      transform: translateX(0) scale(1);
+      transform: translateY(0) scale(1);
     }
   }
 
@@ -144,24 +157,62 @@ const exceptionThemeStyles = `
     90% { transform: translate(-10%, 10%); }
   }
 
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Skeleton loaders */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+
+  .skeleton-text { height: 1em; width: 70%; margin-bottom: 8px; }
+  .skeleton-heading { height: 2em; width: 50%; margin-bottom: 12px; }
+  .skeleton-card { height: 120px; width: 100%; }
+  .skeleton-stat { height: 100px; width: 100%; }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .exception-stagger-item,
+    .exception-card-animate,
+    .pulse-glow-urgent,
+    .pulse-dot,
+    .hero-stat-glow,
+    .exception-scan-line,
+    .skeleton {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
   .exception-stagger-item {
-    animation: exception-stagger-in 0.5s ease-out forwards;
+    animation: exception-stagger-in 0.3s ease-out forwards;
     opacity: 0;
   }
 
   .exception-stagger-item:nth-child(1) { animation-delay: 0ms; }
-  .exception-stagger-item:nth-child(2) { animation-delay: 50ms; }
-  .exception-stagger-item:nth-child(3) { animation-delay: 100ms; }
-  .exception-stagger-item:nth-child(4) { animation-delay: 150ms; }
-  .exception-stagger-item:nth-child(5) { animation-delay: 200ms; }
-  .exception-stagger-item:nth-child(6) { animation-delay: 250ms; }
-  .exception-stagger-item:nth-child(7) { animation-delay: 300ms; }
-  .exception-stagger-item:nth-child(8) { animation-delay: 350ms; }
-  .exception-stagger-item:nth-child(9) { animation-delay: 400ms; }
-  .exception-stagger-item:nth-child(10) { animation-delay: 450ms; }
+  .exception-stagger-item:nth-child(2) { animation-delay: 30ms; }
+  .exception-stagger-item:nth-child(3) { animation-delay: 60ms; }
+  .exception-stagger-item:nth-child(4) { animation-delay: 90ms; }
+  .exception-stagger-item:nth-child(5) { animation-delay: 120ms; }
+  .exception-stagger-item:nth-child(6) { animation-delay: 150ms; }
+  .exception-stagger-item:nth-child(7) { animation-delay: 180ms; }
+  .exception-stagger-item:nth-child(8) { animation-delay: 210ms; }
+  .exception-stagger-item:nth-child(9) { animation-delay: 240ms; }
+  .exception-stagger-item:nth-child(10) { animation-delay: 270ms; }
 
   .exception-card-animate {
-    animation: exception-scale-in 0.4s ease-out forwards;
+    animation: exception-scale-in 0.25s ease-out forwards;
     opacity: 0;
   }
 
@@ -343,10 +394,24 @@ const exceptionThemeStyles = `
     transform: translateX(4px);
   }
 
+  /* Mobile active press states */
+  @media (hover: none) {
+    .exception-card-industrial:active,
+    .exception-resolution-option:active,
+    .exception-touch-active:active {
+      transform: scale(0.98);
+      opacity: 0.95;
+    }
+    
+    .btn-mobile-active:active {
+      transform: scale(0.96);
+    }
+  }
+
   /* Modal backdrop industrial */
   .exception-modal-backdrop {
     background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
   }
 
   /* Accent divider */
@@ -372,16 +437,18 @@ const exceptionThemeStyles = `
     box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
   }
 
-  /* Asymmetric hero section */
+  /* Mobile-first hero grid - single column on mobile */
   .exception-hero-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   @media (min-width: 768px) {
     .exception-hero-grid {
+      display: grid;
       grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 1.5rem;
     }
   }
 
@@ -390,6 +457,54 @@ const exceptionThemeStyles = `
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Mobile input styles - 16px prevents iOS zoom */
+  .exception-mobile-input {
+    font-size: 16px;
+    min-height: 48px;
+    padding: 14px 16px;
+  }
+
+  /* Mobile touch target - 44px minimum */
+  .exception-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile button - 52px for primary CTA */
+  .exception-mobile-btn {
+    min-height: 52px;
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+
+  /* Mobile bottom sheet for modal */
+  .exception-mobile-modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 90vh;
+    border-radius: 24px 24px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .exception-mobile-modal.open {
+    transform: translateY(0);
+  }
+
+  @media (min-width: 640px) {
+    .exception-mobile-modal {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      right: auto;
+      max-height: none;
+      border-radius: 16px;
+      transform: none;
+    }
   }
 
   /* Light mode overrides */
@@ -407,7 +522,125 @@ const exceptionThemeStyles = `
   html.light .exception-hero-stat {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.98) 100%);
   }
+
+  /* Focus visible styles */
+  .exception-focus-visible:focus-visible {
+    outline: 2px solid rgba(168, 85, 247, 0.8);
+    outline-offset: 2px;
+  }
+
+  .exception-focus-visible:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Mobile sticky bottom CTA */
+  .exception-mobile-cta {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    padding-bottom: calc(16px + var(--safe-bottom));
+    background: linear-gradient(to top, rgba(12, 15, 26, 0.98), transparent);
+    z-index: 50;
+  }
+
+  @media (min-width: 768px) {
+    .exception-mobile-cta {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      right: auto;
+      padding: 0;
+      padding-bottom: 0;
+      background: none;
+    }
+  }
 `;
+
+// ============================================================================
+// SKELETON COMPONENTS
+// ============================================================================
+
+function HeroStatSkeleton() {
+  return (
+    <div className="relative border-2 border-red-500/30 rounded-xl overflow-hidden bg-gradient-to-br from-red-500/10 to-gray-900/95">
+      <div className="p-6 sm:p-8">
+        {/* Status dot and label */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="skeleton w-2 h-2 rounded-full" />
+          <div className="skeleton w-24 h-3 rounded" />
+        </div>
+        {/* Large number */}
+        <div className="skeleton w-20 h-16 sm:h-20 rounded-lg mb-2" />
+        {/* Subtitle */}
+        <div className="skeleton w-40 h-4 rounded" />
+        {/* Progress bar */}
+        <div className="mt-6 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+          <div className="skeleton w-1/2 h-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecondaryStatSkeleton() {
+  return (
+    <div className="exception-card-industrial rounded-xl">
+      <div className="p-5 sm:p-6">
+        {/* Icon placeholder */}
+        <div className="w-8 h-8 rounded-lg skeleton mb-3" />
+        {/* Number */}
+        <div className="skeleton w-16 h-10 rounded-lg" />
+        {/* Label */}
+        <div className="skeleton w-24 h-3 rounded mt-1" />
+      </div>
+    </div>
+  );
+}
+
+function StatSkeleton() {
+  // Default to secondary stat skeleton for backward compatibility
+  return <SecondaryStatSkeleton />;
+}
+
+function ExceptionCardSkeleton() {
+  return (
+    <div className="exception-card-industrial rounded-xl mb-3 relative">
+      {/* Status indicator strip placeholder */}
+      <div className="absolute left-0 top-4 bottom-4 w-1 skeleton rounded-r-full" />
+      
+      <div className="p-4 sm:p-5 pl-4">
+        {/* Header row with badges */}
+        <div className="flex flex-wrap items-center gap-2 mb-4 pl-3">
+          <div className="skeleton w-20 h-6 rounded" />
+          <div className="skeleton w-16 h-6 rounded" />
+          <div className="skeleton w-24 h-4 rounded ml-auto" />
+        </div>
+        
+        {/* Details - Mobile Single Column, Desktop Grid */}
+        <div className="flex flex-col sm:grid sm:grid-cols-4 gap-3 sm:gap-4 pl-3">
+          <div>
+            <div className="skeleton w-12 h-3 rounded mb-1" />
+            <div className="skeleton w-20 h-4 rounded" />
+          </div>
+          <div>
+            <div className="skeleton w-8 h-3 rounded mb-1" />
+            <div className="skeleton w-16 h-4 rounded" />
+          </div>
+          <div>
+            <div className="skeleton w-14 h-3 rounded mb-1" />
+            <div className="skeleton w-12 h-4 rounded" />
+          </div>
+          <div>
+            <div className="skeleton w-16 h-3 rounded mb-1" />
+            <div className="skeleton w-20 h-4 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ============================================================================
 // SUBCOMPONENTS
@@ -571,7 +804,7 @@ export function ExceptionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch exceptions
-  const { data: allExceptions, refetch: refetchAll } = useExceptions(
+  const { data: allExceptions, refetch: refetchAll, isLoading: exceptionsLoading } = useExceptions(
     filterStatus === 'all'
       ? { limit: 20, offset: (page - 1) * 20 }
       : { status: filterStatus, limit: 20, offset: (page - 1) * 20 }
@@ -599,7 +832,7 @@ export function ExceptionsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen exception-atmosphere exception-grain">
         <style>{exceptionThemeStyles}</style>
-        <Card className="max-w-md exception-card-industrial">
+        <Card className="max-w-md exception-card-industrial mx-4">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-red-500/10 flex items-center justify-center pulse-glow-urgent">
               <ExclamationTriangleIcon className="h-8 w-8 text-red-400" />
@@ -879,6 +1112,10 @@ export function ExceptionsPage() {
     );
   });
 
+  // Count open exceptions for mobile CTA
+  const openCount = filteredExceptions.filter((e: OrderException) => e.status === ExceptionStatus.OPEN).length;
+  const firstOpenException = filteredExceptions.find((e: OrderException) => e.status === ExceptionStatus.OPEN);
+
   return (
     <div className="min-h-screen exception-atmosphere exception-grain">
       {/* Inject theme styles */}
@@ -888,7 +1125,7 @@ export function ExceptionsPage() {
       <div className="exception-scan-line" />
 
       <Header />
-      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 sm:pb-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
 
@@ -904,11 +1141,11 @@ export function ExceptionsPage() {
                     {summary && summary.open > 0 && (
                       <div className="exception-status-dot exception-status-dot-open pulse-dot" />
                     )}
-                    <h1 className="text-4xl sm:text-5xl text-white exception-display-font">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl text-white exception-display-font">
                       EXCEPTION<span className="text-red-400">.</span>CONTROL
                     </h1>
                   </div>
-                  <p className="text-gray-400 exception-body-font text-lg">
+                  <p className="text-gray-400 exception-body-font text-base sm:text-lg">
                     Industrial Exception Management Center — Monitor, Investigate, Resolve
                   </p>
                 </div>
@@ -921,7 +1158,7 @@ export function ExceptionsPage() {
                       refetchOpen();
                       refetchSummary();
                     }}
-                    className="exception-card-industrial !bg-transparent"
+                    className="exception-card-industrial !bg-transparent exception-touch-target btn-mobile-active"
                   >
                     <ClockIcon className="h-4 w-4 mr-2" />
                     Refresh
@@ -930,12 +1167,19 @@ export function ExceptionsPage() {
               </div>
             </div>
 
-            {/* Asymmetric Hero Stats - Grid Breaking Layout */}
-            {summary && (
+            {/* Asymmetric Hero Stats - Mobile First Single Column */}
+            {summaryLoading ? (
+              <div className="exception-hero-grid">
+                <HeroStatSkeleton />
+                <SecondaryStatSkeleton />
+                <SecondaryStatSkeleton />
+                <SecondaryStatSkeleton />
+              </div>
+            ) : summary && (
               <div className="exception-hero-grid">
                 {/* Hero Stat - Open Exceptions (larger, prominent) */}
                 <Card className="exception-hero-stat hero-stat-glow exception-stagger-item overflow-hidden">
-                  <CardContent className="p-8 relative">
+                  <CardContent className="p-6 sm:p-8 relative">
                     {/* Decorative background pattern */}
                     <div className="absolute inset-0 opacity-10">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 rounded-full blur-3xl" />
@@ -949,7 +1193,7 @@ export function ExceptionsPage() {
                           CRITICAL / OPEN
                         </p>
                       </div>
-                      <p className="text-7xl sm:text-8xl font-black text-white exception-display-font leading-none mb-2">
+                      <p className="text-6xl sm:text-7xl md:text-8xl font-black text-white exception-display-font leading-none mb-2">
                         {summary.open}
                       </p>
                       <p className="text-gray-500 exception-body-font">
@@ -971,13 +1215,13 @@ export function ExceptionsPage() {
 
                 {/* Secondary Stats */}
                 <Card className="exception-card-industrial exception-stagger-item">
-                  <CardContent className="p-6">
+                  <CardContent className="p-5 sm:p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-8 rounded-lg bg-gray-500/10 flex items-center justify-center">
                         <ExclamationTriangleIcon className="h-4 w-4 text-gray-400" />
                       </div>
                     </div>
-                    <p className="text-4xl font-black text-white exception-display-font">
+                    <p className="text-3xl sm:text-4xl font-black text-white exception-display-font">
                       {summary.total}
                     </p>
                     <p className="text-xs uppercase tracking-wider text-gray-500 exception-mono-font mt-1">
@@ -987,13 +1231,13 @@ export function ExceptionsPage() {
                 </Card>
 
                 <Card className="exception-card-industrial exception-stagger-item">
-                  <CardContent className="p-6">
+                  <CardContent className="p-5 sm:p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <CheckCircleIcon className="h-4 w-4 text-emerald-400" />
                       </div>
                     </div>
-                    <p className="text-4xl font-black text-emerald-400 exception-display-font">
+                    <p className="text-3xl sm:text-4xl font-black text-emerald-400 exception-display-font">
                       {summary.resolved}
                     </p>
                     <p className="text-xs uppercase tracking-wider text-gray-500 exception-mono-font mt-1">
@@ -1003,13 +1247,13 @@ export function ExceptionsPage() {
                 </Card>
 
                 <Card className="exception-card-industrial exception-stagger-item">
-                  <CardContent className="p-6">
+                  <CardContent className="p-5 sm:p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
                         <InformationCircleIcon className="h-4 w-4 text-purple-400" />
                       </div>
                     </div>
-                    <p className="text-4xl font-black text-purple-400 exception-display-font">
+                    <p className="text-3xl sm:text-4xl font-black text-purple-400 exception-display-font">
                       {summary.total > 0 ? Math.round((summary.resolved / summary.total) * 100) : 0}
                       %
                     </p>
@@ -1021,7 +1265,7 @@ export function ExceptionsPage() {
               </div>
             )}
 
-            {/* Type Breakdown - Industrial Grid */}
+            {/* Type Breakdown - Mobile First Single Column */}
             {!summaryLoading && summary && Object.keys(summary.byType).length > 0 && (
               <Card className="exception-card-industrial exception-stagger-item">
                 <CardHeader>
@@ -1030,12 +1274,12 @@ export function ExceptionsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  <div className="flex flex-col sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {Object.entries(summary.byType).map(
                       ([type, count]: [string, unknown], index: number) => (
                         <div
                           key={type}
-                          className="exception-card-animate group p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-purple-500/30 hover:bg-purple-500/5 transition-all duration-300 cursor-default"
+                          className="exception-card-animate group p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-purple-500/30 hover:bg-purple-500/5 transition-all duration-300 cursor-default exception-touch-target exception-touch-active"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <p className="text-2xl font-black text-white exception-display-font group-hover:text-purple-300 transition-colors">
@@ -1052,11 +1296,11 @@ export function ExceptionsPage() {
               </Card>
             )}
 
-            {/* Filter Tabs - Industrial Buttons */}
+            {/* Filter Tabs - Mobile Touch-Friendly Buttons */}
             <div className="flex flex-wrap gap-2 exception-stagger-item">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 ${
+                className={`px-4 sm:px-5 py-3 sm:py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
                   filterStatus === 'all'
                     ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25 exception-filter-active'
                     : 'exception-card-industrial text-gray-400 hover:text-white hover:border-purple-500/30'
@@ -1066,7 +1310,7 @@ export function ExceptionsPage() {
               </button>
               <button
                 onClick={() => setFilterStatus(ExceptionStatus.OPEN)}
-                className={`px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 ${
+                className={`px-4 sm:px-5 py-3 sm:py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
                   filterStatus === ExceptionStatus.OPEN
                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/25 exception-filter-active'
                     : 'exception-card-industrial text-gray-400 hover:text-red-400 hover:border-red-500/30'
@@ -1081,7 +1325,7 @@ export function ExceptionsPage() {
               </button>
               <button
                 onClick={() => setFilterStatus(ExceptionStatus.RESOLVED)}
-                className={`px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 ${
+                className={`px-4 sm:px-5 py-3 sm:py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
                   filterStatus === ExceptionStatus.RESOLVED
                     ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 exception-filter-active'
                     : 'exception-card-industrial text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30'
@@ -1094,7 +1338,7 @@ export function ExceptionsPage() {
             {/* Exceptions List */}
             <Card className="exception-card-industrial exception-stagger-item">
               <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex flex-col gap-3">
                   <CardTitle className="text-sm font-bold uppercase tracking-widest text-gray-400 exception-mono-font">
                     {filterStatus === 'all'
                       ? 'ALL EXCEPTIONS'
@@ -1102,28 +1346,40 @@ export function ExceptionsPage() {
                         ? 'OPEN EXCEPTIONS — ACTION REQUIRED'
                         : 'RESOLVED EXCEPTIONS'}
                   </CardTitle>
-                  {/* Search Exceptions Filter */}
+                  {/* Search Exceptions Filter - Mobile Friendly */}
                   <div className="relative w-full sm:w-72">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                    <input
-                      type="text"
-                      placeholder="Search by ID, Order, SKU..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-sm text-white placeholder-gray-600 exception-mono-font focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all"
-                    />
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 exception-mono-font mb-2">
+                      Search
+                    </label>
+                    <div className="relative">
+                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                      <input
+                        type="text"
+                        inputMode="search"
+                        placeholder="ID, Order, SKU..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-base sm:text-sm text-white placeholder-gray-600 exception-mono-font focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all exception-mobile-input exception-focus-visible"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {filteredExceptions.length > 0 ? (
+                {exceptionsLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => (
+                      <ExceptionCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : filteredExceptions.length > 0 ? (
                   <div className="space-y-3">
                     {filteredExceptions.map((exception: OrderException, index: number) => {
                       const isOpen = exception.status === ExceptionStatus.OPEN;
                       return (
                         <div
                           key={exception.exceptionId}
-                          className={`exception-card-animate group relative p-5 rounded-xl transition-all duration-300 ${
+                          className={`exception-card-animate group relative p-4 sm:p-5 rounded-xl transition-all duration-300 exception-touch-active ${
                             isOpen
                               ? 'exception-card-industrial pulse-glow-urgent hover:border-red-500/50'
                               : 'exception-card-industrial hover:border-purple-500/30'
@@ -1136,7 +1392,7 @@ export function ExceptionsPage() {
                           )}
 
                           {/* Header row with badges and ID */}
-                          <div className="flex flex-wrap items-center gap-3 mb-4 pl-3">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 pl-3">
                             <ExceptionTypeBadge type={exception.type} />
                             <ExceptionBadge status={exception.status} />
                             <span className="text-[0.65rem] text-gray-600 exception-mono-font ml-auto">
@@ -1144,8 +1400,8 @@ export function ExceptionsPage() {
                             </span>
                           </div>
 
-                          {/* Details grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pl-3">
+                          {/* Details - Mobile Single Column, Desktop Grid */}
+                          <div className="flex flex-col sm:grid sm:grid-cols-4 gap-3 sm:gap-4 pl-3">
                             <div>
                               <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
                                 Order
@@ -1214,9 +1470,9 @@ export function ExceptionsPage() {
                             </div>
                           )}
 
-                          {/* Resolve button */}
+                          {/* Resolve button - Desktop inline */}
                           {isOpen && (
-                            <div className="mt-5 ml-3">
+                            <div className="hidden sm:block mt-5 ml-3">
                               <Button
                                 variant="primary"
                                 size="sm"
@@ -1229,7 +1485,7 @@ export function ExceptionsPage() {
                                   setNewQuantity(0);
                                   setNewBinLocation('');
                                 }}
-                                className="bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-red-500/25"
+                                className="bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-touch-target btn-mobile-active"
                               >
                                 Resolve Exception
                                 <ChevronRightIcon className="h-4 w-4 ml-1" />
@@ -1241,14 +1497,14 @@ export function ExceptionsPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6">
-                      <CheckCircleIcon className="h-10 w-10 text-emerald-400" />
+                  <div className="flex flex-col items-center justify-center py-16 sm:py-20">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6">
+                      <CheckCircleIcon className="h-8 w-8 sm:h-10 sm:w-10 text-emerald-400" />
                     </div>
                     <p className="text-lg font-semibold text-white exception-display-font mb-2">
                       All Clear
                     </p>
-                    <p className="text-sm text-gray-500 exception-body-font">
+                    <p className="text-sm text-gray-500 exception-body-font text-center px-4">
                       {searchQuery
                         ? 'No exceptions match your search criteria'
                         : 'No exceptions match this filter'}
@@ -1273,24 +1529,50 @@ export function ExceptionsPage() {
         )}
       </main>
 
-      {/* Resolve Modal - Industrial Design */}
+      {/* Mobile Bottom CTA - Fixed at bottom for thumb zone */}
+      {openCount > 0 && firstOpenException && (
+        <div className="exception-mobile-cta sm:hidden">
+          <Button
+            variant="primary"
+            onClick={() => {
+              setSelectedException(firstOpenException);
+              setShowResolveModal(true);
+              setResolution(ExceptionResolution.BACKORDER);
+              setResolutionNotes('');
+              setSubstituteSku('');
+              setNewQuantity(0);
+              setNewBinLocation('');
+            }}
+            className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-sm tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn"
+          >
+            Resolve Next Exception ({openCount})
+            <ChevronRightIcon className="h-5 w-5 ml-2" />
+          </Button>
+        </div>
+      )}
+
+      {/* Resolve Modal - Mobile Bottom Sheet / Desktop Centered */}
       {showResolveModal && selectedException && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+          <div className="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pt-4 pb-0 sm:pb-20 text-center sm:block sm:p-0">
             {/* Background overlay */}
             <div
               className="fixed inset-0 exception-modal-backdrop transition-opacity"
               onClick={() => setShowResolveModal(false)}
             />
 
-            {/* Modal panel */}
-            <div className="inline-block align-bottom bg-gray-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-white/[0.08] exception-card-animate">
+            {/* Modal panel - Bottom sheet on mobile */}
+            <div className={`exception-mobile-modal ${showResolveModal ? 'open' : ''} inline-block align-bottom bg-gray-900 rounded-t-2xl sm:rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border-t sm:border border-white/[0.08] exception-card-animate w-full max-h-[90vh]`}>
+              {/* Mobile drag handle */}
+              <div className="sm:hidden flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 rounded-full bg-gray-700" />
+              </div>
+              
               {/* Modal header */}
-              <div className="relative px-6 py-5 border-b border-white/[0.08] bg-gradient-to-r from-red-500/10 to-amber-500/10">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml,...')]" />
+              <div className="relative px-4 sm:px-6 py-4 sm:py-5 border-b border-white/[0.08] bg-gradient-to-r from-red-500/10 to-amber-500/10">
                 <div className="relative flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-white exception-display-font">
+                    <h3 className="text-lg sm:text-xl font-bold text-white exception-display-font">
                       Resolve Exception
                     </h3>
                     <p className="mt-1 text-xs text-gray-500 exception-mono-font">
@@ -1299,15 +1581,16 @@ export function ExceptionsPage() {
                   </div>
                   <button
                     onClick={() => setShowResolveModal(false)}
-                    className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="w-11 h-11 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition-colors exception-touch-target exception-focus-visible"
+                    aria-label="Close modal"
                   >
-                    <XMarkIcon className="h-5 w-5" />
+                    <XMarkIcon className="h-6 w-6" />
                   </button>
                 </div>
               </div>
 
               {/* Modal content */}
-              <div className="px-6 py-6 max-h-[60vh] overflow-y-auto">
+              <div className="px-4 sm:px-6 py-4 sm:py-6 max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
                 {/* Exception Details Section */}
                 <div className="mb-6">
                   <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 exception-mono-font mb-4 flex items-center gap-2">
@@ -1317,11 +1600,12 @@ export function ExceptionsPage() {
                     Exception Details
                   </h4>
                   <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.08]">
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
                       <ExceptionTypeBadge type={selectedException.type} />
                       <ExceptionBadge status={selectedException.status} />
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {/* Mobile Single Column, Desktop Grid */}
+                    <div className="flex flex-col sm:grid sm:grid-cols-4 gap-3">
                       <div className="p-3 rounded-lg bg-white/[0.02]">
                         <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
                           Order
@@ -1376,12 +1660,12 @@ export function ExceptionsPage() {
                     </div>
                     Select Resolution <span className="text-red-400">*</span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
                     {getResolutionOptions(selectedException.type).map((option, idx) => (
                       <button
                         key={option.value}
                         onClick={() => setResolution(option.value)}
-                        className={`exception-resolution-option text-left p-4 rounded-xl border transition-all ${
+                        className={`exception-resolution-option text-left p-4 rounded-xl border transition-all exception-touch-target exception-focus-visible ${
                           resolution === option.value
                             ? 'border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10'
                             : 'border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.04]'
@@ -1404,7 +1688,7 @@ export function ExceptionsPage() {
                   </div>
 
                   {/* Conditional Fields */}
-                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.08]">
+                  <div className="p-4 sm:p-5 rounded-xl bg-white/[0.02] border border-white/[0.08]">
                     <h5 className="text-xs font-bold uppercase tracking-widest text-gray-500 exception-mono-font mb-4">
                       Resolution Details
                     </h5>
@@ -1415,9 +1699,10 @@ export function ExceptionsPage() {
                         </label>
                         <input
                           type="text"
+                          inputMode="text"
                           value={substituteSku}
                           onChange={e => setSubstituteSku(e.target.value.toUpperCase())}
-                          className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-mono-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all"
+                          className="w-full px-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-mono-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all exception-mobile-input exception-focus-visible"
                           placeholder="Enter substitute SKU..."
                         />
                       </div>
@@ -1430,11 +1715,12 @@ export function ExceptionsPage() {
                         </label>
                         <input
                           type="number"
+                          inputMode="numeric"
                           min={0}
                           max={selectedException.quantityExpected}
                           value={newQuantity}
                           onChange={e => setNewQuantity(parseInt(e.target.value) || 0)}
-                          className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-mono-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all"
+                          className="w-full px-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-mono-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all exception-mobile-input exception-focus-visible"
                           placeholder="Enter new quantity..."
                         />
                       </div>
@@ -1447,9 +1733,10 @@ export function ExceptionsPage() {
                         </label>
                         <input
                           type="text"
+                          inputMode="text"
                           value={newBinLocation}
                           onChange={e => setNewBinLocation(e.target.value.toUpperCase())}
-                          className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-mono-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all"
+                          className="w-full px-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-mono-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all exception-mobile-input exception-focus-visible"
                           placeholder="Enter new bin location..."
                         />
                       </div>
@@ -1463,7 +1750,7 @@ export function ExceptionsPage() {
                         value={resolutionNotes}
                         onChange={e => setResolutionNotes(e.target.value)}
                         rows={3}
-                        className="w-full px-4 py-3 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-body-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all resize-none"
+                        className="w-full px-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-white exception-body-font placeholder-gray-600 focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all resize-none exception-mobile-input exception-focus-visible"
                         placeholder="Add notes about this resolution..."
                       />
                     </div>
@@ -1471,12 +1758,12 @@ export function ExceptionsPage() {
                 </div>
               </div>
 
-              {/* Modal footer */}
-              <div className="px-6 py-5 border-t border-white/[0.08] flex flex-col sm:flex-row justify-end gap-3">
+              {/* Modal footer - Mobile sticky bottom */}
+              <div className="sticky bottom-0 px-4 sm:px-6 py-4 sm:py-5 border-t border-white/[0.08] bg-gray-900 flex flex-col sm:flex-row gap-3 pb-[calc(1rem+var(--safe-bottom))] sm:pb-5">
                 <Button
                   variant="secondary"
                   onClick={() => setShowResolveModal(false)}
-                  className="exception-card-industrial !bg-transparent"
+                  className="exception-card-industrial !bg-transparent exception-mobile-btn sm:!min-h-[44px] sm:!py-2.5 sm:!text-sm"
                 >
                   Cancel
                 </Button>
@@ -1484,7 +1771,7 @@ export function ExceptionsPage() {
                   variant="primary"
                   onClick={handleResolve}
                   disabled={resolveMutation.isPending}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-emerald-500/25"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold uppercase text-sm tracking-wider exception-mono-font shadow-lg shadow-emerald-500/25 exception-mobile-btn sm:!min-h-[44px] sm:!py-2.5 sm:!text-sm"
                 >
                   {resolveMutation.isPending ? 'Resolving...' : 'Confirm Resolution'}
                 </Button>

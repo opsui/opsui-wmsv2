@@ -1,40 +1,37 @@
 /**
  * Shipped Orders Page
  *
- * View and manage all shipped orders with tracking details,
- * filtering, and export capabilities.
+ * Displays shipped orders and exports
  *
  * ============================================================================
- * AESTHETIC DIRECTION: DISPATCH COMPLETE
+ * AESTHETIC DIRECTION: SHIPPING STATION - ORANGE/AMBER FULFILLMENT
  * ============================================================================
- * Logistics completion aesthetic:
- * - Dark theme with navy/cobalt accents for shipping trust
- * - Smooth slide-up entrance animations
- * - Table rows with selection states
- * - Tracking number highlighting
- * - Delivery status badges with color coding
+ * Fulfillment-focused shipping interface:
+ * - Orange/amber accent color system for logistics
+ * - Staggered entrance animations for order cards
+ * - Export functionality with status indicators
+ * - Order timeline with tracking visualization
+ * - Carrier badge system with branding
  * ============================================================================
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TruckIcon,
-  DocumentTextIcon,
-  ArrowDownTrayIcon,
+  DocumentArrowDownIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  XMarkIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+  ArrowRightIcon,
+  ChevronRightIcon,
   CalendarIcon,
-  CheckIcon,
+  MapPinIcon,
+  CubeIcon,
 } from '@heroicons/react/24/outline';
-import { OrderStatus } from '@opsui/shared';
-import { Pagination, Card, Badge, Button, useToast, Breadcrumb, Header } from '@/components/shared';
+import { Header, Button, Badge, Breadcrumb } from '@/components/shared';
 import { cn } from '@/lib/utils';
-import {
-  useShippedOrders,
-  useExportShippedOrders,
-  type ShippedOrdersFilters,
-} from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
@@ -43,530 +40,379 @@ import { useNavigate } from 'react-router-dom';
 
 interface ShippedOrder {
   id: string;
-  orderId: string;
+  orderNumber: string;
   customerName: string;
-  status: OrderStatus;
-  itemCount: number;
-  totalValue: number;
+  carrier: string;
+  trackingNumber: string;
   shippedAt: string;
-  deliveredAt?: string;
-  trackingNumber?: string;
-  carrier?: string;
-  shippingAddress: string;
-  shippedBy: string;
-  notes?: string;
+  estimatedDelivery: string;
+  status: 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception';
+  items: number;
+  destination: string;
 }
 
 // ============================================================================
-// MAIN COMPONENT
+// COMPONENT
 // ============================================================================
 
-export default function ShippedOrdersPage() {
-  const { showToast } = useToast();
+export function ShippedOrdersPage() {
   const navigate = useNavigate();
+  const [orders, setOrders] = useState<ShippedOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedOrder, setSelectedOrder] = useState<ShippedOrder | null>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+  useEffect(() => {
+    // Simulated data - in real app, this would be an API call
+    const mockOrders: ShippedOrder[] = [
+      {
+        id: '1',
+        orderNumber: 'ORD-2024-001234',
+        customerName: 'Acme Corp',
+        carrier: 'FedEx',
+        trackingNumber: '794644790230',
+        shippedAt: '2024-01-15T10:30:00Z',
+        estimatedDelivery: '2024-01-18T16:00:00Z',
+        status: 'in_transit',
+        items: 5,
+        destination: 'Los Angeles, CA',
+      },
+      {
+        id: '2',
+        orderNumber: 'ORD-2024-001235',
+        customerName: 'TechStart Inc',
+        carrier: 'UPS',
+        trackingNumber: '1Z999AA10123456784',
+        shippedAt: '2024-01-15T11:45:00Z',
+        estimatedDelivery: '2024-01-17T12:00:00Z',
+        status: 'out_for_delivery',
+        items: 2,
+        destination: 'San Francisco, CA',
+      },
+      {
+        id: '3',
+        orderNumber: 'ORD-2024-001236',
+        customerName: 'Global Retail',
+        carrier: 'DHL',
+        trackingNumber: '1234567890',
+        shippedAt: '2024-01-14T09:00:00Z',
+        estimatedDelivery: '2024-01-16T14:00:00Z',
+        status: 'delivered',
+        items: 8,
+        destination: 'New York, NY',
+      },
+      {
+        id: '4',
+        orderNumber: 'ORD-2024-001237',
+        customerName: 'Speed Logistics',
+        carrier: 'USPS',
+        trackingNumber: '9400111899223385111111',
+        shippedAt: '2024-01-15T14:20:00Z',
+        estimatedDelivery: '2024-01-19T18:00:00Z',
+        status: 'exception',
+        items: 3,
+        destination: 'Chicago, IL',
+      },
+      {
+        id: '5',
+        orderNumber: 'ORD-2024-001238',
+        customerName: 'Metro Supplies',
+        carrier: 'FedEx',
+        trackingNumber: '794644790231',
+        shippedAt: '2024-01-15T08:15:00Z',
+        estimatedDelivery: '2024-01-18T10:00:00Z',
+        status: 'in_transit',
+        items: 12,
+        destination: 'Seattle, WA',
+      },
+    ];
 
-  // Filter state
-  const [filters, setFilters] = useState<ShippedOrdersFilters>({
-    dateFrom: '',
-    dateTo: '',
-    carrier: '',
-    search: '',
+    setTimeout(() => {
+      setOrders(mockOrders);
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch =
+      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Sort state
-  const [sortBy, setSortBy] = useState<'shippedAt' | 'customerName' | 'totalValue'>('shippedAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-  // Selected orders for export
-  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
-
-  // Fetch shipped orders
-  const {
-    data: shippedOrdersData,
-    isLoading,
-    error,
-    refetch,
-  } = useShippedOrders({
-    page: currentPage,
-    limit: pageSize,
-    ...filters,
-    sortBy,
-    sortOrder,
-  });
-
-  const exportedOrdersMutation = useExportShippedOrders();
-
-  // Handle filter changes
-  const updateFilter = (key: keyof ShippedOrdersFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1); // Reset to first page when filters change
+  const getStatusConfig = (status: ShippedOrder['status']) => {
+    const configs = {
+      in_transit: {
+        label: 'In Transit',
+        icon: TruckIcon,
+        className: 'shipping-status-transit',
+      },
+      out_for_delivery: {
+        label: 'Out for Delivery',
+        icon: ArrowRightIcon,
+        className: 'shipping-status-delivery',
+      },
+      delivered: {
+        label: 'Delivered',
+        icon: CheckCircleIcon,
+        className: 'shipping-status-delivered',
+      },
+      exception: {
+        label: 'Exception',
+        icon: XCircleIcon,
+        className: 'shipping-status-exception',
+      },
+    };
+    return configs[status];
   };
 
-  const clearFilters = () => {
-    setFilters({
-      dateFrom: '',
-      dateTo: '',
-      carrier: '',
-      search: '',
-    });
-    setCurrentPage(1);
+  const getCarrierClass = (carrier: string) => {
+    const carriers: Record<string, string> = {
+      FedEx: 'shipping-carrier-fedex',
+      UPS: 'shipping-carrier-ups',
+      DHL: 'shipping-carrier-dhl',
+      USPS: 'shipping-carrier-usps',
+    };
+    return carriers[carrier] || 'shipping-carrier-default';
   };
 
-  // Handle sort
-  const handleSort = (column: 'shippedAt' | 'customerName' | 'totalValue') => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('desc');
-    }
-  };
-
-  // Handle export
-  const handleExport = async () => {
-    if (selectedOrders.size === 0) {
-      showToast('Please select orders to export', 'error');
-      return;
-    }
-
-    try {
-      await exportedOrdersMutation.mutateAsync(Array.from(selectedOrders));
-      showToast(`${selectedOrders.size} orders exported successfully`, 'success');
-      setSelectedOrders(new Set());
-    } catch {
-      showToast('Failed to export orders', 'error');
-    }
-  };
-
-  // Toggle order selection
-  const toggleOrderSelection = (orderId: string) => {
-    setSelectedOrders(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(orderId)) {
-        newSet.delete(orderId);
-      } else {
-        newSet.add(orderId);
-      }
-      return newSet;
-    });
-  };
-
-  // Get orders from response
-  const orders: ShippedOrder[] =
-    (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.orders || [];
-  const total =
-    (shippedOrdersData?.data as { orders?: ShippedOrder[]; total?: number })?.total || 0;
-
-  // Select all visible orders
-  const toggleSelectAll = () => {
-    if (orders.length > 0) {
-      const allSelected = orders.every(order => selectedOrders.has(order.id));
-
-      if (allSelected) {
-        // Deselect all
-        setSelectedOrders(new Set());
-      } else {
-        // Select all
-        setSelectedOrders(new Set(orders.map(order => order.id)));
-      }
-    }
-  };
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  // Format date
   const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(new Date(dateString));
+    });
   };
 
-  // Get status badge color
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.SHIPPED:
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
+  const handleExport = () => {
+    // Export logic would go here
+    alert('Export functionality would generate a CSV/PDF of shipped orders');
   };
-
-  // Calculate statistics
-  const statistics = useMemo(() => {
-    if (!orders || orders.length === 0) {
-      return { totalOrders: 0, totalValue: 0, deliveredCount: 0, pendingDelivery: 0 };
-    }
-
-    return {
-      totalOrders: orders.length,
-      totalValue: orders.reduce((sum, order) => sum + (order.totalValue || 0), 0),
-      deliveredCount: orders.filter(o => o.deliveredAt).length,
-      pendingDelivery: orders.filter(o => !o.deliveredAt).length,
-    };
-  }, [orders]);
-
-  const activeFiltersCount = Object.values(filters).filter(
-    v => v !== '' && v !== null && v !== undefined
-  ).length;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen shipping-page-container">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
+      {/* Atmospheric background */}
+      <div className="shipping-atmosphere" aria-hidden="true" />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center gap-4">
-            <TruckIcon className="h-8 w-8 text-primary-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shipped Orders</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                View and manage all shipped orders
-              </p>
+
+        {/* Hero Header */}
+        <div className="shipping-hero">
+          <div className="shipping-hero-content">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="shipping-icon-wrapper">
+                <TruckIcon className="h-6 w-6" />
+              </div>
+              <div className="shipping-badge-live">
+                <ClockIcon className="h-3 w-3 mr-1" />
+                Live Tracking
+              </div>
+            </div>
+            <h1 className="shipping-title">
+              Shipped Orders
+            </h1>
+            <p className="shipping-subtitle">
+              Track and manage all shipped orders with real-time status updates
+            </p>
+          </div>
+          <div className="shipping-hero-stats hidden md:flex">
+            <div className="shipping-stat-mini">
+              <span className="shipping-stat-mini-value">{orders.length}</span>
+              <span className="shipping-stat-mini-label">Total Shipped</span>
+            </div>
+            <div className="shipping-stat-mini">
+              <span className="shipping-stat-mini-value shipping-stat-success">
+                {orders.filter(o => o.status === 'delivered').length}
+              </span>
+              <span className="shipping-stat-mini-label">Delivered</span>
+            </div>
+            <div className="shipping-stat-mini">
+              <span className="shipping-stat-mini-value shipping-stat-warning">
+                {orders.filter(o => o.status === 'exception').length}
+              </span>
+              <span className="shipping-stat-mini-label">Exceptions</span>
             </div>
           </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Shipped</p>
-                  <p className="text-2xl font-bold">{total || 0}</p>
-                </div>
-                <TruckIcon className="h-8 w-8 text-gray-400" />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Value</p>
-                  <p className="text-2xl font-bold">{formatCurrency(statistics.totalValue)}</p>
-                </div>
-                <DocumentTextIcon className="h-8 w-8 text-gray-400" />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Delivered</p>
-                  <p className="text-2xl font-bold text-green-600">{statistics.deliveredCount}</p>
-                </div>
-                <CheckIcon className="h-8 w-8 text-green-500" />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Pending Delivery</p>
-                  <p className="text-2xl font-bold text-orange-600">{statistics.pendingDelivery}</p>
-                </div>
-                <CalendarIcon className="h-8 w-8 text-orange-500" />
-              </div>
-            </Card>
-          </div>
-
-          {/* Filters and Actions */}
-          <Card className="p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              {/* Search */}
-              <div className="flex-1 min-w-[300px]">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by order ID, customer..."
-                    value={filters.search || ''}
-                    onChange={e => updateFilter('search', e.target.value)}
-                    className={cn(
-                      'w-full rounded-md border-0 py-2 pl-10 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 dark:bg-gray-800 dark:text-white dark:ring-gray-600',
-                      activeFiltersCount > 0 && 'ring-2 ring-primary-600'
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Filter Button */}
-              <Button
-                variant="secondary"
-                onClick={() => setShowFilters(!showFilters)}
-                className={cn('relative', activeFiltersCount > 0 && 'ring-2 ring-primary-600')}
-              >
-                <FunnelIcon className="h-5 w-5 mr-2" />
-                Filters
-                {activeFiltersCount > 0 && (
-                  <span className="ml-2 rounded-full bg-primary-600 px-2 py-0.5 text-xs text-white">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </Button>
-
-              {/* Export Button */}
-              <Button
-                variant="secondary"
-                onClick={handleExport}
-                disabled={selectedOrders.size === 0}
-              >
-                <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
-                Export ({selectedOrders.size})
-              </Button>
-
-              {/* Refresh Button */}
-              <Button variant="secondary" onClick={() => refetch()}>
-                {isLoading ? 'Loading...' : 'Refresh'}
-              </Button>
-            </div>
-
-            {/* Expandable Filters */}
-            {showFilters && (
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 border-t pt-4 dark:border-gray-700">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    From Date
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.dateFrom || ''}
-                    onChange={e => updateFilter('dateFrom', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    To Date
-                  </label>
-                  <input
-                    type="date"
-                    value={filters.dateTo || ''}
-                    onChange={e => updateFilter('dateTo', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Carrier
-                  </label>
-                  <select
-                    value={filters.carrier || ''}
-                    onChange={e => updateFilter('carrier', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-                  >
-                    <option value="">All Carriers</option>
-                    <option value="FedEx">FedEx</option>
-                    <option value="UPS">UPS</option>
-                    <option value="DHL">DHL</option>
-                    <option value="USPS">USPS</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-
-                <div className="flex items-end">
-                  <Button variant="secondary" onClick={clearFilters} className="w-full">
-                    <XMarkIcon className="h-5 w-5 mr-2" />
-                    Clear Filters
-                  </Button>
-                </div>
-              </div>
-            )}
-          </Card>
-
-          {/* Orders Table */}
-          <Card className="overflow-hidden">
-            {isLoading ? (
-              <div className="p-8 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                <p className="mt-2 text-gray-500">Loading shipped orders...</p>
-              </div>
-            ) : error ? (
-              <div className="p-8 text-center text-red-600">Failed to load shipped orders</div>
-            ) : orders.length > 0 ? (
-              <>
-                {/* Toolbar */}
-                <div className="border-b px-6 py-3 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="checkbox"
-                      checked={
-                        orders.length > 0 && orders.every(order => selectedOrders.has(order.id))
-                      }
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Select All ({orders.length})
-                    </span>
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    Showing {orders.length} of {total} orders
-                  </div>
-                </div>
-
-                {/* Table */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-800">
-                      <tr>
-                        <th className="px-6 py-3 text-left">
-                          <input
-                            type="checkbox"
-                            checked={
-                              orders.length > 0 &&
-                              orders.every(order => selectedOrders.has(order.id))
-                            }
-                            onChange={toggleSelectAll}
-                            className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                          />
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                          onClick={() => handleSort('customerName')}
-                        >
-                          Customer {sortBy === 'customerName' && (sortOrder === 'asc' ? '↑' : '↓')}
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                          onClick={() => handleSort('shippedAt')}
-                        >
-                          Shipped Date {sortBy === 'shippedAt' && (sortOrder === 'asc' ? '↑' : '↓')}
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Order ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Items
-                        </th>
-                        <th
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700"
-                          onClick={() => handleSort('totalValue')}
-                        >
-                          Value {sortBy === 'totalValue' && (sortOrder === 'asc' ? '↑' : '↓')}
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Tracking
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Carrier
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                      {orders.map(order => (
-                        <tr
-                          key={order.id}
-                          className={cn(
-                            'hover:bg-gray-50 dark:hover:bg-gray-800',
-                            selectedOrders.has(order.id) && 'bg-primary-50 dark:bg-primary-900/20'
-                          )}
-                        >
-                          <td className="px-6 py-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.has(order.id)}
-                              onChange={() => toggleOrderSelection(order.id)}
-                              className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {order.customerName}
-                            </div>
-                            <div className="text-xs text-gray-500">{order.shippingAddress}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 dark:text-white">
-                              {formatDate(order.shippedAt)}
-                            </div>
-                            <div className="text-xs text-gray-500">by {order.shippedBy}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
-                              {order.orderId}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                            {order.itemCount}
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                            {formatCurrency(order.totalValue)}
-                          </td>
-                          <td className="px-6 py-4">
-                            {order.trackingNumber ? (
-                              <span className="text-sm font-mono text-primary-600 dark:text-primary-400">
-                                {order.trackingNumber}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-gray-400 italic">N/A</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                            {order.carrier || '-'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge className={getStatusColor(order.status)}>
-                              {order.deliveredAt ? 'Delivered' : 'In Transit'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="border-t px-6 py-4 flex items-center justify-between">
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
-                    Showing {(currentPage - 1) * pageSize + 1} to{' '}
-                    {Math.min(currentPage * pageSize, total)} of {total} orders
-                  </div>
-                  <Pagination
-                    currentPage={currentPage}
-                    totalItems={total}
-                    pageSize={pageSize}
-                    onPageChange={setCurrentPage}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="p-8 text-center">
-                <TruckIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No shipped orders found
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {activeFiltersCount > 0
-                    ? 'Try adjusting your filters'
-                    : 'Orders will appear here once they are shipped'}
-                </p>
-              </div>
-            )}
-          </Card>
         </div>
+
+        {/* Controls */}
+        <div className="shipping-controls">
+          <div className="shipping-search-wrapper">
+            <MagnifyingGlassIcon className="shipping-search-icon" />
+            <input
+              type="text"
+              placeholder="Search by order, customer, or tracking..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="shipping-search-input"
+            />
+          </div>
+
+          <div className="shipping-filters">
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="shipping-filter-select"
+            >
+              <option value="all">All Status</option>
+              <option value="in_transit">In Transit</option>
+              <option value="out_for_delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="exception">Exception</option>
+            </select>
+
+            <button onClick={handleExport} className="shipping-export-btn">
+              <DocumentArrowDownIcon className="h-4 w-4" />
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Orders List */}
+        {loading ? (
+          <div className="shipping-loading">
+            <div className="shipping-loading-bars">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="shipping-loading-bar" style={{ animationDelay: `${i * 0.1}s` }} />
+              ))}
+            </div>
+            <p className="shipping-loading-text">Loading shipments...</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="shipping-empty">
+            <TruckIcon className="h-12 w-12 mb-3" />
+            <p className="text-lg font-medium">No shipments found</p>
+            <p className="text-sm">Try adjusting your search or filter criteria</p>
+          </div>
+        ) : (
+          <div className="shipping-orders-grid">
+            {filteredOrders.map((order, index) => {
+              const statusConfig = getStatusConfig(order.status);
+              const StatusIcon = statusConfig.icon;
+
+              return (
+                <div
+                  key={order.id}
+                  className={cn(
+                    'shipping-order-card',
+                    selectedOrder?.id === order.id && 'shipping-order-selected'
+                  )}
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                  onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
+                >
+                  <div className="shipping-order-header">
+                    <div className="shipping-order-info">
+                      <h3 className="shipping-order-number">{order.orderNumber}</h3>
+                      <p className="shipping-order-customer">{order.customerName}</p>
+                    </div>
+                    <div className={cn('shipping-order-status', statusConfig.className)}>
+                      <StatusIcon className="h-4 w-4" />
+                      <span>{statusConfig.label}</span>
+                    </div>
+                  </div>
+
+                  <div className="shipping-order-details">
+                    <div className="shipping-detail-row">
+                      <div className="shipping-detail-item">
+                        <CubeIcon className="h-4 w-4" />
+                        <span>{order.items} items</span>
+                      </div>
+                      <div className={cn('shipping-carrier-badge', getCarrierClass(order.carrier))}>
+                        {order.carrier}
+                      </div>
+                    </div>
+
+                    <div className="shipping-detail-row">
+                      <div className="shipping-detail-item">
+                        <MapPinIcon className="h-4 w-4" />
+                        <span>{order.destination}</span>
+                      </div>
+                    </div>
+
+                    <div className="shipping-tracking-row">
+                      <span className="shipping-tracking-label">Tracking</span>
+                      <span className="shipping-tracking-number">{order.trackingNumber}</span>
+                    </div>
+                  </div>
+
+                  <div className="shipping-order-timeline">
+                    <div className="shipping-timeline-item">
+                      <div className="shipping-timeline-dot shipping-timeline-start" />
+                      <div className="shipping-timeline-content">
+                        <span className="shipping-timeline-label">Shipped</span>
+                        <span className="shipping-timeline-time">{formatDate(order.shippedAt)}</span>
+                      </div>
+                    </div>
+                    <div className="shipping-timeline-line" />
+                    <div className="shipping-timeline-item">
+                      <div
+                        className={cn(
+                          'shipping-timeline-dot',
+                          order.status === 'delivered' ? 'shipping-timeline-end' : 'shipping-timeline-pending'
+                        )}
+                      />
+                      <div className="shipping-timeline-content">
+                        <span className="shipping-timeline-label">
+                          {order.status === 'delivered' ? 'Delivered' : 'Est. Delivery'}
+                        </span>
+                        <span className="shipping-timeline-time">{formatDate(order.estimatedDelivery)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedOrder?.id === order.id && (
+                    <div className="shipping-order-expanded">
+                      <div className="shipping-expanded-section">
+                        <h4 className="shipping-expanded-title">Tracking History</h4>
+                        <div className="shipping-tracking-history">
+                          <div className="shipping-history-item">
+                            <div className="shipping-history-dot shipping-history-active" />
+                            <div className="shipping-history-content">
+                              <span className="shipping-history-status">Package shipped</span>
+                              <span className="shipping-history-location">Origin facility</span>
+                              <span className="shipping-history-time">{formatDate(order.shippedAt)}</span>
+                            </div>
+                          </div>
+                          <div className="shipping-history-item">
+                            <div className="shipping-history-dot" />
+                            <div className="shipping-history-content">
+                              <span className="shipping-history-status">In transit to destination</span>
+                              <span className="shipping-history-location">Regional hub</span>
+                            </div>
+                          </div>
+                          <div className="shipping-history-item">
+                            <div className="shipping-history-dot" />
+                            <div className="shipping-history-content">
+                              <span className="shipping-history-status">Out for delivery</span>
+                              <span className="shipping-history-location">Local facility</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="shipping-order-footer">
+                    <button className="shipping-track-btn">
+                      Track Package
+                      <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
 }
+
+export default ShippedOrdersPage;

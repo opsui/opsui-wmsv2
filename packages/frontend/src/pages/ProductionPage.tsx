@@ -1,21 +1,14 @@
 /**
- * Production Page - Industry-Standard Tabbed Navigation
- *
- * Following MES (Manufacturing Execution System) conventions:
- * - Dashboard: KPIs and overview metrics
- * - Orders: Active production orders with Kanban view
- * - Analytics: OEE, performance trends, detailed reports
- * - Work Centers: Equipment status and capacity
- * - BOMs: Bill of materials management
+ * Production Page - Manufacturing Execution System
  *
  * ============================================================================
  * AESTHETIC DIRECTION: FACTORY FLOOR
  * ============================================================================
- * Manufacturing execution system aesthetic:
- * - Dark theme with yellow/gold accents for manufacturing energy
- * - Vertical slide-up entrance animations
- * - Kanban board with production flow visualization
- * - Work center status with capacity indicators
+ * Industrial manufacturing execution system aesthetic:
+ * - Dark theme with amber/gold accents for manufacturing energy
+ * - Vertical slide-up entrance animations with stagger
+ * - Industrial geometric elements and diagonal lines
+ * - Ambient factory-like lighting with warm glows
  * - OEE metrics with performance dashboards
  * ============================================================================
  */
@@ -31,7 +24,7 @@ import {
   Breadcrumb,
 } from '@/components/shared';
 import { useProductionOrders, useBOMs, useUpdateProductionOrder } from '@/services/api';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { ProductionOrder as SharedProductionOrder, ProductionOrderStatus } from '@opsui/shared';
 import { CreateProductionOrderModal } from '@/components/production/CreateProductionOrderModal';
 import { CreateBOMModal } from '@/components/production/CreateBOMModal';
@@ -47,6 +40,9 @@ import {
   ClipboardDocumentListIcon,
   DocumentChartBarIcon,
   BuildingOfficeIcon,
+  ArrowTrendingUpIcon,
+  BoltIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline';
 
 type ProductionOrder = SharedProductionOrder;
@@ -67,24 +63,174 @@ const TABS: TabConfig[] = [
   { id: 'bom', label: 'BOMs', icon: DocumentTextIcon },
 ];
 
+// Animated counter hook
+function useAnimatedCounter(end: number, duration: number = 800) {
+  const [value, setValue] = useState(0);
+  
+  useEffect(() => {
+    if (end === 0) {
+      setValue(0);
+      return;
+    }
+    
+    const startTime = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.floor(end * eased));
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    requestAnimationFrame(animate);
+  }, [end, duration]);
+  
+  return value;
+}
+
+// Intersection observer for scroll animations
+function useInView(threshold = 0.1) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+        }
+      },
+      { threshold }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, isInView };
+}
+
+// Animated metric card with industrial styling
+function MetricCard({ 
+  label, 
+  value, 
+  color = 'amber',
+  delay = 0,
+  icon: Icon
+}: { 
+  label: string; 
+  value: number; 
+  color?: 'amber' | 'blue' | 'emerald' | 'slate';
+  delay?: number;
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
+  const { ref, isInView } = useInView(0.1);
+  const animatedValue = useAnimatedCounter(isInView ? value : 0, 1000);
+
+  const colorClasses = {
+    amber: 'from-amber-500 to-yellow-500 text-amber-400 border-amber-500/30',
+    blue: 'from-blue-500 to-cyan-500 text-blue-400 border-blue-500/30',
+    emerald: 'from-emerald-500 to-teal-500 text-emerald-400 border-emerald-500/30',
+    slate: 'from-slate-400 to-slate-500 text-slate-300 border-slate-500/30',
+  };
+
+  return (
+    <div 
+      ref={ref}
+      className="relative group"
+      style={{
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'translateY(0)' : 'translateY(40px)',
+        transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`
+      }}
+    >
+      {/* Industrial corner accent */}
+      <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-amber-500/50 rounded-tl-lg" />
+      <div className="absolute -bottom-px -right-px w-4 h-4 border-b-2 border-r-2 border-amber-500/50 rounded-br-lg" />
+      
+      <div className={`relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border ${colorClasses[color].split(' ').pop()} rounded-xl p-5 overflow-hidden`}>
+        {/* Background glow */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${colorClasses[color].split(' ').slice(0, 2).join(' ')} opacity-5`} />
+        
+        <div className="relative">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-slate-500 uppercase tracking-wider">{label}</p>
+            {Icon && <Icon className={`h-4 w-4 ${colorClasses[color].split(' ')[2]}`} />}
+          </div>
+          <p className={`text-4xl font-light ${colorClasses[color].split(' ')[2]}`}>
+            {animatedValue}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Alert card with industrial styling
+function AlertCard({ 
+  type, 
+  label, 
+  value,
+  delay = 0
+}: { 
+  type: 'error' | 'warning';
+  label: string;
+  value: number;
+  delay?: number;
+}) {
+  const { ref, isInView } = useInView(0.1);
+  const animatedValue = useAnimatedCounter(isInView ? value : 0, 800);
+
+  const typeClasses = {
+    error: 'from-rose-500/10 to-rose-500/5 border-rose-500/30 text-rose-400',
+    warning: 'from-amber-500/10 to-amber-500/5 border-amber-500/30 text-amber-400',
+  };
+
+  return (
+    <div 
+      ref={ref}
+      className="relative"
+      style={{
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'translateY(20px)' : 'translateY(30px)',
+        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`
+      }}
+    >
+      <div className={`relative bg-gradient-to-br ${typeClasses[type]} border rounded-lg p-4`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ExclamationTriangleIcon className={`h-5 w-5 ${typeClasses[type].split(' ').pop()}`} />
+            <span className="text-sm font-medium text-white">{label}</span>
+          </div>
+          <span className={`text-2xl font-light ${typeClasses[type].split(' ').pop()}`}>
+            {animatedValue}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProductionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateBOMModalOpen, setIsCreateBOMModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  // Get active tab from URL or default to dashboard
   const activeTab = (searchParams.get('tab') as TabType) || 'dashboard';
 
   const setActiveTab = (tab: TabType) => {
     setSearchParams({ tab });
   };
 
-  // Fetch data
   const { data: ordersData, isLoading: isOrdersLoading } = useProductionOrders();
   const { data: bomsData } = useBOMs();
 
-  // Action hooks
   const updateOrderMutation = useUpdateProductionOrder();
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: ProductionOrderStatus) => {
@@ -134,66 +280,109 @@ export function ProductionPage() {
   }, [orders]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Industrial ambient background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Factory floor lighting effect */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-amber-500/5 rounded-full blur-[150px] -translate-y-1/2" />
+        <div className="absolute top-0 right-1/4 w-[400px] h-[300px] bg-orange-500/5 rounded-full blur-[120px] -translate-y-1/2" />
+        <div className="absolute bottom-0 left-1/3 w-[500px] h-[300px] bg-amber-500/5 rounded-full blur-[100px] translate-y-1/2" />
+        
+        {/* Industrial grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, white 1px, transparent 1px),
+              linear-gradient(to bottom, white 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px'
+          }}
+        />
+        
+        {/* Diagonal industrial lines */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          background: `repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 100px,
+            white 100px,
+            white 101px
+          )`
+        }} />
+      </div>
+
       <Header />
 
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb Navigation */}
+      <main className="relative w-full px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumb />
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-6">
+        
+        {/* Page Header with industrial styling */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Production Management</h1>
-            <p className="mt-2 text-gray-400">Manufacturing Execution System</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30">
+                <BoltIcon className="h-6 w-6 text-slate-900" />
+              </div>
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">Manufacturing Execution System</span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-2">
+              Production Management
+            </h1>
+            <p className="text-slate-400 font-light">
+              Monitor, control, and optimize manufacturing operations
+            </p>
           </div>
+          
           <div className="flex gap-3">
             <Button
               variant="secondary"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-11 px-5 border-slate-700 hover:border-amber-500/30"
               onClick={() => setIsCreateBOMModalOpen(true)}
             >
-              <DocumentTextIcon className="h-5 w-5" />
+              <DocumentTextIcon className="h-4 w-4" />
               New BOM
             </Button>
             <Button
               variant="primary"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-11 px-5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-medium shadow-lg shadow-amber-500/25"
               onClick={() => setIsCreateModalOpen(true)}
             >
-              <PlusIcon className="h-5 w-5" />
+              <PlusIcon className="h-4 w-4" />
               New Order
             </Button>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="border-b border-white/[0.08]">
-            <nav className="flex gap-1 -mb-px overflow-x-auto">
-              {TABS.map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 whitespace-nowrap rounded-t-lg ${
-                      isActive
-                        ? 'border-primary-500 text-primary-400 bg-primary-500/10'
-                        : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-white/[0.03]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                    {tab.id === 'dashboard' && dashboardMetrics.overdueOrders > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-error-500/20 text-error-300">
-                        !
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
+        {/* Tab Navigation with industrial styling */}
+        <div className="mb-8">
+          <div className="flex gap-1 p-1 rounded-xl bg-slate-900/50 border border-slate-800 w-fit overflow-x-auto">
+            {TABS.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 whitespace-nowrap ${
+                    isActive 
+                      ? 'text-slate-900' 
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg shadow-lg shadow-amber-500/25" />
+                  )}
+                  <Icon className="h-4 w-4 relative" />
+                  <span className="relative">{tab.label}</span>
+                  {tab.id === 'dashboard' && dashboardMetrics.overdueOrders > 0 && (
+                    <span className={`relative ml-1 w-2 h-2 rounded-full ${
+                      isActive ? 'bg-slate-900' : 'bg-rose-400 animate-pulse'
+                    }`} />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -201,8 +390,11 @@ export function ProductionPage() {
         {isLoading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-2 border-white/[0.08] border-t-primary-500"></div>
-              <p className="text-gray-400 text-sm">Loading production data...</p>
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
+                <CogIcon className="absolute inset-0 m-auto h-6 w-6 text-amber-400 animate-pulse" />
+              </div>
+              <p className="text-slate-400 text-sm font-light">Initializing production systems...</p>
             </div>
           </div>
         )}
@@ -212,99 +404,95 @@ export function ProductionPage() {
           <div>
             {/* Dashboard Tab */}
             {activeTab === 'dashboard' && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {/* Key Metrics Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card variant="glass" className="p-4 border-l-4 border-l-white/[0.3]">
-                    <p className="text-sm text-gray-400">Draft</p>
-                    <p className="text-2xl font-bold text-white">{dashboardMetrics.draft}</p>
-                  </Card>
-                  <Card variant="glass" className="p-4 border-l-4 border-l-blue-500">
-                    <p className="text-sm text-gray-400">Planned</p>
-                    <p className="text-2xl font-bold text-white">{dashboardMetrics.planned}</p>
-                  </Card>
-                  <Card variant="glass" className="p-4 border-l-4 border-l-primary-500">
-                    <p className="text-sm text-gray-400">In Production</p>
-                    <p className="text-2xl font-bold text-white">{dashboardMetrics.inProduction}</p>
-                  </Card>
-                  <Card variant="glass" className="p-4 border-l-4 border-l-success-500">
-                    <p className="text-sm text-gray-400">Completed Today</p>
-                    <p className="text-2xl font-bold text-white">{dashboardMetrics.completed}</p>
-                  </Card>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <MetricCard 
+                    label="Draft Orders" 
+                    value={dashboardMetrics.draft} 
+                    color="slate"
+                    delay={0}
+                    icon={DocumentTextIcon}
+                  />
+                  <MetricCard 
+                    label="Planned" 
+                    value={dashboardMetrics.planned} 
+                    color="blue"
+                    delay={100}
+                    icon={ClipboardDocumentListIcon}
+                  />
+                  <MetricCard 
+                    label="In Production" 
+                    value={dashboardMetrics.inProduction} 
+                    color="amber"
+                    delay={200}
+                    icon={BoltIcon}
+                  />
+                  <MetricCard 
+                    label="Completed Today" 
+                    value={dashboardMetrics.completed} 
+                    color="emerald"
+                    delay={300}
+                    icon={ArrowTrendingUpIcon}
+                  />
                 </div>
 
-                {/* Alerts and Quick Actions */}
+                {/* Alerts and Quick Stats */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {(dashboardMetrics.overdueOrders > 0 ||
-                    dashboardMetrics.upcomingDeadlines > 0) && (
-                    <Card variant="glass">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <ExclamationTriangleIcon className="h-5 w-5 text-warning-400" />
-                          Alerts
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
+                  {/* Alerts */}
+                  {(dashboardMetrics.overdueOrders > 0 || dashboardMetrics.upcomingDeadlines > 0) && (
+                    <div className="relative">
+                      <div className="absolute -inset-px bg-gradient-to-r from-rose-500/20 via-amber-500/10 to-rose-500/20 rounded-2xl" />
+                      <div className="relative rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center">
+                            <ExclamationTriangleIcon className="h-4 w-4 text-rose-400" />
+                          </div>
+                          <h3 className="text-lg font-light text-white">Production Alerts</h3>
+                        </div>
                         <div className="space-y-3">
                           {dashboardMetrics.overdueOrders > 0 && (
-                            <div className="p-3 bg-error-500/10 border border-white/[0.08] rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-white">
-                                  Overdue Orders
-                                </span>
-                                <span className="text-lg font-bold text-error-400">
-                                  {dashboardMetrics.overdueOrders}
-                                </span>
-                              </div>
-                            </div>
+                            <AlertCard type="error" label="Overdue Orders" value={dashboardMetrics.overdueOrders} delay={100} />
                           )}
                           {dashboardMetrics.upcomingDeadlines > 0 && (
-                            <div className="p-3 bg-warning-500/10 border border-white/[0.08] rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-white">
-                                  Due This Week
-                                </span>
-                                <span className="text-lg font-bold text-warning-400">
-                                  {dashboardMetrics.upcomingDeadlines}
-                                </span>
-                              </div>
-                            </div>
+                            <AlertCard type="warning" label="Due This Week" value={dashboardMetrics.upcomingDeadlines} delay={200} />
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   )}
 
                   {/* Quick Stats */}
-                  <Card variant="glass">
-                    <CardHeader>
-                      <CardTitle>Quick Stats</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <div className="absolute -inset-px bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10 rounded-2xl" />
+                    <div className="relative rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                          <ChartBarIcon className="h-4 w-4 text-amber-400" />
+                        </div>
+                        <h3 className="text-lg font-light text-white">Quick Stats</h3>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-6">
                         <div>
-                          <p className="text-xs text-gray-400">Total Orders</p>
-                          <p className="text-xl font-bold text-white">{orders.length}</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Total Orders</p>
+                          <p className="text-3xl font-light text-white">{orders.length}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400">Active BOMs</p>
-                          <p className="text-xl font-bold text-white">
-                            {bomsData?.boms?.length || 0}
-                          </p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Active BOMs</p>
+                          <p className="text-3xl font-light text-white">{bomsData?.boms?.length || 0}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400">On Hold</p>
-                          <p className="text-xl font-bold text-warning-400">
-                            {dashboardMetrics.onHold}
-                          </p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">On Hold</p>
+                          <p className="text-3xl font-light text-amber-400">{dashboardMetrics.onHold}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400">Work Centers</p>
-                          <p className="text-xl font-bold text-white">3</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Work Centers</p>
+                          <p className="text-3xl font-light text-white">3</p>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -334,10 +522,13 @@ export function ProductionPage() {
             {activeTab === 'bom' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">Bills of Materials</h2>
+                  <div>
+                    <h2 className="text-2xl font-light text-white">Bills of Materials</h2>
+                    <p className="text-sm text-slate-500 mt-1">Manage product component specifications</p>
+                  </div>
                   <Button
                     variant="secondary"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-slate-700 hover:border-amber-500/30"
                     onClick={() => setIsCreateBOMModalOpen(true)}
                   >
                     <PlusIcon className="h-4 w-4" />
@@ -347,55 +538,33 @@ export function ProductionPage() {
 
                 {bomsData?.boms && bomsData.boms.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {bomsData.boms.map((bom: any) => (
-                      <Card key={bom.bomId} variant="glass">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="text-lg font-semibold text-white">{bom.name}</h3>
-                              <p className="text-sm text-gray-400">{bom.productId}</p>
-                            </div>
-                            <span
-                              className={`px-2 py-1 rounded text-xs font-medium ${
-                                bom.status === 'ACTIVE'
-                                  ? 'bg-success-500/20 text-success-300'
-                                  : 'bg-gray-500/20 text-gray-300'
-                              }`}
-                            >
-                              {bom.status}
-                            </span>
-                          </div>
-                          <div className="space-y-1 text-sm">
-                            <p className="text-gray-400">
-                              Version: <span className="text-white">{bom.version}</span>
-                            </p>
-                            <p className="text-gray-400">
-                              Components:{' '}
-                              <span className="text-white">{bom.components?.length || 0}</span>
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
+                    {bomsData.boms.map((bom: any, index: number) => (
+                      <BOMCard key={bom.bomId} bom={bom} index={index} />
                     ))}
                   </div>
                 ) : (
-                  <Card variant="glass">
-                    <CardContent className="py-12 text-center">
-                      <DocumentTextIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-white mb-2">No BOMs Created</h3>
-                      <p className="text-gray-400 mb-4">
-                        Create a Bill of Materials to start production
+                  <div className="relative rounded-3xl bg-gradient-to-br from-slate-900/80 to-slate-800/50 border border-white/5 p-12 text-center">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-5">
+                      <DocumentTextIcon className="h-64 w-64 text-white" />
+                    </div>
+                    <div className="relative">
+                      <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                        <DocumentTextIcon className="h-10 w-10 text-amber-400" />
+                      </div>
+                      <h3 className="text-2xl font-light text-white mb-3">No BOMs Created</h3>
+                      <p className="text-slate-400 font-light max-w-md mx-auto mb-6">
+                        Create a Bill of Materials to define product components and start production.
                       </p>
                       <Button
                         variant="primary"
-                        className="flex items-center gap-2 mx-auto"
+                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-medium shadow-lg shadow-amber-500/25"
                         onClick={() => setIsCreateBOMModalOpen(true)}
                       >
-                        <PlusIcon className="h-4 w-4" />
+                        <PlusIcon className="h-4 w-4 mr-2" />
                         Create First BOM
                       </Button>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -435,5 +604,47 @@ export function ProductionPage() {
   );
 }
 
-// Default export for compatibility with index.ts
+// BOM Card component
+function BOMCard({ bom, index }: { bom: any; index: number }) {
+  const { ref, isInView } = useInView(0.1);
+  
+  return (
+    <div 
+      ref={ref}
+      className="group relative"
+      style={{
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'translateY(0)' : 'translateY(30px)',
+        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`
+      }}
+    >
+      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-xl p-5 hover:border-amber-500/30 transition-colors duration-300">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-light text-white group-hover:text-amber-400 transition-colors">{bom.name}</h3>
+            <p className="text-sm text-slate-500">{bom.productId}</p>
+          </div>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+            bom.status === 'ACTIVE' 
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+              : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+          }`}>
+            {bom.status}
+          </span>
+        </div>
+        <div className="flex items-center gap-4 text-sm text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <span>Version:</span>
+            <span className="text-white">{bom.version}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>Components:</span>
+            <span className="text-white">{bom.components?.length || 0}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default ProductionPage;

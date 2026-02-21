@@ -1,10 +1,11 @@
 /**
  * Zone Picking Page
  *
- * Manage warehouse zones, picker assignments, and zone performance
+ * Manage warehouse zones, picker assignments, and zone performance.
+ * Design direction: WAREHOUSE FLOOR - Industrial aesthetic with spatial visualization.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardHeader,
@@ -85,36 +86,45 @@ export function ZonePickingPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Industrial ambient background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[400px] bg-orange-500/5 rounded-full blur-[150px] -translate-y-1/2" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-amber-500/5 rounded-full blur-[120px] translate-y-1/2" />
+        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      </div>
+      
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in">
-        {/* Breadcrumb Navigation */}
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumb />
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Zone Picking</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Manage warehouse zones and picker assignments
-                </p>
-              </div>
+        
+        {/* Page Header */}
+        <header className="mb-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 shadow-lg shadow-orange-500/30">
+              <MapIcon className="h-6 w-6 text-slate-900" />
             </div>
-            <div className="flex gap-2">
-              {canManage && (
-                <Button
-                  onClick={handleRebalance}
-                  disabled={rebalanceMutation.isPending}
-                  variant="secondary"
-                  className="flex items-center gap-2"
-                >
-                  <ArrowPathIcon className="h-4 w-4" />
-                  Rebalance Pickers
-                </Button>
-              )}
-            </div>
+            <span className="text-xs font-medium uppercase tracking-[0.3em] text-orange-400/80">Warehouse Operations</span>
           </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-3">Zone Picking</h1>
+              <p className="text-lg text-slate-400 font-light max-w-xl">Manage warehouse zones and picker assignments for optimal workflow.</p>
+            </div>
+            {canManage && (
+              <Button
+                onClick={handleRebalance}
+                disabled={rebalanceMutation.isPending}
+                className="h-12 px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-900 font-medium shadow-lg shadow-orange-500/25"
+              >
+                <ArrowPathIcon className={`h-4 w-4 mr-2 ${rebalanceMutation.isPending ? 'animate-spin' : ''}`} />
+                Rebalance Pickers
+              </Button>
+            )}
+          </div>
+        </header>
+        
+        <div className="space-y-8">
 
           {/* Zones Overview */}
           <Card className="dark:bg-gray-800 dark:border-gray-700">

@@ -1,5 +1,5 @@
 /**
- * System Constants for Warehouse Management System
+ * System Constants for Enterprise Resource Planning (ERP) System
  *
  * This file contains all system-wide constants including:
  * - API endpoints and ports

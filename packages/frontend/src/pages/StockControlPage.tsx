@@ -93,6 +93,7 @@ function MetricCard({
   color = 'primary',
   trend,
   featured = false,
+  index = 0,
 }: {
   title: string;
   value: string | number;
@@ -100,6 +101,7 @@ function MetricCard({
   color?: 'primary' | 'success' | 'warning' | 'error';
   trend?: { value: number; isPositive: boolean };
   featured?: boolean;
+  index?: number;
 }) {
   const colorStyles = {
     primary:
@@ -119,15 +121,21 @@ function MetricCard({
     error: 'shadow-red-500/20 dark:shadow-red-500/30',
   };
 
+  const accentLineStyles = {
+    primary: 'bg-gradient-to-r from-transparent via-blue-500/50 to-transparent',
+    success: 'bg-gradient-to-r from-transparent via-green-500/50 to-transparent',
+    warning: 'bg-gradient-to-r from-transparent via-amber-500/50 to-transparent',
+    error: 'bg-gradient-to-r from-transparent via-red-500/50 to-transparent',
+  };
+
   return (
     <Card
       variant="glass"
       className={`stock-control-card card-hover group relative overflow-hidden bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 ${featured ? 'md:col-span-2' : ''}`}
+      style={{ animationDelay: `${index * 75}ms` }}
     >
-      {/* Top accent line */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-${color === 'primary' ? 'blue' : color === 'success' ? 'green' : color === 'warning' ? 'amber' : 'red'}-500/50 to-transparent`}
-      />
+      {/* Top accent line - fixed with proper Tailwind classes */}
+      <div className={`absolute top-0 left-0 right-0 h-1 ${accentLineStyles[color]}`} />
 
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
@@ -695,24 +703,28 @@ function DashboardTab() {
           value={dashboard.totalSKUs}
           icon={CubeIcon}
           color="primary"
+          index={0}
         />
         <MetricCard
           title="Total Bins"
           value={dashboard.totalBins}
           icon={ClipboardDocumentListIcon}
           color="success"
+          index={1}
         />
         <MetricCard
           title="Low Stock Items"
           value={dashboard.lowStockItems}
           icon={ExclamationTriangleIcon}
           color={dashboard.lowStockItems > 0 ? 'warning' : 'success'}
+          index={2}
         />
         <MetricCard
           title="Out of Stock"
           value={dashboard.outOfStockItems}
           icon={XMarkIcon}
           color={dashboard.outOfStockItems > 0 ? 'error' : 'success'}
+          index={3}
         />
       </div>
 

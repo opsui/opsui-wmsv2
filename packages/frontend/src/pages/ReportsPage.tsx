@@ -237,7 +237,22 @@ export function ReportsPage() {
   };
 
   return (
-    <div className="reports-container min-h-screen">
+    <div className="reports-container min-h-screen relative overflow-hidden">
+      {/* Atmospheric background with data visualization theme */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Gradient mesh background */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-indigo-500/8 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2" />
+        </div>
+        {/* Subtle dot pattern overlay */}
+        <div className="absolute inset-0 opacity-30" style={{
+          backgroundImage: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }} />
+      </div>
+
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />

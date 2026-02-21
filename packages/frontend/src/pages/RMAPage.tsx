@@ -9,6 +9,7 @@
  * ============================================================================
  * Flowing returns management with pipeline visualization:
  * - Dark theme with rose/pink accents for returns flow
+ * - Syne for headings (distinctive, modern), JetBrains Mono for IDs
  * - Right-to-left entrance animations (reverse flow for returns)
  * - Pipeline stage progression visualization
  * - Status flow indicators with connecting lines
@@ -405,7 +406,7 @@ function RMARequestCard({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-white">{request.rmaId}</h3>
+              <h3 className="text-lg font-semibold text-white font-['JetBrains_Mono',monospace]">{request.rmaId}</h3>
               <StatusBadge status={request.status} />
               <ReasonBadge reason={request.reason} />
             </div>
@@ -614,11 +615,11 @@ function RMAPage() {
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              <ArrowPathIcon className="h-8 w-8 text-primary-400" />
+            <h1 className="roles-title text-3xl font-bold tracking-tight flex items-center gap-3 font-['Syne',sans-serif]">
+              <ArrowPathIcon className="h-8 w-8 text-rose-400" />
               Returns & RMA
             </h1>
-            <p className="mt-2 text-gray-400">
+            <p className="mt-2 text-gray-400 font-['Plus_Jakarta_Sans',sans-serif]">
               Customer returns, warranty claims, and refurbishments
             </p>
           </div>

@@ -9,10 +9,12 @@
  * ============================================================================
  * Code-like configuration interface:
  * - Dark theme with cyan/slate accents for logic focus
- * - Scale-down entrance animations from top
+ * - IBM Plex Mono for headings (distinctive, technical), JetBrains Mono for code/IDs
+ * - Scale-down entrance animations from top with staggered delays
  * - Rule builder with condition/action visualization
  * - Status indicators with toggle animations
  * - Testing sandbox with live feedback
+ * - Circuit-board inspired background patterns
  * ============================================================================
  */
 
@@ -145,16 +147,36 @@ export function BusinessRulesPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Circuit-board inspired background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-20">
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-slate-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-teal-500/5 rounded-full blur-2xl" />
+      </div>
+
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Header with animation */}
+        <div 
+          className="mb-8"
+          style={{ animation: 'rules-stagger-in 0.5s ease-out' }}
+        >
           <div className="flex items-center gap-4 mb-4"></div>
-          <h1 className="text-3xl font-bold text-white">Business Rules</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="rules-title text-3xl font-bold">Business Rules</h1>
+          <p className="mt-2 text-gray-400 font-medium">
             Configure automated decision logic for order allocation, picking, and shipping
           </p>
         </div>
@@ -272,12 +294,16 @@ export function BusinessRulesPage() {
                 </tr>
               </thead>
               <tbody className="bg-gray-900/30 divide-y divide-gray-800">
-                {paginatedRules.map((rule: BusinessRule) => (
-                  <tr key={rule.ruleId} className="hover:bg-gray-800/50 transition-colors">
+                {paginatedRules.map((rule: BusinessRule, index: number) => (
+                  <tr 
+                    key={rule.ruleId} 
+                    className="hover:bg-gray-800/50 transition-colors"
+                    style={{ animation: `rules-stagger-in 0.4s ease-out ${0.1 + index * 0.05}s backwards` }}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-white">{rule.name}</div>
-                        <div className="text-sm text-gray-400">{rule.description}</div>
+                        <div className="text-sm font-medium text-white rules-table">{rule.name}</div>
+                        <div className="text-sm text-gray-400 font-['JetBrains_Mono',monospace]">{rule.description}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

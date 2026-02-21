@@ -8,10 +8,12 @@
  * ============================================================================
  * Identity and access management aesthetic:
  * - Dark theme with indigo/violet accents for trust/authority
- * - Scale-up entrance animations
+ * - Space Grotesk for headings, JetBrains Mono for IDs/codes
+ * - Scale-up entrance animations with staggered delays
  * - Role toggle grid with clear state indicators
  * - User card hierarchy with status badges
  * - Permission matrix visualization
+ * - Subtle atmospheric gradient orbs in background
  * ============================================================================
  */
 
@@ -244,14 +246,24 @@ function UserRolesPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Atmospheric background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2" />
+      </div>
+
       <Header />
       {/* Breadcrumb Navigation */}
       <Breadcrumb />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        {/* Page Header with animation */}
+        <div 
+          className="mb-8"
+          style={{ animation: 'userrole-stagger-in 0.5s ease-out' }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4"></div>
             <div className="flex items-center gap-3">
@@ -281,10 +293,10 @@ function UserRolesPage() {
               <UserGroupIcon className="h-8 w-8 text-primary-500 dark:text-primary-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-['Space_Grotesk',sans-serif]">
                 User Roles Management
               </h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
+              <p className="mt-2 text-gray-600 dark:text-gray-400 font-medium">
                 Create users and manage role assignments
               </p>
             </div>
@@ -338,7 +350,7 @@ function UserRolesPage() {
 
         {/* Users List */}
         <div className="space-y-6">
-          {paginatedUsers.map(user => {
+          {paginatedUsers.map((user, index) => {
             const daysRemaining = getDaysRemaining(user.deletedAt);
             const isDeleted = !!user.deletedAt;
 
@@ -346,7 +358,10 @@ function UserRolesPage() {
               <Card
                 key={user.userId}
                 variant="glass"
-                className={isDeleted ? 'border-warning-500/30 bg-warning-500/5' : ''}
+                className={`userrole-card ${isDeleted ? 'border-warning-500/30 bg-warning-500/5' : ''}`}
+                style={{ 
+                  animation: `userrole-stagger-in 0.4s ease-out ${0.1 + index * 0.08}s backwards`,
+                }}
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -380,7 +395,7 @@ function UserRolesPage() {
                           {user.email}
                         </p>
                         <div className="flex items-center gap-3 mt-2">
-                          <span className="text-xs text-gray-500">ID: {user.userId}</span>
+                          <span className="text-xs text-gray-500 font-['JetBrains_Mono',monospace]">ID: {user.userId}</span>
                           {isDeleted ? (
                             <span className={`badge badge-warning`}>{user.role}</span>
                           ) : (
