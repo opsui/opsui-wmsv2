@@ -2386,7 +2386,7 @@ export function Header() {
 
   return (
     <>
-      <header className="relative z-50 bg-white/95 dark:bg-transparent backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/50">
+      <header className="relative z-50 bg-transparent border-b-0">
         <div className="w-full">
           {/* Mobile: Logo above toolbar (stacked), desktop: horizontal layout */}
           {/* Mobile: flex-col for stacking, desktop: flex-row */}
