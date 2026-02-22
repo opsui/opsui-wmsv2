@@ -2388,12 +2388,11 @@ export function Header() {
     <>
       <header className="relative z-50 bg-transparent border-b-0">
         <div className="w-full">
-          {/* Mobile: Logo above toolbar (stacked), desktop: horizontal layout */}
-          {/* Mobile: flex-col for stacking, desktop: flex-row */}
+          {/* Mobile: Logo centered above toolbar, desktop: horizontal layout */}
           <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
-            {/* Mobile: Top row - Hamburger on left, Logo centered. Desktop: Left side with menu */}
+            {/* Mobile: Top row with hamburger only. Desktop: Left side with menu and logo */}
             <div className="flex items-center justify-between md:justify-start w-full md:w-auto mb-2 md:mb-0">
-              {/* Hamburger - always visible */}
+              {/* Hamburger - always visible on mobile, desktop keeps it */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
@@ -2403,13 +2402,13 @@ export function Header() {
                 <Bars3Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
               </button>
 
-              {/* Logo - centered on mobile, left on desktop */}
+              {/* Logo - centered on mobile in its own row below, left on desktop */}
               <button
                 onClick={() => {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-xl font-bold tracking-tight dark:text-white text-gray-900 cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:mx-0 relative group overflow-hidden"
+                className="hidden md:flex text-xl font-bold tracking-tight dark:text-white text-gray-900 cursor-pointer relative group overflow-hidden"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
@@ -2426,8 +2425,24 @@ export function Header() {
                   <span className="absolute inset-0 animate-pulse bg-purple-500/30 blur-md" />
                 </span>
               </button>
-              {/* Spacer for mobile to balance hamburger */}
-              <div className="w-10 md:hidden"></div>
+            </div>
+
+            {/* Mobile: Centered Logo above toolbar */}
+            <div className="flex md:hidden items-center justify-center mb-2">
+              <button
+                onClick={() => {
+                  const homePath = getHomePathForRole(effectiveRole, user.role);
+                  navigate(homePath);
+                }}
+                className="text-2xl font-bold tracking-tight dark:text-white text-gray-900 cursor-pointer relative group overflow-hidden"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                title="Go to home"
+              >
+                <span className="relative z-10 transition-all duration-300">
+                  Ops
+                  <span className="text-purple-500 dark:text-purple-400 transition-colors">UI</span>
+                </span>
+              </button>
             </div>
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}

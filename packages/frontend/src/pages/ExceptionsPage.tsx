@@ -680,7 +680,7 @@ function ExceptionBadge({ status }: { status: ExceptionStatus }) {
 
   return (
     <span
-      className={`px-2.5 py-1 rounded-md text-[0.65rem] font-bold uppercase tracking-wider exception-mono-font ${config.color} ${config.glow || ''}`}
+      className={`px-2.5 py-1.5 rounded-md text-xs sm:text-[0.65rem] font-bold uppercase tracking-wider exception-mono-font ${config.color} ${config.glow || ''}`}
     >
       {config.label}
     </span>
@@ -774,11 +774,11 @@ function ExceptionTypeBadge({ type }: { type: ExceptionType }) {
 
   return (
     <div className="flex items-center gap-2">
-      <div className={`p-1.5 rounded-md bg-white/5 ${config.color}`}>
-        <Icon className="h-3.5 w-3.5" />
+      <div className={`p-1.5 sm:p-1 rounded-md bg-white/5 ${config.color}`}>
+        <Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
       </div>
       <span
-        className={`text-xs font-semibold uppercase tracking-wide exception-mono-font ${config.color} ${config.glowClass || ''}`}
+        className={`text-xs sm:text-xs font-semibold uppercase tracking-wide exception-mono-font ${config.color} ${config.glowClass || ''}`}
       >
         {config.label}
       </span>
@@ -1297,7 +1297,7 @@ export function ExceptionsPage() {
                           <p className="text-2xl font-black text-white exception-display-font group-hover:text-purple-300 transition-colors">
                             {count as number}
                           </p>
-                          <p className="text-[0.65rem] uppercase tracking-wide text-gray-500 exception-mono-font mt-1 truncate">
+                          <p className="text-xs sm:text-[0.65rem] uppercase tracking-wide text-gray-500 exception-mono-font mt-1 sm:truncate">
                             {type.replace(/_/g, ' ')}
                           </p>
                         </div>
@@ -1407,15 +1407,15 @@ export function ExceptionsPage() {
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 pl-3">
                             <ExceptionTypeBadge type={exception.type} />
                             <ExceptionBadge status={exception.status} />
-                            <span className="text-[0.65rem] text-gray-600 exception-mono-font ml-auto">
+                            <span className="text-xs sm:text-[0.65rem] text-gray-500 exception-mono-font ml-auto">
                               #{exception.exceptionId}
                             </span>
                           </div>
 
-                          {/* Details - Mobile Single Column, Desktop Grid */}
-                          <div className="flex flex-col sm:grid sm:grid-cols-4 gap-3 sm:gap-4 pl-3">
+                          {/* Details - Mobile 2x2 Grid, Desktop 4 Column Grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pl-3">
                             <div>
-                              <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 Order
                               </p>
                               <p className="text-sm font-semibold text-white exception-mono-font truncate">
@@ -1423,7 +1423,7 @@ export function ExceptionsPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 SKU
                               </p>
                               <p className="text-sm font-semibold text-white exception-mono-font truncate">
@@ -1431,22 +1431,33 @@ export function ExceptionsPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
-                                Quantity
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
+                                Qty
                               </p>
-                              <p className="text-sm text-white exception-quantity">
-                                <span className="text-red-400">{exception.quantityActual}</span>
-                                <span className="text-gray-600 mx-1">/</span>
-                                <span>{exception.quantityExpected}</span>
+                              <div className="text-sm text-white exception-quantity">
+                                {/* Mobile: Stack vertically for clarity */}
+                                <span className="sm:hidden block">
+                                  <span className="text-red-400 font-bold">
+                                    {exception.quantityActual}
+                                  </span>
+                                  <span className="text-gray-500"> / </span>
+                                  <span>{exception.quantityExpected}</span>
+                                </span>
+                                {/* Desktop: Inline */}
+                                <span className="hidden sm:inline">
+                                  <span className="text-red-400">{exception.quantityActual}</span>
+                                  <span className="text-gray-600 mx-1">/</span>
+                                  <span>{exception.quantityExpected}</span>
+                                </span>
                                 {exception.quantityShort > 0 && (
-                                  <span className="text-red-400 ml-1">
-                                    (-{exception.quantityShort})
+                                  <span className="text-red-400 text-xs sm:text-sm block sm:inline sm:ml-1 mt-0.5 sm:mt-0">
+                                    -{exception.quantityShort} short
                                   </span>
                                 )}
-                              </p>
+                              </div>
                             </div>
                             <div>
-                              <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 Reported
                               </p>
                               <p className="text-sm text-gray-400 exception-mono-font">
@@ -1618,10 +1629,10 @@ export function ExceptionsPage() {
                       <ExceptionTypeBadge type={selectedException.type} />
                       <ExceptionBadge status={selectedException.status} />
                     </div>
-                    {/* Mobile Single Column, Desktop Grid */}
-                    <div className="flex flex-col sm:grid sm:grid-cols-4 gap-3">
+                    {/* Mobile 2x2 Grid, Desktop 4 Column Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="p-3 rounded-lg bg-white/[0.02]">
-                        <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                        <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                           Order
                         </p>
                         <p className="text-sm font-semibold text-white exception-mono-font truncate">
@@ -1629,7 +1640,7 @@ export function ExceptionsPage() {
                         </p>
                       </div>
                       <div className="p-3 rounded-lg bg-white/[0.02]">
-                        <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                        <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                           SKU
                         </p>
                         <p className="text-sm font-semibold text-white exception-mono-font truncate">
@@ -1637,7 +1648,7 @@ export function ExceptionsPage() {
                         </p>
                       </div>
                       <div className="p-3 rounded-lg bg-white/[0.02]">
-                        <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                        <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                           Expected
                         </p>
                         <p className="text-sm font-semibold text-white exception-quantity">
@@ -1645,7 +1656,7 @@ export function ExceptionsPage() {
                         </p>
                       </div>
                       <div className="p-3 rounded-lg bg-white/[0.02]">
-                        <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-1">
+                        <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                           Actual
                         </p>
                         <p className="text-sm font-semibold text-red-400 exception-quantity">
@@ -1655,7 +1666,7 @@ export function ExceptionsPage() {
                     </div>
                     {selectedException.reason && (
                       <div className="mt-4 pt-4 border-t border-white/[0.05]">
-                        <p className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font mb-2">
+                        <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-2">
                           Reason
                         </p>
                         <p className="text-sm text-gray-300 exception-body-font italic">
