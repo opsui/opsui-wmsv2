@@ -2447,13 +2447,13 @@ export function Header() {
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
             <div
-              className={`relative flex items-center justify-center gap-1 p-1.5 sm:p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 ${isMobileSearchActive ? 'w-full max-w-md' : ''}`}
+              className={`relative flex items-center justify-center gap-1 p-1.5 sm:p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-full max-w-md' : ''}`}
             >
-              {/* Animated gradient border - rounded-xl when expanded, rounded-full when collapsed */}
-              <div className={`absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-60 animate-gradient-shift bg-[length:200%_100%] ${isMobileSearchActive ? 'rounded-xl' : 'rounded-full'}`} />
-              {/* Inner container with glass effect - taller when search active */}
+              {/* Animated gradient border - smooth Dynamic Island transition */}
+              <div className={`absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-60 animate-gradient-shift bg-[length:200%_100%] transition-all duration-300 ease-out ${isMobileSearchActive ? 'rounded-xl' : 'rounded-full'}`} />
+              {/* Inner container with glass effect - smooth transition for all properties */}
               <div
-                className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl px-2 py-1 sm:py-0.5 ${isMobileSearchActive ? 'w-full rounded-xl py-2' : 'rounded-full'}`}
+                className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-full rounded-xl px-3 py-2' : 'px-2 py-1 sm:py-0.5 rounded-full'}`}
               >
                 {/* Subtle purple glow on hover - pointer-events-none to not block clicks */}
                 <div className="absolute inset-0 rounded-full bg-purple-500/0 hover:bg-purple-500/10 transition-colors duration-300 pointer-events-none" />

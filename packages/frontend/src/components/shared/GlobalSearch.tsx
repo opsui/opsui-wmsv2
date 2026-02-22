@@ -580,7 +580,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       {mobileInputAnimState !== 'hidden' && (
         <div
           ref={containerRef}
-          className="md:hidden flex-1 min-w-0 w-full relative flex items-center"
+          className={`md:hidden flex-1 min-w-0 w-full relative flex items-center transition-all duration-300 ease-out ${mobileInputAnimState === 'entering' ? 'opacity-0' : 'opacity-100'}`}
         >
           {/* Search icon */}
           <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none flex-shrink-0" />
@@ -609,7 +609,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
           {/* Results dropdown for mobile - positioned right below toolbar */}
           {isOpen && (query || isLoading) && (
-            <div className="fixed inset-x-4 top-16 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto">
+            <div className="fixed inset-x-4 top-16 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto animate-fade-in">
               <SearchResults
                 results={results}
                 isLoading={isLoading}
