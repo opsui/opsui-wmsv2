@@ -2,13 +2,13 @@
  * Production Page - Manufacturing Execution System
  *
  * ============================================================================
- * AESTHETIC DIRECTION: FACTORY FLOOR
+ * AESTHETIC DIRECTION: PURPLE INDUSTRIAL
  * ============================================================================
- * Industrial manufacturing execution system aesthetic:
- * - Dark theme with amber/gold accents for manufacturing energy
+ * Industrial manufacturing execution system aesthetic with purple theme:
+ * - Dark theme with purple accents matching application brand
  * - Vertical slide-up entrance animations with stagger
  * - Industrial geometric elements and diagonal lines
- * - Ambient factory-like lighting with warm glows
+ * - Ambient purple lighting with brand-consistent glows
  * - OEE metrics with performance dashboards
  * ============================================================================
  */
@@ -119,13 +119,13 @@ function useInView(threshold = 0.1) {
 function MetricCard({
   label,
   value,
-  color = 'amber',
+  color = 'purple',
   delay = 0,
   icon: Icon,
 }: {
   label: string;
   value: number;
-  color?: 'amber' | 'blue' | 'emerald' | 'slate';
+  color?: 'purple' | 'blue' | 'emerald' | 'slate';
   delay?: number;
   icon?: React.ComponentType<{ className?: string }>;
 }) {
@@ -133,7 +133,7 @@ function MetricCard({
   const animatedValue = useAnimatedCounter(isInView ? value : 0, 1000);
 
   const colorClasses = {
-    amber: 'from-amber-500 to-yellow-500 text-amber-400 border-amber-500/30',
+    purple: 'from-purple-500 to-purple-400 text-purple-400 border-purple-500/30',
     blue: 'from-blue-500 to-cyan-500 text-blue-400 border-blue-500/30',
     emerald: 'from-emerald-500 to-teal-500 text-emerald-400 border-emerald-500/30',
     slate: 'from-slate-400 to-slate-500 text-slate-300 border-slate-500/30',
@@ -150,8 +150,8 @@ function MetricCard({
       }}
     >
       {/* Industrial corner accent */}
-      <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-amber-500/50 rounded-tl-lg" />
-      <div className="absolute -bottom-px -right-px w-4 h-4 border-b-2 border-r-2 border-amber-500/50 rounded-br-lg" />
+      <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-purple-500/50 rounded-tl-lg" />
+      <div className="absolute -bottom-px -right-px w-4 h-4 border-b-2 border-r-2 border-purple-500/50 rounded-br-lg" />
 
       <div
         className={`relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border ${colorClasses[color].split(' ').pop()} rounded-xl p-5 overflow-hidden`}
@@ -284,13 +284,13 @@ export function ProductionPage() {
   }, [orders]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/30 to-slate-950">
       {/* Industrial ambient background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Factory floor lighting effect */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-amber-500/5 rounded-full blur-[150px] -translate-y-1/2" />
-        <div className="absolute top-0 right-1/4 w-[400px] h-[300px] bg-orange-500/5 rounded-full blur-[120px] -translate-y-1/2" />
-        <div className="absolute bottom-0 left-1/3 w-[500px] h-[300px] bg-amber-500/5 rounded-full blur-[100px] translate-y-1/2" />
+        {/* Purple ambient lighting effect */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-purple-500/8 rounded-full blur-[150px] -translate-y-1/2" />
+        <div className="absolute top-0 right-1/4 w-[400px] h-[300px] bg-purple-400/6 rounded-full blur-[120px] -translate-y-1/2" />
+        <div className="absolute bottom-0 left-1/3 w-[500px] h-[300px] bg-purple-500/6 rounded-full blur-[100px] translate-y-1/2" />
 
         {/* Industrial grid pattern */}
         <div
@@ -328,10 +328,10 @@ export function ProductionPage() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30">
-                <BoltIcon className="h-6 w-6 text-slate-900" />
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30">
+                <BoltIcon className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-purple-400/80">
                 Manufacturing Execution System
               </span>
             </div>
@@ -346,7 +346,7 @@ export function ProductionPage() {
           <div className="flex gap-3">
             <Button
               variant="secondary"
-              className="flex items-center gap-2 h-11 px-5 border-slate-700 hover:border-amber-500/30"
+              className="flex items-center gap-2 h-11 px-5 border-slate-700 hover:border-purple-500/30"
               onClick={() => setIsCreateBOMModalOpen(true)}
             >
               <DocumentTextIcon className="h-4 w-4" />
@@ -354,7 +354,7 @@ export function ProductionPage() {
             </Button>
             <Button
               variant="primary"
-              className="flex items-center gap-2 h-11 px-5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-medium shadow-lg shadow-amber-500/25"
+              className="flex items-center gap-2 h-11 px-5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white font-medium shadow-lg shadow-purple-500/25"
               onClick={() => setIsCreateModalOpen(true)}
             >
               <PlusIcon className="h-4 w-4" />
@@ -380,7 +380,7 @@ export function ProductionPage() {
                   }`}
                 >
                   {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg shadow-lg shadow-amber-500/25" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg shadow-purple-500/25" />
                   )}
                   <Icon className="h-4 w-4 relative" />
                   <span className="relative">{tab.label}</span>
@@ -402,8 +402,8 @@ export function ProductionPage() {
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
-                <CogIcon className="absolute inset-0 m-auto h-6 w-6 text-amber-400 animate-pulse" />
+                <div className="w-16 h-16 rounded-full border-2 border-purple-500/20 border-t-purple-500 animate-spin" />
+                <CogIcon className="absolute inset-0 m-auto h-6 w-6 text-purple-400 animate-pulse" />
               </div>
               <p className="text-slate-400 text-sm font-light">
                 Initializing production systems...
@@ -437,7 +437,7 @@ export function ProductionPage() {
                   <MetricCard
                     label="In Production"
                     value={dashboardMetrics.inProduction}
-                    color="amber"
+                    color="purple"
                     delay={200}
                     icon={BoltIcon}
                   />
@@ -488,11 +488,11 @@ export function ProductionPage() {
 
                   {/* Quick Stats */}
                   <div className="relative">
-                    <div className="absolute -inset-px bg-gradient-to-r from-amber-500/10 via-transparent to-amber-500/10 rounded-2xl" />
+                    <div className="absolute -inset-px bg-gradient-to-r from-purple-500/10 via-transparent to-purple-500/10 rounded-2xl" />
                     <div className="relative rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 p-6">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                          <ChartBarIcon className="h-4 w-4 text-amber-400" />
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                          <ChartBarIcon className="h-4 w-4 text-purple-400" />
                         </div>
                         <h3 className="text-lg font-light text-white">Quick Stats</h3>
                       </div>
@@ -516,7 +516,7 @@ export function ProductionPage() {
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                             On Hold
                           </p>
-                          <p className="text-3xl font-light text-amber-400">
+                          <p className="text-3xl font-light text-purple-400">
                             {dashboardMetrics.onHold}
                           </p>
                         </div>
@@ -566,7 +566,7 @@ export function ProductionPage() {
                   </div>
                   <Button
                     variant="secondary"
-                    className="flex items-center gap-2 border-slate-700 hover:border-amber-500/30"
+                    className="flex items-center gap-2 border-slate-700 hover:border-purple-500/30"
                     onClick={() => setIsCreateBOMModalOpen(true)}
                   >
                     <PlusIcon className="h-4 w-4" />
@@ -586,8 +586,8 @@ export function ProductionPage() {
                       <DocumentTextIcon className="h-64 w-64 text-white" />
                     </div>
                     <div className="relative">
-                      <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                        <DocumentTextIcon className="h-10 w-10 text-amber-400" />
+                      <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                        <DocumentTextIcon className="h-10 w-10 text-purple-400" />
                       </div>
                       <h3 className="text-2xl font-light text-white mb-3">No BOMs Created</h3>
                       <p className="text-slate-400 font-light max-w-md mx-auto mb-6">
@@ -596,7 +596,7 @@ export function ProductionPage() {
                       </p>
                       <Button
                         variant="primary"
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-medium shadow-lg shadow-amber-500/25"
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white font-medium shadow-lg shadow-purple-500/25"
                         onClick={() => setIsCreateBOMModalOpen(true)}
                       >
                         <PlusIcon className="h-4 w-4 mr-2" />
@@ -657,10 +657,10 @@ function BOMCard({ bom, index }: { bom: any; index: number }) {
         transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`,
       }}
     >
-      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-xl p-5 hover:border-amber-500/30 transition-colors duration-300">
+      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-xl p-5 hover:border-purple-500/30 transition-colors duration-300">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-light text-white group-hover:text-amber-400 transition-colors">
+            <h3 className="text-lg font-light text-white group-hover:text-purple-400 transition-colors">
               {bom.name}
             </h3>
             <p className="text-sm text-slate-500">{bom.productId}</p>

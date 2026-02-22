@@ -2446,11 +2446,15 @@ export function Header() {
             </div>
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
-            <div className="relative flex items-center justify-center gap-1 p-1.5 sm:p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+            <div
+              className={`relative flex items-center justify-center gap-1 p-1.5 sm:p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 ${isMobileSearchActive ? 'w-full max-w-md' : ''}`}
+            >
               {/* Animated gradient border */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-60 animate-gradient-shift bg-[length:200%_100%]" />
               {/* Inner container with glass effect */}
-              <div className="relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-full px-2 py-1 sm:py-0.5">
+              <div
+                className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-full px-2 py-1 sm:py-0.5 ${isMobileSearchActive ? 'w-full' : ''}`}
+              >
                 {/* Subtle purple glow on hover - pointer-events-none to not block clicks */}
                 <div className="absolute inset-0 rounded-full bg-purple-500/0 hover:bg-purple-500/10 transition-colors duration-300 pointer-events-none" />
                 {/* Global Search — passes callback so it can hide sibling icons on mobile and desktop */}

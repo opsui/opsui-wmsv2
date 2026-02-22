@@ -6429,8 +6429,20 @@ html.light .accounting-atmosphere::after {
 
 /* Search input wrapper - expand/collapse */
 .global-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 9999px;
   transition: opacity 0.2s ease-in-out,
-              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.light .global-search-input-wrapper {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 .global-search-input-wrapper.entering {

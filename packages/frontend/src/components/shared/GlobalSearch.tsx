@@ -579,10 +579,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
       {/* ── Input: visible when expanded (mobile or desktop) ── */}
       <div
-        className={`relative ${mobileInputAnimState !== 'hidden' ? 'md:hidden' : 'hidden'} ${desktopInputAnimState !== 'hidden' ? 'hidden md:flex' : 'hidden'}`}
+        className={`relative ${mobileInputAnimState !== 'hidden' ? 'md:hidden flex-1 min-w-0' : ''} ${desktopInputAnimState !== 'hidden' ? 'hidden md:flex flex-1 min-w-0' : 'hidden'}`}
       >
         <div
-          className={`global-search-input-wrapper w-full ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''} ${desktopInputAnimState === 'entering' ? 'entering' : desktopInputAnimState === 'visible' ? 'visible' : ''}`}
+          className={`global-search-input-wrapper w-full min-w-[200px] ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''} ${desktopInputAnimState === 'entering' ? 'entering' : desktopInputAnimState === 'visible' ? 'visible' : ''}`}
         >
           {/* Search icon inside input - only ONE source of truth */}
           <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
