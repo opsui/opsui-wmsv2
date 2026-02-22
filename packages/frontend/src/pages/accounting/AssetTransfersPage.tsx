@@ -268,7 +268,7 @@ export default function AssetTransfersPage() {
 
           <button
             onClick={() => setShowNewTransferModal(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
             <PlusIcon className="h-4 w-4" />
             New Transfer
@@ -524,7 +524,7 @@ export default function AssetTransfersPage() {
                 </button>
                 <button
                   onClick={createTransfer}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
                 >
                   Create Transfer
                 </button>

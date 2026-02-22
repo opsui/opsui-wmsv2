@@ -4,12 +4,12 @@
  * Provides tools for reconciling bank accounts with book balances,
  * tracking cleared and outstanding transactions.
  *
- * Design: Ledger Noir Aesthetic
+ * Design: Purple Industrial Aesthetic
  * - DM Serif Display for elegant headings
  * - IBM Plex Mono for precise financial figures
  * - Staggered entrance animations
  * - Atmospheric depth with subtle glows
- * - Blue accent for bank/financial theme
+ * - Purple accent matching application brand
  */
 
 import { useState, useEffect } from 'react';
@@ -385,9 +385,9 @@ function BankReconciliationPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
-                  <div className="relative p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-2xl border border-blue-500/20">
-                    <BuildingOffice2Icon className="h-7 w-7 text-blue-500 dark:text-blue-400" />
+                  <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />
+                  <div className="relative p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-2xl border border-purple-500/20">
+                    <BuildingOffice2Icon className="h-7 w-7 text-purple-500 dark:text-purple-400" />
                   </div>
                 </div>
                 <div>
@@ -408,7 +408,7 @@ function BankReconciliationPage() {
           </div>
 
           {/* Decorative line */}
-          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
         </header>
 
         {/* Start Reconciliation Form */}

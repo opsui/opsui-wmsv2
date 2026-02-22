@@ -5,7 +5,7 @@
  * vendor performance, and customer financial summaries
  *
  * ============================================================================
- * AESTHETIC DIRECTION: LEDGER NOIR
+ * AESTHETIC DIRECTION: PURPLE INDUSTRIAL
  * ============================================================================
  * A refined, editorial financial command center:
  * - Dark, luxurious background with layered depth
@@ -13,7 +13,7 @@
  * - IBM Plex Mono for numbers (precise, professional)
  * - Asymmetric hero section with signature visual
  * - Art Deco-inspired geometric accents
- * - Emerald/teal accent highlights
+ * - Purple accent highlights matching application brand
  * - Orchestrated entrance animations
  * ============================================================================
  */
@@ -307,7 +307,7 @@ function PeriodDropdown({ selectedPeriod, onSelectPeriod }: PeriodDropdownProps)
         variant="secondary"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 min-w-[140px] justify-between bg-slate-800/50 border-slate-600/30 hover:bg-slate-700/50 hover:border-emerald-500/30"
+        className="flex items-center gap-2 min-w-[140px] justify-between bg-slate-800/50 border-slate-600/30 hover:bg-slate-700/50 hover:border-purple-500/30"
       >
         <span className="text-slate-300">{selectedLabel}</span>
         <ChevronDownIcon
@@ -653,15 +653,15 @@ function AccountingPage() {
       <div className="accounting-atmosphere" />
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className="ledger-float-element absolute top-20 right-20 w-64 h-64 border border-emerald-500/10 rounded-full"
+          className="ledger-float-element absolute top-20 right-20 w-64 h-64 border border-purple-500/10 rounded-full"
           style={{ animationDelay: '0s' }}
         />
         <div
-          className="ledger-float-element absolute bottom-40 left-20 w-48 h-48 border border-cyan-500/10 rounded-full"
+          className="ledger-float-element absolute bottom-40 left-20 w-48 h-48 border border-purple-400/10 rounded-full"
           style={{ animationDelay: '2s' }}
         />
         <div
-          className="ledger-float-element absolute top-1/3 left-1/4 w-32 h-32 border border-emerald-500/5 rotate-45"
+          className="ledger-float-element absolute top-1/3 left-1/4 w-32 h-32 border border-purple-500/5 rotate-45"
           style={{ animationDelay: '4s' }}
         />
       </div>
@@ -680,8 +680,8 @@ function AccountingPage() {
               className="flex items-start gap-5"
               style={{ animation: 'ledger-stagger-in 0.5s ease-out' }}
             >
-              <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 rounded-2xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
-                <CurrencyDollarIcon className="h-8 w-8 text-emerald-400" />
+              <div className="p-4 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-2xl border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                <CurrencyDollarIcon className="h-8 w-8 text-purple-400" />
               </div>
               <div>
                 <h1 className="ledger-title text-3xl lg:text-4xl text-white mb-2">
@@ -709,7 +709,7 @@ function AccountingPage() {
                 size="sm"
                 onClick={() => refetchMetrics()}
                 disabled={isLoadingMetrics}
-                className="flex items-center gap-2 bg-slate-800/50 border-slate-600/30 hover:bg-slate-700/50 hover:border-emerald-500/30"
+                className="flex items-center gap-2 bg-slate-800/50 border-slate-600/30 hover:bg-slate-700/50 hover:border-purple-500/30"
               >
                 <FunnelIcon className={`h-4 w-4 ${isLoadingMetrics ? 'animate-spin' : ''}`} />
                 Refresh
@@ -734,7 +734,7 @@ function AccountingPage() {
                   id={`tab-${tab.id}`}
                   className={`ledger-tab flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
                   }`}
                   style={{ animationDelay: `${150 + index * 50}ms` }}
@@ -1335,7 +1335,7 @@ function AccountingPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30"
+                  className="bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
                 >
                   Next
                 </Button>

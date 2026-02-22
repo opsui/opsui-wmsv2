@@ -4,7 +4,7 @@
  * Displays the cash flow statement showing cash inflows and outflows
  * from operating, investing, and financing activities.
  *
- * Design: Ledger Noir Aesthetic
+ * Design: Purple Industrial Aesthetic
  * - DM Serif Display for elegant headings
  * - IBM Plex Mono for precise financial figures
  * - Staggered entrance animations
@@ -312,9 +312,9 @@ function CashFlowPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full" />
-                  <div className="relative p-3 bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 rounded-2xl border border-cyan-500/20">
-                    <CurrencyDollarIcon className="h-7 w-7 text-cyan-500 dark:text-cyan-400" />
+                  <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />
+                  <div className="relative p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-2xl border border-purple-500/20">
+                    <CurrencyDollarIcon className="h-7 w-7 text-purple-500 dark:text-purple-400" />
                   </div>
                 </div>
                 <div>
@@ -349,7 +349,7 @@ function CashFlowPage() {
                     type="date"
                     value={startDate}
                     onChange={e => setStartDate(e.target.value)}
-                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30"
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/30"
                   />
                 </div>
                 <div className="relative group">
@@ -364,7 +364,7 @@ function CashFlowPage() {
                     type="date"
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
-                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/30"
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/30"
                   />
                 </div>
               </div>
@@ -374,7 +374,7 @@ function CashFlowPage() {
                 <Button
                   variant="secondary"
                   onClick={exportToCSV}
-                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-500/30"
+                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30"
                 >
                   <ArrowDownTrayIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Export</span>
@@ -382,7 +382,7 @@ function CashFlowPage() {
                 <Button
                   variant="secondary"
                   onClick={handlePrint}
-                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-500/30"
+                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30"
                 >
                   <PrinterIcon className="h-4 w-4" />
                   <span className="hidden sm:inline">Print</span>
@@ -404,7 +404,7 @@ function CashFlowPage() {
           )}
 
           {/* Decorative line */}
-          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
         </header>
 
         {/* Cash Flow Statement */}

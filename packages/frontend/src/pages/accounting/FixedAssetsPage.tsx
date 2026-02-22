@@ -1,7 +1,7 @@
 /**
  * Fixed Assets Page
  *
- * Art Deco Financial Aesthetic
+ * Purple Industrial Aesthetic
  * A distinctive, editorial design for asset management
  * Features: Staggered animations, distinctive typography, atmospheric depth
  */
@@ -496,13 +496,13 @@ function FixedAssetsPage() {
             >
               <div className="flex items-center gap-4 mb-3">
                 <div className="relative">
-                  <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-xl border border-emerald-500/30">
-                    <BuildingOfficeIcon className="h-7 w-7 text-emerald-400" />
+                  <div className="p-3 bg-gradient-to-br from-purple-500/20 to-violet-500/20 rounded-xl border border-purple-500/30">
+                    <BuildingOfficeIcon className="h-7 w-7 text-purple-400" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
                 </div>
                 <div>
-                  <span className="category-badge text-emerald-400 tracking-widest">
+                  <span className="category-badge text-purple-400 tracking-widest">
                     Asset Management
                   </span>
                 </div>

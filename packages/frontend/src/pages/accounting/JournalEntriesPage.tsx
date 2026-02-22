@@ -4,10 +4,10 @@
  * Create and manage journal entries for double-entry bookkeeping.
  * Each entry must balance (debits = credits).
  *
- * Design: Ledger Noir Aesthetic
+ * Design: Purple Industrial Aesthetic
  * - Refined, editorial financial command center
  * - DM Serif Display for headings, IBM Plex Mono for numbers
- * - Emerald/gold accent palette
+ * - Purple accent palette
  * - Staggered animations and micro-interactions
  */
 
@@ -374,7 +374,7 @@ function JournalEntryForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header Section with Art Deco Accent */}
       <div className="relative pb-4 border-b border-slate-200 dark:border-slate-700">
-        <div className="absolute top-0 left-0 w-16 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
+        <div className="absolute top-0 left-0 w-16 h-1 bg-gradient-to-r from-purple-500 to-violet-500 rounded-full" />
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-3 ledger-title">
           {entry ? 'Edit Journal Entry' : 'New Journal Entry'}
         </h3>
@@ -433,8 +433,8 @@ function JournalEntryForm({
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <CalculatorIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <CalculatorIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
             <label className="text-sm font-semibold text-slate-900 dark:text-white">
               Entry Lines
@@ -1075,7 +1075,7 @@ function JournalEntriesPage() {
         {/* Hero Section - Asymmetric Layout */}
         <div className="mb-8 relative">
           {/* Decorative Element */}
-          <div className="absolute -top-4 -left-4 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-4 -left-4 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-violet-500/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             {/* Title Area */}
@@ -1083,10 +1083,10 @@ function JournalEntriesPage() {
               className={`transition-all duration-700 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
             >
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
                   <BookOpenIcon className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
                   Double-Entry Bookkeeping
                 </span>
               </div>
@@ -1155,7 +1155,7 @@ function JournalEntriesPage() {
         >
           <div className="bg-white dark:bg-slate-800/60 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-xl shadow-slate-900/5">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-1.5 h-6 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full" />
+              <div className="w-1.5 h-6 bg-gradient-to-b from-purple-500 to-violet-500 rounded-full" />
               <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 Filter Entries
               </h3>

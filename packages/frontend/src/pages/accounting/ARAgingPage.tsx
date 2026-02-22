@@ -4,12 +4,12 @@
  * Displays aging report for accounts receivable showing outstanding invoices
  * grouped by aging buckets (current, 30-60, 60-90, 90-120, 120+ days).
  *
- * Design: Ledger Noir Aesthetic
+ * Design: Purple Industrial Aesthetic
  * - DM Serif Display for elegant headings
  * - IBM Plex Mono for precise financial figures
  * - Staggered entrance animations
  * - Atmospheric depth with subtle glows
- * - Amber accent for time/aging theme
+ * - Purple accent matching application brand
  */
 
 import { useState, useEffect } from 'react';
@@ -303,9 +303,9 @@ function ARAgingPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
-                  <div className="relative p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-2xl border border-amber-500/20">
-                    <ClockIcon className="h-7 w-7 text-amber-500 dark:text-amber-400" />
+                  <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />
+                  <div className="relative p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-2xl border border-purple-500/20">
+                    <ClockIcon className="h-7 w-7 text-purple-500 dark:text-purple-400" />
                   </div>
                 </div>
                 <div>
@@ -366,7 +366,7 @@ function ARAgingPage() {
           </div>
 
           {/* Decorative line */}
-          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
         </header>
 
         {/* Report Content */}

@@ -4,12 +4,12 @@
  * Displays aging report for accounts payable showing outstanding invoices
  * grouped by aging buckets (current, 30-60, 60-90, 90-120, 120+ days).
  *
- * Design: Ledger Noir Aesthetic
+ * Design: Purple Industrial Aesthetic
  * - DM Serif Display for elegant headings
  * - IBM Plex Mono for precise financial figures
  * - Staggered entrance animations
  * - Atmospheric depth with subtle glows
- * - Rose accent for payables/liabilities theme
+ * - Purple accent matching application brand
  */
 
 import { useState, useEffect } from 'react';
@@ -314,9 +314,9 @@ function APAgingPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-rose-500/20 blur-xl rounded-full" />
-                  <div className="relative p-3 bg-gradient-to-br from-rose-500/20 to-rose-600/10 rounded-2xl border border-rose-500/20">
-                    <ClockIcon className="h-7 w-7 text-rose-500 dark:text-rose-400" />
+                  <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full" />
+                  <div className="relative p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/10 rounded-2xl border border-purple-500/20">
+                    <ClockIcon className="h-7 w-7 text-purple-500 dark:text-purple-400" />
                   </div>
                 </div>
                 <div>
@@ -377,7 +377,7 @@ function APAgingPage() {
           </div>
 
           {/* Decorative line */}
-          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
+          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
         </header>
 
         {/* Report Content */}
