@@ -580,34 +580,32 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       {mobileInputAnimState !== 'hidden' && (
         <div
           ref={containerRef}
-          className="md:hidden flex-1 min-w-0 w-full relative"
+          className="md:hidden flex-1 min-w-0 w-full relative flex items-center"
         >
-          <div
-            className={`global-search-input-wrapper w-full h-10 ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''}`}
-          >
-            {/* Search icon */}
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              onFocus={handleFocus}
-              placeholder="Search orders, SKUs, pages..."
-              className="global-search-input w-full h-full pl-9 pr-10 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
-              style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-              }}
-            />
-            {/* Close button */}
+          {/* Search icon */}
+          <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none flex-shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={handleFocus}
+            placeholder="Search orders, SKUs, pages..."
+            className="flex-1 min-w-0 px-2 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+          />
+          {/* Clear button - only show when there's text */}
+          {query && (
             <button
-              onClick={collapseMobile}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-              aria-label="Close search"
+              onClick={handleClear}
+              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors flex-shrink-0"
+              aria-label="Clear search"
             >
               <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </button>
-          </div>
+          )}
 
           {/* Results dropdown for mobile - positioned below toolbar */}
           {isOpen && (query || isLoading) && (
@@ -624,42 +622,40 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         </div>
       )}
 
-      {/* ── Desktop Input - inline expansion ── */}
+      {/* ── Desktop Input - inline inside the toolbar pill ── */}
       {desktopInputAnimState !== 'hidden' && (
         <div
           ref={containerRef}
-          className={`hidden md:flex flex-1 min-w-0 relative ${isDesktopExpanded ? 'flex-1 min-w-0' : ''}`}
+          className="hidden md:flex flex-1 min-w-0 items-center relative"
         >
-          <div
-            className={`global-search-input-wrapper w-full h-10 min-w-[240px] ${desktopInputAnimState === 'entering' ? 'entering' : desktopInputAnimState === 'visible' ? 'visible' : ''}`}
-          >
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              onFocus={handleFocus}
-              placeholder="Search orders, SKUs, pages..."
-              className="global-search-input w-full h-full pl-9 pr-8 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
-              style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-              }}
-            />
-            {query && (
-              <button
-                onClick={handleClear}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-                aria-label="Clear search"
-              >
-                <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              </button>
-            )}
-          </div>
+          {/* Search icon */}
+          <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none flex-shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onFocus={handleFocus}
+            placeholder="Search orders, SKUs, pages..."
+            className="flex-1 min-w-0 px-2 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+          />
+          {/* Clear button - only show when there's text */}
+          {query && (
+            <button
+              onClick={handleClear}
+              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors flex-shrink-0"
+              aria-label="Clear search"
+            >
+              <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            </button>
+          )}
 
           {/* Desktop results dropdown */}
           {isOpen && (query || isLoading) && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
               <SearchResults
                 results={results}
                 isLoading={isLoading}
