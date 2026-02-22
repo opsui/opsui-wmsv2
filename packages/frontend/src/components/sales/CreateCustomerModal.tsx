@@ -24,6 +24,7 @@ interface CustomerFormData {
   email: string;
   phone: string;
   status: 'PROSPECT' | 'ACTIVE' | 'INACTIVE';
+  billingAddress: string;
 }
 
 // ============================================================================
@@ -42,6 +43,7 @@ export function CreateCustomerModal({ isOpen, onClose, onSuccess }: CreateCustom
         email: '',
         phone: '',
         status: 'PROSPECT',
+        billingAddress: '',
       },
       validationRules: {
         companyName: {
@@ -64,6 +66,11 @@ export function CreateCustomerModal({ isOpen, onClose, onSuccess }: CreateCustom
         },
         status: {
           required: true,
+        },
+        billingAddress: {
+          required: true,
+          minLength: 5,
+          maxLength: 500,
         },
       },
       onSubmit: async values => {
@@ -167,6 +174,17 @@ export function CreateCustomerModal({ isOpen, onClose, onSuccess }: CreateCustom
             { value: 'ACTIVE', label: 'Active' },
             { value: 'INACTIVE', label: 'Inactive' },
           ]}
+        />
+
+        <FormInput
+          label="Billing Address"
+          name="billingAddress"
+          value={values.billingAddress}
+          onChange={handleChange}
+          onBlur={() => handleBlur('billingAddress')}
+          error={errors.billingAddress}
+          required
+          placeholder="Enter billing address"
         />
       </form>
     </Modal>
