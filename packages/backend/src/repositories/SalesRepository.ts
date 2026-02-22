@@ -1567,6 +1567,30 @@ export class SalesRepository {
   // ========================================================================
 
   private mapRowToCustomer(row: any): Customer {
+    // Safely parse JSON fields with fallback
+    let billingAddress = { street1: '', city: '', state: '', postalCode: '', country: 'NZ' };
+    try {
+      if (row.billing_address) {
+        billingAddress = typeof row.billing_address === 'string'
+          ? JSON.parse(row.billing_address)
+          : row.billing_address;
+      }
+    } catch (e) {
+      // If parsing fails, use default
+      billingAddress = { street1: String(row.billing_address || ''), city: '', state: '', postalCode: '', country: 'NZ' };
+    }
+
+    let shippingAddress = undefined;
+    try {
+      if (row.shipping_address) {
+        shippingAddress = typeof row.shipping_address === 'string'
+          ? JSON.parse(row.shipping_address)
+          : row.shipping_address;
+      }
+    } catch (e) {
+      // If parsing fails, leave undefined
+    }
+
     return {
       customerId: row.customer_id,
       customerNumber: row.customer_number,
@@ -1574,15 +1598,8 @@ export class SalesRepository {
       contactName: row.contact_name,
       email: row.email,
       phone: row.phone,
-      billingAddress:
-        typeof row.billing_address === 'string'
-          ? JSON.parse(row.billing_address)
-          : row.billing_address,
-      shippingAddress: row.shipping_address
-        ? typeof row.shipping_address === 'string'
-          ? JSON.parse(row.shipping_address)
-          : row.shipping_address
-        : undefined,
+      billingAddress,
+      shippingAddress,
       status: row.status,
       taxId: row.tax_id,
       paymentTerms: row.payment_terms,
