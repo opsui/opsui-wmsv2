@@ -576,56 +576,51 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         </button>
       )}
 
-      {/* ── Mobile Input Overlay - rendered OUTSIDE toolbar via fixed positioning ── */}
+      {/* ── Mobile Input - inline inside the toolbar pill ── */}
       {mobileInputAnimState !== 'hidden' && (
-        <div className="md:hidden fixed inset-0 top-16 z-[100]">
-          {/* Backdrop */}
+        <div
+          ref={containerRef}
+          className="md:hidden flex-1 min-w-0 w-full relative"
+        >
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={collapseMobile}
-          />
-          {/* Search container */}
-          <div className="relative p-4">
-            <div
-              className={`global-search-input-wrapper w-full h-14 ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''}`}
+            className={`global-search-input-wrapper w-full h-10 ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''}`}
+          >
+            {/* Search icon */}
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onFocus={handleFocus}
+              placeholder="Search orders, SKUs, pages..."
+              className="global-search-input w-full h-full pl-9 pr-10 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
+              style={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            />
+            {/* Close button */}
+            <button
+              onClick={collapseMobile}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              aria-label="Close search"
             >
-              {/* Search icon */}
-              <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400 pointer-events-none" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onFocus={handleFocus}
-                placeholder="Search orders, SKUs, pages..."
-                className="global-search-input w-full h-full pl-12 pr-12 text-base bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
-                style={{
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-              />
-              {/* Close button */}
-              <button
-                onClick={collapseMobile}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-                aria-label="Close search"
-              >
-                <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-
-            {/* Results dropdown for mobile */}
-            {isOpen && (query || isLoading) && (
-              <div className="mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[60vh] overflow-y-auto">
-                <SearchResults
-                  results={results}
-                  isLoading={isLoading}
-                  onSelectItem={handleNavigation}
-                  selectedIndex={selectedIndex}
-                  totalItems={totalItems}
-                />
-              </div>
-            )}
+              <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            </button>
           </div>
+
+          {/* Results dropdown for mobile - positioned below toolbar */}
+          {isOpen && (query || isLoading) && (
+            <div className="fixed inset-x-4 top-32 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto">
+              <SearchResults
+                results={results}
+                isLoading={isLoading}
+                onSelectItem={handleNavigation}
+                selectedIndex={selectedIndex}
+                totalItems={totalItems}
+              />
+            </div>
+          )}
         </div>
       )}
 
