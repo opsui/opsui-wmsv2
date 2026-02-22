@@ -290,4 +290,346 @@ router.patch(
   })
 );
 
+// ============================================================================
+// LICENSE PLATE ROUTES
+// ============================================================================
+
+/**
+ * GET /api/inbound/license-plates
+ * Get all license plates with optional filters
+ */
+router.get(
+  '/license-plates',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      status: req.query.status as string | undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
+    };
+
+    const result = await inboundReceivingService.getLicensePlates(filters);
+    res.json(result);
+    return;
+  })
+);
+
+/**
+ * GET /api/inbound/license-plates/:licensePlateId
+ * Get a specific license plate by ID
+ */
+router.get(
+  '/license-plates/:licensePlateId',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { licensePlateId } = req.params;
+    const licensePlate = await inboundReceivingService.getLicensePlate(licensePlateId);
+    res.json(licensePlate);
+    return;
+  })
+);
+
+/**
+ * GET /api/inbound/license-plates/barcode/:barcode
+ * Get a license plate by barcode
+ */
+router.get(
+  '/license-plates/barcode/:barcode',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { barcode } = req.params;
+    const licensePlate = await inboundReceivingService.getLicensePlateByBarcode(barcode);
+    res.json(licensePlate);
+    return;
+  })
+);
+
+/**
+ * POST /api/inbound/license-plates
+ * Create a new license plate
+ */
+router.post(
+  '/license-plates',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const licensePlate = await inboundReceivingService.createLicensePlate({
+      ...req.body,
+      createdBy: req.user!.userId,
+    });
+    res.status(201).json(licensePlate);
+    return;
+  })
+);
+
+/**
+ * POST /api/inbound/license-plates/:licensePlateId/seal
+ * Seal a license plate
+ */
+router.post(
+  '/license-plates/:licensePlateId/seal',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { licensePlateId } = req.params;
+    const licensePlate = await inboundReceivingService.sealLicensePlate(licensePlateId);
+    res.json(licensePlate);
+    return;
+  })
+);
+
+/**
+ * PATCH /api/inbound/license-plates/:licensePlateId/status
+ * Update license plate status
+ */
+router.patch(
+  '/license-plates/:licensePlateId/status',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { licensePlateId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      res.status(400).json({
+        error: 'Status is required',
+        code: 'MISSING_STATUS',
+      });
+      return;
+    }
+
+    const licensePlate = await inboundReceivingService.updateLicensePlateStatus(
+      licensePlateId,
+      status
+    );
+    res.json(licensePlate);
+    return;
+  })
+);
+
+/**
+ * GET /api/inbound/license-plates/suggest-staging/:sku
+ * Get suggested staging location for SKU
+ */
+router.get(
+  '/license-plates/suggest-staging/:sku',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { sku } = req.params;
+    const suggestions = await inboundReceivingService.getSuggestedStaging(sku);
+    res.json(suggestions);
+    return;
+  })
+);
+
+// ============================================================================
+// STAGING LOCATION ROUTES
+// ============================================================================
+
+/**
+ * GET /api/inbound/staging-locations
+ * Get all staging locations with optional filters
+ */
+router.get(
+  '/staging-locations',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      zone: req.query.zone as string | undefined,
+      status: req.query.status as string | undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
+    };
+
+    const result = await inboundReceivingService.getStagingLocations(filters);
+    res.json(result);
+    return;
+  })
+);
+
+/**
+ * GET /api/inbound/staging-locations/:stagingLocationId
+ * Get a specific staging location by ID
+ */
+router.get(
+  '/staging-locations/:stagingLocationId',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { stagingLocationId } = req.params;
+    const stagingLocation = await inboundReceivingService.getStagingLocation(stagingLocationId);
+    res.json(stagingLocation);
+    return;
+  })
+);
+
+/**
+ * POST /api/inbound/staging-locations/assign
+ * Assign a license plate to a staging location
+ */
+router.post(
+  '/staging-locations/assign',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { licensePlateId, stagingLocationId } = req.body;
+
+    if (!licensePlateId || !stagingLocationId) {
+      res.status(400).json({
+        error: 'licensePlateId and stagingLocationId are required',
+        code: 'MISSING_FIELDS',
+      });
+      return;
+    }
+
+    const result = await inboundReceivingService.assignToStagingLocation({
+      licensePlateId,
+      stagingLocationId,
+      userId: req.user!.userId,
+    });
+    res.json(result);
+    return;
+  })
+);
+
+/**
+ * POST /api/inbound/staging-locations/release/:licensePlateId
+ * Release a license plate from staging
+ */
+router.post(
+  '/staging-locations/release/:licensePlateId',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { licensePlateId } = req.params;
+    const result = await inboundReceivingService.releaseFromStaging(licensePlateId);
+    res.json(result);
+    return;
+  })
+);
+
+/**
+ * GET /api/inbound/staging-locations/:stagingLocationId/contents
+ * Get contents of a staging location
+ */
+router.get(
+  '/staging-locations/:stagingLocationId/contents',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { stagingLocationId } = req.params;
+    const contents = await inboundReceivingService.getStagingLocationContents(stagingLocationId);
+    res.json(contents);
+    return;
+  })
+);
+
+// ============================================================================
+// RECEIVING EXCEPTION ROUTES
+// ============================================================================
+
+/**
+ * GET /api/inbound/exceptions
+ * Get all receiving exceptions with optional filters
+ */
+router.get(
+  '/exceptions',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const filters = {
+      status: req.query.status as string | undefined,
+      exceptionType: req.query.exceptionType as string | undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
+    };
+
+    const result = await inboundReceivingService.getReceivingExceptions(filters);
+    res.json(result);
+    return;
+  })
+);
+
+/**
+ * GET /api/inbound/exceptions/:exceptionId
+ * Get a specific receiving exception by ID
+ */
+router.get(
+  '/exceptions/:exceptionId',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.STOCK_CONTROLLER),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { exceptionId } = req.params;
+    const exception = await inboundReceivingService.getReceivingException(exceptionId);
+    res.json(exception);
+    return;
+  })
+);
+
+/**
+ * POST /api/inbound/exceptions
+ * Create a new receiving exception
+ */
+router.post(
+  '/exceptions',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const exception = await inboundReceivingService.createReceivingException({
+      ...req.body,
+      createdBy: req.user!.userId,
+    });
+    res.status(201).json(exception);
+    return;
+  })
+);
+
+/**
+ * PATCH /api/inbound/exceptions/:exceptionId/status
+ * Update exception status
+ */
+router.patch(
+  '/exceptions/:exceptionId/status',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { exceptionId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      res.status(400).json({
+        error: 'Status is required',
+        code: 'MISSING_STATUS',
+      });
+      return;
+    }
+
+    const exception = await inboundReceivingService.updateReceivingExceptionStatus(
+      exceptionId,
+      status
+    );
+    res.json(exception);
+    return;
+  })
+);
+
+/**
+ * POST /api/inbound/exceptions/:exceptionId/resolve
+ * Resolve a receiving exception
+ */
+router.post(
+  '/exceptions/:exceptionId/resolve',
+  authorize('INWARDS' as UserRole, UserRole.SUPERVISOR, UserRole.ADMIN),
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { exceptionId } = req.params;
+    const { resolution, resolutionNotes } = req.body;
+
+    if (!resolution) {
+      res.status(400).json({
+        error: 'Resolution is required',
+        code: 'MISSING_RESOLUTION',
+      });
+      return;
+    }
+
+    const exception = await inboundReceivingService.resolveReceivingException({
+      exceptionId,
+      resolution,
+      resolutionNotes,
+      resolvedBy: req.user!.userId,
+    });
+    res.json(exception);
+    return;
+  })
+);
+
 export default router;
