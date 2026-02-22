@@ -2451,9 +2451,9 @@ export function Header() {
             >
               {/* Animated gradient border - smooth Dynamic Island transition - thicker border via padding */}
               <div className={`absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-70 animate-gradient-shift bg-[length:200%_100%] transition-all duration-300 ease-out ${isMobileSearchActive ? 'rounded-2xl' : 'rounded-full'}`} />
-              {/* Inner container with glass effect - smooth transition for all properties */}
+              {/* Inner container with glass effect - smooth transition for all properties - overflow-visible for dropdown */}
               <div
-                className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl overflow-hidden transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-full rounded-xl px-3 py-1' : 'w-auto px-2 py-1 rounded-full'}`}
+                className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl overflow-visible transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-full rounded-xl px-3 py-1' : 'w-auto px-2 py-1 rounded-full'}`}
               >
                 {/* Subtle purple glow on hover - pointer-events-none to not block clicks */}
                 <div className="absolute inset-0 rounded-full bg-purple-500/0 hover:bg-purple-500/10 transition-colors duration-300 pointer-events-none" />
