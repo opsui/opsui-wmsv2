@@ -4370,15 +4370,16 @@ html.performance-mode .btn-secondary:hover {
 
 /* ============================================================
    SECTION 5: OPTIMIZE TRANSITIONS
-   Faster transitions for snappier feel
+   Balanced for integrated GPU smoothness
+   NOTE: 0.1s animation-duration causes flickering on Intel HD
    ============================================================ */
 
-/* Reduce transition durations for snappier feel */
+/* Reduce transition duration only - NOT animation-duration globally */
 html.performance-mode *,
 html.performance-mode *::before,
 html.performance-mode *::after {
-  transition-duration: 0.1s !important;
-  animation-duration: 0.1s !important;
+  transition-duration: 0.15s !important;
+  /* DO NOT override animation-duration globally - causes flickering on integrated GPUs */
 }
 
 /* Keep smooth theme transitions */
