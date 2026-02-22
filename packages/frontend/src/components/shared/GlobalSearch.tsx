@@ -590,7 +590,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             value={query}
             onChange={e => setQuery(e.target.value)}
             onFocus={handleFocus}
-            placeholder="Search orders, SKUs, pages..."
+            placeholder="Search"
             className="flex-1 min-w-0 px-2 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
             style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -636,7 +636,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             value={query}
             onChange={e => setQuery(e.target.value)}
             onFocus={handleFocus}
-            placeholder="Search orders, SKUs, pages..."
+            placeholder="Search"
             className="flex-1 min-w-0 px-2 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
             style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
