@@ -607,9 +607,9 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             </button>
           )}
 
-          {/* Results dropdown for mobile - positioned below toolbar */}
+          {/* Results dropdown for mobile - positioned right below toolbar */}
           {isOpen && (query || isLoading) && (
-            <div className="fixed inset-x-4 top-32 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto">
+            <div className="fixed inset-x-4 top-16 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto">
               <SearchResults
                 results={results}
                 isLoading={isLoading}
