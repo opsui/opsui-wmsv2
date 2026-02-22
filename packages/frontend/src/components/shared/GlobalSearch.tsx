@@ -579,13 +579,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
       {/* ── Input: visible when expanded (mobile or desktop) ── */}
       <div
-        className={`relative ${mobileInputAnimState !== 'hidden' ? 'md:hidden flex-1 min-w-0 w-full' : ''} ${desktopInputAnimState !== 'hidden' ? 'hidden md:flex flex-1 min-w-0' : 'hidden'}`}
+        className={`${mobileInputAnimState !== 'hidden' ? 'md:hidden fixed inset-x-4 top-20 z-50' : ''} ${desktopInputAnimState !== 'hidden' ? 'hidden md:flex flex-1 min-w-0' : 'hidden'}`}
       >
         <div
-          className={`global-search-input-wrapper w-full h-10 min-w-[280px] sm:min-w-[320px] ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''} ${desktopInputAnimState === 'entering' ? 'entering' : desktopInputAnimState === 'visible' ? 'visible' : ''}`}
+          className={`global-search-input-wrapper w-full h-12 ${mobileInputAnimState === 'entering' ? 'entering' : mobileInputAnimState === 'visible' ? 'visible' : ''} ${desktopInputAnimState === 'entering' ? 'entering' : desktopInputAnimState === 'visible' ? 'visible' : ''}`}
+          style={{ minWidth: '280px' }}
         >
           {/* Search icon inside input - only ONE source of truth */}
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none" />
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400 pointer-events-none" />
           <input
             ref={inputRef}
             type="text"
@@ -593,7 +594,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             onChange={e => setQuery(e.target.value)}
             onFocus={handleFocus}
             placeholder="Search orders, SKUs, pages..."
-            className="global-search-input w-full h-full pl-9 pr-8 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
+            className="global-search-input w-full h-full pl-12 pr-10 text-base bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus-visible:ring-0 appearance-none"
             style={{
               fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
@@ -603,10 +604,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           {query && (
             <button
               onClick={handleClear}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               aria-label="Clear search"
             >
-              <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </button>
           )}
         </div>
