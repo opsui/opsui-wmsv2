@@ -202,14 +202,6 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
         </div>
 
         <div ref={containerRef} className="relative w-full flex justify-center">
-          {/* Atmospheric glow effect behind the chart */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div
-              className="w-72 h-56 rounded-full bg-gradient-to-br from-emerald-500/8 via-blue-500/8 to-purple-500/5 blur-3xl animate-pulse"
-              style={{ animationDuration: '4s' }}
-            />
-          </div>
-
           {containerWidth > 0 && (
             <ResponsiveContainer width={containerWidth} height={320}>
               <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
@@ -262,30 +254,13 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
                 {/* Picked line with gradient - using AreaChart-style fill effect */}
                 <defs>
                   <linearGradient id="pickedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={COLORS.picked} stopOpacity={0.4} />
-                    <stop offset="50%" stopColor={COLORS.picked} stopOpacity={0.1} />
+                    <stop offset="0%" stopColor={COLORS.picked} stopOpacity={0.3} />
                     <stop offset="100%" stopColor={COLORS.picked} stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="shippedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={COLORS.shipped} stopOpacity={0.4} />
-                    <stop offset="50%" stopColor={COLORS.shipped} stopOpacity={0.1} />
+                    <stop offset="0%" stopColor={COLORS.shipped} stopOpacity={0.3} />
                     <stop offset="100%" stopColor={COLORS.shipped} stopOpacity={0} />
                   </linearGradient>
-                  {/* Glow filter for lines */}
-                  <filter id="glow-picked" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                  <filter id="glow-shipped" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
                 </defs>
 
                 {/* Area fills for visual depth */}
@@ -293,47 +268,39 @@ export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputCh
                   type="monotone"
                   dataKey="picked"
                   stroke={COLORS.picked}
-                  strokeWidth={3}
+                  strokeWidth={2.5}
                   dot={{
-                    r: 5,
-                    fill: '#0f172a',
-                    stroke: COLORS.picked,
-                    strokeWidth: 3,
-                    style: { filter: 'drop-shadow(0 0 6px rgba(16, 185, 129, 0.6))' },
-                  }}
-                  activeDot={{
-                    r: 10,
+                    r: 4,
                     fill: COLORS.picked,
                     stroke: '#fff',
-                    strokeWidth: 3,
-                    style: { filter: 'drop-shadow(0 0 16px rgba(16, 185, 129, 0.8))' },
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{
+                    r: 6,
+                    fill: COLORS.picked,
+                    stroke: '#fff',
+                    strokeWidth: 2,
                   }}
                   name="Picked"
-                  fill="url(#pickedGradient)"
-                  filter="url(#glow-picked)"
                 />
                 <Line
                   type="monotone"
                   dataKey="shipped"
                   stroke={COLORS.shipped}
-                  strokeWidth={3}
+                  strokeWidth={2.5}
                   dot={{
-                    r: 5,
-                    fill: '#0f172a',
-                    stroke: COLORS.shipped,
-                    strokeWidth: 3,
-                    style: { filter: 'drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))' },
-                  }}
-                  activeDot={{
-                    r: 10,
+                    r: 4,
                     fill: COLORS.shipped,
                     stroke: '#fff',
-                    strokeWidth: 3,
-                    style: { filter: 'drop-shadow(0 0 16px rgba(168, 85, 247, 0.8))' },
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{
+                    r: 6,
+                    fill: COLORS.shipped,
+                    stroke: '#fff',
+                    strokeWidth: 2,
                   }}
                   name="Shipped"
-                  fill="url(#shippedGradient)"
-                  filter="url(#glow-shipped)"
                 />
               </LineChart>
             </ResponsiveContainer>
