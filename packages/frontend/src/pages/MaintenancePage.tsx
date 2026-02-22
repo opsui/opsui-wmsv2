@@ -247,7 +247,9 @@ function MaintenanceRequestCard({
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm bg-white/5 p-3 rounded-lg">
           <div>
             <p className="text-gray-400 text-xs">Work Order ID</p>
-            <p className="text-white font-medium font-['JetBrains_Mono',monospace]">{request.workOrderNumber}</p>
+            <p className="text-white font-medium font-['JetBrains_Mono',monospace]">
+              {request.workOrderNumber}
+            </p>
           </div>
           <div>
             <p className="text-gray-400 text-xs">Scheduled</p>
@@ -782,8 +784,12 @@ function MaintenancePage() {
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight font-display">Equipment Maintenance</h1>
-            <p className="mt-2 text-gray-400 font-sans">Manage service requests and equipment status</p>
+            <h1 className="text-3xl font-bold text-white tracking-tight font-display">
+              Equipment Maintenance
+            </h1>
+            <p className="mt-2 text-gray-400 font-sans">
+              Manage service requests and equipment status
+            </p>
           </div>
           <div className="flex gap-3">
             <Button

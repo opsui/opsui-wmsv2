@@ -247,10 +247,14 @@ export function ReportsPage() {
           <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2" />
         </div>
         {/* Subtle dot pattern overlay */}
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
-        }} />
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
       </div>
 
       <Header />

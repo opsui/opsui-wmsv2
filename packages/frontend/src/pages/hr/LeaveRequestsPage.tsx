@@ -10,15 +10,15 @@ import { Header } from '@/components/shared/Header';
 import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
 import { useLeaveRequests, useLeaveBalances } from '@/services/api';
-import { 
-  CalendarDaysIcon, 
-  CheckCircleIcon, 
+import {
+  CalendarDaysIcon,
+  CheckCircleIcon,
   XCircleIcon,
   SunIcon,
   ClockIcon,
   UserGroupIcon,
   SparklesIcon,
-  PlusIcon
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 
 // Intersection observer hook for scroll animations
@@ -47,15 +47,15 @@ function useInView(threshold = 0.1) {
 }
 
 // Animated circular progress for leave balance
-function BalanceRing({ 
-  available, 
-  total, 
-  label, 
+function BalanceRing({
+  available,
+  total,
+  label,
   color = 'teal',
-  delay = 0 
-}: { 
-  available: number; 
-  total: number; 
+  delay = 0,
+}: {
+  available: number;
+  total: number;
   label: string;
   color?: 'teal' | 'amber' | 'rose' | 'violet';
   delay?: number;
@@ -63,7 +63,8 @@ function BalanceRing({
   const [isVisible, setIsVisible] = useState(false);
   const percentage = total > 0 ? (available / total) * 100 : 0;
   const circumference = 2 * Math.PI * 45;
-  const strokeDashoffset = circumference - (isVisible ? (percentage / 100) * circumference : circumference);
+  const strokeDashoffset =
+    circumference - (isVisible ? (percentage / 100) * circumference : circumference);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), delay);
@@ -75,48 +76,41 @@ function BalanceRing({
       stroke: 'stroke-teal-400',
       bg: 'stroke-teal-900/30',
       text: 'text-teal-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(45,212,191,0.4)]'
+      glow: 'drop-shadow-[0_0_8px_rgba(45,212,191,0.4)]',
     },
     amber: {
       stroke: 'stroke-amber-400',
       bg: 'stroke-amber-900/30',
       text: 'text-amber-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]'
+      glow: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]',
     },
     rose: {
       stroke: 'stroke-rose-400',
       bg: 'stroke-rose-900/30',
       text: 'text-rose-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]'
+      glow: 'drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]',
     },
     violet: {
       stroke: 'stroke-violet-400',
       bg: 'stroke-violet-900/30',
       text: 'text-violet-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(167,139,250,0.4)]'
+      glow: 'drop-shadow-[0_0_8px_rgba(167,139,250,0.4)]',
     },
   };
 
   const colors = colorClasses[color];
 
   return (
-    <div 
+    <div
       className="relative flex flex-col items-center"
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'scale(1)' : 'scale(0.8)',
-        transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`
+        transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
       }}
     >
       <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
-        <circle
-          cx="50"
-          cy="50"
-          r="45"
-          fill="none"
-          strokeWidth="8"
-          className={colors.bg}
-        />
+        <circle cx="50" cy="50" r="45" fill="none" strokeWidth="8" className={colors.bg} />
         <circle
           cx="50"
           cy="50"
@@ -128,7 +122,7 @@ function BalanceRing({
           style={{
             strokeDasharray: circumference,
             strokeDashoffset,
-            transition: `stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${delay + 200}ms`
+            transition: `stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${delay + 200}ms`,
           }}
         />
       </svg>
@@ -147,7 +141,7 @@ function BalanceRing({
 function MiniCalendar({ startDate, endDate }: { startDate: string; endDate: string }) {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   // Get days in the range
   const days: Date[] = [];
   const current = new Date(start);
@@ -159,7 +153,7 @@ function MiniCalendar({ startDate, endDate }: { startDate: string; endDate: stri
   return (
     <div className="flex items-center gap-1">
       {days.slice(0, 5).map((day, i) => (
-        <div 
+        <div
           key={i}
           className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/20 flex items-center justify-center"
         >
@@ -176,8 +170,13 @@ function MiniCalendar({ startDate, endDate }: { startDate: string; endDate: stri
 }
 
 // Request card with hover effects
-function RequestCard({ request, index, onApprove, onReject }: { 
-  request: any; 
+function RequestCard({
+  request,
+  index,
+  onApprove,
+  onReject,
+}: {
+  request: any;
   index: number;
   onApprove: () => void;
   onReject: () => void;
@@ -185,18 +184,18 @@ function RequestCard({ request, index, onApprove, onReject }: {
   const { ref, isInView } = useInView(0.1);
 
   return (
-    <div 
+    <div
       ref={ref}
       className="group relative"
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(0)' : 'translateY(20px)',
-        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`
+        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`,
       }}
     >
       {/* Glow effect on hover */}
       <div className="absolute -inset-px bg-gradient-to-r from-teal-500/20 via-transparent to-amber-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity duration-500" />
-      
+
       <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-6 hover:border-teal-500/30 transition-colors duration-300">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -252,24 +251,25 @@ function RequestCard({ request, index, onApprove, onReject }: {
 // Balance card with animated fill
 function BalanceCard({ balance, index }: { balance: any; index: number }) {
   const { ref, isInView } = useInView(0.1);
-  const percentage = balance.ytdAccrued > 0 
-    ? Math.min((balance.currentBalance / balance.ytdAccrued) * 100, 100) 
-    : 0;
+  const percentage =
+    balance.ytdAccrued > 0 ? Math.min((balance.currentBalance / balance.ytdAccrued) * 100, 100) : 0;
 
   return (
-    <div 
+    <div
       ref={ref}
       className="group relative"
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(0)' : 'translateY(20px)',
-        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`
+        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`,
       }}
     >
       <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/30 transition-colors duration-300">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-white font-medium">{balance.leaveType?.name || 'Leave Type'}</h4>
-          <span className={`text-2xl font-light ${percentage > 30 ? 'text-amber-400' : 'text-rose-400'}`}>
+          <span
+            className={`text-2xl font-light ${percentage > 30 ? 'text-amber-400' : 'text-rose-400'}`}
+          >
             {balance.currentBalance}
             <span className="text-sm text-slate-500 ml-1">hrs</span>
           </span>
@@ -277,17 +277,17 @@ function BalanceCard({ balance, index }: { balance: any; index: number }) {
 
         {/* Progress bar */}
         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div 
+          <div
             className={`h-full rounded-full transition-all duration-1000 ease-out ${
-              percentage > 50 
-                ? 'bg-gradient-to-r from-amber-500 to-amber-400' 
-                : percentage > 25 
+              percentage > 50
+                ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                : percentage > 25
                   ? 'bg-gradient-to-r from-orange-500 to-amber-400'
                   : 'bg-gradient-to-r from-rose-500 to-rose-400'
             }`}
-            style={{ 
+            style={{
               width: isInView ? `${percentage}%` : '0%',
-              transitionDelay: `${index * 100 + 200}ms`
+              transitionDelay: `${index * 100 + 200}ms`,
             }}
           />
         </div>
@@ -316,7 +316,7 @@ export default function LeaveRequestsPage() {
       </div>
 
       <Header />
-      
+
       <main className="relative w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Page header */}
@@ -325,9 +325,11 @@ export default function LeaveRequestsPage() {
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-500/20">
                 <SunIcon className="h-5 w-5 text-slate-900" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-teal-400/80">Time Off</span>
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-teal-400/80">
+                Time Off
+              </span>
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-3">
               Leave Management
             </h1>
@@ -352,11 +354,13 @@ export default function LeaveRequestsPage() {
                   <ClockIcon className="h-4 w-4" />
                   Pending
                   {requests.length > 0 && (
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      activeTab === 'pending' 
-                        ? 'bg-slate-900/20 text-slate-900' 
-                        : 'bg-amber-500/20 text-amber-400'
-                    }`}>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs ${
+                        activeTab === 'pending'
+                          ? 'bg-slate-900/20 text-slate-900'
+                          : 'bg-amber-500/20 text-amber-400'
+                      }`}
+                    >
                       {requests.length}
                     </span>
                   )}
@@ -387,7 +391,7 @@ export default function LeaveRequestsPage() {
                   <div className="absolute inset-0 flex items-center justify-center opacity-5">
                     <SparklesIcon className="h-64 w-64 text-white" />
                   </div>
-                  
+
                   <div className="relative">
                     <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
                       <CheckCircleIcon className="h-10 w-10 text-teal-400" />
@@ -401,12 +405,16 @@ export default function LeaveRequestsPage() {
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {requests.map((request: any, index: number) => (
-                    <RequestCard 
-                      key={request.requestId} 
-                      request={request} 
+                    <RequestCard
+                      key={request.requestId}
+                      request={request}
                       index={index}
-                      onApprove={() => {/* Approve logic */}}
-                      onReject={() => {/* Reject logic */}}
+                      onApprove={() => {
+                        /* Approve logic */
+                      }}
+                      onReject={() => {
+                        /* Reject logic */
+                      }}
                     />
                   ))}
                 </div>

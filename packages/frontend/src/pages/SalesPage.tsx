@@ -106,8 +106,17 @@ interface Quote {
 // ============================================================================
 
 const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.2, ease: 'easeOut' },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.15, ease: 'easeIn' },
+  },
 };
 
 const staggerContainer = {
@@ -115,6 +124,10 @@ const staggerContainer = {
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.25, ease: 'easeInOut' },
   },
 };
 
@@ -822,19 +835,23 @@ function SalesPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                       isActive
-                        ? 'text-amber-700 dark:text-amber-300'
+                        ? 'text-purple-700 dark:text-purple-300'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 rounded-xl border border-amber-200 dark:border-amber-500/30"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-xl border border-purple-200 dark:border-purple-500/30"
+                        transition={{
+                          type: 'tween',
+                          duration: 0.15,
+                          ease: 'easeOut',
+                        }}
                       />
                     )}
                     <Icon className="h-4 w-4 relative z-10" />
@@ -846,332 +863,368 @@ function SalesPage() {
           )}
         </AnimatePresence>
 
-        {/* Dashboard Tab */}
-        {!isLoading && currentTab === 'dashboard' && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="space-y-8"
-          >
-            {/* Overview Stats - Premium Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              {[
-                {
-                  label: 'Total Customers',
-                  value: dashboard.totalCustomers,
-                  icon: UserGroupIcon,
-                  gradient: 'from-violet-500 to-purple-600',
-                  bgGradient:
-                    'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
-                },
-                {
-                  label: 'Active Leads',
-                  value: dashboard.activeLeads,
-                  icon: UserPlusIcon,
-                  gradient: 'from-amber-500 to-yellow-600',
-                  bgGradient:
-                    'from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20',
-                },
-                {
-                  label: 'Open Opportunities',
-                  value: dashboard.openOpportunities,
-                  icon: TrophyIcon,
-                  gradient: 'from-orange-500 to-red-500',
-                  bgGradient: 'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20',
-                },
-                {
-                  label: 'Pending Quotes',
-                  value: dashboard.pendingQuotes,
-                  icon: DocumentTextIcon,
-                  gradient: 'from-blue-500 to-cyan-500',
-                  bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
-                },
-                {
-                  label: 'Total Pipeline',
-                  value: `$${dashboard.totalPipeline.toLocaleString()}`,
-                  icon: CurrencyDollarIcon,
-                  gradient: 'from-emerald-500 to-teal-500',
-                  bgGradient:
-                    'from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20',
-                  isLargeText: true,
-                },
-              ].map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={stat.label}
-                    variants={fadeInUp}
-                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                    className="group relative"
-                  >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 rounded-2xl transition-opacity duration-300`}
-                    />
-                    <Card
-                      variant="glass"
-                      className={`relative p-6 bg-gradient-to-br ${stat.bgGradient} border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden`}
-                    >
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/50 to-transparent dark:from-white/5 dark:to-transparent rounded-bl-full" />
-                      <div className="relative z-10">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                              {stat.label}
-                            </p>
-                            <motion.p
-                              initial={{ opacity: 0, scale: 0.5 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-                              className={`mt-2 font-bold text-gray-900 dark:text-white ${stat.isLargeText ? 'text-2xl' : 'text-3xl'}`}
-                            >
-                              {stat.value}
-                            </motion.p>
-                          </div>
-                          <motion.div
-                            initial={{ rotate: -10 }}
-                            animate={{ rotate: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
-                          >
-                            <Icon className="h-5 w-5 text-white" />
-                          </motion.div>
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Quick Actions */}
-            <Card
-              variant="glass"
-              className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+        {/* Tab Content - Smooth Transitions */}
+        <AnimatePresence mode="wait">
+          {/* Dashboard Tab */}
+          {!isLoading && currentTab === 'dashboard' && (
+            <motion.div
+              key="dashboard"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={staggerContainer}
+              className="space-y-8"
             >
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => setIsCreateCustomerModalOpen(true)}
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    <span>New Customer</span>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => setIsCreateLeadModalOpen(true)}
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    <span>New Lead</span>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => setIsCreateOpportunityModalOpen(true)}
-                  >
-                    <TrophyIcon className="h-5 w-5" />
-                    <span>New Opportunity</span>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="flex items-center justify-center gap-2"
-                    onClick={() => setIsCreateQuoteModalOpen(true)}
-                  >
-                    <DocumentTextIcon className="h-5 w-5" />
-                    <span>New Quote</span>
-                  </Button>
+              {/* Overview Stats - Premium Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                {[
+                  {
+                    label: 'Total Customers',
+                    value: dashboard.totalCustomers,
+                    icon: UserGroupIcon,
+                    gradient: 'from-violet-500 to-purple-600',
+                    bgGradient:
+                      'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
+                  },
+                  {
+                    label: 'Active Leads',
+                    value: dashboard.activeLeads,
+                    icon: UserPlusIcon,
+                    gradient: 'from-amber-500 to-yellow-600',
+                    bgGradient:
+                      'from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20',
+                  },
+                  {
+                    label: 'Open Opportunities',
+                    value: dashboard.openOpportunities,
+                    icon: TrophyIcon,
+                    gradient: 'from-orange-500 to-red-500',
+                    bgGradient:
+                      'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20',
+                  },
+                  {
+                    label: 'Pending Quotes',
+                    value: dashboard.pendingQuotes,
+                    icon: DocumentTextIcon,
+                    gradient: 'from-blue-500 to-cyan-500',
+                    bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
+                  },
+                  {
+                    label: 'Total Pipeline',
+                    value: `$${dashboard.totalPipeline.toLocaleString()}`,
+                    icon: CurrencyDollarIcon,
+                    gradient: 'from-emerald-500 to-teal-500',
+                    bgGradient:
+                      'from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20',
+                    isLargeText: true,
+                  },
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <motion.div
+                      key={stat.label}
+                      variants={fadeInUp}
+                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                      className="group relative"
+                    >
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 rounded-2xl transition-opacity duration-300`}
+                      />
+                      <Card
+                        variant="glass"
+                        className={`relative p-6 bg-gradient-to-br ${stat.bgGradient} border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden`}
+                      >
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/50 to-transparent dark:from-white/5 dark:to-transparent rounded-bl-full" />
+                        <div className="relative z-10">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                {stat.label}
+                              </p>
+                              <motion.p
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                                className={`mt-2 font-bold text-gray-900 dark:text-white ${stat.isLargeText ? 'text-2xl' : 'text-3xl'}`}
+                              >
+                                {stat.value}
+                              </motion.p>
+                            </div>
+                            <motion.div
+                              initial={{ rotate: -10 }}
+                              animate={{ rotate: 0 }}
+                              transition={{ duration: 0.5, delay: index * 0.1 }}
+                              className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
+                            >
+                              <Icon className="h-5 w-5 text-white" />
+                            </motion.div>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Quick Actions */}
+              <Card
+                variant="glass"
+                className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              >
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => setIsCreateCustomerModalOpen(true)}
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                      <span>New Customer</span>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => setIsCreateLeadModalOpen(true)}
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                      <span>New Lead</span>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => setIsCreateOpportunityModalOpen(true)}
+                    >
+                      <TrophyIcon className="h-5 w-5" />
+                      <span>New Opportunity</span>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="flex items-center justify-center gap-2"
+                      onClick={() => setIsCreateQuoteModalOpen(true)}
+                    >
+                      <DocumentTextIcon className="h-5 w-5" />
+                      <span>New Quote</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Customers Tab */}
+          {!isLoading && currentTab === 'customers' && (
+            <motion.div
+              key="customers"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Manage customer accounts and relationships
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Customers Tab */}
-        {!isLoading && currentTab === 'customers' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                  Manage customer accounts and relationships
-                </p>
+                <Button
+                  variant="primary"
+                  className="flex items-center gap-2"
+                  onClick={() => setIsCreateCustomerModalOpen(true)}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Customer
+                </Button>
               </div>
-              <Button
-                variant="primary"
-                className="flex items-center gap-2"
-                onClick={() => setIsCreateCustomerModalOpen(true)}
-              >
-                <PlusIcon className="h-5 w-5" />
-                New Customer
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {paginatedCustomers.map(customer => (
-                <CustomerCard
-                  key={customer.customerId}
-                  customer={customer}
-                  onViewDetails={handleViewCustomerDetails}
-                  onCreateQuote={handleCreateQuoteForCustomer}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {customers.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                totalItems={customers.length}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Leads Tab */}
-        {!isLoading && currentTab === 'leads' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Leads</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                  Track and convert leads into customers
-                </p>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {paginatedCustomers.map(customer => (
+                  <CustomerCard
+                    key={customer.customerId}
+                    customer={customer}
+                    onViewDetails={handleViewCustomerDetails}
+                    onCreateQuote={handleCreateQuoteForCustomer}
+                  />
+                ))}
               </div>
-              <Button
-                variant="primary"
-                className="flex items-center gap-2"
-                onClick={() => setIsCreateLeadModalOpen(true)}
-              >
-                <PlusIcon className="h-5 w-5" />
-                New Lead
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {paginatedLeads.map(lead => (
-                <LeadCard
-                  key={lead.leadId}
-                  lead={lead}
-                  onViewDetails={handleViewLeadDetails}
-                  onConvert={handleConvertLeadToCustomer}
+              {/* Pagination */}
+              {customers.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={customers.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
                 />
-              ))}
-            </div>
+              )}
+            </motion.div>
+          )}
 
-            {/* Pagination */}
-            {leads.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                totalItems={leads.length}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Opportunities Tab */}
-        {!isLoading && currentTab === 'opportunities' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Opportunities</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                  Manage sales pipeline and opportunities
-                </p>
+          {/* Leads Tab */}
+          {!isLoading && currentTab === 'leads' && (
+            <motion.div
+              key="leads"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Leads</h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Track and convert leads into customers
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  className="flex items-center gap-2"
+                  onClick={() => setIsCreateLeadModalOpen(true)}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Lead
+                </Button>
               </div>
-              <Button
-                variant="primary"
-                className="flex items-center gap-2"
-                onClick={() => setIsCreateOpportunityModalOpen(true)}
-              >
-                <PlusIcon className="h-5 w-5" />
-                New Opportunity
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {paginatedOpportunities.map(opportunity => (
-                <OpportunityCard
-                  key={opportunity.opportunityId}
-                  opportunity={opportunity}
-                  onViewDetails={handleViewOpportunityDetails}
-                  onCreateQuote={handleCreateQuoteForOpportunity}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {opportunities.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                totalItems={opportunities.length}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Quotes Tab */}
-        {!isLoading && currentTab === 'quotes' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quotes</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                  Create and manage sales quotes
-                </p>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {paginatedLeads.map(lead => (
+                  <LeadCard
+                    key={lead.leadId}
+                    lead={lead}
+                    onViewDetails={handleViewLeadDetails}
+                    onConvert={handleConvertLeadToCustomer}
+                  />
+                ))}
               </div>
-              <Button
-                variant="primary"
-                className="flex items-center gap-2"
-                onClick={() => setIsCreateQuoteModalOpen(true)}
-              >
-                <PlusIcon className="h-5 w-5" />
-                New Quote
-              </Button>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {paginatedQuotes.map(quote => (
-                <QuoteCard
-                  key={quote.quoteId}
-                  quote={quote}
-                  onViewDetails={handleViewQuoteDetails}
-                  onSend={handleSendQuote}
-                  onConvert={handleConvertQuoteToOrder}
+              {/* Pagination */}
+              {leads.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={leads.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
                 />
-              ))}
-            </div>
+              )}
+            </motion.div>
+          )}
 
-            {/* Pagination */}
-            {quotes.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                totalItems={quotes.length}
-                pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
-            )}
-          </div>
-        )}
+          {/* Opportunities Tab */}
+          {!isLoading && currentTab === 'opportunities' && (
+            <motion.div
+              key="opportunities"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Opportunities
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Manage sales pipeline and opportunities
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  className="flex items-center gap-2"
+                  onClick={() => setIsCreateOpportunityModalOpen(true)}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Opportunity
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {paginatedOpportunities.map(opportunity => (
+                  <OpportunityCard
+                    key={opportunity.opportunityId}
+                    opportunity={opportunity}
+                    onViewDetails={handleViewOpportunityDetails}
+                    onCreateQuote={handleCreateQuoteForOpportunity}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {opportunities.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={opportunities.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                />
+              )}
+            </motion.div>
+          )}
+
+          {/* Quotes Tab */}
+          {!isLoading && currentTab === 'quotes' && (
+            <motion.div
+              key="quotes"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quotes</h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Create and manage sales quotes
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  className="flex items-center gap-2"
+                  onClick={() => setIsCreateQuoteModalOpen(true)}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Quote
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {paginatedQuotes.map(quote => (
+                  <QuoteCard
+                    key={quote.quoteId}
+                    quote={quote}
+                    onViewDetails={handleViewQuoteDetails}
+                    onSend={handleSendQuote}
+                    onConvert={handleConvertQuoteToOrder}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {quotes.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={quotes.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Modals */}

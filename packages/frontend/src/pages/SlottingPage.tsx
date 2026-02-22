@@ -140,11 +140,11 @@ export function SlottingPage() {
       <Header />
       {/* Atmospheric background */}
       <div className="slotting-atmosphere" aria-hidden="true" />
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        
+
         <div className="space-y-6">
           {/* Hero Header - Asymmetric Layout */}
           <div className="slotting-hero flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
@@ -158,9 +158,7 @@ export function SlottingPage() {
                   AI-Powered
                 </Badge>
               </div>
-              <h1 className="slotting-title">
-                Slotting Optimization
-              </h1>
+              <h1 className="slotting-title">Slotting Optimization</h1>
               <p className="slotting-subtitle">
                 ABC analysis and intelligent slotting recommendations for warehouse efficiency
               </p>
@@ -180,7 +178,13 @@ export function SlottingPage() {
               <div className="slotting-stat-card" style={{ animationDelay: '0.05s' }}>
                 <div className="stat-icon stat-icon-neutral">
                   <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
                 <div className="stat-content">
@@ -188,7 +192,7 @@ export function SlottingPage() {
                   <p className="stat-value stat-value-neutral">{stats.data?.totalSkUs || 0}</p>
                 </div>
               </div>
-              
+
               <div className="slotting-stat-card" style={{ animationDelay: '0.1s' }}>
                 <div className="stat-icon stat-icon-a">
                   <span>A</span>
@@ -199,7 +203,7 @@ export function SlottingPage() {
                   <p className="stat-sublabel">High Velocity</p>
                 </div>
               </div>
-              
+
               <div className="slotting-stat-card" style={{ animationDelay: '0.15s' }}>
                 <div className="stat-icon stat-icon-b">
                   <span>B</span>
@@ -210,7 +214,7 @@ export function SlottingPage() {
                   <p className="stat-sublabel">Medium Velocity</p>
                 </div>
               </div>
-              
+
               <div className="slotting-stat-card" style={{ animationDelay: '0.2s' }}>
                 <div className="stat-icon stat-icon-c">
                   <span>C</span>
@@ -234,11 +238,13 @@ export function SlottingPage() {
                   </div>
                   <div>
                     <h2 className="slotting-card-title">ABC Analysis</h2>
-                    <p className="slotting-card-description">Analyze SKU velocity and classify inventory</p>
+                    <p className="slotting-card-description">
+                      Analyze SKU velocity and classify inventory
+                    </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="slotting-card-content">
                 <div className="slotting-controls">
                   <div className="slotting-control-group">
@@ -258,7 +264,7 @@ export function SlottingPage() {
                       className="slotting-select"
                     />
                   </div>
-                  
+
                   <Button
                     onClick={handleRunAnalysis}
                     disabled={runAnalysisMutation.isPending}
@@ -293,7 +299,9 @@ export function SlottingPage() {
                       <p className="class-description">{cls.description}</p>
                       <div className="class-zones">
                         <span className="zone-label">Zones:</span>
-                        <span className="zone-value">{cls.recommendedZones?.join(', ') || 'N/A'}</span>
+                        <span className="zone-value">
+                          {cls.recommendedZones?.join(', ') || 'N/A'}
+                        </span>
                       </div>
                       <div className="class-strategy">{cls.placementStrategy}</div>
                     </div>
@@ -330,7 +338,7 @@ export function SlottingPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="slotting-card-content">
                   <div className="slotting-table-wrapper">
                     {(() => {
@@ -376,9 +384,13 @@ export function SlottingPage() {
                                   <tr key={idx} className="slotting-table-row">
                                     <td className="slotting-sku-cell">{item.sku}</td>
                                     <td className="slotting-product-cell">{item.productName}</td>
-                                    <td className="slotting-location-cell">{item.currentLocation}</td>
+                                    <td className="slotting-location-cell">
+                                      {item.currentLocation}
+                                    </td>
                                     <td>
-                                      <span className={`slotting-class-badge slotting-class-badge-${item.abcClass?.toLowerCase()}`}>
+                                      <span
+                                        className={`slotting-class-badge slotting-class-badge-${item.abcClass?.toLowerCase()}`}
+                                      >
                                         {item.abcClass}
                                       </span>
                                     </td>
@@ -386,7 +398,9 @@ export function SlottingPage() {
                                       {item.velocity?.toFixed(2) || 0}/day
                                     </td>
                                     <td>
-                                      <span className={`slotting-priority-badge slotting-priority-${item.priority?.toLowerCase()}`}>
+                                      <span
+                                        className={`slotting-priority-badge slotting-priority-${item.priority?.toLowerCase()}`}
+                                      >
                                         {item.priority}
                                       </span>
                                     </td>
@@ -434,7 +448,9 @@ export function SlottingPage() {
                               {recommendations.data.recommendations.length}
                             </span>
                           </h2>
-                          <p className="slotting-card-description">AI-suggested inventory movements</p>
+                          <p className="slotting-card-description">
+                            AI-suggested inventory movements
+                          </p>
                         </div>
                       </div>
                       <div className="slotting-search-wrapper">
@@ -449,7 +465,7 @@ export function SlottingPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="slotting-card-content">
                     <div className="slotting-recommendations-grid">
                       {(() => {
@@ -499,7 +515,9 @@ export function SlottingPage() {
                                       <h4 className="recommendation-name">{rec.productName}</h4>
                                       <p className="recommendation-sku">{rec.sku}</p>
                                     </div>
-                                    <div className={`recommendation-priority priority-${rec.priority >= 8 ? 'high' : rec.priority >= 5 ? 'medium' : 'low'}`}>
+                                    <div
+                                      className={`recommendation-priority priority-${rec.priority >= 8 ? 'high' : rec.priority >= 5 ? 'medium' : 'low'}`}
+                                    >
                                       <span className="priority-value">{rec.priority}</span>
                                       <span className="priority-label">Priority</span>
                                     </div>
@@ -524,14 +542,18 @@ export function SlottingPage() {
                                       {rec.estimatedBenefit.efficiencyGain && (
                                         <div className="benefit-item">
                                           <span className="benefit-icon">↑</span>
-                                          <span className="benefit-value">+{rec.estimatedBenefit.efficiencyGain}%</span>
+                                          <span className="benefit-value">
+                                            +{rec.estimatedBenefit.efficiencyGain}%
+                                          </span>
                                           <span className="benefit-label">Efficiency</span>
                                         </div>
                                       )}
                                       {rec.estimatedBenefit.timeSaved && (
                                         <div className="benefit-item">
                                           <span className="benefit-icon">⏱</span>
-                                          <span className="benefit-value">{rec.estimatedBenefit.timeSaved}m</span>
+                                          <span className="benefit-value">
+                                            {rec.estimatedBenefit.timeSaved}m
+                                          </span>
                                           <span className="benefit-label">Saved</span>
                                         </div>
                                       )}
@@ -539,7 +561,9 @@ export function SlottingPage() {
                                   )}
 
                                   <div className="recommendation-footer">
-                                    <span className={`effort-badge effort-${rec.effort?.toLowerCase()}`}>
+                                    <span
+                                      className={`effort-badge effort-${rec.effort?.toLowerCase()}`}
+                                    >
                                       {rec.effort} Effort
                                     </span>
                                     <Button
@@ -584,8 +608,12 @@ export function SlottingPage() {
                 <h3 className="confirmation-title">Confirm Slotting Change</h3>
                 <p className="confirmation-description">
                   Move <strong>{selectedRecommendation.productName}</strong> from{' '}
-                  <span className="confirmation-location">{selectedRecommendation.fromLocation}</span> to{' '}
-                  <span className="confirmation-location">{selectedRecommendation.toLocation}</span>?
+                  <span className="confirmation-location">
+                    {selectedRecommendation.fromLocation}
+                  </span>{' '}
+                  to{' '}
+                  <span className="confirmation-location">{selectedRecommendation.toLocation}</span>
+                  ?
                 </p>
                 <div className="confirmation-actions">
                   <Button

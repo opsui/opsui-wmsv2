@@ -95,7 +95,9 @@ function CapacityBar({
         <span>
           {utilization.toFixed(1)} / {maximum} {utilization > maximum ? '⚠' : ''}
         </span>
-        <span className={isCritical ? 'text-red-500 font-semibold' : ''}>{percent.toFixed(1)}%</span>
+        <span className={isCritical ? 'text-red-500 font-semibold' : ''}>
+          {percent.toFixed(1)}%
+        </span>
       </div>
     </div>
   );
@@ -673,7 +675,10 @@ export function LocationCapacityPage() {
                   <>
                     {/* Summary Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                      <div className="relative overflow-hidden bg-gradient-to-br from-sky-100 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/20 border border-sky-200 dark:border-sky-500/30 rounded-xl p-5 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20 transition-shadow animate-in slide-in" style={{ animationDelay: '0ms' }}>
+                      <div
+                        className="relative overflow-hidden bg-gradient-to-br from-sky-100 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/20 border border-sky-200 dark:border-sky-500/30 rounded-xl p-5 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20 transition-shadow animate-in slide-in"
+                        style={{ animationDelay: '0ms' }}
+                      >
                         <div className="absolute top-0 right-0 w-24 h-24 bg-sky-400/10 rounded-full -translate-y-8 translate-x-8" />
                         <div className="relative">
                           <div className="text-xs font-semibold text-sky-600 dark:text-sky-300 uppercase tracking-wider">
@@ -684,7 +689,10 @@ export function LocationCapacityPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-100 to-green-50 dark:from-emerald-900/30 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-5 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-shadow animate-in slide-in" style={{ animationDelay: '100ms' }}>
+                      <div
+                        className="relative overflow-hidden bg-gradient-to-br from-emerald-100 to-green-50 dark:from-emerald-900/30 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-5 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-shadow animate-in slide-in"
+                        style={{ animationDelay: '100ms' }}
+                      >
                         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-400/10 rounded-full -translate-y-8 translate-x-8" />
                         <div className="relative">
                           <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 uppercase tracking-wider">
@@ -695,27 +703,45 @@ export function LocationCapacityPage() {
                           </div>
                         </div>
                       </div>
-                      <div className={`relative overflow-hidden border rounded-xl p-5 shadow-lg transition-shadow animate-in slide-in ${overallUtilization >= 80 ? 'bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 border-amber-200 dark:border-amber-500/30 shadow-amber-500/10 hover:shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-100 to-sky-50 dark:from-cyan-900/30 dark:to-sky-900/20 border-cyan-200 dark:border-cyan-500/30 shadow-cyan-500/10 hover:shadow-cyan-500/20'}`} style={{ animationDelay: '200ms' }}>
-                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-8 translate-x-8 ${overallUtilization >= 80 ? 'bg-amber-400/10' : 'bg-cyan-400/10'}`} />
+                      <div
+                        className={`relative overflow-hidden border rounded-xl p-5 shadow-lg transition-shadow animate-in slide-in ${overallUtilization >= 80 ? 'bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 border-amber-200 dark:border-amber-500/30 shadow-amber-500/10 hover:shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-100 to-sky-50 dark:from-cyan-900/30 dark:to-sky-900/20 border-cyan-200 dark:border-cyan-500/30 shadow-cyan-500/10 hover:shadow-cyan-500/20'}`}
+                        style={{ animationDelay: '200ms' }}
+                      >
+                        <div
+                          className={`absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-8 translate-x-8 ${overallUtilization >= 80 ? 'bg-amber-400/10' : 'bg-cyan-400/10'}`}
+                        />
                         <div className="relative">
-                          <div className={`text-xs font-semibold uppercase tracking-wider ${overallUtilization >= 80 ? 'text-amber-600 dark:text-amber-300' : 'text-cyan-600 dark:text-cyan-300'}`}>
+                          <div
+                            className={`text-xs font-semibold uppercase tracking-wider ${overallUtilization >= 80 ? 'text-amber-600 dark:text-amber-300' : 'text-cyan-600 dark:text-cyan-300'}`}
+                          >
                             Utilization
                           </div>
-                          <div className={`mt-2 text-3xl font-bold font-mono ${overallUtilization >= 80 ? 'text-amber-900 dark:text-amber-100' : 'text-cyan-900 dark:text-cyan-100'}`}>
+                          <div
+                            className={`mt-2 text-3xl font-bold font-mono ${overallUtilization >= 80 ? 'text-amber-900 dark:text-amber-100' : 'text-cyan-900 dark:text-cyan-100'}`}
+                          >
                             {overallUtilization.toFixed(1)}%
                           </div>
                         </div>
                       </div>
-                      <div className={`relative overflow-hidden border rounded-xl p-5 shadow-lg transition-shadow animate-in slide-in ${alerts.length > 0 ? 'bg-gradient-to-br from-red-100 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 border-red-200 dark:border-red-500/30 shadow-red-500/10 hover:shadow-red-500/20' : 'bg-gradient-to-br from-slate-100 to-gray-50 dark:from-slate-900/30 dark:to-gray-900/20 border-slate-200 dark:border-slate-500/30 shadow-slate-500/10 hover:shadow-slate-500/20'}`} style={{ animationDelay: '300ms' }}>
-                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-8 translate-x-8 ${alerts.length > 0 ? 'bg-red-400/10' : 'bg-slate-400/10'}`} />
+                      <div
+                        className={`relative overflow-hidden border rounded-xl p-5 shadow-lg transition-shadow animate-in slide-in ${alerts.length > 0 ? 'bg-gradient-to-br from-red-100 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 border-red-200 dark:border-red-500/30 shadow-red-500/10 hover:shadow-red-500/20' : 'bg-gradient-to-br from-slate-100 to-gray-50 dark:from-slate-900/30 dark:to-gray-900/20 border-slate-200 dark:border-slate-500/30 shadow-slate-500/10 hover:shadow-slate-500/20'}`}
+                        style={{ animationDelay: '300ms' }}
+                      >
+                        <div
+                          className={`absolute top-0 right-0 w-24 h-24 rounded-full -translate-y-8 translate-x-8 ${alerts.length > 0 ? 'bg-red-400/10' : 'bg-slate-400/10'}`}
+                        />
                         {alerts.length > 0 && (
                           <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50" />
                         )}
                         <div className="relative">
-                          <div className={`text-xs font-semibold uppercase tracking-wider ${alerts.length > 0 ? 'text-red-600 dark:text-red-300' : 'text-slate-600 dark:text-slate-300'}`}>
+                          <div
+                            className={`text-xs font-semibold uppercase tracking-wider ${alerts.length > 0 ? 'text-red-600 dark:text-red-300' : 'text-slate-600 dark:text-slate-300'}`}
+                          >
                             Active Alerts
                           </div>
-                          <div className={`mt-2 text-3xl font-bold font-mono ${alerts.length > 0 ? 'text-red-900 dark:text-red-100' : 'text-slate-900 dark:text-slate-100'}`}>
+                          <div
+                            className={`mt-2 text-3xl font-bold font-mono ${alerts.length > 0 ? 'text-red-900 dark:text-red-100' : 'text-slate-900 dark:text-slate-100'}`}
+                          >
                             {alerts.length}
                           </div>
                         </div>

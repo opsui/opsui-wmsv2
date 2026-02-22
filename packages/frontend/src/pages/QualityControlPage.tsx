@@ -65,15 +65,18 @@ type ReturnStatus = ReturnAuthorization['status'];
 
 function InspectionStatusBadge({ status }: { status: InspectionStatus }) {
   const styles: Record<InspectionStatus, string> = {
-    [InspectionStatus.PENDING]: 'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600',
+    [InspectionStatus.PENDING]:
+      'bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600',
     [InspectionStatus.IN_PROGRESS]:
       'bg-gradient-to-r from-cyan-100 to-teal-50 dark:from-cyan-900/30 dark:to-teal-900/20 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30',
     [InspectionStatus.PASSED]:
       'bg-gradient-to-r from-emerald-100 to-green-50 dark:from-emerald-900/30 dark:to-green-900/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
-    [InspectionStatus.FAILED]: 'bg-gradient-to-r from-red-100 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-500/30',
+    [InspectionStatus.FAILED]:
+      'bg-gradient-to-r from-red-100 to-rose-50 dark:from-red-900/30 dark:to-rose-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-500/30',
     [InspectionStatus.CONDITIONAL_PASSED]:
       'bg-gradient-to-r from-amber-100 to-yellow-50 dark:from-amber-900/30 dark:to-yellow-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
-    [InspectionStatus.CANCELLED]: 'bg-gradient-to-r from-gray-100 to-slate-50 dark:from-gray-700 dark:to-slate-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600',
+    [InspectionStatus.CANCELLED]:
+      'bg-gradient-to-r from-gray-100 to-slate-50 dark:from-gray-700 dark:to-slate-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600',
   };
 
   const labels: Record<InspectionStatus, string> = {

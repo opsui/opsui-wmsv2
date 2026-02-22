@@ -20,7 +20,13 @@ import { Header } from '@/components/shared/Header';
 import { Breadcrumb, Button } from '@/components/shared';
 import { Card } from '@/components/shared/Card';
 import { usePayrollPeriods, usePayrollRuns } from '@/services/api';
-import { BanknotesIcon, CalendarIcon, UsersIcon, ChartBarIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import {
+  BanknotesIcon,
+  CalendarIcon,
+  UsersIcon,
+  ChartBarIcon,
+  ArrowRightIcon,
+} from '@heroicons/react/24/outline';
 
 export default function PayrollDashboardPage() {
   const navigate = useNavigate();
@@ -108,8 +114,14 @@ export default function PayrollDashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {/* Current Period Card */}
-          <div className="group animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '0ms' }}>
-            <Card variant="glass" className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/5">
+          <div
+            className="group animate-in fade-in slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: '0ms' }}
+          >
+            <Card
+              variant="glass"
+              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
+            >
               <div className="flex items-start gap-4">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
@@ -118,7 +130,9 @@ export default function PayrollDashboardPage() {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Current Period</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                    Current Period
+                  </p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white mt-1 truncate">
                     {currentPeriod
                       ? `${currentPeriod.periodStartDate} → ${currentPeriod.periodEndDate}`
@@ -135,8 +149,14 @@ export default function PayrollDashboardPage() {
           </div>
 
           {/* Last Pay Run Card */}
-          <div className="group animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '50ms' }}>
-            <Card variant="glass" className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-emerald-500/30 dark:hover:border-emerald-500/20 transition-all hover:shadow-lg hover:shadow-emerald-500/5">
+          <div
+            className="group animate-in fade-in slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: '50ms' }}
+          >
+            <Card
+              variant="glass"
+              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-emerald-500/30 dark:hover:border-emerald-500/20 transition-all hover:shadow-lg hover:shadow-emerald-500/5"
+            >
               <div className="flex items-start gap-4">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
@@ -145,7 +165,9 @@ export default function PayrollDashboardPage() {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Last Pay Run</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                    Last Pay Run
+                  </p>
                   <p className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent mt-1 font-mono">
                     {lastRun ? `$${lastRun.totalNetPay?.toLocaleString() || '0'}` : 'N/A'}
                   </p>
@@ -160,8 +182,14 @@ export default function PayrollDashboardPage() {
           </div>
 
           {/* Active Employees Card */}
-          <div className="group animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '100ms' }}>
-            <Card variant="glass" className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-blue-500/30 dark:hover:border-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/5">
+          <div
+            className="group animate-in fade-in slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: '100ms' }}
+          >
+            <Card
+              variant="glass"
+              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-blue-500/30 dark:hover:border-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/5"
+            >
               <div className="flex items-start gap-4">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
@@ -170,7 +198,9 @@ export default function PayrollDashboardPage() {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Active Employees</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+                    Active Employees
+                  </p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white mt-1 font-mono">
                     {lastRun ? lastRun.employeeCount : '-'}
                   </p>
@@ -189,7 +219,9 @@ export default function PayrollDashboardPage() {
         <div className="mb-10">
           <Card variant="glass" className="p-6 border border-gray-200/50 dark:border-gray-700/30">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Upcoming Pay Periods</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Upcoming Pay Periods
+              </h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -211,7 +243,9 @@ export default function PayrollDashboardPage() {
                       #{index + 1}
                     </div>
                     <div>
-                      <p className="text-gray-900 dark:text-white font-semibold">{period.periodName}</p>
+                      <p className="text-gray-900 dark:text-white font-semibold">
+                        {period.periodName}
+                      </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {period.periodStartDate} → {period.periodEndDate}
                       </p>
@@ -220,7 +254,9 @@ export default function PayrollDashboardPage() {
                   <div className="flex items-center gap-4">
                     <div className="text-right hidden sm:block">
                       <p className="text-sm text-gray-500 dark:text-gray-400">Pay Date</p>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{period.payDate}</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {period.payDate}
+                      </p>
                     </div>
                     {period.payrollRunId ? (
                       <span className="px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/20 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30">
@@ -247,7 +283,9 @@ export default function PayrollDashboardPage() {
         <div>
           <Card variant="glass" className="p-6 border border-gray-200/50 dark:border-gray-700/30">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Payroll Runs</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Recent Payroll Runs
+              </h2>
               <Button
                 variant="ghost"
                 size="sm"
@@ -270,7 +308,9 @@ export default function PayrollDashboardPage() {
                       <BanknotesIcon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-gray-900 dark:text-white font-semibold">Run #{run.runNumber}</p>
+                      <p className="text-gray-900 dark:text-white font-semibold">
+                        Run #{run.runNumber}
+                      </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {run.employeeCount} employees
                       </p>
@@ -294,8 +334,12 @@ export default function PayrollDashboardPage() {
                   <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-2xl inline-block mb-4">
                     <BanknotesIcon className="h-10 w-10 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">No payroll runs yet</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Process your first payroll to see history here</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">
+                    No payroll runs yet
+                  </p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                    Process your first payroll to see history here
+                  </p>
                 </div>
               )}
             </div>

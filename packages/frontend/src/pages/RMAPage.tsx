@@ -406,7 +406,9 @@ function RMARequestCard({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-white font-['JetBrains_Mono',monospace]">{request.rmaId}</h3>
+              <h3 className="text-lg font-semibold text-white font-['JetBrains_Mono',monospace]">
+                {request.rmaId}
+              </h3>
               <StatusBadge status={request.status} />
               <ReasonBadge reason={request.reason} />
             </div>

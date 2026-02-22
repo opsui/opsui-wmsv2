@@ -66,27 +66,27 @@ const TABS: TabConfig[] = [
 // Animated counter hook
 function useAnimatedCounter(end: number, duration: number = 800) {
   const [value, setValue] = useState(0);
-  
+
   useEffect(() => {
     if (end === 0) {
       setValue(0);
       return;
     }
-    
+
     const startTime = Date.now();
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.floor(end * eased));
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       }
     };
     requestAnimationFrame(animate);
   }, [end, duration]);
-  
+
   return value;
 }
 
@@ -116,15 +116,15 @@ function useInView(threshold = 0.1) {
 }
 
 // Animated metric card with industrial styling
-function MetricCard({ 
-  label, 
-  value, 
+function MetricCard({
+  label,
+  value,
   color = 'amber',
   delay = 0,
-  icon: Icon
-}: { 
-  label: string; 
-  value: number; 
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
   color?: 'amber' | 'blue' | 'emerald' | 'slate';
   delay?: number;
   icon?: React.ComponentType<{ className?: string }>;
@@ -140,23 +140,27 @@ function MetricCard({
   };
 
   return (
-    <div 
+    <div
       ref={ref}
       className="relative group"
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(0)' : 'translateY(40px)',
-        transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`
+        transition: `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
       }}
     >
       {/* Industrial corner accent */}
       <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-amber-500/50 rounded-tl-lg" />
       <div className="absolute -bottom-px -right-px w-4 h-4 border-b-2 border-r-2 border-amber-500/50 rounded-br-lg" />
-      
-      <div className={`relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border ${colorClasses[color].split(' ').pop()} rounded-xl p-5 overflow-hidden`}>
+
+      <div
+        className={`relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border ${colorClasses[color].split(' ').pop()} rounded-xl p-5 overflow-hidden`}
+      >
         {/* Background glow */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${colorClasses[color].split(' ').slice(0, 2).join(' ')} opacity-5`} />
-        
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${colorClasses[color].split(' ').slice(0, 2).join(' ')} opacity-5`}
+        />
+
         <div className="relative">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-slate-500 uppercase tracking-wider">{label}</p>
@@ -172,12 +176,12 @@ function MetricCard({
 }
 
 // Alert card with industrial styling
-function AlertCard({ 
-  type, 
-  label, 
+function AlertCard({
+  type,
+  label,
   value,
-  delay = 0
-}: { 
+  delay = 0,
+}: {
   type: 'error' | 'warning';
   label: string;
   value: number;
@@ -192,13 +196,13 @@ function AlertCard({
   };
 
   return (
-    <div 
+    <div
       ref={ref}
       className="relative"
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(20px)' : 'translateY(30px)',
-        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`
+        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
       }}
     >
       <div className={`relative bg-gradient-to-br ${typeClasses[type]} border rounded-lg p-4`}>
@@ -287,36 +291,39 @@ export function ProductionPage() {
         <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-amber-500/5 rounded-full blur-[150px] -translate-y-1/2" />
         <div className="absolute top-0 right-1/4 w-[400px] h-[300px] bg-orange-500/5 rounded-full blur-[120px] -translate-y-1/2" />
         <div className="absolute bottom-0 left-1/3 w-[500px] h-[300px] bg-amber-500/5 rounded-full blur-[100px] translate-y-1/2" />
-        
+
         {/* Industrial grid pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.015]"
           style={{
             backgroundImage: `
               linear-gradient(to right, white 1px, transparent 1px),
               linear-gradient(to bottom, white 1px, transparent 1px)
             `,
-            backgroundSize: '60px 60px'
+            backgroundSize: '60px 60px',
           }}
         />
-        
+
         {/* Diagonal industrial lines */}
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          background: `repeating-linear-gradient(
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            background: `repeating-linear-gradient(
             45deg,
             transparent,
             transparent 100px,
             white 100px,
             white 101px
-          )`
-        }} />
+          )`,
+          }}
+        />
       </div>
 
       <Header />
 
       <main className="relative w-full px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumb />
-        
+
         {/* Page Header with industrial styling */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
@@ -324,7 +331,9 @@ export function ProductionPage() {
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30">
                 <BoltIcon className="h-6 w-6 text-slate-900" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">Manufacturing Execution System</span>
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">
+                Manufacturing Execution System
+              </span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-2">
               Production Management
@@ -333,7 +342,7 @@ export function ProductionPage() {
               Monitor, control, and optimize manufacturing operations
             </p>
           </div>
-          
+
           <div className="flex gap-3">
             <Button
               variant="secondary"
@@ -365,8 +374,8 @@ export function ProductionPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 whitespace-nowrap ${
-                    isActive 
-                      ? 'text-slate-900' 
+                    isActive
+                      ? 'text-slate-900'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                   }`}
                 >
@@ -376,9 +385,11 @@ export function ProductionPage() {
                   <Icon className="h-4 w-4 relative" />
                   <span className="relative">{tab.label}</span>
                   {tab.id === 'dashboard' && dashboardMetrics.overdueOrders > 0 && (
-                    <span className={`relative ml-1 w-2 h-2 rounded-full ${
-                      isActive ? 'bg-slate-900' : 'bg-rose-400 animate-pulse'
-                    }`} />
+                    <span
+                      className={`relative ml-1 w-2 h-2 rounded-full ${
+                        isActive ? 'bg-slate-900' : 'bg-rose-400 animate-pulse'
+                      }`}
+                    />
                   )}
                 </button>
               );
@@ -394,7 +405,9 @@ export function ProductionPage() {
                 <div className="w-16 h-16 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin" />
                 <CogIcon className="absolute inset-0 m-auto h-6 w-6 text-amber-400 animate-pulse" />
               </div>
-              <p className="text-slate-400 text-sm font-light">Initializing production systems...</p>
+              <p className="text-slate-400 text-sm font-light">
+                Initializing production systems...
+              </p>
             </div>
           </div>
         )}
@@ -407,30 +420,30 @@ export function ProductionPage() {
               <div className="space-y-8">
                 {/* Key Metrics Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <MetricCard 
-                    label="Draft Orders" 
-                    value={dashboardMetrics.draft} 
+                  <MetricCard
+                    label="Draft Orders"
+                    value={dashboardMetrics.draft}
                     color="slate"
                     delay={0}
                     icon={DocumentTextIcon}
                   />
-                  <MetricCard 
-                    label="Planned" 
-                    value={dashboardMetrics.planned} 
+                  <MetricCard
+                    label="Planned"
+                    value={dashboardMetrics.planned}
                     color="blue"
                     delay={100}
                     icon={ClipboardDocumentListIcon}
                   />
-                  <MetricCard 
-                    label="In Production" 
-                    value={dashboardMetrics.inProduction} 
+                  <MetricCard
+                    label="In Production"
+                    value={dashboardMetrics.inProduction}
                     color="amber"
                     delay={200}
                     icon={BoltIcon}
                   />
-                  <MetricCard 
-                    label="Completed Today" 
-                    value={dashboardMetrics.completed} 
+                  <MetricCard
+                    label="Completed Today"
+                    value={dashboardMetrics.completed}
                     color="emerald"
                     delay={300}
                     icon={ArrowTrendingUpIcon}
@@ -440,7 +453,8 @@ export function ProductionPage() {
                 {/* Alerts and Quick Stats */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Alerts */}
-                  {(dashboardMetrics.overdueOrders > 0 || dashboardMetrics.upcomingDeadlines > 0) && (
+                  {(dashboardMetrics.overdueOrders > 0 ||
+                    dashboardMetrics.upcomingDeadlines > 0) && (
                     <div className="relative">
                       <div className="absolute -inset-px bg-gradient-to-r from-rose-500/20 via-amber-500/10 to-rose-500/20 rounded-2xl" />
                       <div className="relative rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 p-6">
@@ -452,10 +466,20 @@ export function ProductionPage() {
                         </div>
                         <div className="space-y-3">
                           {dashboardMetrics.overdueOrders > 0 && (
-                            <AlertCard type="error" label="Overdue Orders" value={dashboardMetrics.overdueOrders} delay={100} />
+                            <AlertCard
+                              type="error"
+                              label="Overdue Orders"
+                              value={dashboardMetrics.overdueOrders}
+                              delay={100}
+                            />
                           )}
                           {dashboardMetrics.upcomingDeadlines > 0 && (
-                            <AlertCard type="warning" label="Due This Week" value={dashboardMetrics.upcomingDeadlines} delay={200} />
+                            <AlertCard
+                              type="warning"
+                              label="Due This Week"
+                              value={dashboardMetrics.upcomingDeadlines}
+                              delay={200}
+                            />
                           )}
                         </div>
                       </div>
@@ -472,22 +496,34 @@ export function ProductionPage() {
                         </div>
                         <h3 className="text-lg font-light text-white">Quick Stats</h3>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-6">
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Total Orders</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                            Total Orders
+                          </p>
                           <p className="text-3xl font-light text-white">{orders.length}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Active BOMs</p>
-                          <p className="text-3xl font-light text-white">{bomsData?.boms?.length || 0}</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                            Active BOMs
+                          </p>
+                          <p className="text-3xl font-light text-white">
+                            {bomsData?.boms?.length || 0}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">On Hold</p>
-                          <p className="text-3xl font-light text-amber-400">{dashboardMetrics.onHold}</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                            On Hold
+                          </p>
+                          <p className="text-3xl font-light text-amber-400">
+                            {dashboardMetrics.onHold}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Work Centers</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                            Work Centers
+                          </p>
                           <p className="text-3xl font-light text-white">3</p>
                         </div>
                       </div>
@@ -524,7 +560,9 @@ export function ProductionPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-light text-white">Bills of Materials</h2>
-                    <p className="text-sm text-slate-500 mt-1">Manage product component specifications</p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Manage product component specifications
+                    </p>
                   </div>
                   <Button
                     variant="secondary"
@@ -553,7 +591,8 @@ export function ProductionPage() {
                       </div>
                       <h3 className="text-2xl font-light text-white mb-3">No BOMs Created</h3>
                       <p className="text-slate-400 font-light max-w-md mx-auto mb-6">
-                        Create a Bill of Materials to define product components and start production.
+                        Create a Bill of Materials to define product components and start
+                        production.
                       </p>
                       <Button
                         variant="primary"
@@ -607,28 +646,32 @@ export function ProductionPage() {
 // BOM Card component
 function BOMCard({ bom, index }: { bom: any; index: number }) {
   const { ref, isInView } = useInView(0.1);
-  
+
   return (
-    <div 
+    <div
       ref={ref}
       className="group relative"
       style={{
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(0)' : 'translateY(30px)',
-        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`
+        transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`,
       }}
     >
       <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-xl p-5 hover:border-amber-500/30 transition-colors duration-300">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h3 className="text-lg font-light text-white group-hover:text-amber-400 transition-colors">{bom.name}</h3>
+            <h3 className="text-lg font-light text-white group-hover:text-amber-400 transition-colors">
+              {bom.name}
+            </h3>
             <p className="text-sm text-slate-500">{bom.productId}</p>
           </div>
-          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-            bom.status === 'ACTIVE' 
-              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-              : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-          }`}>
+          <span
+            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+              bom.status === 'ACTIVE'
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+            }`}
+          >
             {bom.status}
           </span>
         </div>

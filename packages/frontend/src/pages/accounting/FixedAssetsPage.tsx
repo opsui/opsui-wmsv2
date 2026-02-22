@@ -491,7 +491,9 @@ function FixedAssetsPage() {
         <header className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             {/* Title Section */}
-            <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div
+              className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            >
               <div className="flex items-center gap-4 mb-3">
                 <div className="relative">
                   <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-xl border border-emerald-500/30">
@@ -500,7 +502,9 @@ function FixedAssetsPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
                 </div>
                 <div>
-                  <span className="category-badge text-emerald-400 tracking-widest">Asset Management</span>
+                  <span className="category-badge text-emerald-400 tracking-widest">
+                    Asset Management
+                  </span>
                 </div>
               </div>
               <h1 className="page-title text-4xl lg:text-5xl text-white dark:text-white tracking-tight">
@@ -512,7 +516,9 @@ function FixedAssetsPage() {
             </div>
 
             {/* Action Buttons - Refined Grouping */}
-            <div className={`flex flex-wrap items-center gap-3 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div
+              className={`flex flex-wrap items-center gap-3 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            >
               <Button
                 variant="secondary"
                 onClick={exportToCSV}
@@ -546,12 +552,16 @@ function FixedAssetsPage() {
         {/* Summary Metrics - Art Deco Cards */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
           {/* Total Assets */}
-          <div className={`asset-card metric-card bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-emerald-500/30 transition-all duration-500 ${mounted ? '' : ''}`}>
+          <div
+            className={`asset-card metric-card bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-emerald-500/30 transition-all duration-500 ${mounted ? '' : ''}`}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-emerald-500/10 rounded-lg">
                 <ChartBarIcon className="h-5 w-5 text-emerald-400" />
               </div>
-              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Assets</span>
+              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                Total Assets
+              </span>
             </div>
             <p className="hero-number text-3xl lg:text-4xl font-bold text-white font-mono">
               {mockAssets.length}
@@ -559,12 +569,16 @@ function FixedAssetsPage() {
           </div>
 
           {/* Total Original Cost */}
-          <div className={`asset-card metric-card bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-blue-500/30 transition-all duration-500`}>
+          <div
+            className={`asset-card metric-card bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-blue-500/30 transition-all duration-500`}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-blue-500/10 rounded-lg">
                 <CurrencyDollarIcon className="h-5 w-5 text-blue-400" />
               </div>
-              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Original Cost</span>
+              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                Original Cost
+              </span>
             </div>
             <p className="hero-number text-3xl lg:text-4xl font-bold text-blue-400 font-mono">
               {formatCurrency(totalOriginalCost)}
@@ -572,12 +586,16 @@ function FixedAssetsPage() {
           </div>
 
           {/* Accumulated Depreciation */}
-          <div className={`asset-card metric-card bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-amber-500/30 transition-all duration-500`}>
+          <div
+            className={`asset-card metric-card bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-amber-500/30 transition-all duration-500`}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-amber-500/10 rounded-lg">
                 <CalendarIcon className="h-5 w-5 text-amber-400" />
               </div>
-              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Accum. Dep.</span>
+              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                Accum. Dep.
+              </span>
             </div>
             <p className="hero-number text-3xl lg:text-4xl font-bold text-amber-400 font-mono">
               {formatCurrency(totalAccumulatedDepreciation)}
@@ -585,12 +603,16 @@ function FixedAssetsPage() {
           </div>
 
           {/* Net Book Value */}
-          <div className={`asset-card metric-card live bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-emerald-500/30 transition-all duration-500`}>
+          <div
+            className={`asset-card metric-card live bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-emerald-500/30 transition-all duration-500`}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-emerald-500/10 rounded-lg">
                 <SparklesIcon className="h-5 w-5 text-emerald-400" />
               </div>
-              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Net Book Value</span>
+              <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                Net Book Value
+              </span>
             </div>
             <p className="hero-number text-3xl lg:text-4xl font-bold text-emerald-400 font-mono">
               {formatCurrency(totalNetBookValue)}
@@ -608,7 +630,9 @@ function FixedAssetsPage() {
             {/* Table Header */}
             <div className="px-6 py-5 border-b border-white/10 bg-white/[0.02]">
               <h2 className="text-lg font-semibold text-white tracking-tight">Asset Register</h2>
-              <p className="text-sm text-gray-400 mt-1">Complete listing of all registered fixed assets</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Complete listing of all registered fixed assets
+              </p>
             </div>
 
             {/* Table Content */}
@@ -658,12 +682,12 @@ function FixedAssetsPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-sm text-white font-medium">
-                          {asset.assetName}
-                        </span>
+                        <span className="text-sm text-white font-medium">{asset.assetName}</span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`category-badge inline-flex px-2.5 py-1 rounded-md border ${getCategoryColor(asset.assetCategory)}`}>
+                        <span
+                          className={`category-badge inline-flex px-2.5 py-1 rounded-md border ${getCategoryColor(asset.assetCategory)}`}
+                        >
                           {asset.assetCategory || '-'}
                         </span>
                       </td>
@@ -672,7 +696,7 @@ function FixedAssetsPage() {
                           {new Date(asset.purchaseDate).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
-                            year: 'numeric'
+                            year: 'numeric',
                           })}
                         </span>
                       </td>
@@ -760,7 +784,9 @@ function FixedAssetsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Add New Fixed Asset</h3>
-                    <p className="text-sm text-gray-400 mt-0.5">Register a new asset for depreciation tracking</p>
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      Register a new asset for depreciation tracking
+                    </p>
                   </div>
                 </div>
               </div>
@@ -769,7 +795,9 @@ function FixedAssetsPage() {
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Asset Name</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Asset Name
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g., Forklift - Toyota 8-Series"
@@ -777,7 +805,9 @@ function FixedAssetsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Asset Number</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Asset Number
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g., EQ-2024-001"
@@ -795,9 +825,13 @@ function FixedAssetsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Purchase Cost</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Purchase Cost
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        $
+                      </span>
                       <input
                         type="number"
                         placeholder="0.00"
@@ -806,14 +840,18 @@ function FixedAssetsPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Purchase Date</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Purchase Date
+                    </label>
                     <input
                       type="date"
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Useful Life (Years)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Useful Life (Years)
+                    </label>
                     <input
                       type="number"
                       placeholder="10"
@@ -821,9 +859,13 @@ function FixedAssetsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Salvage Value</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Salvage Value
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        $
+                      </span>
                       <input
                         type="number"
                         placeholder="0.00"

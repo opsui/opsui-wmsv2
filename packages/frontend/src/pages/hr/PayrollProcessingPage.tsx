@@ -11,18 +11,25 @@ import { Header } from '@/components/shared/Header';
 import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
 import { usePayrollPeriods, useProcessPayroll } from '@/services/api';
-import { CalculatorIcon, CheckCircleIcon, CurrencyDollarIcon, UserGroupIcon, ChartBarIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import {
+  CalculatorIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon,
+  UserGroupIcon,
+  ChartBarIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/outline';
 
 // Animated counter hook for number animations
 function useAnimatedCounter(end: number, duration: number = 1000, start: number = 0) {
   const [value, setValue] = useState(start);
-  
+
   useEffect(() => {
     if (end === 0) {
       setValue(0);
       return;
     }
-    
+
     const startTime = Date.now();
     const animate = () => {
       const elapsed = Date.now() - startTime;
@@ -30,27 +37,27 @@ function useAnimatedCounter(end: number, duration: number = 1000, start: number 
       // Easing function for smooth animation
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.floor(start + (end - start) * eased));
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       }
     };
     requestAnimationFrame(animate);
   }, [end, duration, start]);
-  
+
   return value;
 }
 
 // Animated stat component with counter
-function AnimatedStat({ 
-  label, 
-  value, 
-  prefix = '', 
+function AnimatedStat({
+  label,
+  value,
+  prefix = '',
   suffix = '',
   color = 'gold',
-  delay = 0 
-}: { 
-  label: string; 
+  delay = 0,
+}: {
+  label: string;
   value: number;
   prefix?: string;
   suffix?: string;
@@ -59,35 +66,41 @@ function AnimatedStat({
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const animatedValue = useAnimatedCounter(isVisible ? value : 0, 1200);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), delay);
     return () => clearTimeout(timer);
   }, [delay]);
-  
+
   const colorClasses = {
     gold: 'from-amber-400 to-yellow-500 text-amber-400',
     emerald: 'from-emerald-400 to-teal-500 text-emerald-400',
     coral: 'from-rose-400 to-pink-500 text-rose-400',
     silver: 'from-slate-300 to-slate-400 text-slate-300',
   };
-  
+
   return (
-    <div 
+    <div
       className="relative group"
-      style={{ 
-        opacity: isVisible ? 1 : 0, 
+      style={{
+        opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-        transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+        transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       {/* Subtle glow effect on hover */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${colorClasses[color].split(' ').slice(0, 2).join(' ')} opacity-0 group-hover:opacity-10 blur-xl rounded-2xl transition-opacity duration-500`} />
-      
+      <div
+        className={`absolute inset-0 bg-gradient-to-r ${colorClasses[color].split(' ').slice(0, 2).join(' ')} opacity-0 group-hover:opacity-10 blur-xl rounded-2xl transition-opacity duration-500`}
+      />
+
       <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
-        <p className="text-slate-500 text-xs font-medium uppercase tracking-[0.2em] mb-3">{label}</p>
+        <p className="text-slate-500 text-xs font-medium uppercase tracking-[0.2em] mb-3">
+          {label}
+        </p>
         <p className={`text-3xl font-light tracking-tight ${colorClasses[color].split(' ').pop()}`}>
-          {prefix}{animatedValue.toLocaleString()}{suffix}
+          {prefix}
+          {animatedValue.toLocaleString()}
+          {suffix}
         </p>
       </div>
     </div>
@@ -95,14 +108,14 @@ function AnimatedStat({
 }
 
 // Pay period card component
-function PeriodCard({ 
-  period, 
-  isSelected, 
+function PeriodCard({
+  period,
+  isSelected,
   onClick,
-  index 
-}: { 
-  period: any; 
-  isSelected: boolean; 
+  index,
+}: {
+  period: any;
+  isSelected: boolean;
   onClick: () => void;
   index: number;
 }) {
@@ -110,33 +123,35 @@ function PeriodCard({
     <button
       onClick={onClick}
       className="group relative w-full text-left"
-      style={{ 
+      style={{
         animationDelay: `${index * 100}ms`,
       }}
     >
       {/* Selection indicator */}
-      <div 
+      <div
         className={`absolute -inset-px rounded-2xl transition-all duration-300 ${
-          isSelected 
-            ? 'bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-amber-500/20 border border-amber-400/40' 
+          isSelected
+            ? 'bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-amber-500/20 border border-amber-400/40'
             : 'border border-transparent group-hover:border-white/10'
         }`}
       />
-      
+
       <div className="relative p-5 rounded-2xl bg-slate-900/50 backdrop-blur-sm">
         {/* Period name with accent */}
         <div className="flex items-center gap-2 mb-3">
-          <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
-            isSelected ? 'bg-amber-400 shadow-lg shadow-amber-400/50' : 'bg-slate-600'
-          }`} />
+          <div
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              isSelected ? 'bg-amber-400 shadow-lg shadow-amber-400/50' : 'bg-slate-600'
+            }`}
+          />
           <span className="text-white font-medium tracking-wide">{period.periodName}</span>
         </div>
-        
+
         {/* Date range */}
         <p className="text-slate-400 text-sm font-light tracking-wide">
           {period.periodStartDate} → {period.periodEndDate}
         </p>
-        
+
         {/* Pay date badge */}
         <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50">
           <CurrencyDollarIcon className="h-3 w-3 text-amber-500/70" />
@@ -160,7 +175,7 @@ export default function PayrollProcessingPage() {
   const handleCalculate = async () => {
     if (!selectedPeriodId) return;
     setIsCalculating(true);
-    
+
     // Simulate calculation - in real implementation, call the API
     setTimeout(() => {
       setCalculation({
@@ -192,9 +207,9 @@ export default function PayrollProcessingPage() {
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px] -translate-y-1/2" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-[100px] translate-y-1/2" />
       </div>
-      
+
       <Header />
-      
+
       <main className="relative w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Page header with elegant typography */}
@@ -203,9 +218,11 @@ export default function PayrollProcessingPage() {
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/20">
                 <CalculatorIcon className="h-5 w-5 text-slate-900" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">Financial Operations</span>
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">
+                Financial Operations
+              </span>
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-3">
               Process Payroll
             </h1>
@@ -228,7 +245,7 @@ export default function PayrollProcessingPage() {
                     </div>
                     <h2 className="text-xl font-light text-white">Select Pay Period</h2>
                   </div>
-                  
+
                   {availablePeriods.length > 0 ? (
                     <div className="grid sm:grid-cols-2 gap-3">
                       {availablePeriods.map((period: any, index: number) => (
@@ -247,7 +264,9 @@ export default function PayrollProcessingPage() {
                         <SparklesIcon className="h-8 w-8 text-slate-500" />
                       </div>
                       <p className="text-slate-400 font-light">All periods have been processed.</p>
-                      <p className="text-slate-500 text-sm mt-1">Check back later for new periods.</p>
+                      <p className="text-slate-500 text-sm mt-1">
+                        Check back later for new periods.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -255,10 +274,10 @@ export default function PayrollProcessingPage() {
 
               {/* Calculation Results */}
               {showResults && calculation && (
-                <div 
+                <div
                   className="relative animate-in"
                   style={{
-                    animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                    animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <div className="absolute -inset-px bg-gradient-to-r from-amber-500/20 via-teal-500/10 to-amber-500/20 rounded-3xl" />
@@ -274,8 +293,11 @@ export default function PayrollProcessingPage() {
                           <p className="text-sm text-slate-500">Ready for processing</p>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => { setShowResults(false); setCalculation(null); }}
+                      <button
+                        onClick={() => {
+                          setShowResults(false);
+                          setCalculation(null);
+                        }}
                         className="text-sm text-slate-400 hover:text-amber-400 transition-colors"
                       >
                         Recalculate
@@ -284,30 +306,30 @@ export default function PayrollProcessingPage() {
 
                     {/* Animated stats grid */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                      <AnimatedStat 
-                        label="Employees" 
-                        value={calculation.employeeCount} 
+                      <AnimatedStat
+                        label="Employees"
+                        value={calculation.employeeCount}
                         color="silver"
                         delay={100}
                       />
-                      <AnimatedStat 
-                        label="Gross Pay" 
-                        value={calculation.totalGrossPay} 
-                        prefix="$" 
+                      <AnimatedStat
+                        label="Gross Pay"
+                        value={calculation.totalGrossPay}
+                        prefix="$"
                         color="gold"
                         delay={200}
                       />
-                      <AnimatedStat 
-                        label="Net Pay" 
-                        value={calculation.totalNetPay} 
-                        prefix="$" 
+                      <AnimatedStat
+                        label="Net Pay"
+                        value={calculation.totalNetPay}
+                        prefix="$"
                         color="emerald"
                         delay={300}
                       />
-                      <AnimatedStat 
-                        label="Total Tax" 
-                        value={calculation.totalTax} 
-                        prefix="$" 
+                      <AnimatedStat
+                        label="Total Tax"
+                        value={calculation.totalTax}
+                        prefix="$"
                         color="coral"
                         delay={400}
                       />
@@ -317,16 +339,20 @@ export default function PayrollProcessingPage() {
                     <div className="grid grid-cols-2 gap-4 mb-8 p-4 rounded-xl bg-slate-800/30 border border-slate-700/30">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 text-sm">KiwiSaver</span>
-                        <span className="text-white font-light">${calculation.totalKiwiSaver.toLocaleString()}</span>
+                        <span className="text-white font-light">
+                          ${calculation.totalKiwiSaver.toLocaleString()}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 text-sm">ACC</span>
-                        <span className="text-white font-light">${calculation.totalACC.toLocaleString()}</span>
+                        <span className="text-white font-light">
+                          ${calculation.totalACC.toLocaleString()}
+                        </span>
                       </div>
                     </div>
 
                     {/* Process button */}
-                    <Button 
+                    <Button
                       onClick={handleProcess}
                       className="w-full h-14 text-base font-medium bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/30"
                     >
@@ -357,7 +383,8 @@ export default function PayrollProcessingPage() {
                       <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                         <p className="text-sm text-amber-400/80 mb-1">Selected Period</p>
                         <p className="text-white font-light">
-                          {availablePeriods.find((p: any) => p.periodId === selectedPeriodId)?.periodName || 'Unknown'}
+                          {availablePeriods.find((p: any) => p.periodId === selectedPeriodId)
+                            ?.periodName || 'Unknown'}
                         </p>
                       </div>
                     ) : (
@@ -418,7 +445,7 @@ export default function PayrollProcessingPage() {
           </div>
         </div>
       </main>
-      
+
       {/* CSS for animations */}
       <style>{`
         @keyframes fadeInUp {

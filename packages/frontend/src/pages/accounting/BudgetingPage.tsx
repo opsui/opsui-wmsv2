@@ -627,14 +627,28 @@ function BudgetingPage() {
   };
 
   // Get variance status
-  const getVarianceStatus = (variancePercent: number): { label: string; color: string; icon: typeof ArrowTrendingUpIcon } => {
+  const getVarianceStatus = (
+    variancePercent: number
+  ): { label: string; color: string; icon: typeof ArrowTrendingUpIcon } => {
     const absVariance = Math.abs(variancePercent);
     if (absVariance <= 5) {
-      return { label: 'On Track', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', icon: ArrowTrendingUpIcon };
+      return {
+        label: 'On Track',
+        color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+        icon: ArrowTrendingUpIcon,
+      };
     } else if (absVariance <= 10) {
-      return { label: 'Watch', color: 'bg-amber-500/15 text-amber-400 border-amber-500/30', icon: ArrowTrendingDownIcon };
+      return {
+        label: 'Watch',
+        color: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+        icon: ArrowTrendingDownIcon,
+      };
     } else {
-      return { label: 'Alert', color: 'bg-rose-500/15 text-rose-400 border-rose-500/30', icon: ArrowTrendingDownIcon };
+      return {
+        label: 'Alert',
+        color: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+        icon: ArrowTrendingDownIcon,
+      };
     }
   };
 
@@ -657,7 +671,9 @@ function BudgetingPage() {
         <header className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             {/* Title Section */}
-            <div className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div
+              className={`transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            >
               <div className="flex items-center gap-4 mb-3">
                 <div className="relative">
                   <div className="p-3 bg-gradient-to-br from-amber-500/20 to-cyan-500/20 rounded-xl border border-amber-500/30">
@@ -666,7 +682,9 @@ function BudgetingPage() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full live-indicator" />
                 </div>
                 <div>
-                  <span className="category-label text-amber-400 tracking-widest">Financial Planning</span>
+                  <span className="category-label text-amber-400 tracking-widest">
+                    Financial Planning
+                  </span>
                 </div>
               </div>
               <h1 className="page-title-observatory text-4xl lg:text-5xl text-white dark:text-white tracking-tight">
@@ -678,7 +696,9 @@ function BudgetingPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className={`flex flex-wrap items-center gap-3 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div
+              className={`flex flex-wrap items-center gap-3 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            >
               <Button
                 variant="secondary"
                 onClick={exportToCSV}
@@ -729,9 +749,15 @@ function BudgetingPage() {
                   onChange={e => setSelectedBudgetId(e.target.value)}
                   className="budget-selector w-full px-4 py-3 rounded-xl text-sm text-white focus:outline-none cursor-pointer"
                 >
-                  <option value="" className="bg-slate-900 text-gray-400">Select a budget...</option>
+                  <option value="" className="bg-slate-900 text-gray-400">
+                    Select a budget...
+                  </option>
                   {mockBudgets.map(budget => (
-                    <option key={budget.budgetId} value={budget.budgetId} className="bg-slate-900 text-white">
+                    <option
+                      key={budget.budgetId}
+                      value={budget.budgetId}
+                      className="bg-slate-900 text-white"
+                    >
                       {budget.budgetName} ({budget.fiscalYear})
                     </option>
                   ))}
@@ -747,12 +773,16 @@ function BudgetingPage() {
             {/* Summary Stats - Observatory Cards */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {/* Total Budgeted */}
-              <div className={`budget-card metric-card-observatory cyan bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-cyan-500/30 transition-all duration-500`}>
+              <div
+                className={`budget-card metric-card-observatory cyan bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-cyan-500/30 transition-all duration-500`}
+              >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-cyan-500/10 rounded-lg">
                     <ScaleIcon className="h-5 w-5 text-cyan-400" />
                   </div>
-                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Budgeted</span>
+                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                    Total Budgeted
+                  </span>
                 </div>
                 <p className="number-reveal hero-metric-budget text-3xl lg:text-4xl font-bold text-cyan-400">
                   {formatCurrency(totalBudgeted)}
@@ -760,12 +790,16 @@ function BudgetingPage() {
               </div>
 
               {/* Total Actual */}
-              <div className={`budget-card metric-card-observatory gold bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-amber-500/30 transition-all duration-500`}>
+              <div
+                className={`budget-card metric-card-observatory gold bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-amber-500/30 transition-all duration-500`}
+              >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-amber-500/10 rounded-lg">
                     <SparklesIcon className="h-5 w-5 text-amber-400" />
                   </div>
-                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Actual</span>
+                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                    Total Actual
+                  </span>
                 </div>
                 <p className="number-reveal hero-metric-budget text-3xl lg:text-4xl font-bold text-amber-400">
                   {formatCurrency(totalActual)}
@@ -773,31 +807,50 @@ function BudgetingPage() {
               </div>
 
               {/* Net Variance */}
-              <div className={`budget-card metric-card-observatory ${totalVariance >= 0 ? 'emerald' : 'rose'} bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-${totalVariance >= 0 ? 'emerald' : 'rose'}-500/30 transition-all duration-500`}>
+              <div
+                className={`budget-card metric-card-observatory ${totalVariance >= 0 ? 'emerald' : 'rose'} bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-${totalVariance >= 0 ? 'emerald' : 'rose'}-500/30 transition-all duration-500`}
+              >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 ${totalVariance >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'} rounded-lg`}>
+                  <div
+                    className={`p-2 ${totalVariance >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'} rounded-lg`}
+                  >
                     {totalVariance >= 0 ? (
                       <ArrowTrendingUpIcon className="h-5 w-5 text-emerald-400" />
                     ) : (
                       <ArrowTrendingDownIcon className="h-5 w-5 text-rose-400" />
                     )}
                   </div>
-                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Net Variance</span>
+                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                    Net Variance
+                  </span>
                 </div>
-                <p className={`number-reveal hero-metric-budget text-3xl lg:text-4xl font-bold ${totalVariance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {totalVariance >= 0 ? '+' : ''}{formatCurrency(totalVariance)}
+                <p
+                  className={`number-reveal hero-metric-budget text-3xl lg:text-4xl font-bold ${totalVariance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                >
+                  {totalVariance >= 0 ? '+' : ''}
+                  {formatCurrency(totalVariance)}
                 </p>
               </div>
 
               {/* Status */}
-              <div className={`budget-card metric-card-observatory ${totalVariance >= 0 ? 'emerald' : 'rose'} bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-${totalVariance >= 0 ? 'emerald' : 'rose'}-500/30 transition-all duration-500`}>
+              <div
+                className={`budget-card metric-card-observatory ${totalVariance >= 0 ? 'emerald' : 'rose'} bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 p-5 lg:p-6 hover:border-${totalVariance >= 0 ? 'emerald' : 'rose'}-500/30 transition-all duration-500`}
+              >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 ${totalVariance >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'} rounded-lg`}>
-                    <CalendarIcon className={`h-5 w-5 ${totalVariance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`} />
+                  <div
+                    className={`p-2 ${totalVariance >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'} rounded-lg`}
+                  >
+                    <CalendarIcon
+                      className={`h-5 w-5 ${totalVariance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                    />
                   </div>
-                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">Budget Status</span>
+                  <span className="text-sm font-medium text-gray-400 uppercase tracking-wider">
+                    Budget Status
+                  </span>
                 </div>
-                <p className={`number-reveal hero-metric-budget text-3xl lg:text-4xl font-bold ${totalVariance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <p
+                  className={`number-reveal hero-metric-budget text-3xl lg:text-4xl font-bold ${totalVariance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                >
                   {totalVariance >= 0 ? 'Under' : 'Over'}
                 </p>
               </div>
@@ -807,7 +860,9 @@ function BudgetingPage() {
             <div className="budget-card observatory-corner bg-gradient-to-br from-slate-900/80 to-slate-800/60 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden">
               {/* Table Header */}
               <div className="px-6 py-5 border-b border-white/10 bg-white/[0.02]">
-                <h2 className="text-lg font-semibold text-white tracking-tight">Budget vs Actual Analysis</h2>
+                <h2 className="text-lg font-semibold text-white tracking-tight">
+                  Budget vs Actual Analysis
+                </h2>
                 <p className="text-sm text-gray-400 mt-1">Variance breakdown by account category</p>
               </div>
 
@@ -870,18 +925,26 @@ function BudgetingPage() {
                             </span>
                           </td>
                           <td className="py-4 px-6 text-right">
-                            <span className={`text-sm font-medium font-mono ${line.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {line.variance >= 0 ? '+' : ''}{formatCurrency(line.variance)}
+                            <span
+                              className={`text-sm font-medium font-mono ${line.variance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                            >
+                              {line.variance >= 0 ? '+' : ''}
+                              {formatCurrency(line.variance)}
                             </span>
                           </td>
                           <td className="py-4 px-6 text-right">
-                            <span className={`variance-badge text-sm ${line.variancePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {line.variancePercent >= 0 ? '+' : ''}{line.variancePercent.toFixed(1)}%
+                            <span
+                              className={`variance-badge text-sm ${line.variancePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                            >
+                              {line.variancePercent >= 0 ? '+' : ''}
+                              {line.variancePercent.toFixed(1)}%
                             </span>
                           </td>
                           <td className="py-4 px-6">
                             <div className="flex items-center justify-center">
-                              <span className={`variance-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${status.color}`}>
+                              <span
+                                className={`variance-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${status.color}`}
+                              >
                                 <StatusIcon className="h-3 w-3" />
                                 <span className="text-xs">{status.label}</span>
                               </span>
@@ -909,7 +972,8 @@ function BudgetingPage() {
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Select a Budget to Analyze</h3>
               <p className="text-gray-400 max-w-md mx-auto">
-                Choose a budget from the dropdown above to view detailed variance analysis and financial performance metrics
+                Choose a budget from the dropdown above to view detailed variance analysis and
+                financial performance metrics
               </p>
             </div>
           </div>
@@ -935,7 +999,9 @@ function BudgetingPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">Create New Budget</h3>
-                    <p className="text-sm text-gray-400 mt-0.5">Define a new financial planning period</p>
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      Define a new financial planning period
+                    </p>
                   </div>
                 </div>
               </div>
@@ -943,7 +1009,9 @@ function BudgetingPage() {
               {/* Modal Body */}
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Budget Name</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Budget Name
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g., FY 2025 Operating Budget"
@@ -952,7 +1020,9 @@ function BudgetingPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Fiscal Year</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Fiscal Year
+                    </label>
                     <select className="budget-selector w-full px-4 py-3 rounded-xl text-white focus:outline-none transition-all cursor-pointer">
                       <option className="bg-slate-900">2024</option>
                       <option className="bg-slate-900">2025</option>
@@ -960,7 +1030,9 @@ function BudgetingPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Budget Type</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Budget Type
+                    </label>
                     <select className="budget-selector w-full px-4 py-3 rounded-xl text-white focus:outline-none transition-all cursor-pointer">
                       <option className="bg-slate-900">Annual</option>
                       <option className="bg-slate-900">Quarterly</option>
@@ -969,7 +1041,9 @@ function BudgetingPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Description (Optional)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Description (Optional)
+                  </label>
                   <textarea
                     placeholder="Brief description of this budget..."
                     rows={3}

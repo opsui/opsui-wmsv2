@@ -190,11 +190,11 @@ export function RouteOptimizationPage() {
       <Header />
       {/* Atmospheric background */}
       <div className="route-atmosphere" aria-hidden="true" />
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 relative z-10">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
-        
+
         {/* Hero Header */}
         <div className="route-hero">
           <div className="route-hero-content">
@@ -207,9 +207,7 @@ export function RouteOptimizationPage() {
                 Smart Routing
               </div>
             </div>
-            <h1 className="route-title">
-              Route Optimization
-            </h1>
+            <h1 className="route-title">Route Optimization</h1>
             <p className="route-subtitle">
               Calculate optimal picking routes through warehouse locations
             </p>
@@ -248,20 +246,14 @@ export function RouteOptimizationPage() {
           <nav className="route-tabs-nav">
             <button
               onClick={() => setView('optimize')}
-              className={cn(
-                'route-tab',
-                view === 'optimize' && 'route-tab-active'
-              )}
+              className={cn('route-tab', view === 'optimize' && 'route-tab-active')}
             >
               <PlayIcon className="h-4 w-4" />
               Optimize Route
             </button>
             <button
               onClick={() => setView('compare')}
-              className={cn(
-                'route-tab',
-                view === 'compare' && 'route-tab-active'
-              )}
+              className={cn('route-tab', view === 'compare' && 'route-tab-active')}
             >
               <ChartBarIcon className="h-4 w-4" />
               Compare Strategies
@@ -283,21 +275,20 @@ export function RouteOptimizationPage() {
                     <h2 className="route-card-title">Locations to Visit</h2>
                     <p className="route-card-description">Add warehouse locations to optimize</p>
                   </div>
-                  <button
-                    onClick={generateSampleLocations}
-                    className="route-generate-btn"
-                  >
+                  <button onClick={generateSampleLocations} className="route-generate-btn">
                     Generate Sample
                   </button>
                 </div>
-                
+
                 <div className="route-card-content">
                   <div className="route-locations-list">
                     {locations.length === 0 ? (
                       <div className="route-locations-empty">
                         <MapIcon className="h-8 w-8 mb-2" />
                         <p>No locations added yet</p>
-                        <p className="text-xs">Click "Add Location" or "Generate Sample" to start</p>
+                        <p className="text-xs">
+                          Click "Add Location" or "Generate Sample" to start
+                        </p>
                       </div>
                     ) : (
                       locations.map((location, index) => {
@@ -331,10 +322,7 @@ export function RouteOptimizationPage() {
                     )}
                   </div>
 
-                  <button
-                    onClick={handleAddLocation}
-                    className="route-add-location"
-                  >
+                  <button onClick={handleAddLocation} className="route-add-location">
                     + Add Location
                   </button>
                 </div>
@@ -351,7 +339,7 @@ export function RouteOptimizationPage() {
                     <p className="route-card-description">Configure optimization parameters</p>
                   </div>
                 </div>
-                
+
                 <div className="route-card-content">
                   <div className="route-option-group">
                     <label className="route-option-label">Start Point</label>
@@ -391,7 +379,7 @@ export function RouteOptimizationPage() {
                       disabled={optimizing || locations.filter(l => l.trim()).length < 2}
                       className={cn(
                         'route-optimize-btn',
-                        (!optimizing && locations.filter(l => l.trim()).length >= 2)
+                        !optimizing && locations.filter(l => l.trim()).length >= 2
                           ? 'route-optimize-btn-active'
                           : 'route-optimize-btn-disabled'
                       )}
@@ -446,7 +434,7 @@ export function RouteOptimizationPage() {
                   disabled={comparing || locations.filter(l => l.trim()).length < 2}
                   className={cn(
                     'route-compare-btn',
-                    (!comparing && locations.filter(l => l.trim()).length >= 2)
+                    !comparing && locations.filter(l => l.trim()).length >= 2
                       ? 'route-compare-btn-active'
                       : 'route-compare-btn-disabled'
                   )}
@@ -464,7 +452,7 @@ export function RouteOptimizationPage() {
                   )}
                 </button>
               </div>
-              
+
               <div className="route-card-content">
                 {comparison ? (
                   <ComparisonResults comparison={comparison} />
@@ -472,7 +460,9 @@ export function RouteOptimizationPage() {
                   <div className="route-compare-empty">
                     <ChartBarIcon className="h-10 w-10 mb-3" />
                     <p className="text-lg font-medium">No comparison yet</p>
-                    <p className="text-sm">Add locations and click "Compare All" to see algorithm performance</p>
+                    <p className="text-sm">
+                      Add locations and click "Compare All" to see algorithm performance
+                    </p>
                   </div>
                 )}
               </div>
@@ -517,7 +507,7 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
             </div>
           </div>
         </div>
-        
+
         <div className="route-card-content">
           {/* Optimized Path */}
           <div className="route-path-section">
@@ -527,12 +517,7 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
                 const parsed = parseLocation(location);
                 return (
                   <div key={location} className="route-path-item-wrapper">
-                    <div
-                      className={cn(
-                        'route-path-item',
-                        parsed && getZoneColor(parsed.zone)
-                      )}
-                    >
+                    <div className={cn('route-path-item', parsed && getZoneColor(parsed.zone))}>
                       <span className="route-path-index">{index + 1}</span>
                       <span className="route-path-location">{location}</span>
                     </div>
@@ -562,7 +547,9 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
               </div>
               <div className="route-stat-content">
                 <p className="route-stat-label">Total Distance</p>
-                <p className="route-stat-value route-stat-value-green">{result.total_distance_meters}m</p>
+                <p className="route-stat-value route-stat-value-green">
+                  {result.total_distance_meters}m
+                </p>
               </div>
             </div>
             <div className="route-stat-card">
@@ -571,7 +558,9 @@ function RouteResult({ result, getZoneColor, parseLocation }: RouteResultProps) 
               </div>
               <div className="route-stat-content">
                 <p className="route-stat-label">Est. Time</p>
-                <p className="route-stat-value route-stat-value-lime">{result.estimated_time_minutes}m</p>
+                <p className="route-stat-value route-stat-value-lime">
+                  {result.estimated_time_minutes}m
+                </p>
               </div>
             </div>
           </div>

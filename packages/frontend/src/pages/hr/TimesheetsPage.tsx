@@ -22,7 +22,12 @@ import { Breadcrumb } from '@/components/shared';
 import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
 import { useTimesheets, useMyTimesheets } from '@/services/api';
-import { CheckCircleIcon, ClockIcon, XCircleIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+  CalendarDaysIcon,
+} from '@heroicons/react/24/outline';
 
 export default function TimesheetsPage() {
   const navigate = useNavigate();
@@ -154,7 +159,9 @@ export default function TimesheetsPage() {
               <div className="p-4 bg-gradient-to-br from-indigo-100 to-violet-50 dark:from-indigo-900/30 dark:to-violet-900/20 rounded-2xl mb-4">
                 <ClockIcon className="h-12 w-12 text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No timesheets found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No timesheets found
+              </h3>
               <p className="text-gray-500 dark:text-gray-400 max-w-sm">
                 {activeTab === 'pending'
                   ? 'All caught up! No pending timesheets to review.'
@@ -170,7 +177,10 @@ export default function TimesheetsPage() {
                 className="group animate-in fade-in slide-in-from-bottom-4 duration-500"
                 style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
               >
-                <Card variant="glass" className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/5">
+                <Card
+                  variant="glass"
+                  className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
+                >
                   {/* Card Header */}
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -192,7 +202,9 @@ export default function TimesheetsPage() {
                       }`}
                     >
                       {timesheet.status === 'SUBMITTED' && <ClockIcon className="h-3.5 w-3.5" />}
-                      {timesheet.status === 'APPROVED' && <CheckCircleIcon className="h-3.5 w-3.5" />}
+                      {timesheet.status === 'APPROVED' && (
+                        <CheckCircleIcon className="h-3.5 w-3.5" />
+                      )}
                       {timesheet.status === 'REJECTED' && <XCircleIcon className="h-3.5 w-3.5" />}
                       {timesheet.status}
                     </span>
@@ -210,19 +222,25 @@ export default function TimesheetsPage() {
                   {/* Hours Summary */}
                   <div className="space-y-3 mb-5 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">Regular Hours</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">
+                        Regular Hours
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium font-mono">
                         {timesheet.totalRegularHours?.toFixed(1) || '0.0'}h
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">Overtime Hours</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">
+                        Overtime Hours
+                      </span>
                       <span className="text-gray-900 dark:text-white font-medium font-mono">
                         {timesheet.totalOvertimeHours?.toFixed(1) || '0.0'}h
                       </span>
                     </div>
                     <div className="pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">Total Hours</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">
+                        Total Hours
+                      </span>
                       <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent font-mono">
                         {timesheet.totalHours?.toFixed(1) || '0.0'}h
                       </span>

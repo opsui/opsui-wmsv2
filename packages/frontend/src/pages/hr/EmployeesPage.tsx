@@ -17,7 +17,13 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusIcon, MagnifyingGlassIcon, PencilIcon, UserIcon, UsersIcon } from '@heroicons/react/24/outline';
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  UserIcon,
+  UsersIcon,
+} from '@heroicons/react/24/outline';
 import { Header } from '@/components/shared/Header';
 import { Breadcrumb } from '@/components/shared';
 import { Button } from '@/components/shared/Button';
@@ -181,7 +187,9 @@ export default function EmployeesPage() {
               <div className="p-4 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl mb-4">
                 <UserIcon className="h-12 w-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No employees found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No employees found
+              </h3>
               <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm">
                 {searchTerm
                   ? 'Try adjusting your search criteria'
@@ -206,7 +214,10 @@ export default function EmployeesPage() {
                 className="group animate-in fade-in slide-in-from-bottom-4 duration-500"
                 style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
               >
-                <Card variant="glass" className="p-6 card-hover border border-gray-200/50 dark:border-gray-700/30 hover:border-orange-500/30 dark:hover:border-orange-500/20 transition-all hover:shadow-lg hover:shadow-orange-500/5">
+                <Card
+                  variant="glass"
+                  className="p-6 card-hover border border-gray-200/50 dark:border-gray-700/30 hover:border-orange-500/30 dark:hover:border-orange-500/20 transition-all hover:shadow-lg hover:shadow-orange-500/5"
+                >
                   {/* Employee Header */}
                   <div className="flex items-start justify-between mb-5">
                     <div className="flex items-center gap-4">
@@ -225,7 +236,9 @@ export default function EmployeesPage() {
                           {employee.firstName} {employee.lastName}
                         </h3>
                         {employee.preferredName && (
-                          <p className="text-sm text-orange-600 dark:text-orange-400">"{employee.preferredName}"</p>
+                          <p className="text-sm text-orange-600 dark:text-orange-400">
+                            "{employee.preferredName}"
+                          </p>
                         )}
                       </div>
                     </div>
@@ -272,7 +285,9 @@ export default function EmployeesPage() {
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500 dark:text-gray-400 text-sm">Department</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-sm">
+                            Department
+                          </span>
                           <span className="text-gray-900 dark:text-white text-sm">
                             {employee.primaryEmployment.department || 'N/A'}
                           </span>

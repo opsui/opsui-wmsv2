@@ -147,7 +147,9 @@ async function checkPostgreSQL() {
       resolve(false);
     }, 2000);
 
-    socket.connect(5432, 'localhost', () => {
+    // Use the configured database port instead of hardcoded 5432
+    const port = parseInt(CONFIG.databasePort.toString());
+    socket.connect(port, CONFIG.databaseHost, () => {
       clearTimeout(timeout);
       socket.destroy();
       resolve(true);

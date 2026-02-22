@@ -145,7 +145,9 @@ function WorkflowStep({
           {label}
         </p>
         {count !== undefined && (
-          <p className={`text-xs font-mono mt-0.5 ${isActive ? 'text-orange-300' : isComplete ? 'text-emerald-300' : 'text-gray-500'}`}>
+          <p
+            className={`text-xs font-mono mt-0.5 ${isActive ? 'text-orange-300' : isComplete ? 'text-emerald-300' : 'text-gray-500'}`}
+          >
             {count}
           </p>
         )}
