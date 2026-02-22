@@ -7,10 +7,11 @@
  * - Haptic feedback on tap
  * - Badge support for notifications
  * - Accessible with proper ARIA attributes
- * - Distinctive design following frontend skill guidelines
+ * - Light and dark mode support
  */
 
 import { cn } from '@/lib/utils';
+import { useUIStore } from '@/stores';
 import {
   Bars3Icon,
   ChartBarIcon,
@@ -154,6 +155,14 @@ export function BottomNavigation({
   );
   const itemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+  // Get current theme from store
+  const theme = useUIStore(state => state.theme);
+  const isLightMode =
+    theme === 'light' ||
+    (theme === 'auto' &&
+      typeof window !== 'undefined' &&
+      !window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+
   const handleItemClick = (item: NavItem, e: React.MouseEvent) => {
     if (item.disabled) return;
 
@@ -183,21 +192,43 @@ export function BottomNavigation({
     }
   };
 
+  // Dynamic styles based on theme
+  const navStyles: React.CSSProperties = {
+    background: isLightMode
+      ? 'linear-gradient(to top, #ffffff, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95))'
+      : 'linear-gradient(to top, #0f172a, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.95))',
+    borderTopColor: isLightMode ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)',
+    boxShadow: isLightMode ? '0 -4px 20px rgba(0, 0, 0, 0.05)' : 'none',
+  };
+
+  const beforeStyles: React.CSSProperties = {
+    background: isLightMode
+      ? 'linear-gradient(to right, transparent, rgba(0, 0, 0, 0.08), transparent)'
+      : 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent)',
+  };
+
+  const getIconColor = (isActive: boolean) => {
+    if (isActive) return '#ffffff';
+    return isLightMode ? '#9ca3af' : '#64748b';
+  };
+
+  const getLabelColor = (isActive: boolean) => {
+    if (isActive) return isLightMode ? '#1f2937' : '#ffffff';
+    return isLightMode ? '#6b7280' : '#64748b';
+  };
+
+  const getRippleColor = () => {
+    return isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
+  };
+
   return (
     <nav
       role="navigation"
       aria-label="Main navigation"
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50',
-        // Enhanced background with gradient and glass effect
-        'bg-gradient-to-t from-slate-900 via-slate-900/98 to-slate-900/95',
-        'dark:from-dark-100 dark:via-dark-100/98 dark:to-dark-100/95',
         'backdrop-blur-xl',
-        // Top border with gradient
-        'border-t border-white/10',
-        // Subtle top highlight
-        'before:absolute before:top-0 before:left-0 before:right-0 before:h-px',
-        'before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
+        'border-t',
         'flex justify-around items-stretch',
         // Safe area for notched devices
         'pb-[env(safe-area-inset-bottom,0px)]',
@@ -207,11 +238,18 @@ export function BottomNavigation({
         'lg:hidden',
         className
       )}
+      style={navStyles}
     >
+      {/* Top highlight line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={beforeStyles}
+      />
+
       {items.map((item, index) => {
         const isActive = activeId === item.id;
         const showBadge = item.badge && item.badge > 0;
-        const theme = NAV_THEMES[item.theme || 'blue'];
+        const navTheme = NAV_THEMES[item.theme || 'blue'];
 
         return (
           <button
@@ -251,10 +289,11 @@ export function BottomNavigation({
             {/* Ripple effect */}
             {rippleEffect?.id === item.id && (
               <span
-                className="nav-ripple absolute w-8 h-8 rounded-full bg-white/30 pointer-events-none"
+                className="nav-ripple absolute w-8 h-8 rounded-full pointer-events-none"
                 style={{
                   left: rippleEffect.x - 16,
                   top: rippleEffect.y - 16,
+                  background: getRippleColor(),
                 }}
               />
             )}
@@ -266,7 +305,7 @@ export function BottomNavigation({
                 <div
                   className={cn(
                     'absolute w-12 h-12 rounded-2xl bg-gradient-to-br opacity-20 blur-xl',
-                    theme.gradient
+                    navTheme.gradient
                   )}
                 />
               )}
@@ -283,8 +322,8 @@ export function BottomNavigation({
                   <div
                     className={cn(
                       'absolute w-10 h-10 rounded-xl bg-gradient-to-br nav-active-glow',
-                      theme.gradient,
-                      theme.shadow,
+                      navTheme.gradient,
+                      navTheme.shadow,
                       'shadow-lg'
                     )}
                   />
@@ -292,12 +331,8 @@ export function BottomNavigation({
 
                 {/* Icon */}
                 <div
-                  className={cn(
-                    'relative z-10 transition-colors duration-300',
-                    isActive
-                      ? 'text-white'
-                      : 'text-slate-400 dark:text-gray-500 hover:text-slate-200 dark:hover:text-gray-300'
-                  )}
+                  className="relative z-10 transition-colors duration-300"
+                  style={{ color: getIconColor(isActive) }}
                 >
                   {item.icon}
                 </div>
@@ -313,10 +348,13 @@ export function BottomNavigation({
                     'bg-gradient-to-r from-red-500 to-orange-500 text-white',
                     'text-xs font-bold',
                     'rounded-full',
-                    'ring-2 ring-slate-900 dark:ring-dark-100',
+                    'ring-2',
                     'shadow-lg shadow-red-500/30',
                     'nav-badge-pop'
                   )}
+                  style={{
+                    ringColor: isLightMode ? '#ffffff' : '#0f172a',
+                  }}
                   aria-hidden="true"
                 >
                   {item.badge! > 99 ? '99+' : item.badge}
@@ -330,9 +368,12 @@ export function BottomNavigation({
                 className={cn(
                   'mt-1.5 text-[10px] font-medium tracking-wide transition-all duration-300',
                   'truncate max-w-full',
-                  isActive ? 'text-white font-semibold' : 'text-slate-500 dark:text-gray-500'
+                  isActive && 'font-semibold'
                 )}
-                style={{ fontFamily: "'Inter', sans-serif" }}
+                style={{
+                  fontFamily: "'Inter', sans-serif",
+                  color: getLabelColor(isActive),
+                }}
               >
                 {item.label}
               </span>
@@ -341,11 +382,12 @@ export function BottomNavigation({
             {/* Active indicator bar */}
             {isActive && (
               <span
-                className={cn(
-                  'absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full',
-                  theme.indicator,
-                  'shadow-lg'
-                )}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full shadow-lg"
+                style={{
+                  background: isLightMode
+                    ? 'linear-gradient(to right, #3b82f6, #06b6d4)'
+                    : undefined,
+                }}
                 aria-hidden="true"
               />
             )}
@@ -353,9 +395,13 @@ export function BottomNavigation({
         );
       })}
 
-      {/* Ambient light effect on edges */}
-      <div className="absolute bottom-0 left-4 w-16 h-16 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-      <div className="absolute bottom-0 right-4 w-16 h-16 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+      {/* Ambient light effect on edges - only visible in dark mode */}
+      {!isLightMode && (
+        <>
+          <div className="absolute bottom-0 left-4 w-16 h-16 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-0 right-4 w-16 h-16 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+        </>
+      )}
     </nav>
   );
 }

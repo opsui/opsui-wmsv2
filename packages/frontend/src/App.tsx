@@ -7,6 +7,7 @@
 
 import { ErrorBoundary, NotificationCenter, ToastProvider } from '@/components/shared';
 import { useAdminRoleAutoSwitch } from '@/hooks/useAdminRoleAutoSwitch';
+import { useHardwareCapabilities } from '@/hooks/useHardwareCapabilities';
 import { useSEO } from '@/hooks/useSEO';
 import webSocketService from '@/services/WebSocketService';
 import { useAuthStore, useModuleStore, useUIStore } from '@/stores';
@@ -1147,6 +1148,11 @@ function AppInner() {
 // ============================================================================
 
 function App() {
+  // Initialize hardware capabilities detection for performance optimization
+  // This detects GPU, CPU cores, memory, and battery status to enable
+  // performance mode on low-end devices (integrated GPUs, etc.)
+  useHardwareCapabilities();
+
   // Initialize and sync theme with optimized smooth transitions
   useEffect(() => {
     let previousTheme: string | null = null;

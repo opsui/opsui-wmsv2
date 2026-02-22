@@ -228,15 +228,15 @@ function UserRolesPage() {
 
   if (usersLoading || assignmentsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-slate-900 dark:to-indigo-950">
+      <div className="min-h-screen">
         <Header />
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card variant="default" className="bg-white/95 dark:bg-gray-800/30 backdrop-blur-sm">
+          <Card variant="glass">
             <CardContent className="p-8">
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 dark:border-purple-400" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
               </div>
             </CardContent>
           </Card>
@@ -246,12 +246,12 @@ function UserRolesPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-950 dark:via-slate-900 dark:to-indigo-950">
-      {/* Atmospheric background - themed for light/dark mode */}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Atmospheric background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-300/20 dark:bg-indigo-500/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-300/15 dark:bg-violet-500/10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
-        <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-indigo-200/10 dark:bg-blue-500/5 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-500/10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2" />
       </div>
 
       <Header />
@@ -286,8 +286,8 @@ function UserRolesPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 dark:bg-purple-500/20 rounded-xl shadow-sm">
-              <UserGroupIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+            <div className="p-3 bg-primary-100 dark:bg-primary-500/20 rounded-xl">
+              <UserGroupIcon className="h-8 w-8 text-primary-500 dark:text-primary-400" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-['Space_Grotesk',sans-serif]">
@@ -301,14 +301,11 @@ function UserRolesPage() {
         </div>
 
         {/* Info Box */}
-        <Card
-          variant="default"
-          className="mb-8 border-l-4 border-l-purple-500 bg-white/90 dark:bg-purple-500/10 backdrop-blur-sm shadow-sm"
-        >
+        <Card variant="glass" className="mb-8 border-l-4 border-l-blue-500">
           <CardContent className="p-5">
             <div className="flex gap-4">
               <div className="flex-shrink-0">
-                <UserGroupIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <UserGroupIcon className="h-6 w-6 text-blue-500 dark:text-blue-400" />
               </div>
               <div>
                 <h4 className="text-gray-900 dark:text-white font-semibold mb-2">How it works</h4>
@@ -333,19 +330,16 @@ function UserRolesPage() {
         </Card>
 
         {/* Search */}
-        <Card
-          variant="default"
-          className="mb-6 bg-white/90 dark:bg-gray-800/50 backdrop-blur-sm shadow-sm"
-        >
+        <Card variant="glass" className="mb-6">
           <CardContent className="p-4">
             <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search users by name, email, or ID..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </CardContent>
@@ -360,8 +354,8 @@ function UserRolesPage() {
             return (
               <Card
                 key={user.userId}
-                variant="default"
-                className={`userrole-card bg-white/95 dark:bg-gray-800/30 backdrop-blur-sm shadow-sm dark:shadow-none ${isDeleted ? 'border-amber-300/50 dark:border-warning-500/30 bg-amber-50/50 dark:bg-warning-500/5' : ''}`}
+                variant="glass"
+                className={`userrole-card ${isDeleted ? 'border-warning-500/30 bg-warning-500/5' : ''}`}
                 style={{
                   animation: `userrole-stagger-in 0.4s ease-out ${0.1 + index * 0.08}s backwards`,
                 }}
@@ -370,10 +364,10 @@ function UserRolesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div
-                        className={`p-3 rounded-xl ${isDeleted ? 'bg-amber-100 dark:bg-warning-500/20' : 'bg-purple-100 dark:bg-purple-500/20'}`}
+                        className={`p-3 rounded-xl ${isDeleted ? 'bg-warning-100 dark:bg-warning-500/20' : 'bg-primary-100 dark:bg-primary-500/20'}`}
                       >
                         <UserIcon
-                          className={`h-6 w-6 ${isDeleted ? 'text-amber-600 dark:text-warning-400' : 'text-purple-600 dark:text-purple-400'}`}
+                          className={`h-6 w-6 ${isDeleted ? 'text-warning-500 dark:text-warning-400' : 'text-primary-500 dark:text-primary-400'}`}
                         />
                       </div>
                       <div>
@@ -384,29 +378,25 @@ function UserRolesPage() {
                             {user.name}
                           </h3>
                           {!user.active && !isDeleted && (
-                            <span className="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 rounded-md border border-red-200 dark:border-red-500/30">
-                              Inactive
-                            </span>
+                            <span className="badge badge-error">Inactive</span>
                           )}
                           {isDeleted && (
-                            <span className="px-2 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-500/30">
+                            <span className="badge badge-warning">
                               Deleting in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
                             </span>
                           )}
                         </div>
                         <p
-                          className={`text-sm ${isDeleted ? 'text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}
+                          className={`text-sm ${isDeleted ? 'text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}
                         >
                           {user.email}
                         </p>
                         <div className="flex items-center gap-3 mt-2">
-                          <span className="text-xs text-gray-500 dark:text-gray-500 font-['JetBrains_Mono',monospace]">
+                          <span className="text-xs text-gray-500 font-['JetBrains_Mono',monospace]">
                             ID: {user.userId}
                           </span>
                           {isDeleted ? (
-                            <span className="px-2 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-md border border-amber-200 dark:border-amber-500/30">
-                              {user.role}
-                            </span>
+                            <span className={`badge badge-warning`}>{user.role}</span>
                           ) : (
                             <UserRoleBadge role={user.role} userId={user.userId} />
                           )}
@@ -419,7 +409,7 @@ function UserRolesPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleRestoreUser(user)}
-                          className="flex items-center gap-2 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
+                          className="flex items-center gap-2 text-warning-500 dark:text-warning-400 hover:text-warning-600 dark:hover:text-warning-300"
                         >
                           <ArrowPathIcon className="h-4 w-4" />
                           Restore
@@ -439,7 +429,7 @@ function UserRolesPage() {
                             variant="secondary"
                             size="sm"
                             onClick={() => handleDeleteUser(user)}
-                            className="flex items-center gap-2 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                            className="flex items-center gap-2 text-error-400 hover:text-error-300"
                           >
                             <TrashIcon className="h-4 w-4" />
                           </Button>
@@ -455,7 +445,7 @@ function UserRolesPage() {
                         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Additional Roles
                         </h4>
-                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                        <span className="text-xs text-gray-500">
                           {getUserGrantedRoles(user.userId).length} role
                           {getUserGrantedRoles(user.userId).length !== 1 ? 's' : ''} granted
                         </span>
@@ -483,12 +473,12 @@ function UserRolesPage() {
                               disabled={isDisabled}
                               className={`p-4 rounded-xl border transition-all duration-200 ${
                                 isBaseRole
-                                  ? 'bg-purple-100 dark:bg-purple-500/10 border-purple-300 dark:border-purple-500/30 cursor-not-allowed opacity-60'
+                                  ? 'bg-primary-100 dark:bg-primary-500/10 border-primary-300 dark:border-primary-500/30 cursor-not-allowed opacity-50'
                                   : isAdminUser
-                                    ? 'bg-gray-100 dark:bg-gray-700/30 border-gray-300 dark:border-gray-600/30 cursor-not-allowed opacity-50'
+                                    ? 'bg-gray-100 dark:bg-gray-700/30 border-gray-300 dark:border-gray-600/30 cursor-not-allowed opacity-40'
                                     : hasRole
-                                      ? 'bg-emerald-100 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/30 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 shadow-sm'
-                                      : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+                                      ? 'bg-success-100 dark:bg-success-500/20 border-success-300 dark:border-success-500/30 hover:bg-success-200 dark:hover:bg-success-500/30'
+                                      : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                               }`}
                               title={
                                 isBaseRole
@@ -504,24 +494,24 @@ function UserRolesPage() {
                                 <span
                                   className={`text-sm font-medium ${
                                     isBaseRole
-                                      ? 'text-purple-700 dark:text-purple-400'
+                                      ? 'text-primary-600 dark:text-primary-400'
                                       : isAdminUser
                                         ? 'text-gray-400 dark:text-gray-500'
                                         : hasRole
-                                          ? 'text-emerald-700 dark:text-emerald-400'
-                                          : 'text-gray-700 dark:text-gray-400'
+                                          ? 'text-success-600 dark:text-success-400'
+                                          : 'text-gray-600 dark:text-gray-400'
                                   }`}
                                 >
                                   {role}
                                 </span>
                                 {isBaseRole && (
-                                  <KeyIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                  <KeyIcon className="h-5 w-5 text-primary-500 dark:text-primary-400" />
                                 )}
                                 {isAdminUser && !isBaseRole && (
                                   <LockClosedIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                                 )}
                                 {hasRole && !isBaseRole && !isAdminUser && (
-                                  <CheckIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                  <CheckIcon className="h-5 w-5 text-success-500 dark:text-success-400" />
                                 )}
                               </div>
                             </button>
@@ -529,7 +519,7 @@ function UserRolesPage() {
                         })}
                       </div>
 
-                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-3">
+                      <p className="text-sm text-gray-500 mt-3">
                         Click to toggle roles. Users can switch between their base role and any
                         granted roles via the role dropdown in the header.
                       </p>
@@ -553,13 +543,13 @@ function UserRolesPage() {
           )}
 
           {filteredUsers.length === 0 && (
-            <Card variant="default" className="bg-white/95 dark:bg-gray-800/30 backdrop-blur-sm">
+            <Card variant="glass">
               <CardContent className="p-12 text-center">
                 <UserIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-400 mb-2">
+                <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-2">
                   No users found
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
+                <p className="text-sm text-gray-500">
                   Try adjusting your search query or create a new user
                 </p>
               </CardContent>

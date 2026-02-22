@@ -17,3 +17,4 @@ export * from './useSEO';
 export * from './useSwipe';
 export * from './useUndo';
 export * from './useWebSocket';
+export * from './useHardwareCapabilities';

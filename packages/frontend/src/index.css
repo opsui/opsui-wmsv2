@@ -4156,38 +4156,289 @@ html.light .bg-surface {
 /* ============================================
    PERFORMANCE MODE - Low-end device optimizations
    Automatically disables GPU-intensive effects
+   Activated via useHardwareCapabilities hook for:
+   - Integrated GPUs (Intel HD Graphics, AMD APUs)
+   - Low CPU cores (4 or fewer)
+   - Low memory (8GB or less)
+   - Battery saving mode
    ============================================ */
 
-/* Disable backdrop-filter for all elements EXCEPT navbar */
-html.performance-mode *:not(.dynamic-island-header):not(header) {
-  /* Disable all backdrop-filter blur effects - very GPU intensive */
+/* ============================================================
+   SECTION 1: DISABLE GPU-INTENSIVE VISUAL EFFECTS
+   These are the primary causes of lag on integrated graphics
+   ============================================================ */
+
+/* Disable backdrop-filter for all elements EXCEPT essential UI */
+html.performance-mode *:not(.dynamic-island-header):not(header):not([role='menu']):not([role='listbox']) {
+  /* Disable all backdrop-filter blur effects - extremely GPU intensive */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 
-/* Disable background animations */
+/* Disable all background animations - constant GPU repaint */
 html.performance-mode body,
 html.performance-mode body::before,
-html.performance-mode body::after {
+html.performance-mode body::after,
+html.performance-mode .warehouse-ambient::before,
+html.performance-mode .warehouse-ambient::after,
+html.performance-mode .stock-control-grain::before,
+html.performance-mode .stock-control-grain::after,
+html.performance-mode .slotting-atmosphere::before,
+html.performance-mode .slotting-atmosphere::after,
+html.performance-mode .route-atmosphere::before,
+html.performance-mode .route-atmosphere::after,
+html.performance-mode .shipping-atmosphere::before,
+html.performance-mode .shipping-atmosphere::after,
+html.performance-mode .reports-atmosphere::before,
+html.performance-mode .reports-atmosphere::after,
+html.performance-mode .roles-atmosphere::before,
+html.performance-mode .roles-atmosphere::after,
+html.performance-mode .rules-atmosphere::before,
+html.performance-mode .rules-atmosphere::after,
+html.performance-mode .integrations-atmosphere::before,
+html.performance-mode .integrations-atmosphere::after,
+html.performance-mode .accounting-atmosphere::before,
+html.performance-mode .accounting-atmosphere::after,
+html.performance-mode .login-container::before,
+html.performance-mode .login-container::after,
+html.performance-mode .erp-login-container::before,
+html.performance-mode .erp-login-container::after {
   animation: none !important;
   background-attachment: scroll !important;
 }
 
+/* ============================================================
+   SECTION 2: SIMPLIFY CARDS AND CONTAINERS
+   Replace glassmorphism with solid backgrounds
+   ============================================================ */
+
 /* Simplify glass-card to solid backgrounds */
-html.performance-mode .glass-card {
+html.performance-mode .glass-card,
+html.performance-mode [class*='backdrop-blur'] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: rgba(168, 85, 247, 0.08) !important;
+  background: rgba(30, 41, 59, 0.95) !important;
 }
 
-html.light.performance-mode .glass-card {
-  background: rgba(255, 255, 255, 0.95) !important;
+html.light.performance-mode .glass-card,
+html.light.performance-mode [class*='backdrop-blur'] {
+  background: rgba(255, 255, 255, 0.98) !important;
 }
 
-/* Reduce shadow complexity */
-html.performance-mode .glass-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  border-color: rgba(168, 85, 247, 0.2) !important;
+/* Simplify picking-card */
+html.performance-mode .picking-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+
+/* Simplify accounting-card */
+html.performance-mode .accounting-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+
+/* Simplify login-card */
+html.performance-mode .login-card,
+html.performance-mode .erp-login-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+
+html.light.performance-mode .login-card,
+html.light.performance-mode .erp-login-card {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Simplify toolbar container */
+html.performance-mode .toolbar-container {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ============================================================
+   SECTION 3: DISABLE NON-ESSENTIAL ANIMATIONS
+   Keep only essential feedback animations
+   ============================================================ */
+
+/* Disable staggered entrance animations */
+html.performance-mode .dashboard-stagger-1,
+html.performance-mode .dashboard-stagger-2,
+html.performance-mode .dashboard-stagger-3,
+html.performance-mode .dashboard-stagger-4,
+html.performance-mode .dashboard-stagger-5,
+html.performance-mode .dashboard-stagger-6,
+html.performance-mode .stock-control-card,
+html.performance-mode .accounting-card,
+html.performance-mode .route-card,
+html.performance-mode .shipping-order-card,
+html.performance-mode .reports-card,
+html.performance-mode .role-card,
+html.performance-mode .rule-card,
+html.performance-mode .integration-card-enhanced,
+html.performance-mode .slotting-card,
+html.performance-mode .slotting-stat-card,
+html.performance-mode .slotting-class-card,
+html.performance-mode .slotting-recommendation-card {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Disable decorative animations */
+html.performance-mode .hero-title-gradient,
+html.performance-mode .hero-gradient-shift,
+html.performance-mode .bin-location-display,
+html.performance-mode .status-badge-glow,
+html.performance-mode .metric-live,
+html.performance-mode .sku-display,
+html.performance-mode .low-stock-warning,
+html.performance-mode .indicator-pulse,
+html.performance-mode .notification-badge-pulse,
+html.performance-mode .bin-beacon,
+html.performance-mode .picking-reticle::before,
+html.performance-mode .picking-reticle::after,
+html.performance-mode .warehouse-loading-icon::after,
+html.performance-mode .toolbar-logo,
+html.performance-mode .toolbar-logo-accent,
+html.performance-mode .login-title,
+html.performance-mode .erp-login-title,
+html.performance-mode .erp-login-btn,
+html.performance-mode .ledger-title,
+html.performance-mode .ledger-hero::before,
+html.performance-mode .connection-status.connected::before,
+html.performance-mode .connection-status.connecting::before {
+  animation: none !important;
+}
+
+/* Disable shimmer/skeleton animations */
+html.performance-mode .animate-shimmer,
+html.performance-mode .ledger-shimmer {
+  animation: none !important;
+}
+
+/* Disable confetti/celebration animations */
+html.performance-mode .confetti-piece,
+html.performance-mode .celebration-container::before,
+html.performance-mode .animate-bounce-in,
+html.performance-mode .animate-celebrate,
+html.performance-mode .animate-pop-in,
+html.performance-mode .animate-fade-in-up {
+  animation: none !important;
+}
+
+/* Disable scan beam/reticle effects */
+html.performance-mode .scanner-active::before,
+html.performance-mode .scan-line-active::after {
+  animation: none !important;
+}
+
+/* ============================================================
+   SECTION 4: SIMPLIFY SHADOWS AND GLOWS
+   Complex shadows cause expensive repaints
+   ============================================================ */
+
+/* Reduce shadow complexity globally */
+html.performance-mode .glass-card:hover,
+html.performance-mode .picking-card:hover,
+html.performance-mode .accounting-card:hover,
+html.performance-mode .shadow-glow,
+html.performance-mode .shadow-glow-lg {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Disable glow effects on metric cards */
+html.performance-mode .metric-card-glow {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* Simplify button shadows */
+html.performance-mode .action-button-enhanced,
+html.performance-mode .btn-primary,
+html.performance-mode .btn-secondary {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+html.performance-mode .action-button-enhanced:hover,
+html.performance-mode .btn-primary:hover,
+html.performance-mode .btn-secondary:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ============================================================
+   SECTION 5: OPTIMIZE TRANSITIONS
+   Faster transitions for snappier feel
+   ============================================================ */
+
+/* Reduce transition durations for snappier feel */
+html.performance-mode *,
+html.performance-mode *::before,
+html.performance-mode *::after {
+  transition-duration: 0.1s !important;
+  animation-duration: 0.1s !important;
+}
+
+/* Keep smooth theme transitions */
+html.performance-mode.theme-transitioning body,
+html.performance-mode.theme-transitioning .glass-card,
+html.performance-mode.theme-transitioning .modal-content,
+html.performance-mode.theme-transitioning .dropdown-menu,
+html.performance-mode.theme-transitioning nav,
+html.performance-mode.theme-transitioning header,
+html.performance-mode.theme-transitioning main {
+  transition-duration: 0.2s !important;
+}
+
+/* Keep essential UI feedback animations */
+html.performance-mode .skeleton-pulse,
+html.performance-mode .animate-pulse {
+  animation-duration: 2s !important;
+  animation-timing-function: ease-in-out !important;
+}
+
+/* ============================================================
+   SECTION 6: CHART OPTIMIZATIONS
+   Disable expensive SVG effects in Recharts
+   ============================================================ */
+
+/* Disable chart gradient backgrounds */
+html.performance-mode .recharts-surface {
+  filter: none !important;
+}
+
+/* Disable chart glow effects */
+html.performance-mode [filter*='glow'],
+html.performance-mode filter {
+  display: none !important;
+}
+
+/* Simplify chart bars */
+html.performance-mode .recharts-bar-rectangle path {
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Disable atmospheric glow behind charts */
+html.performance-mode [class*='atmosphere']::before,
+html.performance-mode [class*='atmosphere']::after,
+html.performance-mode .absolute.inset-0.blur-3xl {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* ============================================================
+   SECTION 7: MOBILE & HEADER OPTIMIZATIONS
+   Keep navbar functional but optimized
+   ============================================================ */
+
+/* Keep header blur for readability but simplified */
+html.performance-mode .dynamic-island-header,
+html.performance-mode header {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Disable mobile header blur */
@@ -4197,82 +4448,105 @@ html.performance-mode .mobile-sticky-header {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Disable modal backdrop blur */
-html.performance-mode .modal-backdrop,
-html.performance-mode [class*='backdrop-blur']:not(.dynamic-island-header) {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* Exception: Keep modal backdrop blur for visual hierarchy */
-html.performance-mode .modal-backdrop,
-html.performance-mode [data-modal-backdrop],
-html.performance-mode .fixed.inset-0.bg-black {
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-}
-
-/* Exception: Keep dropdown menu blur for readability */
+/* Keep dropdown menu blur for readability */
 html.performance-mode [role='menu'],
 html.performance-mode [role='listbox'],
-html.performance-mode .dropdown-menu {
+html.performance-mode .dropdown-menu,
+html.performance-mode .dropdown-menu-enhanced {
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
 
-/* Reduce glow shadows */
-html.performance-mode .shadow-glow,
-html.performance-mode .shadow-glow-lg {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+/* Keep modal backdrop blur for visual hierarchy */
+html.performance-mode .modal-backdrop,
+html.performance-mode [data-modal-backdrop],
+html.performance-mode .fixed.inset-0.bg-black,
+html.performance-mode .scanner-modal-overlay {
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
 }
 
-/* Disable shimmer animations */
-html.performance-mode .animate-shimmer {
+/* Simplify modal content */
+html.performance-mode .scanner-modal-content,
+html.performance-mode .modal-content {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(30, 41, 59, 0.98) !important;
+}
+
+html.light.performance-mode .scanner-modal-content,
+html.light.performance-mode .modal-content {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* ============================================================
+   SECTION 8: GRID AND BACKGROUND PATTERNS
+   Disable GPU-intensive pattern overlays
+   ============================================================ */
+
+/* Disable industrial grid backgrounds */
+html.performance-mode .fixed.inset-0[class*='background-image'],
+html.performance-mode [style*='background-image: linear-gradient'] {
+  background-image: none !important;
+}
+
+/* Disable grain textures */
+html.performance-mode .stock-control-grain::before {
+  display: none !important;
+}
+
+/* ============================================================
+   SECTION 9: PROGRESS RING OPTIMIZATION
+   Simplify SVG animations
+   ============================================================ */
+
+html.performance-mode .progress-ring-circle {
   animation: none !important;
 }
 
-/* Reduce transition durations for snappier feel - exclude animations that should remain smooth */
-html.performance-mode *:not(.skeleton-pulse):not(.indicator-pulse):not(.animate-pulse):not(.theme-transitioning):not(html.theme-transitioning *),
-html.performance-mode *::before,
-html.performance-mode *::after {
-  transition-duration: 0.1s !important;
-}
-
-/* Keep smooth theme transitions - optimized selectors only */
-html.performance-mode.theme-transitioning body,
-html.performance-mode.theme-transitioning .glass-card,
-html.performance-mode.theme-transitioning .modal-content,
-html.performance-mode.theme-transitioning .dropdown-menu,
-html.performance-mode.theme-transitioning nav,
-html.performance-mode.theme-transitioning header,
-html.performance-mode.theme-transitioning main {
-  transition-duration: 0.25s !important;
-}
-
-/* Keep body background animations disabled in performance mode */
-html.performance-mode body,
-html.performance-mode body::before,
-html.performance-mode body::after {
+html.performance-mode .efficiency-ring {
   animation: none !important;
-  animation-duration: 0s !important;
 }
 
-/* Keep skeleton animations smooth - they're already lightweight */
-html.performance-mode .skeleton-pulse,
-html.performance-mode .skeleton-pulse::before {
-  animation-duration: 2s !important;
-  animation-timing-function: ease-in-out !important;
+/* ============================================================
+   SECTION 10: KEEP ESSENTIAL ANIMATIONS
+   These are needed for user feedback
+   ============================================================ */
+
+/* Keep loading spinners functional */
+html.performance-mode .warehouse-loading-bar {
+  animation: none !important;
 }
 
-/* Keep Tailwind's animate-pulse smooth for notification badges and indicators */
-html.performance-mode .animate-pulse {
-  animation-duration: 2s !important;
+/* Keep hover states working (just faster) */
+html.performance-mode .card-hover:hover {
+  transform: translateY(-1px) !important;
 }
 
-/* Keep indicator-pulse smooth in performance mode */
-html.performance-mode .indicator-pulse {
-  animation-duration: 2s !important;
-  animation-timing-function: ease-in-out !important;
+/* Keep focus indicators working */
+html.performance-mode *:focus-visible {
+  outline: 2px solid currentColor !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================
+   SECTION 11: FONT RENDERING OPTIMIZATION
+   Improve text rendering performance
+   ============================================================ */
+
+html.performance-mode {
+  text-rendering: optimizeSpeed !important;
+}
+
+html.performance-mode body {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Disable expensive font features */
+html.performance-mode * {
+  font-feature-settings: normal !important;
+  font-variant-ligatures: none !important;
 }
 
 /* ============================================

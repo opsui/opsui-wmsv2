@@ -165,18 +165,18 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             Orders
           </div>
           {safeResults.orders.map(order => (
-            <div key={order.orderId} {...getItemProps('order', order)}>
+            <div key={order.orderId || 'unknown'} {...getItemProps('order', order)}>
               <div className="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                 <span className="text-xs font-bold text-blue-600 dark:text-blue-300">
-                  {order.orderId.slice(0, 3)}
+                  {(order.orderId || 'UNK').slice(0, 3)}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {order.orderId}
+                  {order.orderId || 'Unknown Order'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {order.customerName} • {order.status}
+                  {order.customerName || 'Unknown'} • {order.status || 'Unknown'}
                 </p>
               </div>
             </div>

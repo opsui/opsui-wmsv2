@@ -1,0 +1,32 @@
+{
+  "totalCompressions": 1,
+  "totalTokenSavings": 0,
+  "compressionRatio": 0,
+  "topRules": [
+    {
+      "id": "react-imports",
+      "name": "React Standard Imports",
+      "usageCount": 0
+    },
+    {
+      "id": "vitest-setup",
+      "name": "Vitest Test Setup",
+      "usageCount": 0
+    },
+    {
+      "id": "express-route",
+      "name": "Express Route Boilerplate",
+      "usageCount": 0
+    },
+    {
+      "id": "service-transaction",
+      "name": "Service Transaction Pattern",
+      "usageCount": 0
+    },
+    {
+      "id": "zod-validation",
+      "name": "Zod Validation Schema",
+      "usageCount": 0
+    }
+  ]
+}

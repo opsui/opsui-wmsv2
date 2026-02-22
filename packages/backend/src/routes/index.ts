@@ -8,6 +8,7 @@ import { Router } from 'express';
 import accountingRoutes from './accounting';
 import advancedInventoryRoutes from './advancedInventory';
 import authRoutes from './auth';
+import searchRoutes from './search';
 import binLocationsRoutes from './binLocations';
 import businessRulesRoutes from './businessRules';
 import customRolesRoutes from './customRoles';
@@ -107,6 +108,7 @@ v1Router.use('/route-optimization', routeOptimizationRoutes);
 v1Router.use('/automation', automationRoutes);
 v1Router.use('/modules', moduleRoutes);
 v1Router.use('/organizations', organizationRoutes);
+v1Router.use('/search', searchRoutes);
 
 // Developer tools (development only)
 v1Router.use('/developer', developerRoutes);
@@ -166,5 +168,6 @@ router.use('/developer', developerRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/route-optimization', routeOptimizationRoutes);
 router.use('/modules', moduleRoutes);
+router.use('/search', searchRoutes);
 
 export default router;

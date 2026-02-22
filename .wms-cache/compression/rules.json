@@ -1,0 +1,80 @@
+[
+  {
+    "id": "react-imports",
+    "name": "React Standard Imports",
+    "pattern": {
+      "source": "import React(?:[, ]{[^}]*})? from ['\"]react['\"];?\\s*import { useState, useEffect } from ['\"]react['\"];?",
+      "flags": "g"
+    },
+    "category": "import",
+    "reference": "@imports:react-standard",
+    "compressed": "// @imports:react-standard",
+    "tokenSavings": 30,
+    "usageCount": 0
+  },
+  {
+    "id": "vitest-setup",
+    "name": "Vitest Test Setup",
+    "pattern": {
+      "source": "import { describe, it, expect, beforeEach, afterEach, vi } from ['\"]vitest['\"];?\\s*import { render, screen, waitFor } from ['\"]@testing-library\\/react['\"];?",
+      "flags": "g"
+    },
+    "category": "test-setup",
+    "reference": "@test-setup:vitest-standard",
+    "compressed": "// @test-setup:vitest-standard",
+    "tokenSavings": 45,
+    "usageCount": 0
+  },
+  {
+    "id": "express-route",
+    "name": "Express Route Boilerplate",
+    "pattern": {
+      "source": "router\\.(get|post|put|delete|patch)\\(['\"`][^'\"`]+['\"`], async \\(req, res, next\\) => \\{\\s*try \\{[\\s\\S]{100,500}?\\} catch \\(error\\) \\{\\s*next\\(error\\);\\s*\\}\\s*\\}\\);",
+      "flags": "g"
+    },
+    "category": "boilerplate",
+    "reference": "@boilerplate:express-route",
+    "compressed": "// @boilerplate:express-route",
+    "tokenSavings": 80,
+    "usageCount": 0
+  },
+  {
+    "id": "service-transaction",
+    "name": "Service Transaction Pattern",
+    "pattern": {
+      "source": "return await db\\.transaction\\(async \\(trx\\) => \\{[\\s\\S]{50,300}?\\}\\);",
+      "flags": "g"
+    },
+    "category": "boilerplate",
+    "reference": "@boilerplate:service-transaction",
+    "compressed": "// @boilerplate:service-transaction",
+    "tokenSavings": 60,
+    "usageCount": 0
+  },
+  {
+    "id": "zod-validation",
+    "name": "Zod Validation Schema",
+    "pattern": {
+      "source": "import { z } from ['\"]zod['\"];\\s*const \\w+Schema = z\\.object\\(\\{[\\s\\S]{50,400}?\\}\\);",
+      "flags": "g"
+    },
+    "category": "boilerplate",
+    "reference": "@boilerplate:zod-schema",
+    "compressed": "// @boilerplate:zod-schema",
+    "tokenSavings": 70,
+    "usageCount": 0
+  },
+  {
+    "id": "api-client",
+    "name": "API Client Setup",
+    "pattern": {
+      "source": "const api = axios\\.create\\(\\{\\s*baseURL: ['\"][^'\"]+['\"],\\s*timeout: \\d+,\\s*headers:\\s*\\{[^}]*\\}\\s*\\}\\);",
+      "flags": "g"
+    },
+    "category": "config",
+    "reference": "@config:api-client",
+    "compressed": "// @config:api-client",
+    "tokenSavings": 40,
+    "usageCount": 0
+  }
+]

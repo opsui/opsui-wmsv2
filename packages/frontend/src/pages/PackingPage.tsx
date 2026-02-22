@@ -33,6 +33,7 @@ import {
   MinusCircleIcon,
   PrinterIcon,
   ForwardIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import { Address, Carrier, NZCQuote, OrderStatus } from '@opsui/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -66,6 +67,14 @@ export function PackingPage() {
   const [skipItemIndex, setSkipItemIndex] = useState<number | null>(null);
   const [skipReason, setSkipReason] = useState('');
   const [isSkipping, setIsSkipping] = useState(false);
+
+  // Manual override modal state
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [overrideItemIndex, setOverrideItemIndex] = useState<number | null>(null);
+  const [overrideQuantity, setOverrideQuantity] = useState<string>('0');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideNotes, setOverrideNotes] = useState('');
+  const [isOverriding, setIsOverriding] = useState(false);
 
   // Unclaim modal state
   const [showUnclaimModal, setShowUnclaimModal] = useState(false);
@@ -896,6 +905,58 @@ export function PackingPage() {
     setShowUnclaimModal(true);
   };
 
+  // ==========================================================================
+  // MANUAL OVERRIDE FUNCTIONALITY
+  // ==========================================================================
+
+  const handleManualOverride = (index: number) => {
+    const item = order?.items?.[index];
+    if (!item) return;
+
+    setOverrideItemIndex(index);
+    setOverrideQuantity(String(item.verifiedQuantity || 0));
+    setOverrideReason('');
+    setOverrideNotes('');
+    setShowOverrideModal(true);
+  };
+
+  const handleConfirmOverride = async () => {
+    if (overrideItemIndex === null || !order?.items?.[overrideItemIndex]) return;
+
+    const item = order.items[overrideItemIndex];
+    const quantity = parseInt(overrideQuantity, 10) || 0;
+
+    // Validate quantity
+    if (quantity < 0 || quantity > item.quantity) {
+      showToast(`Quantity must be between 0 and ${item.quantity}`, 'error');
+      return;
+    }
+
+    setIsOverriding(true);
+
+    try {
+      await apiClient.post(`/orders/${orderId}/manual-override`, {
+        pickTaskId: item.orderItemId,
+        newQuantity: quantity,
+        reason: overrideReason || 'Manual override',
+        notes: overrideNotes || undefined,
+      });
+
+      showToast('Manual override applied!', 'success');
+      setShowOverrideModal(false);
+      setOverrideItemIndex(null);
+      setOverrideReason('');
+      setOverrideNotes('');
+
+      // Refetch order data
+      await refetch();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to apply override', 'error');
+    } finally {
+      setIsOverriding(false);
+    }
+  };
+
   const handleConfirmUnclaim = async (reason: string, notes: string) => {
     setIsUnclaiming(true);
     try {
@@ -1378,7 +1439,9 @@ export function PackingPage() {
                         </Button>
                       )}
                       <TaskStatusBadge
-                        status={(currentItem.verifiedQuantity || 0) > 0 ? 'IN_PROGRESS' : 'PENDING'}
+                        status={
+                          (currentItem.verifiedQuantity || 0) > 0 ? 'IN_PROGRESS' : 'NOT_STARTED'
+                        }
                       />
                     </div>
                   </div>
@@ -1558,6 +1621,23 @@ export function PackingPage() {
                                   <ForwardIcon className="h-4 w-4" />
                                 </button>
                               )}
+                              {/* Manual override button - for admins/supervisors */}
+                              {isCurrent &&
+                                !isViewMode &&
+                                !isCompleted &&
+                                !isSkipped &&
+                                (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleManualOverride(index);
+                                    }}
+                                    className="text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                    title="Manual override"
+                                  >
+                                    <PencilSquareIcon className="h-4 w-4" />
+                                  </button>
+                                )}
                               {(!isViewMode || userRole === 'ADMIN' || userRole === 'SUPERVISOR') &&
                                 (item.verifiedQuantity || 0) > 0 &&
                                 !isSkipped && (
@@ -1741,6 +1821,103 @@ export function PackingPage() {
           variant="warning"
           isLoading={isCreatingShipment}
         />
+
+        {/* Manual Override Modal */}
+        {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
+            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+              <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="picking-title text-lg">Manual Override</h2>
+                  <button
+                    onClick={() => setShowOverrideModal(false)}
+                    className="text-white hover:text-primary-200 transition-colors"
+                  >
+                    <PencilSquareIcon className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
+                  <p className="picking-title text-white">{order.items[overrideItemIndex].name}</p>
+                  <p className="text-sm text-gray-400 font-mono mt-1">
+                    {order.items[overrideItemIndex].sku}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Required: {order.items[overrideItemIndex].quantity} | Currently Verified:{' '}
+                    {order.items[overrideItemIndex].verifiedQuantity || 0}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    New Verified Quantity <span className="text-error-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={order.items[overrideItemIndex].quantity}
+                    value={overrideQuantity}
+                    onChange={e => setOverrideQuantity(e.target.value)}
+                    onFocus={e => e.target.select()}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Max: {order.items[overrideItemIndex].quantity} (cannot exceed required quantity)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Reason <span className="text-error-400">*</span>
+                  </label>
+                  <textarea
+                    value={overrideReason}
+                    onChange={e => setOverrideReason(e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                    placeholder="e.g., Found damaged item, Correcting count, etc."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Additional Notes (optional)
+                  </label>
+                  <textarea
+                    value={overrideNotes}
+                    onChange={e => setOverrideNotes(e.target.value)}
+                    rows={2}
+                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                    placeholder="Any additional details..."
+                  />
+                </div>
+
+                <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                  <p className="picking-subtitle text-primary-300 text-sm">
+                    <strong>Note:</strong> This action will be logged and audited. Supervisors will
+                    be able to review this override.
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleConfirmOverride}
+                  isLoading={isOverriding}
+                  disabled={!overrideReason.trim() || parseInt(overrideQuantity) < 0}
+                >
+                  Apply Override
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
