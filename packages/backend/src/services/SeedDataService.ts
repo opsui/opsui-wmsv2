@@ -302,6 +302,11 @@ export async function runDatabaseReset(resetType: 'fresh' | 'with-orders' | 'ful
       ['SKU-003', 'Gadget X', 'B-02-01', 75],
       ['SKU-004', 'Gadget Y', 'B-02-02', 200],
       ['SKU-005', 'Tool Z', 'C-03-01', 50],
+      // Production-related SKUs
+      ['WIDGET-001', 'Test Widget Product', 'D-04-01', 50],
+      ['PROD-002', 'Test Product Assembly', 'D-04-02', 30],
+      ['COMP-001', 'Component One', 'E-05-01', 200],
+      ['COMP-002', 'Component Two', 'E-05-02', 150],
     ];
 
     for (const [sku, description, location, quantity] of sampleSkus) {

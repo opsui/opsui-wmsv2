@@ -233,9 +233,25 @@ export function ProductionPage() {
   };
 
   const { data: ordersData, isLoading: isOrdersLoading } = useProductionOrders();
-  const { data: bomsData } = useBOMs();
+  const { data: bomsData, refetch: refetchBOMs } = useBOMs();
 
   const updateOrderMutation = useUpdateProductionOrder();
+
+  // State for BOM activation
+  const [activatingBOMId, setActivatingBOMId] = useState<string | null>(null);
+
+  // BOM activation handler
+  const handleActivateBOM = async (bomId: string) => {
+    setActivatingBOMId(bomId);
+    try {
+      await apiClient.post(`/production/bom/${bomId}/activate`);
+      refetchBOMs();
+    } catch (error) {
+      console.error('Failed to activate BOM:', error);
+    } finally {
+      setActivatingBOMId(null);
+    }
+  };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: ProductionOrderStatus) => {
     try {
@@ -502,7 +518,7 @@ export function ProductionPage() {
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                             Total Orders
                           </p>
-                          <p className="text-3xl font-light text-white">{orders.length}</p>
+                          <p className="text-3xl font-light text-white">{activeOrders.length}</p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
@@ -577,7 +593,13 @@ export function ProductionPage() {
                 {bomsData?.boms && bomsData.boms.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {bomsData.boms.map((bom: any, index: number) => (
-                      <BOMCard key={bom.bomId} bom={bom} index={index} />
+                      <BOMCard
+                        key={bom.bomId}
+                        bom={bom}
+                        index={index}
+                        onActivate={handleActivateBOM}
+                        isActivating={activatingBOMId === bom.bomId}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -643,8 +665,21 @@ export function ProductionPage() {
   );
 }
 
+import { useMutation } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+
 // BOM Card component
-function BOMCard({ bom, index }: { bom: any; index: number }) {
+function BOMCard({
+  bom,
+  index,
+  onActivate,
+  isActivating,
+}: {
+  bom: any;
+  index: number;
+  onActivate: (bomId: string) => void;
+  isActivating: boolean;
+}) {
   const { ref, isInView } = useInView(0.1);
 
   return (
@@ -675,15 +710,28 @@ function BOMCard({ bom, index }: { bom: any; index: number }) {
             {bom.status}
           </span>
         </div>
-        <div className="flex items-center gap-4 text-sm text-slate-500">
-          <div className="flex items-center gap-1.5">
-            <span>Version:</span>
-            <span className="text-white">{bom.version}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-sm text-slate-500">
+            <div className="flex items-center gap-1.5">
+              <span>Version:</span>
+              <span className="text-white">{bom.version}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>Components:</span>
+              <span className="text-white">{bom.components?.length || 0}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span>Components:</span>
-            <span className="text-white">{bom.components?.length || 0}</span>
-          </div>
+          {bom.status === 'DRAFT' && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs h-8 px-3 border-emerald-500/30 hover:bg-emerald-500/10 hover:border-emerald-500/50 text-emerald-400"
+              onClick={() => onActivate(bom.bomId)}
+              disabled={isActivating}
+            >
+              {isActivating ? 'Activating...' : 'Activate'}
+            </Button>
+          )}
         </div>
       </div>
     </div>

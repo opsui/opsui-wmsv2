@@ -2176,6 +2176,46 @@ router.get(
 );
 
 /**
+ * POST /api/developer/test/seed-production-skus
+ * Seed production-related SKUs for testing
+ */
+router.post(
+  '/test/seed-production-skus',
+  requireDevelopment,
+  authenticate,
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const productionSkus = [
+      ['WIDGET-001', 'Test Widget Product', 'D-04-01', 50],
+      ['PROD-002', 'Test Product Assembly', 'D-04-02', 30],
+      ['COMP-001', 'Component One', 'E-05-01', 200],
+      ['COMP-002', 'Component Two', 'E-05-02', 150],
+    ];
+
+    let inserted = 0;
+    for (const [sku, description, binLocation, quantity] of productionSkus) {
+      const result = await pool.query(
+        `INSERT INTO skus (sku, description, bin_location, quantity)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (sku) DO UPDATE SET description = $2, bin_location = $3, quantity = $4
+         RETURNING sku`,
+        [sku, description, binLocation, quantity]
+      );
+      if (result.rows.length > 0) inserted++;
+    }
+
+    res.json({
+      message: `Seeded ${inserted} production SKUs`,
+      skus: productionSkus.map(([sku, desc, loc, qty]) => ({
+        sku,
+        description: desc,
+        binLocation: loc,
+        quantity: qty,
+      })),
+    });
+  })
+);
+
+/**
  * GET /api/developer/test/stats
  * Get database statistics for testing
  */

@@ -108,22 +108,25 @@ function calculateStats(orders: ProductionOrder[]): ProductionStats {
   const nextWeek = new Date(today);
   nextWeek.setDate(nextWeek.getDate() + 7);
 
+  // Safely parse numbers to avoid NaN
+  const safeNumber = (val: any, fallback = 0): number => {
+    const num = Number(val);
+    return isNaN(num) ? fallback : num;
+  };
+
+  const totalQuantity = orders.reduce((sum, o) => sum + safeNumber(o.quantityToProduce), 0);
+  const completedQuantity = orders.reduce((sum, o) => sum + safeNumber(o.quantityCompleted), 0);
+  const rejectedQuantity = orders.reduce((sum, o) => sum + safeNumber(o.quantityRejected), 0);
+
   return {
     totalOrders: orders.length,
     completedOrders: orders.filter(o => o.status === 'COMPLETED').length,
     inProgressOrders: orders.filter(o => o.status === 'IN_PROGRESS').length,
     onHoldOrders: orders.filter(o => o.status === 'ON_HOLD').length,
-    totalQuantity: orders.reduce((sum, o) => sum + (o.quantityToProduce || 0), 0),
-    completedQuantity: orders.reduce((sum, o) => sum + (o.quantityCompleted || 0), 0),
-    rejectedQuantity: orders.reduce((sum, o) => sum + (o.quantityRejected || 0), 0),
-    yieldRate:
-      orders.length > 0
-        ? Math.round(
-            (orders.reduce((sum, o) => sum + (o.quantityCompleted || 0), 0) /
-              orders.reduce((sum, o) => sum + (o.quantityToProduce || 1), 0)) *
-              100
-          )
-        : 0,
+    totalQuantity,
+    completedQuantity,
+    rejectedQuantity,
+    yieldRate: totalQuantity > 0 ? Math.round((completedQuantity / totalQuantity) * 100) : 0,
     avgCycleTime: 0, // Would need start/end timestamps
     overdueOrders: orders.filter(
       o => o.scheduledEndDate && new Date(o.scheduledEndDate) < now && o.status !== 'COMPLETED'

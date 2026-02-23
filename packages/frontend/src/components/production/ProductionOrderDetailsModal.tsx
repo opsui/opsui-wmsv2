@@ -412,7 +412,7 @@ export function ProductionOrderDetailsModal({
                 <Button
                   variant="primary"
                   className="flex items-center gap-1"
-                  onClick={() => handleStatusChange('RELEASED' as ProductionOrderStatus)}
+                  onClick={() => handleStatusChange('IN_PROGRESS' as ProductionOrderStatus)}
                 >
                   <ArrowPathIcon className="h-4 w-4" />
                   Resume Order
