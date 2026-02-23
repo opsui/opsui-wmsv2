@@ -193,13 +193,14 @@ export class SalesRepository {
       paramCount++;
     }
 
-    fields.push(`updated_at = NOW()`);
-    values.push(customerId);
-    paramCount++;
-
-    if (fields.length === 1) {
+    // Only proceed if there are actual field updates (not just updated_at)
+    if (fields.length === 0) {
       return await this.findCustomerById(customerId);
     }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(customerId);
+    // Note: customerId is now at position paramCount (1-indexed)
 
     const result = await client.query(
       `UPDATE customers SET ${fields.join(', ')} WHERE customer_id = $${paramCount} RETURNING *`,
@@ -343,9 +344,14 @@ export class SalesRepository {
       paramCount++;
     }
 
+    // Only proceed if there are actual field updates (not just updated_at)
+    if (fields.length === 0) {
+      return await this.findLeadById(leadId);
+    }
+
     fields.push(`updated_at = NOW()`);
     values.push(leadId);
-    paramCount++;
+    // Note: leadId is now at position paramCount (1-indexed)
 
     const result = await client.query(
       `UPDATE leads SET ${fields.join(', ')} WHERE lead_id = $${paramCount} RETURNING *`,
