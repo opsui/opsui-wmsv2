@@ -624,10 +624,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
       {/* ── Desktop Input - inline inside the toolbar pill ── */}
       {desktopInputAnimState !== 'hidden' && (
-        <div
-          ref={containerRef}
-          className="hidden md:flex flex-1 min-w-0 items-center relative"
-        >
+        <div ref={containerRef} className="hidden md:flex flex-1 min-w-0 items-center relative">
           {/* Search icon */}
           <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 pointer-events-none flex-shrink-0" />
           <input

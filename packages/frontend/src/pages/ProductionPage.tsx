@@ -278,14 +278,18 @@ export function ProductionPage() {
 
     const overdueOrders = orders.filter(
       o =>
-        o.scheduledEndDate && new Date(o.scheduledEndDate) < new Date() && o.status !== 'COMPLETED'
+        o.scheduledEndDate &&
+        new Date(o.scheduledEndDate) < new Date() &&
+        o.status !== 'COMPLETED' &&
+        o.status !== 'CANCELLED'
     );
     const upcomingDeadlines = orders.filter(
       o =>
         o.scheduledEndDate &&
         new Date(o.scheduledEndDate) >= new Date() &&
         new Date(o.scheduledEndDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) &&
-        o.status !== 'COMPLETED'
+        o.status !== 'COMPLETED' &&
+        o.status !== 'CANCELLED'
     );
 
     return {

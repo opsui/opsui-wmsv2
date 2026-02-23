@@ -58,6 +58,20 @@ export class ProductionRepository {
 
       // Insert components
       for (const component of bom.components) {
+        // Ensure component SKU exists in the skus table (auto-create if needed)
+        const skuCheck = await client.query(`SELECT sku FROM skus WHERE sku = $1`, [component.sku]);
+
+        if (skuCheck.rows.length === 0) {
+          // Create the SKU if it doesn't exist
+          await client.query(
+            `INSERT INTO skus (sku, name, category, active, created_at, updated_at)
+             VALUES ($1, $2, 'COMPONENT', true, NOW(), NOW())
+             ON CONFLICT (sku) DO NOTHING`,
+            [component.sku, component.sku]
+          );
+          logger.info('Auto-created SKU for BOM component', { sku: component.sku });
+        }
+
         await client.query(
           `INSERT INTO bom_components
             (component_id, bom_id, sku, quantity, unit_of_measure, is_optional, substitute_skus, notes)
@@ -210,13 +224,13 @@ export class ProductionRepository {
       paramCount++;
     }
 
-    if (updates.effectiveDate !== undefined) {
+    if (updates.effectiveDate !== undefined && updates.effectiveDate !== null) {
       fields.push(`effective_date = $${paramCount}`);
       values.push(updates.effectiveDate);
       paramCount++;
     }
 
-    if (updates.expiryDate !== undefined) {
+    if (updates.expiryDate !== undefined && updates.expiryDate !== null) {
       fields.push(`expiry_date = $${paramCount}`);
       values.push(updates.expiryDate);
       paramCount++;
@@ -230,14 +244,13 @@ export class ProductionRepository {
 
     fields.push(`updated_at = NOW()`);
     values.push(bomId);
-    paramCount++;
 
     if (fields.length === 1) {
       return await this.findBOMById(bomId);
     }
 
     const result = await client.query(
-      `UPDATE bill_of_materials SET ${fields.join(', ')} WHERE bom_id = $${paramCount} RETURNING *`,
+      `UPDATE bill_of_materials SET ${fields.join(', ')} WHERE bom_id = $${values.length} RETURNING *`,
       values
     );
 
@@ -525,40 +538,66 @@ export class ProductionRepository {
 
     const outputId = `OUT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    const result = await client.query(
-      `INSERT INTO production_outputs
-        (output_id, order_id, product_id, quantity, quantity_rejected, lot_number,
-         produced_at, produced_by, inspected_by, inspection_date, notes, bin_location)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-       RETURNING *`,
-      [
-        outputId,
-        output.orderId,
+    try {
+      await client.query('BEGIN');
+
+      // Ensure SKU exists in the skus table (auto-create if needed)
+      const skuCheck = await client.query(`SELECT sku FROM skus WHERE sku = $1`, [
         output.productId,
-        output.quantity,
-        output.quantityRejected,
-        output.lotNumber || null,
-        output.producedAt,
-        output.producedBy,
-        output.inspectedBy || null,
-        output.inspectionDate || null,
-        output.notes || null,
-        output.binLocation || null,
-      ]
-    );
+      ]);
 
-    // Update production order quantities
-    await client.query(
-      `UPDATE production_orders
-       SET quantity_completed = quantity_completed + $1,
-           quantity_rejected = quantity_rejected + $2,
-           updated_at = NOW()
-       WHERE order_id = $3`,
-      [output.quantity, output.quantityRejected, output.orderId]
-    );
+      if (skuCheck.rows.length === 0) {
+        // Create the SKU if it doesn't exist
+        await client.query(
+          `INSERT INTO skus (sku, name, category, active, created_at, updated_at)
+           VALUES ($1, $2, 'PRODUCTION', true, NOW(), NOW())
+           ON CONFLICT (sku) DO NOTHING`,
+          [output.productId, output.productId]
+        );
+        logger.info('Auto-created SKU for production output', { sku: output.productId });
+      }
 
-    logger.info('Production output recorded', { outputId, orderId: output.orderId });
-    return this.mapRowToProductionOutput(result.rows[0]);
+      const result = await client.query(
+        `INSERT INTO production_outputs
+          (output_id, order_id, product_id, quantity, quantity_rejected, lot_number,
+           produced_at, produced_by, inspected_by, inspection_date, notes, bin_location)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         RETURNING *`,
+        [
+          outputId,
+          output.orderId,
+          output.productId,
+          output.quantity,
+          output.quantityRejected,
+          output.lotNumber || null,
+          output.producedAt,
+          output.producedBy,
+          output.inspectedBy || null,
+          output.inspectionDate || null,
+          output.notes || null,
+          output.binLocation || null,
+        ]
+      );
+
+      // Update production order quantities
+      await client.query(
+        `UPDATE production_orders
+         SET quantity_completed = quantity_completed + $1,
+             quantity_rejected = quantity_rejected + $2,
+             updated_at = NOW()
+         WHERE order_id = $3`,
+        [output.quantity, output.quantityRejected, output.orderId]
+      );
+
+      await client.query('COMMIT');
+
+      logger.info('Production output recorded', { outputId, orderId: output.orderId });
+      return this.mapRowToProductionOutput(result.rows[0]);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      logger.error('Error creating production output', error);
+      throw error;
+    }
   }
 
   // ========================================================================

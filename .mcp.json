@@ -16,6 +16,11 @@
       "env": {
         "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW"
       }
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": ["@browsermcp/mcp@latest"],
+      "disabled": false
     }
   }
 }

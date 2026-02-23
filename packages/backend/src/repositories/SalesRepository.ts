@@ -1571,21 +1571,29 @@ export class SalesRepository {
     let billingAddress = { street1: '', city: '', state: '', postalCode: '', country: 'NZ' };
     try {
       if (row.billing_address) {
-        billingAddress = typeof row.billing_address === 'string'
-          ? JSON.parse(row.billing_address)
-          : row.billing_address;
+        billingAddress =
+          typeof row.billing_address === 'string'
+            ? JSON.parse(row.billing_address)
+            : row.billing_address;
       }
     } catch (e) {
       // If parsing fails, use default
-      billingAddress = { street1: String(row.billing_address || ''), city: '', state: '', postalCode: '', country: 'NZ' };
+      billingAddress = {
+        street1: String(row.billing_address || ''),
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'NZ',
+      };
     }
 
     let shippingAddress = undefined;
     try {
       if (row.shipping_address) {
-        shippingAddress = typeof row.shipping_address === 'string'
-          ? JSON.parse(row.shipping_address)
-          : row.shipping_address;
+        shippingAddress =
+          typeof row.shipping_address === 'string'
+            ? JSON.parse(row.shipping_address)
+            : row.shipping_address;
       }
     } catch (e) {
       // If parsing fails, leave undefined

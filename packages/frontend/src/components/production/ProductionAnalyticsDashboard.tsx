@@ -114,12 +114,15 @@ function calculateStats(orders: ProductionOrder[]): ProductionStats {
     return isNaN(num) ? fallback : num;
   };
 
-  const totalQuantity = orders.reduce((sum, o) => sum + safeNumber(o.quantityToProduce), 0);
-  const completedQuantity = orders.reduce((sum, o) => sum + safeNumber(o.quantityCompleted), 0);
-  const rejectedQuantity = orders.reduce((sum, o) => sum + safeNumber(o.quantityRejected), 0);
+  // Filter out cancelled orders for total counts
+  const activeOrders = orders.filter(o => o.status !== 'CANCELLED');
+
+  const totalQuantity = activeOrders.reduce((sum, o) => sum + safeNumber(o.quantityToProduce), 0);
+  const completedQuantity = activeOrders.reduce((sum, o) => sum + safeNumber(o.quantityCompleted), 0);
+  const rejectedQuantity = activeOrders.reduce((sum, o) => sum + safeNumber(o.quantityRejected), 0);
 
   return {
-    totalOrders: orders.length,
+    totalOrders: activeOrders.length,
     completedOrders: orders.filter(o => o.status === 'COMPLETED').length,
     inProgressOrders: orders.filter(o => o.status === 'IN_PROGRESS').length,
     onHoldOrders: orders.filter(o => o.status === 'ON_HOLD').length,

@@ -2450,7 +2450,9 @@ export function Header() {
               className={`relative flex items-center justify-center gap-1 p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-[340px] max-w-[90vw]' : 'w-auto'}`}
             >
               {/* Animated gradient border - smooth Dynamic Island transition - thicker border via padding */}
-              <div className={`absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-70 animate-gradient-shift bg-[length:200%_100%] transition-all duration-300 ease-out ${isMobileSearchActive ? 'rounded-2xl' : 'rounded-full'}`} />
+              <div
+                className={`absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-70 animate-gradient-shift bg-[length:200%_100%] transition-all duration-300 ease-out ${isMobileSearchActive ? 'rounded-2xl' : 'rounded-full'}`}
+              />
               {/* Inner container with glass effect - smooth transition for all properties - overflow-visible for dropdown */}
               <div
                 className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl overflow-visible transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-full rounded-xl px-3 py-1' : 'w-auto px-2 py-1 rounded-full'}`}

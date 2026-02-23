@@ -466,6 +466,27 @@ const exceptionThemeStyles = `
     padding: 14px 16px;
   }
 
+  /* iPhone 14 Pro Max specific fixes */
+  @media (max-width: 440px) {
+    .exception-hero-grid {
+      gap: 0.75rem;
+    }
+
+    .exception-resolution-option {
+      padding: 0.75rem 1rem;
+    }
+
+    /* Better tap targets for exception cards */
+    .exception-card-animate {
+      padding: 1rem;
+    }
+
+    /* Smaller header text for narrow screens */
+    .exception-display-font {
+      letter-spacing: -0.04em;
+    }
+  }
+
   /* Mobile touch target - 44px minimum */
   .exception-touch-target {
     min-height: 44px;
@@ -543,6 +564,7 @@ const exceptionThemeStyles = `
     padding-bottom: calc(16px + var(--safe-bottom));
     background: linear-gradient(to top, rgba(12, 15, 26, 0.98), transparent);
     z-index: 50;
+    backdrop-filter: blur(8px);
   }
 
   @media (min-width: 768px) {
@@ -1133,7 +1155,7 @@ export function ExceptionsPage() {
       <div className="exception-scan-line" />
 
       <Header />
-      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-32 sm:pb-8">
+      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-[calc(5rem+var(--safe-bottom))] sm:pb-8">
         {/* Breadcrumb Navigation */}
         <Breadcrumb />
 
@@ -1142,22 +1164,22 @@ export function ExceptionsPage() {
           <>
             {/* Page Header - Industrial Title */}
             <div className="exception-stagger-item">
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+              <div className="flex flex-col items-center sm:items-start sm:flex-row sm:items-end sm:justify-between gap-4 text-center sm:text-left">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-2">
                     {/* Status indicator dot */}
                     {summary && summary.open > 0 && (
-                      <div className="exception-status-dot exception-status-dot-open pulse-dot" />
+                      <div className="exception-status-dot exception-status-dot-open pulse-dot flex-shrink-0" />
                     )}
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl text-white exception-display-font">
+                    <h1 className="text-xl sm:text-4xl md:text-5xl text-white exception-display-font leading-none">
                       EXCEPTION<span className="text-red-400">.</span>CONTROL
                     </h1>
                   </div>
-                  <p className="text-gray-400 exception-body-font text-base sm:text-lg">
-                    Industrial Exception Management Center — Monitor, Investigate, Resolve
+                  <p className="text-gray-400 exception-body-font text-sm sm:text-lg">
+                    Monitor, Investigate, Resolve
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end">
                   <Button
                     variant="secondary"
                     size="sm"
@@ -1166,10 +1188,11 @@ export function ExceptionsPage() {
                       refetchOpen();
                       refetchSummary();
                     }}
-                    className="exception-card-industrial !bg-transparent exception-touch-target btn-mobile-active"
+                    className="exception-card-industrial !bg-transparent exception-touch-target btn-mobile-active min-w-[100px] sm:min-w-0"
                   >
                     <ClockIcon className="h-4 w-4 mr-2" />
-                    Refresh
+                    <span className="hidden sm:inline">Refresh</span>
+                    <span className="sm:hidden">Refresh</span>
                   </Button>
                 </div>
               </div>
@@ -1286,7 +1309,7 @@ export function ExceptionsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
                     {Object.entries(summary.byType).map(
                       ([type, count]: [string, unknown], index: number) => (
                         <div
@@ -1309,41 +1332,47 @@ export function ExceptionsPage() {
             )}
 
             {/* Filter Tabs - Mobile Touch-Friendly Buttons */}
-            <div className="flex flex-wrap gap-2 exception-stagger-item">
+            <div className="flex flex-wrap gap-2 sm:gap-3 exception-stagger-item">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-4 sm:px-5 py-3 sm:py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
+                className={`flex-1 sm:flex-none min-w-[90px] sm:min-w-0 px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-lg text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
                   filterStatus === 'all'
                     ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/25 exception-filter-active'
                     : 'exception-card-industrial text-gray-400 hover:text-white hover:border-purple-500/30'
                 }`}
               >
-                All ({summary?.total || 0})
+                <span className="hidden sm:inline">All</span>
+                <span className="sm:hidden">All</span>
+                <span className="ml-1 sm:ml-2">({summary?.total || 0})</span>
               </button>
               <button
                 onClick={() => setFilterStatus(ExceptionStatus.OPEN)}
-                className={`px-4 sm:px-5 py-3 sm:py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
+                className={`flex-1 sm:flex-none min-w-[90px] sm:min-w-0 px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-lg text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
                   filterStatus === ExceptionStatus.OPEN
                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/25 exception-filter-active'
                     : 'exception-card-industrial text-gray-400 hover:text-red-400 hover:border-red-500/30'
                 }`}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-1.5 sm:gap-2">
                   {summary && summary.open > 0 && (
-                    <span className="w-2 h-2 rounded-full bg-red-400 pulse-dot" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 pulse-dot flex-shrink-0" />
                   )}
-                  Open ({summary?.open || 0})
+                  <span className="hidden sm:inline">Open</span>
+                  <span className="sm:hidden">Open</span>
+                  <span>({summary?.open || 0})</span>
                 </span>
               </button>
               <button
                 onClick={() => setFilterStatus(ExceptionStatus.RESOLVED)}
-                className={`px-4 sm:px-5 py-3 sm:py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
+                className={`flex-1 sm:flex-none min-w-[90px] sm:min-w-0 px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-lg text-[0.7rem] sm:text-xs font-bold uppercase tracking-wider exception-mono-font transition-all duration-200 exception-touch-target exception-focus-visible ${
                   filterStatus === ExceptionStatus.RESOLVED
                     ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 exception-filter-active'
                     : 'exception-card-industrial text-gray-400 hover:text-emerald-400 hover:border-emerald-500/30'
                 }`}
               >
-                Resolved ({summary?.resolved || 0})
+                <span className="hidden sm:inline">Resolved</span>
+                <span className="sm:hidden">Done</span>
+                <span className="ml-1 sm:ml-2">({summary?.resolved || 0})</span>
               </button>
             </div>
 
@@ -1493,9 +1522,9 @@ export function ExceptionsPage() {
                             </div>
                           )}
 
-                          {/* Resolve button - Desktop inline */}
+                          {/* Resolve button - Desktop inline, Mobile full width */}
                           {isOpen && (
-                            <div className="hidden sm:block mt-5 ml-3">
+                            <div className="mt-4 sm:mt-5 ml-3">
                               <Button
                                 variant="primary"
                                 size="sm"
@@ -1508,7 +1537,7 @@ export function ExceptionsPage() {
                                   setNewQuantity(0);
                                   setNewBinLocation('');
                                 }}
-                                className="bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-touch-target btn-mobile-active"
+                                className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn sm:!min-h-[36px] sm:!py-2 sm:!text-sm btn-mobile-active"
                               >
                                 Resolve Exception
                                 <ChevronRightIcon className="h-4 w-4 ml-1" />
@@ -1554,7 +1583,7 @@ export function ExceptionsPage() {
 
       {/* Mobile Bottom CTA - Fixed at bottom for thumb zone */}
       {openCount > 0 && firstOpenException && (
-        <div className="exception-mobile-cta sm:hidden">
+        <div className="exception-mobile-cta sm:hidden px-4">
           <Button
             variant="primary"
             onClick={() => {
@@ -1566,10 +1595,13 @@ export function ExceptionsPage() {
               setNewQuantity(0);
               setNewBinLocation('');
             }}
-            className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-sm tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn"
+            className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs sm:text-sm tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn flex items-center justify-center gap-2"
           >
-            Resolve Next Exception ({openCount})
-            <ChevronRightIcon className="h-5 w-5 ml-2" />
+            <span className="truncate">Resolve Exception</span>
+            <span className="flex items-center gap-1 flex-shrink-0">
+              <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({openCount})</span>
+              <ChevronRightIcon className="h-4 w-4" />
+            </span>
           </Button>
         </div>
       )}
@@ -1784,7 +1816,7 @@ export function ExceptionsPage() {
               </div>
 
               {/* Modal footer - Mobile sticky bottom */}
-              <div className="sticky bottom-0 px-4 sm:px-6 py-4 sm:py-5 border-t border-white/[0.08] bg-gray-900 flex flex-col sm:flex-row gap-3 pb-[calc(1rem+var(--safe-bottom))] sm:pb-5">
+              <div className="sticky bottom-0 px-4 sm:px-6 py-4 sm:py-5 border-t border-white/[0.08] bg-gray-900/95 backdrop-blur-sm flex flex-col sm:flex-row gap-3 pb-[calc(1rem+var(--safe-bottom))] sm:pb-5">
                 <Button
                   variant="secondary"
                   onClick={() => setShowResolveModal(false)}

@@ -54,6 +54,7 @@ const PackingPage = createLazyPage(() => import('@/pages/PackingPage'));
 const ShippedOrdersPage = createLazyPage(() => import('@/pages/ShippedOrdersPage'));
 const StockControlPage = createLazyPage(() => import('@/pages/StockControlPage'));
 const InwardsGoodsPage = createLazyPage(() => import('@/pages/InwardsGoodsPage'));
+const ASNDetailPage = createLazyPage(() => import('@/pages/inwards/ASNDetailPage'));
 const ProductionPage = createLazyPage(() => import('@/pages/ProductionPage'));
 const MaintenancePage = createLazyPage(() => import('@/pages/MaintenancePage'));
 const RMAPage = createLazyPage(() => import('@/pages/RMAPage'));
@@ -647,6 +648,17 @@ function AppInner() {
               requiredRoles={['INWARDS' as UserRole, UserRole.ADMIN, UserRole.SUPERVISOR]}
             >
               <InwardsGoodsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* ASN Detail route */}
+        <Route
+          path="/inwards/asn/:asnId"
+          element={
+            <ProtectedRoute
+              requiredRoles={['INWARDS' as UserRole, UserRole.ADMIN, UserRole.SUPERVISOR]}
+            >
+              <ASNDetailPage />
             </ProtectedRoute>
           }
         />
