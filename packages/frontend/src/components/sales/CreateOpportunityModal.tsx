@@ -273,7 +273,10 @@ export function CreateOpportunityModal({
             onBlur={() => handleBlur('assignedTo')}
             error={errors.assignedTo}
             required
-            options={users.map(u => ({ value: u.userId, label: u.name || u.email }))}
+            options={[
+              { value: '', label: 'Select a user...' },
+              ...users.map(u => ({ value: u.userId, label: u.name || u.email })),
+            ]}
           />
 
           <FormInput
