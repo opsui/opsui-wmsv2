@@ -22,6 +22,7 @@ import {
   Input,
   Skeleton,
   Breadcrumb,
+  Toast,
 } from '@/components/shared';
 import {
   PlusIcon,
@@ -614,7 +615,7 @@ function CustomDropdown({
             style={{ animation: 'fadeIn 0.15s ease-out' }}
           />
           <div
-            className={`absolute z-20 w-full mt-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-2 border-[var(--color-accent-gold)]/20 rounded-xl shadow-2xl overflow-hidden ${
+            className={`absolute z-50 w-full mt-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-2 border-[var(--color-accent-gold)]/20 rounded-xl shadow-2xl overflow-hidden ${
               isAnimating && !isOpen
                 ? 'animate-out fade-out slide-out-to-top-2'
                 : 'animate-in slide-in-from-top-2'
@@ -1100,6 +1101,14 @@ function ChartOfAccountsPage() {
   const createMutation = useCreateAccount();
   const updateMutation = useUpdateAccount();
 
+  // Toast state for error notifications
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' } | null>(null);
+
+  const showToast = (message: string, type: 'error' | 'success' = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
   // Build tree structure
   const buildAccountTree = (flatAccounts: ChartOfAccounts[]): AccountNode[] => {
     const accountMap = new Map<string, AccountNode>();
@@ -1134,14 +1143,59 @@ function ChartOfAccountsPage() {
 
   const accountTree = buildAccountTree(accounts);
 
-  // Filter by search
-  const filteredTree = searchQuery
-    ? accountTree.filter(
-        account =>
-          account.accountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          account.accountCode.includes(searchQuery)
-      )
-    : accountTree;
+  // Filter by search - recursively search through all accounts including children
+  const filterAccountsBySearch = (accounts: AccountNode[], query: string): AccountNode[] => {
+    if (!query) return accounts;
+    const lowerQuery = query.toLowerCase();
+
+    return accounts.reduce<AccountNode[]>((acc, account) => {
+      const matchesSelf =
+        account.accountName.toLowerCase().includes(lowerQuery) ||
+        account.accountCode.includes(query);
+
+      const matchingChildren = filterAccountsBySearch(account.children, query);
+
+      if (matchesSelf || matchingChildren.length > 0) {
+        acc.push({
+          ...account,
+          children: matchingChildren.length > 0 ? matchingChildren : account.children,
+        });
+      }
+
+      return acc;
+    }, []);
+  };
+
+  // Filter by account type on client-side (for sample data)
+  const filterByType = (accounts: AccountNode[], type: string): AccountNode[] => {
+    if (!type) return accounts;
+
+    return accounts.reduce<AccountNode[]>((acc, account) => {
+      const matchesSelf = account.accountType === type;
+      const matchingChildren = filterByType(account.children, type);
+
+      if (matchesSelf || matchingChildren.length > 0) {
+        acc.push({
+          ...account,
+          children: matchingChildren.length > 0 ? matchingChildren : account.children,
+        });
+      }
+
+      return acc;
+    }, []);
+  };
+
+  let filteredTree = accountTree;
+
+  // Apply type filter first
+  if (filterType) {
+    filteredTree = filterByType(filteredTree, filterType);
+  }
+
+  // Apply search filter
+  if (searchQuery) {
+    filteredTree = filterAccountsBySearch(filteredTree, searchQuery);
+  }
 
   // Format currency
   const formatCurrency = (value: number): string => {
@@ -1165,17 +1219,27 @@ function ChartOfAccountsPage() {
   };
 
   const handleCreateAccount = async (data: any) => {
-    await createMutation.mutateAsync(data);
-    setShowCreateModal(false);
-    refetch();
+    try {
+      await createMutation.mutateAsync(data);
+      setShowCreateModal(false);
+      showToast('Account created successfully', 'success');
+      refetch();
+    } catch (error: any) {
+      showToast(error.message || 'Failed to create account', 'error');
+    }
   };
 
   const handleEditAccount = async (data: any) => {
     if (selectedAccount) {
-      await updateMutation.mutateAsync({ accountId: selectedAccount.accountId, data });
-      setShowEditModal(false);
-      setSelectedAccount(undefined);
-      refetch();
+      try {
+        await updateMutation.mutateAsync({ accountId: selectedAccount.accountId, data });
+        setShowEditModal(false);
+        setSelectedAccount(undefined);
+        showToast('Account updated successfully', 'success');
+        refetch();
+      } catch (error: any) {
+        showToast(error.message || 'Failed to update account', 'error');
+      }
     }
   };
 
@@ -1675,6 +1739,38 @@ function ChartOfAccountsPage() {
           </div>
         </Modal>
       </main>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed bottom-4 right-4 z-[100] px-6 py-4 rounded-xl shadow-2xl backdrop-blur-xl animate-in slide-in-from-bottom-4 ${
+            toast.type === 'error' ? 'bg-rose-500/90 text-white' : 'bg-emerald-500/90 text-white'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            {toast.type === 'error' ? (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+            <span className="font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Ambient background effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">

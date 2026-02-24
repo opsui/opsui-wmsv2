@@ -608,6 +608,45 @@ router.post(
   })
 );
 
+/**
+ * POST /api/developer/run-accounting-migration
+ * Run the accounting tables migration
+ */
+router.post(
+  '/run-accounting-migration',
+  requireDevelopment,
+  authenticate,
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    try {
+      const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
+
+      // Run Phase 1 (Chart of Accounts)
+      const phase1SQL = fs.readFileSync(
+        path.join(migrationsDir, '044_add_full_erp_accounting_phase1.sql'),
+        'utf8'
+      );
+      await pool.query(phase1SQL);
+
+      res.json({
+        success: true,
+        message: 'Accounting tables migration completed successfully',
+        tablesCreated: [
+          'acct_chart_of_accounts',
+          'acct_journal_entries',
+          'acct_journal_entry_lines',
+          'acct_trial_balance',
+          'acct_trial_balance_lines',
+        ],
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  })
+);
+
 // ============================================================================
 // FEATURE FLAGS
 // ============================================================================
