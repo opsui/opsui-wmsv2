@@ -647,6 +647,63 @@ router.post(
   })
 );
 
+/**
+ * POST /api/developer/run-account-id-fix
+ * Fix account_id column length to support UUIDs
+ */
+router.post(
+  '/run-account-id-fix',
+  requireDevelopment,
+  authenticate,
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    try {
+      // Alter the account_id column to support UUIDs
+      await pool.query(`
+        ALTER TABLE IF EXISTS acct_chart_of_accounts 
+        ALTER COLUMN account_id TYPE VARCHAR(50)
+      `);
+
+      // Also update any related columns
+      await pool.query(`
+        ALTER TABLE IF EXISTS acct_journal_entry_lines 
+        ALTER COLUMN account_id TYPE VARCHAR(50)
+      `);
+
+      await pool.query(`
+        ALTER TABLE IF EXISTS acct_trial_balance_lines 
+        ALTER COLUMN account_id TYPE VARCHAR(50)
+      `);
+
+      await pool.query(`
+        ALTER TABLE IF EXISTS acct_budget_lines 
+        ALTER COLUMN account_id TYPE VARCHAR(50)
+      `);
+
+      await pool.query(`
+        ALTER TABLE IF EXISTS acct_forecast_lines 
+        ALTER COLUMN account_id TYPE VARCHAR(50)
+      `);
+
+      res.json({
+        success: true,
+        message: 'Account ID column length fixed to support UUIDs',
+        changes: [
+          'acct_chart_of_accounts.account_id -> VARCHAR(50)',
+          'acct_journal_entry_lines.account_id -> VARCHAR(50)',
+          'acct_trial_balance_lines.account_id -> VARCHAR(50)',
+          'acct_budget_lines.account_id -> VARCHAR(50)',
+          'acct_forecast_lines.account_id -> VARCHAR(50)',
+        ],
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  })
+);
+
 // ============================================================================
 // FEATURE FLAGS
 // ============================================================================

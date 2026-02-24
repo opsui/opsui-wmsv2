@@ -1197,12 +1197,16 @@ function ChartOfAccountsPage() {
     filteredTree = filterAccountsBySearch(filteredTree, searchQuery);
   }
 
-  // Format currency
-  const formatCurrency = (value: number): string => {
+  // Format currency - handles null/undefined gracefully
+  const formatCurrency = (value: number | null | undefined): string => {
+    const numValue = value ?? 0;
+    if (isNaN(numValue) || !isFinite(numValue)) {
+      return '$0.00';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(value);
+    }).format(numValue);
   };
 
   // Handlers
