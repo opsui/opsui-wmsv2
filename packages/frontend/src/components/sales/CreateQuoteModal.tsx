@@ -58,28 +58,31 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
     setQuery(value);
   }, [value]);
 
-  // Auto-fill when query exactly matches a SKU or name in results (handles paste)
-  useEffect(() => {
-    if (!open && query.length >= 2) {
-      const q = query.toLowerCase();
-      const exact = skus.find(
-        (s: any) => s.sku.toLowerCase() === q || s.name?.toLowerCase() === q
-      );
-      if (exact) {
-        onSelect(exact.sku, exact.description || exact.name || '', parseFloat(exact.unit_price ?? exact.unitPrice ?? 0));
-      }
+  // Keep a ref to latest skus so the blur handler can access them without stale closure
+  const skusRef = useRef(skus);
+  useEffect(() => { skusRef.current = skus; }, [skus]);
+
+  const tryAutoFill = () => {
+    if (query.length < 2) return;
+    const q = query.toLowerCase();
+    const exact = skusRef.current.find(
+      (s: any) => s.sku.toLowerCase() === q || s.name?.toLowerCase() === q
+    );
+    if (exact) {
+      onSelect(exact.sku, exact.description || exact.name || '', parseFloat(exact.unit_price ?? exact.unitPrice ?? 0));
     }
-  }, [skus]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
+        tryAutoFill();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [query]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="relative" ref={containerRef}>
@@ -91,6 +94,7 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
+        onBlur={() => { setOpen(false); tryAutoFill(); }}
         placeholder="SKU or name..."
         className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
       />
