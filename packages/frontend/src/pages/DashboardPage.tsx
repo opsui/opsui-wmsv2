@@ -14,16 +14,11 @@
 import {
   AuditLogsCard,
   Breadcrumb,
-  Button,
   Card,
   CardContent,
   Header,
-  ListSkeleton,
   MetricCardSkeleton,
-  OrderPriorityBadge,
-  OrderStatusBadge,
   OrderStatusChart,
-  Pagination,
   PerformanceChart,
   RoleActivityCard,
   Skeleton,
@@ -46,7 +41,6 @@ import {
   useAllStockControllersPerformance,
   useAuditLogs,
   useDashboardMetrics,
-  useOrderQueue,
   useOrderStatusBreakdown,
   useRoleActivity,
   useRoleDetails,
@@ -59,15 +53,13 @@ import {
   ArrowTrendingUpIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
   QueueListIcon,
   UserGroupIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { OrderStatus, UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { memo, useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
 // ANIMATION STYLES (injected for staggered reveals)
@@ -250,163 +242,13 @@ const MetricCard = memo(function MetricCard({
   );
 });
 
-// Admin Orders Modal Component
-function AdminOrdersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const pageSize = 10;
-  const { data: queueData, isLoading } = useOrderQueue({
-    status: 'PENDING' as OrderStatus,
-    page: currentPage,
-    limit: pageSize,
-    enabled: isOpen, // Only fetch when modal is actually open
-  });
-
-  // Filter orders based on search
-  const filteredOrders = queueData?.orders
-    ? queueData.orders.filter(order => {
-        if (!searchQuery.trim()) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-          order.orderId?.toLowerCase().includes(query) ||
-          order.customerName?.toLowerCase().includes(query) ||
-          order.status?.toLowerCase().includes(query)
-        );
-      })
-    : [];
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-6xl max-h-[80vh] dark:bg-gray-900 bg-white rounded-2xl dark:border border-gray-200 shadow-2xl animate-fade-in flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 dark:border-b border-gray-200">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-semibold dark:text-white text-gray-900">
-              All Orders (Admin View)
-            </h2>
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 w-64 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700"
-              />
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900 rounded-lg dark:hover:bg-white/[0.05] hover:bg-gray-100"
-          >
-            <XMarkIcon className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {isLoading ? (
-            <ListSkeleton items={5} />
-          ) : !queueData?.orders || queueData.orders.length === 0 ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-gray-400">No orders available</div>
-            </div>
-          ) : (
-            <>
-              {filteredOrders.length === 0 ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-gray-400">No orders match your search</div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredOrders.map(order => (
-                    <Card
-                      key={order.orderId}
-                      variant="glass"
-                      className="p-4 dark:bg-white/[0.02] bg-gray-50/50 border-opacity-50"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold dark:text-white text-gray-900 truncate">
-                              {order.orderId}
-                            </h3>
-                            <OrderPriorityBadge priority={order.priority} />
-                            <OrderStatusBadge status={order.status} />
-                            <span className="text-xs px-2 py-0.5 rounded-full dark:bg-gray-700/50 bg-gray-200 dark:text-gray-400 text-gray-500 border dark:border-gray-600 border-gray-300">
-                              Read-only
-                            </span>
-                          </div>
-                          <p className="text-sm dark:text-gray-400 text-gray-600 truncate">
-                            {order.customerName}
-                          </p>
-                          <div className="mt-3 flex items-center gap-6 text-sm dark:text-gray-400 text-gray-600">
-                            <span>
-                              Items:{' '}
-                              <span className="dark:text-white text-gray-900 font-medium">
-                                {order.items?.length || 0}
-                              </span>
-                            </span>
-                            <span>
-                              Progress:{' '}
-                              <span className="dark:text-white text-gray-900 font-medium">
-                                {order.progress}%
-                              </span>
-                            </span>
-                            <span>
-                              Created:{' '}
-                              <span className="dark:text-white text-gray-900 font-medium">
-                                {formatDate(order.createdAt)}
-                              </span>
-                            </span>
-                          </div>
-                        </div>
-                        {order.status === 'PICKING' && (
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            onClick={() => (window.location.href = `/orders/${order.orderId}/pick`)}
-                            className="flex items-center gap-2 shrink-0"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                            Live View
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {/* Pagination */}
-              <div className="mt-4 flex justify-center">
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={queueData?.total || 0}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
 export function DashboardPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { invalidateQueued } = useDebouncedInvalidation(500);
   const canSupervise = useAuthStore(state => state.canSupervise);
@@ -431,7 +273,6 @@ export function DashboardPage() {
   const [performanceRole, setPerformanceRole] = useState<
     UserRole.PICKER | UserRole.PACKER | UserRole.STOCK_CONTROLLER
   >(UserRole.PICKER);
-  const [showAdminOrders, setShowAdminOrders] = useState(false);
   const [scanType, setScanType] = useState<'pick' | 'pack' | 'verify' | 'all'>('pick');
   const [topSKUsTimePeriod, setTopSKUsTimePeriod] = useState<
     'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -721,7 +562,6 @@ export function DashboardPage() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Header />
-      <AdminOrdersModal isOpen={showAdminOrders} onClose={() => setShowAdminOrders(false)} />
       <main
         id="main-content"
         className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 lg:space-y-8 overflow-x-hidden"
@@ -790,7 +630,7 @@ export function DashboardPage() {
             value={metrics.queueDepth}
             icon={QueueListIcon}
             color="warning"
-            onClick={() => setShowAdminOrders(true)}
+            onClick={() => navigate('/orders')}
             index={2}
           />
           <MetricCard
