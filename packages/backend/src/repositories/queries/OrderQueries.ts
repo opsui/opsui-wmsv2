@@ -32,6 +32,8 @@ export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
     pt.completed_at,
     pt.skip_reason,
     s.barcode,
+    COALESCE(s.unit_price, 0) as unit_price,
+    COALESCE(pt.quantity * s.unit_price, 0) as line_total,
     COALESCE(
       i_specific.available,
       i_total.total_available,
