@@ -50,10 +50,6 @@ export class OrderRepository extends BaseRepository<Order> {
           priority: dto.priority,
           status: OrderStatus.PENDING,
           progress: 0,
-          currency,
-          taxAmount: 0,
-          shippingCost: 0,
-          discountAmount: 0,
         } as any,
         client
       );
@@ -113,16 +109,8 @@ export class OrderRepository extends BaseRepository<Order> {
         );
       }
 
-      // Calculate and update order totals
-      const taxAmount = 0; // TODO: Implement tax calculation based on customer location
-      const shippingCost = 0; // TODO: Implement shipping cost calculation
-      const discountAmount = 0; // TODO: Implement discount calculation
-      const totalAmount = subtotal + taxAmount + shippingCost - discountAmount;
-
-      await client.query(
-        `UPDATE orders SET subtotal = $1, tax_amount = $2, shipping_cost = $3, discount_amount = $4, total_amount = $5 WHERE order_id = $6`,
-        [subtotal, taxAmount, shippingCost, discountAmount, totalAmount, orderId]
-      );
+      // Order totals will be calculated when needed
+      // Note: subtotal, tax_amount, discount_amount, total_amount columns don't exist in current schema
 
       // Fetch complete order with items
       return this.getOrderWithItems(order.orderId);
@@ -268,10 +256,12 @@ export class OrderRepository extends BaseRepository<Order> {
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
+        const totalAmount = mappedItems.reduce((sum: number, item: any) => sum + Number(item.lineTotal || 0), 0);
 
         return {
           ...order,
           items: mappedItems,
+          totalAmount,
         };
       })
     );

@@ -135,6 +135,8 @@ export function mapOrderItem(row: any): any {
     completedAt: row.completed_at || row.completedAt,
     barcode: row.barcode || null,
     onHandQuantity: row.on_hand_quantity ?? row.onHandQuantity ?? 0,
+    unitPrice: row.unit_price != null ? parseFloat(row.unit_price) : (row.unitPrice ?? null),
+    lineTotal: row.line_total != null ? parseFloat(row.line_total) : (row.lineTotal ?? null),
   };
 }
 
