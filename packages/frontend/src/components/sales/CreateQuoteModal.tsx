@@ -50,13 +50,23 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data, isFetching } = useSKUSearch(query, open && query.length >= 2);
+  const { data, isFetching } = useSKUSearch(query, query.length >= 2);
   const skus: any[] = data?.data || data?.skus || (Array.isArray(data) ? data : []);
 
   // Sync external value resets (e.g. form reset)
   useEffect(() => {
     setQuery(value);
   }, [value]);
+
+  // Auto-fill when query exactly matches a SKU in results (handles paste)
+  useEffect(() => {
+    if (!open && query.length >= 2) {
+      const exact = skus.find((s: any) => s.sku.toLowerCase() === query.toLowerCase());
+      if (exact) {
+        onSelect(exact.sku, exact.description || exact.name || '', parseFloat(exact.unit_price ?? exact.unitPrice ?? 0));
+      }
+    }
+  }, [skus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
