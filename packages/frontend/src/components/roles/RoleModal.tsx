@@ -4,7 +4,7 @@
  * Modal for creating and editing custom roles with permissions
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/shared';
 import {
   XMarkIcon,
@@ -108,9 +108,13 @@ function RoleModal({
     validateOnChange: true,
   });
 
+  // Track if modal has been initialized to prevent infinite loops
+  const initRef = useRef(false);
+
   // Initialize form when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !initRef.current) {
+      initRef.current = true;
       reset();
       setFieldValue('name', initialData?.name || '');
       setFieldValue('description', '');
@@ -135,6 +139,10 @@ function RoleModal({
       // Expand all groups by default
       const allGroups = new Set(Object.keys(PERMISSION_GROUPS));
       setExpandedGroups(allGroups);
+    }
+
+    if (!isOpen) {
+      initRef.current = false;
     }
   }, [isOpen, initialData, reset, setFieldValue]);
 

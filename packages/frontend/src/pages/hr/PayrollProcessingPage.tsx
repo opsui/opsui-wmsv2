@@ -54,14 +54,14 @@ function AnimatedStat({
   value,
   prefix = '',
   suffix = '',
-  color = 'gold',
+  color = 'purple',
   delay = 0,
 }: {
   label: string;
   value: number;
   prefix?: string;
   suffix?: string;
-  color?: 'gold' | 'emerald' | 'coral' | 'silver';
+  color?: 'purple' | 'violet' | 'fuchsia' | 'silver';
   delay?: number;
 }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -73,9 +73,9 @@ function AnimatedStat({
   }, [delay]);
 
   const colorClasses = {
-    gold: 'from-amber-400 to-yellow-500 text-amber-400',
-    emerald: 'from-emerald-400 to-teal-500 text-emerald-400',
-    coral: 'from-rose-400 to-pink-500 text-rose-400',
+    purple: 'from-purple-400 to-violet-500 text-purple-400',
+    violet: 'from-violet-400 to-purple-500 text-violet-400',
+    fuchsia: 'from-fuchsia-400 to-purple-500 text-fuchsia-400',
     silver: 'from-slate-300 to-slate-400 text-slate-300',
   };
 
@@ -131,7 +131,7 @@ function PeriodCard({
       <div
         className={`absolute -inset-px rounded-2xl transition-all duration-300 ${
           isSelected
-            ? 'bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-amber-500/20 border border-amber-400/40'
+            ? 'bg-gradient-to-r from-purple-500/20 via-purple-400/10 to-purple-500/20 border border-purple-400/40'
             : 'border border-transparent group-hover:border-white/10'
         }`}
       />
@@ -141,7 +141,7 @@ function PeriodCard({
         <div className="flex items-center gap-2 mb-3">
           <div
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              isSelected ? 'bg-amber-400 shadow-lg shadow-amber-400/50' : 'bg-slate-600'
+              isSelected ? 'bg-purple-400 shadow-lg shadow-purple-400/50' : 'bg-slate-600'
             }`}
           />
           <span className="text-white font-medium tracking-wide">{period.periodName}</span>
@@ -154,7 +154,7 @@ function PeriodCard({
 
         {/* Pay date badge */}
         <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50">
-          <CurrencyDollarIcon className="h-3 w-3 text-amber-500/70" />
+          <CurrencyDollarIcon className="h-3 w-3 text-purple-500/70" />
           <span className="text-xs text-slate-400">Pay: {period.payDate}</span>
         </div>
       </div>
@@ -204,8 +204,8 @@ export default function PayrollProcessingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Ambient background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px] -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-[100px] translate-y-1/2" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[120px] -translate-y-1/2" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[100px] translate-y-1/2" />
       </div>
 
       <Header />
@@ -215,10 +215,10 @@ export default function PayrollProcessingPage() {
           {/* Page header with elegant typography */}
           <header className="mb-12">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/20">
-                <CalculatorIcon className="h-5 w-5 text-slate-900" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg shadow-purple-500/20">
+                <CalculatorIcon className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-purple-400/80">
                 Financial Operations
               </span>
             </div>
@@ -241,7 +241,7 @@ export default function PayrollProcessingPage() {
                 <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/5 p-6 sm:p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
-                      <ChartBarIcon className="h-4 w-4 text-amber-400" />
+                      <ChartBarIcon className="h-4 w-4 text-purple-400" />
                     </div>
                     <h2 className="text-xl font-light text-white">Select Pay Period</h2>
                   </div>
@@ -280,13 +280,13 @@ export default function PayrollProcessingPage() {
                     animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
-                  <div className="absolute -inset-px bg-gradient-to-r from-amber-500/20 via-teal-500/10 to-amber-500/20 rounded-3xl" />
-                  <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-amber-500/10 p-6 sm:p-8">
+                  <div className="absolute -inset-px bg-gradient-to-r from-purple-500/20 via-violet-500/10 to-purple-500/20 rounded-3xl" />
+                  <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-purple-500/10 p-6 sm:p-8">
                     {/* Results header */}
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                          <CalculatorIcon className="h-5 w-5 text-slate-900" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                          <CalculatorIcon className="h-5 w-5 text-white" />
                         </div>
                         <div>
                           <h2 className="text-xl font-light text-white">Calculation Complete</h2>
@@ -298,7 +298,7 @@ export default function PayrollProcessingPage() {
                           setShowResults(false);
                           setCalculation(null);
                         }}
-                        className="text-sm text-slate-400 hover:text-amber-400 transition-colors"
+                        className="text-sm text-slate-400 hover:text-purple-400 transition-colors"
                       >
                         Recalculate
                       </button>
@@ -316,21 +316,21 @@ export default function PayrollProcessingPage() {
                         label="Gross Pay"
                         value={calculation.totalGrossPay}
                         prefix="$"
-                        color="gold"
+                        color="purple"
                         delay={200}
                       />
                       <AnimatedStat
                         label="Net Pay"
                         value={calculation.totalNetPay}
                         prefix="$"
-                        color="emerald"
+                        color="violet"
                         delay={300}
                       />
                       <AnimatedStat
                         label="Total Tax"
                         value={calculation.totalTax}
                         prefix="$"
-                        color="coral"
+                        color="fuchsia"
                         delay={400}
                       />
                     </div>
@@ -354,7 +354,7 @@ export default function PayrollProcessingPage() {
                     {/* Process button */}
                     <Button
                       onClick={handleProcess}
-                      className="w-full h-14 text-base font-medium bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/30"
+                      className="w-full h-14 text-base font-medium bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30"
                     >
                       <CheckCircleIcon className="h-5 w-5 mr-2" />
                       Process Payroll
@@ -373,15 +373,15 @@ export default function PayrollProcessingPage() {
                   <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/5 p-6 sm:p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
-                        <UserGroupIcon className="h-4 w-4 text-teal-400" />
+                        <UserGroupIcon className="h-4 w-4 text-purple-400" />
                       </div>
                       <h2 className="text-lg font-light text-white">Ready to Calculate</h2>
                     </div>
 
                     {/* Selected period indicator */}
                     {selectedPeriodId ? (
-                      <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                        <p className="text-sm text-amber-400/80 mb-1">Selected Period</p>
+                      <div className="mb-6 p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
+                        <p className="text-sm text-purple-400/80 mb-1">Selected Period</p>
                         <p className="text-white font-light">
                           {availablePeriods.find((p: any) => p.periodId === selectedPeriodId)
                             ?.periodName || 'Unknown'}
@@ -401,7 +401,7 @@ export default function PayrollProcessingPage() {
                       size="lg"
                       className={`w-full h-14 text-base font-medium transition-all duration-500 ${
                         selectedPeriodId
-                          ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30'
+                          ? 'bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30'
                           : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                       }`}
                     >
@@ -427,15 +427,15 @@ export default function PayrollProcessingPage() {
                   <h3 className="text-sm font-medium text-slate-300 mb-3">Processing Notes</h3>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-start gap-2">
-                      <div className="w-1 h-1 rounded-full bg-amber-500/50 mt-2" />
+                      <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2" />
                       <span>Calculations include all approved timesheets</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1 h-1 rounded-full bg-amber-500/50 mt-2" />
+                      <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2" />
                       <span>Tax withheld per PAYE guidelines</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <div className="w-1 h-1 rounded-full bg-amber-500/50 mt-2" />
+                      <div className="w-1 h-1 rounded-full bg-purple-500/50 mt-2" />
                       <span>KiwiSaver deductions applied automatically</span>
                     </li>
                   </ul>

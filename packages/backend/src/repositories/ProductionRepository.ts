@@ -722,6 +722,94 @@ export class ProductionRepository {
       binLocation: row.bin_location,
     };
   }
+
+  // ========================================================================
+  // BOM COMPONENT MANAGEMENT
+  // ========================================================================
+
+  async replaceBOMComponents(
+    bomId: string,
+    components: Array<{
+      sku: string;
+      quantity: number;
+      unitOfMeasure: string;
+      isOptional?: boolean;
+      substituteSkus?: string[];
+      notes?: string;
+    }>
+  ): Promise<void> {
+    const client = await getPool();
+    await client.query('BEGIN');
+    try {
+      await client.query(`DELETE FROM bom_components WHERE bom_id = $1`, [bomId]);
+      for (const component of components) {
+        await client.query(
+          `INSERT INTO bom_components
+             (component_id, bom_id, sku, quantity, unit_of_measure, is_optional, substitute_skus, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            `COMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            bomId,
+            component.sku,
+            component.quantity,
+            component.unitOfMeasure,
+            component.isOptional ?? false,
+            component.substituteSkus ? JSON.stringify(component.substituteSkus) : null,
+            component.notes ?? null,
+          ]
+        );
+      }
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    }
+  }
+
+  // ========================================================================
+  // PRODUCTION ORDER COMPONENT MANAGEMENT
+  // ========================================================================
+
+  async getProductionOrderComponent(
+    orderId: string,
+    componentId: string
+  ): Promise<{ sku: string; quantityRequired: number; quantityIssued: number; quantityReturned: number } | null> {
+    const client = await getPool();
+    const result = await client.query(
+      `SELECT sku, quantity_required, quantity_issued, quantity_returned
+       FROM production_order_components
+       WHERE order_id = $1 AND component_id = $2`,
+      [orderId, componentId]
+    );
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      sku: row.sku,
+      quantityRequired: parseFloat(row.quantity_required),
+      quantityIssued: parseFloat(row.quantity_issued),
+      quantityReturned: parseFloat(row.quantity_returned),
+    };
+  }
+
+  async incrementComponentIssuedQty(orderId: string, componentId: string, quantity: number): Promise<void> {
+    const client = await getPool();
+    await client.query(
+      `UPDATE production_order_components
+       SET quantity_issued = quantity_issued + $1
+       WHERE order_id = $2 AND component_id = $3`,
+      [quantity, orderId, componentId]
+    );
+  }
+
+  async incrementComponentReturnedQty(orderId: string, componentId: string, quantity: number): Promise<void> {
+    const client = await getPool();
+    await client.query(
+      `UPDATE production_order_components
+       SET quantity_returned = quantity_returned + $1
+       WHERE order_id = $2 AND component_id = $3`,
+      [quantity, orderId, componentId]
+    );
+  }
 }
 
 // Singleton instance

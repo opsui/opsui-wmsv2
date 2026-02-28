@@ -5,6 +5,7 @@
  */
 
 import { productionRepository } from '../repositories/ProductionRepository';
+import { inventoryRepository } from '../repositories/InventoryRepository';
 import {
   ProductionOrder,
   BillOfMaterial,
@@ -84,7 +85,10 @@ export class ProductionService {
       throw new NotFoundError('BOM', bomId);
     }
 
-    // TODO: Update components if provided (would require separate table operations)
+    // Update components if provided — replace all components for this BOM
+    if (dto.components && dto.components.length > 0) {
+      await productionRepository.replaceBOMComponents(bomId, dto.components);
+    }
 
     return updated;
   }
@@ -367,7 +371,7 @@ export class ProductionService {
   // MATERIAL MANAGEMENT
   // ========================================================================
 
-  async issueMaterial(dto: IssueMaterialDTO, _userId: string): Promise<void> {
+  async issueMaterial(dto: IssueMaterialDTO, userId: string): Promise<void> {
     const order = await this.getProductionOrderById(dto.orderId);
 
     if (
@@ -377,13 +381,30 @@ export class ProductionService {
       throw new Error('Can only issue materials for RELEASED or IN_PROGRESS orders');
     }
 
-    // This would integrate with inventory service
-    // For now, just update the component issued quantity
+    // Look up the production order component to get the SKU
+    const component = await productionRepository.getProductionOrderComponent(
+      dto.orderId,
+      dto.componentId
+    );
+    if (!component) {
+      throw new Error(`Component ${dto.componentId} not found on order ${dto.orderId}`);
+    }
 
-    // TODO: Implement inventory integration and component update
+    // Deduct inventory (use provided bin location or a default placeholder)
+    const binLocation = dto.binLocation ?? 'PRODUCTION';
+    await inventoryRepository.adjustInventory(
+      component.sku,
+      binLocation,
+      -dto.quantity,
+      userId,
+      `PRODUCTION_ISSUE:${dto.orderId}`
+    );
+
+    // Record the issued quantity on the production order component
+    await productionRepository.incrementComponentIssuedQty(dto.orderId, dto.componentId, dto.quantity);
   }
 
-  async returnMaterial(dto: ReturnMaterialDTO, _userId: string): Promise<void> {
+  async returnMaterial(dto: ReturnMaterialDTO, userId: string): Promise<void> {
     const order = await this.getProductionOrderById(dto.orderId);
 
     // Can return materials from active or completed orders
@@ -395,8 +416,31 @@ export class ProductionService {
       throw new Error('Can only return materials from active or completed orders');
     }
 
-    // This would integrate with inventory service
-    // TODO: Implement inventory integration
+    // Look up the production order component to get the SKU
+    const component = await productionRepository.getProductionOrderComponent(
+      dto.orderId,
+      dto.componentId
+    );
+    if (!component) {
+      throw new Error(`Component ${dto.componentId} not found on order ${dto.orderId}`);
+    }
+
+    if (dto.quantity > component.quantityIssued - component.quantityReturned) {
+      throw new Error('Return quantity exceeds the net issued quantity');
+    }
+
+    // Return stock back to inventory
+    const binLocation = dto.binLocation ?? 'PRODUCTION';
+    await inventoryRepository.adjustInventory(
+      component.sku,
+      binLocation,
+      dto.quantity,
+      userId,
+      `PRODUCTION_RETURN:${dto.orderId}`
+    );
+
+    // Record the returned quantity on the production order component
+    await productionRepository.incrementComponentReturnedQty(dto.orderId, dto.componentId, dto.quantity);
   }
 
   // ========================================================================

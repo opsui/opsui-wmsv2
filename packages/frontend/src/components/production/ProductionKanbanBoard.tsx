@@ -141,10 +141,9 @@ function MaterialAlert({ hasShortage }: { hasShortage: boolean }) {
 interface KanbanCardProps {
   order: ProductionOrder;
   onClick: () => void;
-  showMaterialAlert?: boolean;
 }
 
-function KanbanCard({ order, onClick, showMaterialAlert }: KanbanCardProps) {
+function KanbanCard({ order, onClick }: KanbanCardProps) {
   const progress =
     order.quantityToProduce > 0
       ? Math.round((order.quantityCompleted / order.quantityToProduce) * 100)
@@ -153,7 +152,30 @@ function KanbanCard({ order, onClick, showMaterialAlert }: KanbanCardProps) {
   const isOverdue =
     order.scheduledEndDate &&
     new Date(order.scheduledEndDate) < new Date() &&
-    order.status !== 'COMPLETED';
+    order.status !== 'COMPLETED' &&
+    order.status !== 'CANCELLED';
+
+  // Check for material shortage - compare issued vs required quantities
+  const hasMaterialShortage = useMemo(() => {
+    // Only check for orders that need materials (not DRAFT or COMPLETED/CANCELLED)
+    if (
+      !order.components ||
+      order.components.length === 0 ||
+      order.status === 'DRAFT' ||
+      order.status === 'COMPLETED' ||
+      order.status === 'CANCELLED'
+    ) {
+      return false;
+    }
+
+    // Check if any component has insufficient issued quantity
+    return order.components.some(comp => {
+      const required = comp.quantityRequired || 0;
+      const issued = comp.quantityIssued || 0;
+      // Shortage if issued is less than required
+      return issued < required;
+    });
+  }, [order.components, order.status]);
 
   return (
     <div
@@ -208,9 +230,8 @@ function KanbanCard({ order, onClick, showMaterialAlert }: KanbanCardProps) {
         )}
       </div>
 
-      {/* Material Alert - only show if actual shortage detected */}
-      {/* Material availability check requires inventory integration */}
-      {showMaterialAlert && false && <MaterialAlert hasShortage={true} />}
+      {/* Material Alert - show if material shortage detected */}
+      <MaterialAlert hasShortage={hasMaterialShortage} />
     </div>
   );
 }
@@ -351,11 +372,7 @@ export function ProductionKanbanBoard({
                         onDragStart={() => handleDragStart(order)}
                         className={onUpdateStatus ? 'cursor-grab active:cursor-grabbing' : ''}
                       >
-                        <KanbanCard
-                          order={order}
-                          onClick={() => onOrderClick(order.orderId)}
-                          showMaterialAlert
-                        />
+                        <KanbanCard order={order} onClick={() => onOrderClick(order.orderId)} />
                       </div>
                     ))
                   )}

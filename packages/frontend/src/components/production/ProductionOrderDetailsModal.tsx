@@ -17,8 +17,89 @@ import {
   WrenchScrewdriverIcon,
   PlusIcon,
   ArrowPathIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { ProductionOrderStatus } from '@opsui/shared';
+
+// ============================================================================
+// CONFIRMATION DIALOG COMPONENT
+// ============================================================================
+
+interface ConfirmDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  variant?: 'danger' | 'warning' | 'primary';
+  isLoading?: boolean;
+}
+
+function ConfirmDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  variant = 'primary',
+  isLoading = false,
+}: ConfirmDialogProps) {
+  if (!isOpen) return null;
+
+  const variantStyles = {
+    danger: 'bg-red-600 hover:bg-red-700',
+    warning: 'bg-amber-600 hover:bg-amber-700',
+    primary: 'bg-primary-600 hover:bg-primary-700',
+  };
+
+  const iconStyles = {
+    danger: 'text-red-400',
+    warning: 'text-amber-400',
+    primary: 'text-primary-400',
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-gray-800 rounded-xl border border-gray-700 p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="flex items-start gap-4">
+          <div
+            className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${variant === 'danger' ? 'bg-red-500/20' : variant === 'warning' ? 'bg-amber-500/20' : 'bg-primary-500/20'}`}
+          >
+            <ExclamationTriangleIcon className={`h-5 w-5 ${iconStyles[variant]}`} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+            <p className="text-sm text-gray-300">{message}</p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+            {cancelText}
+          </Button>
+          <Button
+            className={`${variantStyles[variant]} text-white`}
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Processing...
+              </span>
+            ) : (
+              confirmText
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ============================================================================
 // TYPES
@@ -89,6 +170,16 @@ export function ProductionOrderDetailsModal({
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [showOutputModal, setShowOutputModal] = useState(false);
 
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText: string;
+    variant: 'danger' | 'warning' | 'primary';
+    onConfirm: () => void;
+  } | null>(null);
+
   const handleStatusChange = async (newStatus: ProductionOrderStatus) => {
     try {
       await updateOrderMutation.mutateAsync({
@@ -96,10 +187,51 @@ export function ProductionOrderDetailsModal({
         data: { status: newStatus },
       });
       showToast(`Order status changed to ${newStatus.replace('_', ' ')}`, 'success');
+      setConfirmDialog(null);
       onActionSuccess?.();
     } catch (error: any) {
       showToast(error?.response?.data?.error || 'Failed to update status', 'error');
     }
+  };
+
+  // Wrapper functions for actions requiring confirmation
+  const handleHoldOrder = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Hold Production Order?',
+      message:
+        'This will pause the production order. You can resume it later from the On Hold status.',
+      confirmText: 'Hold Order',
+      variant: 'warning',
+      onConfirm: () => handleStatusChange('ON_HOLD' as ProductionOrderStatus),
+    });
+  };
+
+  const handleCompleteOrder = () => {
+    const progress = Math.round((order.quantityCompleted / order.quantityToProduce) * 100);
+    const isIncomplete = progress < 100;
+
+    setConfirmDialog({
+      isOpen: true,
+      title: isIncomplete ? 'Complete Order Early?' : 'Complete Production Order?',
+      message: isIncomplete
+        ? `This order is only ${progress}% complete. Completing it now will mark it as finished with the current output. This action cannot be undone.`
+        : 'This will mark the order as completed. This action cannot be undone.',
+      confirmText: 'Complete Order',
+      variant: 'primary',
+      onConfirm: () => handleStatusChange('COMPLETED' as ProductionOrderStatus),
+    });
+  };
+
+  const handleCancelOrder = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Cancel Production Order?',
+      message: 'This will permanently cancel this production order. This action cannot be undone.',
+      confirmText: 'Cancel Order',
+      variant: 'danger',
+      onConfirm: () => handleStatusChange('CANCELLED' as ProductionOrderStatus),
+    });
   };
 
   if (!isOpen) return null;
@@ -356,8 +488,13 @@ export function ProductionOrderDetailsModal({
                   variant="success"
                   className="flex items-center gap-1"
                   onClick={() => handleStatusChange('RELEASED' as ProductionOrderStatus)}
+                  disabled={updateOrderMutation.isPending}
                 >
-                  <PlusIcon className="h-4 w-4" />
+                  {updateOrderMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <PlusIcon className="h-4 w-4" />
+                  )}
                   Release Order
                 </Button>
               </>
@@ -367,14 +504,20 @@ export function ProductionOrderDetailsModal({
                   variant="primary"
                   className="flex items-center gap-1"
                   onClick={() => handleStatusChange('IN_PROGRESS' as ProductionOrderStatus)}
+                  disabled={updateOrderMutation.isPending}
                 >
-                  <PlusIcon className="h-4 w-4" />
+                  {updateOrderMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <PlusIcon className="h-4 w-4" />
+                  )}
                   Start Production
                 </Button>
                 <Button
                   variant="warning"
                   className="flex items-center gap-1"
-                  onClick={() => handleStatusChange('ON_HOLD' as ProductionOrderStatus)}
+                  onClick={handleHoldOrder}
+                  disabled={updateOrderMutation.isPending}
                 >
                   <PauseCircleIcon className="h-4 w-4" />
                   Hold Order
@@ -393,7 +536,8 @@ export function ProductionOrderDetailsModal({
                 <Button
                   variant="warning"
                   className="flex items-center gap-1"
-                  onClick={() => handleStatusChange('ON_HOLD' as ProductionOrderStatus)}
+                  onClick={handleHoldOrder}
+                  disabled={updateOrderMutation.isPending}
                 >
                   <PauseCircleIcon className="h-4 w-4" />
                   Hold Order
@@ -401,7 +545,8 @@ export function ProductionOrderDetailsModal({
                 <Button
                   variant="success"
                   className="flex items-center gap-1"
-                  onClick={() => handleStatusChange('COMPLETED' as ProductionOrderStatus)}
+                  onClick={handleCompleteOrder}
+                  disabled={updateOrderMutation.isPending}
                 >
                   <CheckCircleIcon className="h-4 w-4" />
                   Complete Order
@@ -413,14 +558,20 @@ export function ProductionOrderDetailsModal({
                   variant="primary"
                   className="flex items-center gap-1"
                   onClick={() => handleStatusChange('IN_PROGRESS' as ProductionOrderStatus)}
+                  disabled={updateOrderMutation.isPending}
                 >
-                  <ArrowPathIcon className="h-4 w-4" />
+                  {updateOrderMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <ArrowPathIcon className="h-4 w-4" />
+                  )}
                   Resume Order
                 </Button>
                 <Button
                   variant="danger"
                   className="flex items-center gap-1"
-                  onClick={() => handleStatusChange('CANCELLED' as ProductionOrderStatus)}
+                  onClick={handleCancelOrder}
+                  disabled={updateOrderMutation.isPending}
                 >
                   <XCircleIcon className="h-4 w-4" />
                   Cancel Order
@@ -462,6 +613,20 @@ export function ProductionOrderDetailsModal({
             quantityRejected: order.quantityRejected,
             unitOfMeasure: order.unitOfMeasure,
           }}
+        />
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={() => setConfirmDialog(null)}
+          onConfirm={confirmDialog.onConfirm}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmText={confirmDialog.confirmText}
+          variant={confirmDialog.variant}
+          isLoading={updateOrderMutation.isPending}
         />
       )}
     </>

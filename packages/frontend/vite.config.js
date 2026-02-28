@@ -42,13 +42,13 @@ export default defineConfig({
     open: false, // Don't open browser automatically
     hmr: {
       overlay: true, // Show error overlay
-      protocol: 'ws', // Use WebSocket for HMR
-      host: 'localhost', // HMR host
-      port: 5174, // Separate port for HMR WebSocket
+      // Use the server's LAN IP so remote browsers can reach the HMR WebSocket
+      host: '192.168.1.13',
+      port: 5174,
+      protocol: 'ws',
     },
     watch: {
-      usePolling: true, // Use polling instead of file system events (more reliable)
-      interval: 1000, // Poll every 1 second
+      usePolling: false, // Native FS events (polling caused infinite reload loops on Windows)
       ignored: [
         '**/node_modules/**',
         '**/.git/**',

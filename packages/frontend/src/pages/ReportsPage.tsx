@@ -242,8 +242,8 @@ export function ReportsPage() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Gradient mesh background */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-indigo-500/8 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-purple-500/8 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-violet-500/8 rounded-full blur-3xl" />
           <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-2xl transform -translate-x-1/2 -translate-y-1/2" />
         </div>
         {/* Subtle dot pattern overlay */}
@@ -251,7 +251,7 @@ export function ReportsPage() {
           className="absolute inset-0 opacity-30"
           style={{
             backgroundImage:
-              'radial-gradient(circle, rgba(99, 102, 241, 0.1) 1px, transparent 1px)',
+              'radial-gradient(circle, rgba(168, 85, 247, 0.1) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
           }}
         />
@@ -265,7 +265,7 @@ export function ReportsPage() {
         <div className="mb-8" style={{ animation: 'reports-stagger-in 0.4s ease-out' }}>
           <div className="flex items-center gap-4 mb-4">
             {/* Decorative accent */}
-            <div className="w-1.5 h-12 bg-gradient-to-b from-indigo-500 to-blue-500 rounded-full" />
+            <div className="w-1.5 h-12 bg-gradient-to-b from-purple-500 to-violet-500 rounded-full" />
           </div>
           <h1 className="reports-title text-3xl sm:text-4xl text-white">Reports & Analytics</h1>
           <p className="mt-2 text-gray-400 font-medium">
@@ -284,7 +284,7 @@ export function ReportsPage() {
               className={cn(
                 'reports-tab py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 flex items-center gap-2',
                 activeTab === 'reports'
-                  ? 'border-indigo-500 text-indigo-400'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200'
               )}
             >
@@ -296,7 +296,7 @@ export function ReportsPage() {
               className={cn(
                 'reports-tab py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 flex items-center gap-2',
                 activeTab === 'dashboards'
-                  ? 'border-indigo-500 text-indigo-400'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200'
               )}
             >
@@ -308,7 +308,7 @@ export function ReportsPage() {
               className={cn(
                 'reports-tab py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 flex items-center gap-2',
                 activeTab === 'exports'
-                  ? 'border-indigo-500 text-indigo-400'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200'
               )}
             >
@@ -540,7 +540,7 @@ function ReportsTab({
             value={searchTerm}
             onChange={e => onSearchChange(e.target.value)}
             placeholder="Search reports..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
       </div>
@@ -578,7 +578,7 @@ function ReportsTab({
                   </h3>
                   <p className="text-sm text-gray-400 mt-1">{report.description}</p>
                 </div>
-                <span className="data-mono px-2 py-1 text-xs font-medium rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="data-mono px-2 py-1 text-xs font-medium rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
                   {report.reportType}
                 </span>
               </div>
@@ -602,7 +602,7 @@ function ReportsTab({
                   </button>
                   <button
                     onClick={() => onEditReport(report)}
-                    className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
+                    className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition-all"
                     title="Edit Report"
                   >
                     <PencilIcon className="h-5 w-5" />
@@ -712,7 +712,7 @@ function DashboardsTab({
             value={searchTerm}
             onChange={e => onSearchChange(e.target.value)}
             placeholder="Search dashboards..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
       </div>
@@ -738,7 +738,7 @@ function DashboardsTab({
                 <div className="flex gap-2">
                   <button
                     onClick={() => onSelectDashboard(dashboard)}
-                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-purple-400 hover:text-purple-300 transition-colors"
                     title="View Dashboard"
                   >
                     <EyeIcon className="h-5 w-5" />
@@ -881,7 +881,7 @@ function ExportsTab({ exportJobs, onCreateExport }: ExportsTabProps) {
                       className={cn(
                         'text-xs px-2 py-1 rounded-full',
                         job.status === ReportStatus.COMPLETED && 'bg-green-500/20 text-green-400',
-                        job.status === ReportStatus.RUNNING && 'bg-blue-500/20 text-blue-400',
+                        job.status === ReportStatus.RUNNING && 'bg-purple-500/20 text-purple-400',
                         job.status === ReportStatus.FAILED && 'bg-red-500/20 text-red-400'
                       )}
                     >

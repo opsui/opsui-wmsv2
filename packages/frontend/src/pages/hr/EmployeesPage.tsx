@@ -4,10 +4,10 @@
  * Manage employee records with NZ HR features.
  *
  * ============================================================================
- * AESTHETIC DIRECTION: CORPORATE ORGANICS
+ * AESTHETIC DIRECTION: CORPORATE ELEGANCE
  * ============================================================================
- * Human-centered HR interface with warm, approachable design:
- * - Soft coral/terracotta accents for human touch
+ * Human-centered HR interface with refined purple design:
+ * - Soft purple/violet accents for professional warmth
  * - Organic curves and gentle shadows
  * - Staggered card animations with scale-in effects
  * - Warm gradient backgrounds with subtle texture
@@ -81,11 +81,11 @@ export default function EmployeesPage() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Atmospheric background - Corporate Organics theme */}
+      {/* Atmospheric background - Corporate Elegance theme */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-orange-500/8 to-rose-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-amber-500/6 to-orange-600/4 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-80 h-80 bg-gradient-to-r from-rose-400/4 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/8 to-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-fuchsia-500/6 to-purple-600/4 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-80 h-80 bg-gradient-to-r from-violet-400/4 to-transparent rounded-full blur-3xl" />
         {/* Subtle noise texture */}
         <div
           className="absolute inset-0 opacity-[0.02]"
@@ -98,19 +98,19 @@ export default function EmployeesPage() {
       <Header />
       <Breadcrumb />
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Page Header - Corporate Organics Design */}
+        {/* Page Header - Corporate Elegance Design */}
         <div className="mb-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex items-center gap-5">
               <div className="relative">
-                {/* Outer ring with warm gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-rose-400/20 rounded-2xl blur-sm" />
+                {/* Outer ring with purple gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 to-violet-400/20 rounded-2xl blur-sm" />
                 {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-orange-500/20 to-rose-500/15 rounded-2xl border border-orange-500/30 shadow-lg shadow-orange-500/10 backdrop-blur-sm">
-                  <UsersIcon className="h-9 w-9 text-orange-400" />
+                <div className="relative p-4 bg-gradient-to-br from-purple-500/20 to-violet-500/15 rounded-2xl border border-purple-500/30 shadow-lg shadow-purple-500/10 backdrop-blur-sm">
+                  <UsersIcon className="h-9 w-9 text-purple-400" />
                 </div>
                 {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full shadow-lg shadow-orange-400/50" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
@@ -124,9 +124,9 @@ export default function EmployeesPage() {
 
             <div className="flex items-center gap-4">
               {/* Employee count indicator */}
-              <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-orange-500/10 to-transparent rounded-xl border border-orange-500/20">
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-500/10 to-transparent rounded-xl border border-purple-500/20">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-rose-400 rounded-full" />
+                  <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-violet-400 rounded-full" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     {activeEmployeesCount} Active
                   </span>
@@ -139,7 +139,7 @@ export default function EmployeesPage() {
 
               <Button
                 onClick={handleAdd}
-                className="whitespace-nowrap bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/20"
+                className="whitespace-nowrap bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-lg shadow-purple-500/20"
               >
                 <PlusIcon className="h-5 w-5 mr-2" />
                 Add Employee
@@ -157,13 +157,13 @@ export default function EmployeesPage() {
               placeholder="Search employees..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all shadow-sm"
             />
           </div>
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="px-4 py-3 bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700/50 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all shadow-sm [&_option]:bg-white dark:[&_option]:bg-gray-900 [&_option]:text-gray-900 dark:[&_option]:text-white"
+            className="px-4 py-3 bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700/50 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all shadow-sm [&_option]:bg-white dark:[&_option]:bg-gray-900 [&_option]:text-gray-900 dark:[&_option]:text-white"
           >
             <option value="">All Status</option>
             <option value="ACTIVE">Active</option>
@@ -177,7 +177,7 @@ export default function EmployeesPage() {
         {isLoading ? (
           <div className="text-center py-16">
             <div className="inline-flex items-center gap-3 px-6 py-3 bg-white dark:bg-gray-900/80 rounded-xl shadow-lg">
-              <div className="w-5 h-5 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
               <span className="text-gray-600 dark:text-gray-300">Loading employees...</span>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function EmployeesPage() {
               {!searchTerm && (
                 <Button
                   onClick={handleAdd}
-                  className="bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/20"
+                  className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-lg shadow-purple-500/20"
                 >
                   <PlusIcon className="h-5 w-5 mr-2" />
                   Add Employee
@@ -216,15 +216,15 @@ export default function EmployeesPage() {
               >
                 <Card
                   variant="glass"
-                  className="p-6 card-hover border border-gray-200/50 dark:border-gray-700/30 hover:border-orange-500/30 dark:hover:border-orange-500/20 transition-all hover:shadow-lg hover:shadow-orange-500/5"
+                  className="p-6 card-hover border border-gray-200/50 dark:border-gray-700/30 hover:border-purple-500/30 dark:hover:border-purple-500/20 transition-all hover:shadow-lg hover:shadow-purple-500/5"
                 >
                   {/* Employee Header */}
                   <div className="flex items-start justify-between mb-5">
                     <div className="flex items-center gap-4">
                       {/* Avatar with warm gradient ring */}
                       <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-rose-400 rounded-full blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                        <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
+                        <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
                           <span className="text-lg font-bold text-white">
                             {employee.firstName[0]}
                             {employee.lastName[0]}
@@ -236,7 +236,7 @@ export default function EmployeesPage() {
                           {employee.firstName} {employee.lastName}
                         </h3>
                         {employee.preferredName && (
-                          <p className="text-sm text-orange-600 dark:text-orange-400">
+                          <p className="text-sm text-purple-600 dark:text-purple-400">
                             "{employee.preferredName}"
                           </p>
                         )}
@@ -303,7 +303,7 @@ export default function EmployeesPage() {
                       size="sm"
                       fullWidth
                       onClick={() => navigate(`/hr/employees/${employee.employeeId}`)}
-                      className="hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-500/30"
+                      className="hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-500/30"
                     >
                       View Details
                     </Button>
@@ -311,7 +311,7 @@ export default function EmployeesPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(employee)}
-                      className="hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400"
+                      className="hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400"
                     >
                       <PencilIcon className="h-4 w-4" />
                     </Button>

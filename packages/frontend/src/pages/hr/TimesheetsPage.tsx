@@ -43,15 +43,15 @@ export default function TimesheetsPage() {
     <div className="min-h-screen relative">
       {/* Atmospheric background - Time Flow theme */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-indigo-500/8 to-violet-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-purple-500/6 to-indigo-600/4 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-gradient-to-l from-blue-400/4 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-purple-500/8 to-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-tr from-purple-500/6 to-violet-600/4 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-gradient-to-l from-fuchsia-400/4 to-transparent rounded-full blur-3xl" />
         {/* Calendar grid pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.015]"
           style={{
-            backgroundImage: `linear-gradient(rgba(99, 102, 241, 0.3) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(99, 102, 241, 0.3) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(rgba(168, 85, 247, 0.3) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(168, 85, 247, 0.3) 1px, transparent 1px)`,
             backgroundSize: '48px 48px',
           }}
         />
@@ -66,13 +66,13 @@ export default function TimesheetsPage() {
             <div className="flex items-center gap-5">
               <div className="relative">
                 {/* Outer ring animation */}
-                <div className="absolute inset-0 bg-indigo-500/20 rounded-2xl animate-pulse" />
+                <div className="absolute inset-0 bg-purple-500/20 rounded-2xl animate-pulse" />
                 {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-indigo-500/25 to-violet-500/15 rounded-2xl border border-indigo-500/40 shadow-lg shadow-indigo-500/20 backdrop-blur-sm">
-                  <CalendarDaysIcon className="h-9 w-9 text-indigo-400" />
+                <div className="relative p-4 bg-gradient-to-br from-purple-500/25 to-violet-500/15 rounded-2xl border border-purple-500/40 shadow-lg shadow-purple-500/20 backdrop-blur-sm">
+                  <CalendarDaysIcon className="h-9 w-9 text-purple-400" />
                 </div>
                 {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-indigo-400 to-violet-400 rounded-full shadow-lg shadow-indigo-400/50" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
@@ -100,7 +100,7 @@ export default function TimesheetsPage() {
 
               <Button
                 onClick={() => navigate('/hr/timesheets/new')}
-                className="whitespace-nowrap bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 shadow-lg shadow-indigo-500/20"
+                className="whitespace-nowrap bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-lg shadow-purple-500/20"
               >
                 <ClockIcon className="h-5 w-5 mr-2" />
                 New Timesheet
@@ -116,7 +116,7 @@ export default function TimesheetsPage() {
               onClick={() => setActiveTab('pending')}
               className={`relative px-5 py-3 font-medium text-sm transition-all rounded-t-lg ${
                 activeTab === 'pending'
-                  ? 'text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-900/50 border-b-2 border-indigo-500'
+                  ? 'text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900/50 border-b-2 border-purple-500'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
               }`}
             >
@@ -133,7 +133,7 @@ export default function TimesheetsPage() {
               onClick={() => setActiveTab('my')}
               className={`relative px-5 py-3 font-medium text-sm transition-all rounded-t-lg ${
                 activeTab === 'my'
-                  ? 'text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-900/50 border-b-2 border-indigo-500'
+                  ? 'text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900/50 border-b-2 border-purple-500'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
               }`}
             >
@@ -143,7 +143,7 @@ export default function TimesheetsPage() {
               onClick={() => setActiveTab('all')}
               className={`relative px-5 py-3 font-medium text-sm transition-all rounded-t-lg ${
                 activeTab === 'all'
-                  ? 'text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-900/50 border-b-2 border-indigo-500'
+                  ? 'text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900/50 border-b-2 border-purple-500'
                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
               }`}
             >
@@ -156,8 +156,8 @@ export default function TimesheetsPage() {
         {timesheets.length === 0 ? (
           <div className="text-center py-16">
             <div className="inline-flex flex-col items-center p-8 bg-white dark:bg-gray-900/80 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700/50">
-              <div className="p-4 bg-gradient-to-br from-indigo-100 to-violet-50 dark:from-indigo-900/30 dark:to-violet-900/20 rounded-2xl mb-4">
-                <ClockIcon className="h-12 w-12 text-indigo-400" />
+              <div className="p-4 bg-gradient-to-br from-purple-100 to-violet-50 dark:from-purple-900/30 dark:to-violet-900/20 rounded-2xl mb-4">
+                <ClockIcon className="h-12 w-12 text-purple-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No timesheets found
@@ -179,12 +179,12 @@ export default function TimesheetsPage() {
               >
                 <Card
                   variant="glass"
-                  className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
+                  className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-purple-500/30 dark:hover:border-purple-500/20 transition-all hover:shadow-lg hover:shadow-purple-500/5"
                 >
                   {/* Card Header */}
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <CalendarDaysIcon className="h-4 w-4 text-indigo-400" />
+                      <CalendarDaysIcon className="h-4 w-4 text-purple-400" />
                       <span className="font-medium">
                         {timesheet.periodStartDate} - {timesheet.periodEndDate}
                       </span>
@@ -241,7 +241,7 @@ export default function TimesheetsPage() {
                       <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">
                         Total Hours
                       </span>
-                      <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent font-mono">
+                      <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-violet-600 dark:from-purple-400 dark:to-violet-400 bg-clip-text text-transparent font-mono">
                         {timesheet.totalHours?.toFixed(1) || '0.0'}h
                       </span>
                     </div>
@@ -254,7 +254,7 @@ export default function TimesheetsPage() {
                         variant="secondary"
                         size="sm"
                         fullWidth
-                        className="hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-500/30"
+                        className="hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-500/30"
                       >
                         Review
                       </Button>

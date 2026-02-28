@@ -70,7 +70,7 @@ function ToggleSwitch({
         ${sizeClasses[size].track}
         ${
           enabled
-            ? 'bg-gradient-to-r from-teal-500 to-teal-400 shadow-lg shadow-teal-500/25'
+            ? 'bg-gradient-to-r from-purple-500 to-violet-400 shadow-lg shadow-purple-500/25'
             : 'bg-slate-700'
         }
       `}
@@ -80,7 +80,7 @@ function ToggleSwitch({
           inline-block rounded-full bg-white shadow-sm transition-all duration-300
           ${sizeClasses[size].thumb}
           ${enabled ? sizeClasses[size].translate : 'translate-x-0.5'}
-          ${enabled ? 'shadow-teal-500/20' : ''}
+          ${enabled ? 'shadow-purple-500/20' : ''}
         `}
       />
     </button>
@@ -109,13 +109,13 @@ function SettingsItem({
         transition: `all 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${index * 50}ms`,
       }}
     >
-      <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-transparent hover:border-teal-500/20 hover:bg-slate-800/50 transition-all duration-300">
+      <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-transparent hover:border-purple-500/20 hover:bg-slate-800/50 transition-all duration-300">
         <div className="flex items-center gap-4">
           <div
-            className={`w-2 h-2 rounded-full ${item.isActive ? 'bg-teal-400' : 'bg-slate-500'}`}
+            className={`w-2 h-2 rounded-full ${item.isActive ? 'bg-purple-400' : 'bg-slate-500'}`}
           />
           <div>
-            <p className="text-white font-medium group-hover:text-teal-400 transition-colors">
+            <p className="text-white font-medium group-hover:text-purple-400 transition-colors">
               {item.name}
             </p>
             <p className="text-sm text-slate-500">
@@ -142,16 +142,16 @@ function SettingsSection({
 }: {
   title: string;
   icon: React.ElementType;
-  iconColor?: 'teal' | 'amber' | 'violet' | 'rose';
+  iconColor?: 'purple' | 'violet' | 'fuchsia' | 'rose';
   children: React.ReactNode;
   index?: number;
 }) {
   const { ref, isInView } = useInView(0.1);
 
   const iconColors = {
-    teal: 'from-teal-400 to-teal-600 shadow-teal-500/20',
-    amber: 'from-amber-400 to-amber-600 shadow-amber-500/20',
+    purple: 'from-purple-400 to-purple-600 shadow-purple-500/20',
     violet: 'from-violet-400 to-violet-600 shadow-violet-500/20',
+    fuchsia: 'from-fuchsia-400 to-fuchsia-600 shadow-fuchsia-500/20',
     rose: 'from-rose-400 to-rose-600 shadow-rose-500/20',
   };
 
@@ -171,7 +171,7 @@ function SettingsSection({
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${iconColors[iconColor]} flex items-center justify-center shadow-lg`}
           >
-            <Icon className="h-5 w-5 text-slate-900" />
+            <Icon className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-light text-white">{title}</h2>
@@ -216,10 +216,10 @@ function InfoCard({
         transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
       }}
     >
-      <div className="p-5 rounded-xl bg-slate-800/30 border border-white/5 hover:border-teal-500/20 transition-colors duration-300">
+      <div className="p-5 rounded-xl bg-slate-800/30 border border-white/5 hover:border-purple-500/20 transition-colors duration-300">
         <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
-            <Icon className="h-4 w-4 text-teal-400" />
+          <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+            <Icon className="h-4 w-4 text-purple-400" />
           </div>
           <div>
             <p className="text-xs text-slate-500 uppercase tracking-wider">{label}</p>
@@ -239,8 +239,8 @@ export default function HRSettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Ambient background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-violet-500/5 rounded-full blur-[120px] -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/3 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-[100px] translate-y-1/2" />
+        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] -translate-y-1/2" />
+        <div className="absolute bottom-0 right-1/3 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[100px] translate-y-1/2" />
         {/* Subtle dot pattern */}
         <div
           className="absolute inset-0 opacity-[0.02]"
@@ -258,10 +258,10 @@ export default function HRSettingsPage() {
           {/* Page header */}
           <header className="mb-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-violet-600 shadow-lg shadow-violet-500/20">
-                <CogIcon className="h-5 w-5 text-slate-900" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-violet-600 shadow-lg shadow-purple-500/20">
+                <CogIcon className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-violet-400/80">
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-purple-400/80">
                 Configuration
               </span>
             </div>
@@ -280,7 +280,7 @@ export default function HRSettingsPage() {
             <SettingsSection
               title="Deduction Types"
               icon={AdjustmentsHorizontalIcon}
-              iconColor="teal"
+              iconColor="purple"
               index={0}
             >
               {deductionTypes.length > 0 ? (
@@ -301,7 +301,7 @@ export default function HRSettingsPage() {
             <SettingsSection
               title="Leave Types"
               icon={CalendarDaysIcon}
-              iconColor="amber"
+              iconColor="violet"
               index={1}
             >
               {leaveTypes.length > 0 ? (
@@ -321,11 +321,11 @@ export default function HRSettingsPage() {
 
           {/* NZ Tax Configuration */}
           <div className="relative">
-            <div className="absolute -inset-px bg-gradient-to-r from-violet-500/10 via-transparent to-teal-500/10 rounded-3xl" />
+            <div className="absolute -inset-px bg-gradient-to-r from-purple-500/10 via-transparent to-violet-500/10 rounded-3xl" />
             <div className="relative rounded-3xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-500/20">
-                  <ShieldCheckIcon className="h-5 w-5 text-slate-900 m-auto mt-2.5" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-violet-600 shadow-lg shadow-purple-500/20">
+                  <ShieldCheckIcon className="h-5 w-5 text-white m-auto mt-2.5" />
                 </div>
                 <div>
                   <h2 className="text-xl font-light text-white">NZ Tax Configuration</h2>
@@ -354,8 +354,8 @@ export default function HRSettingsPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 p-4 rounded-xl bg-teal-500/5 border border-teal-500/10">
-                <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+              <div className="flex items-center gap-2 p-4 rounded-xl bg-purple-500/5 border border-purple-500/10">
+                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
                 <p className="text-sm text-slate-400">
                   Tax tables are updated automatically. Contact HR Administrator for changes to tax
                   rates.

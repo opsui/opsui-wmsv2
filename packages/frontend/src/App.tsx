@@ -100,6 +100,8 @@ const BudgetingPage = createLazyPage(() => import('@/pages/accounting/BudgetingP
 const NotFoundPage = createLazyPage(() => import('@/pages/NotFoundPage'));
 // HR & Payroll pages
 const EmployeesPage = createLazyPage(() => import('@/pages/hr/EmployeesPage'));
+// Admin pages
+const OrganizationsPage = createLazyPage(() => import('@/pages/admin/OrganizationsPage'));
 const TimesheetsPage = createLazyPage(() => import('@/pages/hr/TimesheetsPage'));
 const PayrollDashboardPage = createLazyPage(() => import('@/pages/hr/PayrollDashboardPage'));
 const PayrollProcessingPage = createLazyPage(() => import('@/pages/hr/PayrollProcessingPage'));
@@ -1034,9 +1036,7 @@ function AppInner() {
         <Route
           path="/hr/employees"
           element={
-            <ProtectedRoute
-              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
-            >
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <EmployeesPage />
             </ProtectedRoute>
           }
@@ -1044,15 +1044,7 @@ function AppInner() {
         <Route
           path="/hr/timesheets"
           element={
-            <ProtectedRoute
-              requiredRoles={[
-                UserRole.ADMIN,
-                'HR_MANAGER' as UserRole,
-                'HR_ADMIN' as UserRole,
-                UserRole.PICKER,
-                UserRole.PACKER,
-              ]}
-            >
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.PICKER, UserRole.PACKER]}>
               <TimesheetsPage />
             </ProtectedRoute>
           }
@@ -1060,9 +1052,7 @@ function AppInner() {
         <Route
           path="/hr/payroll"
           element={
-            <ProtectedRoute
-              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
-            >
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <PayrollDashboardPage />
             </ProtectedRoute>
           }
@@ -1070,9 +1060,7 @@ function AppInner() {
         <Route
           path="/hr/payroll/process"
           element={
-            <ProtectedRoute
-              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
-            >
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <PayrollProcessingPage />
             </ProtectedRoute>
           }
@@ -1080,9 +1068,7 @@ function AppInner() {
         <Route
           path="/hr/payroll/runs"
           element={
-            <ProtectedRoute
-              requiredRoles={[UserRole.ADMIN, 'HR_MANAGER' as UserRole, 'HR_ADMIN' as UserRole]}
-            >
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <PayrollRunsPage />
             </ProtectedRoute>
           }
@@ -1090,15 +1076,7 @@ function AppInner() {
         <Route
           path="/hr/leave"
           element={
-            <ProtectedRoute
-              requiredRoles={[
-                UserRole.ADMIN,
-                'HR_MANAGER' as UserRole,
-                'HR_ADMIN' as UserRole,
-                UserRole.PICKER,
-                UserRole.PACKER,
-              ]}
-            >
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.PICKER, UserRole.PACKER]}>
               <LeaveRequestsPage />
             </ProtectedRoute>
           }
@@ -1106,7 +1084,7 @@ function AppInner() {
         <Route
           path="/hr/settings"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, 'HR_ADMIN' as UserRole]}>
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <HRSettingsPage />
             </ProtectedRoute>
           }
@@ -1128,6 +1106,16 @@ function AppInner() {
           element={
             <ProtectedRoute>
               <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Organizations Management - Admin only */}
+        <Route
+          path="/organizations"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+              <OrganizationsPage />
             </ProtectedRoute>
           }
         />

@@ -164,7 +164,7 @@ export function IntegrationsPage() {
     <div className="min-h-screen relative">
       {/* Atmospheric background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
@@ -177,8 +177,8 @@ export function IntegrationsPage() {
           <div className="flex items-center gap-4 mb-4">
             {/* Connection accent */}
             <div className="flex items-center gap-1">
-              <div className="w-1 h-8 bg-blue-500 rounded-full" />
               <div className="w-1 h-8 bg-purple-500 rounded-full" />
+              <div className="w-1 h-8 bg-violet-500 rounded-full" />
             </div>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-white font-['Space_Grotesk',sans-serif]">
@@ -199,7 +199,7 @@ export function IntegrationsPage() {
               onClick={() => setActiveTab('integrations')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'integrations'
-                  ? 'border-blue-500 text-blue-400'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
               }`}
             >
@@ -209,7 +209,7 @@ export function IntegrationsPage() {
               onClick={() => setActiveTab('sync-jobs')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'sync-jobs'
-                  ? 'border-blue-500 text-blue-400'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
               }`}
             >
@@ -219,7 +219,7 @@ export function IntegrationsPage() {
               onClick={() => setActiveTab('webhooks')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${
                 activeTab === 'webhooks'
-                  ? 'border-blue-500 text-blue-400'
+                  ? 'border-purple-500 text-purple-400'
                   : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-700'
               }`}
             >
@@ -342,7 +342,7 @@ function IntegrationsTab({
       <div className="text-center py-12">
         <XCircleIcon className="mx-auto h-12 w-12 text-red-600" />
         <p className="mt-2 text-gray-400">Error loading integrations</p>
-        <button onClick={() => refetch()} className="mt-4 text-blue-400 hover:text-blue-300">
+        <button onClick={() => refetch()} className="mt-4 text-purple-400 hover:text-purple-300">
           Retry
         </button>
       </div>
@@ -372,7 +372,7 @@ function IntegrationsTab({
               onClick={() => setFilter('ALL')}
               className={`px-4 py-2 rounded-md font-medium ${
                 filter === 'ALL'
-                  ? 'bg-blue-900/50 text-blue-300 border border-blue-700'
+                  ? 'bg-purple-900/50 text-purple-300 border border-purple-700'
                   : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'
               }`}
             >
@@ -408,14 +408,14 @@ function IntegrationsTab({
               placeholder="Search integrations..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-64 bg-gray-800 border border-gray-700 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="pl-10 pr-4 py-2 w-64 bg-gray-800 border border-gray-700 rounded-md text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             />
           </div>
         </div>
 
         <button
           onClick={onCreateIntegration}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
           Add Integration
@@ -461,7 +461,7 @@ function IntegrationsTab({
         <div className="text-center py-12">
           <ServerIcon className="mx-auto h-12 w-12 text-gray-600" />
           <p className="mt-2 text-gray-400">No integrations configured</p>
-          <button onClick={onCreateIntegration} className="mt-4 text-blue-400 hover:text-blue-300">
+          <button onClick={onCreateIntegration} className="mt-4 text-purple-400 hover:text-purple-300">
             Add your first integration
           </button>
         </div>
@@ -549,7 +549,7 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">
           <div className="provider-icon-container p-3 rounded-xl">
-            <ProviderIcon className="h-6 w-6 text-blue-400" />
+            <ProviderIcon className="h-6 w-6 text-purple-400" />
           </div>
           <div className="ml-4">
             <h3 className="text-lg font-semibold text-white font-['Space_Grotesk',sans-serif]">
@@ -611,7 +611,7 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
           </button>
           <button
             onClick={() => onSelect(integration)}
-            className="p-2 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-blue-500/10 transition-all"
+            className="p-2 text-purple-400 hover:text-purple-300 rounded-lg hover:bg-purple-500/10 transition-all"
             title="Edit Integration"
           >
             <PencilIcon className="h-5 w-5" />
@@ -819,7 +819,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   required
                 />
               </div>
@@ -830,7 +830,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                   type="text"
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
 
@@ -848,7 +848,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                         provider: providers[0],
                       });
                     }}
-                    className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value={IntegrationType.ERP}>ERP System</option>
                     <option value={IntegrationType.ECOMMERCE}>E-commerce Platform</option>
@@ -866,7 +866,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                     onChange={e =>
                       setFormData({ ...formData, provider: e.target.value as IntegrationProvider })
                     }
-                    className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     {availableProviders.map(provider => (
                       <option key={provider} value={provider}>
@@ -889,7 +889,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                     })
                   }
                   placeholder="https://api.example.com"
-                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
 
@@ -910,7 +910,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                     })
                   }
                   placeholder="Enter API key"
-                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
 
@@ -939,7 +939,7 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
               <button
                 type="submit"
                 disabled={createIntegration.isPending || updateIntegration.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-700"
+                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-700"
               >
                 {isEdit ? 'Update Integration' : 'Add Integration'}
               </button>

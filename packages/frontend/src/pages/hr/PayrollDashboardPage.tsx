@@ -7,7 +7,7 @@
  * AESTHETIC DIRECTION: FINANCIAL ELEGANCE
  * ============================================================================
  * Professional financial dashboard with refined design:
- * - Emerald/green gradients representing money and growth
+ * - Purple gradients for consistent brand identity
  * - Currency-inspired accents and subtle patterns
  * - Clean typography with monospace for financial figures
  * - Staggered card animations with elegant transitions
@@ -46,14 +46,14 @@ export default function PayrollDashboardPage() {
     <div className="min-h-screen relative">
       {/* Atmospheric background - Financial Elegance theme */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-gradient-to-br from-emerald-500/8 to-teal-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-green-500/6 to-emerald-600/4 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-80 h-80 bg-gradient-to-r from-teal-400/4 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/8 to-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-fuchsia-500/6 to-purple-600/4 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-80 h-80 bg-gradient-to-r from-violet-400/4 to-transparent rounded-full blur-3xl" />
         {/* Subtle geometric pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.012]"
           style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.3) 1px, transparent 0)`,
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(168, 85, 247, 0.3) 1px, transparent 0)`,
             backgroundSize: '32px 32px',
           }}
         />
@@ -68,13 +68,13 @@ export default function PayrollDashboardPage() {
             <div className="flex items-center gap-5">
               <div className="relative">
                 {/* Outer ring animation */}
-                <div className="absolute inset-0 bg-emerald-500/20 rounded-2xl animate-pulse" />
+                <div className="absolute inset-0 bg-purple-500/20 rounded-2xl animate-pulse" />
                 {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-emerald-500/25 to-teal-500/15 rounded-2xl border border-emerald-500/40 shadow-lg shadow-emerald-500/20 backdrop-blur-sm">
-                  <BanknotesIcon className="h-9 w-9 text-emerald-400" />
+                <div className="relative p-4 bg-gradient-to-br from-purple-500/25 to-violet-500/15 rounded-2xl border border-purple-500/40 shadow-lg shadow-purple-500/20 backdrop-blur-sm">
+                  <BanknotesIcon className="h-9 w-9 text-purple-400" />
                 </div>
                 {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full shadow-lg shadow-emerald-400/50" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
@@ -102,7 +102,7 @@ export default function PayrollDashboardPage() {
 
               <Button
                 onClick={() => navigate('/hr/payroll/process')}
-                className="whitespace-nowrap bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/20"
+                className="whitespace-nowrap bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-lg shadow-purple-500/20"
               >
                 <ChartBarIcon className="h-5 w-5 mr-2" />
                 Process Payroll
@@ -120,12 +120,12 @@ export default function PayrollDashboardPage() {
           >
             <Card
               variant="glass"
-              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-indigo-500/30 dark:hover:border-indigo-500/20 transition-all hover:shadow-lg hover:shadow-indigo-500/5"
+              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-purple-500/30 dark:hover:border-purple-500/20 transition-all hover:shadow-lg hover:shadow-purple-500/5"
             >
               <div className="flex items-start gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                  <div className="relative h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-violet-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
+                  <div className="relative h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
                     <CalendarIcon className="h-7 w-7 text-white" />
                   </div>
                 </div>
@@ -139,7 +139,7 @@ export default function PayrollDashboardPage() {
                       : 'N/A'}
                   </p>
                   {currentPeriod && (
-                    <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-1">
+                    <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">
                       Pay: {currentPeriod.payDate}
                     </p>
                   )}
@@ -155,12 +155,12 @@ export default function PayrollDashboardPage() {
           >
             <Card
               variant="glass"
-              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-emerald-500/30 dark:hover:border-emerald-500/20 transition-all hover:shadow-lg hover:shadow-emerald-500/5"
+              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-purple-500/30 dark:hover:border-purple-500/20 transition-all hover:shadow-lg hover:shadow-purple-500/5"
             >
               <div className="flex items-start gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                  <div className="relative h-14 w-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-400 to-purple-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
+                  <div className="relative h-14 w-14 rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
                     <BanknotesIcon className="h-7 w-7 text-white" />
                   </div>
                 </div>
@@ -168,7 +168,7 @@ export default function PayrollDashboardPage() {
                   <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
                     Last Pay Run
                   </p>
-                  <p className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent mt-1 font-mono">
+                  <p className="text-xl font-bold bg-gradient-to-r from-fuchsia-600 to-purple-600 dark:from-fuchsia-400 dark:to-purple-400 bg-clip-text text-transparent mt-1 font-mono">
                     {lastRun ? `$${lastRun.totalNetPay?.toLocaleString() || '0'}` : 'N/A'}
                   </p>
                   {lastRun && (
@@ -188,12 +188,12 @@ export default function PayrollDashboardPage() {
           >
             <Card
               variant="glass"
-              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-blue-500/30 dark:hover:border-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/5"
+              className="p-6 border border-gray-200/50 dark:border-gray-700/30 hover:border-violet-500/30 dark:hover:border-violet-500/20 transition-all hover:shadow-lg hover:shadow-violet-500/5"
             >
               <div className="flex items-start gap-4">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
-                  <div className="relative h-14 w-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-400 to-purple-400 rounded-xl blur-sm opacity-50 group-hover:opacity-75 transition-opacity" />
+                  <div className="relative h-14 w-14 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shadow-lg">
                     <UsersIcon className="h-7 w-7 text-white" />
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export default function PayrollDashboardPage() {
                     {lastRun ? lastRun.employeeCount : '-'}
                   </p>
                   {lastRun?.totalGrossPay && (
-                    <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                    <p className="text-sm text-violet-600 dark:text-violet-400 mt-1">
                       ${lastRun.totalGrossPay.toLocaleString()} gross
                     </p>
                   )}
@@ -226,7 +226,7 @@ export default function PayrollDashboardPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/hr/payroll/process')}
-                className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
               >
                 Process
                 <ArrowRightIcon className="h-4 w-4 ml-1" />
@@ -236,7 +236,7 @@ export default function PayrollDashboardPage() {
               {periods.slice(0, 5).map((period: any, index: number) => (
                 <div
                   key={period.periodId}
-                  className="group flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-all"
+                  className="group flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 hover:border-purple-200 dark:hover:border-purple-500/30 transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-700 dark:to-gray-800 text-gray-600 dark:text-gray-300 font-mono text-sm font-semibold">
@@ -290,7 +290,7 @@ export default function PayrollDashboardPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/hr/payroll/runs')}
-                className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
               >
                 View All
                 <ArrowRightIcon className="h-4 w-4 ml-1" />
@@ -300,11 +300,11 @@ export default function PayrollDashboardPage() {
               {runs.map((run: any) => (
                 <div
                   key={run.payrollRunId}
-                  className="group flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-all cursor-pointer"
+                  className="group flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 hover:border-purple-200 dark:hover:border-purple-500/30 transition-all cursor-pointer"
                   onClick={() => navigate(`/hr/payroll/runs/${run.payrollRunId}`)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/20 text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-violet-50 dark:from-purple-900/30 dark:to-violet-900/20 text-purple-600 dark:text-purple-400">
                       <BanknotesIcon className="h-5 w-5" />
                     </div>
                     <div>
@@ -318,7 +318,7 @@ export default function PayrollDashboardPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-lg font-bold font-mono bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                      <p className="text-lg font-bold font-mono bg-gradient-to-r from-purple-600 to-violet-600 dark:from-purple-400 dark:to-violet-400 bg-clip-text text-transparent">
                         ${run.totalGrossPay?.toLocaleString() || '0'}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">gross pay</p>

@@ -44,7 +44,6 @@ interface ProductionStats {
   completedQuantity: number;
   rejectedQuantity: number;
   yieldRate: number; // Percentage
-  avgCycleTime: number; // Hours
   overdueOrders: number;
   upcomingDeadlines: number;
 }
@@ -118,7 +117,10 @@ function calculateStats(orders: ProductionOrder[]): ProductionStats {
   const activeOrders = orders.filter(o => o.status !== 'CANCELLED');
 
   const totalQuantity = activeOrders.reduce((sum, o) => sum + safeNumber(o.quantityToProduce), 0);
-  const completedQuantity = activeOrders.reduce((sum, o) => sum + safeNumber(o.quantityCompleted), 0);
+  const completedQuantity = activeOrders.reduce(
+    (sum, o) => sum + safeNumber(o.quantityCompleted),
+    0
+  );
   const rejectedQuantity = activeOrders.reduce((sum, o) => sum + safeNumber(o.quantityRejected), 0);
 
   return {
@@ -130,7 +132,6 @@ function calculateStats(orders: ProductionOrder[]): ProductionStats {
     completedQuantity,
     rejectedQuantity,
     yieldRate: totalQuantity > 0 ? Math.round((completedQuantity / totalQuantity) * 100) : 0,
-    avgCycleTime: 0, // Would need start/end timestamps
     overdueOrders: orders.filter(
       o => o.scheduledEndDate && new Date(o.scheduledEndDate) < now && o.status !== 'COMPLETED'
     ).length,

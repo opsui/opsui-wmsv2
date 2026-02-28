@@ -85,16 +85,16 @@ function MiniStat({
   label: string;
   value: number;
   prefix?: string;
-  color?: 'white' | 'emerald' | 'coral' | 'amber';
+  color?: 'white' | 'purple' | 'violet' | 'fuchsia';
   animate?: boolean;
 }) {
   const animatedValue = useAnimatedCounter(animate ? value : 0, 800);
 
   const colorClasses = {
     white: 'text-white',
-    emerald: 'text-emerald-400',
-    coral: 'text-rose-400',
-    amber: 'text-amber-400',
+    purple: 'text-purple-400',
+    violet: 'text-violet-400',
+    fuchsia: 'text-fuchsia-400',
   };
 
   return (
@@ -124,14 +124,14 @@ function TimelineItem({ run, index }: { run: any; index: number }) {
       }}
     >
       {/* Timeline connector */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-amber-500/50 via-slate-700 to-transparent -translate-x-1/2 hidden lg:block" />
+      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-purple-500/50 via-slate-700 to-transparent -translate-x-1/2 hidden lg:block" />
 
       {/* Timeline node */}
       <div className="absolute left-1/2 -translate-x-1/2 top-8 hidden lg:block">
         <div
           className={`w-4 h-4 rounded-full border-2 transition-all duration-500 ${
             isInView
-              ? 'bg-amber-400 border-amber-400/50 shadow-lg shadow-amber-400/30'
+              ? 'bg-purple-400 border-purple-400/50 shadow-lg shadow-purple-400/30'
               : 'bg-slate-700 border-slate-600'
           }`}
         />
@@ -142,9 +142,9 @@ function TimelineItem({ run, index }: { run: any; index: number }) {
         {/* Spacer for alternating layout */}
         <div className={`${isEven ? 'lg:pr-12' : 'lg:col-start-2 lg:pl-12'}`}>
           <Link to={`/hr/payroll/runs/${run.payrollRunId}`} className="group block">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 hover:border-amber-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-amber-500/5">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 hover:border-purple-500/30 transition-all duration-500 hover:shadow-xl hover:shadow-purple-500/5">
               {/* Hover gradient effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
               <div className="relative p-6">
                 {/* Header row */}
@@ -153,14 +153,14 @@ function TimelineItem({ run, index }: { run: any; index: number }) {
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${
                         isInView
-                          ? 'bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/30'
+                          ? 'bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg shadow-purple-500/30'
                           : 'bg-slate-700'
                       }`}
                     >
-                      <DocumentTextIcon className="h-5 w-5 text-slate-900" />
+                      <DocumentTextIcon className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-light text-white group-hover:text-amber-400 transition-colors">
+                      <h3 className="text-lg font-light text-white group-hover:text-purple-400 transition-colors">
                         Payroll Run #{run.runNumber}
                       </h3>
                       <p className="text-xs text-slate-500 flex items-center gap-1.5">
@@ -196,21 +196,21 @@ function TimelineItem({ run, index }: { run: any; index: number }) {
                     label="Gross"
                     value={run.totalGrossPay || 0}
                     prefix="$"
-                    color="amber"
+                    color="purple"
                     animate={isInView}
                   />
                   <MiniStat
                     label="Net"
                     value={run.totalNetPay || 0}
                     prefix="$"
-                    color="emerald"
+                    color="violet"
                     animate={isInView}
                   />
                   <MiniStat
                     label="Tax"
                     value={run.totalTax || 0}
                     prefix="$"
-                    color="coral"
+                    color="fuchsia"
                     animate={isInView}
                   />
                 </div>
@@ -221,7 +221,7 @@ function TimelineItem({ run, index }: { run: any; index: number }) {
                     <CalendarIcon className="h-4 w-4" />
                     <span>Pay Period: {run.periodName || 'Standard'}</span>
                   </div>
-                  <ArrowRightIcon className="h-4 w-4 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                  <ArrowRightIcon className="h-4 w-4 text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
                 </div>
               </div>
             </div>
@@ -257,12 +257,12 @@ function SummaryCard({ runs }: { runs: any[] }) {
       }}
     >
       {/* Ambient glow */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
 
       <div className="relative">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/20 flex items-center justify-center">
-            <CurrencyDollarIcon className="h-5 w-5 text-amber-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400/20 to-purple-600/20 flex items-center justify-center">
+            <CurrencyDollarIcon className="h-5 w-5 text-purple-400" />
           </div>
           <div>
             <h3 className="text-lg font-light text-white">Total Summary</h3>
@@ -285,11 +285,11 @@ function SummaryCard({ runs }: { runs: any[] }) {
             <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">
               Total Net Pay
             </p>
-            <p className="text-3xl font-light text-emerald-400">${totals.net.toLocaleString()}</p>
+            <p className="text-3xl font-light text-violet-400">${totals.net.toLocaleString()}</p>
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Total Tax</p>
-            <p className="text-3xl font-light text-rose-400">${totals.tax.toLocaleString()}</p>
+            <p className="text-3xl font-light text-fuchsia-400">${totals.tax.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -304,8 +304,8 @@ export default function PayrollRunsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Ambient background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/3 w-[400px] h-[400px] bg-teal-500/5 rounded-full blur-[100px] translate-y-1/2" />
+        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] -translate-y-1/2" />
+        <div className="absolute bottom-0 right-1/3 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[100px] translate-y-1/2" />
         {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.02]"
@@ -323,10 +323,10 @@ export default function PayrollRunsPage() {
           {/* Page header */}
           <header className="mb-12">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/20">
-                <ClockIcon className="h-5 w-5 text-slate-900" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 shadow-lg shadow-purple-500/20">
+                <ClockIcon className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-amber-400/80">
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-purple-400/80">
                 Payroll History
               </span>
             </div>
@@ -342,7 +342,7 @@ export default function PayrollRunsPage() {
               </div>
 
               <Link to="/hr/payroll/process">
-                <Button className="h-12 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-medium shadow-lg shadow-amber-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/30">
+                <Button className="h-12 px-6 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white font-medium shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30">
                   <PlusIcon className="h-5 w-5 mr-2" />
                   New Pay Run
                 </Button>
@@ -354,7 +354,7 @@ export default function PayrollRunsPage() {
           {isLoading ? (
             <div className="relative rounded-3xl bg-slate-900/50 border border-white/5 p-12 text-center">
               <div className="inline-flex items-center gap-3">
-                <div className="w-5 h-5 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
                 <span className="text-slate-400 font-light">Loading payroll history...</span>
               </div>
             </div>
@@ -375,7 +375,7 @@ export default function PayrollRunsPage() {
                   Process your first payroll run to see your payment history appear here.
                 </p>
                 <Link to="/hr/payroll/process">
-                  <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-medium shadow-lg shadow-amber-500/25">
+                  <Button className="bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white font-medium shadow-lg shadow-purple-500/25">
                     <PlusIcon className="h-5 w-5 mr-2" />
                     Process First Payroll
                   </Button>

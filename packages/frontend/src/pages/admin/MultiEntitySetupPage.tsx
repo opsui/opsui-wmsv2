@@ -96,11 +96,137 @@ export default function MultiEntitySetupPage() {
   const [consolidationRules, setConsolidationRules] = useState<ConsolidationRule[]>([]);
   const [isLoadingConsolidation, setIsLoadingConsolidation] = useState(false);
 
+  // Entity form state
+  const [entityForm, setEntityForm] = useState({
+    entity_name: '',
+    entity_code: '',
+    entity_type: 'SUBSIDIARY' as 'SUBSIDIARY' | 'BRANCH' | 'DIVISION' | 'HEAD_OFFICE',
+    parent_entity_id: '',
+    base_currency: 'USD',
+    entity_status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE',
+  });
+  const [isSubmittingEntity, setIsSubmittingEntity] = useState(false);
+  const [entityFormError, setEntityFormError] = useState<string | null>(null);
+
+  // Users tab state
+  const [selectedEntityForUsers, setSelectedEntityForUsers] = useState<string>('');
+  const [entityUsers, setEntityUsers] = useState<any[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [showAssignUserModal, setShowAssignUserModal] = useState(false);
+  const [assignUserForm, setAssignUserForm] = useState({ user_id: '', entity_user_role: 'ENTITY_USER' });
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [isSubmittingAssignment, setIsSubmittingAssignment] = useState(false);
+
+  const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
+
   // Load entities on mount
   useEffect(() => {
     loadEntities();
     loadEntityHierarchy();
   }, []);
+
+  const handleCreateEntity = async () => {
+    if (!entityForm.entity_name.trim() || !entityForm.entity_code.trim()) {
+      setEntityFormError('Entity name and code are required');
+      return;
+    }
+    setIsSubmittingEntity(true);
+    setEntityFormError(null);
+    try {
+      const response = await fetch('/api/v1/multi-entity/entities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        body: JSON.stringify({
+          ...entityForm,
+          parent_entity_id: entityForm.parent_entity_id || null,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to create entity');
+      }
+      await loadEntities();
+      await loadEntityHierarchy();
+      setShowEntityModal(false);
+      setEntityForm({ entity_name: '', entity_code: '', entity_type: 'SUBSIDIARY', parent_entity_id: '', base_currency: 'USD', entity_status: 'ACTIVE' });
+    } catch (error: any) {
+      setEntityFormError(error.message || 'Failed to create entity');
+    } finally {
+      setIsSubmittingEntity(false);
+    }
+  };
+
+  const loadUsersForEntity = async (entityId: string) => {
+    if (!entityId) { setEntityUsers([]); return; }
+    setIsLoadingUsers(true);
+    try {
+      const response = await fetch(`/api/v1/multi-entity/entities/${entityId}/users`, {
+        headers: authHeader(),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEntityUsers(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Failed to load entity users:', error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  const loadAllUsers = async () => {
+    try {
+      const response = await fetch('/api/v1/users', { headers: authHeader() });
+      if (response.ok) {
+        const data = await response.json();
+        setAllUsers(Array.isArray(data) ? data : (data.users ?? []));
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  };
+
+  const handleAssignUser = async () => {
+    if (!assignUserForm.user_id || !selectedEntityForUsers) return;
+    setIsSubmittingAssignment(true);
+    try {
+      const response = await fetch('/api/v1/multi-entity/users/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
+        body: JSON.stringify({
+          entity_id: selectedEntityForUsers,
+          user_id: assignUserForm.user_id,
+          entity_user_role: assignUserForm.entity_user_role,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to assign user');
+      }
+      await loadUsersForEntity(selectedEntityForUsers);
+      setShowAssignUserModal(false);
+      setAssignUserForm({ user_id: '', entity_user_role: 'ENTITY_USER' });
+    } catch (error: any) {
+      alert(error.message || 'Failed to assign user');
+    } finally {
+      setIsSubmittingAssignment(false);
+    }
+  };
+
+  const handleRemoveUser = async (entityUserId: string) => {
+    if (!confirm('Remove this user from the entity?')) return;
+    try {
+      const response = await fetch(`/api/v1/multi-entity/entity-users/${entityUserId}`, {
+        method: 'DELETE',
+        headers: authHeader(),
+      });
+      if (response.ok) {
+        await loadUsersForEntity(selectedEntityForUsers);
+      }
+    } catch (error) {
+      console.error('Failed to remove user:', error);
+    }
+  };
 
   const loadEntities = async () => {
     setIsLoadingEntities(true);
@@ -181,6 +307,8 @@ export default function MultiEntitySetupPage() {
       loadTransactions();
     } else if (activeTab === 'consolidation' && consolidationRules.length === 0) {
       loadConsolidationRules();
+    } else if (activeTab === 'users' && allUsers.length === 0) {
+      loadAllUsers();
     }
   }, [activeTab]);
 
@@ -593,18 +721,145 @@ export default function MultiEntitySetupPage() {
           <h3 className="text-lg font-semibold text-white">Entity User Assignments</h3>
           <p className="text-sm text-gray-400">Manage which users can access which entities</p>
         </div>
-        <Button>
+        <Button
+          onClick={() => { setShowAssignUserModal(true); }}
+          disabled={!selectedEntityForUsers}
+        >
           <PlusIcon className="h-4 w-4 mr-1" />
           Assign User
         </Button>
       </div>
 
+      {/* Entity selector */}
       <Card variant="glass">
-        <CardContent className="p-12 text-center text-gray-400">
-          <UsersIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Entity user assignments coming soon</p>
+        <CardContent className="p-4">
+          <label className="block text-sm text-gray-400 mb-2">Select Entity to Manage</label>
+          <select
+            value={selectedEntityForUsers}
+            onChange={e => {
+              setSelectedEntityForUsers(e.target.value);
+              loadUsersForEntity(e.target.value);
+            }}
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          >
+            <option value="">-- Select an entity --</option>
+            {entities.map(e => (
+              <option key={e.entity_id} value={e.entity_id}>
+                {e.entity_name} ({e.entity_code})
+              </option>
+            ))}
+          </select>
         </CardContent>
       </Card>
+
+      {/* Users table */}
+      {selectedEntityForUsers && (
+        <Card variant="glass">
+          <CardContent className="p-0">
+            {isLoadingUsers ? (
+              <div className="p-12 text-center text-gray-400">Loading users...</div>
+            ) : entityUsers.length === 0 ? (
+              <div className="p-12 text-center text-gray-400">
+                <UsersIcon className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p>No users assigned to this entity</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">User</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">Email</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">Role</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">Status</th>
+                    <th className="px-6 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {entityUsers.map((eu: any) => (
+                    <tr key={eu.entity_user_id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="px-6 py-4 text-sm text-white">
+                        {eu.user_name ?? eu.username ?? eu.user_id}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-400">{eu.email ?? '—'}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-xs">
+                          {eu.entity_user_role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs ${eu.is_active !== false ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                          {eu.is_active !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleRemoveUser(eu.entity_user_id)}
+                          className="p-1.5 text-gray-400 hover:text-rose-400 transition-colors"
+                          title="Remove user"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Assign User Modal */}
+      <Modal
+        isOpen={showAssignUserModal}
+        onClose={() => setShowAssignUserModal(false)}
+        title="Assign User to Entity"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowAssignUserModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignUser}
+              disabled={!assignUserForm.user_id || isSubmittingAssignment}
+            >
+              {isSubmittingAssignment ? 'Assigning...' : 'Assign'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 p-2">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">User</label>
+            <select
+              value={assignUserForm.user_id}
+              onChange={e => setAssignUserForm(f => ({ ...f, user_id: e.target.value }))}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            >
+              <option value="">-- Select a user --</option>
+              {allUsers.map((u: any) => (
+                <option key={u.userId ?? u.user_id ?? u.id} value={u.userId ?? u.user_id ?? u.id}>
+                  {u.name ?? u.username ?? u.email ?? u.userId}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Role</label>
+            <select
+              value={assignUserForm.entity_user_role}
+              onChange={e => setAssignUserForm(f => ({ ...f, entity_user_role: e.target.value }))}
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            >
+              <option value="ENTITY_VIEWER">Entity Viewer</option>
+              <option value="ENTITY_USER">Entity User</option>
+              <option value="ENTITY_ACCOUNTANT">Entity Accountant</option>
+              <option value="ENTITY_MANAGER">Entity Manager</option>
+              <option value="ENTITY_ADMIN">Entity Admin</option>
+            </select>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 
@@ -656,19 +911,103 @@ export default function MultiEntitySetupPage() {
         {activeTab === 'users' && renderUsersTab()}
       </div>
 
-      {/* Entity Modal Placeholder */}
+      {/* Entity Creation Modal */}
       <Modal
         isOpen={showEntityModal}
-        onClose={() => setShowEntityModal(false)}
+        onClose={() => { setShowEntityModal(false); setEntityFormError(null); }}
         title={selectedEntity ? 'Edit Entity' : 'Add Entity'}
-      >
-        <div className="p-6">
-          <p className="text-gray-400">Entity form coming soon...</p>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setShowEntityModal(false)}>
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => { setShowEntityModal(false); setEntityFormError(null); }}>
               Cancel
             </Button>
-            <Button onClick={() => setShowEntityModal(false)}>Save</Button>
+            <Button onClick={handleCreateEntity} disabled={isSubmittingEntity}>
+              {isSubmittingEntity ? 'Saving...' : 'Save Entity'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 p-2">
+          {entityFormError && (
+            <div className="text-sm text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-2 rounded-lg">
+              {entityFormError}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Entity Name *</label>
+              <input
+                type="text"
+                value={entityForm.entity_name}
+                onChange={e => setEntityForm(f => ({ ...f, entity_name: e.target.value }))}
+                placeholder="e.g. ACME Corp Asia"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Entity Code *</label>
+              <input
+                type="text"
+                value={entityForm.entity_code}
+                onChange={e => setEntityForm(f => ({ ...f, entity_code: e.target.value.toUpperCase() }))}
+                placeholder="e.g. ASIA-01"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Entity Type</label>
+              <select
+                value={entityForm.entity_type}
+                onChange={e => setEntityForm(f => ({ ...f, entity_type: e.target.value as any }))}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              >
+                <option value="SUBSIDIARY">Subsidiary</option>
+                <option value="BRANCH">Branch</option>
+                <option value="DIVISION">Division</option>
+                <option value="HEAD_OFFICE">Head Office</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Base Currency</label>
+              <input
+                type="text"
+                value={entityForm.base_currency}
+                onChange={e => setEntityForm(f => ({ ...f, base_currency: e.target.value.toUpperCase() }))}
+                placeholder="USD"
+                maxLength={3}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Parent Entity</label>
+              <select
+                value={entityForm.parent_entity_id}
+                onChange={e => setEntityForm(f => ({ ...f, parent_entity_id: e.target.value }))}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              >
+                <option value="">None (Top-level)</option>
+                {entities.map(e => (
+                  <option key={e.entity_id} value={e.entity_id}>
+                    {e.entity_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Status</label>
+              <select
+                value={entityForm.entity_status}
+                onChange={e => setEntityForm(f => ({ ...f, entity_status: e.target.value as any }))}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              >
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
+            </div>
           </div>
         </div>
       </Modal>

@@ -18,8 +18,8 @@
 
 import { Button } from '@/components/shared';
 import { commonValidations, useFormValidation } from '@/hooks/useFormValidation';
-import { authApi } from '@/services/api';
-import { useAuthStore } from '@/stores';
+import { authApi, organizationApi } from '@/services/api';
+import { useAuthStore, useOrganizationStore } from '@/stores';
 import { showError, showSuccess } from '@/stores/uiStore';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -41,6 +41,7 @@ interface LoginFormData {
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore(state => state.login);
+  const setUserOrganizations = useOrganizationStore(state => state.setUserOrganizations);
 
   // Form validation
   const {
@@ -78,7 +79,7 @@ export function LoginPage() {
     onMutate: () => {
       setIsLoading(true);
     },
-    onSuccess: data => {
+    onSuccess: async data => {
       // Check if user data exists
       if (!data || !data.user) {
         showError('Login response missing user data');
@@ -86,6 +87,18 @@ export function LoginPage() {
       }
 
       login(data);
+
+      // Fetch user's organizations and set the primary one
+      try {
+        const orgData = await organizationApi.getUserOrganizations();
+        if (orgData && orgData.organizations) {
+          setUserOrganizations(orgData.organizations);
+        }
+      } catch (error) {
+        // Non-critical error - user can still use the system
+        console.warn('Failed to fetch user organizations:', error);
+      }
+
       showSuccess('Welcome back!');
       // Navigate based on user role
       if (data.user.role === 'PICKER') {

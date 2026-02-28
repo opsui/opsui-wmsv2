@@ -49,19 +49,20 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: FRONTEND_PORT,
-      host: true, // Listen on all addresses (0.0.0.0)
+      host: true, // Listen on all addresses so LAN clients can connect
       strictPort: true, // ✅ CRITICAL: Exit if port is in use (prevents duplicates)
       // SPA fallback - all requests return index.html for client-side routing
       open: false, // Don't open browser automatically
       hmr: {
         overlay: true, // Show error overlay
-        protocol: 'ws', // Use WebSocket for HMR
-        host: 'localhost', // HMR host
-        port: 5174, // Separate port for HMR WebSocket
+        // When accessing from a remote browser, 'localhost' resolves to the client machine.
+        // Use the server's LAN IP so the browser's HMR WebSocket reaches the dev server.
+        host: '192.168.1.13',
+        port: 5174,
+        protocol: 'ws',
       },
       watch: {
-        usePolling: true, // Use polling instead of file system events (more reliable)
-        interval: 1000, // Poll every 1 second
+        usePolling: false, // Use native FS events (polling caused infinite HMR reload loops on Windows)
         ignored: [
           '**/node_modules/**',
           '**/.git/**',

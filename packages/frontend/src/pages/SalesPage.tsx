@@ -3,7 +3,7 @@
  *
  * Sales & CRM module for customer management, leads, opportunities, and quotes
  *
- * Design Direction: "Luxe Pipeline" - A refined, premium aesthetic with warm amber/gold accents
+ * Design Direction: "Luxe Pipeline" - A refined, premium aesthetic with purple accents
  * Typography: Space Grotesk (display) + Inter var (body) for modern sophistication
  * Motion: Staggered reveals, elegant transitions, micro-interactions
  * Layout: Asymmetric hero, overlapping elements, broken grid cards
@@ -14,6 +14,9 @@ import { CreateLeadModal } from '@/components/sales/CreateLeadModal';
 import { CreateOpportunityModal } from '@/components/sales/CreateOpportunityModal';
 import { CreateQuoteModal } from '@/components/sales/CreateQuoteModal';
 import { CustomerDetailModal } from '@/components/sales/CustomerDetailModal';
+import { LeadDetailModal } from '@/components/sales/LeadDetailModal';
+import { OpportunityDetailModal } from '@/components/sales/OpportunityDetailModal';
+import { QuoteDetailModal } from '@/components/sales/QuoteDetailModal';
 import {
   Breadcrumb,
   Button,
@@ -47,7 +50,7 @@ import {
   ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================================================
@@ -172,15 +175,15 @@ function CustomerStatusBadge({ status }: { status: string }) {
 
 function LeadStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    NEW: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+    NEW: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
     CONTACTED:
-      'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-500/30',
+      'bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30',
     QUALIFIED:
       'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 border border-green-200 dark:border-green-500/30',
     PROPOSAL:
       'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
     NEGOTIATION:
-      'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30',
+      'bg-fuchsia-100 dark:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-500/30',
     WON: 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
     LOST: 'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
   };
@@ -197,13 +200,13 @@ function LeadStatusBadge({ status }: { status: string }) {
 function OpportunityStageBadge({ stage, probability }: { stage: string; probability: number }) {
   const styles: Record<string, string> = {
     PROSPECTING:
-      'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+      'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
     QUALIFICATION:
-      'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-500/30',
+      'bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30',
     PROPOSAL:
       'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
     NEGOTIATION:
-      'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30',
+      'bg-fuchsia-100 dark:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-500/30',
     CLOSED_WON:
       'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
     CLOSED_LOST:
@@ -226,13 +229,13 @@ function QuoteStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     DRAFT:
       'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-500/30',
-    SENT: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30',
+    SENT: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30',
     ACCEPTED:
       'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-300 border border-green-200 dark:border-success-500/30',
     REJECTED:
       'bg-red-100 dark:bg-danger-500/20 text-red-600 dark:text-danger-300 border border-red-200 dark:border-danger-500/30',
     EXPIRED:
-      'bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-300 border border-amber-200 dark:border-warning-500/30',
+      'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-500/30',
   };
 
   return (
@@ -363,9 +366,9 @@ function LeadCard({
         </div>
 
         {lead.estimatedValue && (
-          <div className="bg-blue-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
+          <div className="bg-purple-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Estimated Value</p>
-            <p className="text-xl font-bold text-blue-600 dark:text-primary-400">
+            <p className="text-xl font-bold text-purple-600 dark:text-primary-400">
               ${lead.estimatedValue.toLocaleString()}
             </p>
           </div>
@@ -514,9 +517,9 @@ function QuoteCard({
           </div>
         </div>
 
-        <div className="bg-blue-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
+        <div className="bg-purple-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Amount</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-primary-400">
+          <p className="text-2xl font-bold text-purple-600 dark:text-primary-400">
             ${quote.totalAmount.toLocaleString()}
           </p>
         </div>
@@ -567,6 +570,7 @@ function QuoteCard({
 
 function SalesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const currentTab = (searchParams.get('tab') as TabType) || 'dashboard';
   const { showToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
@@ -578,6 +582,9 @@ function SalesPage() {
   const [isCreateOpportunityModalOpen, setIsCreateOpportunityModalOpen] = useState(false);
   const [isCreateQuoteModalOpen, setIsCreateQuoteModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState<string | null>(null);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
 
   // Search/filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -684,8 +691,7 @@ function SalesPage() {
   };
 
   const handleViewLeadDetails = (lead: Lead) => {
-    showToast(`Viewing lead: ${lead.customerName}`, 'info');
-    // TODO: Implement LeadDetailModal
+    setSelectedLeadId(lead.leadId);
   };
 
   const handleConvertLeadToCustomer = async (lead: Lead) => {
@@ -698,8 +704,7 @@ function SalesPage() {
   };
 
   const handleViewOpportunityDetails = (opportunity: Opportunity) => {
-    showToast(`Viewing opportunity: ${opportunity.name}`, 'info');
-    // TODO: Implement OpportunityDetailModal
+    setSelectedOpportunityId(opportunity.opportunityId);
   };
 
   const handleCreateQuoteForOpportunity = (opportunity: Opportunity) => {
@@ -708,8 +713,7 @@ function SalesPage() {
   };
 
   const handleViewQuoteDetails = (quote: Quote) => {
-    showToast(`Viewing quote: ${quote.quoteNumber}`, 'info');
-    // TODO: Implement QuoteDetailModal
+    setSelectedQuoteId(quote.quoteId);
   };
 
   const handleSendQuote = async (quote: Quote) => {
@@ -725,19 +729,19 @@ function SalesPage() {
     try {
       await acceptQuoteMutation.mutateAsync(quote.quoteId);
       showToast(`Quote ${quote.quoteNumber} accepted! Order creation initiated.`, 'success');
-      // TODO: Navigate to order details or show order creation modal
+      navigate('/orders');
     } catch (error: any) {
       showToast(error?.message || 'Failed to convert quote to order', 'error');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-amber-950/20 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950/20 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-amber-200/20 to-orange-200/10 dark:from-amber-500/10 dark:to-orange-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-200/20 to-violet-200/10 dark:from-purple-500/10 dark:to-violet-500/5 rounded-full blur-3xl" />
         <div className="absolute top-1/3 -left-20 w-60 h-60 bg-gradient-to-br from-violet-200/20 to-purple-200/10 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-40 h-40 bg-gradient-to-br from-teal-200/20 to-emerald-200/10 dark:from-teal-500/10 dark:to-emerald-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-1/4 w-40 h-40 bg-gradient-to-br from-purple-200/20 to-fuchsia-200/10 dark:from-purple-500/10 dark:to-fuchsia-500/5 rounded-full blur-3xl" />
       </div>
 
       <Header />
@@ -765,7 +769,7 @@ function SalesPage() {
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 dark:from-amber-500 dark:via-orange-500 dark:to-amber-600 rounded-full"
+                className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-purple-400 via-violet-400 to-purple-500 dark:from-purple-500 dark:via-violet-500 dark:to-purple-600 rounded-full"
               />
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 dark:from-white dark:via-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                 Sales & CRM
@@ -776,7 +780,7 @@ function SalesPage() {
             </motion.div>
             <motion.div
               variants={fadeInUp}
-              className="flex items-center gap-3 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-full border border-amber-200 dark:border-amber-500/30"
+              className="flex items-center gap-3 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-full border border-purple-200 dark:border-purple-500/30"
             >
               <SparklesIcon className="h-4 w-4" />
               <span className="font-medium">Pipeline Intelligence</span>
@@ -795,8 +799,8 @@ function SalesPage() {
               className="flex flex-col items-center justify-center py-20"
             >
               <div className="relative">
-                <div className="w-16 h-16 rounded-full border-2 border-amber-200 dark:border-amber-800" />
-                <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-transparent border-t-amber-500 dark:border-t-amber-400 animate-spin" />
+                <div className="w-16 h-16 rounded-full border-2 border-purple-200 dark:border-purple-800" />
+                <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-transparent border-t-purple-500 dark:border-t-purple-400 animate-spin" />
               </div>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -890,32 +894,32 @@ function SalesPage() {
                     label: 'Active Leads',
                     value: dashboard.activeLeads,
                     icon: UserPlusIcon,
-                    gradient: 'from-amber-500 to-yellow-600',
+                    gradient: 'from-purple-500 to-fuchsia-600',
                     bgGradient:
-                      'from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20',
+                      'from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20',
                   },
                   {
                     label: 'Open Opportunities',
                     value: dashboard.openOpportunities,
                     icon: TrophyIcon,
-                    gradient: 'from-orange-500 to-red-500',
+                    gradient: 'from-violet-500 to-purple-600',
                     bgGradient:
-                      'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20',
+                      'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
                   },
                   {
                     label: 'Pending Quotes',
                     value: dashboard.pendingQuotes,
                     icon: DocumentTextIcon,
-                    gradient: 'from-blue-500 to-cyan-500',
-                    bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20',
+                    gradient: 'from-purple-400 to-violet-500',
+                    bgGradient: 'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
                   },
                   {
                     label: 'Total Pipeline',
                     value: `$${dashboard.totalPipeline.toLocaleString()}`,
                     icon: CurrencyDollarIcon,
-                    gradient: 'from-emerald-500 to-teal-500',
+                    gradient: 'from-fuchsia-500 to-purple-600',
                     bgGradient:
-                      'from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20',
+                      'from-fuchsia-50 to-purple-50 dark:from-fuchsia-900/20 dark:to-purple-900/20',
                     isLargeText: true,
                   },
                 ].map((stat, index) => {
@@ -1264,6 +1268,35 @@ function SalesPage() {
             showToast('Customer details refreshed', 'success');
           }}
           customerId={selectedCustomerId}
+        />
+      )}
+      {selectedLeadId && (
+        <LeadDetailModal
+          isOpen={!!selectedLeadId}
+          onClose={() => setSelectedLeadId(null)}
+          onSuccess={() => {
+            showToast('Lead converted to customer', 'success');
+          }}
+          leadId={selectedLeadId}
+        />
+      )}
+      {selectedOpportunityId && (
+        <OpportunityDetailModal
+          isOpen={!!selectedOpportunityId}
+          onClose={() => setSelectedOpportunityId(null)}
+          opportunityId={selectedOpportunityId}
+          onCreateQuote={() => {
+            setSelectedOpportunityId(null);
+            setIsCreateQuoteModalOpen(true);
+          }}
+        />
+      )}
+      {selectedQuoteId && (
+        <QuoteDetailModal
+          isOpen={!!selectedQuoteId}
+          onClose={() => setSelectedQuoteId(null)}
+          quoteId={selectedQuoteId}
+          onAccepted={() => navigate('/orders')}
         />
       )}
     </div>

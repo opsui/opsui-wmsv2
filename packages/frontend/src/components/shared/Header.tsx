@@ -220,6 +220,16 @@ const SECTION_THEMES: Record<string, { accent: string; gradient: string; iconBg:
     gradient: 'from-slate-500/10 to-zinc-400/5',
     iconBg: 'bg-gradient-to-br from-slate-500 to-zinc-400',
   },
+  'role-hr-manager': {
+    accent: 'from-rose-500 to-pink-400',
+    gradient: 'from-rose-500/10 to-pink-400/5',
+    iconBg: 'bg-gradient-to-br from-rose-500 to-pink-400',
+  },
+  'role-hr-admin': {
+    accent: 'from-pink-500 to-fuchsia-400',
+    gradient: 'from-pink-500/10 to-fuchsia-400/5',
+    iconBg: 'bg-gradient-to-br from-pink-500 to-fuchsia-400',
+  },
 };
 
 // Inject styles once
@@ -332,30 +342,15 @@ function MobileMenu({
     }, 300);
   };
 
-  // Store scroll position to restore after closing
-  const scrollPositionRef = useRef(0);
-
   useEffect(() => {
     if (isOpen) {
-      scrollPositionRef.current = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollPositionRef.current}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
+      // scrollbar-gutter: stable on <html> (index.css) keeps the scrollbar gutter
+      // reserved at all times, so hiding overflow never causes a layout width shift.
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
       document.body.style.overflow = '';
-      window.scrollTo(0, scrollPositionRef.current);
     }
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
       document.body.style.overflow = '';
     };
   }, [isOpen]);
@@ -420,14 +415,11 @@ function MobileMenu({
 
   return (
     <>
-      {/* Backdrop overlay - simple dark overlay without blur to avoid color distortion */}
+      {/* Backdrop overlay — lighter in light mode, heavier in dark mode */}
       <div
-        className={`fixed inset-0 z-[105] transition-opacity duration-500 ease-out ${
+        className={`fixed inset-0 z-[105] transition-opacity duration-500 ease-out bg-black/65 dark:bg-black/85 ${
           isClosing || !isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        style={{
-          background: 'rgba(0, 0, 0, 0.85)',
-        }}
         onClick={() => onHoverOff?.()}
       />
 
@@ -964,7 +956,8 @@ const getNotificationRoute = (type: string, data?: Record<string, any>): string 
     case 'ORDER_SHIPPED':
     case 'PICK_UPDATED':
     case 'PICK_COMPLETED':
-      return data?.orderId ? `/picking/${data.orderId}` : '/order-queue';
+      // Navigate to orders page (picking queue) instead of non-existent order-queue
+      return data?.orderId ? `/orders` : '/orders';
     case 'INVENTORY_LOW':
       return '/stock-control';
     case 'QUALITY_FAILED':
@@ -972,13 +965,13 @@ const getNotificationRoute = (type: string, data?: Record<string, any>): string 
       return '/quality-control';
     case 'WAVE_CREATED':
     case 'WAVE_COMPLETED':
-      return data?.waveId ? `/wave-picking` : '/wave-picking';
+      return '/waves';
     case 'ZONE_ASSIGNED':
-      return data?.zoneId ? `/zone-picking` : '/zone-picking';
+      return '/zones';
     case 'CYCLE_COUNT_CREATED':
     case 'CYCLE_COUNT_COMPLETED':
     case 'VARIANCE_DETECTED':
-      return data?.countId ? `/cycle-counting/${data.countId}` : '/cycle-counting';
+      return '/cycle-counting';
     default:
       return null;
   }
@@ -1956,13 +1949,8 @@ export function Header() {
     // =========================================================================
     // 5. HR & PAYROLL - Human Resources
     // =========================================================================
-    // Hide from admin base view - they should use role switcher to access this
-    if (
-      !isAdminInBaseView &&
-      (effectiveRole === UserRole.ADMIN ||
-        effectiveRole === ('HR_MANAGER' as UserRole) ||
-        effectiveRole === ('HR_ADMIN' as UserRole))
-    ) {
+    // Show HR section for Admin users (they manage all HR functions)
+    if (effectiveRole === UserRole.ADMIN) {
       groups.push({
         key: 'hr',
         label: 'HR & Payroll',
@@ -2233,6 +2221,12 @@ export function Header() {
       adminItems.push(
         { key: 'user-roles', label: 'User Roles', path: '/user-roles', icon: UserGroupIcon },
         {
+          key: 'organizations',
+          label: 'Organizations',
+          path: '/organizations',
+          icon: BuildingOfficeIcon,
+        },
+        {
           key: 'business-rules',
           label: 'Business Rules',
           path: '/business-rules',
@@ -2324,7 +2318,7 @@ export function Header() {
       icon: TagIcon,
       role: UserRole.PACKER,
     },
-    // 7. Support - Returns & Maintenance
+    // 8. Support - Returns & Maintenance
     // RMA - Returns processing (Arrow path icon for returns cycle)
     {
       key: 'rma',
@@ -2386,7 +2380,7 @@ export function Header() {
 
   return (
     <>
-      <header className="relative z-50 bg-transparent border-b-0">
+      <header className="relative z-50 bg-fuchsia-50/90 dark:bg-transparent backdrop-blur-md dark:backdrop-blur-none border-b border-purple-200/50 dark:border-b-0">
         <div className="w-full">
           {/* Mobile: Logo centered above toolbar, desktop: horizontal layout */}
           <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
@@ -2396,10 +2390,10 @@ export function Header() {
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
-                className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
+                className="p-2 text-purple-800 dark:text-gray-300 hover:bg-purple-100/60 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
                 aria-label="Open menu"
               >
-                <Bars3Icon className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+                <Bars3Icon className="h-6 w-6 text-purple-800 dark:text-gray-300" />
               </button>
 
               {/* Logo - centered on mobile in its own row below, left on desktop */}
@@ -2408,7 +2402,7 @@ export function Header() {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="hidden md:flex text-xl font-bold tracking-tight dark:text-white text-gray-900 cursor-pointer relative group overflow-hidden"
+                className="hidden md:flex text-xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
@@ -2434,7 +2428,7 @@ export function Header() {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-2xl font-bold tracking-tight dark:text-white text-gray-900 cursor-pointer relative group overflow-hidden"
+                className="text-2xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >

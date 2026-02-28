@@ -203,7 +203,7 @@ export default {
   cors: {
     origin: (
       process.env.CORS_ORIGIN ??
-      'https://opsui.app,https://www.opsui.app,http://localhost:5173,http://localhost:3000,http://localhost:5174'
+      'https://opsui.app,https://www.opsui.app,https://app.opsui.au,https://app.opsui.co.nz,http://localhost:5173,http://localhost:3000,http://localhost:5174'
     )
       .split(',')
       .map(String)

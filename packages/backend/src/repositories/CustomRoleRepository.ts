@@ -72,7 +72,15 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
       return null;
     }
 
-    return result.rows[0] as CustomRole;
+    // Map snake_case database columns to camelCase for frontend
+    const row = result.rows[0];
+    return {
+      roleId: row.role_id,
+      name: row.name,
+      description: row.description,
+      isSystem: row.is_system,
+      permissions: row.permissions || [],
+    } as CustomRole;
   }
 
   // --------------------------------------------------------------------------
@@ -258,34 +266,8 @@ export class CustomRoleRepository extends BaseRepository<CustomRole> {
     // Get permissions from default role permissions
     const { DEFAULT_ROLE_PERMISSIONS, Permission } = await import('@opsui/shared');
 
-    // Debug logging - check available roles
-    console.log('[getUserPermissions] Available role keys:', Object.keys(DEFAULT_ROLE_PERMISSIONS));
-    console.log(
-      '[getUserPermissions] userId:',
-      userId,
-      'userRole:',
-      userRole,
-      'userRole type:',
-      typeof userRole
-    );
-
     const defaultPermissions =
       DEFAULT_ROLE_PERMISSIONS[userRole as keyof typeof DEFAULT_ROLE_PERMISSIONS] || [];
-    console.log('[getUserPermissions] defaultPermissions count:', defaultPermissions.length);
-    if (defaultPermissions.length > 0) {
-      console.log('[getUserPermissions] First few permissions:', defaultPermissions.slice(0, 5));
-      console.log('[getUserPermissions] PERFORM_CYCLE_COUNTS:', Permission.PERFORM_CYCLE_COUNTS);
-      console.log(
-        '[getUserPermissions] Has PERFORM_CYCLE_COUNTS:',
-        defaultPermissions.includes(Permission.PERFORM_CYCLE_COUNTS)
-      );
-      console.log(
-        '[getUserPermissions] Has ADMIN_FULL_ACCESS:',
-        defaultPermissions.includes(Permission.ADMIN_FULL_ACCESS)
-      );
-    } else {
-      console.log('[getUserPermissions] WARNING: No default permissions found for role:', userRole);
-    }
 
     // Get custom role permissions that have been granted to this user
     // Cast both sides to text for proper type comparison

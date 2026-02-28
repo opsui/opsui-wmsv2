@@ -44,7 +44,12 @@ import {
   ChevronDownIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { useFinancialMetrics, useProfitLossStatement, useInventoryValuation } from '@/services/api';
+import {
+  useFinancialMetrics,
+  useProfitLossStatement,
+  useInventoryValuation,
+  useTransactions,
+} from '@/services/api';
 import { AccountingPeriod, CostCategory } from '@opsui/shared';
 
 // ============================================================================
@@ -350,6 +355,25 @@ function AccountingPage() {
   const [activeTab, setActiveTab] = useState<
     'overview' | 'profit-loss' | 'inventory' | 'transactions'
   >('overview');
+
+  // Transaction filter state
+  const [transactionType, setTransactionType] = useState<string>('');
+  const [referenceType, setReferenceType] = useState<string>('');
+  const [transactionStatus, setTransactionStatus] = useState<string>('');
+  const [transactionPage, setTransactionPage] = useState(1);
+  const TRANSACTION_LIMIT = 20;
+
+  // Real transaction data from API
+  const { data: transactionData, isLoading: isLoadingTransactions } = useTransactions({
+    type: transactionType || undefined,
+    referenceType: referenceType || undefined,
+    status: transactionStatus || undefined,
+    limit: TRANSACTION_LIMIT,
+    offset: (transactionPage - 1) * TRANSACTION_LIMIT,
+  });
+  const transactions = transactionData?.transactions ?? [];
+  const transactionTotal = transactionData?.total ?? 0;
+  const transactionPageCount = Math.ceil(transactionTotal / TRANSACTION_LIMIT);
 
   // Data fetching
   const {
@@ -1139,6 +1163,8 @@ function AccountingPage() {
                     </label>
                     <select
                       id="transaction-type-filter"
+                      value={transactionType}
+                      onChange={e => { setTransactionType(e.target.value); setTransactionPage(1); }}
                       className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All Types</option>
@@ -1157,6 +1183,8 @@ function AccountingPage() {
                     </label>
                     <select
                       id="reference-type-filter"
+                      value={referenceType}
+                      onChange={e => { setReferenceType(e.target.value); setTransactionPage(1); }}
                       className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All References</option>
@@ -1171,6 +1199,8 @@ function AccountingPage() {
                     </label>
                     <select
                       id="status-filter"
+                      value={transactionStatus}
+                      onChange={e => { setTransactionStatus(e.target.value); setTransactionPage(1); }}
                       className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All Statuses</option>
@@ -1212,108 +1242,73 @@ function AccountingPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="transaction-row border-b border-slate-700/30">
-                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-07</td>
-                        <td className="py-4 px-4">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            REVENUE
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-white">Order SO0001 - Shipment</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
-                          ORD-12345678-1234
-                        </td>
-                        <td className="py-4 px-4 text-sm text-emerald-400 text-right ledger-currency">
-                          +$1,250.00
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            COMPLETED
-                          </span>
-                        </td>
-                      </tr>
-                      <tr className="transaction-row border-b border-slate-700/30">
-                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-07</td>
-                        <td className="py-4 px-4">
-                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                            EXPENSE
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-white">Inventory - SKU10050</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
-                          RCP-001
-                        </td>
-                        <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
-                          -$450.00
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            COMPLETED
-                          </span>
-                        </td>
-                      </tr>
-                      <tr className="transaction-row border-b border-slate-700/30">
-                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-06</td>
-                        <td className="py-4 px-4">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            REVENUE
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-white">Order SO0002 - Shipment</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
-                          ORD-12345678-5678
-                        </td>
-                        <td className="py-4 px-4 text-sm text-emerald-400 text-right ledger-currency">
-                          +$3,200.00
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            COMPLETED
-                          </span>
-                        </td>
-                      </tr>
-                      <tr className="transaction-row border-b border-slate-700/30">
-                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-06</td>
-                        <td className="py-4 px-4">
-                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                            PAYMENT
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-white">Vendor Payment - Acme Corp</td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
-                          PAY-001
-                        </td>
-                        <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
-                          -$2,800.00
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            COMPLETED
-                          </span>
-                        </td>
-                      </tr>
-                      <tr className="transaction-row">
-                        <td className="py-4 px-4 text-sm text-slate-300">2024-02-05</td>
-                        <td className="py-4 px-4">
-                          <span className="px-2 py-1 rounded-lg text-xs font-medium bg-violet-500/15 text-violet-400 border border-violet-500/30">
-                            REFUND
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-white">
-                          Order SO0003 - Customer Return
-                        </td>
-                        <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
-                          RET-001
-                        </td>
-                        <td className="py-4 px-4 text-sm text-rose-400 text-right ledger-currency">
-                          -$185.00
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="status-badge-ledger completed px-2 py-1 rounded-lg text-xs font-medium">
-                            COMPLETED
-                          </span>
-                        </td>
-                      </tr>
+                      {isLoadingTransactions ? (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-slate-400">
+                            Loading transactions...
+                          </td>
+                        </tr>
+                      ) : transactions.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-slate-400">
+                            No transactions match the selected filters
+                          </td>
+                        </tr>
+                      ) : (
+                        transactions.map((tx: any, index: number) => {
+                          const txType = tx.transaction_type ?? tx.transactionType ?? '';
+                          const txDate = tx.created_at ?? tx.createdAt;
+                          const txRef = tx.reference_id ?? tx.referenceId ?? '';
+                          return (
+                            <tr
+                              key={tx.transaction_id ?? tx.transactionId ?? index}
+                              className={`transaction-row ${index < transactions.length - 1 ? 'border-b border-slate-700/30' : ''}`}
+                            >
+                              <td className="py-4 px-4 text-sm text-slate-300">
+                                {txDate ? new Date(txDate).toLocaleDateString() : '—'}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span
+                                  className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                                    txType === 'REVENUE'
+                                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                      : txType === 'EXPENSE'
+                                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                        : txType === 'PAYMENT'
+                                          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                          : 'bg-violet-500/15 text-violet-400 border border-violet-500/30'
+                                  }`}
+                                >
+                                  {txType}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-sm text-white">{tx.description}</td>
+                              <td className="py-4 px-4 text-sm text-slate-500 ledger-currency">
+                                {txRef}
+                              </td>
+                              <td
+                                className={`py-4 px-4 text-sm text-right ledger-currency ${Number(tx.amount) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                              >
+                                {Number(tx.amount) >= 0 ? '+' : ''}
+                                {formatCurrency(Number(tx.amount))}
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <span
+                                  className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                                    tx.status === 'COMPLETED' || tx.status === 'RECONCILED'
+                                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                      : tx.status === 'PENDING'
+                                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                        : 'bg-slate-500/15 text-slate-400 border border-slate-500/30'
+                                  }`}
+                                >
+                                  {tx.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1322,12 +1317,17 @@ function AccountingPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">Showing 1-5 of 128 transactions</p>
+              <p className="text-sm text-slate-400">
+                {transactionTotal > 0
+                  ? `Showing ${(transactionPage - 1) * TRANSACTION_LIMIT + 1}–${Math.min(transactionPage * TRANSACTION_LIMIT, transactionTotal)} of ${transactionTotal} transactions`
+                  : 'No transactions'}
+              </p>
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
-                  disabled
+                  disabled={transactionPage <= 1}
+                  onClick={() => setTransactionPage(p => p - 1)}
                   className="bg-slate-800/50 border-slate-600/30"
                 >
                   Previous
@@ -1335,6 +1335,8 @@ function AccountingPage() {
                 <Button
                   variant="primary"
                   size="sm"
+                  disabled={transactionPage >= transactionPageCount}
+                  onClick={() => setTransactionPage(p => p + 1)}
                   className="bg-purple-500/20 border border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
                 >
                   Next

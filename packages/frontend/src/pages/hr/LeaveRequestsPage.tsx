@@ -51,13 +51,13 @@ function BalanceRing({
   available,
   total,
   label,
-  color = 'teal',
+  color = 'purple',
   delay = 0,
 }: {
   available: number;
   total: number;
   label: string;
-  color?: 'teal' | 'amber' | 'rose' | 'violet';
+  color?: 'purple' | 'violet' | 'fuchsia' | 'amethyst';
   delay?: number;
 }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -72,29 +72,29 @@ function BalanceRing({
   }, [delay]);
 
   const colorClasses = {
-    teal: {
-      stroke: 'stroke-teal-400',
-      bg: 'stroke-teal-900/30',
-      text: 'text-teal-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(45,212,191,0.4)]',
-    },
-    amber: {
-      stroke: 'stroke-amber-400',
-      bg: 'stroke-amber-900/30',
-      text: 'text-amber-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]',
-    },
-    rose: {
-      stroke: 'stroke-rose-400',
-      bg: 'stroke-rose-900/30',
-      text: 'text-rose-400',
-      glow: 'drop-shadow-[0_0_8px_rgba(251,113,133,0.4)]',
+    purple: {
+      stroke: 'stroke-purple-400',
+      bg: 'stroke-purple-900/30',
+      text: 'text-purple-400',
+      glow: 'drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]',
     },
     violet: {
       stroke: 'stroke-violet-400',
       bg: 'stroke-violet-900/30',
       text: 'text-violet-400',
       glow: 'drop-shadow-[0_0_8px_rgba(167,139,250,0.4)]',
+    },
+    fuchsia: {
+      stroke: 'stroke-fuchsia-400',
+      bg: 'stroke-fuchsia-900/30',
+      text: 'text-fuchsia-400',
+      glow: 'drop-shadow-[0_0_8px_rgba(232,121,249,0.4)]',
+    },
+    amethyst: {
+      stroke: 'stroke-purple-300',
+      bg: 'stroke-purple-900/30',
+      text: 'text-purple-300',
+      glow: 'drop-shadow-[0_0_8px_rgba(196,181,253,0.4)]',
     },
   };
 
@@ -155,9 +155,9 @@ function MiniCalendar({ startDate, endDate }: { startDate: string; endDate: stri
       {days.slice(0, 5).map((day, i) => (
         <div
           key={i}
-          className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500/20 to-teal-600/10 border border-teal-500/20 flex items-center justify-center"
+          className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20 flex items-center justify-center"
         >
-          <span className="text-xs text-teal-400">{day.getDate()}</span>
+          <span className="text-xs text-purple-400">{day.getDate()}</span>
         </div>
       ))}
       {days.length > 5 && (
@@ -194,22 +194,22 @@ function RequestCard({
       }}
     >
       {/* Glow effect on hover */}
-      <div className="absolute -inset-px bg-gradient-to-r from-teal-500/20 via-transparent to-amber-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity duration-500" />
+      <div className="absolute -inset-px bg-gradient-to-r from-purple-500/20 via-transparent to-violet-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity duration-500" />
 
-      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-6 hover:border-teal-500/30 transition-colors duration-300">
+      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-6 hover:border-purple-500/30 transition-colors duration-300">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-              <span className="text-xs text-teal-400 uppercase tracking-wider">Pending</span>
+              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <span className="text-xs text-purple-400 uppercase tracking-wider">Pending</span>
             </div>
             <h3 className="text-lg font-light text-white">
               {request.startDate} → {request.endDate}
             </h3>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700/50">
-            <ClockIcon className="h-4 w-4 text-amber-400" />
+            <ClockIcon className="h-4 w-4 text-purple-400" />
             <span className="text-sm text-white">{request.totalDays} days</span>
           </div>
         </div>
@@ -230,7 +230,7 @@ function RequestCard({
         <div className="flex gap-3">
           <Button
             onClick={onApprove}
-            className="flex-1 h-11 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-slate-900 font-medium shadow-lg shadow-teal-500/20 transition-all duration-300"
+            className="flex-1 h-11 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white font-medium shadow-lg shadow-purple-500/20 transition-all duration-300"
           >
             <CheckCircleIcon className="h-4 w-4 mr-2" />
             Approve
@@ -264,11 +264,11 @@ function BalanceCard({ balance, index }: { balance: any; index: number }) {
         transition: `all 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 100}ms`,
       }}
     >
-      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-amber-500/30 transition-colors duration-300">
+      <div className="relative bg-gradient-to-br from-slate-900/90 to-slate-800/50 border border-white/5 rounded-2xl p-5 hover:border-purple-500/30 transition-colors duration-300">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-white font-medium">{balance.leaveType?.name || 'Leave Type'}</h4>
           <span
-            className={`text-2xl font-light ${percentage > 30 ? 'text-amber-400' : 'text-rose-400'}`}
+            className={`text-2xl font-light ${percentage > 30 ? 'text-purple-400' : 'text-fuchsia-400'}`}
           >
             {balance.currentBalance}
             <span className="text-sm text-slate-500 ml-1">hrs</span>
@@ -280,10 +280,10 @@ function BalanceCard({ balance, index }: { balance: any; index: number }) {
           <div
             className={`h-full rounded-full transition-all duration-1000 ease-out ${
               percentage > 50
-                ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                ? 'bg-gradient-to-r from-purple-500 to-violet-400'
                 : percentage > 25
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-400'
-                  : 'bg-gradient-to-r from-rose-500 to-rose-400'
+                  ? 'bg-gradient-to-r from-violet-500 to-purple-400'
+                  : 'bg-gradient-to-r from-fuchsia-500 to-fuchsia-400'
             }`}
             style={{
               width: isInView ? `${percentage}%` : '0%',
@@ -311,8 +311,8 @@ export default function LeaveRequestsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Ambient background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-teal-500/5 rounded-full blur-[120px] -translate-y-1/2" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-[100px] translate-y-1/2" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] -translate-y-1/2" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[100px] translate-y-1/2" />
       </div>
 
       <Header />
@@ -322,10 +322,10 @@ export default function LeaveRequestsPage() {
           {/* Page header */}
           <header className="mb-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-500/20">
-                <SunIcon className="h-5 w-5 text-slate-900" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-violet-600 shadow-lg shadow-purple-500/20">
+                <SunIcon className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xs font-medium uppercase tracking-[0.3em] text-teal-400/80">
+              <span className="text-xs font-medium uppercase tracking-[0.3em] text-purple-400/80">
                 Time Off
               </span>
             </div>
@@ -348,7 +348,7 @@ export default function LeaveRequestsPage() {
                 }`}
               >
                 {activeTab === 'pending' && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-500 rounded-lg shadow-lg shadow-teal-500/25" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg shadow-lg shadow-purple-500/25" />
                 )}
                 <span className="relative flex items-center gap-2">
                   <ClockIcon className="h-4 w-4" />
@@ -357,8 +357,8 @@ export default function LeaveRequestsPage() {
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs ${
                         activeTab === 'pending'
-                          ? 'bg-slate-900/20 text-slate-900'
-                          : 'bg-amber-500/20 text-amber-400'
+                          ? 'bg-white/20 text-white'
+                          : 'bg-purple-500/20 text-purple-400'
                       }`}
                     >
                       {requests.length}
@@ -373,7 +373,7 @@ export default function LeaveRequestsPage() {
                 }`}
               >
                 {activeTab === 'balances' && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-500 rounded-lg shadow-lg shadow-amber-500/25" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg shadow-lg shadow-purple-500/25" />
                 )}
                 <span className="relative flex items-center gap-2">
                   <CalendarDaysIcon className="h-4 w-4" />
@@ -393,8 +393,8 @@ export default function LeaveRequestsPage() {
                   </div>
 
                   <div className="relative">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
-                      <CheckCircleIcon className="h-10 w-10 text-teal-400" />
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                      <CheckCircleIcon className="h-10 w-10 text-purple-400" />
                     </div>
                     <h3 className="text-2xl font-light text-white mb-3">All caught up!</h3>
                     <p className="text-slate-400 font-light max-w-md mx-auto">
@@ -435,7 +435,7 @@ export default function LeaveRequestsPage() {
                         available={Math.floor(balance.currentBalance / 8)} // Convert hours to days
                         total={Math.floor((balance.ytdAccrued || 20) / 8)}
                         label={balance.leaveType?.name?.split(' ')[0] || 'Leave'}
-                        color={(['teal', 'amber', 'rose', 'violet'] as const)[index % 4]}
+                        color={(['purple', 'violet', 'fuchsia', 'amethyst'] as const)[index % 4]}
                         delay={index * 150}
                       />
                     ))}

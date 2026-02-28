@@ -7,7 +7,7 @@
  * AESTHETIC DIRECTION: LOST IN WAREHOUSE
  * ============================================================================
  * A playful yet helpful error experience with warehouse theming:
- * - Dark theme with subtle red/amber accents for urgency
+ * - Dark theme with subtle purple accents
  * - Floating box decorations suggesting lost inventory
  * - Spotlight sweep effect for "searching" visual
  * - Bouncing 404 number for visual interest
@@ -32,9 +32,9 @@ export function NotFoundPage() {
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
       {/* Atmospheric background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-fuchsia-500/5 rounded-full blur-3xl" />
 
         {/* Floating box decorations */}
         <div className="floating-box absolute top-20 left-20 w-16 h-16 bg-gray-800/30 border border-gray-700/50 rounded-lg" />
@@ -79,24 +79,24 @@ export function NotFoundPage() {
           style={{ animation: 'lost-fade-in 0.5s ease-out 0.3s backwards' }}
         >
           <h2 className="text-white font-semibold flex items-center justify-center gap-2">
-            <MagnifyingGlassIcon className="h-5 w-5 text-amber-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-purple-400" />
             What can you do?
           </h2>
           <ul className="text-sm text-gray-400 space-y-2 text-left">
             <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-amber-500/50 rounded-full" />
+              <span className="w-1.5 h-1.5 bg-purple-500/50 rounded-full" />
               Check the URL for spelling mistakes
             </li>
             <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-amber-500/50 rounded-full" />
+              <span className="w-1.5 h-1.5 bg-purple-500/50 rounded-full" />
               Try going back to the previous page
             </li>
             <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-amber-500/50 rounded-full" />
+              <span className="w-1.5 h-1.5 bg-purple-500/50 rounded-full" />
               Use the navigation menu to find what you need
             </li>
             <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-amber-500/50 rounded-full" />
+              <span className="w-1.5 h-1.5 bg-purple-500/50 rounded-full" />
               Contact support if you believe this is an error
             </li>
           </ul>
@@ -135,7 +135,7 @@ export function NotFoundPage() {
           Need help?{' '}
           <a
             href="mailto:support@warehouse-management.com"
-            className="text-amber-400 hover:text-amber-300 transition-colors"
+            className="text-purple-400 hover:text-purple-300 transition-colors"
           >
             Contact Support
           </a>
