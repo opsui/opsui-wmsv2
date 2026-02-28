@@ -1,12 +1,8 @@
 /**
- * Picking queue page - "Industrial Velocity" Design
+ * Order Queue Page (Picking & Packing)
  *
- * A high-energy, industrial aesthetic for warehouse operations
- * Features: Diagonal scan lines, electric accents, momentum animations
- *
- * Design Direction: Industrial/Utilitarian with high-energy twist
- * Typography: Bold condensed headers, refined body
- * Color: Deep slate base with electric lime/emerald accents
+ * Unified queue page used for both picking (/orders) and packing (/packing).
+ * Mode is determined by the `mode` prop passed from App.tsx routes.
  */
 
 import {
@@ -22,7 +18,7 @@ import {
 } from '@/components/shared';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
-import { useClaimOrder, useContinueOrder, useOrderQueue } from '@/services/api';
+import { useClaimOrder, useContinueOrder, useOrderQueue, useClaimOrderForPacking } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
@@ -30,15 +26,64 @@ import {
   ChartBarIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
+  CubeIcon,
   ExclamationTriangleIcon,
   QueueListIcon,
   ShoppingBagIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiClient } from '@/lib/api-client';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export type QueueMode = 'picking' | 'packing';
+
+// Per-mode configuration
+const MODE_CONFIG = {
+  picking: {
+    title: 'Picking Queue',
+    pageView: PageViews.ORDER_QUEUE,
+    idleStatus: OrderStatus.PENDING,
+    activeStatus: OrderStatus.PICKING,
+    idleLabel: 'Pending',
+    activeLabel: 'Tote',
+    idleIcon: ShoppingBagIcon,
+    activeIcon: ClipboardDocumentListIcon,
+    emptyIcon: ShoppingBagIcon,
+    emptyText: 'No orders available',
+    progressLabel: 'Progress',
+    claimButtonIcon: BoltIcon,
+    claimButtonLabel: 'Claim',
+    continueButtonLabel: 'Continue',
+    queryKey: 'picking-queue',
+    usePickingApi: true,
+  },
+  packing: {
+    title: 'Packing Queue',
+    pageView: 'Packing Queue' as any,
+    idleStatus: OrderStatus.PICKED,
+    activeStatus: OrderStatus.PACKING,
+    idleLabel: 'Ready',
+    activeLabel: 'My Orders',
+    idleIcon: CubeIcon,
+    activeIcon: TruckIcon,
+    emptyIcon: CubeIcon,
+    emptyText: 'No orders to pack',
+    progressLabel: 'Verified',
+    claimButtonIcon: TruckIcon,
+    claimButtonLabel: 'Start Packing',
+    continueButtonLabel: 'Continue',
+    queryKey: 'packing-queue',
+    usePickingApi: false,
+  },
+} as const;
 
 // ============================================================================
 // ANIMATION VARIANTS
@@ -46,29 +91,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const pageVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
 
 const cardVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring', stiffness: 100, damping: 15 },
-  },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } },
 };
 
 const headerVariants = {
   hidden: { opacity: 0, y: -20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: 'easeOut' },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
 const pulseVariants = {
@@ -80,35 +113,32 @@ const pulseVariants = {
 };
 
 // ============================================================================
-// FILTER DROPDOWN COMPONENTS
+// FILTER DROPDOWNS
 // ============================================================================
 
-interface StatusFilterDropdownProps {
+function StatusFilterDropdown({
+  value,
+  onChange,
+  mode,
+}: {
   value: OrderStatus;
-  onChange: (status: OrderStatus) => void;
-}
-
-function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
+  onChange: (s: OrderStatus) => void;
+  mode: QueueMode;
+}) {
+  const cfg = MODE_CONFIG[mode];
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const options = [
-    { value: 'PENDING' as OrderStatus, label: 'Pending', icon: ShoppingBagIcon, color: 'emerald' },
-    {
-      value: 'PICKING' as OrderStatus,
-      label: 'Tote',
-      icon: ClipboardDocumentListIcon,
-      color: 'lime',
-    },
+    { value: cfg.idleStatus, label: cfg.idleLabel, icon: cfg.idleIcon },
+    { value: cfg.activeStatus, label: cfg.activeLabel, icon: cfg.activeIcon },
   ];
 
-  const selectedOption = options.find(opt => opt.value === value);
+  const selectedOption = options.find(o => o.value === value);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -126,13 +156,10 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
         }`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label={`Status filter: ${selectedOption?.label}`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
         <span className="uppercase">{selectedOption?.label}</span>
-        <ChevronDownIcon
-          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        />
+        <ChevronDownIcon className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </motion.button>
 
       <AnimatePresence>
@@ -147,32 +174,22 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
           >
             <div className="py-2">
               {options.map(option => {
-                const OptionIcon = option.icon;
+                const Icon = option.icon;
                 const isActive = option.value === value;
                 return (
                   <motion.button
                     key={option.value}
                     whileHover={{ x: 4 }}
-                    onClick={() => {
-                      onChange(option.value);
-                      setIsOpen(false);
-                    }}
+                    onClick={() => { onChange(option.value); setIsOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
-                      isActive
-                        ? 'bg-purple-400 text-slate-900'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
+                      isActive ? 'bg-purple-400 text-slate-900' : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
                     }`}
                     role="option"
                     aria-selected={isActive}
                   >
-                    <OptionIcon className="h-4 w-4 flex-shrink-0" />
+                    <Icon className="h-4 w-4 flex-shrink-0" />
                     {option.label}
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeIndicator"
-                        className="ml-auto w-2 h-2 rounded-full bg-slate-900"
-                      />
-                    )}
+                    {isActive && <motion.div layoutId="activeIndicator" className="ml-auto w-2 h-2 rounded-full bg-slate-900" />}
                   </motion.button>
                 );
               })}
@@ -184,35 +201,29 @@ function StatusFilterDropdown({ value, onChange }: StatusFilterDropdownProps) {
   );
 }
 
-interface PriorityFilterDropdownProps {
+function PriorityFilterDropdown({
+  value,
+  onChange,
+}: {
   value: OrderPriority | undefined;
-  onChange: (priority: OrderPriority | undefined) => void;
-}
-
-function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps) {
+  onChange: (p: OrderPriority | undefined) => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const options = [
     { value: undefined as OrderPriority | undefined, label: 'All Priority', icon: QueueListIcon },
-    {
-      value: 'URGENT' as OrderPriority,
-      label: 'Urgent',
-      icon: ExclamationTriangleIcon,
-      color: 'red',
-    },
-    { value: 'HIGH' as OrderPriority, label: 'High', icon: BoltIcon, color: 'orange' },
-    { value: 'NORMAL' as OrderPriority, label: 'Normal', icon: ChartBarIcon, color: 'blue' },
-    { value: 'LOW' as OrderPriority, label: 'Low', icon: ArrowPathIcon, color: 'gray' },
+    { value: 'URGENT' as OrderPriority, label: 'Urgent', icon: ExclamationTriangleIcon },
+    { value: 'HIGH' as OrderPriority, label: 'High', icon: BoltIcon },
+    { value: 'NORMAL' as OrderPriority, label: 'Normal', icon: ChartBarIcon },
+    { value: 'LOW' as OrderPriority, label: 'Low', icon: ArrowPathIcon },
   ];
 
-  const selectedOption = options.find(opt => opt.value === value);
+  const selectedOption = options.find(o => o.value === value);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -230,13 +241,10 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
         }`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-label={`Priority filter: ${selectedOption?.label}`}
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
         <span className="uppercase">{selectedOption?.label}</span>
-        <ChevronDownIcon
-          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-        />
+        <ChevronDownIcon className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </motion.button>
 
       <AnimatePresence>
@@ -251,23 +259,18 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
           >
             <div className="py-2">
               {options.map(option => {
-                const OptionIcon = option.icon;
+                const Icon = option.icon;
                 const isActive = option.value === value;
                 return (
                   <motion.button
                     key={option.label}
                     whileHover={{ x: 4 }}
-                    onClick={() => {
-                      onChange(option.value);
-                      setIsOpen(false);
-                    }}
+                    onClick={() => { onChange(option.value); setIsOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
-                      isActive
-                        ? 'bg-purple-400 text-slate-900'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
+                      isActive ? 'bg-purple-400 text-slate-900' : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
                     }`}
                   >
-                    <OptionIcon className="h-4 w-4 flex-shrink-0" />
+                    <Icon className="h-4 w-4 flex-shrink-0" />
                     {option.label}
                   </motion.button>
                 );
@@ -281,27 +284,30 @@ function PriorityFilterDropdown({ value, onChange }: PriorityFilterDropdownProps
 }
 
 // ============================================================================
-// ORDER CARD COMPONENT
+// ORDER CARD
 // ============================================================================
 
-interface OrderCardProps {
+function OrderCard({
+  order,
+  onClaim,
+  isClaiming,
+  claimingOrderId,
+  mode,
+}: {
   order: any;
   onClaim: (orderId: string, status: OrderStatus) => void;
   isClaiming: boolean;
   claimingOrderId: string | null;
-}
-
-function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardProps) {
+  mode: QueueMode;
+}) {
+  const cfg = MODE_CONFIG[mode];
   const isUrgent = order.priority === 'URGENT' || order.priority === 'HIGH';
+  const isActive = order.status === cfg.activeStatus;
+
+  const items: any[] = order.items || [];
 
   return (
-    <motion.div
-      variants={cardVariants}
-      layout
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="relative group"
-    >
-      {/* Urgent glow effect */}
+    <motion.div variants={cardVariants} layout whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative group">
       {isUrgent && (
         <motion.div
           variants={pulseVariants}
@@ -313,12 +319,9 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
       <Card
         variant="glass"
         className={`relative flex flex-col h-full bg-slate-900/95 border-2 transition-all duration-300 ${
-          isUrgent
-            ? 'border-orange-500/50 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
-            : 'border-slate-700/50 hover:border-purple-500/30'
+          isUrgent ? 'border-orange-500/50 shadow-[0_0_30px_rgba(249,115,22,0.2)]' : 'border-slate-700/50 hover:border-purple-500/30'
         }`}
       >
-        {/* Scan line effect */}
         <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
           <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(192,132,252,0.02)_10px,rgba(192,132,252,0.02)_20px)]" />
         </div>
@@ -328,14 +331,9 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">
-                  {order.orderId}
-                </h3>
+                <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">{order.orderId}</h3>
                 {isUrgent && (
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
+                  <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
                     <BoltIcon className="h-5 w-5 text-orange-400" />
                   </motion.div>
                 )}
@@ -348,32 +346,28 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
             </div>
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-700/50">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Items</p>
-              <p className="text-xl font-black text-white">{order.items?.length || 0}</p>
+              <p className="text-xl font-black text-white">{items.length}</p>
             </div>
             <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-700/50">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Total</p>
-              <p className="text-xl font-black text-purple-400">
-                ${Number(order.totalAmount || 0).toFixed(2)}
-              </p>
+              <p className="text-xl font-black text-purple-400">${Number(order.totalAmount || 0).toFixed(2)}</p>
             </div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Progress */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                Progress
-              </span>
-              <span className="text-sm font-black text-purple-400">{order.progress}%</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{cfg.progressLabel}</span>
+              <span className="text-sm font-black text-purple-400">{order.progress || 0}%</span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${order.progress}%` }}
+                animate={{ width: `${order.progress || 0}%` }}
                 transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
                 className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400 relative"
               >
@@ -382,20 +376,17 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
             </div>
           </div>
 
-          {/* Items List */}
-          {order.items && order.items.length > 0 && (
+          {/* Items list */}
+          {items.length > 0 && (
             <div className="flex-1 overflow-y-auto space-y-2 mb-4 max-h-48">
-              {order.items.map((item: any, itemIdx: number) => {
+              {items.map((item: any, idx: number) => {
+                const qty = mode === 'packing' ? (item.verifiedQuantity || 0) : (item.pickedQuantity || 0);
                 const isCompleted =
                   item.status === 'COMPLETED' ||
                   item.status === 'FULLY_PICKED' ||
-                  item.pickedQuantity >= item.quantity;
+                  qty >= item.quantity;
                 const isSkipped = item.status === 'SKIPPED';
-                const isPartial =
-                  !isCompleted &&
-                  !isSkipped &&
-                  item.pickedQuantity > 0 &&
-                  item.pickedQuantity < item.quantity;
+                const isPartial = !isCompleted && !isSkipped && qty > 0 && qty < item.quantity;
 
                 const statusStyles = isCompleted
                   ? 'border-purple-500/50 bg-purple-500/10'
@@ -407,10 +398,10 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
 
                 return (
                   <motion.div
-                    key={`${order.orderId}-item-${itemIdx}`}
+                    key={`${order.orderId}-item-${idx}`}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: itemIdx * 0.05 }}
+                    transition={{ delay: idx * 0.05 }}
                     className={`text-xs p-3 rounded-lg border-l-4 ${statusStyles}`}
                   >
                     <div className="flex items-start gap-2 mb-1">
@@ -422,16 +413,8 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
                       <span className="text-slate-500 text-[10px]">
                         LOC: <span className="text-slate-300 font-bold">{item.binLocation}</span>
                       </span>
-                      <span
-                        className={`font-bold text-sm ${
-                          isCompleted
-                            ? 'text-purple-400'
-                            : isSkipped
-                              ? 'text-orange-400'
-                              : 'text-slate-300'
-                        }`}
-                      >
-                        {isSkipped ? 'SKIPPED' : `${item.pickedQuantity || 0}/${item.quantity}`}
+                      <span className={`font-bold text-sm ${isCompleted ? 'text-purple-400' : isSkipped ? 'text-orange-400' : 'text-slate-300'}`}>
+                        {isSkipped ? 'SKIPPED' : `${qty}/${item.quantity}`}
                       </span>
                     </div>
                   </motion.div>
@@ -440,7 +423,7 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
             </div>
           )}
 
-          {/* Claim Button */}
+          {/* Action button */}
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               fullWidth
@@ -449,18 +432,18 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
               onClick={() => onClaim(order.orderId, order.status)}
               disabled={
                 isClaiming ||
-                (order.status !== 'PENDING' && order.status !== 'PICKING') ||
-                (order.status === 'PENDING' && claimingOrderId === order.orderId)
+                (order.status !== cfg.idleStatus && order.status !== cfg.activeStatus) ||
+                (order.status === cfg.idleStatus && claimingOrderId === order.orderId)
               }
-              isLoading={order.status === 'PENDING' && claimingOrderId === order.orderId}
+              isLoading={order.status === cfg.idleStatus && claimingOrderId === order.orderId}
               className="font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-slate-900 border-0 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] transition-all duration-300"
             >
-              {order.status === 'PICKING' ? (
-                'Continue'
+              {isActive ? (
+                cfg.continueButtonLabel
               ) : (
                 <span className="flex items-center gap-2">
-                  <BoltIcon className="h-5 w-5" />
-                  Claim
+                  <cfg.claimButtonIcon className="h-5 w-5" />
+                  {cfg.claimButtonLabel}
                 </span>
               )}
             </Button>
@@ -472,239 +455,213 @@ function OrderCard({ order, onClaim, isClaiming, claimingOrderId }: OrderCardPro
 }
 
 // ============================================================================
-// COMPONENT
+// MAIN COMPONENT
 // ============================================================================
 
-export function OrderQueuePage() {
+export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
+  const cfg = MODE_CONFIG[mode];
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const canPick = useAuthStore(state => state.canPick);
   const userId = useAuthStore(state => state.user?.userId);
+  const currentUser = useAuthStore(state => state.user);
   const { showToast } = useToast();
 
-  // Track current page for admin dashboard
-  usePageTracking({ view: PageViews.ORDER_QUEUE });
+  usePageTracking({ view: cfg.pageView });
 
-  const [statusFilter, setStatusFilter] = useState<OrderStatus>(OrderStatus.PENDING);
+  const [statusFilter, setStatusFilter] = useState<OrderStatus>(cfg.idleStatus);
   const [priorityFilter, setPriorityFilter] = useState<OrderPriority | undefined>();
   const [claimingOrderId, setClaimingOrderId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Read status from URL params immediately on every render
-  const urlStatus = searchParams.get('status') as OrderStatus | null;
-  const effectiveStatusFilter =
-    urlStatus && Object.values(OrderStatus).includes(urlStatus) ? urlStatus : statusFilter;
-
-  // Ref to prevent multiple simultaneous claim attempts (synchronous check)
   const isClaimingRef = useRef(false);
-  // Ref to track last claimed order to prevent duplicate WebSocket toasts
   const lastClaimedOrderIdRef = useRef<string | null>(null);
   const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const { data: queueData, isLoading } = useOrderQueue({
-    status: statusFilter,
-    priority: priorityFilter,
-    pickerId: statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
-    page,
-    limit: pageSize,
+
+  // --- Data fetching ---
+  // Picking mode uses useOrderQueue; packing mode uses a direct apiClient call (different endpoint)
+  const pickingQueueResult = useOrderQueue(
+    mode === 'picking'
+      ? {
+          status: statusFilter,
+          priority: priorityFilter,
+          pickerId: statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
+          page,
+          limit: pageSize,
+        }
+      : { status: 'PENDING' as OrderStatus, page: 1, limit: 1 }, // dummy — disabled below
+    { enabled: mode === 'picking' } as any
+  );
+
+  const packingQueueResult = useQuery({
+    queryKey: ['orders', cfg.queryKey, statusFilter, priorityFilter, page, pageSize],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('status', statusFilter);
+      if (priorityFilter) params.append('priority', priorityFilter);
+      if (statusFilter === cfg.activeStatus && !(isAdmin && !getEffectiveRole())) {
+        params.append('packerId', currentUser?.userId || '');
+      }
+      params.append('page', String(page));
+      params.append('limit', String(pageSize));
+      const response = await apiClient.get(`/orders/full?${params.toString()}`);
+      return response.data;
+    },
+    enabled: mode === 'packing',
+    refetchInterval: 5000,
   });
 
-  // Separate query to check if user has PICKING orders (for auto-detect)
-  const allOrdersQuery = useOrderQueue({
-    status: undefined as OrderStatus | undefined,
-    pickerId: userId,
-    page: 1,
-    limit: 100,
+  const queueData = mode === 'picking' ? pickingQueueResult.data : packingQueueResult.data;
+  const isLoading = mode === 'picking' ? pickingQueueResult.isLoading : packingQueueResult.isLoading;
+
+  // Auto-detect active tab on mount
+  const hasAutoDetectedRef = useRef(false);
+
+  const pickingAllOrders = useOrderQueue(
+    mode === 'picking'
+      ? { status: undefined as any, pickerId: userId, page: 1, limit: 100, refetchOnMount: 'always' }
+      : { status: 'PENDING' as OrderStatus, page: 1, limit: 1 },
+    { enabled: mode === 'picking' } as any
+  );
+
+  const packingAllOrders = useQuery({
+    queryKey: ['orders', 'all-packing', currentUser?.userId],
+    queryFn: async () => {
+      if (!currentUser?.userId) return { orders: [] };
+      const response = await apiClient.get(
+        `/orders/full?status=${OrderStatus.PACKING}&packerId=${currentUser.userId}`
+      );
+      return response.data;
+    },
+    enabled: mode === 'packing',
     refetchOnMount: 'always',
   });
-  const allOrdersData = allOrdersQuery.data;
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter, priorityFilter]);
+  const allOrdersData = mode === 'picking' ? pickingAllOrders.data : packingAllOrders.data;
+
+  useEffect(() => { setPage(1); }, [statusFilter, priorityFilter]);
 
   const orders = queueData?.orders || [];
 
-  // Filter orders based on search query
   const filteredOrders = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return orders;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-
-    return orders.filter(order => {
-      if (order.orderId.toLowerCase().includes(query)) {
-        return true;
-      }
-      if (order.customerName?.toLowerCase().includes(query)) {
-        return true;
-      }
-      if (order.items && order.items.length > 0) {
-        return order.items.some((item: any) => {
-          if (item.sku?.toLowerCase().includes(query)) {
-            return true;
-          }
-          if (item.name?.toLowerCase().includes(query)) {
-            return true;
-          }
-          return false;
-        });
-      }
+    if (!searchQuery.trim()) return orders;
+    const q = searchQuery.toLowerCase().trim();
+    return orders.filter((order: any) => {
+      if (order.orderId.toLowerCase().includes(q)) return true;
+      if (order.customerName?.toLowerCase().includes(q)) return true;
+      if (order.items?.some((item: any) => item.sku?.toLowerCase().includes(q) || item.name?.toLowerCase().includes(q))) return true;
       return false;
     });
   }, [orders, searchQuery]);
 
-  useEffect(() => {
-    if (orders.length > 0) {
-      console.log('[OrderQueue] Orders loaded:', orders);
-    }
-  }, [orders]);
-
-  // Track if we've done the initial auto-detect
-  const hasAutoDetectedRef = useRef(false);
-
-  // Handler to update status filter and sync with URL
   const handleStatusFilterChange = (status: OrderStatus) => {
     setStatusFilter(status);
     setSearchParams({ status });
     hasAutoDetectedRef.current = true;
   };
 
-  // Auto-detect which tab to show - runs once on mount
+  // Auto-detect active/idle tab on mount
   useEffect(() => {
-    if (hasAutoDetectedRef.current) {
-      return;
-    }
-
+    if (hasAutoDetectedRef.current) return;
     const urlStatus = searchParams.get('status') as OrderStatus | null;
     const hasExplicitUrlStatus = urlStatus && Object.values(OrderStatus).includes(urlStatus);
-
     if (allOrdersData?.orders) {
       if (hasExplicitUrlStatus) {
         setStatusFilter(urlStatus!);
         hasAutoDetectedRef.current = true;
         return;
       }
-
-      const allOrders = allOrdersData.orders || [];
-      const pickingOrders = allOrders.filter(o => o.status === OrderStatus.PICKING);
-
-      if (pickingOrders.length > 0) {
-        setStatusFilter(OrderStatus.PICKING);
-        // Use replace to avoid adding to history
-        setSearchParams({ status: OrderStatus.PICKING }, { replace: true });
-        hasAutoDetectedRef.current = true;
-        return;
+      const active = allOrdersData.orders.filter((o: any) => o.status === cfg.activeStatus);
+      if (active.length > 0) {
+        setStatusFilter(cfg.activeStatus);
+        setSearchParams({ status: cfg.activeStatus }, { replace: true });
+      } else {
+        setStatusFilter(cfg.idleStatus);
       }
-
-      setStatusFilter(OrderStatus.PENDING);
       hasAutoDetectedRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrdersData]); // Only depend on allOrdersData, not searchParams
+  }, [allOrdersData]);
 
-  // Refetch orders when component mounts or filter changes
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
   }, [queryClient, statusFilter, priorityFilter]);
 
-  // Polling fallback
   useEffect(() => {
-    const pollInterval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
     }, 10000);
+    return () => clearInterval(interval);
+  }, [queryClient, cfg.queryKey]);
 
-    return () => clearInterval(pollInterval);
-  }, [queryClient]);
-
-  // WebSocket subscription
-  useOrderUpdates(
-    (data: { orderId: string; pickerId?: string; pickerName?: string; reason?: string }) => {
-      queryClient.invalidateQueries({ queryKey: ['order-queue'] });
-
-      if (data.orderId === lastClaimedOrderIdRef.current) {
-        setTimeout(() => {
-          if (lastClaimedOrderIdRef.current === data.orderId) {
-            lastClaimedOrderIdRef.current = null;
-          }
-        }, 2000);
-        return;
-      }
-
-      const isOtherUsersClaim = data.pickerId && data.pickerId !== userId;
-      if (isOtherUsersClaim) {
-        showToast(
-          `Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`,
-          'success',
-          3000
-        );
-      }
+  // WebSocket updates (picking only — packing uses polling)
+  useOrderUpdates((data: { orderId: string; pickerId?: string; pickerName?: string }) => {
+    if (mode !== 'picking') return;
+    queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+    if (data.orderId === lastClaimedOrderIdRef.current) return;
+    if (data.pickerId && data.pickerId !== userId) {
+      showToast(`Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`, 'success', 3000);
     }
-  );
+  });
 
-  const claimMutation = useClaimOrder();
-  const continueMutation = useContinueOrder();
+  // --- Mutations ---
+  const claimPickingMutation = useClaimOrder();
+  const continuePickingMutation = useContinueOrder();
+  const claimPackingMutation = useClaimOrderForPacking();
 
-  const handleClaimOrder = async (orderId: string, orderStatus: OrderStatus) => {
-    if (!userId) {
-      showToast('You must be logged in to claim orders', 'error');
+  const handleClaim = async (orderId: string, orderStatus: OrderStatus) => {
+    if (!userId) { showToast('You must be logged in', 'error'); return; }
+
+    // Packing: continue active order
+    if (mode === 'packing' && orderStatus === OrderStatus.PACKING) {
+      navigate(`/packing/${orderId}/pack`);
       return;
     }
 
-    if (orderStatus === OrderStatus.PICKING) {
-      try {
-        await continueMutation.mutateAsync({ orderId });
-      } catch {
-        // Silently ignore errors
-      }
+    // Picking: continue active order
+    if (mode === 'picking' && orderStatus === OrderStatus.PICKING) {
+      try { await continuePickingMutation.mutateAsync({ orderId }); } catch { /* silent */ }
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
       navigate(`/orders/${orderId}/pick`);
       return;
     }
 
-    if (isClaimingRef.current) {
-      return;
-    }
-
-    if (claimingOrderId === orderId) {
-      return;
-    }
+    if (isClaimingRef.current || claimingOrderId === orderId) return;
 
     isClaimingRef.current = true;
     setClaimingOrderId(orderId);
-    lastClaimedOrderIdRef.current = orderId;
+    if (mode === 'picking') lastClaimedOrderIdRef.current = orderId;
 
     try {
-      await queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
 
-      await claimMutation.mutateAsync({
-        orderId,
-        dto: { pickerId: userId },
-      });
-      showToast(`Order ${orderId} claimed successfully`, 'success');
-      navigate(`/orders/${orderId}/pick`);
-    } catch (error: any) {
-      if (error?.response?.data?.error) {
-        const backendError = error.response.data.error;
-
-        if (backendError.includes('already claimed')) {
-          showToast('Order is already claimed by another picker', 'error');
-          queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
-        } else if (backendError.includes('status')) {
-          showToast(`Order cannot be claimed: ${backendError}`, 'error');
-        } else if (backendError.includes('too many active orders')) {
-          showToast('Maximum of 5 active orders reached. Complete some orders first.', 'error');
-        } else {
-          showToast(backendError, 'error');
-        }
+      if (mode === 'picking') {
+        await claimPickingMutation.mutateAsync({ orderId, dto: { pickerId: userId } });
+        showToast(`Order ${orderId} claimed successfully`, 'success');
+        navigate(`/orders/${orderId}/pick`);
       } else {
-        showToast(error instanceof Error ? error.message : 'Failed to claim order', 'error');
+        await claimPackingMutation.mutateAsync(
+          { orderId, packerId: userId },
+          {
+            onSuccess: () => {
+              showToast(`Order ${orderId} claimed successfully`, 'success');
+              navigate(`/packing/${orderId}/pack`);
+            },
+          }
+        );
+      }
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || (error instanceof Error ? error.message : 'Failed to claim order');
+      if (msg.includes('already claimed')) {
+        showToast(`Order is already claimed by another ${mode === 'picking' ? 'picker' : 'packer'}`, 'error');
+        queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
+      } else {
+        showToast(msg, 'error');
       }
     } finally {
       isClaimingRef.current = false;
@@ -712,7 +669,8 @@ export function OrderQueuePage() {
     }
   };
 
-  if (!canPick) {
+  // Guard: picking page requires canPick
+  if (mode === 'picking' && !canPick) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <Card variant="glass" className="max-w-md bg-slate-900 border-2 border-slate-700">
@@ -730,11 +688,7 @@ export function OrderQueuePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-slate-800" />
             <motion.div
@@ -749,13 +703,12 @@ export function OrderQueuePage() {
     );
   }
 
+  const isClaiming = mode === 'picking' ? claimPickingMutation.isPending : claimPackingMutation.isPending;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900/20 relative overflow-hidden">
-      {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Diagonal scan lines */}
         <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_100px,rgba(192,132,252,0.015)_100px,rgba(192,132,252,0.015)_200px)]" />
-        {/* Corner accents */}
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl" />
       </div>
@@ -768,87 +721,58 @@ export function OrderQueuePage() {
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
         tabIndex={-1}
       >
-        {/* Breadcrumb */}
         <Breadcrumb />
 
-        {/* Page Header */}
-        <motion.div
-          variants={headerVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-center relative"
-        >
+        <motion.div variants={headerVariants} initial="hidden" animate="visible" className="text-center relative">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: '100%' }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent max-w-xs"
           />
-          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">
-            Picking Queue
-          </h1>
+          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">{cfg.title}</h1>
           <p className="mt-4 text-slate-400 text-sm font-medium uppercase tracking-widest">
             {queueData?.total || 0} orders available
           </p>
         </motion.div>
 
-        {/* Filter Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap items-center justify-center gap-4"
-        >
-          <StatusFilterDropdown value={statusFilter} onChange={handleStatusFilterChange} />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-wrap items-center justify-center gap-4">
+          <StatusFilterDropdown value={statusFilter} onChange={handleStatusFilterChange} mode={mode} />
           <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
         </motion.div>
 
-        {/* Order Grid */}
         <AnimatePresence mode="wait">
           {filteredOrders.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
               <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
                 <CardContent className="p-16 text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
-                    <ShoppingBagIcon className="h-10 w-10 text-slate-600" />
+                    <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
                   </div>
                   <p className="text-slate-500 font-bold uppercase tracking-wider">
-                    {searchQuery ? 'No matching orders' : 'No orders available'}
+                    {searchQuery ? 'No matching orders' : cfg.emptyText}
                   </p>
                 </CardContent>
               </Card>
             </motion.div>
           ) : (
-            <motion.div
-              variants={pageVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
-              {filteredOrders.map(order => (
+            <motion.div variants={pageVariants} initial="hidden" animate="visible" className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredOrders.map((order: any) => (
                 <OrderCard
                   key={order.orderId}
                   order={order}
-                  onClaim={handleClaimOrder}
-                  isClaiming={claimMutation.isPending}
+                  onClaim={handleClaim}
+                  isClaiming={isClaiming}
                   claimingOrderId={claimingOrderId}
+                  mode={mode}
                 />
               ))}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Pagination */}
         {queueData?.total && queueData.total > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
             <Pagination
               currentPage={page}
               totalItems={queueData.total}
@@ -861,7 +785,6 @@ export function OrderQueuePage() {
         )}
       </main>
 
-      {/* Custom keyframes */}
       <style>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }

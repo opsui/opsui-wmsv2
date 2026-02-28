@@ -571,7 +571,7 @@ function AppInner() {
           path="/orders"
           element={
             <ProtectedRoute requiredRoles={[UserRole.PICKER, UserRole.ADMIN, UserRole.SUPERVISOR]}>
-              <OrderQueuePage />
+              <OrderQueuePage mode="picking" />
             </ProtectedRoute>
           }
         />
