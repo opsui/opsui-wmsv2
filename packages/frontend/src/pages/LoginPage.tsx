@@ -18,7 +18,8 @@
 
 import { Button } from '@/components/shared';
 import { commonValidations, useFormValidation } from '@/hooks/useFormValidation';
-import { authApi, organizationApi } from '@/services/api';
+import { authApi } from '@/services/api';
+import { apiClient } from '@/lib/api-client';
 import { useAuthStore, useOrganizationStore } from '@/stores';
 import { showError, showSuccess } from '@/stores/uiStore';
 import { useMutation } from '@tanstack/react-query';
@@ -90,7 +91,7 @@ export function LoginPage() {
 
       // Fetch user's organizations and set the primary one
       try {
-        const orgData = await organizationApi.getUserOrganizations();
+        const orgData = await apiClient.get('/multi-entity/user-organizations').then(r => r.data);
         if (orgData && orgData.organizations) {
           setUserOrganizations(orgData.organizations);
         }
