@@ -773,7 +773,12 @@ export class ProductionRepository {
   async getProductionOrderComponent(
     orderId: string,
     componentId: string
-  ): Promise<{ sku: string; quantityRequired: number; quantityIssued: number; quantityReturned: number } | null> {
+  ): Promise<{
+    sku: string;
+    quantityRequired: number;
+    quantityIssued: number;
+    quantityReturned: number;
+  } | null> {
     const client = await getPool();
     const result = await client.query(
       `SELECT sku, quantity_required, quantity_issued, quantity_returned
@@ -791,7 +796,11 @@ export class ProductionRepository {
     };
   }
 
-  async incrementComponentIssuedQty(orderId: string, componentId: string, quantity: number): Promise<void> {
+  async incrementComponentIssuedQty(
+    orderId: string,
+    componentId: string,
+    quantity: number
+  ): Promise<void> {
     const client = await getPool();
     await client.query(
       `UPDATE production_order_components
@@ -801,7 +810,11 @@ export class ProductionRepository {
     );
   }
 
-  async incrementComponentReturnedQty(orderId: string, componentId: string, quantity: number): Promise<void> {
+  async incrementComponentReturnedQty(
+    orderId: string,
+    componentId: string,
+    quantity: number
+  ): Promise<void> {
     const client = await getPool();
     await client.query(
       `UPDATE production_order_components

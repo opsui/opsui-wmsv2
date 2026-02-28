@@ -64,7 +64,11 @@ export function LeadDetailModal({ isOpen, onClose, onSuccess, leadId }: LeadDeta
   };
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
 
   return (
     <Modal
@@ -78,11 +82,7 @@ export function LeadDetailModal({ isOpen, onClose, onSuccess, leadId }: LeadDeta
             Close
           </Button>
           {lead && lead.status !== 'WON' && lead.status !== 'LOST' && (
-            <Button
-              variant="primary"
-              onClick={handleConvert}
-              disabled={convertMutation.isPending}
-            >
+            <Button variant="primary" onClick={handleConvert} disabled={convertMutation.isPending}>
               {convertMutation.isPending ? 'Converting...' : 'Convert to Customer'}
             </Button>
           )}
@@ -116,11 +116,15 @@ export function LeadDetailModal({ isOpen, onClose, onSuccess, leadId }: LeadDeta
             </div>
             <div className="flex items-center gap-2">
               {lead.priority && (
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${PRIORITY_STYLES[lead.priority] || PRIORITY_STYLES.MEDIUM}`}>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium ${PRIORITY_STYLES[lead.priority] || PRIORITY_STYLES.MEDIUM}`}
+                >
                   {lead.priority}
                 </span>
               )}
-              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[lead.status] || STATUS_STYLES.NEW}`}>
+              <span
+                className={`px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[lead.status] || STATUS_STYLES.NEW}`}
+              >
                 {lead.status}
               </span>
             </div>
@@ -190,7 +194,9 @@ export function LeadDetailModal({ isOpen, onClose, onSuccess, leadId }: LeadDeta
           {lead.notes && (
             <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Notes</p>
-              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{lead.notes}</p>
+              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                {lead.notes}
+              </p>
             </div>
           )}
 

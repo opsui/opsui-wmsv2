@@ -461,7 +461,10 @@ function IntegrationsTab({
         <div className="text-center py-12">
           <ServerIcon className="mx-auto h-12 w-12 text-gray-600" />
           <p className="mt-2 text-gray-400">No integrations configured</p>
-          <button onClick={onCreateIntegration} className="mt-4 text-purple-400 hover:text-purple-300">
+          <button
+            onClick={onCreateIntegration}
+            className="mt-4 text-purple-400 hover:text-purple-300"
+          >
             Add your first integration
           </button>
         </div>

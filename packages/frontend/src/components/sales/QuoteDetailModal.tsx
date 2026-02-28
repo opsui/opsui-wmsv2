@@ -79,7 +79,10 @@ export function QuoteDetailModal({
   const isExpiredOrRejected = status === 'EXPIRED' || status === 'REJECTED';
 
   const lineItems: any[] = quote?.lineItems ?? quote?.items ?? [];
-  const subtotal = lineItems.reduce((sum: number, item: any) => sum + (Number(item.lineTotal ?? item.totalPrice ?? 0)), 0);
+  const subtotal = lineItems.reduce(
+    (sum: number, item: any) => sum + Number(item.lineTotal ?? item.totalPrice ?? 0),
+    0
+  );
   const totalAmount = quote?.totalAmount ?? quote?.total ?? subtotal;
   const taxAmount = quote?.taxAmount ?? quote?.tax ?? 0;
 
@@ -97,11 +100,7 @@ export function QuoteDetailModal({
           {!isExpiredOrRejected && status !== 'ACCEPTED' && (
             <div className="flex items-center gap-2">
               {status === 'DRAFT' && (
-                <Button
-                  variant="secondary"
-                  onClick={handleSend}
-                  disabled={sendMutation.isPending}
-                >
+                <Button variant="secondary" onClick={handleSend} disabled={sendMutation.isPending}>
                   {sendMutation.isPending ? 'Sending...' : 'Send to Customer'}
                 </Button>
               )}
@@ -139,9 +138,7 @@ export function QuoteDetailModal({
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {quote.quoteNumber}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {quote.customerName}
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{quote.customerName}</p>
               </div>
             </div>
             <span
@@ -203,7 +200,11 @@ export function QuoteDetailModal({
                     {lineItems.map((item: any, idx: number) => (
                       <tr
                         key={idx}
-                        className={idx < lineItems.length - 1 ? 'border-b border-gray-200 dark:border-gray-700' : ''}
+                        className={
+                          idx < lineItems.length - 1
+                            ? 'border-b border-gray-200 dark:border-gray-700'
+                            : ''
+                        }
                       >
                         <td className="px-4 py-3 text-gray-900 dark:text-white">
                           {item.description ?? item.productName ?? item.sku ?? `Item ${idx + 1}`}
@@ -248,7 +249,9 @@ export function QuoteDetailModal({
           {quote.notes && (
             <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Notes</p>
-              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{quote.notes}</p>
+              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                {quote.notes}
+              </p>
             </div>
           )}
         </div>

@@ -113,7 +113,10 @@ export default function MultiEntitySetupPage() {
   const [entityUsers, setEntityUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [showAssignUserModal, setShowAssignUserModal] = useState(false);
-  const [assignUserForm, setAssignUserForm] = useState({ user_id: '', entity_user_role: 'ENTITY_USER' });
+  const [assignUserForm, setAssignUserForm] = useState({
+    user_id: '',
+    entity_user_role: 'ENTITY_USER',
+  });
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [isSubmittingAssignment, setIsSubmittingAssignment] = useState(false);
 
@@ -148,7 +151,14 @@ export default function MultiEntitySetupPage() {
       await loadEntities();
       await loadEntityHierarchy();
       setShowEntityModal(false);
-      setEntityForm({ entity_name: '', entity_code: '', entity_type: 'SUBSIDIARY', parent_entity_id: '', base_currency: 'USD', entity_status: 'ACTIVE' });
+      setEntityForm({
+        entity_name: '',
+        entity_code: '',
+        entity_type: 'SUBSIDIARY',
+        parent_entity_id: '',
+        base_currency: 'USD',
+        entity_status: 'ACTIVE',
+      });
     } catch (error: any) {
       setEntityFormError(error.message || 'Failed to create entity');
     } finally {
@@ -157,7 +167,10 @@ export default function MultiEntitySetupPage() {
   };
 
   const loadUsersForEntity = async (entityId: string) => {
-    if (!entityId) { setEntityUsers([]); return; }
+    if (!entityId) {
+      setEntityUsers([]);
+      return;
+    }
     setIsLoadingUsers(true);
     try {
       const response = await fetch(`/api/v1/multi-entity/entities/${entityId}/users`, {
@@ -722,7 +735,9 @@ export default function MultiEntitySetupPage() {
           <p className="text-sm text-gray-400">Manage which users can access which entities</p>
         </div>
         <Button
-          onClick={() => { setShowAssignUserModal(true); }}
+          onClick={() => {
+            setShowAssignUserModal(true);
+          }}
           disabled={!selectedEntityForUsers}
         >
           <PlusIcon className="h-4 w-4 mr-1" />
@@ -770,13 +785,18 @@ export default function MultiEntitySetupPage() {
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">User</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">Email</th>
                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">Role</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">Status</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-400">
+                      Status
+                    </th>
                     <th className="px-6 py-3" />
                   </tr>
                 </thead>
                 <tbody>
                   {entityUsers.map((eu: any) => (
-                    <tr key={eu.entity_user_id} className="border-b border-white/5 hover:bg-white/5">
+                    <tr
+                      key={eu.entity_user_id}
+                      className="border-b border-white/5 hover:bg-white/5"
+                    >
                       <td className="px-6 py-4 text-sm text-white">
                         {eu.user_name ?? eu.username ?? eu.user_id}
                       </td>
@@ -787,7 +807,9 @@ export default function MultiEntitySetupPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded text-xs ${eu.is_active !== false ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${eu.is_active !== false ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400'}`}
+                        >
                           {eu.is_active !== false ? 'Active' : 'Inactive'}
                         </span>
                       </td>
@@ -914,11 +936,20 @@ export default function MultiEntitySetupPage() {
       {/* Entity Creation Modal */}
       <Modal
         isOpen={showEntityModal}
-        onClose={() => { setShowEntityModal(false); setEntityFormError(null); }}
+        onClose={() => {
+          setShowEntityModal(false);
+          setEntityFormError(null);
+        }}
         title={selectedEntity ? 'Edit Entity' : 'Add Entity'}
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => { setShowEntityModal(false); setEntityFormError(null); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEntityModal(false);
+                setEntityFormError(null);
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleCreateEntity} disabled={isSubmittingEntity}>
@@ -949,7 +980,9 @@ export default function MultiEntitySetupPage() {
               <input
                 type="text"
                 value={entityForm.entity_code}
-                onChange={e => setEntityForm(f => ({ ...f, entity_code: e.target.value.toUpperCase() }))}
+                onChange={e =>
+                  setEntityForm(f => ({ ...f, entity_code: e.target.value.toUpperCase() }))
+                }
                 placeholder="e.g. ASIA-01"
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               />
@@ -974,7 +1007,9 @@ export default function MultiEntitySetupPage() {
               <input
                 type="text"
                 value={entityForm.base_currency}
-                onChange={e => setEntityForm(f => ({ ...f, base_currency: e.target.value.toUpperCase() }))}
+                onChange={e =>
+                  setEntityForm(f => ({ ...f, base_currency: e.target.value.toUpperCase() }))
+                }
                 placeholder="USD"
                 maxLength={3}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"

@@ -401,7 +401,11 @@ export class ProductionService {
     );
 
     // Record the issued quantity on the production order component
-    await productionRepository.incrementComponentIssuedQty(dto.orderId, dto.componentId, dto.quantity);
+    await productionRepository.incrementComponentIssuedQty(
+      dto.orderId,
+      dto.componentId,
+      dto.quantity
+    );
   }
 
   async returnMaterial(dto: ReturnMaterialDTO, userId: string): Promise<void> {
@@ -440,7 +444,11 @@ export class ProductionService {
     );
 
     // Record the returned quantity on the production order component
-    await productionRepository.incrementComponentReturnedQty(dto.orderId, dto.componentId, dto.quantity);
+    await productionRepository.incrementComponentReturnedQty(
+      dto.orderId,
+      dto.componentId,
+      dto.quantity
+    );
   }
 
   // ========================================================================

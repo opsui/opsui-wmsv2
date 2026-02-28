@@ -1164,7 +1164,10 @@ function AccountingPage() {
                     <select
                       id="transaction-type-filter"
                       value={transactionType}
-                      onChange={e => { setTransactionType(e.target.value); setTransactionPage(1); }}
+                      onChange={e => {
+                        setTransactionType(e.target.value);
+                        setTransactionPage(1);
+                      }}
                       className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All Types</option>
@@ -1184,7 +1187,10 @@ function AccountingPage() {
                     <select
                       id="reference-type-filter"
                       value={referenceType}
-                      onChange={e => { setReferenceType(e.target.value); setTransactionPage(1); }}
+                      onChange={e => {
+                        setReferenceType(e.target.value);
+                        setTransactionPage(1);
+                      }}
                       className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All References</option>
@@ -1200,7 +1206,10 @@ function AccountingPage() {
                     <select
                       id="status-filter"
                       value={transactionStatus}
-                      onChange={e => { setTransactionStatus(e.target.value); setTransactionPage(1); }}
+                      onChange={e => {
+                        setTransactionStatus(e.target.value);
+                        setTransactionPage(1);
+                      }}
                       className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-600/30 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     >
                       <option value="">All Statuses</option>

@@ -50,7 +50,11 @@ export function OpportunityDetailModal({
   const { data: opportunity, isLoading } = useOpportunity(opportunityId, isOpen);
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value);
 
   const getDaysUntilClose = (dateStr: string) => {
     const closeDate = new Date(dateStr);
@@ -76,7 +80,10 @@ export function OpportunityDetailModal({
           {!isClosed && onCreateQuote && (
             <Button
               variant="primary"
-              onClick={() => { onCreateQuote(opportunityId); onClose(); }}
+              onClick={() => {
+                onCreateQuote(opportunityId);
+                onClose();
+              }}
             >
               Create Quote
             </Button>
@@ -157,14 +164,17 @@ export function OpportunityDetailModal({
                   <p className="text-sm text-gray-900 dark:text-white">
                     {new Date(opportunity.expectedCloseDate).toLocaleDateString()}
                   </p>
-                  {!isClosed && (() => {
-                    const days = getDaysUntilClose(opportunity.expectedCloseDate);
-                    return (
-                      <p className={`text-xs ${days < 0 ? 'text-rose-400' : days <= 7 ? 'text-amber-400' : 'text-gray-400'}`}>
-                        {days < 0 ? `${Math.abs(days)}d overdue` : `${days}d remaining`}
-                      </p>
-                    );
-                  })()}
+                  {!isClosed &&
+                    (() => {
+                      const days = getDaysUntilClose(opportunity.expectedCloseDate);
+                      return (
+                        <p
+                          className={`text-xs ${days < 0 ? 'text-rose-400' : days <= 7 ? 'text-amber-400' : 'text-gray-400'}`}
+                        >
+                          {days < 0 ? `${Math.abs(days)}d overdue` : `${days}d remaining`}
+                        </p>
+                      );
+                    })()}
                 </div>
               </div>
             )}

@@ -911,7 +911,8 @@ function SalesPage() {
                     value: dashboard.pendingQuotes,
                     icon: DocumentTextIcon,
                     gradient: 'from-purple-400 to-violet-500',
-                    bgGradient: 'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
+                    bgGradient:
+                      'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
                   },
                   {
                     label: 'Total Pipeline',
