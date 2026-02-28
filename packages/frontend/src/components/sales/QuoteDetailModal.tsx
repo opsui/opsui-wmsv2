@@ -13,6 +13,7 @@ import {
   UserIcon,
   CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
+import { useState } from 'react';
 
 // ============================================================================
 // TYPES
@@ -49,6 +50,7 @@ export function QuoteDetailModal({
   const { data: quote, isLoading } = useQuote(quoteId, isOpen);
   const sendMutation = useSendQuote();
   const acceptMutation = useAcceptQuote();
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -65,14 +67,23 @@ export function QuoteDetailModal({
 
   const handleAccept = async () => {
     try {
-      await acceptMutation.mutateAsync(quoteId);
+      const result = await acceptMutation.mutateAsync(quoteId);
+      const orderId = result?.order?.orderId;
+      if (orderId) {
+        setCreatedOrderId(orderId);
+      }
       showToast(`Quote ${quote?.quoteNumber} accepted! Order created.`, 'success');
       onSuccess?.();
       onAccepted?.();
-      onClose();
     } catch (error: any) {
       showToast(error?.message || 'Failed to accept quote', 'error');
     }
+  };
+
+  // Reset created order state when modal closes
+  const handleClose = () => {
+    setCreatedOrderId(null);
+    onClose();
   };
 
   const status = quote?.status ?? '';
@@ -89,31 +100,46 @@ export function QuoteDetailModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Quote Details"
       size="lg"
       footer={
         <div className="flex items-center justify-between">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          {!isExpiredOrRejected && status !== 'ACCEPTED' && (
-            <div className="flex items-center gap-2">
-              {status === 'DRAFT' && (
-                <Button variant="secondary" onClick={handleSend} disabled={sendMutation.isPending}>
-                  {sendMutation.isPending ? 'Sending...' : 'Send to Customer'}
-                </Button>
-              )}
-              {status === 'SENT' && (
-                <Button
-                  variant="primary"
-                  onClick={handleAccept}
-                  disabled={acceptMutation.isPending}
-                >
-                  {acceptMutation.isPending ? 'Accepting...' : 'Accept & Create Order'}
-                </Button>
-              )}
-            </div>
+          {createdOrderId ? (
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Order{' '}
+              <span className="font-mono font-medium text-gray-900 dark:text-white">
+                {createdOrderId}
+              </span>{' '}
+              created and queued for picking
+            </span>
+          ) : (
+            !isExpiredOrRejected &&
+            status !== 'ACCEPTED' && (
+              <div className="flex items-center gap-2">
+                {status === 'DRAFT' && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleSend}
+                    disabled={sendMutation.isPending}
+                  >
+                    {sendMutation.isPending ? 'Sending...' : 'Send to Customer'}
+                  </Button>
+                )}
+                {status === 'SENT' && (
+                  <Button
+                    variant="primary"
+                    onClick={handleAccept}
+                    disabled={acceptMutation.isPending}
+                  >
+                    {acceptMutation.isPending ? 'Accepting...' : 'Accept & Create Order'}
+                  </Button>
+                )}
+              </div>
+            )
           )}
         </div>
       }
