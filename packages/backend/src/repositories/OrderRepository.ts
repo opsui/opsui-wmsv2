@@ -281,7 +281,7 @@ export class OrderRepository extends BaseRepository<Order> {
       status?: OrderStatus;
       packerId?: string;
     } = {}
-  ): Promise<{ orders: Order[] }> {
+  ): Promise<{ orders: Order[]; total: number }> {
     const conditions: string[] = [];
     const params: any[] = [];
     let paramIndex = 1;
@@ -305,7 +305,7 @@ export class OrderRepository extends BaseRepository<Order> {
           WHEN o.status = 'PACKING'
           THEN (
             SELECT COUNT(*) FILTER (
-              WHERE oi.picked_quantity >= oi.quantity
+              WHERE oi.verified_quantity >= oi.quantity
             ) FROM order_items oi WHERE oi.order_id = o.order_id
           )
           ELSE 0
@@ -315,7 +315,7 @@ export class OrderRepository extends BaseRepository<Order> {
           THEN ROUND(
             CAST(
               (SELECT COUNT(*) FILTER (
-                WHERE oi.picked_quantity >= oi.quantity
+                WHERE oi.verified_quantity >= oi.quantity
               ) FROM order_items oi WHERE oi.order_id = o.order_id) AS FLOAT
             ) / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.order_id), 0) * 100
           )
@@ -335,15 +335,17 @@ export class OrderRepository extends BaseRepository<Order> {
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
+        const totalAmount = mappedItems.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
 
         return {
           ...order,
           items: mappedItems,
+          totalAmount,
         };
       })
     );
 
-    return { orders };
+    return { orders, total: orders.length };
   }
 
   // --------------------------------------------------------------------------
