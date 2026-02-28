@@ -51,7 +51,7 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { data, isFetching } = useSKUSearch(query, open && query.length >= 2);
-  const skus: any[] = data?.skus || data || [];
+  const skus: any[] = data?.data || data?.skus || (Array.isArray(data) ? data : []);
 
   // Sync external value resets (e.g. form reset)
   useEffect(() => {
