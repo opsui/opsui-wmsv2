@@ -252,7 +252,7 @@ export class OrderRepository extends BaseRepository<Order> {
     const orders = await Promise.all(
       ordersResult.rows.map(async order => {
         const itemsQuery = getOrderItemsQuery(order.status);
-        const itemsResult = await query(itemsQuery, [order.orderId]);
+        const itemsResult = await query(itemsQuery, [order.order_id || order.orderId]);
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
@@ -331,7 +331,7 @@ export class OrderRepository extends BaseRepository<Order> {
     const orders = await Promise.all(
       ordersResult.rows.map(async order => {
         const itemsQuery = getOrderItemsQuery(order.status);
-        const itemsResult = await query(itemsQuery, [order.orderId]);
+        const itemsResult = await query(itemsQuery, [order.order_id || order.orderId]);
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
