@@ -5,9 +5,9 @@
  */
 
 import { Modal, FormInput, FormSelect, Button, useToast } from '@/components/shared';
-import { useFormValidation, commonValidations } from '@/hooks/useFormValidation';
-import { useCreateQuote, useCustomers, useOpportunities } from '@/services/api';
-import { useState } from 'react';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { useCreateQuote, useCustomers, useOpportunities, useSKUSearch } from '@/services/api';
+import { useState, useRef, useEffect } from 'react';
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 // ============================================================================
@@ -35,6 +35,84 @@ interface QuoteLineItem {
   unitPrice: number;
   discount: number;
   taxRate: number;
+}
+
+// ============================================================================
+// SKU COMBOBOX
+// ============================================================================
+
+interface SKUComboboxProps {
+  value: string;
+  onSelect: (sku: string, description: string, unitPrice: number) => void;
+}
+
+function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { data, isFetching } = useSKUSearch(query, open && query.length >= 2);
+  const skus: any[] = data?.skus || data || [];
+
+  // Sync external value resets (e.g. form reset)
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <input
+        type="text"
+        value={query}
+        onChange={e => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        placeholder="Search SKU..."
+        className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
+      />
+      {open && query.length >= 2 && (
+        <div className="absolute z-50 left-0 mt-1 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-56 overflow-y-auto">
+          {isFetching ? (
+            <div className="px-3 py-2 text-xs text-gray-400">Searching...</div>
+          ) : skus.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-gray-400">No SKUs found</div>
+          ) : (
+            skus.map((s: any) => (
+              <button
+                key={s.sku}
+                type="button"
+                onClick={() => {
+                  setQuery(s.sku);
+                  setOpen(false);
+                  onSelect(s.sku, s.description || s.name || '', parseFloat(s.unitPrice ?? s.unit_price ?? 0));
+                }}
+                className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0"
+              >
+                <div className="text-sm font-medium text-gray-900 dark:text-white">{s.sku}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{s.name}</div>
+                {(s.unitPrice ?? s.unit_price) != null && (
+                  <div className="text-xs text-primary-600 dark:text-primary-400">
+                    ${parseFloat(s.unitPrice ?? s.unit_price).toFixed(2)}
+                  </div>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ============================================================================
@@ -315,12 +393,13 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                       SKU *
                     </label>
-                    <input
-                      type="text"
+                    <SKUCombobox
                       value={item.sku}
-                      onChange={e => updateLineItem(index, 'sku', e.target.value)}
-                      placeholder="SKU"
-                      className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
+                      onSelect={(sku, description, unitPrice) => {
+                        const newItems = [...lineItems];
+                        newItems[index] = { ...newItems[index], sku, description, unitPrice };
+                        setLineItems(newItems);
+                      }}
                     />
                   </div>
 
