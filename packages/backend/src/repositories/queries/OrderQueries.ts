@@ -64,7 +64,9 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     oi.picked_quantity,
     0 as verified_quantity,
     oi.status,
-    s.barcode
+    s.barcode,
+    COALESCE(oi.unit_price, s.unit_price) as unit_price,
+    COALESCE(oi.line_total, oi.quantity * s.unit_price) as line_total
   FROM order_items oi
   LEFT JOIN skus s ON oi.sku = s.sku
   WHERE oi.order_id = $1
