@@ -7454,6 +7454,7 @@ export const useQuote = (quoteId: string, enabled: boolean = true) => {
       return response.data;
     },
     enabled: enabled && !!quoteId,
+    staleTime: 0,
   });
 };
 
@@ -7466,6 +7467,7 @@ export const useCreateCustomer = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales', 'customers'] });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'dashboard'] });
     },
   });
 };
@@ -7582,8 +7584,9 @@ export const useSendQuote = () => {
       const response = await apiClient.post(`/sales/quotes/${quoteId}/send`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, quoteId) => {
       queryClient.invalidateQueries({ queryKey: ['sales', 'quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'quotes', quoteId] });
     },
   });
 };
