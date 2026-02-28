@@ -58,10 +58,13 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
     setQuery(value);
   }, [value]);
 
-  // Auto-fill when query exactly matches a SKU in results (handles paste)
+  // Auto-fill when query exactly matches a SKU or name in results (handles paste)
   useEffect(() => {
     if (!open && query.length >= 2) {
-      const exact = skus.find((s: any) => s.sku.toLowerCase() === query.toLowerCase());
+      const q = query.toLowerCase();
+      const exact = skus.find(
+        (s: any) => s.sku.toLowerCase() === q || s.name?.toLowerCase() === q
+      );
       if (exact) {
         onSelect(exact.sku, exact.description || exact.name || '', parseFloat(exact.unit_price ?? exact.unitPrice ?? 0));
       }
@@ -88,7 +91,7 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        placeholder="Search SKU..."
+        placeholder="SKU or name..."
         className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
       />
       {open && query.length >= 2 && (
@@ -398,10 +401,10 @@ export function CreateQuoteModal({ isOpen, onClose, onSuccess }: CreateQuoteModa
                 className="bg-gray-50 dark:bg-white/[0.02] rounded-lg p-4 border border-gray-200 dark:border-white/[0.08]"
               >
                 <div className="grid grid-cols-12 gap-2 items-start">
-                  {/* SKU */}
+                  {/* SKU / Name */}
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                      SKU *
+                      SKU / Name *
                     </label>
                     <SKUCombobox
                       value={item.sku}
