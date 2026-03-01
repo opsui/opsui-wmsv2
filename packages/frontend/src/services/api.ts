@@ -1155,10 +1155,9 @@ export const useDashboardMetrics = (
   return useQuery({
     queryKey: ['metrics', 'dashboard'],
     queryFn: metricsApi.getDashboard,
-    refetchInterval: 2000, // Poll every 2 seconds for real-time updates
-    staleTime: 0, // Always consider data stale
-    refetchOnMount: 'always', // Always refetch on mount
-    refetchOnWindowFocus: 'always', // Refetch when window regains focus
+    refetchInterval: () => (document.hidden ? false : 10000),
+    staleTime: 10000,
+    refetchOnWindowFocus: false,
     ...options,
   });
 };
@@ -1170,12 +1169,10 @@ export const usePickerActivity = (options?: Omit<UseQueryOptions, 'queryKey' | '
       const data = await metricsApi.getPickerActivity();
       return data;
     },
-    refetchInterval: 1000, // Poll every 1 second for real-time updates
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache data (gcTime replaced cacheTime in v5)
-    refetchOnMount: 'always', // Always refetch on mount
-    refetchOnWindowFocus: 'always', // Refetch when window regains focus
-    retry: 1, // Only retry once
+    refetchInterval: () => (document.hidden ? false : 5000),
+    staleTime: 5000,
+    refetchOnWindowFocus: false,
+    retry: 1,
     ...options,
   });
 
@@ -1199,12 +1196,10 @@ export const usePackerActivity = (options?: Omit<UseQueryOptions, 'queryKey' | '
       const data = await metricsApi.getPackerActivity();
       return data as unknown[];
     },
-    refetchInterval: 1000, // Poll every 1 second for real-time updates
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache data (gcTime replaced cacheTime in v5)
-    refetchOnMount: 'always', // Always refetch on mount
-    refetchOnWindowFocus: 'always', // Refetch when window regains focus
-    retry: 1, // Only retry once
+    refetchInterval: () => (document.hidden ? false : 5000),
+    staleTime: 5000,
+    refetchOnWindowFocus: false,
+    retry: 1,
     ...options,
   });
 
@@ -1282,12 +1277,10 @@ export const useStockControllerActivity = (
       const data = await metricsApi.getStockControllerActivity();
       return data as unknown[];
     },
-    refetchInterval: 1000, // Poll every 1 second for real-time updates
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache data (gcTime replaced cacheTime in v5)
-    refetchOnMount: 'always', // Always refetch on mount
-    refetchOnWindowFocus: 'always', // Refetch when window regains focus
-    retry: 1, // Only retry once
+    refetchInterval: () => (document.hidden ? false : 5000),
+    staleTime: 5000,
+    refetchOnWindowFocus: false,
+    retry: 1,
     ...options,
   });
 

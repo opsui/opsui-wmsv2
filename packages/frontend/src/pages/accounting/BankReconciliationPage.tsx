@@ -72,26 +72,29 @@ function AnimatedNumber({ value, className = '', prefix = '$', delay = 0 }: Anim
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
-    const duration = 1000;
-    const steps = 60;
-    const increment = value / steps;
-    let current = 0;
+    const duration = 800;
+    let rafId: number;
+    let startTime: number | null = null;
 
-    const timeout = setTimeout(() => {
-      const interval = setInterval(() => {
-        current += increment;
-        if (current >= value) {
-          setDisplayValue(value);
-          clearInterval(interval);
+    const delayId = setTimeout(() => {
+      const animate = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setDisplayValue(Math.floor(value * eased * 100) / 100);
+        if (progress < 1) {
+          rafId = requestAnimationFrame(animate);
         } else {
-          setDisplayValue(Math.floor(current * 100) / 100);
+          setDisplayValue(value);
         }
-      }, duration / steps);
-
-      return () => clearInterval(interval);
+      };
+      rafId = requestAnimationFrame(animate);
     }, delay);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(delayId);
+      cancelAnimationFrame(rafId);
+    };
   }, [value, delay]);
 
   const formattedValue = new Intl.NumberFormat('en-US', {

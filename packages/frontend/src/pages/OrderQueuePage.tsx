@@ -664,7 +664,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
   useEffect(() => {
     const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
+      if (!document.hidden) {
+        queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
+      }
     }, 10000);
     return () => clearInterval(interval);
   }, [queryClient, cfg.queryKey]);
