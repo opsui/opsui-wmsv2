@@ -2317,7 +2317,7 @@ export const useOpenExceptions = (params?: {
     queryKey: ['exceptions', 'open', params],
     queryFn: () => exceptionApi.getOpenExceptions(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: () => (document.hidden ? false : 5000), for open exceptions
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
