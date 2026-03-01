@@ -50,21 +50,15 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
 
     // Register this tracking instance as active
     activeTrackingIds.set(trackingId, true);
-    console.log(`[PageTracking] Registered tracking instance: ${trackingId} for view: ${view}`);
 
     // Function to update current view (ACTIVE)
     const updateView = async () => {
       // Check if user is authenticated before making API call
       const isAuthenticated = useAuthStore.getState().isAuthenticated;
-      if (!isAuthenticated) {
-        console.log(`[PageTracking] [${trackingId}] User not authenticated - skipping view update`);
-        return;
-      }
+      if (!isAuthenticated) return;
 
       try {
-        console.log(`[PageTracking] [${trackingId}] Updating current view to: ${view}`);
         await apiClient.post('/auth/current-view', { view });
-        console.log(`[PageTracking] [${trackingId}] Successfully updated current view to: ${view}`);
       } catch (error) {
         // Only log non-401 errors to reduce console noise during tests
         const isAuthError =
@@ -73,7 +67,7 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
           'response' in error &&
           (error as { response?: { status?: number } }).response?.status === 401;
         if (!isAuthError) {
-          console.error(`[PageTracking] [${trackingId}] Failed to update current view:`, error);
+          console.error(`[PageTracking] Failed to update current view:`, error);
         }
       }
     };
@@ -85,24 +79,14 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
         id => id !== trackingId && activeTrackingIds.get(id)
       );
 
-      if (hasOtherActiveTracking) {
-        console.log(
-          `[PageTracking] [${trackingId}] Skipping IDLE - other tracking instances active`
-        );
-        return;
-      }
+      if (hasOtherActiveTracking) return;
 
       // Check if user is authenticated before making API call
       const isAuthenticated = useAuthStore.getState().isAuthenticated;
-      if (!isAuthenticated) {
-        console.log(`[PageTracking] [${trackingId}] User not authenticated - skipping IDLE set`);
-        return;
-      }
+      if (!isAuthenticated) return;
 
       try {
-        console.log(`[PageTracking] [${trackingId}] Setting picker to IDLE (last active instance)`);
         await apiClient.post('/auth/set-idle');
-        console.log(`[PageTracking] [${trackingId}] Successfully set picker to IDLE`);
       } catch (error) {
         // Only log non-401 errors to reduce console noise during tests
         const isAuthError =
@@ -111,7 +95,7 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
           'response' in error &&
           (error as { response?: { status?: number } }).response?.status === 401;
         if (!isAuthError) {
-          console.error(`[PageTracking] [${trackingId}] Failed to set picker to IDLE:`, error);
+          console.error(`[PageTracking] Failed to set picker to IDLE:`, error);
         }
       }
     };
@@ -122,12 +106,8 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
     // Handle visibility changes
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // Tab became visible - picker is ACTIVE
-        console.log(`[PageTracking] [${trackingId}] Tab became visible, updating view: ${view}`);
         updateView();
       } else {
-        // Tab became hidden - picker is IDLE
-        console.log(`[PageTracking] [${trackingId}] Tab became hidden, setting picker to IDLE`);
         setIdle();
       }
     };
@@ -136,8 +116,6 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
 
     // Cleanup when component unmounts
     return () => {
-      console.log(`[PageTracking] [${trackingId}] Cleaning up tracking for view: ${view}`);
-
       // Unregister this tracking instance
       activeTrackingIds.delete(trackingId);
 
@@ -149,14 +127,7 @@ export function usePageTracking({ view, enabled = true }: UsePageTrackingOptions
       const hasOtherActiveTracking = Array.from(activeTrackingIds.values()).some(Boolean);
 
       if (!hasOtherActiveTracking) {
-        console.log(
-          `[PageTracking] [${trackingId}] No other tracking instances - setting IDLE on cleanup`
-        );
         setIdle();
-      } else {
-        console.log(
-          `[PageTracking] [${trackingId}] Other tracking instances still active - skipping IDLE on cleanup`
-        );
       }
     };
   }, [view, enabled]); // Only depend on view and enabled

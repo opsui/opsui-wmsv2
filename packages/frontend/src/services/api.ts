@@ -1394,7 +1394,7 @@ export const useHourlyThroughput = (options?: Omit<UseQueryOptions, 'queryKey' |
   return useQuery({
     queryKey: ['metrics', 'hourly-throughput'],
     queryFn: metricsApi.getHourlyThroughput,
-    refetchInterval: 60000, // Poll every minute
+    refetchInterval: () => (document.hidden ? false : 60000), // Poll every minute
     staleTime: 30000, // Consider data fresh for 30 seconds
     ...options,
   });
@@ -1407,7 +1407,7 @@ export const useThroughputByRange = (
   return useQuery({
     queryKey: ['metrics', 'throughput-by-range', range],
     queryFn: () => metricsApi.getThroughputByRange(range),
-    refetchInterval: 60000, // Poll every minute
+    refetchInterval: () => (document.hidden ? false : 60000), // Poll every minute
     staleTime: 30000, // Consider data fresh for 30 seconds
     ...options,
   });
@@ -1419,7 +1419,7 @@ export const useOrderStatusBreakdown = (
   return useQuery({
     queryKey: ['metrics', 'order-status-breakdown'],
     queryFn: metricsApi.getOrderStatusBreakdown,
-    refetchInterval: 30000, // Poll every 30 seconds
+    refetchInterval: () => (document.hidden ? false : 30000), // Poll every 30 seconds
     staleTime: 15000,
     ...options,
   });
@@ -1434,7 +1434,7 @@ export const useTopSKUs = (
   return useQuery({
     queryKey: ['metrics', 'top-skus', limit, scanType, timePeriod],
     queryFn: () => metricsApi.getTopSKUs(limit, scanType, timePeriod),
-    refetchInterval: 300000, // Poll every 5 minutes
+    refetchInterval: () => (document.hidden ? false : 300000), // Poll every 5 minutes
     staleTime: 180000, // Consider data fresh for 3 minutes
     ...options,
   });
@@ -1495,7 +1495,7 @@ export const useAuditStatistics = (
   return useQuery({
     queryKey: ['audit', 'statistics', startDateKey, endDateKey],
     queryFn: async (): Promise<AuditStatistics> => auditApi.getStatistics(startDate, endDate),
-    refetchInterval: 120000, // Poll every 2 minutes
+    refetchInterval: () => (document.hidden ? false : 120000), // Poll every 2 minutes
     staleTime: 60000,
     ...queryOptions,
   });
@@ -1547,7 +1547,7 @@ export const useAllPickersPerformance = (
   return useQuery({
     queryKey: ['metrics', 'all-pickers-performance', startDateKey, endDateKey],
     queryFn: () => metricsApi.getAllPickersPerformance(startDate, endDate),
-    refetchInterval: 60000, // Poll every minute
+    refetchInterval: () => (document.hidden ? false : 60000), // Poll every minute
     staleTime: 30000,
     ...options,
   });
@@ -1565,7 +1565,7 @@ export const useAllPackersPerformance = (
   return useQuery({
     queryKey: ['metrics', 'all-packers-performance', startDateKey, endDateKey],
     queryFn: () => metricsApi.getAllPackersPerformance(startDate, endDate),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
     staleTime: 30000,
     ...options,
   });
@@ -1583,7 +1583,7 @@ export const useAllStockControllersPerformance = (
   return useQuery({
     queryKey: ['metrics', 'all-stock-controllers-performance', startDateKey, endDateKey],
     queryFn: () => metricsApi.getAllStockControllersPerformance(startDate, endDate),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
     staleTime: 30000,
     ...options,
   });
@@ -2601,7 +2601,7 @@ export const useCycleCountKPIs = (filters?: {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'overall', filters],
     queryFn: () => cycleCountKPIApi.getOverallKPIs(filters),
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: () => (document.hidden ? false : 30000), // Refresh every 30 seconds
   });
 };
 
@@ -2609,7 +2609,7 @@ export const useCycleCountAccuracyTrend = (days: number = 30) => {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'accuracy-trend', days],
     queryFn: () => cycleCountKPIApi.getAccuracyTrend(days),
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: () => (document.hidden ? false : 60000), // Refresh every minute
   });
 };
 
@@ -2617,7 +2617,7 @@ export const useCycleCountTopDiscrepancies = (limit: number = 10, days: number =
   return useQuery({
     queryKey: ['cycle-count-kpi', 'top-discrepancies', limit, days],
     queryFn: () => cycleCountKPIApi.getTopDiscrepancies(limit, days),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
   });
 };
 
@@ -2625,7 +2625,7 @@ export const useCycleCountUserPerformance = (days: number = 30) => {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'user-performance', days],
     queryFn: () => cycleCountKPIApi.getUserPerformance(days),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
   });
 };
 
@@ -2633,7 +2633,7 @@ export const useCycleCountZonePerformance = (days: number = 30) => {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'zone-performance', days],
     queryFn: () => cycleCountKPIApi.getZonePerformance(days),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
   });
 };
 
@@ -2641,7 +2641,7 @@ export const useCycleCountTypeEffectiveness = (days: number = 90) => {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'count-type-effectiveness', days],
     queryFn: () => cycleCountKPIApi.getCountTypeEffectiveness(days),
-    refetchInterval: 120000, // Refresh every 2 minutes
+    refetchInterval: () => (document.hidden ? false : 120000), // Refresh every 2 minutes
   });
 };
 
@@ -2649,7 +2649,7 @@ export const useCycleCountDailyStats = (days: number = 30) => {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'daily-stats', days],
     queryFn: () => cycleCountKPIApi.getDailyStats(days),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
   });
 };
 
@@ -2662,7 +2662,7 @@ export const useCycleCountDashboard = (filters?: {
   return useQuery({
     queryKey: ['cycle-count-kpi', 'dashboard', filters],
     queryFn: () => cycleCountKPIApi.getDashboard(filters),
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: () => (document.hidden ? false : 30000), // Refresh every 30 seconds
   });
 };
 
@@ -2805,7 +2805,7 @@ export const useCheckCollisions = (planId: string) => {
     queryKey: ['cycle-count', 'collisions', planId],
     queryFn: () => cycleCountApi.checkCollisions(planId),
     enabled: !!planId,
-    refetchInterval: 30000,
+    refetchInterval: () => (document.hidden ? false : 30000),
   });
 };
 
@@ -2876,7 +2876,7 @@ export const useMicroCountStats = (days: number = 30) => {
   return useQuery({
     queryKey: ['interleaved-count', 'stats', days],
     queryFn: () => interleavedCountApi.getStats(days),
-    refetchInterval: 60000,
+    refetchInterval: () => (document.hidden ? false : 60000),
   });
 };
 
@@ -3310,7 +3310,7 @@ export const useRecurringSchedules = (params?: {
   return useQuery({
     queryKey: ['recurring-schedules', params],
     queryFn: () => recurringSchedulesApi.getAllSchedules(params),
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: () => (document.hidden ? false : 60000), // Refetch every minute
   });
 };
 
@@ -3361,7 +3361,7 @@ export const useRootCausePareto = (days: number = 30) => {
   return useQuery({
     queryKey: ['root-cause-pareto', days],
     queryFn: () => rootCauseAnalysisApi.getPareto(days),
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: () => (document.hidden ? false : 300000), // Refetch every 5 minutes
   });
 };
 
@@ -3369,7 +3369,7 @@ export const useRootCauseCategoryBreakdown = (days: number = 30) => {
   return useQuery({
     queryKey: ['root-cause-breakdown', days],
     queryFn: () => rootCauseAnalysisApi.getCategoryBreakdown(days),
-    refetchInterval: 300000,
+    refetchInterval: () => (document.hidden ? false : 300000),
   });
 };
 
@@ -3377,7 +3377,7 @@ export const useRootCauseTrending = (days: number = 30) => {
   return useQuery({
     queryKey: ['root-cause-trending', days],
     queryFn: () => rootCauseAnalysisApi.getTrendingRootCauses(days),
-    refetchInterval: 300000,
+    refetchInterval: () => (document.hidden ? false : 300000),
   });
 };
 
@@ -3518,7 +3518,7 @@ export const useCapacityRules = (enabled: boolean = true) => {
     queryKey: ['location-capacity', 'rules'],
     queryFn: locationCapacityApi.getRules,
     enabled,
-    refetchInterval: 30000,
+    refetchInterval: () => (document.hidden ? false : 30000),
   });
 };
 
@@ -4698,7 +4698,7 @@ export const useBinLocationsManagement = (params?: {
     queryKey: ['bin-locations', 'all', params],
     queryFn: () => binLocationApi.getAll(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 30000,
+    refetchInterval: () => (document.hidden ? false : 30000),
   });
 };
 
@@ -5224,7 +5224,7 @@ export const useAllZoneStats = () => {
   return useQuery({
     queryKey: ['zones', 'stats', 'all'],
     queryFn: zoneApi.getAllZoneStats,
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds
+    refetchInterval: () => (document.hidden ? false : 30 * 1000), // Refetch every 30 seconds
     staleTime: 15 * 1000, // 15 seconds
   });
 };
@@ -5371,7 +5371,7 @@ export const useSlottingStats = () => {
   return useQuery({
     queryKey: ['slotting', 'stats'],
     queryFn: slottingApi.getStats,
-    refetchInterval: 60 * 1000, // Refetch every minute
+    refetchInterval: () => (document.hidden ? false : 60 * 1000), // Refetch every minute
     staleTime: 30 * 1000, // 30 seconds
   });
 };
@@ -6898,7 +6898,7 @@ export const useWebhookEvents = (params?: {
   return useQuery({
     queryKey: ['integrations', 'webhooks', 'events', params],
     queryFn: () => integrationsApi.getWebhookEvents(params),
-    refetchInterval: 30000, // Poll every 30 seconds for new events
+    refetchInterval: () => (document.hidden ? false : 30000), // Poll every 30 seconds for new events
   });
 };
 

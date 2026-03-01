@@ -44,7 +44,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // ============================================================================
@@ -121,22 +121,26 @@ export function PickingPage() {
   // ==========================================================================
 
   // Subscribe to pick updates for this order
-  usePickUpdates((data: { orderId: string; orderItemId: string; pickedQuantity?: number }) => {
-    // If this pick is for the current order, refresh the order data
-    if (data.orderId === orderId) {
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
-    }
-  });
+  const handlePickUpdate = useCallback(
+    (data: { orderId: string; orderItemId: string; pickedQuantity?: number }) => {
+      if (data.orderId === orderId) {
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      }
+    },
+    [orderId, queryClient]
+  );
+  usePickUpdates(handlePickUpdate);
 
   // Subscribe to zone updates (for zone reassignments during picking)
-  useZoneUpdates(
+  const handleZoneUpdate = useCallback(
     (data: { zoneId: string; pickerId?: string; taskCount?: number; pickerCount?: number }) => {
-      // If this zone assignment affects the current user, refresh
       if (data.pickerId === currentUser?.userId) {
         queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       }
-    }
+    },
+    [currentUser?.userId, orderId, queryClient]
   );
+  useZoneUpdates(handleZoneUpdate);
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);

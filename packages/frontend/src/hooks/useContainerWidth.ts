@@ -6,7 +6,7 @@
  * Initializes with a fallback width so charts always render immediately.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * Get a fallback width based on viewport size
@@ -28,6 +28,14 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
   // Initialize with fallback immediately so charts always render
   const [width, setWidth] = useState(getFallbackWidth);
   const isMountedRef = useRef(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setWidthDebounced = useCallback((newWidth: number) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (isMountedRef.current) setWidth(newWidth);
+    }, 200);
+  }, []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -36,19 +44,23 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
     // If no container, keep using fallback
     if (!container) return;
 
-    // Measure and update width
-    const updateWidth = () => {
+    // Measure and update width (immediate for initial mount, debounced for resize)
+    const updateWidth = (debounce = false) => {
       if (!isMountedRef.current) return;
       const rect = container.getBoundingClientRect();
       if (rect.width > 0) {
-        setWidth(rect.width);
+        if (debounce) {
+          setWidthDebounced(rect.width);
+        } else {
+          setWidth(rect.width);
+        }
       }
     };
 
-    // Initial measurement
-    updateWidth();
+    // Initial measurement (immediate, no debounce)
+    updateWidth(false);
 
-    // Use ResizeObserver for responsive updates
+    // Use ResizeObserver for responsive updates (debounced)
     let resizeObserver: ResizeObserver | null = null;
     try {
       resizeObserver = new ResizeObserver(entries => {
@@ -56,7 +68,7 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
         for (const entry of entries) {
           const { width: newWidth } = entry.contentRect;
           if (newWidth > 0) {
-            setWidth(newWidth);
+            setWidthDebounced(newWidth);
           }
         }
       });
@@ -65,21 +77,19 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): [
       // ResizeObserver not supported
     }
 
-    // Window resize as backup
-    const handleWindowResize = () => {
-      if (!isMountedRef.current) return;
-      updateWidth();
-    };
+    // Window resize as backup (debounced)
+    const handleWindowResize = () => updateWidth(true);
     window.addEventListener('resize', handleWindowResize);
 
     return () => {
       isMountedRef.current = false;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
       window.removeEventListener('resize', handleWindowResize);
     };
-  }, []);
+  }, [setWidthDebounced]);
 
   return [containerRef, width];
 }

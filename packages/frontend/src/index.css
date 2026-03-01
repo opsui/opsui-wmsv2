@@ -4309,6 +4309,23 @@ html.performance-mode .ledger-shimmer {
   animation: none !important;
 }
 
+/* Suppress Tailwind animate-ping (notification dots, live indicators) */
+html.performance-mode .animate-ping {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
+/* Suppress Tailwind animate-spin (decorative spinners - not loading indicators) */
+/* Note: loading spinners inside buttons/skeletons are excluded via :not() in the component */
+html.performance-mode [class~='animate-spin']:not([data-loading='true']) {
+  animation: none !important;
+}
+
+/* Suppress Tailwind animate-bounce (decorative bounce effects) */
+html.performance-mode .animate-bounce {
+  animation: none !important;
+}
+
 /* Disable confetti/celebration animations */
 html.performance-mode .confetti-piece,
 html.performance-mode .celebration-container::before,

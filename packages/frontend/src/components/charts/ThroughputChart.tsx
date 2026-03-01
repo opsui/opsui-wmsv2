@@ -14,7 +14,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
 import { useContainerWidth } from '@/hooks/useContainerWidth';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import {
   CartesianGrid,
   Legend,
@@ -60,7 +60,7 @@ const RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: 'yearly', label: 'Yearly' },
 ];
 
-export function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputChartProps) {
+export const ThroughputChart = memo(function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputChartProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('daily');
   const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
@@ -381,4 +381,4 @@ function TimeRangeSelector({
       )}
     </div>
   );
-}
+});

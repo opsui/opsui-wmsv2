@@ -11,7 +11,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@/components/shared';
 import { useContainerWidth } from '@/hooks/useContainerWidth';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface OrderStatusData {
@@ -49,7 +49,7 @@ const STATUS_LABELS: Record<string, string> = {
   BACKORDERED: 'Backordered',
 };
 
-export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartProps) {
+export const OrderStatusChart = memo(function OrderStatusChart({ data, isLoading, error }: OrderStatusChartProps) {
   const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   // Memoize chart data to prevent re-renders
@@ -355,4 +355,4 @@ export function OrderStatusChart({ data, isLoading, error }: OrderStatusChartPro
       </CardContent>
     </Card>
   );
-}
+});
