@@ -9,6 +9,7 @@ import { validate } from '../middleware/validation';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole, ExceptionType } from '@opsui/shared';
 import { getPool } from '../db/client';
+import { cache } from '../middleware/cache';
 
 const router = Router();
 
@@ -35,6 +36,7 @@ router.post(
  */
 router.get(
   '/',
+  cache({ ttl: 5000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const filters = {
       status: req.query.status as any,
@@ -453,6 +455,7 @@ router.post(
 router.get(
   '/:orderId/progress',
   validate.orderId,
+  cache({ ttl: 5000, varyBy: ['params'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const progress = await orderService.getOrderPickingProgress(req.params.orderId);
     res.json(progress);
@@ -910,6 +913,7 @@ router.post(
 router.get(
   '/packing-queue',
   authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
+  cache({ ttl: 5000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const orders = await orderService.getPackingQueue();
     res.json(orders);

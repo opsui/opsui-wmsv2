@@ -39,7 +39,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '@/lib/api-client';
@@ -672,18 +672,22 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   }, [queryClient, cfg.queryKey]);
 
   // WebSocket updates (picking only — packing uses polling)
-  useOrderUpdates((data: { orderId: string; pickerId?: string; pickerName?: string }) => {
-    if (mode !== 'picking') return;
-    queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
-    if (data.orderId === lastClaimedOrderIdRef.current) return;
-    if (data.pickerId && data.pickerId !== userId) {
-      showToast(
-        `Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`,
-        'success',
-        3000
-      );
-    }
-  });
+  const handleOrderUpdate = useCallback(
+    (data: { orderId: string; pickerId?: string; pickerName?: string }) => {
+      if (mode !== 'picking') return;
+      queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+      if (data.orderId === lastClaimedOrderIdRef.current) return;
+      if (data.pickerId && data.pickerId !== userId) {
+        showToast(
+          `Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`,
+          'success',
+          3000
+        );
+      }
+    },
+    [mode, queryClient, lastClaimedOrderIdRef, userId, showToast]
+  );
+  useOrderUpdates(handleOrderUpdate);
 
   // --- Mutations ---
   const claimPickingMutation = useClaimOrder();

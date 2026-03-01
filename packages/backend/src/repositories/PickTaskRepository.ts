@@ -156,10 +156,6 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
   // --------------------------------------------------------------------------
 
   async decrementPickedQuantity(pickTaskId: string, quantity: number = 1): Promise<PickTask> {
-    console.log('=== decrementPickedQuantity called ===');
-    console.log('pickTaskId:', pickTaskId);
-    console.log('quantity to decrement:', quantity);
-
     // First check if task exists with explicit column selection
     const checkResult = await query(
       `SELECT 
@@ -187,9 +183,6 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
     }
 
     const task = checkResult.rows[0] as any;
-    console.log('Current picked_quantity:', task.picked_quantity);
-    console.log('Current quantity:', task.quantity);
-    console.log('Current status:', task.status);
 
     // Reset picked_quantity to 0 in pick_tasks (instead of decrementing)
     // Do the UPDATE, then immediately SELECT to get fresh data
@@ -224,13 +217,7 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
       [pickTaskId]
     );
 
-    const updatedTask = selectResult.rows[0] as any;
-    console.log('Reset picked_quantity in pick_tasks to 0');
-    console.log('Status after reset:', updatedTask.status);
-    console.log('pickedQuantity from SELECT:', updatedTask.pickedQuantity);
-    console.log('orderItemId from SELECT:', updatedTask.orderItemId);
-
-    return updatedTask;
+    return selectResult.rows[0] as any;
   }
 
   // --------------------------------------------------------------------------
@@ -260,24 +247,12 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
   // --------------------------------------------------------------------------
 
   async updateStatus(pickTaskId: string, status: TaskStatus): Promise<PickTask> {
-    console.log('=== updateStatus called ===');
-    console.log('pickTaskId type:', typeof pickTaskId);
-    console.log('pickTaskId value:', pickTaskId);
-    console.log('status type:', typeof status);
-    console.log('status value:', status);
-    console.log('pickTaskId length:', pickTaskId?.length);
-
     logger.debug('Updating pick task status', { pickTaskId, status });
 
     // First check if task exists
     const checkResult = await query<PickTask>(`SELECT * FROM pick_tasks WHERE pick_task_id = $1`, [
       pickTaskId,
     ]);
-
-    console.log('checkResult rows:', checkResult.rows.length);
-    if (checkResult.rows.length > 0) {
-      console.log('checkResult first row:', checkResult.rows[0]);
-    }
 
     logger.debug('Pick task check', {
       pickTaskId,
@@ -289,8 +264,6 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
     const task = checkResult.rows[0];
     const shouldResetQuantity = task?.status === 'SKIPPED' && status === 'PENDING';
 
-    console.log('shouldResetQuantity:', shouldResetQuantity);
-
     const result = await query(
       `UPDATE pick_tasks
        SET status = $1::task_status,
@@ -301,7 +274,6 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
       [status, status, pickTaskId]
     );
 
-    console.log('UPDATE result rows:', result.rows.length);
     logger.debug('Update result', {
       pickTaskId,
       status,
@@ -310,35 +282,18 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
 
     // If reverting skip, reset picked_quantity to 0 in both pick_tasks and order_items
     if (shouldResetQuantity) {
-      console.log('=== REVERTING SKIP ===');
-      console.log('Resetting picked_quantity in pick_tasks');
-
       // Reset picked_quantity in pick_tasks table
-      const pickTaskReset = await query(
-        `UPDATE pick_tasks SET picked_quantity = 0 WHERE pick_task_id = $1 RETURNING *`,
+      await query(
+        `UPDATE pick_tasks SET picked_quantity = 0 WHERE pick_task_id = $1`,
         [pickTaskId]
       );
 
-      console.log('Pick tasks reset rows:', pickTaskReset.rows.length);
-
       if (task?.orderItemId) {
-        console.log(
-          'Resetting picked_quantity in order_items for order_item_id:',
-          task.orderItemId
-        );
-        const orderItemReset = await query(
-          `UPDATE order_items SET picked_quantity = 0 WHERE order_item_id = $1 RETURNING *`,
+        await query(
+          `UPDATE order_items SET picked_quantity = 0 WHERE order_item_id = $1`,
           [task.orderItemId]
         );
-        console.log('Order items reset rows:', orderItemReset.rows.length);
       }
-    } else {
-      console.log(
-        'NOT resetting picked_quantity - shouldResetQuantity:',
-        shouldResetQuantity,
-        'orderItemId:',
-        task?.orderItemId
-      );
     }
 
     if (result.rows.length === 0) {

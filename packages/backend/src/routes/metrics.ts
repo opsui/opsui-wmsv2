@@ -35,6 +35,7 @@ router.get(
 router.get(
   '/picker/:pickerId',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 30000, varyBy: ['params', 'query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const pickerId = req.params.pickerId;
 
@@ -92,6 +93,7 @@ router.get(
 router.get(
   '/packers',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 30000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -121,6 +123,7 @@ router.get(
 router.get(
   '/stock-controllers',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 30000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -150,6 +153,7 @@ router.get(
 router.get(
   '/orders/status-breakdown',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 10000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const breakdown = await metricsService.getOrderStatusBreakdown();
     res.json(breakdown);
@@ -163,6 +167,7 @@ router.get(
 router.get(
   '/orders/hourly-throughput',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 60000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const throughput = await metricsService.getHourlyThroughput();
     res.json(throughput);
@@ -177,6 +182,7 @@ router.get(
 router.get(
   '/orders/throughput',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 60000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const range = (req.query.range as string) || 'daily';
     // Validate range
@@ -198,6 +204,7 @@ router.get(
 router.get(
   '/skus/top-picked',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 300000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
     const scanType = (req.query.scanType as string) || 'pick';

@@ -58,7 +58,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { OrderStatus, UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { memo, useMemo, useState, useEffect } from 'react';
+import { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
@@ -287,65 +287,59 @@ export function DashboardPage() {
   // ==========================================================================
 
   // Subscribe to order updates to refresh metrics and order data
-  useOrderUpdates(
+  const handleOrderUpdate = useCallback(
     (data: { orderId: string; pickerId?: string; pickerName?: string; reason?: string }) => {
-      // Refresh dashboard metrics and role activity for all order events
-      // Using debounced invalidation to batch multiple updates
       invalidateQueued('dashboard-metrics');
       invalidateQueued('role-activity');
-      // Only invalidate order status breakdown on status changes (not on every pick/pack event)
-      // This prevents the chart from flashing constantly
       if (data.reason) {
-        // Order was cancelled/completed - status definitely changed
         invalidateQueued('order-status-breakdown');
       }
       invalidateQueued('throughput');
       invalidateQueued('top-skus');
 
-      // Show toast for specific events
       if (data.reason) {
-        // Order was cancelled
         showToast(`Order ${data.orderId} has been cancelled`, 'warning', 3000);
-      } else if (data.pickerName) {
-        // Order was claimed
-        // Don't show toast for claims as they happen frequently
-      } else {
-        // Order was completed
+      } else if (!data.pickerName) {
         showToast(`Order ${data.orderId} has been completed`, 'success', 3000);
       }
-    }
+    },
+    [invalidateQueued, showToast]
   );
+  useOrderUpdates(handleOrderUpdate);
 
   // Subscribe to pick updates to refresh performance metrics
-  usePickUpdates(() => {
-    // Refresh performance data and metrics for all pick events
-    // Using debounced invalidation to batch with other updates
+  const handlePickUpdate = useCallback(() => {
     invalidateQueued('picker-performance');
     invalidateQueued('packer-performance');
     invalidateQueued('dashboard-metrics');
     invalidateQueued('role-activity');
-  });
+  }, [invalidateQueued]);
+  usePickUpdates(handlePickUpdate);
 
   // Subscribe to inventory updates
-  useInventoryUpdates((data: { sku: string; binLocation?: string; quantity?: number }) => {
-    // Refresh inventory-related metrics
-    invalidateQueued('dashboard-metrics');
-
-    // Show alert toast for low stock
-    if (data.quantity !== undefined && data.quantity > 0) {
-      showToast(`SKU ${data.sku} is running low (${data.quantity} remaining)`, 'error', 5000);
-    }
-  });
+  const handleInventoryUpdate = useCallback(
+    (data: { sku: string; binLocation?: string; quantity?: number }) => {
+      invalidateQueued('dashboard-metrics');
+      if (data.quantity !== undefined && data.quantity > 0) {
+        showToast(`SKU ${data.sku} is running low (${data.quantity} remaining)`, 'error', 5000);
+      }
+    },
+    [invalidateQueued, showToast]
+  );
+  useInventoryUpdates(handleInventoryUpdate);
 
   // Subscribe to notifications
-  useNotifications((notification: { notificationId: string; title: string; message: string }) => {
-    // Show toast for notifications
-    showToast(
-      `${notification.title || 'Notification'}: ${notification.message || ''}`,
-      'info',
-      4000
-    );
-  });
+  const handleNotification = useCallback(
+    (notification: { notificationId: string; title: string; message: string }) => {
+      showToast(
+        `${notification.title || 'Notification'}: ${notification.message || ''}`,
+        'info',
+        4000
+      );
+    },
+    [showToast]
+  );
+  useNotifications(handleNotification);
 
   // ==========================================================================
   // Data Hooks

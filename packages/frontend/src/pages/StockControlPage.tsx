@@ -19,7 +19,7 @@
  * ============================================================================
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -1683,22 +1683,27 @@ export function StockControlPage() {
   // ==========================================================================
 
   // Subscribe to inventory updates for real-time stock changes
-  useInventoryUpdates(data => {
-    // Refresh all stock control data when inventory changes
-    queryClient.invalidateQueries({ queryKey: ['stock-control'] });
-    queryClient.invalidateQueries({ queryKey: ['inventory'] });
-    queryClient.invalidateQueries({ queryKey: ['low-stock'] });
-    // Show low stock alert
-    if (data.quantity !== undefined && data.quantity <= 10) {
-      showToast(`SKU ${data.sku} is running low (${data.quantity} remaining)`, 'error');
-    }
-  });
+  const handleInventoryUpdate = useCallback(
+    (data: { sku: string; binLocation?: string; quantity?: number }) => {
+      queryClient.invalidateQueries({ queryKey: ['stock-control'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['low-stock'] });
+      if (data.quantity !== undefined && data.quantity <= 10) {
+        showToast(`SKU ${data.sku} is running low (${data.quantity} remaining)`, 'error');
+      }
+    },
+    [queryClient, showToast]
+  );
+  useInventoryUpdates(handleInventoryUpdate);
 
   // Subscribe to notifications for stock control alerts
-  useNotifications(data => {
-    // Show toast for all notifications
-    showToast(data.message || data.title, 'info');
-  });
+  const handleNotification = useCallback(
+    (data: { message?: string; title?: string }) => {
+      showToast(data.message || data.title, 'info');
+    },
+    [showToast]
+  );
+  useNotifications(handleNotification);
 
   // Read active tab from URL query param, default to 'dashboard'
   const activeTab = (searchParams.get('tab') as TabType) || 'dashboard';

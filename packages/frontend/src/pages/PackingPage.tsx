@@ -231,7 +231,7 @@ export function PackingPage() {
     }
 
     const intervalId = setInterval(() => {
-      refetch();
+      if (!document.hidden) refetch();
     }, 10000);
 
     return () => {
