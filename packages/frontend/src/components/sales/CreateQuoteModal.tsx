@@ -60,7 +60,9 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
 
   // Keep a ref to latest skus so the blur handler can access them without stale closure
   const skusRef = useRef(skus);
-  useEffect(() => { skusRef.current = skus; }, [skus]);
+  useEffect(() => {
+    skusRef.current = skus;
+  }, [skus]);
 
   const tryAutoFill = () => {
     if (query.length < 2) return;
@@ -69,7 +71,11 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
       (s: any) => s.sku.toLowerCase() === q || s.name?.toLowerCase() === q
     );
     if (exact) {
-      onSelect(exact.sku, exact.description || exact.name || '', parseFloat(exact.unit_price ?? exact.unitPrice ?? 0));
+      onSelect(
+        exact.sku,
+        exact.description || exact.name || '',
+        parseFloat(exact.unit_price ?? exact.unitPrice ?? 0)
+      );
     }
   };
 
@@ -94,7 +100,10 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => { setOpen(false); tryAutoFill(); }}
+        onBlur={() => {
+          setOpen(false);
+          tryAutoFill();
+        }}
         placeholder="SKU or name..."
         className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary-500"
       />
@@ -112,7 +121,11 @@ function SKUCombobox({ value, onSelect }: SKUComboboxProps) {
                 onClick={() => {
                   setQuery(s.sku);
                   setOpen(false);
-                  onSelect(s.sku, s.description || s.name || '', parseFloat(s.unitPrice ?? s.unit_price ?? 0));
+                  onSelect(
+                    s.sku,
+                    s.description || s.name || '',
+                    parseFloat(s.unitPrice ?? s.unit_price ?? 0)
+                  );
                 }}
                 className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0"
               >

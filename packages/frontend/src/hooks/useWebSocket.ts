@@ -164,6 +164,7 @@ export function useOrderUpdates(
 
   useEffect(() => {
     const unsubscribes = [
+      subscribe('order:created', handler as ServerToClientEvents['order:created']),
       subscribe('order:claimed', handler as ServerToClientEvents['order:claimed']),
       subscribe('order:completed', handler as ServerToClientEvents['order:completed']),
       subscribe('order:cancelled', handler as ServerToClientEvents['order:cancelled']),

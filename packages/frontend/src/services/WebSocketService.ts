@@ -13,6 +13,7 @@ import { io, Socket } from 'socket.io-client';
 // ============================================================================
 
 export type ServerToClientEvents = {
+  'order:created': (data: { orderId: string; customerId: string; itemCount: number }) => void;
   'order:claimed': (data: { orderId: string; pickerId: string; pickerName: string }) => void;
   'order:completed': (data: { orderId: string; pickerId: string }) => void;
   'order:cancelled': (data: { orderId: string; reason: string }) => void;

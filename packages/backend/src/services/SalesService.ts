@@ -6,6 +6,7 @@
 
 import { salesRepository } from '../repositories/SalesRepository';
 import { orderService } from './OrderService';
+import wsServer from '../websocket';
 import {
   Customer,
   Lead,
@@ -348,14 +349,18 @@ export class SalesService {
     }
 
     // In production, this would send an email
-    // For now, just update the status
+    // Update quote status to SENT
+    await salesRepository.updateQuote(quoteId, {
+      status: QuoteStatus.SENT,
+      updatedBy: userId,
+    } as any);
 
     await salesRepository.updateCustomer(quote.customerId, {
       lastContactDate: new Date(),
       updatedBy: userId,
     } as any);
 
-    return quote; // Return original since update doesn't return full quote
+    return await this.getQuoteById(quoteId);
   }
 
   async acceptQuote(quoteId: string, userId: string): Promise<{ quote: Quote; order?: any }> {
@@ -382,6 +387,16 @@ export class SalesService {
       convertedToOrderId: order.orderId,
       updatedBy: userId,
     } as any);
+
+    // Broadcast new order to pickers so the queue updates in real-time
+    const broadcaster = wsServer.getBroadcaster();
+    if (broadcaster) {
+      broadcaster.broadcastOrderCreated({
+        orderId: order.orderId,
+        customerId: order.customerId,
+        itemCount: order.items?.length ?? 0,
+      });
+    }
 
     // Return updated quote and created order
     const updatedQuote = await this.getQuoteById(quoteId);

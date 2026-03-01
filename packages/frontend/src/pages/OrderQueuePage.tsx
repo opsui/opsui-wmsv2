@@ -18,7 +18,12 @@ import {
 } from '@/components/shared';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
-import { useClaimOrder, useContinueOrder, useOrderQueue, useClaimOrderForPacking } from '@/services/api';
+import {
+  useClaimOrder,
+  useContinueOrder,
+  useOrderQueue,
+  useClaimOrderForPacking,
+} from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
@@ -96,7 +101,12 @@ const pageVariants = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 100, damping: 15 } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 100, damping: 15 },
+  },
 };
 
 const headerVariants = {
@@ -159,7 +169,9 @@ function StatusFilterDropdown({
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
         <span className="uppercase">{selectedOption?.label}</span>
-        <ChevronDownIcon className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDownIcon
+          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </motion.button>
 
       <AnimatePresence>
@@ -180,16 +192,26 @@ function StatusFilterDropdown({
                   <motion.button
                     key={option.value}
                     whileHover={{ x: 4 }}
-                    onClick={() => { onChange(option.value); setIsOpen(false); }}
+                    onClick={() => {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
-                      isActive ? 'bg-purple-400 text-slate-900' : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
+                      isActive
+                        ? 'bg-purple-400 text-slate-900'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
                     }`}
                     role="option"
                     aria-selected={isActive}
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
                     {option.label}
-                    {isActive && <motion.div layoutId="activeIndicator" className="ml-auto w-2 h-2 rounded-full bg-slate-900" />}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="ml-auto w-2 h-2 rounded-full bg-slate-900"
+                      />
+                    )}
                   </motion.button>
                 );
               })}
@@ -244,7 +266,9 @@ function PriorityFilterDropdown({
       >
         {selectedOption && <selectedOption.icon className="h-4 w-4" />}
         <span className="uppercase">{selectedOption?.label}</span>
-        <ChevronDownIcon className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDownIcon
+          className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </motion.button>
 
       <AnimatePresence>
@@ -265,9 +289,14 @@ function PriorityFilterDropdown({
                   <motion.button
                     key={option.label}
                     whileHover={{ x: 4 }}
-                    onClick={() => { onChange(option.value); setIsOpen(false); }}
+                    onClick={() => {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
-                      isActive ? 'bg-purple-400 text-slate-900' : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
+                      isActive
+                        ? 'bg-purple-400 text-slate-900'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
                     }`}
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
@@ -307,7 +336,12 @@ function OrderCard({
   const items: any[] = order.items || [];
 
   return (
-    <motion.div variants={cardVariants} layout whileHover={{ y: -4, transition: { duration: 0.2 } }} className="relative group">
+    <motion.div
+      variants={cardVariants}
+      layout
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      className="relative group"
+    >
       {isUrgent && (
         <motion.div
           variants={pulseVariants}
@@ -319,7 +353,9 @@ function OrderCard({
       <Card
         variant="glass"
         className={`relative flex flex-col h-full bg-slate-900/95 border-2 transition-all duration-300 ${
-          isUrgent ? 'border-orange-500/50 shadow-[0_0_30px_rgba(249,115,22,0.2)]' : 'border-slate-700/50 hover:border-purple-500/30'
+          isUrgent
+            ? 'border-orange-500/50 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
+            : 'border-slate-700/50 hover:border-purple-500/30'
         }`}
       >
         <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
@@ -331,9 +367,14 @@ function OrderCard({
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">{order.orderId}</h3>
+                <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">
+                  {order.orderId}
+                </h3>
                 {isUrgent && (
-                  <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
                     <BoltIcon className="h-5 w-5 text-orange-400" />
                   </motion.div>
                 )}
@@ -354,14 +395,18 @@ function OrderCard({
             </div>
             <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-700/50">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Total</p>
-              <p className="text-xl font-black text-purple-400">${Number(order.totalAmount || 0).toFixed(2)}</p>
+              <p className="text-xl font-black text-purple-400">
+                ${Number(order.totalAmount || 0).toFixed(2)}
+              </p>
             </div>
           </div>
 
           {/* Progress */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{cfg.progressLabel}</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                {cfg.progressLabel}
+              </span>
               <span className="text-sm font-black text-purple-400">{order.progress || 0}%</span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
@@ -380,7 +425,8 @@ function OrderCard({
           {items.length > 0 && (
             <div className="flex-1 overflow-y-auto space-y-2 mb-4 max-h-48">
               {items.map((item: any, idx: number) => {
-                const qty = mode === 'packing' ? (item.verifiedQuantity || 0) : (item.pickedQuantity || 0);
+                const qty =
+                  mode === 'packing' ? item.verifiedQuantity || 0 : item.pickedQuantity || 0;
                 const isCompleted =
                   item.status === 'COMPLETED' ||
                   item.status === 'FULLY_PICKED' ||
@@ -413,7 +459,9 @@ function OrderCard({
                       <span className="text-slate-500 text-[10px]">
                         LOC: <span className="text-slate-300 font-bold">{item.binLocation}</span>
                       </span>
-                      <span className={`font-bold text-sm ${isCompleted ? 'text-purple-400' : isSkipped ? 'text-orange-400' : 'text-slate-300'}`}>
+                      <span
+                        className={`font-bold text-sm ${isCompleted ? 'text-purple-400' : isSkipped ? 'text-orange-400' : 'text-slate-300'}`}
+                      >
                         {isSkipped ? 'SKIPPED' : `${qty}/${item.quantity}`}
                       </span>
                     </div>
@@ -458,30 +506,53 @@ function OrderCard({
 // MAIN COMPONENT
 // ============================================================================
 
-export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
-  const cfg = MODE_CONFIG[mode];
+export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
   const canPick = useAuthStore(state => state.canPick);
+  const canPack = useAuthStore(state => state.canPack);
   const userId = useAuthStore(state => state.user?.userId);
   const currentUser = useAuthStore(state => state.user);
+  const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
   const { showToast } = useToast();
 
-  usePageTracking({ view: cfg.pageView });
+  // Admins arriving via ?queue= param (e.g. from the dashboard) can switch modes
+  const queueParam = searchParams.get('queue') as QueueMode | null;
+  const [adminMode, setAdminMode] = useState<QueueMode | null>(
+    isAdmin && queueParam && (queueParam === 'picking' || queueParam === 'packing')
+      ? queueParam
+      : null
+  );
+  const mode: QueueMode = adminMode ?? modeProp;
+  const cfg = MODE_CONFIG[mode];
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>(cfg.idleStatus);
   const [priorityFilter, setPriorityFilter] = useState<OrderPriority | undefined>();
   const [claimingOrderId, setClaimingOrderId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const isClaimingRef = useRef(false);
   const lastClaimedOrderIdRef = useRef<string | null>(null);
-  const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
-  const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // Auto-detect active tab on mount - must be before handleAdminModeSwitch
+  const hasAutoDetectedRef = useRef(false);
+
+  const handleAdminModeSwitch = (newMode: QueueMode) => {
+    setAdminMode(newMode);
+    setSearchParams(params => {
+      params.set('queue', newMode);
+      params.delete('status');
+      return params;
+    });
+    setStatusFilter(MODE_CONFIG[newMode].idleStatus);
+    setPriorityFilter(undefined);
+    setPage(1);
+    hasAutoDetectedRef.current = false;
+  };
 
   // --- Data fetching ---
   // Picking mode uses useOrderQueue; packing mode uses a direct apiClient call (different endpoint)
@@ -490,7 +561,8 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
       ? {
           status: statusFilter,
           priority: priorityFilter,
-          pickerId: statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
+          pickerId:
+            statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
           page,
           limit: pageSize,
         }
@@ -517,14 +589,18 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
   });
 
   const queueData = mode === 'picking' ? pickingQueueResult.data : packingQueueResult.data;
-  const isLoading = mode === 'picking' ? pickingQueueResult.isLoading : packingQueueResult.isLoading;
-
-  // Auto-detect active tab on mount
-  const hasAutoDetectedRef = useRef(false);
+  const isLoading =
+    mode === 'picking' ? pickingQueueResult.isLoading : packingQueueResult.isLoading;
 
   const pickingAllOrders = useOrderQueue(
     mode === 'picking'
-      ? { status: undefined as any, pickerId: userId, page: 1, limit: 100, refetchOnMount: 'always' }
+      ? {
+          status: undefined as any,
+          pickerId: userId,
+          page: 1,
+          limit: 100,
+          refetchOnMount: 'always',
+        }
       : { status: 'PENDING' as OrderStatus, page: 1, limit: 1 },
     { enabled: mode === 'picking' } as any
   );
@@ -544,20 +620,14 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
 
   const allOrdersData = mode === 'picking' ? pickingAllOrders.data : packingAllOrders.data;
 
-  useEffect(() => { setPage(1); }, [statusFilter, priorityFilter]);
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, priorityFilter]);
 
   const orders = queueData?.orders || [];
 
-  const filteredOrders = useMemo(() => {
-    if (!searchQuery.trim()) return orders;
-    const q = searchQuery.toLowerCase().trim();
-    return orders.filter((order: any) => {
-      if (order.orderId.toLowerCase().includes(q)) return true;
-      if (order.customerName?.toLowerCase().includes(q)) return true;
-      if (order.items?.some((item: any) => item.sku?.toLowerCase().includes(q) || item.name?.toLowerCase().includes(q))) return true;
-      return false;
-    });
-  }, [orders, searchQuery]);
+  // Use orders directly without client-side filtering
+  const filteredOrders = orders;
 
   const handleStatusFilterChange = (status: OrderStatus) => {
     setStatusFilter(status);
@@ -605,7 +675,11 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
     queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
     if (data.orderId === lastClaimedOrderIdRef.current) return;
     if (data.pickerId && data.pickerId !== userId) {
-      showToast(`Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`, 'success', 3000);
+      showToast(
+        `Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`,
+        'success',
+        3000
+      );
     }
   });
 
@@ -615,7 +689,10 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
   const claimPackingMutation = useClaimOrderForPacking();
 
   const handleClaim = async (orderId: string, orderStatus: OrderStatus) => {
-    if (!userId) { showToast('You must be logged in', 'error'); return; }
+    if (!userId) {
+      showToast('You must be logged in', 'error');
+      return;
+    }
 
     // Packing: continue active order
     if (mode === 'packing' && orderStatus === OrderStatus.PACKING) {
@@ -625,7 +702,11 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
 
     // Picking: continue active order
     if (mode === 'picking' && orderStatus === OrderStatus.PICKING) {
-      try { await continuePickingMutation.mutateAsync({ orderId }); } catch { /* silent */ }
+      try {
+        await continuePickingMutation.mutateAsync({ orderId });
+      } catch {
+        /* silent */
+      }
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
       navigate(`/orders/${orderId}/pick`);
       return;
@@ -656,9 +737,14 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
         );
       }
     } catch (error: any) {
-      const msg = error?.response?.data?.error || (error instanceof Error ? error.message : 'Failed to claim order');
+      const msg =
+        error?.response?.data?.error ||
+        (error instanceof Error ? error.message : 'Failed to claim order');
       if (msg.includes('already claimed')) {
-        showToast(`Order is already claimed by another ${mode === 'picking' ? 'picker' : 'packer'}`, 'error');
+        showToast(
+          `Order is already claimed by another ${mode === 'picking' ? 'picker' : 'packer'}`,
+          'error'
+        );
         queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
       } else {
         showToast(msg, 'error');
@@ -688,7 +774,11 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-slate-800" />
             <motion.div
@@ -703,7 +793,8 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
     );
   }
 
-  const isClaiming = mode === 'picking' ? claimPickingMutation.isPending : claimPackingMutation.isPending;
+  const isClaiming =
+    mode === 'picking' ? claimPickingMutation.isPending : claimPackingMutation.isPending;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900/20 relative overflow-hidden">
@@ -723,40 +814,100 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
       >
         <Breadcrumb />
 
-        <motion.div variants={headerVariants} initial="hidden" animate="visible" className="text-center relative">
+        <motion.div
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+          className="text-center relative"
+        >
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: '100%' }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent max-w-xs"
           />
-          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">{cfg.title}</h1>
+          <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">
+            {cfg.title}
+          </h1>
           <p className="mt-4 text-slate-400 text-sm font-medium uppercase tracking-widest">
             {queueData?.total || 0} orders available
           </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-wrap items-center justify-center gap-4">
-          <StatusFilterDropdown value={statusFilter} onChange={handleStatusFilterChange} mode={mode} />
+        {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
+        {(isAdmin || (canPick() && canPack())) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex justify-center"
+          >
+            <div className="inline-flex rounded-xl bg-slate-800/80 p-1.5 border-2 border-slate-700">
+              <button
+                onClick={() => handleAdminModeSwitch('picking')}
+                className={`px-6 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 min-h-touch flex items-center gap-2 ${
+                  mode === 'picking'
+                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
+                    : 'text-slate-400 hover:text-purple-400 hover:bg-slate-700/50'
+                }`}
+              >
+                <ShoppingBagIcon className="h-5 w-5" />
+                Picking Queue
+              </button>
+              <button
+                onClick={() => handleAdminModeSwitch('packing')}
+                className={`px-6 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 min-h-touch flex items-center gap-2 ${
+                  mode === 'packing'
+                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
+                    : 'text-slate-400 hover:text-purple-400 hover:bg-slate-700/50'
+                }`}
+              >
+                <CubeIcon className="h-5 w-5" />
+                Packing Queue
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex flex-wrap items-center justify-center gap-4"
+        >
+          <StatusFilterDropdown
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+            mode={mode}
+          />
           <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
         </motion.div>
 
         <AnimatePresence mode="wait">
           {filteredOrders.length === 0 ? (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
               <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
                 <CardContent className="p-16 text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
                     <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
                   </div>
                   <p className="text-slate-500 font-bold uppercase tracking-wider">
-                    {searchQuery ? 'No matching orders' : cfg.emptyText}
+                    {cfg.emptyText}
                   </p>
                 </CardContent>
               </Card>
             </motion.div>
           ) : (
-            <motion.div variants={pageVariants} initial="hidden" animate="visible" className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <motion.div
+              variants={pageVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
               {filteredOrders.map((order: any) => (
                 <OrderCard
                   key={order.orderId}
@@ -772,7 +923,11 @@ export function OrderQueuePage({ mode = 'picking' }: { mode?: QueueMode }) {
         </AnimatePresence>
 
         {queueData?.total && queueData.total > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
             <Pagination
               currentPage={page}
               totalItems={queueData.total}

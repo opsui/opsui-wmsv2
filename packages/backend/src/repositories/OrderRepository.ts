@@ -170,6 +170,7 @@ export class OrderRepository extends BaseRepository<Order> {
       status?: OrderStatus;
       priority?: OrderPriority;
       pickerId?: string;
+      search?: string;
       limit?: number;
       offset?: number;
     } = {}
@@ -197,6 +198,23 @@ export class OrderRepository extends BaseRepository<Order> {
     // This prevents showing already-claimed orders in the queue
     if (filters.status === OrderStatus.PENDING && !filters.pickerId) {
       conditions.push(`o.picker_id IS NULL`);
+    }
+
+    // Search filter - search across order_id, customer_name, and item sku/name
+    let searchJoin = '';
+    if (filters.search && filters.search.trim()) {
+      const searchParam = `%${filters.search.trim().toLowerCase()}%`;
+      conditions.push(`(
+        LOWER(o.order_id) LIKE $${paramIndex} OR
+        LOWER(o.customer_name) LIKE $${paramIndex} OR
+        EXISTS (
+          SELECT 1 FROM order_items oi 
+          WHERE oi.order_id = o.order_id 
+          AND (LOWER(oi.sku) LIKE $${paramIndex} OR LOWER(oi.name) LIKE $${paramIndex})
+        )
+      )`);
+      params.push(searchParam);
+      paramIndex++;
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -256,7 +274,10 @@ export class OrderRepository extends BaseRepository<Order> {
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
-        const totalAmount = mappedItems.reduce((sum: number, item: any) => sum + Number(item.lineTotal || 0), 0);
+        const totalAmount = mappedItems.reduce(
+          (sum: number, item: any) => sum + Number(item.lineTotal || 0),
+          0
+        );
 
         return {
           ...order,

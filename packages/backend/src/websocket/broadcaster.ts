@@ -119,6 +119,13 @@ export class WebSocketBroadcaster {
   // ==========================================================================
 
   /**
+   * Broadcast when a new order is created (e.g. from an accepted quote)
+   */
+  broadcastOrderCreated(data: { orderId: string; customerId: string; itemCount: number }): void {
+    this.broadcastAll('order:created', data);
+  }
+
+  /**
    * Broadcast when an order is claimed by a picker
    */
   broadcastOrderClaimed(data: OrderClaimedEvent): void {

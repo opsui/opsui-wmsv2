@@ -40,6 +40,8 @@ router.get(
       status: req.query.status as any,
       priority: req.query.priority as any,
       pickerId: req.query.pickerId as string | undefined,
+      packerId: req.query.packerId as string | undefined,
+      search: req.query.search as string | undefined,
       page: req.query.page ? parseInt(req.query.page as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
     };

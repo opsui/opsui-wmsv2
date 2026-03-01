@@ -248,6 +248,7 @@ export const orderApi = {
     status?: OrderStatus;
     priority?: OrderPriority;
     pickerId?: string;
+    search?: string;
     page?: number;
     limit?: number;
   }): Promise<{ orders: Order[]; total: number }> => {
@@ -1034,6 +1035,7 @@ export const useOrderQueue = (params?: {
   status?: OrderStatus;
   priority?: OrderPriority;
   pickerId?: string;
+  search?: string;
   page?: number;
   limit?: number;
   enabled?: boolean;
