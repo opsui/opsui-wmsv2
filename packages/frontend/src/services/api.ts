@@ -1053,7 +1053,7 @@ export const useMyOrders = () => {
   return useQuery({
     queryKey: ['orders', 'my'],
     queryFn: orderApi.getMyOrders,
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -1185,7 +1185,7 @@ export const usePickerOrders = (pickerId: string, enabled: boolean = true) => {
     queryFn: () => metricsApi.getPickerOrders(pickerId),
     enabled: enabled && !!pickerId,
     staleTime: 5000, // Cache for 5 seconds
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -1212,7 +1212,7 @@ export const usePackerOrders = (packerId: string, enabled: boolean = true) => {
     queryFn: () => metricsApi.getPackerOrders(packerId),
     enabled: enabled && !!packerId,
     staleTime: 5000, // Cache for 5 seconds
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -1301,7 +1301,7 @@ export const useStockControllerTransactions = (controllerId: string, enabled: bo
     queryFn: () => getStockControllerTransactions(controllerId),
     enabled: enabled && !!controllerId,
     staleTime: 5000, // Cache for 5 seconds
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -1481,7 +1481,7 @@ export const useAuditLogs = (
 
       return auditApi.getLogs(options);
     },
-    refetchInterval: 5000, // Poll every 5 seconds for near-instant updates
+    refetchInterval: () => (document.hidden ? false : 5000),
     staleTime: 2000,
     ...queryOptions,
   });
@@ -1665,7 +1665,7 @@ export const usePackingQueue = () => {
   return useQuery({
     queryKey: ['orders', 'packing-queue'],
     queryFn: packingApi.getPackingQueue,
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -1974,7 +1974,7 @@ export const useStockControlDashboard = () => {
   return useQuery({
     queryKey: ['stock-control', 'dashboard'],
     queryFn: stockControlApi.getDashboard,
-    refetchInterval: 5000,
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -2303,7 +2303,7 @@ export const useExceptions = (params?: {
     queryKey: ['exceptions', params],
     queryFn: () => exceptionApi.getExceptions(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000, // Poll every 10 seconds
+    refetchInterval: () => (document.hidden ? false : 10000), // Poll every 10 seconds
   });
 };
 
@@ -2317,7 +2317,7 @@ export const useOpenExceptions = (params?: {
     queryKey: ['exceptions', 'open', params],
     queryFn: () => exceptionApi.getOpenExceptions(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 5000, // Poll every 5 seconds for open exceptions
+    refetchInterval: () => (document.hidden ? false : 5000), for open exceptions
   });
 };
 
@@ -2326,7 +2326,7 @@ export const useExceptionSummary = (enabled: boolean = true) => {
     queryKey: ['exceptions', 'summary'],
     queryFn: exceptionApi.getExceptionSummary,
     enabled,
-    refetchInterval: 15000, // Poll every 15 seconds
+    refetchInterval: () => (document.hidden ? false : 15000), // Poll every 15 seconds
   });
 };
 
@@ -2680,7 +2680,7 @@ export const useCycleCountPlans = (params?: {
     queryKey: ['cycle-count', 'plans', params],
     queryFn: () => cycleCountApi.getPlans(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 
   return result;
@@ -2691,7 +2691,7 @@ export const useCycleCountPlan = (planId: string, enabled: boolean = true) => {
     queryKey: ['cycle-count', 'plans', planId],
     queryFn: () => cycleCountApi.getPlan(planId),
     enabled,
-    refetchInterval: 5000,
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -3535,7 +3535,7 @@ export const useLocationCapacities = (params?: {
     queryKey: ['location-capacity', 'locations', params],
     queryFn: () => locationCapacityApi.getCapacities(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 15000,
+    refetchInterval: () => (document.hidden ? false : 15000),
   });
 };
 
@@ -3548,7 +3548,7 @@ export const useCapacityAlerts = (params?: {
     queryKey: ['location-capacity', 'alerts', params],
     queryFn: () => locationCapacityApi.getAlerts(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -3831,7 +3831,7 @@ export const useQualityInspections = (params?: {
     queryKey: ['quality-control', 'inspections', params],
     queryFn: () => qualityControlApi.getInspections(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -3840,7 +3840,7 @@ export const useQualityInspection = (inspectionId: string, enabled: boolean = tr
     queryKey: ['quality-control', 'inspections', inspectionId],
     queryFn: () => qualityControlApi.getInspection(inspectionId),
     enabled,
-    refetchInterval: 5000,
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -3861,7 +3861,7 @@ export const useReturnAuthorizations = (params?: {
     queryKey: ['quality-control', 'returns', params],
     queryFn: () => qualityControlApi.getReturns(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 15000,
+    refetchInterval: () => (document.hidden ? false : 15000),
   });
 };
 
@@ -4120,7 +4120,7 @@ export const useInwardsDashboard = () => {
   return useQuery({
     queryKey: ['inwards', 'dashboard'],
     queryFn: inwardsGoodsApi.getDashboard,
-    refetchInterval: 5000,
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -4129,7 +4129,7 @@ export const useASNs = (params?: { status?: string; supplierId?: string; enabled
     queryKey: ['inwards', 'asn', params],
     queryFn: () => inwardsGoodsApi.getASNs(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -4146,7 +4146,7 @@ export const useReceipts = (params?: { status?: string; asnId?: string; enabled?
     queryKey: ['inwards', 'receipts', params],
     queryFn: () => inwardsGoodsApi.getReceipts(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -4167,7 +4167,7 @@ export const usePutawayTasks = (params?: {
     queryKey: ['inwards', 'putaway', params],
     queryFn: () => inwardsGoodsApi.getPutawayTasks(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 5000,
+    refetchInterval: () => (document.hidden ? false : 5000),
   });
 };
 
@@ -4320,7 +4320,7 @@ export const useLicensePlates = (params?: {
     queryKey: ['inwards', 'license-plates', params],
     queryFn: () => licensePlateApi.getAll(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -4426,7 +4426,7 @@ export const useStagingLocations = (params?: {
     queryKey: ['inwards', 'staging-locations', params],
     queryFn: () => stagingLocationApi.getAll(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -4544,7 +4544,7 @@ export const useReceivingExceptions = (params?: {
     queryKey: ['inwards', 'exceptions', params],
     queryFn: () => receivingExceptionApi.getAll(params),
     enabled: params?.enabled ?? true,
-    refetchInterval: 10000,
+    refetchInterval: () => (document.hidden ? false : 10000),
   });
 };
 
@@ -5084,7 +5084,7 @@ export const usePickerWaves = (pickerId: string, enabled?: boolean) => {
     queryKey: ['waves', 'picker', pickerId],
     queryFn: () => waveApi.getPickerWaves(pickerId),
     enabled: enabled && !!pickerId,
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: () => (document.hidden ? false : 10000), // Refetch every 10 seconds
     staleTime: 5 * 1000, // 5 seconds
   });
 };
@@ -5094,7 +5094,7 @@ export const useWaveStatus = (waveId: string, enabled?: boolean) => {
     queryKey: ['waves', 'status', waveId],
     queryFn: () => waveApi.getWaveStatus(waveId),
     enabled: enabled && !!waveId,
-    refetchInterval: 5 * 1000, // Refetch every 5 seconds
+    refetchInterval: () => (document.hidden ? false : 5000), // Refetch every 5 seconds
     staleTime: 3 * 1000, // 3 seconds
   });
 };
@@ -5218,7 +5218,7 @@ export const useZoneStats = (zoneId: string, enabled?: boolean) => {
     queryKey: ['zones', 'stats', zoneId],
     queryFn: () => zoneApi.getZoneStats(zoneId),
     enabled: enabled && !!zoneId,
-    refetchInterval: 15 * 1000, // Refetch every 15 seconds
+    refetchInterval: () => (document.hidden ? false : 15000), // Refetch every 15 seconds
     staleTime: 10 * 1000, // 10 seconds
   });
 };
@@ -5237,7 +5237,7 @@ export const useZonePickTasks = (zoneId: string, status?: string) => {
     queryKey: ['zones', 'tasks', zoneId, status],
     queryFn: () => zoneApi.getZonePickTasks(zoneId, status),
     enabled: !!zoneId && zoneId.length > 0, // Only fetch when zoneId is provided
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: () => (document.hidden ? false : 10000), // Refetch every 10 seconds
     staleTime: 5 * 1000, // 5 seconds
   });
 };

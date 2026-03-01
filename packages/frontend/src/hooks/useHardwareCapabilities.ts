@@ -209,17 +209,21 @@ export function useHardwareCapabilities(): HardwareCapabilities {
     }
     const refreshRate = cachedRefreshRate.current;
 
-    // Determine if performance mode should be enabled
-    // Enable for: low tier devices, integrated GPUs with low memory, or battery saving
+    // Determine if performance mode should be enabled.
+    // deviceMemory API may return undefined on older browsers — treat undefined as low-memory.
+    const mem = hardware.deviceMemory ?? 4;
     const shouldUsePerformanceMode =
       tier === 'low' ||
-      (hardware.isIntegratedGPU && hardware.deviceMemory <= 8) ||
-      (hardware.isIntegratedGPU && hardware.cpuCores <= 4) ||
+      tier === 'medium' ||
+      hardware.isIntegratedGPU ||
+      mem <= 8 ||
+      hardware.cpuCores <= 4 ||
       (isOnBattery && isLowPowerMode) ||
-      // Specific check for known low-end GPUs
       (hardware.gpuRenderer?.includes('HD Graphics') &&
         !hardware.gpuRenderer?.includes('HD Graphics 5')) ||
-      hardware.gpuRenderer?.includes('UHD Graphics');
+      hardware.gpuRenderer?.includes('UHD Graphics') ||
+      hardware.gpuRenderer?.includes('Mesa') ||
+      hardware.gpuRenderer?.includes('Intel');
 
     setCapabilities({
       cpuCores: hardware.cpuCores,

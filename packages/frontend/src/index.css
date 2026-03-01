@@ -4534,6 +4534,33 @@ html.performance-mode body {
   -moz-osx-font-smoothing: grayscale !important;
 }
 
+/* Disable remaining infinite animations not covered above */
+html.performance-mode .profit-indicator,
+html.performance-mode .ledger-float-element,
+html.performance-mode .notification-badge,
+html.performance-mode .slotting-badge-pulse,
+html.performance-mode .role-toggle.active,
+html.performance-mode .connection-status.connected::after,
+html.performance-mode .connection-status.connecting::after,
+html.performance-mode [class*='scan-line'],
+html.performance-mode [class*='reports-scan'] {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* Replace transition:all with specific properties (transition:all forces layout recalc) */
+html.performance-mode .glass-card {
+  transition: opacity 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Strip translateZ(0) layer promotions - forces compositing on CPU-only machines */
+html.performance-mode .indicator-pulse,
+html.performance-mode .skeleton-pulse,
+html.performance-mode .animate-pulse {
+  transform: none !important;
+  backface-visibility: visible !important;
+}
+
 /* Disable expensive font features */
 html.performance-mode * {
   font-feature-settings: normal !important;
