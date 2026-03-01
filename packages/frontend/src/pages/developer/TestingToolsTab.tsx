@@ -4,7 +4,7 @@
  * Developer panel tab for testing and debugging
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -70,6 +70,18 @@ export function TestingToolsTab() {
   const [e2eRunning, setE2eRunning] = useState(false);
   const [workflowResults, setWorkflowResults] = useState<E2ETestResults | null>(null);
   const [workflowRunning, setWorkflowRunning] = useState(false);
+
+  // Refs to track polling intervals so they can be cleared on unmount
+  const e2ePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const workflowPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clean up any active polling intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (e2ePollRef.current) clearInterval(e2ePollRef.current);
+      if (workflowPollRef.current) clearInterval(workflowPollRef.current);
+    };
+  }, []);
 
   // Confirm dialog states
   const [loadPresetConfirm, setLoadPresetConfirm] = useState<{
@@ -187,13 +199,14 @@ export function TestingToolsTab() {
       const response = await apiClient.post('/developer/e2e/start');
       addMessage('success', response.data.message);
 
-      // Poll for results
-      const pollInterval = setInterval(async () => {
+      // Poll for results — stored in ref so it can be cleared on unmount
+      e2ePollRef.current = setInterval(async () => {
         try {
           const resultsRes = await apiClient.get('/developer/e2e/results');
           setE2eResults(resultsRes.data);
           setE2eRunning(false);
-          clearInterval(pollInterval);
+          clearInterval(e2ePollRef.current!);
+          e2ePollRef.current = null;
 
           if (resultsRes.data.success) {
             addMessage(
@@ -237,13 +250,14 @@ export function TestingToolsTab() {
       const response = await apiClient.post('/developer/workflows/start');
       addMessage('success', response.data.message);
 
-      // Poll for results
-      const pollInterval = setInterval(async () => {
+      // Poll for results — stored in ref so it can be cleared on unmount
+      workflowPollRef.current = setInterval(async () => {
         try {
           const resultsRes = await apiClient.get('/developer/workflows/results');
           setWorkflowResults(resultsRes.data);
           setWorkflowRunning(false);
-          clearInterval(pollInterval);
+          clearInterval(workflowPollRef.current!);
+          workflowPollRef.current = null;
 
           if (resultsRes.data.success) {
             addMessage(

@@ -308,19 +308,22 @@ function AnimatedNumber({ value, className }: { value: number; className?: strin
 
   useEffect(() => {
     const duration = 1000;
-    const steps = 60;
-    const increment = value / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= value) {
-        setDisplayValue(value);
-        clearInterval(timer);
+    let rafId: number;
+    let startTime: number | null = null;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayValue(Math.floor(value * eased));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
       } else {
-        setDisplayValue(Math.floor(current));
+        setDisplayValue(value);
       }
-    }, duration / steps);
-    return () => clearInterval(timer);
+    };
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [value]);
 
   return <span className={className}>{formatCurrency(displayValue)}</span>;

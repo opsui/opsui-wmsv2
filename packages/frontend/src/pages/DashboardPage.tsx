@@ -65,7 +65,8 @@ import { useNavigate } from 'react-router-dom';
 // ANIMATION STYLES (injected for staggered reveals)
 // ============================================================================
 
-const staggerStyles = `
+// Core styles — always injected (stagger-in runs once on mount, not infinite)
+const staggerStylesCore = `
   @keyframes dashboard-stagger-in {
     from {
       opacity: 0;
@@ -76,32 +77,14 @@ const staggerStyles = `
       transform: translateY(0) scale(1);
     }
   }
-  
-  @keyframes metric-pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
-    }
-    50% {
-      box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
-    }
-  }
-  
-  @keyframes hero-gradient-shift {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-  
+
   .dashboard-stagger-1 { animation: dashboard-stagger-in 0.6s ease-out 0.1s both; }
   .dashboard-stagger-2 { animation: dashboard-stagger-in 0.6s ease-out 0.2s both; }
   .dashboard-stagger-3 { animation: dashboard-stagger-in 0.6s ease-out 0.3s both; }
   .dashboard-stagger-4 { animation: dashboard-stagger-in 0.6s ease-out 0.4s both; }
   .dashboard-stagger-5 { animation: dashboard-stagger-in 0.6s ease-out 0.5s both; }
   .dashboard-stagger-6 { animation: dashboard-stagger-in 0.6s ease-out 0.6s both; }
-  
+
   .metric-card-glow {
     box-shadow: 0 0 20px rgba(168, 85, 247, 0.12);
   }
@@ -114,9 +97,58 @@ const staggerStyles = `
   }
 `;
 
+// Infinite animations — suppressed in performance mode to reduce sustained CPU/GPU load
+const staggerStylesInfinite = `
+  @keyframes metric-pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+    }
+  }
+
+  @keyframes hero-gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+`;
+
 // ============================================================================
 // SUBCOMPONENTS
 // ============================================================================
+
+// Module-level constant — never recreated on render
+const METRIC_CARD_COLOR_STYLES = {
+  primary: {
+    bg: 'bg-gradient-to-br from-purple-500/20 via-violet-600/10 to-purple-500/20 dark:from-purple-500/20 dark:via-violet-600/10 dark:to-purple-500/20',
+    icon: 'bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-purple-500/40',
+    border: 'border-purple-400/30 dark:border-purple-500/20',
+    glow: 'hover:shadow-purple-500/20',
+  },
+  success: {
+    bg: 'bg-gradient-to-br from-emerald-500/20 via-green-600/10 to-teal-500/20 dark:from-emerald-500/20 dark:via-green-600/10 dark:to-teal-500/20',
+    icon: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/40',
+    border: 'border-emerald-400/30 dark:border-emerald-500/20',
+    glow: 'hover:shadow-emerald-500/20',
+  },
+  warning: {
+    bg: 'bg-gradient-to-br from-amber-500/20 via-orange-600/10 to-yellow-500/20 dark:from-amber-500/20 dark:via-orange-600/10 dark:to-yellow-500/20',
+    icon: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-amber-500/40',
+    border: 'border-amber-400/30 dark:border-amber-500/20',
+    glow: 'hover:shadow-amber-500/20',
+  },
+  error: {
+    bg: 'bg-gradient-to-br from-red-500/20 via-rose-600/10 to-pink-500/20 dark:from-red-500/20 dark:via-rose-600/10 dark:to-pink-500/20',
+    icon: 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-red-500/40',
+    border: 'border-red-400/30 dark:border-red-500/20',
+    glow: 'hover:shadow-red-500/20',
+  },
+} as const;
 
 const MetricCard = memo(function MetricCard({
   title,
@@ -133,35 +165,7 @@ const MetricCard = memo(function MetricCard({
   onClick?: () => void;
   index?: number;
 }) {
-  // Distinctive color schemes with depth
-  const colorStyles = {
-    primary: {
-      bg: 'bg-gradient-to-br from-purple-500/20 via-violet-600/10 to-purple-500/20 dark:from-purple-500/20 dark:via-violet-600/10 dark:to-purple-500/20',
-      icon: 'bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-purple-500/40',
-      border: 'border-purple-400/30 dark:border-purple-500/20',
-      glow: 'hover:shadow-purple-500/20',
-    },
-    success: {
-      bg: 'bg-gradient-to-br from-emerald-500/20 via-green-600/10 to-teal-500/20 dark:from-emerald-500/20 dark:via-green-600/10 dark:to-teal-500/20',
-      icon: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/40',
-      border: 'border-emerald-400/30 dark:border-emerald-500/20',
-      glow: 'hover:shadow-emerald-500/20',
-    },
-    warning: {
-      bg: 'bg-gradient-to-br from-amber-500/20 via-orange-600/10 to-yellow-500/20 dark:from-amber-500/20 dark:via-orange-600/10 dark:to-yellow-500/20',
-      icon: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-amber-500/40',
-      border: 'border-amber-400/30 dark:border-amber-500/20',
-      glow: 'hover:shadow-amber-500/20',
-    },
-    error: {
-      bg: 'bg-gradient-to-br from-red-500/20 via-rose-600/10 to-pink-500/20 dark:from-red-500/20 dark:via-rose-600/10 dark:to-pink-500/20',
-      icon: 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-red-500/40',
-      border: 'border-red-400/30 dark:border-red-500/20',
-      glow: 'hover:shadow-red-500/20',
-    },
-  };
-
-  const style = colorStyles[color];
+  const style = METRIC_CARD_COLOR_STYLES[color];
 
   return (
     <div
@@ -500,13 +504,16 @@ export function DashboardPage() {
     !!selectedMember
   );
 
-  // Inject stagger animation styles on mount
+  // Inject stagger animation styles on mount — suppress infinite animations in performance mode
   useEffect(() => {
     const styleId = 'dashboard-stagger-styles';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
-      style.textContent = staggerStyles;
+      const isPerformanceMode = document.documentElement.classList.contains('performance-mode');
+      style.textContent = isPerformanceMode
+        ? staggerStylesCore
+        : staggerStylesCore + staggerStylesInfinite;
       document.head.appendChild(style);
     }
   }, []);

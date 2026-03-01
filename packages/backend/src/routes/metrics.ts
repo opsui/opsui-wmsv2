@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { metricsService } from '../services/MetricsService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
+import { cache } from '../middleware/cache';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole } from '@opsui/shared';
 
@@ -20,6 +21,7 @@ router.use(authenticate);
 router.get(
   '/dashboard',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 10000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const metrics = await metricsService.getDashboardMetrics();
     res.json(metrics);
@@ -60,9 +62,8 @@ router.get(
 router.get(
   '/pickers',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 30000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    console.log('[MetricsRoute] /pickers query params:', req.query);
-
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
@@ -79,14 +80,7 @@ router.get(
       }
     }
 
-    console.log(
-      '[MetricsRoute] Fetching picker performance from',
-      startDate.toISOString(),
-      'to',
-      endDate.toISOString()
-    );
     const performance = await metricsService.getAllPickersPerformance(startDate, endDate);
-    console.log('[MetricsRoute] Picker performance result:', performance?.length || 0, 'pickers');
     res.json(performance);
   })
 );
@@ -243,13 +237,9 @@ router.get(
 router.get(
   '/picker-activity',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 5000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
-    console.log('[MetricsRoute] Calling getPickerActivity');
     const activity = await metricsService.getPickerActivity();
-    console.log('[MetricsRoute] Activity count:', activity?.length || 0);
-    if (activity && activity.length > 0) {
-      console.log('[MetricsRoute] First picker:', JSON.stringify(activity[0], null, 2));
-    }
     res.json(activity);
   })
 );
@@ -275,13 +265,9 @@ router.get(
 router.get(
   '/packer-activity',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 5000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
-    console.log('[MetricsRoute] Calling getPackerActivity');
     const activity = await metricsService.getPackerActivity();
-    console.log('[MetricsRoute] Packer activity count:', activity?.length || 0);
-    if (activity && activity.length > 0) {
-      console.log('[MetricsRoute] First packer:', JSON.stringify(activity[0], null, 2));
-    }
     res.json(activity);
   })
 );
@@ -307,13 +293,9 @@ router.get(
 router.get(
   '/stock-controller-activity',
   authorize(UserRole.STOCK_CONTROLLER, UserRole.SUPERVISOR, UserRole.ADMIN),
+  cache({ ttl: 5000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
-    console.log('[MetricsRoute] Calling getStockControllerActivity');
     const activity = await metricsService.getStockControllerActivity();
-    console.log('[MetricsRoute] Stock controller activity count:', activity?.length || 0);
-    if (activity && activity.length > 0) {
-      console.log('[MetricsRoute] First stock controller:', JSON.stringify(activity[0], null, 2));
-    }
     res.json(activity);
   })
 );

@@ -71,7 +71,7 @@ export function useLongPress(config: LongPressConfig = {}): LongPressHandlers & 
   });
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const progressRafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
 
   const clearTimers = useCallback(() => {
@@ -79,9 +79,9 @@ export function useLongPress(config: LongPressConfig = {}): LongPressHandlers & 
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
+    if (progressRafRef.current) {
+      cancelAnimationFrame(progressRafRef.current);
+      progressRafRef.current = null;
     }
   }, []);
 
@@ -104,14 +104,17 @@ export function useLongPress(config: LongPressConfig = {}): LongPressHandlers & 
         progress: 0,
       });
 
-      // Start progress tracking
-      const progressStep = 50; // Update every 50ms
-      progressIntervalRef.current = setInterval(() => {
+      // Start progress tracking via rAF — pauses automatically when tab is hidden
+      const trackProgress = () => {
         const elapsed = Date.now() - startTimeRef.current;
         const progress = Math.min(elapsed / duration, 1);
         onProgress?.(progress);
         setState(prev => ({ ...prev, progress }));
-      }, progressStep);
+        if (progress < 1) {
+          progressRafRef.current = requestAnimationFrame(trackProgress);
+        }
+      };
+      progressRafRef.current = requestAnimationFrame(trackProgress);
 
       // Set long press timeout
       timeoutRef.current = setTimeout(() => {

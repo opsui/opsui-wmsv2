@@ -92,8 +92,9 @@ export function CrawlerTab() {
           const statusRes = await apiClient.get('/developer/crawler/status');
           setStatus(prev => ({ ...prev, ...statusRes.data }));
 
-          // When crawler completes, load full results
+          // When crawler completes, load full results and log completion
           if (!statusRes.data.isRunning) {
+            addLog('Crawler completed!', 'success');
             await loadCrawlerStatus();
           }
         } catch (error) {
@@ -132,23 +133,8 @@ export function CrawlerTab() {
       addLog('Starting crawler...', 'info');
       const response = await apiClient.post('/developer/crawler/start');
       addLog(response.data.message, 'success');
-
-      // Poll for status updates
-      const pollInterval = setInterval(async () => {
-        try {
-          const statusRes = await apiClient.get('/developer/crawler/status');
-          setStatus(prev => ({ ...prev, ...statusRes.data }));
-
-          if (!statusRes.data.isRunning) {
-            clearInterval(pollInterval);
-            addLog('Crawler completed!', 'success');
-            await loadCrawlerStatus();
-          }
-        } catch (error) {
-          clearInterval(pollInterval);
-          addLog('Error checking crawler status', 'error');
-        }
-      }, 2000);
+      // Refresh status so isRunning becomes true — the useEffect above handles all subsequent polling
+      await loadCrawlerStatus();
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Failed to start crawler';
       addLog(errorMsg, 'error');
