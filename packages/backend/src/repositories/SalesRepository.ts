@@ -645,7 +645,10 @@ export class SalesRepository {
   async findQuoteById(quoteId: string): Promise<Quote | null> {
     const client = await getPool();
 
-    const result = await client.query(`SELECT * FROM quotes WHERE quote_id = $1`, [quoteId]);
+    const result = await client.query(
+      `SELECT q.*, c.company_name as customer_name FROM quotes q LEFT JOIN customers c ON q.customer_id = c.customer_id WHERE q.quote_id = $1`,
+      [quoteId]
+    );
 
     if (result.rows.length === 0) {
       return null;
@@ -1682,6 +1685,7 @@ export class SalesRepository {
       quoteId: row.quote_id,
       quoteNumber: row.quote_number,
       customerId: row.customer_id,
+      customerName: row.customer_name ?? undefined,
       opportunityId: row.opportunity_id,
       status: row.status,
       validUntil: row.valid_until,

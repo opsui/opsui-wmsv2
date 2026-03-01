@@ -890,11 +890,13 @@ export class OrderService {
       throw new ConflictError(`Order is already claimed by another packer`);
     }
 
-    // Update order status to PACKING and assign packer
+    // Update order status to PACKING, assign packer, and reset progress to 0
+    // (orders.progress stores picking progress at 100 from the previous phase)
     await orderRepository.update(orderId, {
       status: OrderStatus.PACKING,
       packerId,
     });
+    await query(`UPDATE orders SET progress = 0 WHERE order_id = $1`, [orderId]);
 
     logger.info('Order claimed for packing', { orderId, packerId });
 
@@ -923,6 +925,36 @@ export class OrderService {
     });
 
     logger.info('Order packing completed', { orderId, packerId });
+
+    return this.getOrder(orderId);
+  }
+
+  async shipOrder(
+    orderId: string,
+    dto: { carrier: string; trackingNumber: string; shippedBy: string }
+  ): Promise<Order> {
+    logger.info('Shipping order', {
+      orderId,
+      carrier: dto.carrier,
+      trackingNumber: dto.trackingNumber,
+    });
+
+    const order = await this.getOrder(orderId);
+
+    if (order.status !== OrderStatus.PACKED) {
+      throw new ConflictError(`Order is not in PACKED status (current status: ${order.status})`);
+    }
+
+    await query(
+      `UPDATE orders SET status = 'SHIPPED', shipped_at = NOW(), carrier = $1, tracking_number = $2, progress = 100 WHERE order_id = $3`,
+      [dto.carrier, dto.trackingNumber, orderId]
+    );
+
+    logger.info('Order shipped', {
+      orderId,
+      carrier: dto.carrier,
+      trackingNumber: dto.trackingNumber,
+    });
 
     return this.getOrder(orderId);
   }
@@ -978,6 +1010,15 @@ export class OrderService {
     await query(
       `UPDATE order_items SET verified_quantity = COALESCE(verified_quantity, 0) + $1 WHERE order_item_id = $2`,
       [quantity, orderItemId]
+    );
+
+    // Update order packing progress based on verified items
+    await query(
+      `UPDATE orders SET progress = COALESCE(ROUND(
+        CAST((SELECT COUNT(*) FILTER (WHERE oi.verified_quantity >= oi.quantity) FROM order_items oi WHERE oi.order_id = $1) AS FLOAT)
+        / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
+      ), 0) WHERE order_id = $1`,
+      [orderId]
     );
 
     logger.info('Packing item verified', { orderId, orderItemId, quantity });
@@ -1065,6 +1106,15 @@ export class OrderService {
         [orderItemId]
       );
     }
+
+    // Update order packing progress based on verified items
+    await query(
+      `UPDATE orders SET progress = COALESCE(ROUND(
+        CAST((SELECT COUNT(*) FILTER (WHERE oi.verified_quantity >= oi.quantity) FROM order_items oi WHERE oi.order_id = $1) AS FLOAT)
+        / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = $1), 0) * 100
+      ), 0) WHERE order_id = $1`,
+      [orderId]
+    );
 
     logger.info('Packing verification undone', { orderId, orderItemId, quantity, reason });
 

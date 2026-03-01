@@ -1331,6 +1331,33 @@ export class AccountingService {
     offset?: number;
   }): Promise<{ entries: JournalEntry[]; total: number }> {
     try {
+      // Build WHERE clause conditions
+      let whereClause = `WHERE 1=1`;
+      const params: any[] = [];
+      let paramCount = 0;
+
+      if (filters?.status) {
+        paramCount++;
+        whereClause += ` AND status = $${paramCount}`;
+        params.push(filters.status);
+      }
+      if (filters?.dateFrom) {
+        paramCount++;
+        whereClause += ` AND entry_date >= $${paramCount}`;
+        params.push(filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        paramCount++;
+        whereClause += ` AND entry_date <= $${paramCount}`;
+        params.push(filters.dateTo);
+      }
+
+      // Get total count with same filters
+      const countQuery = `SELECT COUNT(*) FROM acct_journal_entries ${whereClause}`;
+      const countResult = await dbQuery(countQuery, params);
+      const total = parseInt(countResult.rows[0]?.count) || 0;
+
+      // Build main query
       let query = `
         SELECT
           journal_entry_id as "journalEntryId",
@@ -1350,32 +1377,9 @@ export class AccountingService {
           created_at as "createdAt",
           updated_at as "updatedAt"
         FROM acct_journal_entries
-        WHERE 1=1
+        ${whereClause}
+        ORDER BY entry_date DESC, created_at DESC
       `;
-      const params: any[] = [];
-      let paramCount = 0;
-
-      if (filters?.status) {
-        paramCount++;
-        query += ` AND status = $${paramCount}`;
-        params.push(filters.status);
-      }
-      if (filters?.dateFrom) {
-        paramCount++;
-        query += ` AND entry_date >= $${paramCount}`;
-        params.push(filters.dateFrom);
-      }
-      if (filters?.dateTo) {
-        paramCount++;
-        query += ` AND entry_date <= $${paramCount}`;
-        params.push(filters.dateTo);
-      }
-
-      query += ` ORDER BY entry_date DESC, created_at DESC`;
-
-      // Get total count
-      const countResult = await dbQuery(query.replace('SELECT *', 'SELECT COUNT(*)'), params);
-      const total = parseInt(countResult.rows[0].count);
 
       // Add pagination
       if (filters?.limit) {
@@ -1730,13 +1734,18 @@ export class AccountingService {
     // Equity
     const equityItems = await this.getBalanceSheetItems(equityAccounts, asOfDate, [3000, 3999]);
 
-    const totalAssets =
-      currentAssets.reduce((sum, item) => sum + item.amount, 0) +
-      nonCurrentAssets.reduce((sum, item) => sum + item.amount, 0);
-    const totalLiabilities =
-      currentLiabilities.reduce((sum, item) => sum + item.amount, 0) +
-      nonCurrentLiabilities.reduce((sum, item) => sum + item.amount, 0);
+    // Calculate totals
+    const currentAssetsTotal = currentAssets.reduce((sum, item) => sum + item.amount, 0);
+    const nonCurrentAssetsTotal = nonCurrentAssets.reduce((sum, item) => sum + item.amount, 0);
+    const currentLiabilitiesTotal = currentLiabilities.reduce((sum, item) => sum + item.amount, 0);
+    const nonCurrentLiabilitiesTotal = nonCurrentLiabilities.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
     const totalEquity = equityItems.reduce((sum, item) => sum + item.amount, 0);
+
+    const totalAssets = currentAssetsTotal + nonCurrentAssetsTotal;
+    const totalLiabilities = currentLiabilitiesTotal + nonCurrentLiabilitiesTotal;
 
     return {
       asOfDate,
@@ -1744,11 +1753,15 @@ export class AccountingService {
       assets: {
         current: currentAssets,
         nonCurrent: nonCurrentAssets,
+        currentTotal: currentAssetsTotal,
+        nonCurrentTotal: nonCurrentAssetsTotal,
         total: totalAssets,
       },
       liabilities: {
         current: currentLiabilities,
         nonCurrent: nonCurrentLiabilities,
+        currentTotal: currentLiabilitiesTotal,
+        nonCurrentTotal: nonCurrentLiabilitiesTotal,
         total: totalLiabilities,
       },
       equity: {

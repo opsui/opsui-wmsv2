@@ -7606,6 +7606,32 @@ export const useAcceptQuote = () => {
   });
 };
 
+export const useShipOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      carrier,
+      trackingNumber,
+    }: {
+      orderId: string;
+      carrier: string;
+      trackingNumber: string;
+    }) => {
+      const response = await apiClient.post(`/orders/${orderId}/ship`, {
+        carrier,
+        tracking_number: trackingNumber,
+      });
+      return response.data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['orders', variables.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['sales', 'quotes'] });
+    },
+  });
+};
+
 export const useLogInteraction = () => {
   const queryClient = useQueryClient();
   return useMutation({

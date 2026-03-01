@@ -3,15 +3,21 @@
  *
  * Modal for viewing quote details, line items, and performing quote actions
  * (send to customer, accept/convert to order).
+ * When accepted, shows live order fulfillment status through to shipped.
  */
 
 import { Modal, Button, useToast } from '@/components/shared';
-import { useQuote, useSendQuote, useAcceptQuote } from '@/services/api';
+import { useQuote, useSendQuote, useAcceptQuote, useShipOrder } from '@/services/api';
+import { apiClient } from '@/lib/api-client';
+import { useQuery } from '@tanstack/react-query';
 import {
   DocumentTextIcon,
   CalendarIcon,
   UserIcon,
   CurrencyDollarIcon,
+  TruckIcon,
+  CheckCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
@@ -35,8 +41,238 @@ const STATUS_STYLES: Record<string, string> = {
   EXPIRED: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
 };
 
+// Order lifecycle steps for display in the accepted quote view
+const ORDER_STEPS = [
+  { status: 'PENDING', label: 'Queued' },
+  { status: 'PICKING', label: 'Picking' },
+  { status: 'PICKED', label: 'Picked' },
+  { status: 'PACKING', label: 'Packing' },
+  { status: 'PACKED', label: 'Packed' },
+  { status: 'SHIPPED', label: 'Shipped' },
+] as const;
+
+const ORDER_STATUS_ORDER = ['PENDING', 'PICKING', 'PICKED', 'PACKING', 'PACKED', 'SHIPPED'];
+
 // ============================================================================
-// COMPONENT
+// ORDER FULFILLMENT TRACKER
+// ============================================================================
+
+function OrderFulfillmentTracker({
+  orderId,
+  onShipped,
+}: {
+  orderId: string;
+  onShipped?: () => void;
+}) {
+  const { data: order, isLoading } = useQuery({
+    queryKey: ['orders', orderId],
+    queryFn: async () => {
+      const response = await apiClient.get(`/orders/${orderId}`);
+      return response.data;
+    },
+    enabled: !!orderId,
+    refetchInterval: 10000, // poll every 10s so salesperson sees live progress
+  });
+  const shipMutation = useShipOrder();
+  const { showToast } = useToast();
+  const [showShipForm, setShowShipForm] = useState(false);
+  const [carrier, setCarrier] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState('');
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <ClockIcon className="h-4 w-4 animate-spin" />
+        Loading order status...
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        Order <span className="font-mono font-medium text-gray-900 dark:text-white">{orderId}</span>{' '}
+        created and queued for picking.
+      </p>
+    );
+  }
+
+  const currentStatusIndex = ORDER_STATUS_ORDER.indexOf(order.status);
+  const isShipped = order.status === 'SHIPPED';
+  const isPacked = order.status === 'PACKED';
+
+  const handleShip = async () => {
+    if (!carrier.trim() || !trackingNumber.trim()) {
+      showToast('Carrier and tracking number are required', 'error');
+      return;
+    }
+    try {
+      await shipMutation.mutateAsync({
+        orderId,
+        carrier: carrier.trim(),
+        trackingNumber: trackingNumber.trim(),
+      });
+      showToast(`Order ${orderId} marked as shipped!`, 'success');
+      setShowShipForm(false);
+      onShipped?.();
+    } catch (error: any) {
+      showToast(error?.response?.data?.error || 'Failed to mark order as shipped', 'error');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Order ID */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Order{' '}
+          <span className="font-mono font-medium text-gray-900 dark:text-white">{orderId}</span>
+        </p>
+        <span
+          className={`px-2 py-0.5 rounded text-xs font-semibold ${
+            isShipped
+              ? 'bg-emerald-500/20 text-emerald-400'
+              : isPacked
+                ? 'bg-blue-500/20 text-blue-400'
+                : 'bg-amber-500/20 text-amber-400'
+          }`}
+        >
+          {order.status}
+        </span>
+      </div>
+
+      {/* Step progress bar */}
+      <div className="flex items-center gap-0">
+        {ORDER_STEPS.map((step, idx) => {
+          const stepIndex = ORDER_STATUS_ORDER.indexOf(step.status);
+          const isDone = stepIndex <= currentStatusIndex;
+          const isCurrent = stepIndex === currentStatusIndex;
+          const isLast = idx === ORDER_STEPS.length - 1;
+
+          return (
+            <div key={step.status} className="flex items-center flex-1 min-w-0">
+              <div className="flex flex-col items-center flex-1">
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors ${
+                    isDone
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : isCurrent
+                        ? 'border-amber-400 bg-amber-400/20'
+                        : 'border-gray-600 bg-transparent'
+                  }`}
+                >
+                  {isDone && <CheckCircleIcon className="h-3.5 w-3.5 text-white" />}
+                </div>
+                <span
+                  className={`text-[10px] mt-1 font-medium truncate text-center ${
+                    isDone
+                      ? 'text-emerald-400'
+                      : isCurrent
+                        ? 'text-amber-400'
+                        : 'text-gray-600 dark:text-gray-500'
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+              {!isLast && (
+                <div
+                  className={`h-0.5 flex-1 mx-1 mt-[-16px] transition-colors ${
+                    stepIndex < currentStatusIndex ? 'bg-emerald-500' : 'bg-gray-700'
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Shipped info */}
+      {isShipped && (order.carrier || order.trackingNumber) && (
+        <div className="flex items-start gap-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+          <TruckIcon className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm space-y-0.5">
+            {order.carrier && (
+              <p className="text-gray-300">
+                <span className="text-gray-500">Carrier: </span>
+                <span className="font-medium">{order.carrier}</span>
+              </p>
+            )}
+            {order.trackingNumber && (
+              <p className="text-gray-300">
+                <span className="text-gray-500">Tracking: </span>
+                <span className="font-mono font-medium text-emerald-400">
+                  {order.trackingNumber}
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Ship form — shown for PACKED orders */}
+      {isPacked && !showShipForm && (
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={() => setShowShipForm(true)}
+          className="flex items-center gap-2"
+        >
+          <TruckIcon className="h-4 w-4" />
+          Mark as Shipped
+        </Button>
+      )}
+
+      {isPacked && showShipForm && (
+        <div className="space-y-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            Shipping Details
+          </p>
+          <div className="space-y-2">
+            <div>
+              <label className="text-xs text-gray-500 dark:text-gray-400">Carrier</label>
+              <input
+                type="text"
+                value={carrier}
+                onChange={e => setCarrier(e.target.value)}
+                placeholder="e.g. NZ Post, DHL, FedEx"
+                className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 dark:text-gray-400">Tracking Number</label>
+              <input
+                type="text"
+                value={trackingNumber}
+                onChange={e => setTrackingNumber(e.target.value)}
+                placeholder="e.g. NZ123456789NZ"
+                className="w-full mt-1 px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={handleShip}
+              disabled={shipMutation.isPending}
+              className="flex items-center gap-2"
+            >
+              <TruckIcon className="h-4 w-4" />
+              {shipMutation.isPending ? 'Shipping...' : 'Confirm Shipment'}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setShowShipForm(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
 // ============================================================================
 
 export function QuoteDetailModal({
@@ -97,6 +333,9 @@ export function QuoteDetailModal({
   const totalAmount = quote?.totalAmount ?? quote?.total ?? subtotal;
   const taxAmount = quote?.taxAmount ?? quote?.tax ?? 0;
 
+  // The linked order ID — either just created this session or previously linked on the quote
+  const linkedOrderId = createdOrderId ?? quote?.convertedToOrderId ?? null;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -108,38 +347,23 @@ export function QuoteDetailModal({
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          {createdOrderId ? (
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              Order{' '}
-              <span className="font-mono font-medium text-gray-900 dark:text-white">
-                {createdOrderId}
-              </span>{' '}
-              created and queued for picking
-            </span>
-          ) : (
-            !isExpiredOrRejected &&
-            status !== 'ACCEPTED' && (
-              <div className="flex items-center gap-2">
-                {status === 'DRAFT' && (
-                  <Button
-                    variant="secondary"
-                    onClick={handleSend}
-                    disabled={sendMutation.isPending}
-                  >
-                    {sendMutation.isPending ? 'Sending...' : 'Send to Customer'}
-                  </Button>
-                )}
-                {status === 'SENT' && (
-                  <Button
-                    variant="primary"
-                    onClick={handleAccept}
-                    disabled={acceptMutation.isPending}
-                  >
-                    {acceptMutation.isPending ? 'Accepting...' : 'Accept & Create Order'}
-                  </Button>
-                )}
-              </div>
-            )
+          {!isExpiredOrRejected && status !== 'ACCEPTED' && (
+            <div className="flex items-center gap-2">
+              {status === 'DRAFT' && (
+                <Button variant="secondary" onClick={handleSend} disabled={sendMutation.isPending}>
+                  {sendMutation.isPending ? 'Sending...' : 'Send to Customer'}
+                </Button>
+              )}
+              {status === 'SENT' && (
+                <Button
+                  variant="primary"
+                  onClick={handleAccept}
+                  disabled={acceptMutation.isPending}
+                >
+                  {acceptMutation.isPending ? 'Accepting...' : 'Accept & Create Order'}
+                </Button>
+              )}
+            </div>
           )}
         </div>
       }
@@ -197,6 +421,16 @@ export function QuoteDetailModal({
               </div>
             )}
           </div>
+
+          {/* Order fulfillment tracker — shown when quote is accepted and has a linked order */}
+          {(status === 'ACCEPTED' || linkedOrderId) && linkedOrderId && (
+            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
+                Order Fulfillment
+              </p>
+              <OrderFulfillmentTracker orderId={linkedOrderId} onShipped={onSuccess} />
+            </div>
+          )}
 
           {/* Line items */}
           {lineItems.length > 0 ? (

@@ -201,7 +201,6 @@ export class OrderRepository extends BaseRepository<Order> {
     }
 
     // Search filter - search across order_id, customer_name, and item sku/name
-    let searchJoin = '';
     if (filters.search && filters.search.trim()) {
       const searchParam = `%${filters.search.trim().toLowerCase()}%`;
       conditions.push(`(
@@ -270,7 +269,7 @@ export class OrderRepository extends BaseRepository<Order> {
     const orders = await Promise.all(
       ordersResult.rows.map(async order => {
         const itemsQuery = getOrderItemsQuery(order.status);
-        const itemsResult = await query(itemsQuery, [order.order_id || order.orderId]);
+        const itemsResult = await query(itemsQuery, [order.orderId]);
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
@@ -320,6 +319,11 @@ export class OrderRepository extends BaseRepository<Order> {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Get orders with items
+    // orders.progress is kept up to date for all phases:
+    // - PICKING: maintained by the DB trigger (picked_quantity-based)
+    // - PACKING: maintained by verifyPackingItem / undoPackingVerification (verified_quantity-based)
+    // - PICKED: reset to 0 when order transitions from PICKING → PICKED (claimOrderForPacking resets it)
+    // So we can safely read o.progress directly here.
     const ordersResult = await query<Order>(
       `SELECT o.*,
         CASE
@@ -330,18 +334,7 @@ export class OrderRepository extends BaseRepository<Order> {
             ) FROM order_items oi WHERE oi.order_id = o.order_id
           )
           ELSE 0
-        END as completed_count,
-        CASE
-          WHEN o.status = 'PACKING'
-          THEN ROUND(
-            CAST(
-              (SELECT COUNT(*) FILTER (
-                WHERE oi.verified_quantity >= oi.quantity
-              ) FROM order_items oi WHERE oi.order_id = o.order_id) AS FLOAT
-            ) / NULLIF((SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.order_id), 0) * 100
-          )
-          ELSE 0
-        END as progress
+        END as completed_count
       FROM orders o
       ${whereClause}
       ORDER BY o.priority DESC, o.created_at ASC`,
@@ -352,7 +345,7 @@ export class OrderRepository extends BaseRepository<Order> {
     const orders = await Promise.all(
       ordersResult.rows.map(async order => {
         const itemsQuery = getOrderItemsQuery(order.status);
-        const itemsResult = await query(itemsQuery, [order.order_id || order.orderId]);
+        const itemsResult = await query(itemsQuery, [order.orderId]);
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);

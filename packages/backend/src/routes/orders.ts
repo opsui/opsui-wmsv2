@@ -1046,4 +1046,45 @@ router.post(
   })
 );
 
+/**
+ * POST /api/orders/:orderId/ship
+ * Mark a PACKED order as SHIPPED with carrier and tracking number
+ */
+router.post(
+  '/:orderId/ship',
+  authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.DISPATCH),
+  validate.orderId,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { carrier, tracking_number } = req.body;
+
+    if (!carrier || !tracking_number) {
+      res.status(400).json({
+        error: 'carrier and tracking_number are required',
+        code: 'MISSING_SHIPPING_INFO',
+      });
+      return;
+    }
+
+    try {
+      const order = await orderService.shipOrder(req.params.orderId, {
+        carrier,
+        trackingNumber: tracking_number,
+        shippedBy: req.user.userId,
+      });
+      res.json(order);
+    } catch (error: any) {
+      if (error?.message?.includes('not in PACKED status')) {
+        res.status(409).json({ error: error.message, code: 'NOT_PACKED' });
+        return;
+      }
+      throw error;
+    }
+  })
+);
+
 export default router;

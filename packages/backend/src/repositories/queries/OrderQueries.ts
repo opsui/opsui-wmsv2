@@ -64,7 +64,7 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     oi.bin_location,
     oi.quantity,
     oi.picked_quantity,
-    0 as verified_quantity,
+    COALESCE(oi.verified_quantity, 0) as verified_quantity,
     oi.status,
     s.barcode,
     COALESCE(oi.unit_price, s.unit_price) as unit_price,

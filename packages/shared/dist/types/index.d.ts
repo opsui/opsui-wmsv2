@@ -249,6 +249,8 @@ export interface Order {
     discountAmount?: number;
     totalAmount?: number;
     currency?: string;
+    carrier?: string;
+    trackingNumber?: string;
 }
 /**
  * OrderItem - Line item representing quantity of SKU to fulfill
@@ -2811,6 +2813,8 @@ export interface BalanceSheet {
 export interface BalanceSheetSection {
     current: BalanceSheetItem[];
     nonCurrent: BalanceSheetItem[];
+    currentTotal: number;
+    nonCurrentTotal: number;
     total: number;
 }
 /**

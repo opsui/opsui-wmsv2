@@ -119,6 +119,7 @@ export interface Quote {
     quoteId: string;
     quoteNumber: string;
     customerId: string;
+    customerName?: string;
     opportunityId?: string;
     status: QuoteStatus;
     validUntil: Date;

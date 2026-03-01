@@ -136,6 +136,7 @@ export interface Quote {
   quoteId: string;
   quoteNumber: string; // QT-XXXXX
   customerId: string;
+  customerName?: string;
   opportunityId?: string;
   status: QuoteStatus;
   validUntil: Date;

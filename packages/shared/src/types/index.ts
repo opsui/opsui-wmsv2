@@ -553,6 +553,9 @@ export interface Order {
   discountAmount?: number; // Total discount applied
   totalAmount?: number; // Final total (subtotal + tax + shipping - discount)
   currency?: string; // Currency code for the order
+  // Shipping fields (populated when order is SHIPPED)
+  carrier?: string;
+  trackingNumber?: string;
 }
 
 /**
@@ -3543,6 +3546,8 @@ export interface BalanceSheet {
 export interface BalanceSheetSection {
   current: BalanceSheetItem[];
   nonCurrent: BalanceSheetItem[];
+  currentTotal: number;
+  nonCurrentTotal: number;
   total: number;
 }
 
