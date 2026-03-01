@@ -43,23 +43,23 @@ export interface NotificationMessage {
  * Send a notification to a specific user
  */
 export async function notifyUser(
-  notification: NotificationMessage & { userId: string }
+  _notification: NotificationMessage & { userId: string }
 ): Promise<void> {
-  console.log(`[Notification] User: ${notification.userId}`);
+  // stub — real implementation would push via WebSocket/push notification service
 }
 
 /**
  * Send a notification to all relevant users
  */
-export async function notifyAll(notification: NotificationMessage): Promise<void> {
-  console.log(`[Broadcast Notification] ${notification.title}`);
+export async function notifyAll(_notification: NotificationMessage): Promise<void> {
+  // stub — real implementation would broadcast via WebSocket
 }
 
 /**
  * Broadcast an event to all connected clients
  */
-export async function broadcastEvent(event: string, _data: unknown): Promise<void> {
-  console.log(`[Broadcast Event] ${event}`);
+export async function broadcastEvent(_event: string, _data: unknown): Promise<void> {
+  // stub — real implementation would broadcast via WebSocket
 }
 
 /**

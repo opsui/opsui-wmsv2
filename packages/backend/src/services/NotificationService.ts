@@ -305,7 +305,7 @@ export class NotificationService {
     preferences: Partial<NotificationPreference>
   ): Promise<void> {
     // This is a stub - implement full logic when needed
-    console.log('[NotificationService] Update preferences stub called:', userId, preferences);
+    void userId; void preferences;
   }
 
   /**

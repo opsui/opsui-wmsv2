@@ -704,15 +704,6 @@ export class MetricsService {
     Array<{ sku: string; name: string; picks: number; scans?: number; packVerifies?: number }>
   > {
     const interval = this.getTimePeriodInterval(timePeriod);
-    console.log(
-      '[MetricsService] getTopSKUsByScanType - scanType:',
-      scanType,
-      'timePeriod:',
-      timePeriod,
-      'interval:',
-      interval
-    );
-
     if (scanType === 'pick') {
       // Pick frequency - count pick_tasks
       const result = await query(

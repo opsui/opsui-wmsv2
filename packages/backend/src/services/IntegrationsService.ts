@@ -353,34 +353,28 @@ export class IntegrationsService {
     }
   }
 
-  private async handleOrderCreated(payload: any, _integration: Integration): Promise<void> {
+  private async handleOrderCreated(_payload: any, _integration: Integration): Promise<void> {
     // Handle order creation from e-commerce platform
-    console.log('Handling order created webhook:', payload.orderId);
   }
 
-  private async handleOrderUpdated(payload: any, _integration: Integration): Promise<void> {
+  private async handleOrderUpdated(_payload: any, _integration: Integration): Promise<void> {
     // Handle order update from e-commerce platform
-    console.log('Handling order updated webhook:', payload.orderId);
   }
 
-  private async handleOrderCancelled(payload: any, _integration: Integration): Promise<void> {
+  private async handleOrderCancelled(_payload: any, _integration: Integration): Promise<void> {
     // Handle order cancellation from e-commerce platform
-    console.log('Handling order cancelled webhook:', payload.orderId);
   }
 
-  private async handleProductUpdated(payload: any, _integration: Integration): Promise<void> {
+  private async handleProductUpdated(_payload: any, _integration: Integration): Promise<void> {
     // Handle product update from e-commerce platform
-    console.log('Handling product updated webhook:', payload.productId);
   }
 
-  private async handleInventoryUpdated(payload: any, _integration: Integration): Promise<void> {
+  private async handleInventoryUpdated(_payload: any, _integration: Integration): Promise<void> {
     // Handle inventory update from ERP system
-    console.log('Handling inventory updated webhook:', payload.sku);
   }
 
-  private async handleShipmentStatusUpdate(payload: any, _integration: Integration): Promise<void> {
+  private async handleShipmentStatusUpdate(_payload: any, _integration: Integration): Promise<void> {
     // Handle shipment status update from carrier
-    console.log('Handling shipment status update webhook:', payload.trackingNumber);
   }
 
   private async findWebhookEvent(eventId: string): Promise<WebhookEvent | null> {

@@ -8,6 +8,7 @@
 import { Router } from 'express';
 import { accountingService } from '../services/AccountingService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
+import { cache } from '../middleware/cache';
 import { AuthenticatedRequest } from '../middleware/auth';
 import {
   UserRole,
@@ -36,6 +37,7 @@ const accountingAuth = authorize(UserRole.SUPERVISOR, UserRole.ADMIN, UserRole.A
 router.get(
   '/metrics',
   accountingAuth,
+  cache({ ttl: 60000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const period = req.query.period as AccountingPeriod;
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
@@ -62,6 +64,7 @@ router.get(
 router.get(
   '/inventory/valuation',
   accountingAuth,
+  cache({ ttl: 60000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const category = req.query.category as string | undefined;
     const zone = req.query.zone as string | undefined;
@@ -289,6 +292,7 @@ router.post(
 router.get(
   '/transactions',
   accountingAuth,
+  cache({ ttl: 30000, varyBy: ['query'] }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const transactionType = req.query.type as TransactionType | undefined;
     const referenceType = req.query.referenceType as string | undefined;

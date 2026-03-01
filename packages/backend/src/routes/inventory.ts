@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { inventoryService } from '../services/InventoryService';
 import { asyncHandler, authenticate, authorize } from '../middleware';
+import { cache } from '../middleware/cache';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole, validateBinLocation, validateSKU } from '@opsui/shared';
 
@@ -19,6 +20,7 @@ router.use(authenticate);
  */
 router.get(
   '/sku/:sku',
+  cache({ ttl: 10000 }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     validateSKU(req.params.sku);
     const inventory = await inventoryService.getInventoryBySKU(req.params.sku);
@@ -32,6 +34,7 @@ router.get(
  */
 router.get(
   '/bin/:binLocation',
+  cache({ ttl: 10000 }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     validateBinLocation(req.params.binLocation);
     const inventory = await inventoryService.getInventoryByBinLocation(req.params.binLocation);
@@ -45,6 +48,7 @@ router.get(
  */
 router.get(
   '/sku/:sku/available',
+  cache({ ttl: 10000 }),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     validateSKU(req.params.sku);
     const available = await inventoryService.getAvailableInventory(req.params.sku);

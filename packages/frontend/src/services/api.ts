@@ -1070,14 +1070,11 @@ export const useNextTask = (orderId: string) => {
 
   const result = useQuery({
     queryKey: ['orders', orderId, 'next-task'],
-    queryFn: () => {
-      console.log(`[useNextTask] Fetching next task for order: ${orderId}`);
-      return orderApi.getNextTask(orderId);
-    },
+    queryFn: () => orderApi.getNextTask(orderId),
     enabled: !!orderId,
-    staleTime: 0, // Always consider data stale
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnMount: 'always', // Always refetch on component mount
+    staleTime: 5000, // 5s — task changes infrequently; WebSocket invalidates on pick events
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Invalidate picker activity cache when next task successfully fetches
@@ -7449,7 +7446,7 @@ export const useQuote = (quoteId: string, enabled: boolean = true) => {
       return response.data;
     },
     enabled: enabled && !!quoteId,
-    staleTime: 0,
+    staleTime: 30000, // 30s — quotes change infrequently
   });
 };
 

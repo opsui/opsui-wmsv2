@@ -4567,6 +4567,17 @@ html.performance-mode * {
   font-variant-ligatures: none !important;
 }
 
+/* Suppress expensive backdrop-filter blur on glassmorphism toolbar in performance-mode */
+html.performance-mode .toolbar-container {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+}
+
+html.dark.performance-mode .toolbar-container {
+  background: rgba(30, 41, 59, 0.97) !important;
+}
+
 /* ============================================
    PICKING PAGE - SCANNER-FIRST INDUSTRIAL AESTHETIC
    Bold, distinctive design for warehouse picking
