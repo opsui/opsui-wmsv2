@@ -49,6 +49,8 @@ import {
   SparklesIcon,
   ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -98,10 +100,25 @@ interface Opportunity {
 interface Quote {
   quoteId: string;
   quoteNumber: string;
-  customerName: string;
+  customerId: string;
+  customerName?: string;
+  opportunityId?: string;
   status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
   totalAmount: number;
+  subtotal?: number;
+  taxAmount?: number;
+  discountAmount?: number;
   validUntil: string;
+  createdAt?: string;
+  updatedAt?: string;
+  sentAt?: string;
+  acceptedAt?: string;
+  rejectedAt?: string;
+  notes?: string;
+  termsAndConditions?: string;
+  createdBy?: string;
+  convertedToOrderId?: string;
+  lineItems?: Array<{ sku?: string; description?: string; quantity: number; unitPrice?: number; discount?: number; total?: number }>;
 }
 
 // ============================================================================
@@ -480,6 +497,15 @@ function OpportunityCard({
   );
 }
 
+const ORDER_STATUS_COLOR: Record<string, string> = {
+  PENDING: 'bg-slate-500/20 text-slate-400',
+  PICKING: 'bg-blue-500/20 text-blue-400',
+  PICKED: 'bg-cyan-500/20 text-cyan-400',
+  PACKING: 'bg-amber-500/20 text-amber-400',
+  PACKED: 'bg-orange-500/20 text-orange-400',
+  SHIPPED: 'bg-emerald-500/20 text-emerald-400',
+};
+
 function QuoteCard({
   quote,
   onViewDetails,
@@ -491,55 +517,164 @@ function QuoteCard({
   onSend: (quote: Quote) => void;
   onConvert: (quote: Quote) => void;
 }) {
+  const { data: linkedOrder } = useQuery({
+    queryKey: ['orders', quote.convertedToOrderId],
+    queryFn: async () => {
+      const response = await apiClient.get(`/orders/${quote.convertedToOrderId}`);
+      return response.data;
+    },
+    enabled: !!quote.convertedToOrderId,
+    refetchInterval: 15000,
+    staleTime: 10000,
+  });
+
   const isExpiringSoon =
     new Date(quote.validUntil) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const isExpired = new Date(quote.validUntil) < new Date();
+  const itemCount = quote.lineItems?.length ?? 0;
 
   return (
     <Card
       variant="glass"
-      className="card-hover bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+      className="card-hover bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 flex flex-col"
     >
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <CardContent className="p-5 flex flex-col gap-4 flex-1">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
                 {quote.quoteNumber}
               </h3>
               <QuoteStatusBadge status={quote.status} />
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300">{quote.customerName}</p>
-            {isExpired && <p className="text-xs text-red-500 dark:text-danger-400 mt-1">Expired</p>}
-            {isExpiringSoon && !isExpired && (
-              <p className="text-xs text-amber-500 dark:text-warning-400 mt-1">Expiring Soon</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
+              {quote.customerName ?? '—'}
+            </p>
+            {quote.createdAt && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                Created {new Date(quote.createdAt).toLocaleDateString()}
+                {quote.createdBy && <span className="ml-1">by {quote.createdBy}</span>}
+              </p>
+            )}
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+              ${Number(quote.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            {itemCount > 0 && (
+              <p className="text-xs text-gray-400 dark:text-gray-500">{itemCount} item{itemCount !== 1 ? 's' : ''}</p>
             )}
           </div>
         </div>
 
-        <div className="bg-purple-50 dark:bg-primary-500/10 p-3 rounded-lg mb-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Amount</p>
-          <p className="text-2xl font-bold text-purple-600 dark:text-primary-400">
-            ${quote.totalAmount.toLocaleString()}
+        {/* Line items preview */}
+        {quote.lineItems && quote.lineItems.length > 0 && (
+          <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3 space-y-1.5">
+            {quote.lineItems.slice(0, 3).map((item, i) => (
+              <div key={i} className="flex items-start justify-between text-xs gap-2">
+                <div className="flex-1 min-w-0">
+                  <span className="text-gray-700 dark:text-gray-200 font-medium truncate block">
+                    {item.description ?? item.sku ?? `Item ${i + 1}`}
+                  </span>
+                  {item.sku && item.description && (
+                    <span className="text-gray-400 dark:text-gray-500">{item.sku}</span>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-gray-500 dark:text-gray-400">×{item.quantity}</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium ml-2">
+                    ${Number(item.total ?? (item.unitPrice ?? 0) * item.quantity).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {quote.lineItems.length > 3 && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 pt-0.5">
+                +{quote.lineItems.length - 3} more item{quote.lineItems.length - 3 !== 1 ? 's' : ''}
+              </p>
+            )}
+            {/* Financial breakdown */}
+            {(quote.subtotal !== undefined || quote.taxAmount !== undefined || quote.discountAmount !== undefined) && (
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2 space-y-1">
+                {quote.subtotal !== undefined && (
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Subtotal</span>
+                    <span>${Number(quote.subtotal).toFixed(2)}</span>
+                  </div>
+                )}
+                {quote.discountAmount !== undefined && quote.discountAmount > 0 && (
+                  <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
+                    <span>Discount</span>
+                    <span>-${Number(quote.discountAmount).toFixed(2)}</span>
+                  </div>
+                )}
+                {quote.taxAmount !== undefined && quote.taxAmount > 0 && (
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Tax</span>
+                    <span>${Number(quote.taxAmount).toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Linked SO + order status */}
+        {quote.convertedToOrderId && (
+          <div className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700/50">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-0.5">Sales Order</p>
+              <p className="text-xs font-mono font-semibold text-gray-800 dark:text-gray-200">
+                {quote.convertedToOrderId}
+              </p>
+            </div>
+            {linkedOrder ? (
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${ORDER_STATUS_COLOR[linkedOrder.status] ?? 'bg-gray-500/20 text-gray-400'}`}>
+                {linkedOrder.status}
+              </span>
+            ) : (
+              <span className="text-[10px] text-gray-400 animate-pulse">Loading…</span>
+            )}
+          </div>
+        )}
+
+        {/* Status dates + notes */}
+        <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
+          {quote.sentAt && (
+            <div className="flex justify-between">
+              <span>Sent</span>
+              <span>{new Date(quote.sentAt).toLocaleDateString()}</span>
+            </div>
+          )}
+          {quote.acceptedAt && (
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+              <span>Accepted</span>
+              <span>{new Date(quote.acceptedAt).toLocaleDateString()}</span>
+            </div>
+          )}
+          {quote.rejectedAt && (
+            <div className="flex justify-between text-red-500 dark:text-red-400">
+              <span>Rejected</span>
+              <span>{new Date(quote.rejectedAt).toLocaleDateString()}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span>Valid until</span>
+            <span className={isExpired ? 'text-red-500 font-medium' : isExpiringSoon ? 'text-amber-500 font-medium' : 'text-gray-600 dark:text-gray-300'}>
+              {isExpired ? '⚠ ' : isExpiringSoon ? '⏰ ' : ''}{new Date(quote.validUntil).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+
+        {quote.notes && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 italic border-l-2 border-gray-200 dark:border-gray-700 pl-2 line-clamp-2">
+            {quote.notes}
           </p>
-        </div>
+        )}
 
-        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Valid Until</p>
-            <p
-              className={`text-sm ${isExpired ? 'text-red-500 dark:text-danger-400' : isExpiringSoon ? 'text-amber-500 dark:text-warning-400' : 'text-gray-900 dark:text-white'}`}
-            >
-              {new Date(quote.validUntil).toLocaleDateString()}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-center">
-            <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Status</p>
-            <p className="text-sm text-gray-900 dark:text-white">{quote.status}</p>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
+        {/* Actions */}
+        <div className="flex gap-2 mt-auto pt-1">
           <Button
             variant="secondary"
             size="sm"

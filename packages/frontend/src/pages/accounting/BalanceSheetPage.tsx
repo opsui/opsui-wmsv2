@@ -56,6 +56,11 @@ function AccountSection({
   accentColor = 'emerald',
   animationDelay = 0,
 }: AccountSectionProps) {
+  // Handle NaN/undefined total by calculating from accounts if needed
+  const safeTotal =
+    isNaN(total) || total === undefined
+      ? accounts.reduce((sum, acc) => sum + (acc.amount || 0), 0)
+      : total;
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -120,7 +125,7 @@ function AccountSection({
           {totalLabel}
         </span>
         <span className={`ledger-currency text-sm font-bold ${colorClass}`}>
-          {formatCurrency(total)}
+          {formatCurrency(safeTotal)}
         </span>
       </div>
     </div>

@@ -6,7 +6,7 @@
  * Features: Staggered animations, distinctive typography, atmospheric depth
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -29,6 +29,9 @@ import {
   ChartBarIcon,
   CurrencyDollarIcon,
   SparklesIcon,
+  XMarkIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // ============================================================================
@@ -48,6 +51,25 @@ interface FixedAsset {
   currentBookValue: number;
   accumulatedDepreciation: number;
   status: string;
+}
+
+interface FormData {
+  assetName: string;
+  assetNumber: string;
+  category: string;
+  purchaseCost: string;
+  purchaseDate: string;
+  usefulLife: string;
+  salvageValue: string;
+}
+
+interface FormErrors {
+  assetName?: string;
+  assetNumber?: string;
+  category?: string;
+  purchaseCost?: string;
+  purchaseDate?: string;
+  usefulLife?: string;
 }
 
 // ============================================================================
@@ -325,7 +347,109 @@ const pageStyles = `
   html.light .grain-overlay {
     opacity: 0.02;
   }
+
+  /* Toast notification */
+  .toast {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Input error state */
+  .input-error {
+    border-color: rgba(239, 68, 68, 0.5) !important;
+    background-color: rgba(239, 68, 68, 0.05) !important;
+  }
 `;
+
+// ============================================================================
+// API FUNCTIONS
+// ============================================================================
+
+const API_BASE = '/api/v1/accounting';
+
+async function fetchAssets(): Promise<FixedAsset[]> {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE}/asset-register`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch assets: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.assets || [];
+}
+
+async function createAsset(assetData: FormData): Promise<FixedAsset> {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE}/fixed-assets`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      assetNumber: assetData.assetNumber,
+      assetName: assetData.assetName,
+      assetCategory: assetData.category,
+      purchaseDate: assetData.purchaseDate,
+      purchaseCost: parseFloat(assetData.purchaseCost),
+      salvageValue: parseFloat(assetData.salvageValue || '0'),
+      usefulLife: parseInt(assetData.usefulLife),
+      depreciationMethod: 'STRAIGHT_LINE',
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `Failed to create asset: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+async function deleteAsset(assetId: string): Promise<void> {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE}/fixed-assets/${assetId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete asset: ${response.statusText}`);
+  }
+}
+
+// ============================================================================
+// INITIAL FORM STATE
+// ============================================================================
+
+const initialFormData: FormData = {
+  assetName: '',
+  assetNumber: '',
+  category: '',
+  purchaseCost: '',
+  purchaseDate: new Date().toISOString().split('T')[0],
+  usefulLife: '',
+  salvageValue: '0',
+};
 
 // ============================================================================
 // MAIN PAGE
@@ -335,17 +459,43 @@ function FixedAssetsPage() {
   const navigate = useNavigate();
 
   // State
-  const [isLoading, setIsLoading] = useState(false);
+  const [assets, setAssets] = useState<FixedAsset[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; assetId: string; assetName: string }>({
+    show: false,
+    assetId: '',
+    assetName: '',
+  });
 
-  // Trigger animations after mount
-  useEffect(() => {
-    setMounted(true);
+  // Fetch assets on mount
+  const loadAssets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchAssets();
+      setAssets(data);
+    } catch (error) {
+      console.error('Failed to load assets:', error);
+      showToast('error', 'Failed to load assets. Using sample data.');
+      // Use sample data as fallback
+      setAssets(getSampleAssets());
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Mock data
-  const mockAssets: FixedAsset[] = [
+  useEffect(() => {
+    setMounted(true);
+    loadAssets();
+  }, [loadAssets]);
+
+  // Sample assets fallback
+  const getSampleAssets = (): FixedAsset[] => [
     {
       assetId: 'FA-001',
       assetNumber: 'EQ-2024-001',
@@ -404,6 +554,100 @@ function FixedAssetsPage() {
     },
   ];
 
+  // Show toast notification
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  // Form validation
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    if (!formData.assetName.trim()) {
+      errors.assetName = 'Asset name is required';
+    }
+
+    if (!formData.assetNumber.trim()) {
+      errors.assetNumber = 'Asset number is required';
+    }
+
+    if (!formData.category) {
+      errors.category = 'Category is required';
+    }
+
+    if (!formData.purchaseCost || parseFloat(formData.purchaseCost) <= 0) {
+      errors.purchaseCost = 'Purchase cost must be greater than 0';
+    }
+
+    if (!formData.purchaseDate) {
+      errors.purchaseDate = 'Purchase date is required';
+    }
+
+    if (!formData.usefulLife || parseInt(formData.usefulLife) <= 0) {
+      errors.usefulLife = 'Useful life must be greater than 0';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form input change
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (formErrors[field as keyof FormErrors]) {
+      setFormErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // Handle form submit
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const newAsset = await createAsset(formData);
+      setAssets(prev => [...prev, newAsset]);
+      setShowAddModal(false);
+      setFormData(initialFormData);
+      setFormErrors({});
+      showToast('success', `Asset "${newAsset.assetName}" created successfully!`);
+    } catch (error) {
+      console.error('Failed to create asset:', error);
+      showToast('error', error instanceof Error ? error.message : 'Failed to create asset');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle delete asset
+  const handleDeleteAsset = async () => {
+    if (!deleteConfirm.assetId) return;
+
+    setIsSubmitting(true);
+    try {
+      await deleteAsset(deleteConfirm.assetId);
+      setAssets(prev => prev.filter(a => a.assetId !== deleteConfirm.assetId));
+      setDeleteConfirm({ show: false, assetId: '', assetName: '' });
+      showToast('success', 'Asset deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete asset:', error);
+      showToast('error', error instanceof Error ? error.message : 'Failed to delete asset');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    setShowAddModal(false);
+    setFormData(initialFormData);
+    setFormErrors({});
+  };
+
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -413,12 +657,12 @@ function FixedAssetsPage() {
     }).format(value);
   };
 
-  const totalOriginalCost = mockAssets.reduce((sum, a) => sum + a.purchaseCost, 0);
-  const totalAccumulatedDepreciation = mockAssets.reduce(
+  const totalOriginalCost = assets.reduce((sum, a) => sum + a.purchaseCost, 0);
+  const totalAccumulatedDepreciation = assets.reduce(
     (sum, a) => sum + a.accumulatedDepreciation,
     0
   );
-  const totalNetBookValue = mockAssets.reduce((sum, a) => sum + a.currentBookValue, 0);
+  const totalNetBookValue = assets.reduce((sum, a) => sum + a.currentBookValue, 0);
 
   // Export to CSV
   const exportToCSV = () => {
@@ -431,7 +675,7 @@ function FixedAssetsPage() {
       'Asset Number,Asset Name,Category,Purchase Date,Cost,Accum. Depreciation,Net Book Value'
     );
 
-    mockAssets.forEach(asset => {
+    assets.forEach(asset => {
       lines.push(
         `${asset.assetNumber},${asset.assetName},${asset.assetCategory || ''},` +
           `${new Date(asset.purchaseDate).toLocaleDateString()},${asset.purchaseCost},` +
@@ -454,6 +698,7 @@ function FixedAssetsPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast('success', 'Asset register exported successfully!');
   };
 
   // Print
@@ -482,6 +727,32 @@ function FixedAssetsPage() {
       <div className="grain-overlay" aria-hidden="true" />
 
       <Header />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[100] toast">
+          <div
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
+              toast.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : 'bg-red-500/10 border-red-500/30 text-red-400'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <CheckCircleIcon className="h-5 w-5" />
+            ) : (
+              <ExclamationCircleIcon className="h-5 w-5" />
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-2 hover:opacity-70 transition-opacity"
+            >
+              <XMarkIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb Navigation */}
@@ -564,7 +835,7 @@ function FixedAssetsPage() {
               </span>
             </div>
             <p className="hero-number text-3xl lg:text-4xl font-bold text-white font-mono">
-              {mockAssets.length}
+              {assets.length}
             </p>
           </div>
 
@@ -670,95 +941,141 @@ function FixedAssetsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {mockAssets.map((asset, index) => (
-                    <tr
-                      key={asset.assetId}
-                      className="asset-row"
-                      style={{ animationDelay: `${0.1 + index * 0.05}s` }}
-                    >
-                      <td className="py-4 px-6">
-                        <span className="asset-number text-sm text-emerald-400 font-medium">
-                          {asset.assetNumber}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="text-sm text-white font-medium">{asset.assetName}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`category-badge inline-flex px-2.5 py-1 rounded-md border ${getCategoryColor(asset.assetCategory)}`}
-                        >
-                          {asset.assetCategory || '-'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="text-sm text-gray-400">
-                          {new Date(asset.purchaseDate).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <span className="text-sm font-medium text-blue-400 font-mono">
-                          {formatCurrency(asset.purchaseCost)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <span className="text-sm text-amber-400 font-mono">
-                          {formatCurrency(asset.accumulatedDepreciation)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <span className="text-sm font-bold text-emerald-400 font-mono">
-                          {formatCurrency(asset.currentBookValue)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        <span className="text-xs text-gray-500 uppercase tracking-wide">
-                          {asset.depreciationMethod.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center justify-center gap-1">
-                          <button className="p-2 hover:bg-white/5 rounded-lg transition-colors group">
-                            <PencilIcon className="h-4 w-4 text-gray-500 group-hover:text-emerald-400 transition-colors" />
-                          </button>
-                          <button className="p-2 hover:bg-white/5 rounded-lg transition-colors group">
-                            <TrashIcon className="h-4 w-4 text-gray-500 group-hover:text-rose-400 transition-colors" />
-                          </button>
+                  {assets.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-12 text-center text-gray-400">
+                        <div className="flex flex-col items-center gap-3">
+                          <BuildingOfficeIcon className="h-12 w-12 text-gray-600" />
+                          <p>No assets registered yet</p>
+                          <Button
+                            variant="primary"
+                            onClick={() => setShowAddModal(true)}
+                            className="mt-2"
+                          >
+                            Add Your First Asset
+                          </Button>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    assets.map((asset, index) => (
+                      <tr
+                        key={asset.assetId}
+                        className="asset-row"
+                        style={{ animationDelay: `${0.1 + index * 0.05}s` }}
+                      >
+                        <td className="py-4 px-6">
+                          <span className="asset-number text-sm text-emerald-400 font-medium">
+                            {asset.assetNumber}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="text-sm text-white font-medium">{asset.assetName}</span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span
+                            className={`category-badge inline-flex px-2.5 py-1 rounded-md border ${getCategoryColor(asset.assetCategory)}`}
+                          >
+                            {asset.assetCategory || '-'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="text-sm text-gray-400">
+                            {new Date(asset.purchaseDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <span className="text-sm font-medium text-blue-400 font-mono">
+                            {formatCurrency(asset.purchaseCost)}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <span className="text-sm text-amber-400 font-mono">
+                            {formatCurrency(asset.accumulatedDepreciation)}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <span className="text-sm font-bold text-emerald-400 font-mono">
+                            {formatCurrency(asset.currentBookValue)}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <span className="text-xs text-gray-500 uppercase tracking-wide">
+                            {asset.depreciationMethod.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => {
+                                // Pre-fill form with asset data for editing
+                                setFormData({
+                                  assetName: asset.assetName,
+                                  assetNumber: asset.assetNumber,
+                                  category: asset.assetCategory || '',
+                                  purchaseCost: asset.purchaseCost.toString(),
+                                  purchaseDate: new Date(asset.purchaseDate).toISOString().split('T')[0],
+                                  usefulLife: asset.usefulLife.toString(),
+                                  salvageValue: asset.salvageValue.toString(),
+                                });
+                                setShowAddModal(true);
+                              }}
+                              className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
+                              title="Edit asset"
+                            >
+                              <PencilIcon className="h-4 w-4 text-gray-500 group-hover:text-emerald-400 transition-colors" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setDeleteConfirm({
+                                  show: true,
+                                  assetId: asset.assetId,
+                                  assetName: asset.assetName,
+                                })
+                              }
+                              className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
+                              title="Delete asset"
+                            >
+                              <TrashIcon className="h-4 w-4 text-gray-500 group-hover:text-rose-400 transition-colors" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
-                <tfoot>
-                  <tr className="border-t-2 border-emerald-500/20 bg-emerald-500/5">
-                    <td
-                      colSpan={4}
-                      className="py-4 px-6 text-sm font-bold text-gray-300 text-right uppercase tracking-wider"
-                    >
-                      Totals
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <span className="text-sm font-bold text-blue-400 font-mono">
-                        {formatCurrency(totalOriginalCost)}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <span className="text-sm font-bold text-amber-400 font-mono">
-                        {formatCurrency(totalAccumulatedDepreciation)}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <span className="text-base font-bold text-emerald-400 font-mono">
-                        {formatCurrency(totalNetBookValue)}
-                      </span>
-                    </td>
-                    <td colSpan={2} />
-                  </tr>
-                </tfoot>
+                {assets.length > 0 && (
+                  <tfoot>
+                    <tr className="border-t-2 border-emerald-500/20 bg-emerald-500/5">
+                      <td
+                        colSpan={4}
+                        className="py-4 px-6 text-sm font-bold text-gray-300 text-right uppercase tracking-wider"
+                      >
+                        Totals
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <span className="text-sm font-bold text-blue-400 font-mono">
+                          {formatCurrency(totalOriginalCost)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <span className="text-sm font-bold text-amber-400 font-mono">
+                          {formatCurrency(totalAccumulatedDepreciation)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <span className="text-base font-bold text-emerald-400 font-mono">
+                          {formatCurrency(totalNetBookValue)}
+                        </span>
+                      </td>
+                      <td colSpan={2} />
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>
@@ -770,7 +1087,7 @@ function FixedAssetsPage() {
             {/* Backdrop */}
             <div
               className="modal-overlay absolute inset-0"
-              onClick={() => setShowAddModal(false)}
+              onClick={handleCancel}
               aria-hidden="true"
             />
 
@@ -796,37 +1113,71 @@ function FixedAssetsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Asset Name
+                      Asset Name <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
                       placeholder="e.g., Forklift - Toyota 8-Series"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                      value={formData.assetName}
+                      onChange={e => handleInputChange('assetName', e.target.value)}
+                      className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                        formErrors.assetName ? 'input-error' : 'border-white/10'
+                      }`}
                     />
+                    {formErrors.assetName && (
+                      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                        <ExclamationCircleIcon className="h-4 w-4" />
+                        {formErrors.assetName}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Asset Number
+                      Asset Number <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
                       placeholder="e.g., EQ-2024-001"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
+                      value={formData.assetNumber}
+                      onChange={e => handleInputChange('assetNumber', e.target.value)}
+                      className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono ${
+                        formErrors.assetNumber ? 'input-error' : 'border-white/10'
+                      }`}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                    <select className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all">
-                      <option value="">Select category</option>
-                      <option value="equipment">Equipment</option>
-                      <option value="vehicles">Vehicles</option>
-                      <option value="building">Building Improvements</option>
-                      <option value="furniture">Furniture & Fixtures</option>
-                    </select>
+                    {formErrors.assetNumber && (
+                      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                        <ExclamationCircleIcon className="h-4 w-4" />
+                        {formErrors.assetNumber}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Purchase Cost
+                      Category <span className="text-red-400">*</span>
+                    </label>
+                    <select
+                      value={formData.category}
+                      onChange={e => handleInputChange('category', e.target.value)}
+                      className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                        formErrors.category ? 'input-error' : 'border-white/10'
+                      }`}
+                    >
+                      <option value="">Select category</option>
+                      <option value="Equipment">Equipment</option>
+                      <option value="Vehicles">Vehicles</option>
+                      <option value="Building Improvements">Building Improvements</option>
+                      <option value="Furniture & Fixtures">Furniture & Fixtures</option>
+                    </select>
+                    {formErrors.category && (
+                      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                        <ExclamationCircleIcon className="h-4 w-4" />
+                        {formErrors.category}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Purchase Cost <span className="text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -835,28 +1186,58 @@ function FixedAssetsPage() {
                       <input
                         type="number"
                         placeholder="0.00"
-                        className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
+                        value={formData.purchaseCost}
+                        onChange={e => handleInputChange('purchaseCost', e.target.value)}
+                        className={`w-full pl-8 pr-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono ${
+                          formErrors.purchaseCost ? 'input-error' : 'border-white/10'
+                        }`}
                       />
                     </div>
+                    {formErrors.purchaseCost && (
+                      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                        <ExclamationCircleIcon className="h-4 w-4" />
+                        {formErrors.purchaseCost}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Purchase Date
+                      Purchase Date <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="date"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                      value={formData.purchaseDate}
+                      onChange={e => handleInputChange('purchaseDate', e.target.value)}
+                      className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all ${
+                        formErrors.purchaseDate ? 'input-error' : 'border-white/10'
+                      }`}
                     />
+                    {formErrors.purchaseDate && (
+                      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                        <ExclamationCircleIcon className="h-4 w-4" />
+                        {formErrors.purchaseDate}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Useful Life (Years)
+                      Useful Life (Years) <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="number"
                       placeholder="10"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
+                      value={formData.usefulLife}
+                      onChange={e => handleInputChange('usefulLife', e.target.value)}
+                      className={`w-full px-4 py-3 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono ${
+                        formErrors.usefulLife ? 'input-error' : 'border-white/10'
+                      }`}
                     />
+                    {formErrors.usefulLife && (
+                      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                        <ExclamationCircleIcon className="h-4 w-4" />
+                        {formErrors.usefulLife}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -869,6 +1250,8 @@ function FixedAssetsPage() {
                       <input
                         type="number"
                         placeholder="0.00"
+                        value={formData.salvageValue}
+                        onChange={e => handleInputChange('salvageValue', e.target.value)}
                         className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
                       />
                     </div>
@@ -880,17 +1263,86 @@ function FixedAssetsPage() {
               <div className="px-6 py-4 border-t border-white/10 bg-white/[0.02] flex justify-end gap-3">
                 <Button
                   variant="secondary"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={handleCancel}
+                  disabled={isSubmitting}
                   className="bg-white/5 hover:bg-white/10 border-white/10"
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="primary"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
                   className="bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 border-0"
                 >
-                  Save Asset
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    'Save Asset'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm.show && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="modal-overlay absolute inset-0"
+              onClick={() => setDeleteConfirm({ show: false, assetId: '', assetName: '' })}
+            />
+            <div className="relative w-full max-w-md bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-white/10 shadow-2xl p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-red-500/10 rounded-lg">
+                  <TrashIcon className="h-6 w-6 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Delete Asset</h3>
+                  <p className="text-sm text-gray-400">
+                    Are you sure you want to delete "{deleteConfirm.assetName}"?
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-400 mb-6">
+                This action cannot be undone. The asset will be permanently removed from the
+                register.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => setDeleteConfirm({ show: false, assetId: '', assetName: '' })}
+                  disabled={isSubmitting}
+                  className="bg-white/5 hover:bg-white/10 border-white/10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleDeleteAsset}
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-500 border-0"
+                >
+                  {isSubmitting ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>
             </div>

@@ -432,7 +432,7 @@ function MobileMenu({
         onMouseLeave={handleMouseLeave}
       >
         <div
-          className="h-full flex flex-col relative overflow-hidden"
+          className="h-full flex flex-col relative overflow-hidden bg-slate-900"
           style={{
             background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
             boxShadow:
@@ -561,7 +561,7 @@ function MobileMenu({
                     />
                   </div>
                   <p
-                    className="text-sm text-slate-400 truncate"
+                    className="text-sm text-slate-300 truncate"
                     style={{ fontFamily: "'Inter', sans-serif" }}
                   >
                     {userEmail}
@@ -575,7 +575,7 @@ function MobileMenu({
           {hasRoleSwitcher && showRoleSwitcher && (
             <div className="border-b border-white/10 px-4 py-3 bg-white/[0.02]">
               <p
-                className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 px-2"
+                className="text-xs font-bold uppercase tracking-widest text-slate-200 mb-2 px-2"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
                 Switch Role View
@@ -602,7 +602,7 @@ function MobileMenu({
                         <ViewIcon className="w-3.5 h-3.5 text-white" />
                       </div>
                       <span
-                        className={`font-medium text-sm ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}
+                        className={`font-medium text-sm ${isActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}
                         style={{ fontFamily: "'Inter', sans-serif" }}
                       >
                         {view.label}
@@ -642,7 +642,7 @@ function MobileMenu({
                       <GroupIcon className="w-3.5 h-3.5 text-white" />
                     </div>
                     <h3
-                      className="text-xs font-bold uppercase tracking-widest text-slate-300"
+                      className="text-xs font-bold uppercase tracking-widest text-white"
                       style={{ fontFamily: "'Outfit', sans-serif" }}
                     >
                       {group.label}
@@ -686,7 +686,7 @@ function MobileMenu({
                           >
                             <ItemIcon
                               className={`w-4 h-4 transition-colors duration-300 ${
-                                isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
+                                isActive ? 'text-white' : 'text-slate-200 group-hover:text-white'
                               }`}
                             />
                           </div>
@@ -694,7 +694,7 @@ function MobileMenu({
                           {/* Label */}
                           <span
                             className={`relative z-10 font-medium text-sm tracking-wide transition-colors duration-300 ${
-                              isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                              isActive ? 'text-white' : 'text-slate-100 group-hover:text-white'
                             }`}
                             style={{ fontFamily: "'Inter', sans-serif" }}
                           >
@@ -730,10 +730,10 @@ function MobileMenu({
               className="w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-300 group"
             >
               <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center group-hover:bg-slate-600 transition-colors">
-                <CogIcon className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
+                <CogIcon className="w-4 h-4 text-slate-100 group-hover:text-white transition-colors" />
               </div>
               <span
-                className="font-medium text-sm text-slate-300 group-hover:text-white transition-colors"
+                className="font-medium text-sm text-slate-100 group-hover:text-white transition-colors"
                 style={{ fontFamily: "'Inter', sans-serif" }}
               >
                 Settings
