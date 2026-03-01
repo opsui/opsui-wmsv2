@@ -230,16 +230,12 @@ export function PackingPage() {
       return;
     }
 
-    console.log(`[PackingPage] Starting real-time updates for view mode`);
-
     const intervalId = setInterval(() => {
-      console.log(`[PackingPage] Refetching order data for view mode`);
       refetch();
-    }, 2000);
+    }, 10000);
 
     return () => {
       clearInterval(intervalId);
-      console.log(`[PackingPage] Stopped real-time updates for view mode`);
     };
   }, [order, currentUser, userRole, refetch]);
 

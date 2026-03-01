@@ -77,16 +77,11 @@
                 radial-gradient(circle at 60% 70%, rgba(139, 92, 246, 0.12) 0%, transparent 50%);
     z-index: -1;
     pointer-events: none;
-    animation: backgroundShift 20s ease-in-out infinite;
-    /* GPU acceleration for smooth animation */
-    will-change: filter;
     transform: translateZ(0);
-    backface-visibility: hidden;
   }
 
   /* Disable light mode background animation during theme transition */
   html.theme-transitioning html.light body::before {
-    animation: none !important;
     opacity: 0 !important;
     transition: opacity 0.2s ease-out;
   }
@@ -121,9 +116,7 @@
   body {
     @apply text-gray-100;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-    background-size: 400% 400%;
     background-attachment: fixed;
-    animation: gradientShift 15s ease infinite;
     /* Optimize for theme transitions */
     transition: background 0.25s ease-out;
   }
@@ -144,21 +137,16 @@
     width: 100%;
     min-height: 100vh;
     height: 100%;
-    background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.18) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(192, 132, 252, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+    background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(192, 132, 252, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
     z-index: -1;
     pointer-events: none;
-    animation: backgroundShift 20s ease-in-out infinite;
-    /* GPU acceleration for smooth animation */
-    will-change: filter;
     transform: translateZ(0);
-    backface-visibility: hidden;
   }
 
   /* Disable background pseudo-element animation during theme transition */
   html.theme-transitioning body::before {
-    animation: none !important;
     opacity: 0 !important;
     transition: opacity 0.2s ease-out;
   }
@@ -263,18 +251,18 @@
      GLASSMORPHISM CARD
      ============================================ */
   .glass-card {
-    background: rgba(168, 85, 247, 0.25);
+    background: rgba(30, 41, 59, 0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(192, 132, 252, 0.4);
-    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
   }
 
   .glass-card:hover {
-    background: rgba(168, 85, 247, 0.3);
-    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(192, 132, 252, 0.25);
-    border-color: rgba(192, 132, 252, 0.5);
+    background: rgba(30, 41, 59, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   html.light .glass-card {
@@ -286,8 +274,8 @@
   }
 
   html.light .glass-card:hover {
-    border-color: rgba(168, 85, 247, 0.2);
-    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   }
 
   /* ============================================
@@ -462,6 +450,11 @@
   /* ============================================
      ANIMATIONS
      ============================================ */
+  @keyframes toast-shrink {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+
   @keyframes slide-in-from-right {
     from {
       transform: translateX(100%);
@@ -1157,7 +1150,7 @@ html.light .slotting-atmosphere::after {
   animation: slotting-stagger-in 0.5s ease-out 0.1s backwards;
 }
 
-/* Icon wrapper with purple glow */
+/* Icon wrapper */
 .slotting-icon-wrapper {
   display: flex;
   align-items: center;
@@ -1165,15 +1158,13 @@ html.light .slotting-atmosphere::after {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
   color: #a855f7;
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.light .slotting-icon-wrapper {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
 }
 
 /* Badge with pulse */
@@ -2349,7 +2340,7 @@ html.light .route-atmosphere::after {
   animation: route-stagger-in 0.4s ease-out 0.1s backwards;
 }
 
-/* Icon wrapper with purple glow */
+/* Icon wrapper */
 .route-icon-wrapper {
   display: flex;
   align-items: center;
@@ -2357,15 +2348,13 @@ html.light .route-atmosphere::after {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
   color: #a855f7;
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.light .route-icon-wrapper {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
 }
 
 /* Badge with intelligent routing */
@@ -3377,7 +3366,7 @@ html.light .shipping-atmosphere::after {
   animation: shipping-stagger-in 0.4s ease-out 0.1s backwards;
 }
 
-/* Icon wrapper with purple glow */
+/* Icon wrapper */
 .shipping-icon-wrapper {
   display: flex;
   align-items: center;
@@ -3385,15 +3374,13 @@ html.light .shipping-atmosphere::after {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(192, 132, 252, 0.1) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
   color: #a855f7;
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 html.light .shipping-icon-wrapper {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
 }
 
 /* Live badge */
@@ -4765,15 +4752,12 @@ html.performance-mode * {
   z-index: 0;
 }
 
-/* Distinctive picking card */
-.picking-card {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(76, 29, 149, 0.9) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 40px rgba(168, 85, 247, 0.1);
-}
+  /* Distinctive picking card */
+  .picking-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
 
 /* Hero number display (for progress, quantities) */
 .hero-number {
@@ -7097,4 +7081,33 @@ html.light .integration-card-enhanced {
   font-size: 0.75rem;
   color: #94a3b8;
   letter-spacing: -0.02em;
+}
+
+/* ============================================================================
+   REDUCED MOTION — respects Windows "Reduce animations" and macOS equivalent.
+   Kills all decorative infinite loops for users who opted out of animations,
+   which includes many low-end PC users with accessibility settings enabled.
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  /* Stop all animations and transitions globally for decorative elements */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep functional spinners readable but instant */
+  .animate-spin {
+    animation: none !important;
+    opacity: 0.6;
+  }
+
+  /* Keep skeleton loaders visible without animation */
+  .animate-shimmer,
+  .ledger-shimmer {
+    animation: none !important;
+    opacity: 0.5;
+  }
 }

@@ -55,15 +55,15 @@ const BOTTOM_NAV_STYLES = `
   }
   
   .nav-item-active .nav-icon-wrapper {
-    animation: iconFloat 2s ease-in-out infinite;
+    transform: translateY(-2px);
   }
-  
+
   .nav-badge-pop {
     animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
-  
+
   .nav-active-glow {
-    animation: activeGlow 2s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
   }
   
   .nav-ripple {

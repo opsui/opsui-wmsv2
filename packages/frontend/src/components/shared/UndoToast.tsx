@@ -31,27 +31,13 @@ export function UndoToast({
   duration = 5000,
   undoLabel = 'Undo',
 }: UndoToastProps) {
-  const [timeLeft, setTimeLeft] = useState(duration);
-
   useEffect(() => {
-    // Auto-dismiss after duration
     const timer = setTimeout(() => {
       onDismiss();
     }, duration);
 
     return () => clearTimeout(timer);
   }, [duration, onDismiss]);
-
-  useEffect(() => {
-    // Countdown timer for visual feedback
-    if (timeLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => Math.max(0, prev - 100));
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [timeLeft]);
 
   const handleUndo = () => {
     onUndo();
@@ -82,8 +68,8 @@ export function UndoToast({
 
       {/* Progress Bar */}
       <div
-        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary-500 to-primary-400 transition-all duration-100 ease-linear rounded-b-xl"
-        style={{ width: `${(timeLeft / duration) * 100}%` }}
+        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary-500 to-primary-400 rounded-b-xl"
+        style={{ animation: `toast-shrink ${duration}ms linear forwards` }}
       />
     </div>
   );

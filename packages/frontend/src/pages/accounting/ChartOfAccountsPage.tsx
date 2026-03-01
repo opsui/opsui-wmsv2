@@ -1289,19 +1289,10 @@ function ChartOfAccountsPage() {
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent-gold)]/5 rounded-full blur-3xl" />
               <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-[var(--color-accent-copper)]/5 rounded-full blur-3xl" />
 
-              {/* Floating geometric shapes */}
-              <div
-                className="absolute top-8 right-8 w-4 h-4 border border-[var(--color-accent-gold)]/30 rotate-45"
-                style={{ animation: 'coa-float 4s ease-in-out infinite' }}
-              />
-              <div
-                className="absolute bottom-12 right-24 w-3 h-3 border border-[var(--color-accent-copper)]/30 rotate-12"
-                style={{ animation: 'coa-float 5s ease-in-out infinite 0.5s' }}
-              />
-              <div
-                className="absolute top-16 right-48 w-2 h-2 bg-[var(--color-accent-gold)]/20 rounded-full"
-                style={{ animation: 'coa-float 3s ease-in-out infinite 1s' }}
-              />
+              {/* Decorative geometric shapes */}
+              <div className="absolute top-8 right-8 w-4 h-4 border border-[var(--color-accent-gold)]/30 rotate-45" />
+              <div className="absolute bottom-12 right-24 w-3 h-3 border border-[var(--color-accent-copper)]/30 rotate-12" />
+              <div className="absolute top-16 right-48 w-2 h-2 bg-[var(--color-accent-gold)]/20 rounded-full" />
 
               {/* Ledger lines effect */}
               <div className="absolute inset-0 coa-ledger-lines opacity-30" />

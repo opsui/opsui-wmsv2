@@ -102,17 +102,16 @@ const MOBILE_MENU_STYLES = `
   }
   
   .active-indicator-glow {
-    animation: pulseGlow 2s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
   }
-  
+
   .shimmer-text {
     background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: shimmerMove 3s ease-in-out infinite;
   }
-  
+
   .floating-particle {
-    animation: floatParticle 4s ease-in-out infinite;
+    opacity: 0.4;
   }
 `;
 
@@ -2224,6 +2223,12 @@ export function Header() {
           key: 'organizations',
           label: 'Organizations',
           path: '/organizations',
+          icon: BuildingOfficeIcon,
+        },
+        {
+          key: 'multi-entity-setup',
+          label: 'Multi-Entity Setup',
+          path: '/multi-entity-setup',
           icon: BuildingOfficeIcon,
         },
         {

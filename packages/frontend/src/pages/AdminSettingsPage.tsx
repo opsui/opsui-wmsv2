@@ -98,11 +98,9 @@ const settingsAnimationStyles = `
   
   .settings-title-gradient {
     background: linear-gradient(135deg, #a855f7 0%, #8b5cf6 50%, #ec4899 100%);
-    background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: title-gradient-flow 6s ease infinite;
   }
   
   .settings-card-hover {

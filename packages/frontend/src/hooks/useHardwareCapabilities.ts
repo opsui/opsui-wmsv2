@@ -13,7 +13,7 @@
  * - Screen refresh rate detection
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface HardwareCapabilities {
   /** Number of logical CPU cores */
@@ -176,6 +176,10 @@ export function useHardwareCapabilities(): HardwareCapabilities {
     };
   });
 
+  // Cache refresh rate — running the RAF loop every visibilitychange is wasteful
+  // since the display refresh rate doesn't change when switching tabs.
+  const cachedRefreshRate = useRef<number | null>(null);
+
   const updateCapabilities = useCallback(async () => {
     const hardware = getHardwareInfo();
     const tier = calculatePerformanceTier(hardware);
@@ -195,13 +199,15 @@ export function useHardwareCapabilities(): HardwareCapabilities {
       // Battery API not available
     }
 
-    // Estimate refresh rate
-    let refreshRate = 60;
-    try {
-      refreshRate = await estimateRefreshRate();
-    } catch (e) {
-      // Use default
+    // Estimate refresh rate only once — the display rate doesn't change between tab switches
+    if (cachedRefreshRate.current === null) {
+      try {
+        cachedRefreshRate.current = await estimateRefreshRate();
+      } catch (e) {
+        cachedRefreshRate.current = 60;
+      }
     }
+    const refreshRate = cachedRefreshRate.current;
 
     // Determine if performance mode should be enabled
     // Enable for: low tier devices, integrated GPUs with low memory, or battery saving

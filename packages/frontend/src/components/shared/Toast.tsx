@@ -11,7 +11,7 @@
  * ```
  */
 
-import { useEffect, useState, createContext, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -111,18 +111,6 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
-  const [timeLeft, setTimeLeft] = useState(toast.duration || 0);
-
-  useEffect(() => {
-    if (!toast.duration || toast.duration <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => Math.max(0, prev - 100));
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, [toast.duration]);
-
   const config = {
     success: {
       icon: CheckCircleIcon,
@@ -183,8 +171,10 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       {/* Progress Bar */}
       {toast.duration && toast.duration > 0 && (
         <div
-          className={`absolute bottom-0 left-0 h-1 ${style.progressColor} transition-all duration-100 ease-linear rounded-b-xl`}
-          style={{ width: `${(timeLeft / toast.duration) * 100}%` }}
+          className={`absolute bottom-0 left-0 h-1 ${style.progressColor} rounded-b-xl`}
+          style={{
+            animation: `toast-shrink ${toast.duration}ms linear forwards`,
+          }}
         />
       )}
     </div>

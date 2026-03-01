@@ -392,25 +392,9 @@ export function PickingPage() {
       order.pickerId !== currentUser?.userId &&
       (userRole === 'ADMIN' || userRole === 'SUPERVISOR');
 
-    // Only poll when in view mode (admin/supervisor viewing someone else's work)
-    if (!isViewMode) {
-      return;
-    }
-
-    console.log(`[PickingPage] Starting real-time updates for view mode`);
-
-    // Poll every 2 seconds to get latest order state
-    const intervalId = setInterval(() => {
-      console.log(`[PickingPage] Refetching order data for view mode`);
-      refetch();
-    }, 2000);
-
-    // Cleanup
-    return () => {
-      clearInterval(intervalId);
-      console.log(`[PickingPage] Stopped real-time updates for view mode`);
-    };
-  }, [order, currentUser, userRole, refetch]);
+    // View mode uses WebSocket events (pick:updated / pick:completed) already
+    // subscribed via usePickUpdates above — no polling needed.
+  }, [order, currentUser, userRole]);
 
   // Get current pick task
   const currentTask = order?.items?.[currentTaskIndex];

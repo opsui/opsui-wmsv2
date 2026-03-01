@@ -65,17 +65,15 @@ export function MonitoringTab() {
 
   useEffect(() => {
     loadAllData();
-    let interval: NodeJS.Timeout;
+    if (!autoRefresh) return;
 
-    if (autoRefresh) {
-      interval = setInterval(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden) {
         loadAllData();
-      }, refreshInterval);
-    }
+      }
+    }, refreshInterval);
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, duration]);
 
   const loadAllData = async () => {

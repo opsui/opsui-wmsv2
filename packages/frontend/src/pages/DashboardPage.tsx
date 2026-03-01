@@ -103,16 +103,14 @@ const staggerStyles = `
   .dashboard-stagger-6 { animation: dashboard-stagger-in 0.6s ease-out 0.6s both; }
   
   .metric-card-glow {
-    animation: metric-pulse-glow 3s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.12);
   }
-  
+
   .hero-title-gradient {
     background: linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%);
-    background-size: 200% 200%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: hero-gradient-shift 8s ease infinite;
   }
 `;
 
