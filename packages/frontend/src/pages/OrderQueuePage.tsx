@@ -444,15 +444,17 @@ function OrderCard({
 
       <Card
         variant="glass"
-        className={`relative flex flex-col h-full bg-slate-900/95 border-2 transition-all duration-300 ${
+        className={`relative flex flex-col h-full bg-slate-900/95 border-2 transition-colors duration-200 ${
           isUrgent
             ? 'border-orange-500/50 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
             : 'border-slate-700/50 hover:border-purple-500/30'
         }`}
       >
-        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
-          <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(192,132,252,0.02)_10px,rgba(192,132,252,0.02)_20px)]" />
-        </div>
+        {!noMotion && (
+          <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+            <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(192,132,252,0.02)_10px,rgba(192,132,252,0.02)_20px)]" />
+          </div>
+        )}
 
         <CardContent className="p-5 flex-1 flex flex-col relative z-10">
           {/* Header */}
@@ -722,7 +724,10 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       return response.data;
     },
     enabled: mode === 'packing',
-    refetchInterval: 5000,
+    // Throttle packing poll to 15s on perf-mode devices — 5s causes a full card
+    // list reconciliation every 5 seconds which saturates the main thread on i5-4570.
+    // WebSocket handles real-time updates for picking; packing uses polling only.
+    refetchInterval: noMotion ? 15000 : 5000,
   });
 
   const queueData = mode === 'picking' ? pickingQueueResult.data : packingQueueResult.data;

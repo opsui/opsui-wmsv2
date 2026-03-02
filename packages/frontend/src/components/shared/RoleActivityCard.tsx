@@ -11,6 +11,7 @@
  */
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/shared';
+import { useIsPerformanceMode } from '@/hooks/useHardwareCapabilities';
 import {
   ArrowPathIcon,
   ChevronDownIcon,
@@ -198,7 +199,7 @@ function RoleSelectorDropdown({ value, onChange }: RoleSelectorDropdownProps) {
     <div className="relative z-[9999]" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 ${
           isOpen
             ? 'dark:text-white text-black dark:bg-white/[0.08] bg-gray-100 dark:border-white/[0.12] border-gray-300 shadow-lg dark:shadow-blue-500/10 shadow-gray-200'
             : 'dark:text-gray-300 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-white/[0.05] hover:bg-gray-100 dark:border-transparent border-transparent dark:hover:border-white/[0.08] hover:border-gray-300'
@@ -224,7 +225,7 @@ function RoleSelectorDropdown({ value, onChange }: RoleSelectorDropdownProps) {
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 group ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors duration-150 group ${
                     isActive
                       ? 'dark:text-white text-black dark:bg-blue-600 bg-blue-50'
                       : 'dark:text-gray-200 text-gray-800 dark:hover:text-white hover:text-black dark:hover:bg-gray-800 hover:bg-gray-100'
@@ -262,6 +263,7 @@ export function RoleActivityCard({
   ordersLoading,
   transactionsLoading,
 }: RoleActivityCardProps) {
+  const noMotion = useIsPerformanceMode();
   const [selectedMember, setSelectedMember] = useState<{
     id: string;
     name: string;
@@ -603,7 +605,7 @@ export function RoleActivityCard({
                 <tr
                   key={`${userRole}-${memberId}`}
                   className={`
-                    dark:hover:bg-white/[0.03] hover:bg-white transition-all duration-200
+                    dark:hover:bg-white/[0.03] hover:bg-white transition-colors duration-150
                     ${isActive ? 'dark:bg-white/[0.01] bg-white/50' : ''}
                   `}
                 >
@@ -633,7 +635,7 @@ export function RoleActivityCard({
                       size="sm"
                       variant="primary"
                       onClick={() => handleViewOrders(memberId, memberName, userRole)}
-                      className="text-xs touch-target hover:scale-105 transition-transform bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white shadow-lg shadow-purple-500/25"
+                      className="text-xs touch-target bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 text-white shadow-lg shadow-purple-500/25"
                     >
                       {userRole === UserRole.STOCK_CONTROLLER ? (
                         <>
@@ -669,7 +671,7 @@ export function RoleActivityCard({
                         </span>
                         <div className="w-12 h-1.5 rounded-full dark:bg-white/[0.1] bg-gray-200 overflow-hidden">
                           <div
-                            className={`h-full rounded-full bg-gradient-to-r from-${theme.accent}-400 to-${theme.accent}-500 transition-all duration-500`}
+                            className={`h-full rounded-full bg-gradient-to-r from-${theme.accent}-400 to-${theme.accent}-500`}
                             style={{ width: `${member.orderProgress}%` }}
                           />
                         </div>
@@ -700,7 +702,7 @@ export function RoleActivityCard({
                           member.status === 'ACTIVE' ||
                           member.status === 'PICKING' ||
                           member.status === 'PACKING'
-                            ? 'bg-emerald-500 animate-pulse'
+                            ? `bg-emerald-500${noMotion ? '' : ' animate-pulse'}`
                             : member.status === 'INACTIVE'
                               ? 'bg-red-500'
                               : 'bg-gray-400'
@@ -736,10 +738,10 @@ export function RoleActivityCard({
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            className={`fixed inset-0 bg-black/80 transition-opacity${noMotion ? '' : ' backdrop-blur-sm'}`}
             onClick={() => setSelectedMember(null)}
           />
-          <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
+          <div className="inline-block align-bottom glass-card rounded-2xl text-left overflow-hidden shadow-premium-lg sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full animate-scale-in">
             <div className="dark:bg-white/[0.02] bg-gray-50 px-6 py-4 sm:px-6 flex items-center justify-between dark:border-b border-b dark:border-white/[0.08] border-gray-200">
               <div>
                 <h3 className="text-lg leading-6 font-semibold dark:text-white text-gray-900">
@@ -754,7 +756,7 @@ export function RoleActivityCard({
               </div>
               <button
                 onClick={() => setSelectedMember(null)}
-                className="dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 focus:outline-none transition-colors duration-200 hover:rotate-90 transform"
+                className="dark:text-gray-400 text-gray-500 dark:hover:text-white hover:text-gray-900 focus:outline-none transition-colors duration-200"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -771,7 +773,7 @@ export function RoleActivityCard({
                   {modalData.map((item: any) => (
                     <div
                       key={isStockController ? item.transactionId : item.orderId}
-                      className="dark:border dark:border-white/[0.08] border border-gray-200 rounded-xl p-4 dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-all duration-300"
+                      className="dark:border dark:border-white/[0.08] border border-gray-200 rounded-xl p-4 dark:hover:bg-white/[0.02] hover:bg-gray-50 transition-colors duration-150"
                     >
                       {isStockController ? (
                         // Transaction Card
@@ -998,12 +1000,12 @@ export function RoleActivityCard({
                     <div
                       key={userRole}
                       className={`
-                        relative overflow-hidden rounded-2xl 
+                        relative overflow-hidden rounded-2xl
                         bg-gradient-to-br ${theme.gradient}
                         border dark:border-white/[0.05] border-gray-200
-                        animate-fade-in
+                        ${noMotion ? '' : 'animate-fade-in'}
                       `}
-                      style={{ animationDelay: `${roleIndex * 100}ms` }}
+                      style={noMotion ? undefined : { animationDelay: `${roleIndex * 100}ms` }}
                     >
                       {/* Role header */}
                       <div className="flex items-center justify-between p-4 border-b dark:border-white/[0.05] border-gray-200">

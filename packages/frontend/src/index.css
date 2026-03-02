@@ -4626,6 +4626,17 @@ html.performance-mode nav {
   contain: layout paint style;
 }
 
+/* Role activity card — each role section is a self-contained paint boundary
+   so a single member's status dot pulsing doesn't repaint the whole table */
+html.performance-mode [class*='rounded-2xl'][class*='bg-gradient-to-br'] {
+  contain: layout paint;
+}
+
+/* Fixed modal overlay — isolate from the rest of the page completely */
+html.performance-mode .fixed.inset-0 {
+  contain: layout paint style;
+}
+
 /* Narrow transition-all to specific properties.
    Tailwind transition-all maps to transition:all which forces the browser
    to watch every CSS property — even ones that never animate.
