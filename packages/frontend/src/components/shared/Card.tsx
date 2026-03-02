@@ -42,7 +42,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     ref
   ) => {
     const baseStyles = [
-      'rounded-xl transition-all duration-300 ease-out',
+      // transition-colors instead of transition-all: only animate color/border/shadow properties.
+      // transition-all forces the browser to watch every CSS property for changes, which is
+      // expensive on low-end CPUs. Colors are the only properties that actually animate on cards.
+      'rounded-xl transition-colors duration-300 ease-out',
       'relative overflow-hidden',
     ].join(' ');
 

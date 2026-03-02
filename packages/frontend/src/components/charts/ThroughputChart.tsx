@@ -60,7 +60,11 @@ const RANGE_OPTIONS: { value: TimeRange; label: string }[] = [
   { value: 'yearly', label: 'Yearly' },
 ];
 
-export const ThroughputChart = memo(function ThroughputChart({ data, isLoading, onRangeChange }: ThroughputChartProps) {
+export const ThroughputChart = memo(function ThroughputChart({
+  data,
+  isLoading,
+  onRangeChange,
+}: ThroughputChartProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRange>('daily');
   const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
@@ -309,7 +313,7 @@ export const ThroughputChart = memo(function ThroughputChart({ data, isLoading, 
       </CardContent>
     </Card>
   );
-}
+});
 
 // Time Range Selector Component - Dropdown matching header style
 function TimeRangeSelector({
@@ -381,4 +385,4 @@ function TimeRangeSelector({
       )}
     </div>
   );
-});
+}

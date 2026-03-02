@@ -53,7 +53,8 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { useIsPerformanceMode } from '@/hooks/useHardwareCapabilities';
 
 // ============================================================================
 // TYPES
@@ -118,7 +119,14 @@ interface Quote {
   termsAndConditions?: string;
   createdBy?: string;
   convertedToOrderId?: string;
-  lineItems?: Array<{ sku?: string; description?: string; quantity: number; unitPrice?: number; discount?: number; total?: number }>;
+  lineItems?: Array<{
+    sku?: string;
+    description?: string;
+    quantity: number;
+    unitPrice?: number;
+    discount?: number;
+    total?: number;
+  }>;
 }
 
 // ============================================================================
@@ -180,13 +188,11 @@ function CustomerStatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <motion.span
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+    <span
       className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${styles[status] || styles.PROSPECT}`}
     >
       {status}
-    </motion.span>
+    </span>
   );
 }
 
@@ -560,10 +566,16 @@ function QuoteCard({
           </div>
           <div className="text-right shrink-0">
             <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
-              ${Number(quote.totalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              $
+              {Number(quote.totalAmount || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
             {itemCount > 0 && (
-              <p className="text-xs text-gray-400 dark:text-gray-500">{itemCount} item{itemCount !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {itemCount} item{itemCount !== 1 ? 's' : ''}
+              </p>
             )}
           </div>
         </div>
@@ -595,7 +607,9 @@ function QuoteCard({
               </p>
             )}
             {/* Financial breakdown */}
-            {(quote.subtotal !== undefined || quote.taxAmount !== undefined || quote.discountAmount !== undefined) && (
+            {(quote.subtotal !== undefined ||
+              quote.taxAmount !== undefined ||
+              quote.discountAmount !== undefined) && (
               <div className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2 space-y-1">
                 {quote.subtotal !== undefined && (
                   <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
@@ -624,13 +638,17 @@ function QuoteCard({
         {quote.convertedToOrderId && (
           <div className="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-gray-700/50">
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-0.5">Sales Order</p>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-0.5">
+                Sales Order
+              </p>
               <p className="text-xs font-mono font-semibold text-gray-800 dark:text-gray-200">
                 {quote.convertedToOrderId}
               </p>
             </div>
             {linkedOrder ? (
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${ORDER_STATUS_COLOR[linkedOrder.status] ?? 'bg-gray-500/20 text-gray-400'}`}>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${ORDER_STATUS_COLOR[linkedOrder.status] ?? 'bg-gray-500/20 text-gray-400'}`}
+              >
                 {linkedOrder.status}
               </span>
             ) : (
@@ -661,8 +679,17 @@ function QuoteCard({
           )}
           <div className="flex items-center justify-between">
             <span>Valid until</span>
-            <span className={isExpired ? 'text-red-500 font-medium' : isExpiringSoon ? 'text-amber-500 font-medium' : 'text-gray-600 dark:text-gray-300'}>
-              {isExpired ? '⚠ ' : isExpiringSoon ? '⏰ ' : ''}{new Date(quote.validUntil).toLocaleDateString()}
+            <span
+              className={
+                isExpired
+                  ? 'text-red-500 font-medium'
+                  : isExpiringSoon
+                    ? 'text-amber-500 font-medium'
+                    : 'text-gray-600 dark:text-gray-300'
+              }
+            >
+              {isExpired ? '⚠ ' : isExpiringSoon ? '⏰ ' : ''}
+              {new Date(quote.validUntil).toLocaleDateString()}
             </span>
           </div>
         </div>
@@ -708,6 +735,9 @@ function SalesPage() {
   const navigate = useNavigate();
   const currentTab = (searchParams.get('tab') as TabType) || 'dashboard';
   const { showToast } = useToast();
+  const isPerf = useIsPerformanceMode();
+  const prefersReducedMotion = useReducedMotion();
+  const noMotion = isPerf || !!prefersReducedMotion;
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
 
@@ -883,488 +913,397 @@ function SalesPage() {
 
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Breadcrumb Navigation */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Breadcrumb />
-        </motion.div>
+        <Breadcrumb />
 
         {/* Page Header - Premium Design */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-          className="mb-10 relative"
-        >
+        <div className="mb-10 relative">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <motion.div variants={fadeInUp} className="relative">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '100%' }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-purple-400 via-violet-400 to-purple-500 dark:from-purple-500 dark:via-violet-500 dark:to-purple-600 rounded-full"
-              />
+            <div className="relative">
+              {!noMotion && (
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-purple-400 via-violet-400 to-purple-500 dark:from-purple-500 dark:via-violet-500 dark:to-purple-600 rounded-full"
+                />
+              )}
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 dark:from-white dark:via-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                 Sales & CRM
               </h1>
               <p className="mt-3 text-lg text-gray-600 dark:text-gray-400 max-w-xl">
                 Nurture relationships, close deals, and grow your pipeline with elegance
               </p>
-            </motion.div>
-            <motion.div
-              variants={fadeInUp}
-              className="flex items-center gap-3 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-full border border-purple-200 dark:border-purple-500/30"
-            >
+            </div>
+            <div className="flex items-center gap-3 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-full border border-purple-200 dark:border-purple-500/30">
               <SparklesIcon className="h-4 w-4" />
               <span className="font-medium">Pipeline Intelligence</span>
               <ArrowTrendingUpIcon className="h-4 w-4" />
-            </motion.div>
+            </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Loading State - Premium Skeleton */}
-        <AnimatePresence>
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-20"
-            >
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full border-2 border-purple-200 dark:border-purple-800" />
-                <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-transparent border-t-purple-500 dark:border-t-purple-400 animate-spin" />
-              </div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="mt-6 text-gray-500 dark:text-gray-400 text-sm font-medium"
-              >
-                Loading your pipeline...
-              </motion.p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-2 border-purple-200 dark:border-purple-800" />
+              <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-transparent border-t-purple-500 dark:border-t-purple-400 animate-spin" />
+            </div>
+            <p className="mt-6 text-gray-500 dark:text-gray-400 text-sm font-medium">
+              Loading your pipeline...
+            </p>
+          </div>
+        )}
 
         {/* Tab Navigation - Premium Pills */}
-        <AnimatePresence>
-          {!isLoading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="flex gap-2 mb-10"
-            >
-              {[
-                { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
-                { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
-                { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
-                { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
-                { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
-              ].map((tab, index) => {
-                const Icon = tab.icon;
-                const isActive = currentTab === tab.key;
-                return (
-                  <motion.button
-                    key={tab.key}
-                    onClick={() => setTab(tab.key)}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      isActive
-                        ? 'text-purple-700 dark:text-purple-300'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {isActive && (
+        {!isLoading && (
+          <div className="flex gap-2 mb-10">
+            {[
+              { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
+              { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
+              { key: 'leads' as TabType, label: 'Leads', icon: UserPlusIcon },
+              { key: 'opportunities' as TabType, label: 'Opportunities', icon: TrophyIcon },
+              { key: 'quotes' as TabType, label: 'Quotes', icon: DocumentTextIcon },
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = currentTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setTab(tab.key)}
+                  className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                    isActive
+                      ? 'text-purple-700 dark:text-purple-300'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {isActive &&
+                    (noMotion ? (
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-xl border border-purple-200 dark:border-purple-500/30" />
+                    ) : (
                       <motion.div
                         layoutId="activeTab"
                         className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-xl border border-purple-200 dark:border-purple-500/30"
-                        transition={{
-                          type: 'tween',
-                          duration: 0.15,
-                          ease: 'easeOut',
-                        }}
+                        transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
                       />
-                    )}
-                    <Icon className="h-4 w-4 relative z-10" />
-                    <span className="relative z-10">{tab.label}</span>
-                  </motion.button>
-                );
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    ))}
+                  <Icon className="h-4 w-4 relative z-10" />
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Tab Content - Smooth Transitions */}
-        <AnimatePresence mode="wait">
-          {/* Dashboard Tab */}
-          {!isLoading && currentTab === 'dashboard' && (
-            <motion.div
-              key="dashboard"
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={staggerContainer}
-              className="space-y-8"
-            >
-              {/* Overview Stats - Premium Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                {[
-                  {
-                    label: 'Total Customers',
-                    value: dashboard.totalCustomers,
-                    icon: UserGroupIcon,
-                    gradient: 'from-violet-500 to-purple-600',
-                    bgGradient:
-                      'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
-                  },
-                  {
-                    label: 'Active Leads',
-                    value: dashboard.activeLeads,
-                    icon: UserPlusIcon,
-                    gradient: 'from-purple-500 to-fuchsia-600',
-                    bgGradient:
-                      'from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20',
-                  },
-                  {
-                    label: 'Open Opportunities',
-                    value: dashboard.openOpportunities,
-                    icon: TrophyIcon,
-                    gradient: 'from-violet-500 to-purple-600',
-                    bgGradient:
-                      'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
-                  },
-                  {
-                    label: 'Pending Quotes',
-                    value: dashboard.pendingQuotes,
-                    icon: DocumentTextIcon,
-                    gradient: 'from-purple-400 to-violet-500',
-                    bgGradient:
-                      'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
-                  },
-                  {
-                    label: 'Total Pipeline',
-                    value: `$${dashboard.totalPipeline.toLocaleString()}`,
-                    icon: CurrencyDollarIcon,
-                    gradient: 'from-fuchsia-500 to-purple-600',
-                    bgGradient:
-                      'from-fuchsia-50 to-purple-50 dark:from-fuchsia-900/20 dark:to-purple-900/20',
-                    isLargeText: true,
-                  },
-                ].map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <motion.div
-                      key={stat.label}
-                      variants={fadeInUp}
-                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                      className="group relative"
+        {/* Tab Content */}
+        {/* Dashboard Tab */}
+        {!isLoading && currentTab === 'dashboard' && (
+          <div className="space-y-8">
+            {/* Overview Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              {[
+                {
+                  label: 'Total Customers',
+                  value: dashboard.totalCustomers,
+                  icon: UserGroupIcon,
+                  gradient: 'from-violet-500 to-purple-600',
+                  bgGradient:
+                    'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
+                },
+                {
+                  label: 'Active Leads',
+                  value: dashboard.activeLeads,
+                  icon: UserPlusIcon,
+                  gradient: 'from-purple-500 to-fuchsia-600',
+                  bgGradient:
+                    'from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20',
+                },
+                {
+                  label: 'Open Opportunities',
+                  value: dashboard.openOpportunities,
+                  icon: TrophyIcon,
+                  gradient: 'from-violet-500 to-purple-600',
+                  bgGradient:
+                    'from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20',
+                },
+                {
+                  label: 'Pending Quotes',
+                  value: dashboard.pendingQuotes,
+                  icon: DocumentTextIcon,
+                  gradient: 'from-purple-400 to-violet-500',
+                  bgGradient:
+                    'from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
+                },
+                {
+                  label: 'Total Pipeline',
+                  value: `$${dashboard.totalPipeline.toLocaleString()}`,
+                  icon: CurrencyDollarIcon,
+                  gradient: 'from-fuchsia-500 to-purple-600',
+                  bgGradient:
+                    'from-fuchsia-50 to-purple-50 dark:from-fuchsia-900/20 dark:to-purple-900/20',
+                  isLargeText: true,
+                },
+              ].map(stat => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="group relative">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 rounded-2xl transition-opacity duration-300`}
+                    />
+                    <Card
+                      variant="glass"
+                      className={`relative p-6 bg-gradient-to-br ${stat.bgGradient} border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden`}
                     >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 dark:group-hover:opacity-20 rounded-2xl transition-opacity duration-300`}
-                      />
-                      <Card
-                        variant="glass"
-                        className={`relative p-6 bg-gradient-to-br ${stat.bgGradient} border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden`}
-                      >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/50 to-transparent dark:from-white/5 dark:to-transparent rounded-bl-full" />
-                        <div className="relative z-10">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                {stat.label}
-                              </p>
-                              <motion.p
-                                initial={{ opacity: 0, scale: 0.5 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
-                                className={`mt-2 font-bold text-gray-900 dark:text-white ${stat.isLargeText ? 'text-2xl' : 'text-3xl'}`}
-                              >
-                                {stat.value}
-                              </motion.p>
-                            </div>
-                            <motion.div
-                              initial={{ rotate: -10 }}
-                              animate={{ rotate: 0 }}
-                              transition={{ duration: 0.5, delay: index * 0.1 }}
-                              className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/50 to-transparent dark:from-white/5 dark:to-transparent rounded-bl-full" />
+                      <div className="relative z-10">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                              {stat.label}
+                            </p>
+                            <p
+                              className={`mt-2 font-bold text-gray-900 dark:text-white ${stat.isLargeText ? 'text-2xl' : 'text-3xl'}`}
                             >
-                              <Icon className="h-5 w-5 text-white" />
-                            </motion.div>
+                              {stat.value}
+                            </p>
+                          </div>
+                          <div
+                            className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
+                          >
+                            <Icon className="h-5 w-5 text-white" />
                           </div>
                         </div>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              {/* Quick Actions */}
-              <Card
-                variant="glass"
-                className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-              >
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => setIsCreateCustomerModalOpen(true)}
-                    >
-                      <PlusIcon className="h-5 w-5" />
-                      <span>New Customer</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => setIsCreateLeadModalOpen(true)}
-                    >
-                      <PlusIcon className="h-5 w-5" />
-                      <span>New Lead</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => setIsCreateOpportunityModalOpen(true)}
-                    >
-                      <TrophyIcon className="h-5 w-5" />
-                      <span>New Opportunity</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => setIsCreateQuoteModalOpen(true)}
-                    >
-                      <DocumentTextIcon className="h-5 w-5" />
-                      <span>New Quote</span>
-                    </Button>
+                      </div>
+                    </Card>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                );
+              })}
+            </div>
 
-          {/* Customers Tab */}
-          {!isLoading && currentTab === 'customers' && (
-            <motion.div
-              key="customers"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="space-y-6"
+            {/* Quick Actions */}
+            <Card
+              variant="glass"
+              className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                    Manage customer accounts and relationships
-                  </p>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="flex items-center justify-center gap-2"
+                    onClick={() => setIsCreateCustomerModalOpen(true)}
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    <span>New Customer</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="flex items-center justify-center gap-2"
+                    onClick={() => setIsCreateLeadModalOpen(true)}
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    <span>New Lead</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="flex items-center justify-center gap-2"
+                    onClick={() => setIsCreateOpportunityModalOpen(true)}
+                  >
+                    <TrophyIcon className="h-5 w-5" />
+                    <span>New Opportunity</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="flex items-center justify-center gap-2"
+                    onClick={() => setIsCreateQuoteModalOpen(true)}
+                  >
+                    <DocumentTextIcon className="h-5 w-5" />
+                    <span>New Quote</span>
+                  </Button>
                 </div>
-                <Button
-                  variant="primary"
-                  className="flex items-center gap-2"
-                  onClick={() => setIsCreateCustomerModalOpen(true)}
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  New Customer
-                </Button>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {paginatedCustomers.map(customer => (
-                  <CustomerCard
-                    key={customer.customerId}
-                    customer={customer}
-                    onViewDetails={handleViewCustomerDetails}
-                    onCreateQuote={handleCreateQuoteForCustomer}
-                  />
-                ))}
+        {/* Customers Tab */}
+        {!isLoading && currentTab === 'customers' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Manage customer accounts and relationships
+                </p>
               </div>
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateCustomerModalOpen(true)}
+              >
+                <PlusIcon className="h-5 w-5" />
+                New Customer
+              </Button>
+            </div>
 
-              {/* Pagination */}
-              {customers.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={customers.length}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {paginatedCustomers.map(customer => (
+                <CustomerCard
+                  key={customer.customerId}
+                  customer={customer}
+                  onViewDetails={handleViewCustomerDetails}
+                  onCreateQuote={handleCreateQuoteForCustomer}
                 />
-              )}
-            </motion.div>
-          )}
+              ))}
+            </div>
 
-          {/* Leads Tab */}
-          {!isLoading && currentTab === 'leads' && (
-            <motion.div
-              key="leads"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Leads</h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                    Track and convert leads into customers
-                  </p>
-                </div>
-                <Button
-                  variant="primary"
-                  className="flex items-center gap-2"
-                  onClick={() => setIsCreateLeadModalOpen(true)}
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  New Lead
-                </Button>
+            {customers.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={customers.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Leads Tab */}
+        {!isLoading && currentTab === 'leads' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sales Leads</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Track and convert leads into customers
+                </p>
               </div>
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateLeadModalOpen(true)}
+              >
+                <PlusIcon className="h-5 w-5" />
+                New Lead
+              </Button>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {paginatedLeads.map(lead => (
-                  <LeadCard
-                    key={lead.leadId}
-                    lead={lead}
-                    onViewDetails={handleViewLeadDetails}
-                    onConvert={handleConvertLeadToCustomer}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {leads.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={leads.length}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {paginatedLeads.map(lead => (
+                <LeadCard
+                  key={lead.leadId}
+                  lead={lead}
+                  onViewDetails={handleViewLeadDetails}
+                  onConvert={handleConvertLeadToCustomer}
                 />
-              )}
-            </motion.div>
-          )}
+              ))}
+            </div>
 
-          {/* Opportunities Tab */}
-          {!isLoading && currentTab === 'opportunities' && (
-            <motion.div
-              key="opportunities"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Opportunities
-                  </h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                    Manage sales pipeline and opportunities
-                  </p>
-                </div>
-                <Button
-                  variant="primary"
-                  className="flex items-center gap-2"
-                  onClick={() => setIsCreateOpportunityModalOpen(true)}
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  New Opportunity
-                </Button>
+            {leads.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={leads.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Opportunities Tab */}
+        {!isLoading && currentTab === 'opportunities' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Opportunities</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Manage sales pipeline and opportunities
+                </p>
               </div>
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateOpportunityModalOpen(true)}
+              >
+                <PlusIcon className="h-5 w-5" />
+                New Opportunity
+              </Button>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {paginatedOpportunities.map(opportunity => (
-                  <OpportunityCard
-                    key={opportunity.opportunityId}
-                    opportunity={opportunity}
-                    onViewDetails={handleViewOpportunityDetails}
-                    onCreateQuote={handleCreateQuoteForOpportunity}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {opportunities.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={opportunities.length}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {paginatedOpportunities.map(opportunity => (
+                <OpportunityCard
+                  key={opportunity.opportunityId}
+                  opportunity={opportunity}
+                  onViewDetails={handleViewOpportunityDetails}
+                  onCreateQuote={handleCreateQuoteForOpportunity}
                 />
-              )}
-            </motion.div>
-          )}
+              ))}
+            </div>
 
-          {/* Quotes Tab */}
-          {!isLoading && currentTab === 'quotes' && (
-            <motion.div
-              key="quotes"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quotes</h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                    Create and manage sales quotes
-                  </p>
-                </div>
-                <Button
-                  variant="primary"
-                  className="flex items-center gap-2"
-                  onClick={() => setIsCreateQuoteModalOpen(true)}
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  New Quote
-                </Button>
+            {opportunities.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={opportunities.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Quotes Tab */}
+        {!isLoading && currentTab === 'quotes' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Quotes</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Create and manage sales quotes
+                </p>
               </div>
+              <Button
+                variant="primary"
+                className="flex items-center gap-2"
+                onClick={() => setIsCreateQuoteModalOpen(true)}
+              >
+                <PlusIcon className="h-5 w-5" />
+                New Quote
+              </Button>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {paginatedQuotes.map(quote => (
-                  <QuoteCard
-                    key={quote.quoteId}
-                    quote={quote}
-                    onViewDetails={handleViewQuoteDetails}
-                    onSend={handleSendQuote}
-                    onConvert={handleConvertQuoteToOrder}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {quotes.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={quotes.length}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {paginatedQuotes.map(quote => (
+                <QuoteCard
+                  key={quote.quoteId}
+                  quote={quote}
+                  onViewDetails={handleViewQuoteDetails}
+                  onSend={handleSendQuote}
+                  onConvert={handleConvertQuoteToOrder}
                 />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              ))}
+            </div>
+
+            {quotes.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={quotes.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            )}
+          </div>
+        )}
       </main>
 
       {/* Modals */}

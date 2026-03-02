@@ -41,7 +41,8 @@ import { OrderPriority, OrderStatus } from '@opsui/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useIsPerformanceMode } from '@/hooks/useHardwareCapabilities';
 import { apiClient } from '@/lib/api-client';
 
 // ============================================================================
@@ -138,6 +139,9 @@ function StatusFilterDropdown({
   const cfg = MODE_CONFIG[mode];
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isPerf = useIsPerformanceMode();
+  const prefersReducedMotion = useReducedMotion();
+  const noMotion = isPerf || !!prefersReducedMotion;
 
   const options = [
     { value: cfg.idleStatus, label: cfg.idleLabel, icon: cfg.idleIcon },
@@ -154,10 +158,13 @@ function StatusFilterDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const TriggerButton = noMotion ? 'button' : motion.button;
+  const triggerProps = noMotion ? {} : { whileTap: { scale: 0.98 } };
+
   return (
     <div className="relative z-40" ref={dropdownRef}>
-      <motion.button
-        whileTap={{ scale: 0.98 }}
+      <TriggerButton
+        {...(triggerProps as any)}
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 min-h-touch border-2 ${
           isOpen
@@ -172,15 +179,11 @@ function StatusFilterDropdown({
         <ChevronDownIcon
           className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
-      </motion.button>
+      </TriggerButton>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+      {noMotion ? (
+        isOpen && (
+          <div
             className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl overflow-hidden"
             role="listbox"
           >
@@ -189,14 +192,13 @@ function StatusFilterDropdown({
                 const Icon = option.icon;
                 const isActive = option.value === value;
                 return (
-                  <motion.button
+                  <button
                     key={option.value}
-                    whileHover={{ x: 4 }}
                     onClick={() => {
                       onChange(option.value);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-colors duration-200 ${
                       isActive
                         ? 'bg-purple-400 text-slate-900'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
@@ -206,19 +208,60 @@ function StatusFilterDropdown({
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
                     {option.label}
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeIndicator"
-                        className="ml-auto w-2 h-2 rounded-full bg-slate-900"
-                      />
-                    )}
-                  </motion.button>
+                    {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-slate-900" />}
+                  </button>
                 );
               })}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        )
+      ) : (
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+              role="listbox"
+            >
+              <div className="py-2">
+                {options.map(option => {
+                  const Icon = option.icon;
+                  const isActive = option.value === value;
+                  return (
+                    <motion.button
+                      key={option.value}
+                      whileHover={{ x: 4 }}
+                      onClick={() => {
+                        onChange(option.value);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
+                        isActive
+                          ? 'bg-purple-400 text-slate-900'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
+                      }`}
+                      role="option"
+                      aria-selected={isActive}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {option.label}
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeIndicator"
+                          className="ml-auto w-2 h-2 rounded-full bg-slate-900"
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 }
@@ -232,6 +275,9 @@ function PriorityFilterDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isPerf = useIsPerformanceMode();
+  const prefersReducedMotion = useReducedMotion();
+  const noMotion = isPerf || !!prefersReducedMotion;
 
   const options = [
     { value: undefined as OrderPriority | undefined, label: 'All Priority', icon: QueueListIcon },
@@ -251,10 +297,13 @@ function PriorityFilterDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const TriggerButton = noMotion ? 'button' : motion.button;
+  const triggerProps = noMotion ? {} : { whileTap: { scale: 0.98 } };
+
   return (
     <div className="relative z-40" ref={dropdownRef}>
-      <motion.button
-        whileTap={{ scale: 0.98 }}
+      <TriggerButton
+        {...(triggerProps as any)}
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200 min-h-touch border-2 ${
           isOpen
@@ -269,15 +318,11 @@ function PriorityFilterDropdown({
         <ChevronDownIcon
           className={`h-4 w-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
-      </motion.button>
+      </TriggerButton>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+      {noMotion ? (
+        isOpen && (
+          <div
             className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl overflow-hidden"
             role="listbox"
           >
@@ -286,14 +331,13 @@ function PriorityFilterDropdown({
                 const Icon = option.icon;
                 const isActive = option.value === value;
                 return (
-                  <motion.button
+                  <button
                     key={option.label}
-                    whileHover={{ x: 4 }}
                     onClick={() => {
                       onChange(option.value);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-colors duration-200 ${
                       isActive
                         ? 'bg-purple-400 text-slate-900'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
@@ -301,13 +345,51 @@ function PriorityFilterDropdown({
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
                     {option.label}
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        )
+      ) : (
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full left-0 mt-2 w-52 bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+              role="listbox"
+            >
+              <div className="py-2">
+                {options.map(option => {
+                  const Icon = option.icon;
+                  const isActive = option.value === value;
+                  return (
+                    <motion.button
+                      key={option.label}
+                      whileHover={{ x: 4 }}
+                      onClick={() => {
+                        onChange(option.value);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
+                        isActive
+                          ? 'bg-purple-400 text-slate-900'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-purple-400'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      {option.label}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 }
@@ -332,23 +414,33 @@ function OrderCard({
   const cfg = MODE_CONFIG[mode];
   const isUrgent = order.priority === 'URGENT' || order.priority === 'HIGH';
   const isActive = order.status === cfg.activeStatus;
+  const isPerf = useIsPerformanceMode();
+  const prefersReducedMotion = useReducedMotion();
+  const noMotion = isPerf || !!prefersReducedMotion;
 
   const items: any[] = order.items || [];
 
+  const CardWrapper = noMotion ? 'div' : motion.div;
+  const cardWrapperProps = noMotion
+    ? {}
+    : {
+        variants: cardVariants,
+        layout: true,
+        whileHover: { y: -4, transition: { duration: 0.2 } },
+      };
+
   return (
-    <motion.div
-      variants={cardVariants}
-      layout
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="relative group"
-    >
-      {isUrgent && (
-        <motion.div
-          variants={pulseVariants}
-          animate="animate"
-          className="absolute -inset-1 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 rounded-2xl blur-lg"
-        />
-      )}
+    <CardWrapper {...(cardWrapperProps as any)} className="relative group">
+      {isUrgent &&
+        (noMotion ? (
+          <div className="absolute -inset-1 rounded-2xl border border-orange-500/40" />
+        ) : (
+          <motion.div
+            variants={pulseVariants}
+            animate="animate"
+            className="absolute -inset-1 bg-gradient-to-r from-red-500/20 via-orange-500/20 to-red-500/20 rounded-2xl blur-lg"
+          />
+        ))}
 
       <Card
         variant="glass"
@@ -370,14 +462,17 @@ function OrderCard({
                 <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">
                   {order.orderId}
                 </h3>
-                {isUrgent && (
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
+                {isUrgent &&
+                  (noMotion ? (
                     <BoltIcon className="h-5 w-5 text-orange-400" />
-                  </motion.div>
-                )}
+                  ) : (
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <BoltIcon className="h-5 w-5 text-orange-400" />
+                    </motion.div>
+                  ))}
               </div>
               <p className="text-sm text-slate-400 mt-1 truncate">{order.customerName}</p>
             </div>
@@ -410,14 +505,21 @@ function OrderCard({
               <span className="text-sm font-black text-purple-400">{order.progress || 0}%</span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${order.progress || 0}%` }}
-                transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400 relative"
-              >
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.3)_50%,transparent_100%)] animate-[shimmer_2s_infinite]" />
-              </motion.div>
+              {noMotion ? (
+                <div
+                  style={{ width: `${order.progress || 0}%` }}
+                  className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400"
+                />
+              ) : (
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${order.progress || 0}%` }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+                  className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400 relative"
+                >
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.3)_50%,transparent_100%)] animate-[shimmer_2s_infinite]" />
+                </motion.div>
+              )}
             </div>
           </div>
 
@@ -442,12 +544,19 @@ function OrderCard({
                       ? 'border-blue-500/50 bg-blue-500/10'
                       : 'border-slate-700/50 bg-slate-800/50';
 
+                const ItemEl = noMotion ? 'div' : motion.div;
+                const itemProps = noMotion
+                  ? {}
+                  : {
+                      initial: { opacity: 0, x: -10 },
+                      animate: { opacity: 1, x: 0 },
+                      transition: { delay: idx * 0.05 },
+                    };
+
                 return (
-                  <motion.div
+                  <ItemEl
                     key={`${order.orderId}-item-${idx}`}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
+                    {...(itemProps as any)}
                     className={`text-xs p-3 rounded-lg border-l-4 ${statusStyles}`}
                   >
                     <div className="flex items-start gap-2 mb-1">
@@ -465,14 +574,14 @@ function OrderCard({
                         {isSkipped ? 'SKIPPED' : `${qty}/${item.quantity}`}
                       </span>
                     </div>
-                  </motion.div>
+                  </ItemEl>
                 );
               })}
             </div>
           )}
 
           {/* Action button */}
-          <motion.div whileTap={{ scale: 0.98 }}>
+          {noMotion ? (
             <Button
               fullWidth
               size="lg"
@@ -495,10 +604,35 @@ function OrderCard({
                 </span>
               )}
             </Button>
-          </motion.div>
+          ) : (
+            <motion.div whileTap={{ scale: 0.98 }}>
+              <Button
+                fullWidth
+                size="lg"
+                variant="primary"
+                onClick={() => onClaim(order.orderId, order.status)}
+                disabled={
+                  isClaiming ||
+                  (order.status !== cfg.idleStatus && order.status !== cfg.activeStatus) ||
+                  (order.status === cfg.idleStatus && claimingOrderId === order.orderId)
+                }
+                isLoading={order.status === cfg.idleStatus && claimingOrderId === order.orderId}
+                className="font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-slate-900 border-0 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] transition-all duration-300"
+              >
+                {isActive ? (
+                  cfg.continueButtonLabel
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <cfg.claimButtonIcon className="h-5 w-5" />
+                    {cfg.claimButtonLabel}
+                  </span>
+                )}
+              </Button>
+            </motion.div>
+          )}
         </CardContent>
       </Card>
-    </motion.div>
+    </CardWrapper>
   );
 }
 
@@ -511,6 +645,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const isAdmin = useAuthStore(state => state.user?.role === 'ADMIN');
+  const isPerf = useIsPerformanceMode();
+  const prefersReducedMotion = useReducedMotion();
+  const noMotion = isPerf || !!prefersReducedMotion;
   const canPick = useAuthStore(state => state.canPick);
   const canPack = useAuthStore(state => state.canPack);
   const userId = useAuthStore(state => state.user?.userId);
@@ -780,21 +917,14 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
+        <div className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-slate-800" />
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-t-purple-400"
-            />
+            {/* CSS animate-spin runs on the compositor thread — no JS animation engine needed */}
+            <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-t-purple-400 animate-spin" />
           </div>
           <p className="text-slate-500 font-bold uppercase tracking-wider text-sm">Loading Queue</p>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -820,34 +950,26 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       >
         <Breadcrumb />
 
-        <motion.div
-          variants={headerVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-center relative"
-        >
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: '100%' }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent max-w-xs"
-          />
+        <div className="text-center relative">
+          {!noMotion && (
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: '100%' }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent max-w-xs"
+            />
+          )}
           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight uppercase">
             {cfg.title}
           </h1>
           <p className="mt-4 text-slate-400 text-sm font-medium uppercase tracking-widest">
             {queueData?.total || 0} orders available
           </p>
-        </motion.div>
+        </div>
 
         {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
         {(isAdmin || (canPick() && canPack())) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex justify-center"
-          >
+          <div className="flex justify-center">
             <div className="inline-flex rounded-xl bg-slate-800/80 p-1.5 border-2 border-slate-700">
               <button
                 onClick={() => handleAdminModeSwitch('picking')}
@@ -872,77 +994,69 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 Packing Queue
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap items-center justify-center gap-4"
-        >
+        <div className="flex flex-wrap items-center justify-center gap-4">
           <StatusFilterDropdown
             value={statusFilter}
             onChange={handleStatusFilterChange}
             mode={mode}
           />
           <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
-        </motion.div>
+        </div>
 
-        <AnimatePresence mode="wait">
-          {filteredOrders.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
-              <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
-                <CardContent className="p-16 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
-                    <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
-                  </div>
-                  <p className="text-slate-500 font-bold uppercase tracking-wider">
-                    {cfg.emptyText}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={pageVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
-              {filteredOrders.map((order: any) => (
-                <OrderCard
-                  key={order.orderId}
-                  order={order}
-                  onClaim={handleClaim}
-                  isClaiming={isClaiming}
-                  claimingOrderId={claimingOrderId}
-                  mode={mode}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {filteredOrders.length === 0 ? (
+          <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
+            <CardContent className="p-16 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
+                <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
+              </div>
+              <p className="text-slate-500 font-bold uppercase tracking-wider">{cfg.emptyText}</p>
+            </CardContent>
+          </Card>
+        ) : noMotion ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredOrders.map((order: any) => (
+              <OrderCard
+                key={order.orderId}
+                order={order}
+                onClaim={handleClaim}
+                isClaiming={isClaiming}
+                claimingOrderId={claimingOrderId}
+                mode={mode}
+              />
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            variants={pageVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+          >
+            {filteredOrders.map((order: any) => (
+              <OrderCard
+                key={order.orderId}
+                order={order}
+                onClaim={handleClaim}
+                isClaiming={isClaiming}
+                claimingOrderId={claimingOrderId}
+                mode={mode}
+              />
+            ))}
+          </motion.div>
+        )}
 
         {queueData?.total && queueData.total > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Pagination
-              currentPage={page}
-              totalItems={queueData.total}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={setPageSize}
-              pageSizeOptions={[10, 20, 50, 100]}
-            />
-          </motion.div>
+          <Pagination
+            currentPage={page}
+            totalItems={queueData.total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[10, 20, 50, 100]}
+          />
         )}
       </main>
 

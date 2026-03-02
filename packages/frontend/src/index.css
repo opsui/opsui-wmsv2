@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@300;400;500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import './styles/tokens.css';
 
 @tailwind base;
@@ -4593,6 +4593,45 @@ html.performance-mode .toolbar-container {
 
 html.dark.performance-mode .toolbar-container {
   background: rgba(30, 41, 59, 0.97) !important;
+}
+
+/* ============================================================
+   SECTION 12: CSS CONTAINMENT
+   Limits paint/layout recalc to isolated subtrees.
+   Prevents a single card/row update from triggering
+   full-page layout recalculation on low-end CPUs.
+   Safe: Chrome 52+, Firefox 69+, Edge 79+.
+   ============================================================ */
+
+/* Card components — contain layout+paint so card-internal changes
+   don't cause the surrounding grid to recalculate */
+html.performance-mode .glass-card,
+html.performance-mode .picking-card,
+html.performance-mode .accounting-card,
+html.performance-mode .card-hover {
+  contain: layout paint;
+}
+
+/* Table rows — contain paint so a single row update (e.g. status change)
+   doesn't repaint the entire table */
+html.performance-mode tr,
+html.performance-mode [role='row'] {
+  contain: layout paint;
+}
+
+/* Sidebar and nav — contain strictly since their layout never affects
+   the main content area in our shell layout */
+html.performance-mode aside,
+html.performance-mode nav {
+  contain: layout paint style;
+}
+
+/* Narrow transition-all to specific properties.
+   Tailwind transition-all maps to transition:all which forces the browser
+   to watch every CSS property — even ones that never animate.
+   This override limits it to the properties that actually need it. */
+html.performance-mode [class~='transition-all'] {
+  transition-property: opacity, transform, box-shadow, border-color !important;
 }
 
 /* ============================================
