@@ -42,7 +42,7 @@ export class OrderRepository extends BaseRepository<Order> {
       let subtotal = 0;
 
       // Create order
-      const order = await this.insert(
+      const orderResult = await this.insert(
         {
           orderId,
           customerId: dto.customerId,
@@ -53,6 +53,10 @@ export class OrderRepository extends BaseRepository<Order> {
         } as any,
         client
       );
+
+      // Note: insert() within transaction returns snake_case columns, so use order_id
+      // The orderId is already generated above, so use that directly
+      const createdOrderId = orderId;
 
       // Create order items
       for (let i = 0; i < dto.items.length; i++) {
@@ -92,12 +96,12 @@ export class OrderRepository extends BaseRepository<Order> {
           );
         }
 
-        // Create order item with pricing
+        // Create order item with pricing - use createdOrderId (already generated above)
         await client.query(
           `INSERT INTO order_items (order_item_id, order_id, sku, name, quantity, bin_location, status, unit_price, line_total, currency) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, $9)`,
           [
-            `OI-${order.orderId}-${i}`,
-            order.orderId,
+            `OI-${createdOrderId}-${i}`,
+            createdOrderId,
             item.sku,
             name,
             item.quantity,
@@ -112,8 +116,22 @@ export class OrderRepository extends BaseRepository<Order> {
       // Order totals will be calculated when needed
       // Note: subtotal, tax_amount, discount_amount, total_amount columns don't exist in current schema
 
-      // Fetch complete order with items
-      return this.getOrderWithItems(order.orderId);
+      // Fetch the order within the same transaction using the client
+      // Cannot use getOrderWithItems() as it uses query() which creates a new connection
+      const createdOrderResult = await client.query(`SELECT * FROM orders WHERE order_id = $1`, [
+        createdOrderId,
+      ]);
+
+      const createdItemsResult = await client.query(
+        `SELECT * FROM order_items WHERE order_id = $1`,
+        [createdOrderId]
+      );
+
+      return {
+        ...createdOrderResult.rows[0],
+        items: createdItemsResult.rows,
+        progress: 0,
+      } as Order;
     });
   }
 

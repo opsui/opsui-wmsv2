@@ -370,9 +370,17 @@ export class SalesService {
       throw new Error('Only SENT quotes can be accepted');
     }
 
+    // Get customer to retrieve name
+    const customer = await salesRepository.findCustomerById(quote.customerId);
+    if (!customer) {
+      throw new NotFoundError('Customer', quote.customerId);
+    }
+
     // Convert quote to order
     const order = await orderService.createOrder({
       customerId: quote.customerId,
+      customerName: customer.companyName,
+      priority: 'NORMAL',
       items: quote.lineItems.map(item => ({
         sku: item.sku,
         quantity: item.quantity,
