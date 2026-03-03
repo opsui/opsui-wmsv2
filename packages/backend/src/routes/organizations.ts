@@ -22,6 +22,7 @@ import { Response, Router } from 'express';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { organizationService } from '../services/OrganizationService';
+import { UserRepository } from '../repositories/UserRepository';
 
 // ============================================================================
 // ROUTER SETUP
@@ -69,7 +70,11 @@ router.post(
       timezone: req.body.timezone,
       dateFormat: req.body.dateFormat,
       fiscalYearStartMonth: req.body.fiscalYearStartMonth,
-      ownerId: req.user.userId,
+      // ADMIN can specify a different owner; otherwise use current user
+      ownerId:
+        req.user.baseRole === UserRole.ADMIN && req.body.ownerUserId
+          ? req.body.ownerUserId
+          : req.user.userId,
     };
 
     const organization = await organizationService.createOrganization(data);
@@ -325,6 +330,45 @@ router.put(
 // ============================================================================
 // MEMBERSHIP MANAGEMENT
 // ============================================================================
+
+/**
+ * GET /api/organizations/:organizationId/available-users
+ * Get users not in organization (for adding to org)
+ * ADMIN always allowed; org members with can_manage_users also allowed
+ */
+router.get(
+  '/:organizationId/available-users',
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    const { organizationId } = req.params;
+
+    // ADMIN always allowed; org members with can_manage_users also allowed
+    if (req.user.baseRole !== UserRole.ADMIN) {
+      await organizationService.checkPermission(
+        organizationId,
+        req.user.userId,
+        'can_manage_users'
+      );
+    }
+
+    const userRepo = new UserRepository();
+    const users = await userRepo.getUsersNotInOrganization(organizationId);
+
+    res.json({
+      success: true,
+      data: users.map(u => ({
+        userId: u.userId,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+      })),
+    });
+  })
+);
 
 /**
  * GET /api/organizations/:organizationId/members

@@ -218,6 +218,18 @@ export const organizationApi = {
     await apiClient.delete(`/organizations/${organizationId}/members/${userId}`);
   },
 
+  /**
+   * Get users not in organization (for adding to org)
+   */
+  async getAvailableUsers(
+    organizationId: string
+  ): Promise<Array<{ userId: string; name: string; email: string; role: string }>> {
+    const response = await apiClient.get<
+      ApiResponse<Array<{ userId: string; name: string; email: string; role: string }>>
+    >(`/organizations/${organizationId}/available-users`);
+    return response.data.data;
+  },
+
   // --------------------------------------------------------------------------
   // INVITATIONS
   // --------------------------------------------------------------------------

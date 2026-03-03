@@ -373,7 +373,10 @@ export class IntegrationsService {
     // Handle inventory update from ERP system
   }
 
-  private async handleShipmentStatusUpdate(_payload: any, _integration: Integration): Promise<void> {
+  private async handleShipmentStatusUpdate(
+    _payload: any,
+    _integration: Integration
+  ): Promise<void> {
     // Handle shipment status update from carrier
   }
 

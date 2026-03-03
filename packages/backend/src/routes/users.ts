@@ -2,6 +2,7 @@
  * User management routes
  *
  * Provides endpoints for listing users (admin only)
+ * and creating users (admin or org admins with can_manage_users permission)
  */
 
 import { Router, Response, NextFunction } from 'express';
@@ -9,6 +10,8 @@ import { UserRepository } from '../repositories/UserRepository';
 import { asyncHandler, authenticate } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { UserRole } from '@opsui/shared';
+import { organizationService } from '../services/OrganizationService';
+import { organizationUserRepository } from '../repositories/OrganizationRepository';
 
 const router = Router();
 const userRepo = new UserRepository();
@@ -65,14 +68,16 @@ router.get(
 
 /**
  * POST /api/users
- * Create a new user (admin only)
+ * Create a new user
+ *
+ * - ADMIN: Can create users globally (without organizationId) or for any org
+ * - Org admins (with can_manage_users): Can only create users for their org (must provide organizationId)
  */
 router.post(
   '/',
   authenticate,
-  requireAdmin,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, organizationId, organizationRole } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
@@ -111,10 +116,40 @@ router.post(
       return;
     }
 
+    // Permission check: ADMIN always allowed; org members need can_manage_users
+    const isAdmin = req.user?.baseRole === UserRole.ADMIN;
+
+    if (!isAdmin) {
+      // Non-admin must provide organizationId and have can_manage_users permission
+      if (!organizationId) {
+        res.status(403).json({
+          error: 'Non-admin users must specify an organizationId',
+          code: 'ORGANIZATION_REQUIRED',
+        });
+        return;
+      }
+
+      // Verify caller has can_manage_users permission in the organization
+      try {
+        await organizationService.checkPermission(
+          organizationId,
+          req.user!.userId,
+          'can_manage_users'
+        );
+      } catch (error: any) {
+        res.status(403).json({
+          error: 'You do not have permission to create users in this organization',
+          code: 'FORBIDDEN',
+        });
+        return;
+      }
+    }
+
     // Generate user ID
     const { generateUserId } = await import('@opsui/shared');
     const userId = generateUserId();
 
+    // Create the user
     const newUser = await userRepo.createUserWithPassword({
       userId,
       name,
@@ -124,6 +159,27 @@ router.post(
     });
 
     console.log('[POST /users] User created:', newUser);
+
+    // If organizationId is provided, assign user to organization
+    if (organizationId) {
+      await organizationUserRepository.assignUser({
+        organizationId,
+        userId: newUser.userId,
+        role: organizationRole || 'ORG_MEMBER',
+        isPrimary: true,
+        canManageUsers: false,
+        canManageBilling: false,
+        canManageSettings: false,
+        canInviteUsers: false,
+      });
+
+      console.log('[POST /users] User assigned to organization:', {
+        userId: newUser.userId,
+        organizationId,
+        role: organizationRole || 'ORG_MEMBER',
+      });
+    }
+
     res.status(201).json(newUser);
   })
 );

@@ -49,7 +49,11 @@ const STATUS_LABELS: Record<string, string> = {
   BACKORDERED: 'Backordered',
 };
 
-export const OrderStatusChart = memo(function OrderStatusChart({ data, isLoading, error }: OrderStatusChartProps) {
+export const OrderStatusChart = memo(function OrderStatusChart({
+  data,
+  isLoading,
+  error,
+}: OrderStatusChartProps) {
   const [containerRef, containerWidth] = useContainerWidth<HTMLDivElement>();
 
   // Memoize chart data to prevent re-renders

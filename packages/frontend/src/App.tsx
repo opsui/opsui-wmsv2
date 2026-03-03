@@ -102,6 +102,7 @@ const NotFoundPage = createLazyPage(() => import('@/pages/NotFoundPage'));
 const EmployeesPage = createLazyPage(() => import('@/pages/hr/EmployeesPage'));
 // Admin pages
 const OrganizationsPage = createLazyPage(() => import('@/pages/admin/OrganizationsPage'));
+const MultiEntitySetupPage = createLazyPage(() => import('@/pages/admin/MultiEntitySetupPage'));
 const TimesheetsPage = createLazyPage(() => import('@/pages/hr/TimesheetsPage'));
 const PayrollDashboardPage = createLazyPage(() => import('@/pages/hr/PayrollDashboardPage'));
 const PayrollProcessingPage = createLazyPage(() => import('@/pages/hr/PayrollProcessingPage'));
@@ -1116,6 +1117,16 @@ function AppInner() {
           element={
             <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
               <OrganizationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Multi-Entity Setup - Admin only */}
+        <Route
+          path="/multi-entity-setup"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN]}>
+              <MultiEntitySetupPage />
             </ProtectedRoute>
           }
         />

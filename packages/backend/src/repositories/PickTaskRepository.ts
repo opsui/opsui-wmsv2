@@ -283,16 +283,14 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
     // If reverting skip, reset picked_quantity to 0 in both pick_tasks and order_items
     if (shouldResetQuantity) {
       // Reset picked_quantity in pick_tasks table
-      await query(
-        `UPDATE pick_tasks SET picked_quantity = 0 WHERE pick_task_id = $1`,
-        [pickTaskId]
-      );
+      await query(`UPDATE pick_tasks SET picked_quantity = 0 WHERE pick_task_id = $1`, [
+        pickTaskId,
+      ]);
 
       if (task?.orderItemId) {
-        await query(
-          `UPDATE order_items SET picked_quantity = 0 WHERE order_item_id = $1`,
-          [task.orderItemId]
-        );
+        await query(`UPDATE order_items SET picked_quantity = 0 WHERE order_item_id = $1`, [
+          task.orderItemId,
+        ]);
       }
     }
 

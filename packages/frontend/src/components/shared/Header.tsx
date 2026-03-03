@@ -2385,7 +2385,7 @@ export function Header() {
 
   return (
     <>
-      <header className="relative z-50 bg-fuchsia-50/90 dark:bg-transparent backdrop-blur-md dark:backdrop-blur-none border-b border-purple-200/50 dark:border-b-0">
+      <header className="relative z-50 bg-transparent border-none">
         <div className="w-full">
           {/* Mobile: Logo centered above toolbar, desktop: horizontal layout */}
           <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">

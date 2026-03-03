@@ -424,6 +424,31 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   // --------------------------------------------------------------------------
+  // GET USERS NOT IN ORGANIZATION
+  // --------------------------------------------------------------------------
+
+  /**
+   * Get users that are not members of a specific organization
+   * Used for adding existing users to an organization
+   */
+  async getUsersNotInOrganization(organizationId: string): Promise<User[]> {
+    const result = await query<User>(
+      `SELECT u.* FROM users u
+       WHERE u.deleted_at IS NULL AND u.active = true
+         AND u.user_id NOT IN (
+           SELECT user_id FROM organization_users
+           WHERE organization_id = $1 AND is_active = true
+         )
+       ORDER BY u.name ASC`,
+      [organizationId]
+    );
+
+    // Enrich each user with additional roles and entity
+    const users = await Promise.all(result.rows.map(user => this.enrichUser(user)));
+    return users;
+  }
+
+  // --------------------------------------------------------------------------
   // UPDATE USER
   // --------------------------------------------------------------------------
 

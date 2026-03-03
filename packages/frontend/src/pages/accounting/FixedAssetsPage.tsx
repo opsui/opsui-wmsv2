@@ -467,7 +467,11 @@ function FixedAssetsPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; assetId: string; assetName: string }>({
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    assetId: string;
+    assetName: string;
+  }>({
     show: false,
     assetId: '',
     assetName: '',
@@ -1018,7 +1022,9 @@ function FixedAssetsPage() {
                                   assetNumber: asset.assetNumber,
                                   category: asset.assetCategory || '',
                                   purchaseCost: asset.purchaseCost.toString(),
-                                  purchaseDate: new Date(asset.purchaseDate).toISOString().split('T')[0],
+                                  purchaseDate: new Date(asset.purchaseDate)
+                                    .toISOString()
+                                    .split('T')[0],
                                   usefulLife: asset.usefulLife.toString(),
                                   salvageValue: asset.salvageValue.toString(),
                                 });

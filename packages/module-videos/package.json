@@ -1,0 +1,28 @@
+{
+  "name": "@opsui/module-videos",
+  "version": "1.0.0",
+  "description": "Module overview videos for OpsUI WMS",
+  "scripts": {
+    "start": "remotion studio src/index.ts",
+    "build": "remotion render WMS-Modules/Dashboard out/videos/Dashboard.mp4 src/index.ts",
+    "render:all": "remotion render all out/videos src/index.ts"
+  },
+  "keywords": [
+    "remotion",
+    "video",
+    "wms",
+    "opsui"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "typescript": "^5.0.0"
+  }
+}

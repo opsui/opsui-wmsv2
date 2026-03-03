@@ -305,7 +305,8 @@ export class NotificationService {
     preferences: Partial<NotificationPreference>
   ): Promise<void> {
     // This is a stub - implement full logic when needed
-    void userId; void preferences;
+    void userId;
+    void preferences;
   }
 
   /**
