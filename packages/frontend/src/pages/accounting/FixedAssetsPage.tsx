@@ -376,72 +376,29 @@ const pageStyles = `
 // API FUNCTIONS
 // ============================================================================
 
-const API_BASE = '/api/v1/accounting';
+import { apiClient } from '@/lib/api-client';
 
-async function fetchAssets(token: string | null): Promise<FixedAsset[]> {
-  if (!token) {
-    throw new Error('No authentication token');
-  }
-  const response = await fetch(`${API_BASE}/asset-register`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch assets: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.assets || [];
+async function fetchAssets(): Promise<FixedAsset[]> {
+  const response = await apiClient.get('/accounting/fixed-assets');
+  return response.data.assets || [];
 }
 
-async function createAsset(token: string | null, assetData: FormData): Promise<FixedAsset> {
-  if (!token) {
-    throw new Error('No authentication token');
-  }
-  const response = await fetch(`${API_BASE}/fixed-assets`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      assetNumber: assetData.assetNumber,
-      assetName: assetData.assetName,
-      assetCategory: assetData.category,
-      purchaseDate: assetData.purchaseDate,
-      purchaseCost: parseFloat(assetData.purchaseCost),
-      salvageValue: parseFloat(assetData.salvageValue || '0'),
-      usefulLife: parseInt(assetData.usefulLife),
-      depreciationMethod: 'STRAIGHT_LINE',
-    }),
+async function createAsset(assetData: FormData): Promise<FixedAsset> {
+  const response = await apiClient.post('/accounting/fixed-assets', {
+    assetNumber: assetData.assetNumber,
+    assetName: assetData.assetName,
+    assetCategory: assetData.category,
+    purchaseDate: assetData.purchaseDate,
+    purchaseCost: parseFloat(assetData.purchaseCost),
+    salvageValue: parseFloat(assetData.salvageValue || '0'),
+    usefulLife: parseInt(assetData.usefulLife),
+    depreciationMethod: 'STRAIGHT_LINE',
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `Failed to create asset: ${response.statusText}`);
-  }
-
-  return response.json();
+  return response.data;
 }
 
-async function deleteAsset(token: string | null, assetId: string): Promise<void> {
-  if (!token) {
-    throw new Error('No authentication token');
-  }
-  const response = await fetch(`${API_BASE}/fixed-assets/${assetId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to delete asset: ${response.statusText}`);
-  }
+async function deleteAsset(assetId: string): Promise<void> {
+  await apiClient.delete(`/accounting/fixed-assets/${assetId}`);
 }
 
 // ============================================================================
@@ -489,7 +446,7 @@ function FixedAssetsPage() {
   const loadAssets = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await fetchAssets(accessToken);
+      const data = await fetchAssets();
       setAssets(data);
     } catch (error) {
       console.error('Failed to load assets:', error);
@@ -499,7 +456,7 @@ function FixedAssetsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -621,7 +578,7 @@ function FixedAssetsPage() {
 
     setIsSubmitting(true);
     try {
-      const newAsset = await createAsset(accessToken, formData);
+      const newAsset = await createAsset(formData);
       setAssets(prev => [...prev, newAsset]);
       setShowAddModal(false);
       setFormData(initialFormData);
@@ -641,7 +598,7 @@ function FixedAssetsPage() {
 
     setIsSubmitting(true);
     try {
-      await deleteAsset(accessToken, deleteConfirm.assetId);
+      await deleteAsset(deleteConfirm.assetId);
       setAssets(prev => prev.filter(a => a.assetId !== deleteConfirm.assetId));
       setDeleteConfirm({ show: false, assetId: '', assetName: '' });
       showToast('success', 'Asset deleted successfully!');
