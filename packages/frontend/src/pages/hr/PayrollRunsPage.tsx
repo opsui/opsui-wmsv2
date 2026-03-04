@@ -331,22 +331,37 @@ export default function PayrollRunsPage() {
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div>
-                <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-3">
-                  Payroll Runs
-                </h1>
-                <p className="text-lg text-slate-400 font-light max-w-xl">
-                  A chronological view of all processed payroll runs.
-                </p>
+            <div className="flex flex-col mobile:flex-row mobile:items-end mobile:justify-between gap-4">
+              <div className="flex flex-col mobile:items-center gap-3 mobile:gap-4 w-full mobile:w-auto">
+                <div>
+                  <h1 className="text-4xl mobile:text-5xl font-extralight text-white tracking-tight mb-3">
+                    Payroll Runs
+                  </h1>
+                  <p className="text-lg text-slate-400 font-light max-w-xl">
+                    A chronological view of all processed payroll runs.
+                  </p>
+                </div>
+
+                {/* Mobile: Button below title, Desktop: separate */}
+                <div className="mobile:hidden w-full">
+                  <Link to="/hr/payroll/process" className="w-full inline-block">
+                    <Button className="h-12 px-4 sm:px-6 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white font-medium shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30 whitespace-nowrap text-sm sm:text-base">
+                      <PlusIcon className="h-5 w-5 mr-2" />
+                      New Pay Run
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
-              <Link to="/hr/payroll/process">
-                <Button className="h-12 px-6 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white font-medium shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30">
-                  <PlusIcon className="h-5 w-5 mr-2" />
-                  New Pay Run
-                </Button>
-              </Link>
+              {/* Desktop: Button on the right */}
+              <div className="hidden mobile:block">
+                <Link to="/hr/payroll/process">
+                  <Button className="h-12 px-6 bg-gradient-to-r from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500 text-white font-medium shadow-lg shadow-purple-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30 whitespace-nowrap">
+                    <PlusIcon className="h-5 w-5 mr-2" />
+                    New Pay Run
+                  </Button>
+                </Link>
+              </div>
             </div>
           </header>
 

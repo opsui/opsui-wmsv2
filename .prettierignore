@@ -1,0 +1,23 @@
+# Build artifacts
+packages/*/dist/
+node_modules/
+*.lock
+
+# Generated and cache files
+.wms-cache/
+.claude/
+.ralph/
+ai-loop/
+test-snapshots/
+playwright-report/
+
+# E2E tests with template syntax issues
+e2e/
+
+# Test results
+coverage/
+*.log
+
+# Large documentation files that don't need formatting
+CLAUDE_*.md
+*.md

@@ -22,6 +22,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   isLoading?: boolean;
+  /** Enable responsive sizing (scales with viewport) */
+  responsive?: boolean;
 }
 
 // ============================================================================
@@ -35,6 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       size = 'md',
       fullWidth = false,
       isLoading = false,
+      responsive = false,
       disabled,
       className,
       children,
@@ -71,6 +74,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       sm: 'h-9 px-4 text-sm',
       md: 'h-11 px-6 text-base',
       lg: 'h-13 px-8 text-lg',
+      // Responsive variants that scale with viewport
+      'sm-responsive': 'h-9 sm:h-10 px-3 sm:px-4 text-sm sm:text-base',
+      'md-responsive': 'h-10 sm:h-11 md:h-12 px-4 sm:px-6 text-base sm:text-lg',
+      'lg-responsive':
+        'h-11 sm:h-12 md:h-14 lg:h-16 px-5 sm:px-7 lg:px-9 text-base sm:text-lg lg:text-xl',
     };
 
     return (
@@ -80,8 +88,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           baseStyles,
           variantClasses[variant],
-          sizeStyles[size],
+          responsive ? sizeStyles[`${size}-responsive`] : sizeStyles[size],
           fullWidth && 'w-full',
+          // Touch-friendly minimums
+          'min-w-[44px] min-h-[44px]',
           className
         )}
         style={{

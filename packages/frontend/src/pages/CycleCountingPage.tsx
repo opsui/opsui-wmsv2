@@ -714,7 +714,7 @@ export function CycleCountingPage() {
               {/* Filters */}
               <div className="glass-card rounded-lg p-4">
                 <div className="flex flex-wrap gap-4">
-                  <div className="relative flex-1 min-w-[200px]">
+                  <div className="relative flex-1 min-w-[180px] mobile:min-w-0">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="text"

@@ -419,7 +419,7 @@ function ScanTypeSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-44 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-44 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
           <div className="py-2">
             {SCAN_TYPE_OPTIONS.map(option => {
               const isActive = option.value === value;
@@ -491,7 +491,7 @@ function TimePeriodSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-44 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-44 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
           <div className="py-2">
             {TIME_PERIOD_OPTIONS.map(option => {
               const isActive = option.value === value;

@@ -48,8 +48,14 @@ import {
   Skeleton,
   TableSkeleton,
   Breadcrumb,
+  MobileTable,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
 } from '@/components/shared';
 import { useToast } from '@/components/shared';
+import { ResponsiveContainer, ResponsiveGrid } from '@/components/shared/ResponsiveContainer';
 import { useAuthStore } from '@/stores';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { useInventoryUpdates, useNotifications } from '@/hooks/useWebSocket';
@@ -656,23 +662,25 @@ function DashboardTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
-          <MetricCardSkeleton />
+      <ResponsiveContainer variant="fluid" padding="md">
+        <div className="space-y-responsive">
+          <ResponsiveGrid columns={4} minColumnWidth={200} gap="md">
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+          </ResponsiveGrid>
+          <Card
+            variant="glass"
+            className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+          >
+            <CardContent className="p-6">
+              <Skeleton variant="text" className="w-48 h-6 mb-4" />
+              <TableSkeleton rows={5} columns={6} />
+            </CardContent>
+          </Card>
         </div>
-        <Card
-          variant="glass"
-          className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-        >
-          <CardContent className="p-6">
-            <Skeleton variant="text" className="w-48 h-6 mb-4" />
-            <TableSkeleton rows={5} columns={6} />
-          </CardContent>
-        </Card>
-      </div>
+      </ResponsiveContainer>
     );
   }
 
@@ -695,144 +703,47 @@ function DashboardTab() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total SKUs"
-          value={dashboard.totalSKUs}
-          icon={CubeIcon}
-          color="primary"
-          index={0}
-        />
-        <MetricCard
-          title="Total Bins"
-          value={dashboard.totalBins}
-          icon={ClipboardDocumentListIcon}
-          color="success"
-          index={1}
-        />
-        <MetricCard
-          title="Low Stock Items"
-          value={dashboard.lowStockItems}
-          icon={ExclamationTriangleIcon}
-          color={dashboard.lowStockItems > 0 ? 'warning' : 'success'}
-          index={2}
-        />
-        <MetricCard
-          title="Out of Stock"
-          value={dashboard.outOfStockItems}
-          icon={XMarkIcon}
-          color={dashboard.outOfStockItems > 0 ? 'error' : 'success'}
-          index={3}
-        />
-      </div>
+    <ResponsiveContainer variant="fluid" padding="md">
+      <div className="space-y-responsive">
+        {/* Key Metrics */}
+        <ResponsiveGrid columns={4} minColumnWidth={200} gap="md">
+          <MetricCard
+            title="Total SKUs"
+            value={dashboard.totalSKUs}
+            icon={CubeIcon}
+            color="primary"
+            index={0}
+          />
+          <MetricCard
+            title="Total Bins"
+            value={dashboard.totalBins}
+            icon={ClipboardDocumentListIcon}
+            color="success"
+            index={1}
+          />
+          <MetricCard
+            title="Low Stock Items"
+            value={dashboard.lowStockItems}
+            icon={ExclamationTriangleIcon}
+            color={dashboard.lowStockItems > 0 ? 'warning' : 'success'}
+            index={2}
+          />
+          <MetricCard
+            title="Out of Stock"
+            value={dashboard.outOfStockItems}
+            icon={XMarkIcon}
+            color={dashboard.outOfStockItems > 0 ? 'error' : 'success'}
+            index={3}
+          />
+        </ResponsiveGrid>
 
-      {/* Recent Transactions */}
-      <Card
-        variant="glass"
-        className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-      >
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-white/10">
-                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                    Time
-                  </th>
-                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                    Type
-                  </th>
-                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                    SKU
-                  </th>
-                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                    Quantity
-                  </th>
-                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                    Location
-                  </th>
-                  <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                    Reason
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {dashboard.recentTransactions?.map(
-                  (txn: {
-                    transactionId: string;
-                    timestamp: string;
-                    type: string;
-                    sku: string;
-                    quantity: number;
-                    binLocation?: string;
-                    reason: string;
-                  }) => (
-                    <tr
-                      key={txn.transactionId}
-                      className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
-                    >
-                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {new Date(txn.timestamp).toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            txn.type === 'RECEIPT'
-                              ? 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-400'
-                              : txn.type === 'DEDUCTION'
-                                ? 'bg-red-100 dark:bg-error-500/20 text-red-600 dark:text-error-400'
-                                : txn.type === 'ADJUSTMENT'
-                                  ? 'bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-400'
-                                  : 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
-                          }`}
-                        >
-                          {txn.type}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">
-                        {txn.sku}
-                      </td>
-                      <td
-                        className={`py-3 px-4 font-medium ${
-                          txn.quantity > 0
-                            ? 'text-green-600 dark:text-success-400'
-                            : 'text-red-600 dark:text-error-400'
-                        }`}
-                      >
-                        {txn.quantity > 0 ? '+' : ''}
-                        {txn.quantity}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                        {txn.binLocation || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">
-                        {txn.reason}
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Low Stock Alert */}
-      {lowStock && lowStock.items.length > 0 && (
+        {/* Recent Transactions */}
         <Card
           variant="glass"
-          className="border border-amber-200 dark:border-warning-500/20 bg-white dark:bg-gray-800/50"
+          className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
         >
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 dark:text-warning-400" />
-              Low Stock Alert
-            </CardTitle>
+            <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -840,25 +751,126 @@ function DashboardTab() {
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-white/10">
                     <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                      Time
+                    </th>
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                      Type
+                    </th>
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
                       SKU
                     </th>
                     <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                      Name
+                      Quantity
                     </th>
                     <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
                       Location
                     </th>
                     <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
-                      Available
+                      Reason
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {lowStock.items
-                    .slice(0, 10)
-                    .map(
+                  {dashboard.recentTransactions?.map(
+                    (txn: {
+                      transactionId: string;
+                      timestamp: string;
+                      type: string;
+                      sku: string;
+                      quantity: number;
+                      binLocation?: string;
+                      reason: string;
+                    }) => (
+                      <tr
+                        key={txn.transactionId}
+                        className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
+                      >
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                          {new Date(txn.timestamp).toLocaleString()}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              txn.type === 'RECEIPT'
+                                ? 'bg-green-100 dark:bg-success-500/20 text-green-600 dark:text-success-400'
+                                : txn.type === 'DEDUCTION'
+                                  ? 'bg-red-100 dark:bg-error-500/20 text-red-600 dark:text-error-400'
+                                  : txn.type === 'ADJUSTMENT'
+                                    ? 'bg-amber-100 dark:bg-warning-500/20 text-amber-600 dark:text-warning-400'
+                                    : 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
+                            }`}
+                          >
+                            {txn.type}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">
+                          {txn.sku}
+                        </td>
+                        <td
+                          className={`py-3 px-4 font-medium ${
+                            txn.quantity > 0
+                              ? 'text-green-600 dark:text-success-400'
+                              : 'text-red-600 dark:text-error-400'
+                          }`}
+                        >
+                          {txn.quantity > 0 ? '+' : ''}
+                          {txn.quantity}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                          {txn.binLocation || '-'}
+                        </td>
+                        <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">
+                          {txn.reason}
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Low Stock Alert */}
+        {lowStock && lowStock.items.length > 0 && (
+          <Card
+            variant="glass"
+            className="border border-amber-200 dark:border-warning-500/20 bg-white dark:bg-gray-800/50"
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 dark:text-warning-400" />
+                Low Stock Alert
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-white/10">
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                        SKU
+                      </th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                        Name
+                      </th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                        Location
+                      </th>
+                      <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                        Available
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lowStock.items.slice(0, 10).map(
                       (
-                        item: { sku: string; name: string; binLocation: string; available: number },
+                        item: {
+                          sku: string;
+                          name: string;
+                          binLocation: string;
+                          available: number;
+                        },
                         index: number
                       ) => (
                         <tr
@@ -880,13 +892,14 @@ function DashboardTab() {
                         </tr>
                       )
                     )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </ResponsiveContainer>
   );
 }
 
@@ -915,7 +928,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
       >
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Product Name
               </label>
@@ -933,7 +946,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                 />
               </div>
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 SKU
               </label>
@@ -951,7 +964,7 @@ function InventoryTab({ initialSku }: InventoryTabProps) {
                 />
               </div>
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Bin Location
               </label>
@@ -1176,7 +1189,7 @@ function TransactionsTab() {
       >
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 SKU
               </label>
@@ -1191,7 +1204,7 @@ function TransactionsTab() {
                 placeholder="Enter SKU..."
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Bin Location
               </label>
@@ -1206,7 +1219,7 @@ function TransactionsTab() {
                 placeholder="e.g., A-01"
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Type
               </label>
@@ -1488,20 +1501,22 @@ function AnalyticsTab() {
   const { data: binUtilizationData, isLoading: binLoading } = useBinUtilization();
 
   return (
-    <div className="space-y-6">
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <InventoryAgingChart data={agingData?.agingBuckets} isLoading={agingLoading} />
-        <TurnoverChart data={turnoverData?.items} isLoading={turnoverLoading} />
-      </div>
+    <ResponsiveContainer variant="fluid" padding="md">
+      <div className="space-y-responsive">
+        {/* Charts Row */}
+        <ResponsiveGrid columns={2} minColumnWidth={350} gap="md">
+          <InventoryAgingChart data={agingData?.agingBuckets} isLoading={agingLoading} />
+          <TurnoverChart data={turnoverData?.items} isLoading={turnoverLoading} />
+        </ResponsiveGrid>
 
-      {/* Bin Utilization Heatmap */}
-      <BinUtilizationHeatmap
-        data={binUtilizationData?.bins}
-        zoneSummary={binUtilizationData?.zoneSummary}
-        isLoading={binLoading}
-      />
-    </div>
+        {/* Bin Utilization Heatmap */}
+        <BinUtilizationHeatmap
+          data={binUtilizationData?.bins}
+          zoneSummary={binUtilizationData?.zoneSummary}
+          isLoading={binLoading}
+        />
+      </div>
+    </ResponsiveContainer>
   );
 }
 
@@ -1526,7 +1541,7 @@ function LotsTab() {
       >
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Search by SKU
               </label>
@@ -1538,7 +1553,7 @@ function LotsTab() {
                 placeholder="Enter SKU to view lots..."
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Search by Lot Number
               </label>
@@ -1550,7 +1565,7 @@ function LotsTab() {
                 placeholder="Enter lot number..."
               />
             </div>
-            <div className="flex-1 min-w-[150px]">
+            <div className="flex-1 min-w-[120px] mobile:min-w-0">
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
                 Expiring Within
               </label>
@@ -1770,124 +1785,126 @@ export function StockControlPage() {
     ];
 
   return (
-    <div className="min-h-screen relative stock-control-grain">
-      {/* Atmospheric background elements - industrial blue theme */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/6 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-cyan-500/4 rounded-full blur-3xl" />
-        {/* Industrial grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px),
+    <ResponsiveContainer variant="fluid" padding="lg">
+      <div className="min-h-screen relative stock-control-grain">
+        {/* Atmospheric background elements - industrial blue theme */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-600/6 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-cyan-500/4 rounded-full blur-3xl" />
+          {/* Industrial grid pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.015]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(59, 130, 246, 0.5) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
-          }}
-        />
-      </div>
+              backgroundSize: '60px 60px',
+            }}
+          />
+        </div>
 
-      <Header />
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb />
+        <Header />
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb />
 
-        {/* Page Header - Asymmetric Industrial Design */}
-        <div className="inventory-stagger-in">
-          <div className="flex flex-col md:flex-row md:items-end gap-6">
-            {/* Left side - Icon and Title */}
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                {/* Outer ring animation */}
-                <div className="absolute inset-0 bg-blue-500/20 rounded-2xl animate-pulse" />
-                {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-blue-500/25 to-blue-600/15 rounded-2xl border border-blue-500/40 shadow-lg shadow-blue-500/20 backdrop-blur-sm">
-                  <CubeIcon className="h-9 w-9 text-blue-400" />
+          {/* Page Header - Asymmetric Industrial Design */}
+          <div className="inventory-stagger-in">
+            <div className="flex flex-col md:flex-row md:items-end gap-6">
+              {/* Left side - Icon and Title */}
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  {/* Outer ring animation */}
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-2xl animate-pulse" />
+                  {/* Main icon container */}
+                  <div className="relative p-4 bg-gradient-to-br from-blue-500/25 to-blue-600/15 rounded-2xl border border-blue-500/40 shadow-lg shadow-blue-500/20 backdrop-blur-sm">
+                    <CubeIcon className="h-9 w-9 text-blue-400" />
+                  </div>
+                  {/* Corner accent */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
                 </div>
-                {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
+                <div>
+                  <h1 className="stock-control-title text-3xl md:text-4xl text-gray-900 dark:text-white">
+                    Stock Control
+                  </h1>
+                  <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                    Inventory Command Center
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="stock-control-title text-3xl md:text-4xl text-gray-900 dark:text-white">
-                  Stock Control
-                </h1>
-                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
-                  Inventory Command Center
-                </p>
-              </div>
-            </div>
 
-            {/* Right side - Live indicator */}
-            <div className="md:ml-auto flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
-              <div className="relative">
-                <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
-                <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+              {/* Right side - Live indicator */}
+              <div className="md:ml-auto flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+                  <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Live Inventory Data
+                </span>
               </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                Live Inventory Data
-              </span>
             </div>
           </div>
-        </div>
 
-        {/* Quick Search */}
-        <Card
-          variant="glass"
-          className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-        >
-          <CardContent className="p-4">
-            <SearchInput
-              onSelect={sku => {
-                setQuickSearchSku(sku);
-                setActiveTab('inventory');
-              }}
-              placeholder="Quick product search (SKU or name)..."
-            />
-          </CardContent>
-        </Card>
+          {/* Quick Search */}
+          <Card
+            variant="glass"
+            className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+          >
+            <CardContent className="p-4">
+              <SearchInput
+                onSelect={sku => {
+                  setQuickSearchSku(sku);
+                  setActiveTab('inventory');
+                }}
+                placeholder="Quick product search (SKU or name)..."
+              />
+            </CardContent>
+          </Card>
 
-        {/* Tabs */}
-        <Card
-          variant="glass"
-          className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-        >
-          <CardContent className="p-2 relative">
-            {/* Scroll container with fade indicator */}
-            <div className="relative">
-              {/* Right fade indicator - always visible on mobile to indicate scrollability */}
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-800 to-transparent z-10 pointer-events-none sm:hidden" />
+          {/* Tabs */}
+          <Card
+            variant="glass"
+            className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+          >
+            <CardContent className="p-2 relative">
+              {/* Scroll container with fade indicator */}
+              <div className="relative">
+                {/* Right fade indicator - always visible on mobile to indicate scrollability */}
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-800 to-transparent z-10 pointer-events-none sm:hidden" />
 
-              <div className="flex gap-1 sm:gap-2 overflow-x-auto -mx-2 px-2 scrollbar-hide">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap flex-shrink-0 text-sm ${
-                      activeTab === tab.key
-                        ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
-                    }`}
-                  >
-                    <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                    {tab.label}
-                  </button>
-                ))}
+                <div className="flex gap-1 sm:gap-2 overflow-x-auto -mx-2 px-2 scrollbar-hide">
+                  {tabs.map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap flex-shrink-0 text-sm ${
+                        activeTab === tab.key
+                          ? 'bg-blue-100 dark:bg-primary-500/20 text-blue-600 dark:text-primary-400'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <tab.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Tab Content */}
-        <div className="animate-in">
-          {activeTab === 'dashboard' && <DashboardTab />}
-          {activeTab === 'inventory' && <InventoryTab initialSku={quickSearchSku} />}
-          {activeTab === 'transactions' && <TransactionsTab />}
-          {activeTab === 'quick-actions' && <QuickActionsTab />}
-          {activeTab === 'analytics' && <AnalyticsTab />}
-          {activeTab === 'lots' && <LotsTab />}
-        </div>
-      </main>
-    </div>
+          {/* Tab Content */}
+          <div className="animate-in">
+            {activeTab === 'dashboard' && <DashboardTab />}
+            {activeTab === 'inventory' && <InventoryTab initialSku={quickSearchSku} />}
+            {activeTab === 'transactions' && <TransactionsTab />}
+            {activeTab === 'quick-actions' && <QuickActionsTab />}
+            {activeTab === 'analytics' && <AnalyticsTab />}
+            {activeTab === 'lots' && <LotsTab />}
+          </div>
+        </main>
+      </div>
+    </ResponsiveContainer>
   );
 }

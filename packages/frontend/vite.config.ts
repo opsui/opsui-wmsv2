@@ -57,7 +57,8 @@ export default defineConfig(({ mode }) => {
         overlay: true, // Show error overlay
         // When accessing from a remote browser, 'localhost' resolves to the client machine.
         // Use the server's LAN IP so the browser's HMR WebSocket reaches the dev server.
-        host: '192.168.1.13',
+        // Use localhost for development, or set VITE_HMR_HOST env var for LAN access
+        host: process.env.VITE_HMR_HOST || 'localhost',
         port: 5174,
         protocol: 'ws',
       },

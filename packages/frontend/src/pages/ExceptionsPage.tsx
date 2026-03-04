@@ -1171,8 +1171,8 @@ export function ExceptionsPage() {
                     {summary && summary.open > 0 && (
                       <div className="exception-status-dot exception-status-dot-open pulse-dot flex-shrink-0" />
                     )}
-                    <h1 className="text-xl sm:text-4xl md:text-5xl text-white exception-display-font leading-none">
-                      EXCEPTION<span className="text-red-400">.</span>CONTROL
+                    <h1 className="text-xl sm:text-4xl md:text-5xl text-white exception-display-font leading-tight whitespace-normal break-normal min-w-0">
+                      EXCEPTION<span className="text-red-400"> </span>CONTROL
                     </h1>
                   </div>
                   <p className="text-gray-400 exception-body-font text-sm sm:text-lg">
@@ -1218,14 +1218,14 @@ export function ExceptionsPage() {
                         <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500 rounded-full blur-3xl" />
                       </div>
 
-                      <div className="relative">
+                      <div className="relative min-w-0">
                         <div className="flex items-center gap-2 mb-4">
                           <div className="exception-status-dot exception-status-dot-open pulse-dot" />
-                          <p className="text-xs font-bold uppercase tracking-widest text-red-400 exception-mono-font">
+                          <p className="text-xs font-bold uppercase tracking-wider sm:tracking-widest text-red-400 exception-mono-font truncate">
                             CRITICAL / OPEN
                           </p>
                         </div>
-                        <p className="text-6xl sm:text-7xl md:text-8xl font-black text-white exception-display-font leading-none mb-2">
+                        <p className="text-6xl sm:text-7xl md:text-8xl font-black text-white exception-display-font leading-tight mb-2 overflow-hidden text-ellipsis">
                           {summary.open}
                         </p>
                         <p className="text-gray-500 exception-body-font">
@@ -1442,25 +1442,25 @@ export function ExceptionsPage() {
                           </div>
 
                           {/* Details - Mobile 2x2 Grid, Desktop 4 Column Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pl-3">
-                            <div>
-                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pl-3 min-w-0">
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wide sm:tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 Order
                               </p>
                               <p className="text-sm font-semibold text-white exception-mono-font truncate">
                                 {exception.orderId}
                               </p>
                             </div>
-                            <div>
-                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wide sm:tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 SKU
                               </p>
                               <p className="text-sm font-semibold text-white exception-mono-font truncate">
                                 {exception.sku}
                               </p>
                             </div>
-                            <div>
-                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wide sm:tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 Qty
                               </p>
                               <div className="text-sm text-white exception-quantity">
@@ -1485,11 +1485,11 @@ export function ExceptionsPage() {
                                 )}
                               </div>
                             </div>
-                            <div>
-                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-[0.65rem] uppercase tracking-wide sm:tracking-wider text-gray-500 exception-mono-font mb-1.5 sm:mb-1">
                                 Reported
                               </p>
-                              <p className="text-sm text-gray-400 exception-mono-font">
+                              <p className="text-sm text-gray-400 exception-mono-font truncate">
                                 {new Date(exception.reportedAt).toLocaleDateString()}
                               </p>
                             </div>
@@ -1504,11 +1504,11 @@ export function ExceptionsPage() {
                           )}
 
                           {exception.resolution && (
-                            <div className="mt-4 ml-3 flex flex-wrap items-center gap-2">
-                              <span className="text-[0.65rem] uppercase tracking-wider text-gray-600 exception-mono-font">
+                            <div className="mt-4 ml-3 flex flex-wrap items-center gap-2 min-w-0">
+                              <span className="text-[0.65rem] uppercase tracking-wide sm:tracking-wider text-gray-600 exception-mono-font">
                                 Resolution:
                               </span>
-                              <span className="text-xs font-semibold text-emerald-400 exception-mono-font">
+                              <span className="text-xs font-semibold text-emerald-400 exception-mono-font truncate">
                                 {exception.resolution.replace(/_/g, ' ')}
                               </span>
                             </div>
@@ -1537,10 +1537,10 @@ export function ExceptionsPage() {
                                   setNewQuantity(0);
                                   setNewBinLocation('');
                                 }}
-                                className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn sm:!min-h-[36px] sm:!py-2 sm:!text-sm btn-mobile-active"
+                                className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn sm:!min-h-[36px] sm:!py-2 sm:!text-sm btn-mobile-active whitespace-nowrap"
                               >
-                                Resolve Exception
-                                <ChevronRightIcon className="h-4 w-4 ml-1" />
+                                <span className="whitespace-nowrap">Resolve Exception</span>
+                                <ChevronRightIcon className="h-4 w-4 ml-1 flex-shrink-0" />
                               </Button>
                             </div>
                           )}
@@ -1595,12 +1595,14 @@ export function ExceptionsPage() {
               setNewQuantity(0);
               setNewBinLocation('');
             }}
-            className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs sm:text-sm tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-bold uppercase text-xs sm:text-sm tracking-wider exception-mono-font shadow-lg shadow-red-500/25 exception-mobile-btn flex items-center justify-center gap-2 whitespace-nowrap overflow-hidden"
           >
             <span className="truncate">Resolve Exception</span>
             <span className="flex items-center gap-1 flex-shrink-0">
-              <span className="bg-white/20 px-2 py-0.5 rounded text-xs">({openCount})</span>
-              <ChevronRightIcon className="h-4 w-4" />
+              <span className="bg-white/20 px-2 py-0.5 rounded text-xs whitespace-nowrap">
+                ({openCount})
+              </span>
+              <ChevronRightIcon className="h-4 w-4 flex-shrink-0" />
             </span>
           </Button>
         </div>

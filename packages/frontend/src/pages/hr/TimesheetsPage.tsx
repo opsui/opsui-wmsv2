@@ -62,29 +62,56 @@ export default function TimesheetsPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Page Header - Time Flow Design */}
         <div className="mb-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                {/* Outer ring animation */}
-                <div className="absolute inset-0 bg-purple-500/20 rounded-2xl animate-pulse" />
-                {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-purple-500/25 to-violet-500/15 rounded-2xl border border-purple-500/40 shadow-lg shadow-purple-500/20 backdrop-blur-sm">
-                  <CalendarDaysIcon className="h-9 w-9 text-purple-400" />
+          <div className="flex flex-col mobile:flex-row mobile:items-end justify-between gap-6">
+            <div className="flex flex-col mobile:items-center gap-5 mobile:gap-5 w-full mobile:w-auto">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  {/* Outer ring animation */}
+                  <div className="absolute inset-0 bg-purple-500/20 rounded-2xl animate-pulse" />
+                  {/* Main icon container */}
+                  <div className="relative p-4 bg-gradient-to-br from-purple-500/25 to-violet-500/15 rounded-2xl border border-purple-500/40 shadow-lg shadow-purple-500/20 backdrop-blur-sm">
+                    <CalendarDaysIcon className="h-9 w-9 text-purple-400" />
+                  </div>
+                  {/* Corner accent */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
                 </div>
-                {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
+                <div>
+                  <h1 className="text-3xl mobile:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Timesheets
+                  </h1>
+                  <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide">
+                    Track time with precision
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-                  Timesheets
-                </h1>
-                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide">
-                  Track time with precision
-                </p>
+
+              {/* Mobile: Pending indicator and button below title, Desktop: separate */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mobile:hidden w-full">
+                {/* Pending indicator */}
+                {pendingTimesheets.length > 0 && (
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-amber-500/10 to-transparent rounded-xl border border-amber-500/20">
+                    <div className="relative">
+                      <div className="w-2.5 h-2.5 bg-amber-400 rounded-full" />
+                      <div className="absolute inset-0 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      {pendingTimesheets.length} Pending
+                    </span>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => navigate('/hr/timesheets/new')}
+                  className="whitespace-nowrap bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-lg shadow-purple-500/20"
+                >
+                  <ClockIcon className="h-5 w-5 mr-2" />
+                  New Timesheet
+                </Button>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Desktop: Pending indicator and button on the right */}
+            <div className="hidden mobile:flex items-center gap-4">
               {/* Pending indicator */}
               {pendingTimesheets.length > 0 && (
                 <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-amber-500/10 to-transparent rounded-xl border border-amber-500/20">
@@ -113,7 +140,10 @@ export default function TimesheetsPage() {
         <div className="mb-8 border-b border-gray-200 dark:border-gray-800">
           <div className="flex gap-1">
             <button
-              onClick={() => setActiveTab('pending')}
+              onClick={e => {
+                e.stopPropagation();
+                setActiveTab('pending');
+              }}
               className={`relative px-5 py-3 font-medium text-sm transition-all rounded-t-lg ${
                 activeTab === 'pending'
                   ? 'text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900/50 border-b-2 border-purple-500'
@@ -130,7 +160,10 @@ export default function TimesheetsPage() {
               </span>
             </button>
             <button
-              onClick={() => setActiveTab('my')}
+              onClick={e => {
+                e.stopPropagation();
+                setActiveTab('my');
+              }}
               className={`relative px-5 py-3 font-medium text-sm transition-all rounded-t-lg ${
                 activeTab === 'my'
                   ? 'text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900/50 border-b-2 border-purple-500'
@@ -140,7 +173,10 @@ export default function TimesheetsPage() {
               My Timesheets
             </button>
             <button
-              onClick={() => setActiveTab('all')}
+              onClick={e => {
+                e.stopPropagation();
+                setActiveTab('all');
+              }}
               className={`relative px-5 py-3 font-medium text-sm transition-all rounded-t-lg ${
                 activeTab === 'all'
                   ? 'text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900/50 border-b-2 border-purple-500'

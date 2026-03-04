@@ -25,6 +25,7 @@ import {
   UndoPickModal,
   useToast,
 } from '@/components/shared';
+import { ResponsiveContainer } from '@/components/shared/ResponsiveContainer';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
 import { apiClient } from '@/lib/api-client';
@@ -980,1041 +981,1064 @@ export function PickingPage() {
       />
 
       <Header />
-      <main className="relative z-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb />
+      <ResponsiveContainer variant="fluid" padding="lg">
+        <main className="relative z-10 space-y-responsive">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb />
 
-        {/* View Mode Banner */}
-        {isViewMode && (
-          <div className="picking-card rounded-xl p-4 sm:p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center flex-shrink-0">
-              <ExclamationCircleIcon className="h-5 w-5 text-primary-400" />
+          {/* View Mode Banner */}
+          {isViewMode && (
+            <div className="picking-card rounded-xl p-4 sm:p-5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center flex-shrink-0">
+                <ExclamationCircleIcon className="h-5 w-5 text-primary-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="picking-title text-white">
+                  {order.status === 'PICKED' || order.status === 'SHIPPED'
+                    ? 'Viewing completed order'
+                    : "Viewing this picker's work in real-time"}
+                </p>
+                <p className="picking-subtitle text-gray-400 text-sm mt-0.5">
+                  You are in view-only mode. Interactions are disabled.
+                </p>
+              </div>
             </div>
+          )}
+
+          {/* Main Content Grid - Progress on left, Current Task on right */}
+          <div className="lg:flex lg:gap-6">
+            {/* Progress Sidebar - Left side - Sticky on desktop */}
+            <div className="lg:w-1/4 lg:flex-shrink-0 mb-6 lg:mb-0">
+              <div className="picking-card rounded-2xl lg:sticky lg:top-20 industrial-corners">
+                <div className="p-6">
+                  {/* Order Info */}
+                  <div className="mb-6 pb-6 border-b border-white/[0.08]">
+                    <h1 className="picking-title text-xl text-white truncate">{order.orderId}</h1>
+                    <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
+                      {order.customerName}
+                    </p>
+                  </div>
+
+                  {/* Progress Ring */}
+                  <div className="flex justify-center mb-6">
+                    <div className="relative picking-reticle rounded-full">
+                      <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+                        {/* Background circle */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          stroke="rgba(168, 85, 247, 0.2)"
+                          strokeWidth="6"
+                          fill="none"
+                        />
+                        {/* Progress circle */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="45"
+                          stroke="url(#progress-gradient)"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={strokeDashoffset}
+                          className="transition-all duration-700 ease-out"
+                        />
+                        <defs>
+                          <linearGradient
+                            id="progress-gradient"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#a855f7" />
+                            <stop offset="100%" stopColor="#c084fc" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="hero-number text-3xl">{order.progress}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-6">
+                    <div className="flex justify-between items-center">
+                      <span className="picking-subtitle text-gray-400 text-sm">Completed</span>
+                      <span className="hero-number text-lg text-success-400">{completedTasks}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="picking-subtitle text-gray-400 text-sm">Remaining</span>
+                      <span className="hero-number text-lg text-warning-400">
+                        {totalTasks - completedTasks}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="picking-subtitle text-gray-400 text-sm">Total</span>
+                      <span className="hero-number text-lg text-white">{totalTasks}</span>
+                    </div>
+                  </div>
+
+                  {isOrderComplete && (
+                    <Button
+                      size="lg"
+                      variant="success"
+                      onClick={handleCompleteOrder}
+                      isLoading={completeMutation.isPending}
+                      disabled={isViewMode ? true : undefined}
+                      className="w-full action-button-enhanced touch-target"
+                    >
+                      Complete Order
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Current Task - Right side */}
             <div className="flex-1 min-w-0">
-              <p className="picking-title text-white">
-                {order.status === 'PICKED' || order.status === 'SHIPPED'
-                  ? 'Viewing completed order'
-                  : "Viewing this picker's work in real-time"}
-              </p>
-              <p className="picking-subtitle text-gray-400 text-sm mt-0.5">
-                You are in view-only mode. Interactions are disabled.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content Grid - Progress on left, Current Task on right */}
-        <div className="lg:flex lg:gap-6">
-          {/* Progress Sidebar - Left side - Sticky on desktop */}
-          <div className="lg:w-1/4 lg:flex-shrink-0 mb-6 lg:mb-0">
-            <div className="picking-card rounded-2xl lg:sticky lg:top-20 industrial-corners">
-              <div className="p-6">
-                {/* Order Info */}
-                <div className="mb-6 pb-6 border-b border-white/[0.08]">
-                  <h1 className="picking-title text-xl text-white truncate">{order.orderId}</h1>
-                  <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
-                    {order.customerName}
-                  </p>
+              {isOrderComplete ? (
+                /* Complete Order Card with Celebration Animation */
+                <div className="picking-card rounded-2xl border-success-500/50 border-2 overflow-hidden relative celebration-container industrial-corners">
+                  {/* Confetti particles */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {[...Array(30)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="confetti-piece"
+                        style={{
+                          left: `${Math.random() * 100}%`,
+                          top: `${100 + Math.random() * 20}%`,
+                          backgroundColor:
+                            i % 4 === 0
+                              ? '#22c55e'
+                              : i % 4 === 1
+                                ? '#a855f7'
+                                : i % 4 === 2
+                                  ? '#f59e0b'
+                                  : '#8b5cf6',
+                          animationDelay: `${Math.random() * 0.8}s`,
+                          borderRadius: i % 2 === 0 ? '50%' : '2px',
+                          width: `${6 + Math.random() * 8}px`,
+                          height: `${6 + Math.random() * 8}px`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="p-8 sm:p-12 text-center relative z-10">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success-500/20 flex items-center justify-center animate-bounce-in">
+                      <CheckIcon className="h-10 w-10 text-success-400" />
+                    </div>
+                    <h2 className="picking-title text-3xl text-white mb-3 animate-celebrate">
+                      All Items Picked!
+                    </h2>
+                    <p className="picking-subtitle text-gray-400 mb-8">
+                      Order is ready to be completed and sent to packing.
+                    </p>
+                    <Button
+                      size="lg"
+                      variant="success"
+                      onClick={handleCompleteOrder}
+                      isLoading={completeMutation.isPending}
+                      disabled={isViewMode ? true : undefined}
+                      className="action-button-enhanced touch-target animate-pop-in"
+                    >
+                      Complete Order
+                    </Button>
+                  </div>
                 </div>
-
-                {/* Progress Ring */}
-                <div className="flex justify-center mb-6">
-                  <div className="relative picking-reticle rounded-full">
-                    <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
-                      {/* Background circle */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        stroke="rgba(168, 85, 247, 0.2)"
-                        strokeWidth="6"
-                        fill="none"
-                      />
-                      {/* Progress circle */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        stroke="url(#progress-gradient)"
-                        strokeWidth="6"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={strokeDashoffset}
-                        className="transition-all duration-700 ease-out"
-                      />
-                      <defs>
-                        <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#a855f7" />
-                          <stop offset="100%" stopColor="#c084fc" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="hero-number text-3xl">{order.progress}%</span>
+              ) : currentTask ? (
+                /* Current Task Card */
+                <div
+                  className={`picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners ${scanSuccess ? 'item-flash' : ''}`}
+                >
+                  <div className="p-6 border-b border-white/[0.08]">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                          Current Pick Task
+                        </p>
+                        <h2 className="picking-title text-xl text-white">{currentTask.name}</h2>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {!isViewMode && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={handleUnclaimOrder}
+                            disabled={order.status !== OrderStatus.PICKING}
+                          >
+                            Unclaim
+                          </Button>
+                        )}
+                        <TaskStatusBadge
+                          status={
+                            currentTask.pickedQuantity > 0
+                              ? TaskStatus.IN_PROGRESS
+                              : TaskStatus.PENDING
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="picking-subtitle text-gray-400 text-sm">Completed</span>
-                    <span className="hero-number text-lg text-success-400">{completedTasks}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="picking-subtitle text-gray-400 text-sm">Remaining</span>
-                    <span className="hero-number text-lg text-warning-400">
-                      {totalTasks - completedTasks}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="picking-subtitle text-gray-400 text-sm">Total</span>
-                    <span className="hero-number text-lg text-white">{totalTasks}</span>
-                  </div>
-                </div>
-
-                {isOrderComplete && (
-                  <Button
-                    size="lg"
-                    variant="success"
-                    onClick={handleCompleteOrder}
-                    isLoading={completeMutation.isPending}
-                    disabled={isViewMode ? true : undefined}
-                    className="w-full action-button-enhanced touch-target"
-                  >
-                    Complete Order
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Current Task - Right side */}
-          <div className="flex-1 min-w-0">
-            {isOrderComplete ? (
-              /* Complete Order Card with Celebration Animation */
-              <div className="picking-card rounded-2xl border-success-500/50 border-2 overflow-hidden relative celebration-container industrial-corners">
-                {/* Confetti particles */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                  {[...Array(30)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="confetti-piece"
-                      style={{
-                        left: `${Math.random() * 100}%`,
-                        top: `${100 + Math.random() * 20}%`,
-                        backgroundColor:
-                          i % 4 === 0
-                            ? '#22c55e'
-                            : i % 4 === 1
-                              ? '#a855f7'
-                              : i % 4 === 2
-                                ? '#f59e0b'
-                                : '#8b5cf6',
-                        animationDelay: `${Math.random() * 0.8}s`,
-                        borderRadius: i % 2 === 0 ? '50%' : '2px',
-                        width: `${6 + Math.random() * 8}px`,
-                        height: `${6 + Math.random() * 8}px`,
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="p-8 sm:p-12 text-center relative z-10">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success-500/20 flex items-center justify-center animate-bounce-in">
-                    <CheckIcon className="h-10 w-10 text-success-400" />
-                  </div>
-                  <h2 className="picking-title text-3xl text-white mb-3 animate-celebrate">
-                    All Items Picked!
-                  </h2>
-                  <p className="picking-subtitle text-gray-400 mb-8">
-                    Order is ready to be completed and sent to packing.
-                  </p>
-                  <Button
-                    size="lg"
-                    variant="success"
-                    onClick={handleCompleteOrder}
-                    isLoading={completeMutation.isPending}
-                    disabled={isViewMode ? true : undefined}
-                    className="action-button-enhanced touch-target animate-pop-in"
-                  >
-                    Complete Order
-                  </Button>
-                </div>
-              </div>
-            ) : currentTask ? (
-              /* Current Task Card */
-              <div
-                className={`picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners ${scanSuccess ? 'item-flash' : ''}`}
-              >
-                <div className="p-6 border-b border-white/[0.08]">
-                  <div className="flex items-center justify-between">
+                  <div className="p-6 space-y-6">
+                    {/* Barcode Display */}
                     <div>
-                      <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
-                        Current Pick Task
-                      </p>
-                      <h2 className="picking-title text-xl text-white">{currentTask.name}</h2>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {!isViewMode && (
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={handleUnclaimOrder}
-                          disabled={order.status !== OrderStatus.PICKING}
-                        >
-                          Unclaim
-                        </Button>
+                      {currentTask.barcode ? (
+                        <div className="barcode-display rounded-xl px-5 py-4">
+                          <p className="text-primary-400 text-xs uppercase tracking-wider mb-2">
+                            Scan Barcode
+                          </p>
+                          <p className="text-2xl text-white tracking-widest font-mono">
+                            {currentTask.barcode}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-warning-500/10 border border-warning-500/30 rounded-xl px-5 py-4">
+                          <p className="text-warning-400 text-sm">
+                            No barcode assigned - scan or enter item code manually
+                          </p>
+                        </div>
                       )}
-                      <TaskStatusBadge
-                        status={
-                          currentTask.pickedQuantity > 0
-                            ? TaskStatus.IN_PROGRESS
-                            : TaskStatus.PENDING
-                        }
-                      />
                     </div>
-                  </div>
-                </div>
-                <div className="p-6 space-y-6">
-                  {/* Barcode Display */}
-                  <div>
-                    {currentTask.barcode ? (
-                      <div className="barcode-display rounded-xl px-5 py-4">
-                        <p className="text-primary-400 text-xs uppercase tracking-wider mb-2">
-                          Scan Barcode
-                        </p>
-                        <p className="text-2xl text-white tracking-widest font-mono">
-                          {currentTask.barcode}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-warning-500/10 border border-warning-500/30 rounded-xl px-5 py-4">
-                        <p className="text-warning-400 text-sm">
-                          No barcode assigned - scan or enter item code manually
-                        </p>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Quantity Display */}
-                  <div className="flex items-center justify-center gap-8 py-6">
-                    <div className="text-center">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
-                        Picked
-                      </p>
-                      <p className="quantity-display text-primary-400">
-                        {currentTask.pickedQuantity}
-                      </p>
+                    {/* Quantity Display */}
+                    <div className="flex items-center justify-center gap-8 py-6">
+                      <div className="text-center">
+                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                          Picked
+                        </p>
+                        <p className="quantity-display text-primary-400">
+                          {currentTask.pickedQuantity}
+                        </p>
+                      </div>
+                      <div className="text-5xl text-gray-600 font-light">/</div>
+                      <div className="text-center">
+                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                          Needed
+                        </p>
+                        <p className="quantity-display text-white">{currentTask.quantity}</p>
+                      </div>
+                      <div className="text-5xl text-gray-600 font-light hidden sm:block">|</div>
+                      <div className="text-center hidden sm:block">
+                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                          On Hand
+                        </p>
+                        <p
+                          className={`quantity-display ${
+                            (currentTask.pickedQuantity ?? 0) >= currentTask.quantity
+                              ? 'text-success-400'
+                              : (currentTask.pickedQuantity ?? 0) > 0
+                                ? 'text-warning-400'
+                                : 'text-error-400'
+                          }`}
+                        >
+                          {currentTask.pickedQuantity ?? 0}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-5xl text-gray-600 font-light">/</div>
-                    <div className="text-center">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
-                        Needed
-                      </p>
-                      <p className="quantity-display text-white">{currentTask.quantity}</p>
-                    </div>
-                    <div className="text-5xl text-gray-600 font-light hidden sm:block">|</div>
-                    <div className="text-center hidden sm:block">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
-                        On Hand
-                      </p>
-                      <p
-                        className={`quantity-display ${
-                          (currentTask.onHandQuantity ?? 0) >= currentTask.quantity
+
+                    {/* On Hand indicator for mobile */}
+                    <div className="sm:hidden flex items-center justify-center gap-2 mb-4">
+                      <span className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
+                        On Hand:
+                      </span>
+                      <span
+                        className={`font-bold text-lg ${
+                          (currentTask.pickedQuantity ?? 0) >= currentTask.quantity
                             ? 'text-success-400'
-                            : (currentTask.onHandQuantity ?? 0) > 0
+                            : (currentTask.pickedQuantity ?? 0) > 0
                               ? 'text-warning-400'
                               : 'text-error-400'
                         }`}
                       >
-                        {currentTask.onHandQuantity ?? 0}
+                        {currentTask.pickedQuantity ?? 0}
+                      </span>
+                      {(currentTask.pickedQuantity ?? 0) < currentTask.quantity && (
+                        <span className="text-xs text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
+                          Low Stock
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Location */}
+                    <div className="bin-location-display rounded-xl p-5 text-center bin-beacon">
+                      <p className="text-white/70 text-xs uppercase tracking-wider mb-2">
+                        Go to bin location
+                      </p>
+                      <p className="text-3xl text-white font-bold tracking-widest">
+                        {formatBinLocation(currentTask.binLocation)}
                       </p>
                     </div>
-                  </div>
 
-                  {/* On Hand indicator for mobile */}
-                  <div className="sm:hidden flex items-center justify-center gap-2 mb-4">
-                    <span className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
-                      On Hand:
-                    </span>
-                    <span
-                      className={`font-bold text-lg ${
-                        (currentTask.onHandQuantity ?? 0) >= currentTask.quantity
-                          ? 'text-success-400'
-                          : (currentTask.onHandQuantity ?? 0) > 0
-                            ? 'text-warning-400'
-                            : 'text-error-400'
-                      }`}
-                    >
-                      {currentTask.onHandQuantity ?? 0}
-                    </span>
-                    {(currentTask.onHandQuantity ?? 0) < currentTask.quantity && (
-                      <span className="text-xs text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
-                        Low Stock
-                      </span>
-                    )}
-                  </div>
+                    {/* Items in Order - Integrated into Current Pick Task */}
+                    <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.08]">
+                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-4">
+                        Items in Order ({order.items?.length || 0})
+                      </p>
+                      <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                        {order.items?.map((item, index) => {
+                          const isCompleted = item.pickedQuantity >= item.quantity;
+                          const isSkipped = item.status === 'SKIPPED';
+                          const isCurrent = index === currentTaskIndex;
 
-                  {/* Location */}
-                  <div className="bin-location-display rounded-xl p-5 text-center bin-beacon">
-                    <p className="text-white/70 text-xs uppercase tracking-wider mb-2">
-                      Go to bin location
-                    </p>
-                    <p className="text-3xl text-white font-bold tracking-widest">
-                      {formatBinLocation(currentTask.binLocation)}
-                    </p>
-                  </div>
+                          return (
+                            <div
+                              key={item.orderItemId}
+                              onClick={() => {
+                                // Allow clicking on any incomplete/non-skipped item to select it
+                                if (!isCompleted && !isSkipped && !isViewMode) {
+                                  setCurrentTaskIndex(index);
+                                }
+                              }}
+                              className={`pick-item-card flex items-center justify-between p-3 rounded-xl transition-all duration-200 animate-fade-in-up ${
+                                isCurrent
+                                  ? 'active'
+                                  : isCompleted
+                                    ? 'completed'
+                                    : isSkipped
+                                      ? 'skipped'
+                                      : ''
+                              } ${!isCompleted && !isSkipped && !isViewMode ? 'cursor-pointer' : ''}`}
+                              style={{
+                                animationDelay: `${index * 30}ms`,
+                                animationFillMode: 'backwards',
+                              }}
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                {/* Status Icon */}
+                                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                                  {isCompleted && (
+                                    <div className="w-6 h-6 rounded-full bg-success-500/20 flex items-center justify-center">
+                                      <CheckIcon className="h-4 w-4 text-success-400" />
+                                    </div>
+                                  )}
+                                  {isSkipped && !isViewMode && (
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleUnskipItem(index);
+                                      }}
+                                      className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 hover:bg-warning-500/30 transition-colors touch-target"
+                                      title="Revert skip"
+                                    >
+                                      <ArrowPathIcon className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                  {isSkipped && isViewMode && (
+                                    <div className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center">
+                                      <ExclamationTriangleIcon className="h-4 w-4 text-warning-400" />
+                                    </div>
+                                  )}
+                                  {!isCompleted && !isSkipped && (
+                                    <div
+                                      className={`w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-primary-400 status-badge-glow' : 'bg-gray-500'}`}
+                                    />
+                                  )}
+                                </div>
 
-                  {/* Items in Order - Integrated into Current Pick Task */}
-                  <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.08]">
-                    <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-4">
-                      Items in Order ({order.items?.length || 0})
-                    </p>
-                    <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
-                      {order.items?.map((item, index) => {
-                        const isCompleted = item.pickedQuantity >= item.quantity;
-                        const isSkipped = item.status === 'SKIPPED';
-                        const isCurrent = index === currentTaskIndex;
-
-                        return (
-                          <div
-                            key={item.orderItemId}
-                            onClick={() => {
-                              // Allow clicking on any incomplete/non-skipped item to select it
-                              if (!isCompleted && !isSkipped && !isViewMode) {
-                                setCurrentTaskIndex(index);
-                              }
-                            }}
-                            className={`pick-item-card flex items-center justify-between p-3 rounded-xl transition-all duration-200 animate-fade-in-up ${
-                              isCurrent
-                                ? 'active'
-                                : isCompleted
-                                  ? 'completed'
-                                  : isSkipped
-                                    ? 'skipped'
-                                    : ''
-                            } ${!isCompleted && !isSkipped && !isViewMode ? 'cursor-pointer' : ''}`}
-                            style={{
-                              animationDelay: `${index * 30}ms`,
-                              animationFillMode: 'backwards',
-                            }}
-                          >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              {/* Status Icon */}
-                              <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                                {isCompleted && (
-                                  <div className="w-6 h-6 rounded-full bg-success-500/20 flex items-center justify-center">
-                                    <CheckIcon className="h-4 w-4 text-success-400" />
-                                  </div>
-                                )}
-                                {isSkipped && !isViewMode && (
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleUnskipItem(index);
-                                    }}
-                                    className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center text-warning-400 hover:bg-warning-500/30 transition-colors touch-target"
-                                    title="Revert skip"
+                                {/* Item Info */}
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className={`font-medium text-sm truncate ${
+                                      isCompleted
+                                        ? 'text-success-300 line-through'
+                                        : isSkipped
+                                          ? 'text-warning-300'
+                                          : isCurrent
+                                            ? 'text-white'
+                                            : 'text-gray-300'
+                                    }`}
                                   >
-                                    <ArrowPathIcon className="h-4 w-4" />
-                                  </button>
-                                )}
-                                {isSkipped && isViewMode && (
-                                  <div className="w-6 h-6 rounded-full bg-warning-500/20 flex items-center justify-center">
-                                    <ExclamationTriangleIcon className="h-4 w-4 text-warning-400" />
+                                    {item.name}
+                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-xs text-gray-500 font-mono truncate">
+                                      {item.binLocation}
+                                    </p>
+                                    {isSkipped && item.skipReason && (
+                                      <p className="text-xs text-warning-300 truncate">
+                                        ({item.skipReason})
+                                      </p>
+                                    )}
                                   </div>
-                                )}
-                                {!isCompleted && !isSkipped && (
-                                  <div
-                                    className={`w-2.5 h-2.5 rounded-full ${isCurrent ? 'bg-primary-400 status-badge-glow' : 'bg-gray-500'}`}
-                                  />
-                                )}
+                                </div>
                               </div>
 
-                              {/* Item Info */}
-                              <div className="flex-1 min-w-0">
+                              {/* Quantity & Actions */}
+                              <div className="text-right flex-shrink-0 ml-2 flex items-center gap-2">
                                 <p
-                                  className={`font-medium text-sm truncate ${
+                                  className={`font-semibold text-sm font-mono ${
                                     isCompleted
-                                      ? 'text-success-300 line-through'
+                                      ? 'text-success-300'
                                       : isSkipped
                                         ? 'text-warning-300'
                                         : isCurrent
-                                          ? 'text-white'
+                                          ? 'text-primary-400'
                                           : 'text-gray-300'
                                   }`}
                                 >
-                                  {item.name}
+                                  {isSkipped
+                                    ? 'Skipped'
+                                    : `${item.pickedQuantity}/${item.quantity}`}
                                 </p>
-                                <div className="flex items-center gap-2">
-                                  <p className="text-xs text-gray-500 font-mono truncate">
-                                    {item.binLocation}
-                                  </p>
-                                  {isSkipped && item.skipReason && (
-                                    <p className="text-xs text-warning-300 truncate">
-                                      ({item.skipReason})
-                                    </p>
+
+                                {/* Action buttons - only show for current/selected item */}
+                                {isCurrent && !isViewMode && !isCompleted && !isSkipped && (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      handleSkipItem(index);
+                                    }}
+                                    className="text-warning-400 hover:text-warning-300 hover:bg-warning-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                    title="Skip this item"
+                                  >
+                                    <ForwardIcon className="h-4 w-4" />
+                                  </button>
+                                )}
+                                {isCurrent &&
+                                  !isViewMode &&
+                                  !isCompleted &&
+                                  !isSkipped &&
+                                  (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleManualOverride(index);
+                                      }}
+                                      className="text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                      title="Manual override"
+                                    >
+                                      <PencilSquareIcon className="h-4 w-4" />
+                                    </button>
                                   )}
-                                </div>
+                                {(!isViewMode ||
+                                  userRole === 'ADMIN' ||
+                                  userRole === 'SUPERVISOR') &&
+                                  item.pickedQuantity > 0 &&
+                                  !isSkipped && (
+                                    <button
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleUndoPick(index);
+                                      }}
+                                      className="text-error-400 hover:text-error-300 hover:bg-error-500/10 p-1.5 rounded-lg transition-colors touch-target"
+                                      title="Undo pick"
+                                    >
+                                      <MinusCircleIcon className="h-4 w-4" />
+                                    </button>
+                                  )}
                               </div>
                             </div>
-
-                            {/* Quantity & Actions */}
-                            <div className="text-right flex-shrink-0 ml-2 flex items-center gap-2">
-                              <p
-                                className={`font-semibold text-sm font-mono ${
-                                  isCompleted
-                                    ? 'text-success-300'
-                                    : isSkipped
-                                      ? 'text-warning-300'
-                                      : isCurrent
-                                        ? 'text-primary-400'
-                                        : 'text-gray-300'
-                                }`}
-                              >
-                                {isSkipped ? 'Skipped' : `${item.pickedQuantity}/${item.quantity}`}
-                              </p>
-
-                              {/* Action buttons - only show for current/selected item */}
-                              {isCurrent && !isViewMode && !isCompleted && !isSkipped && (
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleSkipItem(index);
-                                  }}
-                                  className="text-warning-400 hover:text-warning-300 hover:bg-warning-500/10 p-1.5 rounded-lg transition-colors touch-target"
-                                  title="Skip this item"
-                                >
-                                  <ForwardIcon className="h-4 w-4" />
-                                </button>
-                              )}
-                              {isCurrent &&
-                                !isViewMode &&
-                                !isCompleted &&
-                                !isSkipped &&
-                                (userRole === 'ADMIN' || userRole === 'SUPERVISOR') && (
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleManualOverride(index);
-                                    }}
-                                    className="text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 p-1.5 rounded-lg transition-colors touch-target"
-                                    title="Manual override"
-                                  >
-                                    <PencilSquareIcon className="h-4 w-4" />
-                                  </button>
-                                )}
-                              {(!isViewMode || userRole === 'ADMIN' || userRole === 'SUPERVISOR') &&
-                                item.pickedQuantity > 0 &&
-                                !isSkipped && (
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleUndoPick(index);
-                                    }}
-                                    className="text-error-400 hover:text-error-300 hover:bg-error-500/10 p-1.5 rounded-lg transition-colors touch-target"
-                                    title="Undo pick"
-                                  >
-                                    <MinusCircleIcon className="h-4 w-4" />
-                                  </button>
-                                )}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Scan Input */}
-                  <div className="scanner-active rounded-xl">
-                    <ScanInput
-                      value={scanValue}
-                      onChange={setScanValue}
-                      onScan={handleScan}
-                      placeholder={
-                        currentTask.barcode ? 'Scan barcode...' : 'Scan or enter item code...'
-                      }
-                      error={scanError || undefined}
-                      disabled={isViewMode ? true : undefined}
-                    />
-                  </div>
-
-                  {/* Scan Instruction */}
-                  {currentTask.barcode && (
-                    <div className="scan-instruction">
-                      <p className="text-gray-400 text-sm">
-                        Scan this barcode:{' '}
-                        <span className="font-mono font-semibold text-primary-400">
-                          {currentTask.barcode}
-                        </span>
-                      </p>
+                    {/* Scan Input */}
+                    <div className="scanner-active rounded-xl">
+                      <ScanInput
+                        value={scanValue}
+                        onChange={setScanValue}
+                        onScan={handleScan}
+                        placeholder={
+                          currentTask.barcode ? 'Scan barcode...' : 'Scan or enter item code...'
+                        }
+                        error={scanError || undefined}
+                        disabled={isViewMode ? true : undefined}
+                      />
                     </div>
-                  )}
 
-                  {/* Actions */}
-                  {!isViewMode && (
-                    <div className="flex gap-3">
-                      <Button
-                        variant="secondary"
-                        size="lg"
-                        onClick={handleReportException}
-                        disabled={pickMutation.isPending}
-                        className="w-full action-button-enhanced touch-target"
-                      >
-                        <WrenchScrewdriverIcon className="h-5 w-5 mr-2" />
-                        Report Exception
-                      </Button>
-                    </div>
-                  )}
-                  {isViewMode && (
-                    <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                      <p className="picking-subtitle text-primary-300 text-sm">
-                        Interactions are disabled in view-only mode
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* No Current Task */
-              <div className="picking-card rounded-2xl p-8 text-center industrial-corners">
-                <p className="picking-subtitle text-gray-400">No items to pick</p>
-              </div>
-            )}
-          </div>
-        </div>
+                    {/* Scan Instruction */}
+                    {currentTask.barcode && (
+                      <div className="scan-instruction">
+                        <p className="text-gray-400 text-sm">
+                          Scan this barcode:{' '}
+                          <span className="font-mono font-semibold text-primary-400">
+                            {currentTask.barcode}
+                          </span>
+                        </p>
+                      </div>
+                    )}
 
-        {/* Exception Modal */}
-        {showExceptionModal && (
-          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-2 sm:p-4">
-            <div className="scanner-modal-content max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-4 sm:px-6 py-4 rounded-t-2xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                      <WrenchScrewdriverIcon className="h-5 w-5" />
-                    </div>
-                    <h2 className="picking-title text-xl">Report Exception</h2>
-                  </div>
-                  <button
-                    onClick={() => setShowExceptionModal(false)}
-                    className="text-white hover:text-warning-200 transition-colors touch-target p-1"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Step Indicator */}
-              <div className="px-6 py-4 border-b border-white/[0.08]">
-                <div className="flex items-center justify-between">
-                  <div className="step-indicator flex items-center gap-2">
-                    <div
-                      className={`step-indicator-dot ${exceptionStep === 'type' ? 'active' : exceptionStep !== 'type' ? 'completed' : ''}`}
-                    />
-                    <span className="text-xs font-medium text-white hidden xs:inline">Type</span>
-                  </div>
-                  <div
-                    className={`step-indicator-line flex-1 mx-2 ${exceptionStep !== 'type' ? 'completed' : ''}`}
-                  />
-                  <div className="step-indicator flex items-center gap-2">
-                    <div
-                      className={`step-indicator-dot ${exceptionStep === 'details' ? 'active' : exceptionStep === 'confirm' ? 'completed' : ''}`}
-                    />
-                    <span className="text-xs font-medium text-white hidden sm:inline">Details</span>
-                  </div>
-                  <div
-                    className={`step-indicator-line flex-1 mx-2 ${exceptionStep === 'confirm' ? 'completed' : ''}`}
-                  />
-                  <div className="step-indicator flex items-center gap-2">
-                    <div
-                      className={`step-indicator-dot ${exceptionStep === 'confirm' ? 'active' : ''}`}
-                    />
-                    <span className="text-xs font-medium text-white hidden sm:inline">Confirm</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                {exceptionStep === 'type' && (
-                  <div>
-                    <p className="picking-subtitle text-white mb-4">Select type of exception:</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {[
-                        {
-                          type: ExceptionType.OUT_OF_STOCK,
-                          label: 'Out of Stock',
-                          desc: 'Item not available in bin',
-                        },
-                        { type: ExceptionType.DAMAGE, label: 'Damaged', desc: 'Item is damaged' },
-                        {
-                          type: ExceptionType.DEFECTIVE,
-                          label: 'Defective',
-                          desc: 'Item has quality issues',
-                        },
-                        {
-                          type: ExceptionType.WRONG_ITEM,
-                          label: 'Wrong Item',
-                          desc: 'Incorrect item in bin',
-                        },
-                        {
-                          type: ExceptionType.SHORT_PICK,
-                          label: 'Short Pick',
-                          desc: 'Insufficient quantity',
-                        },
-                        {
-                          type: ExceptionType.BIN_MISMATCH,
-                          label: 'Bin Mismatch',
-                          desc: 'Item in wrong bin',
-                        },
-                        {
-                          type: ExceptionType.SUBSTITUTION,
-                          label: 'Substitution',
-                          desc: 'Customer accepts substitute',
-                        },
-                        {
-                          type: ExceptionType.BARCODE_MISMATCH,
-                          label: 'Barcode Issue',
-                          desc: "Barcode doesn't match",
-                        },
-                      ].map(({ type, label, desc }) => (
-                        <button
-                          key={type}
-                          onClick={() => setExceptionType(type)}
-                          className={`p-4 rounded-xl border-2 text-left transition-all touch-target ${
-                            exceptionType === type
-                              ? 'border-primary-500 bg-primary-500/20'
-                              : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
-                          }`}
+                    {/* Actions */}
+                    {!isViewMode && (
+                      <div className="flex gap-3">
+                        <Button
+                          variant="secondary"
+                          size="lg"
+                          onClick={handleReportException}
+                          disabled={pickMutation.isPending}
+                          className="w-full action-button-enhanced touch-target"
                         >
-                          <div className="picking-title text-white text-sm">{label}</div>
-                          <div className="picking-subtitle text-xs text-gray-400 mt-1">{desc}</div>
-                        </button>
-                      ))}
+                          <WrenchScrewdriverIcon className="h-5 w-5 mr-2" />
+                          Report Exception
+                        </Button>
+                      </div>
+                    )}
+                    {isViewMode && (
+                      <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
+                        <p className="picking-subtitle text-primary-300 text-sm">
+                          Interactions are disabled in view-only mode
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* No Current Task */
+                <div className="picking-card rounded-2xl p-8 text-center industrial-corners">
+                  <p className="picking-subtitle text-gray-400">No items to pick</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Exception Modal */}
+          {showExceptionModal && (
+            <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-2 sm:p-4">
+              <div className="scanner-modal-content max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-2xl">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-4 sm:px-6 py-4 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                        <WrenchScrewdriverIcon className="h-5 w-5" />
+                      </div>
+                      <h2 className="picking-title text-xl">Report Exception</h2>
+                    </div>
+                    <button
+                      onClick={() => setShowExceptionModal(false)}
+                      className="text-white hover:text-warning-200 transition-colors touch-target p-1"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Step Indicator */}
+                <div className="px-6 py-4 border-b border-white/[0.08]">
+                  <div className="flex items-center justify-between">
+                    <div className="step-indicator flex items-center gap-2">
+                      <div
+                        className={`step-indicator-dot ${exceptionStep === 'type' ? 'active' : exceptionStep !== 'type' ? 'completed' : ''}`}
+                      />
+                      <span className="text-xs font-medium text-white hidden xs:inline">Type</span>
+                    </div>
+                    <div
+                      className={`step-indicator-line flex-1 mx-2 ${exceptionStep !== 'type' ? 'completed' : ''}`}
+                    />
+                    <div className="step-indicator flex items-center gap-2">
+                      <div
+                        className={`step-indicator-dot ${exceptionStep === 'details' ? 'active' : exceptionStep === 'confirm' ? 'completed' : ''}`}
+                      />
+                      <span className="text-xs font-medium text-white hidden sm:inline">
+                        Details
+                      </span>
+                    </div>
+                    <div
+                      className={`step-indicator-line flex-1 mx-2 ${exceptionStep === 'confirm' ? 'completed' : ''}`}
+                    />
+                    <div className="step-indicator flex items-center gap-2">
+                      <div
+                        className={`step-indicator-dot ${exceptionStep === 'confirm' ? 'active' : ''}`}
+                      />
+                      <span className="text-xs font-medium text-white hidden sm:inline">
+                        Confirm
+                      </span>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {exceptionStep === 'details' && (
-                  <div>
-                    <div className="mb-4">
-                      <div className="inline-block px-3 py-1.5 bg-primary-500/20 text-primary-300 rounded-lg text-sm font-medium">
-                        {exceptionType.replace(/_/g, ' ')}
+                {/* Content */}
+                <div className="p-6">
+                  {exceptionStep === 'type' && (
+                    <div>
+                      <p className="picking-subtitle text-white mb-4">Select type of exception:</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                          {
+                            type: ExceptionType.OUT_OF_STOCK,
+                            label: 'Out of Stock',
+                            desc: 'Item not available in bin',
+                          },
+                          { type: ExceptionType.DAMAGE, label: 'Damaged', desc: 'Item is damaged' },
+                          {
+                            type: ExceptionType.DEFECTIVE,
+                            label: 'Defective',
+                            desc: 'Item has quality issues',
+                          },
+                          {
+                            type: ExceptionType.WRONG_ITEM,
+                            label: 'Wrong Item',
+                            desc: 'Incorrect item in bin',
+                          },
+                          {
+                            type: ExceptionType.SHORT_PICK,
+                            label: 'Short Pick',
+                            desc: 'Insufficient quantity',
+                          },
+                          {
+                            type: ExceptionType.BIN_MISMATCH,
+                            label: 'Bin Mismatch',
+                            desc: 'Item in wrong bin',
+                          },
+                          {
+                            type: ExceptionType.SUBSTITUTION,
+                            label: 'Substitution',
+                            desc: 'Customer accepts substitute',
+                          },
+                          {
+                            type: ExceptionType.BARCODE_MISMATCH,
+                            label: 'Barcode Issue',
+                            desc: "Barcode doesn't match",
+                          },
+                        ].map(({ type, label, desc }) => (
+                          <button
+                            key={type}
+                            onClick={() => setExceptionType(type)}
+                            className={`p-4 rounded-xl border-2 text-left transition-all touch-target ${
+                              exceptionType === type
+                                ? 'border-primary-500 bg-primary-500/20'
+                                : 'border-white/[0.08] bg-white/[0.02] hover:border-primary-500/50'
+                            }`}
+                          >
+                            <div className="picking-title text-white text-sm">{label}</div>
+                            <div className="picking-subtitle text-xs text-gray-400 mt-1">
+                              {desc}
+                            </div>
+                          </button>
+                        ))}
                       </div>
                     </div>
+                  )}
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-white mb-2">
-                          Reason <span className="text-error-400">*</span>
-                        </label>
-                        <textarea
-                          value={exceptionReason}
-                          onChange={e => setExceptionReason(e.target.value)}
-                          rows={3}
-                          className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
-                          placeholder="Provide details about the exception..."
-                          required
-                        />
-                      </div>
-
-                      {exceptionType === ExceptionType.SUBSTITUTION && (
-                        <div>
-                          <label className="block text-sm font-medium text-white mb-2">
-                            Substitute SKU
-                          </label>
-                          <input
-                            type="text"
-                            value={substituteSku}
-                            onChange={e => setSubstituteSku(e.target.value.toUpperCase())}
-                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono"
-                            placeholder="Enter substitute SKU..."
-                          />
-                        </div>
-                      )}
-
-                      {exceptionType === ExceptionType.SHORT_PICK && (
-                        <div>
-                          <label className="block text-sm font-medium text-white mb-2">
-                            Actual Quantity Available
-                          </label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={exceptionQuantity}
-                            onChange={e => setExceptionQuantity(parseInt(e.target.value) || 0)}
-                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono"
-                            placeholder="Enter actual quantity..."
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {exceptionStep === 'confirm' && (
-                  <div>
-                    <h3 className="picking-title text-lg text-white mb-4">Confirm Exception</h3>
-
-                    <div className="bg-white/[0.05] rounded-xl p-4 space-y-3 border border-white/[0.08]">
-                      <div className="flex justify-between">
-                        <span className="picking-subtitle text-gray-400 text-sm">Type:</span>
-                        <span className="text-sm font-semibold text-white">
+                  {exceptionStep === 'details' && (
+                    <div>
+                      <div className="mb-4">
+                        <div className="inline-block px-3 py-1.5 bg-primary-500/20 text-primary-300 rounded-lg text-sm font-medium">
                           {exceptionType.replace(/_/g, ' ')}
-                        </span>
+                        </div>
                       </div>
 
-                      {currentTask && (
-                        <>
-                          <div className="flex justify-between">
-                            <span className="picking-subtitle text-gray-400 text-sm">SKU:</span>
-                            <span className="text-sm font-semibold text-white font-mono">
-                              {currentTask.sku}
-                            </span>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-white mb-2">
+                            Reason <span className="text-error-400">*</span>
+                          </label>
+                          <textarea
+                            value={exceptionReason}
+                            onChange={e => setExceptionReason(e.target.value)}
+                            rows={3}
+                            className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                            placeholder="Provide details about the exception..."
+                            required
+                          />
+                        </div>
+
+                        {exceptionType === ExceptionType.SUBSTITUTION && (
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                              Substitute SKU
+                            </label>
+                            <input
+                              type="text"
+                              value={substituteSku}
+                              onChange={e => setSubstituteSku(e.target.value.toUpperCase())}
+                              className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono"
+                              placeholder="Enter substitute SKU..."
+                            />
                           </div>
+                        )}
+
+                        {exceptionType === ExceptionType.SHORT_PICK && (
+                          <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                              Actual Quantity Available
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              value={exceptionQuantity}
+                              onChange={e => setExceptionQuantity(parseInt(e.target.value) || 0)}
+                              className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono"
+                              placeholder="Enter actual quantity..."
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {exceptionStep === 'confirm' && (
+                    <div>
+                      <h3 className="picking-title text-lg text-white mb-4">Confirm Exception</h3>
+
+                      <div className="bg-white/[0.05] rounded-xl p-4 space-y-3 border border-white/[0.08]">
+                        <div className="flex justify-between">
+                          <span className="picking-subtitle text-gray-400 text-sm">Type:</span>
+                          <span className="text-sm font-semibold text-white">
+                            {exceptionType.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+
+                        {currentTask && (
+                          <>
+                            <div className="flex justify-between">
+                              <span className="picking-subtitle text-gray-400 text-sm">SKU:</span>
+                              <span className="text-sm font-semibold text-white font-mono">
+                                {currentTask.sku}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="picking-subtitle text-gray-400 text-sm">
+                                Expected Qty:
+                              </span>
+                              <span className="text-sm font-semibold text-white font-mono">
+                                {currentTask.quantity}
+                              </span>
+                            </div>
+                          </>
+                        )}
+
+                        {exceptionReason && (
+                          <div>
+                            <span className="picking-subtitle text-gray-400 text-sm">Reason:</span>
+                            <p className="text-sm text-white mt-1">{exceptionReason}</p>
+                          </div>
+                        )}
+
+                        {exceptionType === ExceptionType.SUBSTITUTION && substituteSku && (
                           <div className="flex justify-between">
                             <span className="picking-subtitle text-gray-400 text-sm">
-                              Expected Qty:
+                              Substitute SKU:
                             </span>
-                            <span className="text-sm font-semibold text-white font-mono">
-                              {currentTask.quantity}
+                            <span className="text-sm font-semibold text-primary-400 font-mono">
+                              {substituteSku}
                             </span>
                           </div>
-                        </>
-                      )}
+                        )}
 
-                      {exceptionReason && (
-                        <div>
-                          <span className="picking-subtitle text-gray-400 text-sm">Reason:</span>
-                          <p className="text-sm text-white mt-1">{exceptionReason}</p>
-                        </div>
-                      )}
+                        {exceptionType === ExceptionType.SHORT_PICK && exceptionQuantity > 0 && (
+                          <div className="flex justify-between">
+                            <span className="picking-subtitle text-gray-400 text-sm">
+                              Actual Qty:
+                            </span>
+                            <span className="text-sm font-semibold text-white font-mono">
+                              {exceptionQuantity}
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                      {exceptionType === ExceptionType.SUBSTITUTION && substituteSku && (
-                        <div className="flex justify-between">
-                          <span className="picking-subtitle text-gray-400 text-sm">
-                            Substitute SKU:
-                          </span>
-                          <span className="text-sm font-semibold text-primary-400 font-mono">
-                            {substituteSku}
-                          </span>
-                        </div>
-                      )}
-
-                      {exceptionType === ExceptionType.SHORT_PICK && exceptionQuantity > 0 && (
-                        <div className="flex justify-between">
-                          <span className="picking-subtitle text-gray-400 text-sm">
-                            Actual Qty:
-                          </span>
-                          <span className="text-sm font-semibold text-white font-mono">
-                            {exceptionQuantity}
-                          </span>
-                        </div>
-                      )}
+                      <div className="mt-4 p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                        <p className="picking-subtitle text-primary-300 text-sm">
+                          <strong>Note:</strong> This exception will be logged and the item will be
+                          skipped. A supervisor will review and resolve this exception.
+                        </p>
+                      </div>
                     </div>
+                  )}
+                </div>
 
-                    <div className="mt-4 p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                      <p className="picking-subtitle text-primary-300 text-sm">
-                        <strong>Note:</strong> This exception will be logged and the item will be
-                        skipped. A supervisor will review and resolve this exception.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex flex-col sm:flex-row justify-between gap-3">
+                  {exceptionStep === 'type' && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setShowExceptionModal(false)}
+                        className="touch-target"
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={() => setExceptionStep('details')} className="touch-target">
+                        Next
+                      </Button>
+                    </>
+                  )}
 
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex flex-col sm:flex-row justify-between gap-3">
-                {exceptionStep === 'type' && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setShowExceptionModal(false)}
-                      className="touch-target"
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={() => setExceptionStep('details')} className="touch-target">
-                      Next
-                    </Button>
-                  </>
-                )}
+                  {exceptionStep === 'details' && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setExceptionStep('type')}
+                        className="touch-target"
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        onClick={() => setExceptionStep('confirm')}
+                        disabled={!exceptionReason}
+                        className="touch-target"
+                      >
+                        Review
+                      </Button>
+                    </>
+                  )}
 
-                {exceptionStep === 'details' && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setExceptionStep('type')}
-                      className="touch-target"
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      onClick={() => setExceptionStep('confirm')}
-                      disabled={!exceptionReason}
-                      className="touch-target"
-                    >
-                      Review
-                    </Button>
-                  </>
-                )}
-
-                {exceptionStep === 'confirm' && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setExceptionStep('details')}
-                      className="touch-target"
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={handleLogException}
-                      isLoading={logExceptionMutation.isPending}
-                      className="touch-target"
-                    >
-                      Log Exception & Skip
-                    </Button>
-                  </>
-                )}
+                  {exceptionStep === 'confirm' && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setExceptionStep('details')}
+                        className="touch-target"
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={handleLogException}
+                        isLoading={logExceptionMutation.isPending}
+                        className="touch-target"
+                      >
+                        Log Exception & Skip
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Unclaim Modal */}
-        <UnclaimModal
-          isOpen={showUnclaimModal}
-          onClose={() => setShowUnclaimModal(false)}
-          onConfirm={handleConfirmUnclaim}
-          orderId={orderId!}
-          isLoading={isUnclaiming}
-        />
-
-        {/* Undo Pick Modal */}
-        {undoPickItemIndex !== null && (
-          <UndoPickModal
-            isOpen={showUndoPickModal}
-            onClose={() => {
-              setShowUndoPickModal(false);
-              setUndoPickItemIndex(null);
-            }}
-            onConfirm={handleConfirmUndoPick}
-            itemName={order.items?.[undoPickItemIndex]?.name || ''}
-            sku={order.items?.[undoPickItemIndex]?.sku || ''}
-            currentQuantity={order.items?.[undoPickItemIndex]?.pickedQuantity || 0}
-            totalQuantity={order.items?.[undoPickItemIndex]?.quantity || 0}
-            wasCompleted={
-              (order.items?.[undoPickItemIndex]?.pickedQuantity || 0) >=
-              (order.items?.[undoPickItemIndex]?.quantity || 0)
-            }
-            isLoading={isUndoingPick}
+          {/* Unclaim Modal */}
+          <UnclaimModal
+            isOpen={showUnclaimModal}
+            onClose={() => setShowUnclaimModal(false)}
+            onConfirm={handleConfirmUnclaim}
+            orderId={orderId!}
+            isLoading={isUnclaiming}
           />
-        )}
 
-        {/* Complete Order Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={completeOrderConfirm.isOpen}
-          onClose={() => setCompleteOrderConfirm({ isOpen: false, skippedItems: [] })}
-          onConfirm={confirmCompleteOrder}
-          title="Complete Order with Skipped Items"
-          message={
-            <div className="text-left">
-              <p className="mb-3">The following items were skipped and could not be found:</p>
-              <ul className="list-disc pl-5 mb-3 space-y-1">
-                {completeOrderConfirm.skippedItems.map((item: any, i: number) => (
-                  <li key={i}>
-                    {item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}
-                  </li>
-                ))}
-              </ul>
-              <p>Are you sure you want to complete this order? These items will remain unpicked.</p>
-            </div>
-          }
-          confirmText="Complete Order"
-          cancelText="Cancel"
-          variant="warning"
-          isLoading={completeMutation.isPending}
-        />
+          {/* Undo Pick Modal */}
+          {undoPickItemIndex !== null && (
+            <UndoPickModal
+              isOpen={showUndoPickModal}
+              onClose={() => {
+                setShowUndoPickModal(false);
+                setUndoPickItemIndex(null);
+              }}
+              onConfirm={handleConfirmUndoPick}
+              itemName={order.items?.[undoPickItemIndex]?.name || ''}
+              sku={order.items?.[undoPickItemIndex]?.sku || ''}
+              currentQuantity={order.items?.[undoPickItemIndex]?.pickedQuantity || 0}
+              totalQuantity={order.items?.[undoPickItemIndex]?.quantity || 0}
+              wasCompleted={
+                (order.items?.[undoPickItemIndex]?.pickedQuantity || 0) >=
+                (order.items?.[undoPickItemIndex]?.quantity || 0)
+              }
+              isLoading={isUndoingPick}
+            />
+          )}
 
-        {/* Unskip Item Confirmation Dialog */}
-        <ConfirmDialog
-          isOpen={unskipConfirm.isOpen}
-          onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
-          onConfirm={confirmUnskipItem}
-          title="Revert Skip"
-          message={`Do you want to revert the skip for ${unskipConfirm.item?.name} (${unskipConfirm.item?.sku})?`}
-          confirmText="Revert"
-          cancelText="Cancel"
-          variant="success"
-        />
+          {/* Complete Order Confirmation Dialog */}
+          <ConfirmDialog
+            isOpen={completeOrderConfirm.isOpen}
+            onClose={() => setCompleteOrderConfirm({ isOpen: false, skippedItems: [] })}
+            onConfirm={confirmCompleteOrder}
+            title="Complete Order with Skipped Items"
+            message={
+              <div className="text-left">
+                <p className="mb-3">The following items were skipped and could not be found:</p>
+                <ul className="list-disc pl-5 mb-3 space-y-1">
+                  {completeOrderConfirm.skippedItems.map((item: any, i: number) => (
+                    <li key={i}>
+                      {item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Are you sure you want to complete this order? These items will remain unpicked.
+                </p>
+              </div>
+            }
+            confirmText="Complete Order"
+            cancelText="Cancel"
+            variant="warning"
+            isLoading={completeMutation.isPending}
+          />
 
-        {/* Skip Item Modal */}
-        {showSkipModal && skipItemIndex !== null && order?.items?.[skipItemIndex] && (
-          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
-            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
-              <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
-                <div className="flex items-center justify-between">
-                  <h2 className="picking-title text-lg">Skip Item</h2>
-                  <button
-                    onClick={() => setShowSkipModal(false)}
-                    className="text-white hover:text-warning-200 transition-colors"
+          {/* Unskip Item Confirmation Dialog */}
+          <ConfirmDialog
+            isOpen={unskipConfirm.isOpen}
+            onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
+            onConfirm={confirmUnskipItem}
+            title="Revert Skip"
+            message={`Do you want to revert the skip for ${unskipConfirm.item?.name} (${unskipConfirm.item?.sku})?`}
+            confirmText="Revert"
+            cancelText="Cancel"
+            variant="success"
+          />
+
+          {/* Skip Item Modal */}
+          {showSkipModal && skipItemIndex !== null && order?.items?.[skipItemIndex] && (
+            <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
+              <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+                <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <h2 className="picking-title text-lg">Skip Item</h2>
+                    <button
+                      onClick={() => setShowSkipModal(false)}
+                      className="text-white hover:text-warning-200 transition-colors"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
+                    <p className="picking-title text-white">{order.items[skipItemIndex].name}</p>
+                    <p className="text-sm text-gray-400 font-mono mt-1">
+                      {order.items[skipItemIndex].sku}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
+                      {order.items[skipItemIndex].binLocation}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Reason for skipping <span className="text-error-400">*</span>
+                    </label>
+                    <textarea
+                      value={skipReason}
+                      onChange={e => setSkipReason(e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 text-white placeholder-gray-500"
+                      placeholder="e.g., Item not found in bin, Damaged, etc."
+                    />
+                  </div>
+
+                  <div className="p-4 bg-warning-500/10 border border-warning-500/30 rounded-xl">
+                    <p className="picking-subtitle text-warning-300 text-sm">
+                      <strong>Warning:</strong> Skipping this item will mark it as skipped. You can
+                      revert this later if needed.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                  <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="warning"
+                    onClick={handleConfirmSkip}
+                    isLoading={isSkipping}
+                    disabled={!skipReason.trim()}
                   >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
+                    Skip Item
+                  </Button>
                 </div>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
-                  <p className="picking-title text-white">{order.items[skipItemIndex].name}</p>
-                  <p className="text-sm text-gray-400 font-mono mt-1">
-                    {order.items[skipItemIndex].sku}
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
-                    {order.items[skipItemIndex].binLocation}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Reason for skipping <span className="text-error-400">*</span>
-                  </label>
-                  <textarea
-                    value={skipReason}
-                    onChange={e => setSkipReason(e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 text-white placeholder-gray-500"
-                    placeholder="e.g., Item not found in bin, Damaged, etc."
-                  />
-                </div>
-
-                <div className="p-4 bg-warning-500/10 border border-warning-500/30 rounded-xl">
-                  <p className="picking-subtitle text-warning-300 text-sm">
-                    <strong>Warning:</strong> Skipping this item will mark it as skipped. You can
-                    revert this later if needed.
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="warning"
-                  onClick={handleConfirmSkip}
-                  isLoading={isSkipping}
-                  disabled={!skipReason.trim()}
-                >
-                  Skip Item
-                </Button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Manual Override Modal */}
-        {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
-          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
-            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
-              <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
-                <div className="flex items-center justify-between">
-                  <h2 className="picking-title text-lg">Manual Override</h2>
-                  <button
-                    onClick={() => setShowOverrideModal(false)}
-                    className="text-white hover:text-primary-200 transition-colors"
+          {/* Manual Override Modal */}
+          {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
+            <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
+              <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+                <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <h2 className="picking-title text-lg">Manual Override</h2>
+                    <button
+                      onClick={() => setShowOverrideModal(false)}
+                      className="text-white hover:text-primary-200 transition-colors"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
+                    <p className="picking-title text-white">
+                      {order.items[overrideItemIndex].name}
+                    </p>
+                    <p className="text-sm text-gray-400 font-mono mt-1">
+                      {order.items[overrideItemIndex].sku}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Required: {order.items[overrideItemIndex].quantity} | Currently Picked:{' '}
+                      {order.items[overrideItemIndex].pickedQuantity}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      New Picked Quantity <span className="text-error-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={order.items[overrideItemIndex].quantity}
+                      value={overrideQuantity}
+                      onChange={e => setOverrideQuantity(e.target.value)}
+                      onFocus={e => e.target.select()}
+                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Max: {order.items[overrideItemIndex].quantity} (cannot exceed required
+                      quantity)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Reason <span className="text-error-400">*</span>
+                    </label>
+                    <textarea
+                      value={overrideReason}
+                      onChange={e => setOverrideReason(e.target.value)}
+                      rows={2}
+                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                      placeholder="e.g., Found damaged item, Correcting count, etc."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Additional Notes (optional)
+                    </label>
+                    <textarea
+                      value={overrideNotes}
+                      onChange={e => setOverrideNotes(e.target.value)}
+                      rows={2}
+                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                      placeholder="Any additional details..."
+                    />
+                  </div>
+
+                  <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                    <p className="picking-subtitle text-primary-300 text-sm">
+                      <strong>Note:</strong> This action will be logged and audited. Supervisors
+                      will be able to review this override.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+                  <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleConfirmOverride}
+                    isLoading={isOverriding}
+                    disabled={!overrideReason.trim() || overrideQuantity < 0}
                   >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
+                    Apply Override
+                  </Button>
                 </div>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
-                  <p className="picking-title text-white">{order.items[overrideItemIndex].name}</p>
-                  <p className="text-sm text-gray-400 font-mono mt-1">
-                    {order.items[overrideItemIndex].sku}
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Required: {order.items[overrideItemIndex].quantity} | Currently Picked:{' '}
-                    {order.items[overrideItemIndex].pickedQuantity}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    New Picked Quantity <span className="text-error-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={order.items[overrideItemIndex].quantity}
-                    value={overrideQuantity}
-                    onChange={e => setOverrideQuantity(e.target.value)}
-                    onFocus={e => e.target.select()}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Max: {order.items[overrideItemIndex].quantity} (cannot exceed required quantity)
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Reason <span className="text-error-400">*</span>
-                  </label>
-                  <textarea
-                    value={overrideReason}
-                    onChange={e => setOverrideReason(e.target.value)}
-                    rows={2}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
-                    placeholder="e.g., Found damaged item, Correcting count, etc."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Additional Notes (optional)
-                  </label>
-                  <textarea
-                    value={overrideNotes}
-                    onChange={e => setOverrideNotes(e.target.value)}
-                    rows={2}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
-                    placeholder="Any additional details..."
-                  />
-                </div>
-
-                <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                  <p className="picking-subtitle text-primary-300 text-sm">
-                    <strong>Note:</strong> This action will be logged and audited. Supervisors will
-                    be able to review this override.
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleConfirmOverride}
-                  isLoading={isOverriding}
-                  disabled={!overrideReason.trim() || overrideQuantity < 0}
-                >
-                  Apply Override
-                </Button>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      </ResponsiveContainer>
     </div>
   );
 }

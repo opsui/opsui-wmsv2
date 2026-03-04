@@ -64,9 +64,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const paddingStyles = {
       none: '',
-      sm: 'p-4',
-      md: 'p-6',
-      lg: 'p-8',
+      sm: 'p-3 xs:p-4',
+      md: 'p-4 xs:p-5 sm:p-6',
+      lg: 'p-5 xs:p-6 sm:p-8 lg:p-10',
     };
 
     const hoverClasses = hover

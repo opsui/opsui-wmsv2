@@ -42,8 +42,9 @@ export default defineConfig({
     // Base URL for tests
     baseURL: process.env.BASE_URL || 'http://localhost:5173',
 
-    // Test mode - bypass authentication when enabled
-    storageState: process.env.TEST_MODE === 'true' ? undefined : 'playwright/.auth/admin.json',
+    // Test mode - bypass authentication by default for local development
+    // Set USE_AUTH=true to enable auth file loading
+    storageState: process.env.USE_AUTH === 'true' ? 'playwright/.auth/admin.json' : undefined,
 
     // Trace collection on failure
     trace: 'retain-on-failure',
@@ -78,17 +79,80 @@ export default defineConfig({
 
   // Projects
   projects: [
-    // Setup project - runs before tests to establish authentication
-    {
-      name: 'setup',
-      testMatch: /.*\.setup\.ts/,
-    },
-    // Main test project
+    // Desktop Chrome (default)
     {
       name: 'chromium',
-      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+
+    // Mobile Device Projects
+    {
+      name: 'mobile-small',
+      use: {
+        ...devices['iPhone SE'],
+        viewport: { width: 320, height: 568 },
+        userAgent:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+      },
+    },
+
+    {
+      name: 'mobile-standard',
+      use: {
+        ...devices['iPhone 13'],
+        viewport: { width: 375, height: 667 },
+      },
+    },
+
+    {
+      name: 'mobile-android',
+      use: {
+        ...devices['Pixel 5'],
+        viewport: { width: 360, height: 640 },
+      },
+    },
+
+    // Tablet Projects
+    {
+      name: 'tablet-portrait',
+      use: {
+        ...devices['iPad Pro 11'],
+        viewport: { width: 768, height: 1024 },
+      },
+    },
+
+    {
+      name: 'tablet-landscape',
+      use: {
+        ...devices['iPad Pro 11 landscape'],
+        viewport: { width: 1024, height: 768 },
+      },
+    },
+
+    // Desktop Projects
+    {
+      name: 'desktop-standard',
+      use: {
+        ...devices['Desktop Chrome HiDPI'],
+        viewport: { width: 1440, height: 900 },
+      },
+    },
+
+    {
+      name: 'desktop-large',
+      use: {
+        viewport: { width: 1920, height: 1080 },
+      },
+    },
+
+    // Ultra-Wide Monitor
+    {
+      name: 'ultra-wide',
+      use: {
+        viewport: { width: 2560, height: 1440 },
       },
     },
   ],
@@ -97,9 +161,9 @@ export default defineConfig({
   webServer: process.env.SKIP_SERVER
     ? undefined
     : {
-        command: 'npm run dev',
+        command: 'cd packages/frontend && npm run dev',
         url: 'http://localhost:5173',
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: true,
         timeout: 120000,
       },
 });

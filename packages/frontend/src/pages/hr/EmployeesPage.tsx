@@ -100,29 +100,57 @@ export default function EmployeesPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Page Header - Corporate Elegance Design */}
         <div className="mb-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                {/* Outer ring with purple gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 to-violet-400/20 rounded-2xl blur-sm" />
-                {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-purple-500/20 to-violet-500/15 rounded-2xl border border-purple-500/30 shadow-lg shadow-purple-500/10 backdrop-blur-sm">
-                  <UsersIcon className="h-9 w-9 text-purple-400" />
+          <div className="flex flex-col mobile:flex-row mobile:items-end justify-between gap-6">
+            <div className="flex flex-col mobile:items-center gap-5 mobile:gap-5 w-full mobile:w-auto">
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  {/* Outer ring with purple gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400/30 to-violet-400/20 rounded-2xl blur-sm" />
+                  {/* Main icon container */}
+                  <div className="relative p-4 bg-gradient-to-br from-purple-500/20 to-violet-500/15 rounded-2xl border border-purple-500/30 shadow-lg shadow-purple-500/10 backdrop-blur-sm">
+                    <UsersIcon className="h-9 w-9 text-purple-400" />
+                  </div>
+                  {/* Corner accent */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
                 </div>
-                {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-purple-400 to-violet-400 rounded-full shadow-lg shadow-purple-400/50" />
+                <div>
+                  <h1 className="text-3xl mobile:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Employees
+                  </h1>
+                  <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide">
+                    Manage your team with care
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-                  Employees
-                </h1>
-                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide">
-                  Manage your team with care
-                </p>
+
+              {/* Mobile: Status and button below title, Desktop: separate */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mobile:hidden w-full">
+                {/* Employee count indicator */}
+                <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-500/10 to-transparent rounded-xl border border-purple-500/20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gradient-to-r from-purple-400 to-violet-400 rounded-full" />
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      {activeEmployeesCount} Active
+                    </span>
+                  </div>
+                  <div className="w-px h-4 bg-gray-300 dark:bg-gray-700" />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {totalEmployeesCount} Total
+                  </span>
+                </div>
+
+                <Button
+                  onClick={handleAdd}
+                  className="whitespace-nowrap bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 shadow-lg shadow-purple-500/20"
+                >
+                  <PlusIcon className="h-5 w-5 mr-2" />
+                  Add Employee
+                </Button>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Desktop: Status and button on the right */}
+            <div className="hidden mobile:flex items-center gap-4">
               {/* Employee count indicator */}
               <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-purple-500/10 to-transparent rounded-xl border border-purple-500/20">
                 <div className="flex items-center gap-2">

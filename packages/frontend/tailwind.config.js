@@ -5,13 +5,30 @@ export default {
   theme: {
     // Mobile-first breakpoints (base styles = mobile, breakpoints = larger screens)
     screens: {
+      // Existing width-based breakpoints (kept for backward compatibility)
       xs: '320px', // Small phones (iPhone SE, etc.)
       sm: '375px', // Standard phones (iPhone 6/7/8, etc.)
       md: '414px', // Large phones (iPhone Plus, etc.)
+      mobile: '550px', // PRIMARY MOBILE BREAKPOINT (Chrome DevTools mobile)
       lg: '768px', // Tablets portrait
       xl: '1024px', // Tablets landscape / small laptops
       '2xl': '1280px', // Desktops
       '3xl': '1536px', // Large desktops
+
+      // NEW: Aspect ratio breakpoints for better orientation support
+      portrait: '(orientation: portrait)',
+      landscape: '(orientation: landscape)',
+
+      // NEW: Height-based breakpoints for constrained viewports
+      'h-sm': '(max-height: 600px)',
+      'h-md': '(min-height: 601px) and (max-height: 900px)',
+      'h-lg': '(min-height: 901px)',
+
+      // NEW: Ultra-wide monitor support
+      'ultra-wide': '(min-aspect-ratio: 21/9)',
+
+      // NEW: Foldable device support
+      foldable: '(max-width: 480px) and (min-height: 700px)',
     },
     extend: {
       fontFamily: {
@@ -231,6 +248,12 @@ export default {
         'safe-top': 'env(safe-area-inset-top, 0px)',
         'safe-left': 'env(safe-area-inset-left, 0px)',
         'safe-right': 'env(safe-area-inset-right, 0px)',
+        // NEW: Responsive spacing tokens using clamp() for fluid scaling
+        'responsive-xs': 'clamp(0.5rem, 1vw, 1rem)',
+        'responsive-sm': 'clamp(0.75rem, 1.5vw, 1.5rem)',
+        'responsive-md': 'clamp(1rem, 2vw, 2rem)',
+        'responsive-lg': 'clamp(1.5rem, 3vw, 3rem)',
+        'responsive-xl': 'clamp(2rem, 4vw, 4rem)',
       },
       minHeight: {
         touch: '44px',

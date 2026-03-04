@@ -32,6 +32,8 @@ export interface ModalProps {
   className?: string;
   /** Whether to show close button (default: true) */
   showCloseButton?: boolean;
+  /** Use drawer-style on mobile (slides up from bottom) */
+  mobileDrawer?: boolean;
 }
 
 // ============================================================================
@@ -48,6 +50,7 @@ export function Modal({
   footer,
   className,
   showCloseButton = true,
+  mobileDrawer = true,
 }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
@@ -74,16 +77,33 @@ export function Modal({
 
   if (!isOpen) return null;
 
+  // Fluid width classes using percentage for better responsiveness
+  // mobile breakpoint (550px): full-width with no rounded corners
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]',
+    sm: 'mobile:max-w-[100vw] mobile:rounded-none max-w-[95vw] sm:max-w-[90vw] md:max-w-[600px]',
+    md: 'mobile:max-w-[100vw] mobile:rounded-none max-w-[95vw] sm:max-w-[90vw] md:max-w-[700px] lg:max-w-[800px]',
+    lg: 'mobile:max-w-[100vw] mobile:rounded-none max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px] lg:max-w-[1000px] xl:max-w-[1100px]',
+    xl: 'mobile:max-w-[100vw] mobile:rounded-none max-w-[95vw] sm:max-w-[90vw] md:max-w-[900px] lg:max-w-[1200px] xl:max-w-[1400px]',
+    full: 'max-w-[100vw] max-h-[100vh] rounded-none',
   };
 
+  // Mobile drawer animation classes
+  const mobileDrawerClass = mobileDrawer
+    ? 'sm:items-end sm:justify-end sm:p-0'
+    : 'items-center justify-center p-4';
+
+  const modalContainerClass = mobileDrawer
+    ? 'sm:rounded-t-2xl sm:rounded-b-none sm:max-h-[90vh] sm:my-0'
+    : 'rounded-2xl max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]';
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto animate-fade-in" role="presentation">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 overflow-y-auto animate-fade-in',
+        mobileDrawer && 'sm:overflow-hidden'
+      )}
+      role="presentation"
+    >
       {/* Backdrop with purple tint */}
       <div
         className="fixed inset-0 transition-opacity duration-300"
@@ -96,7 +116,7 @@ export function Modal({
       />
 
       {/* Modal Container */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className={cn('flex min-h-full', mobileDrawerClass)}>
         <div
           ref={containerRef}
           role="dialog"
@@ -104,16 +124,18 @@ export function Modal({
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
           className={cn(
-            'relative w-full rounded-2xl transform transition-all duration-300 ease-out',
+            'relative w-full transform transition-all duration-300 ease-out',
             'animate-in fade-in-0 zoom-in-95',
             // Dark mode support via Tailwind
             'bg-white dark:bg-slate-800',
             'border border-purple-500/15 dark:border-purple-500/30',
             'shadow-2xl',
             sizeClasses[size],
-            // Mobile-responsive
-            'mx-auto',
-            'max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]',
+            // Mobile drawer styling
+            mobileDrawerClass,
+            modalContainerClass,
+            // Margin and width
+            mobileDrawer ? 'mx-auto sm:ml-auto sm:mr-0 sm:w-full sm:max-w-[500px]' : 'mx-auto',
             className
           )}
           onClick={e => e.stopPropagation()}

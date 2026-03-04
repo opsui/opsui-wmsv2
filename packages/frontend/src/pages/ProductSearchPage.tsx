@@ -834,11 +834,11 @@ export function ProductSearchPage() {
               />
             ) : viewMode === 'table' ? (
               /* Table View */
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="mobile-table-container overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <table className="w-full text-sm min-w-[800px]">
                   <thead>
                     <tr className="border-b dark:border-gray-700">
-                      <th className="py-3 px-4 w-10">
+                      <th className="py-3 px-2 sm:px-4 w-10 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedSkus.size === data.data.length}
@@ -847,7 +847,7 @@ export function ProductSearchPage() {
                         />
                       </th>
                       <th
-                        className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                        className="text-left py-3 px-2 sm:px-4 w-36 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         onClick={() => handleSort('sku')}
                       >
                         <div className="flex items-center gap-1">
@@ -856,7 +856,7 @@ export function ProductSearchPage() {
                         </div>
                       </th>
                       <th
-                        className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                        className="text-left py-3 px-2 sm:px-4 w-56 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         onClick={() => handleSort('name')}
                       >
                         <div className="flex items-center gap-1">
@@ -865,7 +865,7 @@ export function ProductSearchPage() {
                         </div>
                       </th>
                       <th
-                        className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                        className="text-left py-3 px-2 sm:px-4 w-40 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         onClick={() => handleSort('category')}
                       >
                         <div className="flex items-center gap-1">
@@ -874,7 +874,7 @@ export function ProductSearchPage() {
                         </div>
                       </th>
                       <th
-                        className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                        className="text-left py-3 px-2 sm:px-4 w-32 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         onClick={() => handleSort('unitPrice')}
                       >
                         <div className="flex items-center gap-1">
@@ -883,7 +883,7 @@ export function ProductSearchPage() {
                         </div>
                       </th>
                       <th
-                        className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                        className="text-left py-3 px-2 sm:px-4 w-36 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white"
                         onClick={() => handleSort('totalQuantity')}
                       >
                         <div className="flex items-center gap-1">
@@ -891,10 +891,10 @@ export function ProductSearchPage() {
                           <SortIcon field="totalQuantity" />
                         </div>
                       </th>
-                      <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                      <th className="text-left py-3 px-2 sm:px-4 w-28 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium">
                         Status
                       </th>
-                      <th className="text-left py-3 px-4 text-gray-600 dark:text-gray-400 font-medium">
+                      <th className="text-left py-3 px-2 sm:px-4 w-24 whitespace-nowrap text-gray-600 dark:text-gray-400 font-medium">
                         Actions
                       </th>
                     </tr>
@@ -910,7 +910,7 @@ export function ProductSearchPage() {
                             selectedSkus.has(sku.sku) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                           }`}
                         >
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
                             <input
                               type="checkbox"
                               checked={selectedSkus.has(sku.sku)}
@@ -918,46 +918,48 @@ export function ProductSearchPage() {
                               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               {sku.image && (
                                 <img
                                   src={sku.image}
                                   alt={sku.name}
-                                  className="w-8 h-8 rounded object-cover"
+                                  className="w-8 h-8 rounded object-cover flex-shrink-0"
                                 />
                               )}
-                              <span className="font-mono font-medium text-gray-900 dark:text-white">
+                              <span className="font-mono font-medium text-gray-900 dark:text-white truncate">
                                 {sku.sku}
                               </span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-gray-900 dark:text-white">{sku.name}</td>
-                          <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
+                          <td className="py-3 px-2 sm:px-4 text-gray-900 dark:text-white whitespace-nowrap">
+                            {sku.name}
+                          </td>
+                          <td className="py-3 px-2 sm:px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                             {sku.category || '-'}
                           </td>
-                          <td className="py-3 px-4 text-gray-900 dark:text-white">
+                          <td className="py-3 px-2 sm:px-4 text-gray-900 dark:text-white whitespace-nowrap">
                             {sku.unitPrice != null
                               ? `${sku.currency || 'NZD'} $${Number(sku.unitPrice).toFixed(2)}`
                               : '-'}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-gray-900 dark:text-white">
                                 {sku.totalQuantity || 0}
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 whitespace-nowrap">
                                 ({sku.totalAvailable || 0} available)
                               </span>
                             </div>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
                             <Badge variant={status.variant} className="flex items-center gap-1">
                               <StatusIcon className="h-3 w-3" />
                               {status.label}
                             </Badge>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
                             <div className="flex items-center gap-1">
                               <Button
                                 variant="ghost"

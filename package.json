@@ -11,7 +11,7 @@
     "dev": "node scripts/start-dev.js",
     "dev:start": "node scripts/start-dev.js",
     "dev:stop": "node scripts/stop-dev.js",
-    "dev:restart": "node scripts/restart-dev.js",
+    "dev:restart": "node scripts/restart-dev.cjs",
     "dev:safe": "node scripts/safe-dev.js",
     "dev:smart": "node scripts/smart-dev.js",
     "dev:backend": "npm run dev --workspace=packages/backend",

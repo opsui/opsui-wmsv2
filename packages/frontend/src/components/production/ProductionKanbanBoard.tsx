@@ -320,8 +320,8 @@ export function ProductionKanbanBoard({
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-4 min-w-max h-full">
+      <div className="flex-1 overflow-x-auto scrollbar-contain-x">
+        <div className="flex gap-responsive-sm min-w-max h-full p-2">
           {COLUMNS.filter(col => {
             // Hide CANCELLED column by default, show others
             return col.id !== 'CANCELLED';
@@ -332,7 +332,7 @@ export function ProductionKanbanBoard({
             return (
               <div
                 key={column.id}
-                className={`flex-shrink-0 w-80 flex flex-col rounded-xl border-2 transition-all duration-200 ${
+                className={`flex-shrink-0 min-w-[260px] max-w-[350px] w-full flex flex-col rounded-xl border-2 transition-all duration-200 ${
                   draggedOrder && column.id !== draggedOrder.status
                     ? `${column.borderColor} bg-gray-800/30`
                     : `${column.borderColor} ${column.bgColor}`
@@ -359,7 +359,7 @@ export function ProductionKanbanBoard({
                 </div>
 
                 {/* Column Content */}
-                <div className="flex-1 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-300px)]">
+                <div className="flex-1 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-300px)] scrollbar-thin">
                   {columnOrders.length === 0 ? (
                     <div className="flex items-center justify-center h-32 text-gray-500 text-sm">
                       No orders

@@ -53,6 +53,7 @@ import {
   ConfirmDialog,
   Breadcrumb,
 } from '@/components/shared';
+import { ResponsiveContainer, ResponsiveGrid } from '@/components/shared/ResponsiveContainer';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import {
   InboxIcon,
@@ -1303,181 +1304,307 @@ function InwardsGoodsPage() {
     return (
       <div className="min-h-screen">
         <Header />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main className="px-responsive py-responsive space-y-responsive">
           <Skeleton variant="text" className="w-64 h-10 mb-2" />
           <Skeleton variant="text" className="w-96 h-6 mb-6" />
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <ResponsiveGrid columns="auto" minColumnWidth={180} gap="md">
             <MetricCardSkeleton />
             <MetricCardSkeleton />
             <MetricCardSkeleton />
             <MetricCardSkeleton />
             <MetricCardSkeleton />
-          </div>
+          </ResponsiveGrid>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* Atmospheric background - Industrial dock theme */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-amber-600/6 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-orange-400/5 rounded-full blur-3xl" />
-        {/* Industrial grid pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(249, 115, 22, 0.5) 1px, transparent 1px),
+    <ResponsiveContainer variant="fluid" padding="lg">
+      <div className="min-h-screen relative">
+        {/* Atmospheric background - Industrial dock theme */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/8 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-amber-600/6 rounded-full blur-3xl" />
+          <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-orange-400/5 rounded-full blur-3xl" />
+          {/* Industrial grid pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.02]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(249, 115, 22, 0.5) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(249, 115, 22, 0.5) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-          }}
-        />
-      </div>
-
-      <Header />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb />
-
-        {/* Page Header - Industrial Dock Design */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end gap-6">
-          {/* Left side - Icon and Title */}
-          <div className="flex items-center gap-5">
-            <div className="relative">
-              {/* Outer ring animation */}
-              <div className="absolute inset-0 bg-orange-500/20 rounded-2xl animate-pulse" />
-              {/* Main icon container */}
-              <div className="relative p-4 bg-gradient-to-br from-orange-500/25 to-amber-500/15 rounded-2xl border border-orange-500/40 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
-                <TruckIcon className="h-9 w-9 text-orange-400" />
-              </div>
-              {/* Corner accent */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-                Inwards Goods
-              </h1>
-              <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
-                Receiving Dock
-              </p>
-            </div>
-          </div>
-
-          {/* Right side - Actions and live indicator */}
-          <div className="md:ml-auto flex items-center gap-4">
-            {/* Live dock activity indicator */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-transparent rounded-lg border border-orange-500/20">
-              <div className="relative">
-                <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
-                <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
-              </div>
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                Dock Active
-              </span>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setAsnModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <TruckIcon className="h-5 w-5" />
-                New ASN
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => setReceiptModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <InboxIcon className="h-5 w-5" />
-                New Receipt
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Workflow Progress */}
-        <div className="mb-8">
-          <WorkflowProgress
-            currentStage={currentStage}
-            counts={{
-              asn: inTransitAsnCount,
-              receiving: activeReceiptsCount,
-              qc: pendingQcCount,
-              staging: openStagingCount,
-              putaway: pendingPutawayCount,
-              exceptions: openExceptionsCount,
+              backgroundSize: '50px 50px',
             }}
-            onStageClick={handleStageClick}
           />
         </div>
 
-        {/* Overview Stage */}
-        {currentStage === 'overview' && dashboard && (
-          <div className="space-y-8">
-            {/* Metrics Row */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <MetricCard
-                title="In Transit ASNs"
-                value={inTransitAsnCount}
-                icon={TruckIcon}
-                color="primary"
-                onClick={() => setSearchParams({ tab: 'asn' })}
-              />
-              <MetricCard
-                title="Active Receiving"
-                value={activeReceiptsCount}
-                icon={InboxIcon}
-                color="warning"
-                onClick={() => setSearchParams({ tab: 'receiving' })}
-              />
-              <MetricCard
-                title="Pending QC"
-                value={pendingQcCount}
-                icon={ClipboardDocumentCheckIcon}
-                color="error"
-                onClick={() => setSearchParams({ tab: 'qc' })}
-              />
-              <MetricCard
-                title="Pending Putaway"
-                value={pendingPutawayCount}
-                icon={CubeIcon}
-                color="success"
-                onClick={() => setSearchParams({ tab: 'putaway' })}
-              />
-              <MetricCard
-                title="Exceptions"
-                value={openExceptionsCount}
-                icon={ExclamationTriangleIcon}
-                color="error"
-                onClick={() => setSearchParams({ tab: 'exceptions' })}
-              />
+        <Header />
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb />
+
+          {/* Page Header - Industrial Dock Design */}
+          <div className="mb-8 flex flex-col md:flex-row md:items-end gap-6">
+            {/* Left side - Icon and Title */}
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                {/* Outer ring animation */}
+                <div className="absolute inset-0 bg-orange-500/20 rounded-2xl animate-pulse" />
+                {/* Main icon container */}
+                <div className="relative p-4 bg-gradient-to-br from-orange-500/25 to-amber-500/15 rounded-2xl border border-orange-500/40 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
+                  <TruckIcon className="h-9 w-9 text-orange-400" />
+                </div>
+                {/* Corner accent */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  Inwards Goods
+                </h1>
+                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                  Receiving Dock
+                </p>
+              </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent ASNs */}
-              <Card variant="glass">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Recent Shipments</CardTitle>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSearchParams({ tab: 'asn' })}
-                    >
-                      View All
-                    </Button>
+            {/* Right side - Actions and live indicator */}
+            <div className="md:ml-auto flex items-center gap-4">
+              {/* Live dock activity indicator */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-transparent rounded-lg border border-orange-500/20">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+                  <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Dock Active
+                </span>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => setAsnModalOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <TruckIcon className="h-5 w-5" />
+                  New ASN
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => setReceiptModalOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <InboxIcon className="h-5 w-5" />
+                  New Receipt
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Workflow Progress */}
+          <div className="mb-8">
+            <WorkflowProgress
+              currentStage={currentStage}
+              counts={{
+                asn: inTransitAsnCount,
+                receiving: activeReceiptsCount,
+                qc: pendingQcCount,
+                staging: openStagingCount,
+                putaway: pendingPutawayCount,
+                exceptions: openExceptionsCount,
+              }}
+              onStageClick={handleStageClick}
+            />
+          </div>
+
+          {/* Overview Stage */}
+          {currentStage === 'overview' && dashboard && (
+            <div className="space-y-8">
+              {/* Metrics Row */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <MetricCard
+                  title="In Transit ASNs"
+                  value={inTransitAsnCount}
+                  icon={TruckIcon}
+                  color="primary"
+                  onClick={() => setSearchParams({ tab: 'asn' })}
+                />
+                <MetricCard
+                  title="Active Receiving"
+                  value={activeReceiptsCount}
+                  icon={InboxIcon}
+                  color="warning"
+                  onClick={() => setSearchParams({ tab: 'receiving' })}
+                />
+                <MetricCard
+                  title="Pending QC"
+                  value={pendingQcCount}
+                  icon={ClipboardDocumentCheckIcon}
+                  color="error"
+                  onClick={() => setSearchParams({ tab: 'qc' })}
+                />
+                <MetricCard
+                  title="Pending Putaway"
+                  value={pendingPutawayCount}
+                  icon={CubeIcon}
+                  color="success"
+                  onClick={() => setSearchParams({ tab: 'putaway' })}
+                />
+                <MetricCard
+                  title="Exceptions"
+                  value={openExceptionsCount}
+                  icon={ExclamationTriangleIcon}
+                  color="error"
+                  onClick={() => setSearchParams({ tab: 'exceptions' })}
+                />
+              </div>
+
+              {/* Recent Activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent ASNs */}
+                <Card variant="glass">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Recent Shipments</CardTitle>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setSearchParams({ tab: 'asn' })}
+                      >
+                        View All
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {asns.slice(0, 4).map((asn: AdvanceShippingNotice) => (
+                        <ASNListItem
+                          key={asn.asnId}
+                          asn={asn}
+                          onViewDetails={id => navigate(`/inwards/asn/${id}`)}
+                          onStartReceiving={handleStartReceiving}
+                        />
+                      ))}
+                      {asns.length === 0 && (
+                        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                          <TruckIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                          <p>No shipments yet</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Active Tasks */}
+                <Card variant="glass">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>Active Tasks</CardTitle>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setSearchParams({ tab: 'putaway' })}
+                      >
+                        View All
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {/* Putaway Tasks */}
+                      {putawayTasks.slice(0, 2).map((task: PutawayTask) => (
+                        <CompactTaskCard
+                          key={task.putawayTaskId}
+                          title={task.sku}
+                          subtitle={`To: ${task.targetBinLocation}`}
+                          status={task.status}
+                          statusType="putaway"
+                          progress={task.quantityPutaway}
+                          total={task.quantityToPutaway}
+                          onAction={() => {
+                            setSelectedPutawayTask(task);
+                            setPutawayUpdateModalOpen(true);
+                          }}
+                          actionLabel="Update"
+                          icon={CubeIcon}
+                          color="primary"
+                        />
+                      ))}
+                      {/* QC Inspections */}
+                      {qcInspections.slice(0, 2).map((inspection: QualityInspection) => (
+                        <CompactTaskCard
+                          key={inspection.inspectionId}
+                          title={inspection.sku}
+                          subtitle={`Inspection: ${inspection.inspectionId}`}
+                          status={inspection.status}
+                          statusType="qc"
+                          onAction={() => navigate(`/inwards/qc/${inspection.inspectionId}`)}
+                          actionLabel="Inspect"
+                          icon={ClipboardDocumentCheckIcon}
+                          color="success"
+                        />
+                      ))}
+                      {putawayTasks.length === 0 && qcInspections.length === 0 && (
+                        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                          <ClockIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                          <p>No active tasks</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* ASN Stage */}
+          {currentStage === 'asn' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Advance Shipping Notices
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    Track incoming shipments before arrival
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search ASNs..."
+                      value={asnsSearchTerm}
+                      onChange={e => setAsnsSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {asns.slice(0, 4).map((asn: AdvanceShippingNotice) => (
+                </div>
+              </div>
+
+              {isLoadingASNs ? (
+                <div className="space-y-3">
+                  <Skeleton variant="rounded" className="h-20" />
+                  <Skeleton variant="rounded" className="h-20" />
+                  <Skeleton variant="rounded" className="h-20" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {asns
+                    .filter((asn: AdvanceShippingNotice) => {
+                      if (!asnsSearchTerm.trim()) return true;
+                      const query = asnsSearchTerm.toLowerCase();
+                      return (
+                        asn.purchaseOrderNumber.toLowerCase().includes(query) ||
+                        asn.supplierId.toLowerCase().includes(query) ||
+                        asn.asnId.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice((asnsCurrentPage - 1) * asnsPerPage, asnsCurrentPage * asnsPerPage)
+                    .map((asn: AdvanceShippingNotice) => (
                       <ASNListItem
                         key={asn.asnId}
                         asn={asn}
@@ -1485,38 +1612,396 @@ function InwardsGoodsPage() {
                         onStartReceiving={handleStartReceiving}
                       />
                     ))}
-                    {asns.length === 0 && (
-                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                        <TruckIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-                        <p>No shipments yet</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  {asns.length === 0 && (
+                    <Card variant="glass">
+                      <CardContent className="p-12 text-center">
+                        <TruckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                          No ASNs
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                          Create an ASN to track incoming shipments
+                        </p>
+                        <Button variant="primary" onClick={() => setAsnModalOpen(true)}>
+                          <PlusIcon className="h-5 w-5 mr-2" />
+                          Create ASN
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
 
-              {/* Active Tasks */}
-              <Card variant="glass">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Active Tasks</CardTitle>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSearchParams({ tab: 'putaway' })}
-                    >
-                      View All
-                    </Button>
+              {asns.length > asnsPerPage && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={asnsCurrentPage}
+                    totalItems={asns.length}
+                    pageSize={asnsPerPage}
+                    onPageChange={setAsnsCurrentPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Receiving Stage */}
+          {currentStage === 'receiving' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Receiving Dock
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    Receive and verify incoming goods
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search receipts..."
+                      value={receiptsSearchTerm}
+                      onChange={e => setReceiptsSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {/* Putaway Tasks */}
-                    {putawayTasks.slice(0, 2).map((task: PutawayTask) => (
+                </div>
+              </div>
+
+              {isLoadingReceipts ? (
+                <div className="space-y-3">
+                  <Skeleton variant="rounded" className="h-20" />
+                  <Skeleton variant="rounded" className="h-20" />
+                  <Skeleton variant="rounded" className="h-20" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {receipts
+                    .filter((receipt: Receipt) => {
+                      if (!receiptsSearchTerm.trim()) return true;
+                      const query = receiptsSearchTerm.toLowerCase();
+                      return (
+                        receipt.receiptId.toLowerCase().includes(query) ||
+                        receipt.receiptType.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice(
+                      (receiptsCurrentPage - 1) * receiptsPerPage,
+                      receiptsCurrentPage * receiptsPerPage
+                    )
+                    .map((receipt: Receipt) => (
+                      <ReceiptListItem
+                        key={receipt.receiptId}
+                        receipt={receipt}
+                        onViewDetails={id => navigate(`/inwards/receipt/${id}`)}
+                        onCreateLicensePlate={id => navigate(`/inwards/license-plate/create/${id}`)}
+                      />
+                    ))}
+                  {receipts.length === 0 && (
+                    <Card variant="glass">
+                      <CardContent className="p-12 text-center">
+                        <InboxIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                          No Receipts
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                          Create a receipt to record incoming goods
+                        </p>
+                        <Button variant="primary" onClick={() => setReceiptModalOpen(true)}>
+                          <PlusIcon className="h-5 w-5 mr-2" />
+                          Create Receipt
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {receipts.length > receiptsPerPage && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={receiptsCurrentPage}
+                    totalItems={receipts.length}
+                    pageSize={receiptsPerPage}
+                    onPageChange={setReceiptsCurrentPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* QC Stage */}
+          {currentStage === 'qc' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Quality Control
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    Inspect received goods for quality compliance
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search inspections..."
+                      value={qcSearchTerm}
+                      onChange={e => setQcSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {isLoadingQC ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Skeleton variant="rounded" className="h-40" />
+                  <Skeleton variant="rounded" className="h-40" />
+                  <Skeleton variant="rounded" className="h-40" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {qcInspections
+                    .filter((i: QualityInspection) => {
+                      if (!qcSearchTerm.trim()) return true;
+                      const query = qcSearchTerm.toLowerCase();
+                      return (
+                        i.sku.toLowerCase().includes(query) ||
+                        i.inspectionId.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice((qcCurrentPage - 1) * qcPerPage, qcCurrentPage * qcPerPage)
+                    .map((inspection: QualityInspection) => (
+                      <CompactTaskCard
+                        key={inspection.inspectionId}
+                        title={inspection.sku}
+                        subtitle={`Passed: ${inspection.quantityPassed} | Failed: ${inspection.quantityFailed}`}
+                        status={inspection.status}
+                        statusType="qc"
+                        onAction={() => navigate(`/inwards/qc/${inspection.inspectionId}`)}
+                        actionLabel={
+                          inspection.status === InspectionStatus.PENDING
+                            ? 'Start'
+                            : inspection.status === InspectionStatus.IN_PROGRESS
+                              ? 'Complete'
+                              : undefined
+                        }
+                        icon={ClipboardDocumentCheckIcon}
+                        color={
+                          inspection.status === InspectionStatus.PASSED
+                            ? 'success'
+                            : inspection.status === InspectionStatus.FAILED
+                              ? 'error'
+                              : inspection.status === InspectionStatus.CONDITIONAL_PASSED
+                                ? 'warning'
+                                : 'primary'
+                        }
+                      />
+                    ))}
+                  {qcInspections.length === 0 && (
+                    <Card variant="glass" className="md:col-span-2 lg:col-span-3">
+                      <CardContent className="p-12 text-center">
+                        <ClipboardDocumentCheckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                          No QC Inspections
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          QC inspections will appear after receiving
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {qcInspections.length > qcPerPage && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={qcCurrentPage}
+                    totalItems={qcInspections.length}
+                    pageSize={qcPerPage}
+                    onPageChange={setQcCurrentPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Staging Stage */}
+          {currentStage === 'staging' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Staging Areas</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                  License plates and staging locations
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Staging Locations */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Staging Locations
+                  </h3>
+                  {isLoadingStaging ? (
+                    <div className="space-y-3">
+                      <Skeleton variant="rounded" className="h-24" />
+                      <Skeleton variant="rounded" className="h-24" />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {stagingLocations.slice(0, 5).map((location: StagingLocation) => (
+                        <CompactTaskCard
+                          key={location.stagingLocationId}
+                          title={location.locationCode}
+                          subtitle={`Zone: ${location.zone}`}
+                          status={location.status}
+                          statusType="staging"
+                          progress={location.currentOccupancy}
+                          total={location.capacity}
+                          onAction={() =>
+                            navigate(`/inwards/staging/${location.stagingLocationId}/assign`)
+                          }
+                          actionLabel={
+                            location.status === StagingLocationStatus.AVAILABLE
+                              ? 'Assign'
+                              : undefined
+                          }
+                          icon={CubeIcon}
+                          color={
+                            location.status === StagingLocationStatus.AVAILABLE
+                              ? 'success'
+                              : location.status === StagingLocationStatus.OCCUPIED
+                                ? 'warning'
+                                : 'error'
+                          }
+                        />
+                      ))}
+                      {stagingLocations.length === 0 && (
+                        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                          <CubeIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                          <p>No staging locations configured</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* License Plates */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    License Plates
+                  </h3>
+                  {isLoadingLicensePlates ? (
+                    <div className="space-y-3">
+                      <Skeleton variant="rounded" className="h-24" />
+                      <Skeleton variant="rounded" className="h-24" />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {licensePlates.slice(0, 5).map((plate: LicensePlate) => (
+                        <CompactTaskCard
+                          key={plate.licensePlateId}
+                          title={plate.barcode}
+                          subtitle={`SKU: ${plate.sku}${plate.lotNumber ? ` | Lot: ${plate.lotNumber}` : ''}`}
+                          status={plate.status}
+                          statusType="license"
+                          progress={plate.quantityPutaway}
+                          total={plate.quantity}
+                          onAction={() => {
+                            if (plate.status === LicensePlateStatus.OPEN) {
+                              navigate(`/inwards/license-plate/${plate.licensePlateId}/seal`);
+                            } else if (plate.status === LicensePlateStatus.SEALED) {
+                              navigate(`/inwards/qc/create/${plate.licensePlateId}`);
+                            } else if (plate.status === LicensePlateStatus.QC_PASSED) {
+                              navigate(`/inwards/staging/assign/${plate.licensePlateId}`);
+                            }
+                          }}
+                          actionLabel={
+                            plate.status === LicensePlateStatus.OPEN
+                              ? 'Seal'
+                              : plate.status === LicensePlateStatus.SEALED
+                                ? 'Start QC'
+                                : plate.status === LicensePlateStatus.QC_PASSED
+                                  ? 'Stage'
+                                  : undefined
+                          }
+                          icon={TagIcon}
+                          color="primary"
+                        />
+                      ))}
+                      {licensePlates.length === 0 && (
+                        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                          <TagIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                          <p>No license plates created</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Putaway Stage */}
+          {currentStage === 'putaway' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Putaway Tasks
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    Store received items in their bin locations
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search tasks..."
+                      value={putawaySearchTerm}
+                      onChange={e => setPutawaySearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {isLoadingPutaway ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Skeleton variant="rounded" className="h-40" />
+                  <Skeleton variant="rounded" className="h-40" />
+                  <Skeleton variant="rounded" className="h-40" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {putawayTasks
+                    .filter((task: PutawayTask) => {
+                      if (!putawaySearchTerm.trim()) return true;
+                      const query = putawaySearchTerm.toLowerCase();
+                      return (
+                        task.sku.toLowerCase().includes(query) ||
+                        task.targetBinLocation.toLowerCase().includes(query) ||
+                        task.putawayTaskId.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice(
+                      (putawayCurrentPage - 1) * putawayPerPage,
+                      putawayCurrentPage * putawayPerPage
+                    )
+                    .map((task: PutawayTask) => (
                       <CompactTaskCard
                         key={task.putawayTaskId}
                         title={task.sku}
-                        subtitle={`To: ${task.targetBinLocation}`}
+                        subtitle={`To: ${task.targetBinLocation}${task.assignedTo ? ` | Assigned: ${task.assignedTo}` : ''}`}
                         status={task.status}
                         statusType="putaway"
                         progress={task.quantityPutaway}
@@ -1530,635 +2015,159 @@ function InwardsGoodsPage() {
                         color="primary"
                       />
                     ))}
-                    {/* QC Inspections */}
-                    {qcInspections.slice(0, 2).map((inspection: QualityInspection) => (
-                      <CompactTaskCard
-                        key={inspection.inspectionId}
-                        title={inspection.sku}
-                        subtitle={`Inspection: ${inspection.inspectionId}`}
-                        status={inspection.status}
-                        statusType="qc"
-                        onAction={() => navigate(`/inwards/qc/${inspection.inspectionId}`)}
-                        actionLabel="Inspect"
-                        icon={ClipboardDocumentCheckIcon}
-                        color="success"
+                  {putawayTasks.length === 0 && (
+                    <Card variant="glass" className="md:col-span-2 lg:col-span-3">
+                      <CardContent className="p-12 text-center">
+                        <CubeIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                          No Putaway Tasks
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Putaway tasks will appear after receiving goods
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {putawayTasks.length > putawayPerPage && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={putawayCurrentPage}
+                    totalItems={putawayTasks.length}
+                    pageSize={putawayPerPage}
+                    onPageChange={setPutawayCurrentPage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Exceptions Stage */}
+          {currentStage === 'exceptions' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Receiving Exceptions
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    Manage receiving discrepancies and exceptions
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search exceptions..."
+                      value={exceptionsSearchTerm}
+                      onChange={e => setExceptionsSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {isLoadingExceptions ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Skeleton variant="rounded" className="h-40" />
+                  <Skeleton variant="rounded" className="h-40" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {receivingExceptions
+                    .filter((exception: ReceivingException) => {
+                      if (!exceptionsSearchTerm.trim()) return true;
+                      const query = exceptionsSearchTerm.toLowerCase();
+                      return (
+                        exception.sku.toLowerCase().includes(query) ||
+                        exception.exceptionType.toLowerCase().includes(query) ||
+                        exception.exceptionId.toLowerCase().includes(query)
+                      );
+                    })
+                    .slice(
+                      (exceptionsCurrentPage - 1) * exceptionsPerPage,
+                      exceptionsCurrentPage * exceptionsPerPage
+                    )
+                    .map((exception: ReceivingException) => (
+                      <ExceptionCard
+                        key={exception.exceptionId}
+                        exception={exception}
+                        onInvestigate={id => navigate(`/inwards/exceptions/${id}`)}
+                        onResolve={id => navigate(`/inwards/exceptions/${id}/resolve`)}
                       />
                     ))}
-                    {putawayTasks.length === 0 && qcInspections.length === 0 && (
-                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                        <ClockIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-                        <p>No active tasks</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
+                  {receivingExceptions.length === 0 && (
+                    <Card variant="glass" className="md:col-span-2">
+                      <CardContent className="p-12 text-center">
+                        <ExclamationTriangleIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                          No Exceptions
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          No receiving exceptions to display
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
 
-        {/* ASN Stage */}
-        {currentStage === 'asn' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Advance Shipping Notices
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                  Track incoming shipments before arrival
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search ASNs..."
-                    value={asnsSearchTerm}
-                    onChange={e => setAsnsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
+              {receivingExceptions.length > exceptionsPerPage && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={exceptionsCurrentPage}
+                    totalItems={receivingExceptions.length}
+                    pageSize={exceptionsPerPage}
+                    onPageChange={setExceptionsCurrentPage}
                   />
                 </div>
-              </div>
+              )}
             </div>
+          )}
+        </main>
 
-            {isLoadingASNs ? (
-              <div className="space-y-3">
-                <Skeleton variant="rounded" className="h-20" />
-                <Skeleton variant="rounded" className="h-20" />
-                <Skeleton variant="rounded" className="h-20" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {asns
-                  .filter((asn: AdvanceShippingNotice) => {
-                    if (!asnsSearchTerm.trim()) return true;
-                    const query = asnsSearchTerm.toLowerCase();
-                    return (
-                      asn.purchaseOrderNumber.toLowerCase().includes(query) ||
-                      asn.supplierId.toLowerCase().includes(query) ||
-                      asn.asnId.toLowerCase().includes(query)
-                    );
-                  })
-                  .slice((asnsCurrentPage - 1) * asnsPerPage, asnsCurrentPage * asnsPerPage)
-                  .map((asn: AdvanceShippingNotice) => (
-                    <ASNListItem
-                      key={asn.asnId}
-                      asn={asn}
-                      onViewDetails={id => navigate(`/inwards/asn/${id}`)}
-                      onStartReceiving={handleStartReceiving}
-                    />
-                  ))}
-                {asns.length === 0 && (
-                  <Card variant="glass">
-                    <CardContent className="p-12 text-center">
-                      <TruckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                        No ASNs
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        Create an ASN to track incoming shipments
-                      </p>
-                      <Button variant="primary" onClick={() => setAsnModalOpen(true)}>
-                        <PlusIcon className="h-5 w-5 mr-2" />
-                        Create ASN
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {asns.length > asnsPerPage && (
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={asnsCurrentPage}
-                  totalItems={asns.length}
-                  pageSize={asnsPerPage}
-                  onPageChange={setAsnsCurrentPage}
-                />
-              </div>
-            )}
-          </div>
+        {/* Modals */}
+        {asnModalOpen && (
+          <CreateASNModal onClose={() => setAsnModalOpen(false)} onSuccess={() => refetchAsns()} />
+        )}
+        {receiptModalOpen && (
+          <CreateReceiptModal
+            asnId={undefined}
+            onClose={() => setReceiptModalOpen(false)}
+            onSuccess={() => refetchReceipts()}
+          />
+        )}
+        {putawayUpdateModalOpen && selectedPutawayTask && (
+          <UpdatePutawayTaskModal
+            task={selectedPutawayTask}
+            onClose={() => {
+              setPutawayUpdateModalOpen(false);
+              setSelectedPutawayTask(null);
+            }}
+            onSuccess={() => refetchPutawayTasks()}
+          />
         )}
 
-        {/* Receiving Stage */}
-        {currentStage === 'receiving' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Receiving Dock</h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                  Receive and verify incoming goods
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search receipts..."
-                    value={receiptsSearchTerm}
-                    onChange={e => setReceiptsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {isLoadingReceipts ? (
-              <div className="space-y-3">
-                <Skeleton variant="rounded" className="h-20" />
-                <Skeleton variant="rounded" className="h-20" />
-                <Skeleton variant="rounded" className="h-20" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {receipts
-                  .filter((receipt: Receipt) => {
-                    if (!receiptsSearchTerm.trim()) return true;
-                    const query = receiptsSearchTerm.toLowerCase();
-                    return (
-                      receipt.receiptId.toLowerCase().includes(query) ||
-                      receipt.receiptType.toLowerCase().includes(query)
-                    );
-                  })
-                  .slice(
-                    (receiptsCurrentPage - 1) * receiptsPerPage,
-                    receiptsCurrentPage * receiptsPerPage
-                  )
-                  .map((receipt: Receipt) => (
-                    <ReceiptListItem
-                      key={receipt.receiptId}
-                      receipt={receipt}
-                      onViewDetails={id => navigate(`/inwards/receipt/${id}`)}
-                      onCreateLicensePlate={id => navigate(`/inwards/license-plate/create/${id}`)}
-                    />
-                  ))}
-                {receipts.length === 0 && (
-                  <Card variant="glass">
-                    <CardContent className="p-12 text-center">
-                      <InboxIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                        No Receipts
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        Create a receipt to record incoming goods
-                      </p>
-                      <Button variant="primary" onClick={() => setReceiptModalOpen(true)}>
-                        <PlusIcon className="h-5 w-5 mr-2" />
-                        Create Receipt
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {receipts.length > receiptsPerPage && (
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={receiptsCurrentPage}
-                  totalItems={receipts.length}
-                  pageSize={receiptsPerPage}
-                  onPageChange={setReceiptsCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* QC Stage */}
-        {currentStage === 'qc' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Quality Control
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                  Inspect received goods for quality compliance
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search inspections..."
-                    value={qcSearchTerm}
-                    onChange={e => setQcSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {isLoadingQC ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Skeleton variant="rounded" className="h-40" />
-                <Skeleton variant="rounded" className="h-40" />
-                <Skeleton variant="rounded" className="h-40" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {qcInspections
-                  .filter((i: QualityInspection) => {
-                    if (!qcSearchTerm.trim()) return true;
-                    const query = qcSearchTerm.toLowerCase();
-                    return (
-                      i.sku.toLowerCase().includes(query) ||
-                      i.inspectionId.toLowerCase().includes(query)
-                    );
-                  })
-                  .slice((qcCurrentPage - 1) * qcPerPage, qcCurrentPage * qcPerPage)
-                  .map((inspection: QualityInspection) => (
-                    <CompactTaskCard
-                      key={inspection.inspectionId}
-                      title={inspection.sku}
-                      subtitle={`Passed: ${inspection.quantityPassed} | Failed: ${inspection.quantityFailed}`}
-                      status={inspection.status}
-                      statusType="qc"
-                      onAction={() => navigate(`/inwards/qc/${inspection.inspectionId}`)}
-                      actionLabel={
-                        inspection.status === InspectionStatus.PENDING
-                          ? 'Start'
-                          : inspection.status === InspectionStatus.IN_PROGRESS
-                            ? 'Complete'
-                            : undefined
-                      }
-                      icon={ClipboardDocumentCheckIcon}
-                      color={
-                        inspection.status === InspectionStatus.PASSED
-                          ? 'success'
-                          : inspection.status === InspectionStatus.FAILED
-                            ? 'error'
-                            : inspection.status === InspectionStatus.CONDITIONAL_PASSED
-                              ? 'warning'
-                              : 'primary'
-                      }
-                    />
-                  ))}
-                {qcInspections.length === 0 && (
-                  <Card variant="glass" className="md:col-span-2 lg:col-span-3">
-                    <CardContent className="p-12 text-center">
-                      <ClipboardDocumentCheckIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                        No QC Inspections
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        QC inspections will appear after receiving
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {qcInspections.length > qcPerPage && (
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={qcCurrentPage}
-                  totalItems={qcInspections.length}
-                  pageSize={qcPerPage}
-                  onPageChange={setQcCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Staging Stage */}
-        {currentStage === 'staging' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Staging Areas</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                License plates and staging locations
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Staging Locations */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Staging Locations
-                </h3>
-                {isLoadingStaging ? (
-                  <div className="space-y-3">
-                    <Skeleton variant="rounded" className="h-24" />
-                    <Skeleton variant="rounded" className="h-24" />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {stagingLocations.slice(0, 5).map((location: StagingLocation) => (
-                      <CompactTaskCard
-                        key={location.stagingLocationId}
-                        title={location.locationCode}
-                        subtitle={`Zone: ${location.zone}`}
-                        status={location.status}
-                        statusType="staging"
-                        progress={location.currentOccupancy}
-                        total={location.capacity}
-                        onAction={() =>
-                          navigate(`/inwards/staging/${location.stagingLocationId}/assign`)
-                        }
-                        actionLabel={
-                          location.status === StagingLocationStatus.AVAILABLE ? 'Assign' : undefined
-                        }
-                        icon={CubeIcon}
-                        color={
-                          location.status === StagingLocationStatus.AVAILABLE
-                            ? 'success'
-                            : location.status === StagingLocationStatus.OCCUPIED
-                              ? 'warning'
-                              : 'error'
-                        }
-                      />
-                    ))}
-                    {stagingLocations.length === 0 && (
-                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                        <CubeIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-                        <p>No staging locations configured</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* License Plates */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  License Plates
-                </h3>
-                {isLoadingLicensePlates ? (
-                  <div className="space-y-3">
-                    <Skeleton variant="rounded" className="h-24" />
-                    <Skeleton variant="rounded" className="h-24" />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {licensePlates.slice(0, 5).map((plate: LicensePlate) => (
-                      <CompactTaskCard
-                        key={plate.licensePlateId}
-                        title={plate.barcode}
-                        subtitle={`SKU: ${plate.sku}${plate.lotNumber ? ` | Lot: ${plate.lotNumber}` : ''}`}
-                        status={plate.status}
-                        statusType="license"
-                        progress={plate.quantityPutaway}
-                        total={plate.quantity}
-                        onAction={() => {
-                          if (plate.status === LicensePlateStatus.OPEN) {
-                            navigate(`/inwards/license-plate/${plate.licensePlateId}/seal`);
-                          } else if (plate.status === LicensePlateStatus.SEALED) {
-                            navigate(`/inwards/qc/create/${plate.licensePlateId}`);
-                          } else if (plate.status === LicensePlateStatus.QC_PASSED) {
-                            navigate(`/inwards/staging/assign/${plate.licensePlateId}`);
-                          }
-                        }}
-                        actionLabel={
-                          plate.status === LicensePlateStatus.OPEN
-                            ? 'Seal'
-                            : plate.status === LicensePlateStatus.SEALED
-                              ? 'Start QC'
-                              : plate.status === LicensePlateStatus.QC_PASSED
-                                ? 'Stage'
-                                : undefined
-                        }
-                        icon={TagIcon}
-                        color="primary"
-                      />
-                    ))}
-                    {licensePlates.length === 0 && (
-                      <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                        <TagIcon className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-                        <p>No license plates created</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Putaway Stage */}
-        {currentStage === 'putaway' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Putaway Tasks</h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                  Store received items in their bin locations
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search tasks..."
-                    value={putawaySearchTerm}
-                    onChange={e => setPutawaySearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {isLoadingPutaway ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Skeleton variant="rounded" className="h-40" />
-                <Skeleton variant="rounded" className="h-40" />
-                <Skeleton variant="rounded" className="h-40" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {putawayTasks
-                  .filter((task: PutawayTask) => {
-                    if (!putawaySearchTerm.trim()) return true;
-                    const query = putawaySearchTerm.toLowerCase();
-                    return (
-                      task.sku.toLowerCase().includes(query) ||
-                      task.targetBinLocation.toLowerCase().includes(query) ||
-                      task.putawayTaskId.toLowerCase().includes(query)
-                    );
-                  })
-                  .slice(
-                    (putawayCurrentPage - 1) * putawayPerPage,
-                    putawayCurrentPage * putawayPerPage
-                  )
-                  .map((task: PutawayTask) => (
-                    <CompactTaskCard
-                      key={task.putawayTaskId}
-                      title={task.sku}
-                      subtitle={`To: ${task.targetBinLocation}${task.assignedTo ? ` | Assigned: ${task.assignedTo}` : ''}`}
-                      status={task.status}
-                      statusType="putaway"
-                      progress={task.quantityPutaway}
-                      total={task.quantityToPutaway}
-                      onAction={() => {
-                        setSelectedPutawayTask(task);
-                        setPutawayUpdateModalOpen(true);
-                      }}
-                      actionLabel="Update"
-                      icon={CubeIcon}
-                      color="purple"
-                    />
-                  ))}
-                {putawayTasks.length === 0 && (
-                  <Card variant="glass" className="md:col-span-2 lg:col-span-3">
-                    <CardContent className="p-12 text-center">
-                      <CubeIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                        No Putaway Tasks
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Putaway tasks will appear after receiving goods
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {putawayTasks.length > putawayPerPage && (
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={putawayCurrentPage}
-                  totalItems={putawayTasks.length}
-                  pageSize={putawayPerPage}
-                  onPageChange={setPutawayCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Exceptions Stage */}
-        {currentStage === 'exceptions' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Receiving Exceptions
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                  Manage receiving discrepancies and exceptions
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search exceptions..."
-                    value={exceptionsSearchTerm}
-                    onChange={e => setExceptionsSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2.5 w-64 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500/50"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {isLoadingExceptions ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Skeleton variant="rounded" className="h-40" />
-                <Skeleton variant="rounded" className="h-40" />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {receivingExceptions
-                  .filter((exception: ReceivingException) => {
-                    if (!exceptionsSearchTerm.trim()) return true;
-                    const query = exceptionsSearchTerm.toLowerCase();
-                    return (
-                      exception.sku.toLowerCase().includes(query) ||
-                      exception.exceptionType.toLowerCase().includes(query) ||
-                      exception.exceptionId.toLowerCase().includes(query)
-                    );
-                  })
-                  .slice(
-                    (exceptionsCurrentPage - 1) * exceptionsPerPage,
-                    exceptionsCurrentPage * exceptionsPerPage
-                  )
-                  .map((exception: ReceivingException) => (
-                    <ExceptionCard
-                      key={exception.exceptionId}
-                      exception={exception}
-                      onInvestigate={id => navigate(`/inwards/exceptions/${id}`)}
-                      onResolve={id => navigate(`/inwards/exceptions/${id}/resolve`)}
-                    />
-                  ))}
-                {receivingExceptions.length === 0 && (
-                  <Card variant="glass" className="md:col-span-2">
-                    <CardContent className="p-12 text-center">
-                      <ExclamationTriangleIcon className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                        No Exceptions
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No receiving exceptions to display
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
-            {receivingExceptions.length > exceptionsPerPage && (
-              <div className="flex justify-center">
-                <Pagination
-                  currentPage={exceptionsCurrentPage}
-                  totalItems={receivingExceptions.length}
-                  pageSize={exceptionsPerPage}
-                  onPageChange={setExceptionsCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Modals */}
-      {asnModalOpen && (
-        <CreateASNModal onClose={() => setAsnModalOpen(false)} onSuccess={() => refetchAsns()} />
-      )}
-      {receiptModalOpen && (
-        <CreateReceiptModal
-          asnId={undefined}
-          onClose={() => setReceiptModalOpen(false)}
-          onSuccess={() => refetchReceipts()}
-        />
-      )}
-      {putawayUpdateModalOpen && selectedPutawayTask && (
-        <UpdatePutawayTaskModal
-          task={selectedPutawayTask}
+        {/* Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialogOpen}
           onClose={() => {
-            setPutawayUpdateModalOpen(false);
-            setSelectedPutawayTask(null);
+            setConfirmDialogOpen(false);
+            setPendingAsnId(null);
           }}
-          onSuccess={() => refetchPutawayTasks()}
+          onConfirm={handleConfirmStartReceiving}
+          title="Start Receiving Process"
+          message="This will mark the ASN as received and create a receipt. Are you sure you want to proceed?"
+          confirmText="Start Receiving"
+          cancelText="Cancel"
+          variant="info"
+          isLoading={updateASNStatus.isPending}
         />
-      )}
-
-      {/* Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={confirmDialogOpen}
-        onClose={() => {
-          setConfirmDialogOpen(false);
-          setPendingAsnId(null);
-        }}
-        onConfirm={handleConfirmStartReceiving}
-        title="Start Receiving Process"
-        message="This will mark the ASN as received and create a receipt. Are you sure you want to proceed?"
-        confirmText="Start Receiving"
-        cancelText="Cancel"
-        variant="info"
-        isLoading={updateASNStatus.isPending}
-      />
-    </div>
+      </div>
+    </ResponsiveContainer>
   );
 }
 

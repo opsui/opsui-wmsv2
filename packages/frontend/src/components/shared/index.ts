@@ -19,6 +19,7 @@ export * from './Header';
 export * from './Input';
 export * from './Label';
 export * from './LoadingSpinner';
+export * from './MobileTable';
 export * from './Modal';
 export * from './NotificationCenter';
 export * from './Pagination';

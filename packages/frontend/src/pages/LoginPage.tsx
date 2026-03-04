@@ -117,7 +117,7 @@ export function LoginPage() {
   });
 
   return (
-    <div className="login-container login-grid-bg min-h-screen flex items-center justify-center px-4 sm:px-6 py-12">
+    <div className="login-container login-grid-bg min-h-screen flex items-center justify-center px-3 xs:px-4 sm:px-6 py-8 sm:py-12">
       {/* Decorative blur elements for atmospheric depth */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
@@ -125,10 +125,10 @@ export function LoginPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-md w-full space-y-8 relative z-10">
+      <div className="max-w-xs xs:max-w-sm sm:max-w-md w-full space-y-6 xs:space-y-8 relative z-10">
         {/* Header with staggered animation */}
         <div className="text-center" style={{ animation: 'login-stagger-in 0.4s ease-out' }}>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bold tracking-tight">
             <span className="login-title-ops">Ops</span>
             <span className="login-title-ui">UI</span>
           </h1>
@@ -143,7 +143,7 @@ export function LoginPage() {
           className="mt-8 space-y-6"
           style={{ animation: 'login-stagger-in 0.5s ease-out 0.1s backwards' }}
         >
-          <div className="login-card login-corners rounded-2xl p-8 sm:p-10 space-y-6">
+          <div className="login-card login-corners rounded-2xl p-5 xs:p-6 sm:p-8 lg:p-10 space-y-5 xs:space-y-6">
             {/* Security badge */}
             <div className="flex justify-center mb-6">
               <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20">

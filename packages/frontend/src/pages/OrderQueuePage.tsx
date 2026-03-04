@@ -16,6 +16,7 @@ import {
   Pagination,
   useToast,
 } from '@/components/shared';
+import { ResponsiveContainer, ResponsiveGrid } from '@/components/shared/ResponsiveContainer';
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { useOrderUpdates } from '@/hooks/useWebSocket';
 import {
@@ -704,9 +705,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
           page,
           limit: pageSize,
+          enabled: true,
         }
-      : { status: 'PENDING' as OrderStatus, page: 1, limit: 1 }, // dummy — disabled below
-    { enabled: mode === 'picking' } as any
+      : { status: 'PENDING' as OrderStatus, page: 1, limit: 1, enabled: false } // dummy — disabled below
   );
 
   const packingQueueResult = useQuery({
@@ -742,9 +743,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           page: 1,
           limit: 100,
           refetchOnMount: 'always',
+          enabled: true,
         }
-      : { status: 'PENDING' as OrderStatus, page: 1, limit: 1 },
-    { enabled: mode === 'picking' } as any
+      : { status: 'PENDING' as OrderStatus, page: 1, limit: 1, enabled: false }
   );
 
   const packingAllOrders = useQuery({
@@ -1021,7 +1022,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             </CardContent>
           </Card>
         ) : noMotion ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <ResponsiveGrid columns={3} minColumnWidth={300} gap="md">
             {filteredOrders.map((order: any) => (
               <OrderCard
                 key={order.orderId}
@@ -1032,13 +1033,13 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 mode={mode}
               />
             ))}
-          </div>
+          </ResponsiveGrid>
         ) : (
           <motion.div
             variants={pageVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+            className="responsive-grid responsive-grid-3"
           >
             {filteredOrders.map((order: any) => (
               <OrderCard

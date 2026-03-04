@@ -356,7 +356,7 @@ function TimeRangeSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-40 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
+        <div className="absolute top-full left-0 mt-2 w-40 dark:bg-gray-900 bg-white rounded-xl dark:border-gray-700 border-gray-200 shadow-2xl animate-fade-in">
           <div className="py-2">
             {RANGE_OPTIONS.map(option => {
               const isActive = option.value === value;
