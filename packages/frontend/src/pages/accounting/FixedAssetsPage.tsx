@@ -680,10 +680,23 @@ function FixedAssetsPage() {
     const colors: Record<string, string> = {
       Equipment: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
       Vehicles: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+      Building_Improve: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+      Furniture_Fixt: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
       'Building Improvements': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
       'Furniture & Fixtures': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     };
     return colors[category || ''] || 'bg-slate-500/15 text-slate-400 border-slate-500/30';
+  };
+
+  // Get category display label
+  const getCategoryLabel = (category?: string): string => {
+    const labels: Record<string, string> = {
+      Equipment: 'Equipment',
+      Vehicles: 'Vehicles',
+      Building_Improve: 'Building Improvements',
+      Furniture_Fixt: 'Furniture & Fixtures',
+    };
+    return labels[category || ''] || category || '-';
   };
 
   return (
@@ -945,7 +958,7 @@ function FixedAssetsPage() {
                           <span
                             className={`category-badge inline-flex px-2.5 py-1 rounded-md border ${getCategoryColor(asset.assetCategory)}`}
                           >
-                            {asset.assetCategory || '-'}
+                            {getCategoryLabel(asset.assetCategory)}
                           </span>
                         </td>
                         <td className="py-4 px-6">
@@ -1136,8 +1149,8 @@ function FixedAssetsPage() {
                       <option value="">Select category</option>
                       <option value="Equipment">Equipment</option>
                       <option value="Vehicles">Vehicles</option>
-                      <option value="Building Improvements">Building Improvements</option>
-                      <option value="Furniture & Fixtures">Furniture & Fixtures</option>
+                      <option value="Building_Improve">Building Improvements</option>
+                      <option value="Furniture_Fixt">Furniture & Fixtures</option>
                     </select>
                     {formErrors.category && (
                       <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
