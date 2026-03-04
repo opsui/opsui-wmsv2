@@ -52,6 +52,20 @@ interface Budget {
   fiscalYear: number;
   budgetType: string;
   status: string;
+  description?: string;
+}
+
+interface NewBudgetForm {
+  budgetName: string;
+  fiscalYear: number;
+  budgetType: string;
+  description: string;
+}
+
+interface FormErrors {
+  budgetName?: string;
+  fiscalYear?: string;
+  budgetType?: string;
 }
 
 // ============================================================================
@@ -401,6 +415,42 @@ function BudgetingPage() {
   const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Form state for new budget
+  const [budgets, setBudgets] = useState<Budget[]>([
+    {
+      budgetId: 'BG-2024-001',
+      budgetName: 'FY 2024 Operating Budget',
+      fiscalYear: 2024,
+      budgetType: 'ANNUAL',
+      status: 'ACTIVE',
+    },
+    {
+      budgetId: 'BG-2024-002',
+      budgetName: 'FY 2024 Q1 Forecast',
+      fiscalYear: 2024,
+      budgetType: 'QUARTERLY',
+      status: 'ACTIVE',
+    },
+    {
+      budgetId: 'BG-2024-003',
+      budgetName: 'FY 2024 Q2 Forecast',
+      fiscalYear: 2024,
+      budgetType: 'QUARTERLY',
+      status: 'DRAFT',
+    },
+  ]);
+
+  const [formData, setFormData] = useState<NewBudgetForm>({
+    budgetName: '',
+    fiscalYear: 2025,
+    budgetType: 'Annual',
+    description: '',
+  });
+
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
   // Trigger animations after mount
   useEffect(() => {
     setMounted(true);
@@ -652,6 +702,105 @@ function BudgetingPage() {
     }
   };
 
+  // Form validation
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    if (!formData.budgetName.trim()) {
+      errors.budgetName = 'Budget name is required';
+    } else if (formData.budgetName.trim().length < 3) {
+      errors.budgetName = 'Budget name must be at least 3 characters';
+    } else if (formData.budgetName.trim().length > 100) {
+      errors.budgetName = 'Budget name must be less than 100 characters';
+    }
+
+    if (!formData.fiscalYear || formData.fiscalYear < 2020 || formData.fiscalYear > 2100) {
+      errors.fiscalYear = 'Please select a valid fiscal year';
+    }
+
+    if (!formData.budgetType) {
+      errors.budgetType = 'Please select a budget type';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form input changes
+  const handleInputChange = (field: keyof NewBudgetForm, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // Handle form submission
+  const handleSubmitBudget = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Generate new budget ID
+      const newBudgetId = `BG-${formData.fiscalYear}-${String(budgets.length + 1).padStart(3, '0')}`;
+
+      // Create new budget object
+      const newBudget: Budget = {
+        budgetId: newBudgetId,
+        budgetName: formData.budgetName.trim(),
+        fiscalYear: formData.fiscalYear,
+        budgetType: formData.budgetType.toUpperCase(),
+        status: 'DRAFT',
+        description: formData.description.trim() || undefined,
+      };
+
+      // Add to budgets list
+      setBudgets(prev => [...prev, newBudget]);
+
+      // Reset form
+      setFormData({
+        budgetName: '',
+        fiscalYear: 2025,
+        budgetType: 'Annual',
+        description: '',
+      });
+      setFormErrors({});
+
+      // Show success state
+      setSubmitSuccess(true);
+      setTimeout(() => setSubmitSuccess(false), 3000);
+
+      // Close modal
+      setShowAddBudgetModal(false);
+
+      // Auto-select the new budget
+      setSelectedBudgetId(newBudgetId);
+    } catch (error) {
+      console.error('Failed to create budget:', error);
+      setFormErrors({ budgetName: 'Failed to create budget. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset form when modal opens
+  const handleOpenModal = () => {
+    setFormData({
+      budgetName: '',
+      fiscalYear: 2025,
+      budgetType: 'Annual',
+      description: '',
+    });
+    setFormErrors({});
+    setShowAddBudgetModal(true);
+  };
+
   return (
     <div className="min-h-screen relative">
       {/* Inject page-specific styles */}
@@ -718,7 +867,7 @@ function BudgetingPage() {
               <div className="fab-observatory">
                 <Button
                   variant="primary"
-                  onClick={() => setShowAddBudgetModal(true)}
+                  onClick={handleOpenModal}
                   className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-cyan-600 hover:from-amber-500 hover:to-cyan-500 border-0 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300"
                 >
                   <PlusIcon className="h-4 w-4" />
@@ -752,7 +901,7 @@ function BudgetingPage() {
                   <option value="" className="bg-slate-900 text-gray-400">
                     Select a budget...
                   </option>
-                  {mockBudgets.map(budget => (
+                  {budgets.map(budget => (
                     <option
                       key={budget.budgetId}
                       value={budget.budgetId}
@@ -1006,38 +1155,77 @@ function BudgetingPage() {
                 </div>
               </div>
 
+              {/* Success Message */}
+              {submitSuccess && (
+                <div className="mx-6 mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2">
+                  <SparklesIcon className="h-5 w-5 text-emerald-400" />
+                  <span className="text-emerald-400 text-sm">Budget created successfully!</span>
+                </div>
+              )}
+
               {/* Modal Body */}
               <div className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Budget Name
+                    Budget Name <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
+                    value={formData.budgetName}
+                    onChange={e => handleInputChange('budgetName', e.target.value)}
                     placeholder="e.g., FY 2025 Operating Budget"
-                    className="budget-selector w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all"
+                    className={`budget-selector w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all ${formErrors.budgetName ? 'border-rose-500' : ''}`}
                   />
+                  {formErrors.budgetName && (
+                    <p className="mt-1 text-sm text-rose-400">{formErrors.budgetName}</p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Fiscal Year
+                      Fiscal Year <span className="text-rose-400">*</span>
                     </label>
-                    <select className="budget-selector w-full px-4 py-3 rounded-xl text-white focus:outline-none transition-all cursor-pointer">
-                      <option className="bg-slate-900">2024</option>
-                      <option className="bg-slate-900">2025</option>
-                      <option className="bg-slate-900">2026</option>
+                    <select
+                      value={formData.fiscalYear}
+                      onChange={e => handleInputChange('fiscalYear', parseInt(e.target.value))}
+                      className={`budget-selector w-full px-4 py-3 rounded-xl text-white focus:outline-none transition-all cursor-pointer ${formErrors.fiscalYear ? 'border-rose-500' : ''}`}
+                    >
+                      <option value={2024} className="bg-slate-900">
+                        2024
+                      </option>
+                      <option value={2025} className="bg-slate-900">
+                        2025
+                      </option>
+                      <option value={2026} className="bg-slate-900">
+                        2026
+                      </option>
                     </select>
+                    {formErrors.fiscalYear && (
+                      <p className="mt-1 text-sm text-rose-400">{formErrors.fiscalYear}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Budget Type
+                      Budget Type <span className="text-rose-400">*</span>
                     </label>
-                    <select className="budget-selector w-full px-4 py-3 rounded-xl text-white focus:outline-none transition-all cursor-pointer">
-                      <option className="bg-slate-900">Annual</option>
-                      <option className="bg-slate-900">Quarterly</option>
-                      <option className="bg-slate-900">Monthly</option>
+                    <select
+                      value={formData.budgetType}
+                      onChange={e => handleInputChange('budgetType', e.target.value)}
+                      className={`budget-selector w-full px-4 py-3 rounded-xl text-white focus:outline-none transition-all cursor-pointer ${formErrors.budgetType ? 'border-rose-500' : ''}`}
+                    >
+                      <option value="Annual" className="bg-slate-900">
+                        Annual
+                      </option>
+                      <option value="Quarterly" className="bg-slate-900">
+                        Quarterly
+                      </option>
+                      <option value="Monthly" className="bg-slate-900">
+                        Monthly
+                      </option>
                     </select>
+                    {formErrors.budgetType && (
+                      <p className="mt-1 text-sm text-rose-400">{formErrors.budgetType}</p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -1045,6 +1233,8 @@ function BudgetingPage() {
                     Description (Optional)
                   </label>
                   <textarea
+                    value={formData.description}
+                    onChange={e => handleInputChange('description', e.target.value)}
                     placeholder="Brief description of this budget..."
                     rows={3}
                     className="budget-selector w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all resize-none"
@@ -1057,16 +1247,40 @@ function BudgetingPage() {
                 <Button
                   variant="secondary"
                   onClick={() => setShowAddBudgetModal(false)}
+                  disabled={isSubmitting}
                   className="bg-white/5 hover:bg-white/10 border-white/10"
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="primary"
-                  onClick={() => setShowAddBudgetModal(false)}
-                  className="bg-gradient-to-r from-amber-600 to-cyan-600 hover:from-amber-500 hover:to-cyan-500 border-0"
+                  onClick={handleSubmitBudget}
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-r from-amber-600 to-cyan-600 hover:from-amber-500 hover:to-cyan-500 border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Budget
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Creating...
+                    </span>
+                  ) : (
+                    'Create Budget'
+                  )}
                 </Button>
               </div>
             </div>
