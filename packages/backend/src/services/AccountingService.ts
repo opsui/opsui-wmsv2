@@ -2687,6 +2687,14 @@ export class AccountingService {
     }
   }
 
+  async deleteFixedAsset(assetId: string): Promise<void> {
+    const result = await dbQuery(`DELETE FROM acct_fixed_assets WHERE asset_id = $1`, [assetId]);
+
+    if (result.rowCount === 0) {
+      throw new Error('Asset not found');
+    }
+  }
+
   async getAssetRegister(asOfDate: Date): Promise<{
     asOfDate: Date;
     assets: FixedAsset[];

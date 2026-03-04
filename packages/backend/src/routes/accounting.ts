@@ -1129,6 +1129,22 @@ router.post(
 );
 
 /**
+ * DELETE /api/accounting/fixed-assets/:assetId
+ * Delete a fixed asset
+ */
+router.delete(
+  '/fixed-assets/:assetId',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const { assetId } = req.params;
+
+    await accountingService.deleteFixedAsset(assetId);
+
+    res.json({ success: true, message: 'Asset deleted successfully' });
+  })
+);
+
+/**
  * GET /api/accounting/fixed-assets/:assetId/depreciation
  * Calculate depreciation schedule for an asset
  */

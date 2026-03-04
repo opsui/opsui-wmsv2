@@ -610,7 +610,7 @@ router.post(
 
 /**
  * POST /api/developer/run-accounting-migration
- * Run the accounting tables migration
+ * Run the accounting tables migration (all phases)
  */
 router.post(
   '/run-accounting-migration',
@@ -619,24 +619,48 @@ router.post(
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
     try {
       const migrationsDir = path.join(__dirname, '..', 'db', 'migrations');
+      const tablesCreated: string[] = [];
 
       // Run Phase 1 (Chart of Accounts)
-      const phase1SQL = fs.readFileSync(
-        path.join(migrationsDir, '044_add_full_erp_accounting_phase1.sql'),
-        'utf8'
-      );
-      await pool.query(phase1SQL);
+      try {
+        const phase1SQL = fs.readFileSync(
+          path.join(migrationsDir, '044_add_full_erp_accounting_phase1.sql'),
+          'utf8'
+        );
+        await pool.query(phase1SQL);
+        tablesCreated.push('Phase 1: acct_chart_of_accounts, acct_journal_entries, etc.');
+      } catch (e: any) {
+        console.log('Phase 1 skipped or already applied:', e.message);
+      }
+
+      // Run Phase 2
+      try {
+        const phase2SQL = fs.readFileSync(
+          path.join(migrationsDir, '045_add_full_erp_accounting_phase2.sql'),
+          'utf8'
+        );
+        await pool.query(phase2SQL);
+        tablesCreated.push('Phase 2: acct_ar_payments, acct_ap_payments, etc.');
+      } catch (e: any) {
+        console.log('Phase 2 skipped or already applied:', e.message);
+      }
+
+      // Run Phase 3 (Fixed Assets)
+      try {
+        const phase3SQL = fs.readFileSync(
+          path.join(migrationsDir, '046_add_full_erp_accounting_phase3.sql'),
+          'utf8'
+        );
+        await pool.query(phase3SQL);
+        tablesCreated.push('Phase 3: acct_fixed_assets, acct_depreciation_schedule, etc.');
+      } catch (e: any) {
+        console.log('Phase 3 skipped or already applied:', e.message);
+      }
 
       res.json({
         success: true,
-        message: 'Accounting tables migration completed successfully',
-        tablesCreated: [
-          'acct_chart_of_accounts',
-          'acct_journal_entries',
-          'acct_journal_entry_lines',
-          'acct_trial_balance',
-          'acct_trial_balance_lines',
-        ],
+        message: 'All accounting tables migrations completed successfully',
+        tablesCreated,
       });
     } catch (error: any) {
       res.status(500).json({

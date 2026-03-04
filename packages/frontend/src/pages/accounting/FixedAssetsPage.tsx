@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
 import {
   Card,
   CardHeader,
@@ -377,8 +378,10 @@ const pageStyles = `
 
 const API_BASE = '/api/v1/accounting';
 
-async function fetchAssets(): Promise<FixedAsset[]> {
-  const token = localStorage.getItem('token');
+async function fetchAssets(token: string | null): Promise<FixedAsset[]> {
+  if (!token) {
+    throw new Error('No authentication token');
+  }
   const response = await fetch(`${API_BASE}/asset-register`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -394,8 +397,10 @@ async function fetchAssets(): Promise<FixedAsset[]> {
   return data.assets || [];
 }
 
-async function createAsset(assetData: FormData): Promise<FixedAsset> {
-  const token = localStorage.getItem('token');
+async function createAsset(token: string | null, assetData: FormData): Promise<FixedAsset> {
+  if (!token) {
+    throw new Error('No authentication token');
+  }
   const response = await fetch(`${API_BASE}/fixed-assets`, {
     method: 'POST',
     headers: {
@@ -422,8 +427,10 @@ async function createAsset(assetData: FormData): Promise<FixedAsset> {
   return response.json();
 }
 
-async function deleteAsset(assetId: string): Promise<void> {
-  const token = localStorage.getItem('token');
+async function deleteAsset(token: string | null, assetId: string): Promise<void> {
+  if (!token) {
+    throw new Error('No authentication token');
+  }
   const response = await fetch(`${API_BASE}/fixed-assets/${assetId}`, {
     method: 'DELETE',
     headers: {
@@ -457,6 +464,7 @@ const initialFormData: FormData = {
 
 function FixedAssetsPage() {
   const navigate = useNavigate();
+  const accessToken = useAuthStore(state => state.accessToken);
 
   // State
   const [assets, setAssets] = useState<FixedAsset[]>([]);
@@ -481,7 +489,7 @@ function FixedAssetsPage() {
   const loadAssets = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await fetchAssets();
+      const data = await fetchAssets(accessToken);
       setAssets(data);
     } catch (error) {
       console.error('Failed to load assets:', error);
@@ -491,7 +499,7 @@ function FixedAssetsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
     setMounted(true);
@@ -613,7 +621,7 @@ function FixedAssetsPage() {
 
     setIsSubmitting(true);
     try {
-      const newAsset = await createAsset(formData);
+      const newAsset = await createAsset(accessToken, formData);
       setAssets(prev => [...prev, newAsset]);
       setShowAddModal(false);
       setFormData(initialFormData);
@@ -633,7 +641,7 @@ function FixedAssetsPage() {
 
     setIsSubmitting(true);
     try {
-      await deleteAsset(deleteConfirm.assetId);
+      await deleteAsset(accessToken, deleteConfirm.assetId);
       setAssets(prev => prev.filter(a => a.assetId !== deleteConfirm.assetId));
       setDeleteConfirm({ show: false, assetId: '', assetName: '' });
       showToast('success', 'Asset deleted successfully!');
@@ -661,12 +669,12 @@ function FixedAssetsPage() {
     }).format(value);
   };
 
-  const totalOriginalCost = assets.reduce((sum, a) => sum + a.purchaseCost, 0);
+  const totalOriginalCost = assets.reduce((sum, a) => sum + (Number(a.purchaseCost) || 0), 0);
   const totalAccumulatedDepreciation = assets.reduce(
-    (sum, a) => sum + a.accumulatedDepreciation,
+    (sum, a) => sum + (Number(a.accumulatedDepreciation) || 0),
     0
   );
-  const totalNetBookValue = assets.reduce((sum, a) => sum + a.currentBookValue, 0);
+  const totalNetBookValue = assets.reduce((sum, a) => sum + (Number(a.currentBookValue) || 0), 0);
 
   // Export to CSV
   const exportToCSV = () => {
