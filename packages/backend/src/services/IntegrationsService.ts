@@ -6,6 +6,7 @@
  */
 
 import { IntegrationsRepository } from '../repositories/IntegrationsRepository';
+import { NetSuiteOrderSyncService } from './NetSuiteOrderSyncService';
 import {
   Integration,
   IntegrationType,
@@ -203,6 +204,9 @@ export class IntegrationsService {
   }> {
     // Provider-specific sync implementation
     switch (integration.provider) {
+      case IntegrationProvider.NETSUITE:
+        return this.syncNetSuite(integration);
+
       case IntegrationProvider.SAP:
       case IntegrationProvider.ORACLE:
         return this.syncErpSystem(integration);
@@ -220,6 +224,44 @@ export class IntegrationsService {
 
       default:
         throw new Error(`Unsupported provider: ${integration.provider}`);
+    }
+  }
+
+  /**
+   * Sync orders from NetSuite using TBA OAuth 1.0
+   */
+  private async syncNetSuite(integration: Integration): Promise<{
+    totalProcessed: number;
+    succeeded: number;
+    failed: number;
+    details: any;
+  }> {
+    try {
+      const netSuiteSyncService = new NetSuiteOrderSyncService();
+
+      const result = await netSuiteSyncService.syncOrders(integration.integrationId, {
+        lastSyncAt: integration.lastSyncAt,
+        limit: 50,
+        status: '_pendingFulfillment',
+      });
+
+      return {
+        totalProcessed: result.totalProcessed,
+        succeeded: result.succeeded,
+        failed: result.failed,
+        details: {
+          imported: result.details.imported,
+          failed: result.details.failed,
+          skipped: result.details.skipped,
+        },
+      };
+    } catch (error: any) {
+      return {
+        totalProcessed: 0,
+        succeeded: 0,
+        failed: 1,
+        details: { error: error.message },
+      };
     }
   }
 
@@ -433,6 +475,8 @@ export class IntegrationsService {
 
   private getRequiredFieldsForProvider(provider: IntegrationProvider): string[] {
     switch (provider) {
+      case IntegrationProvider.NETSUITE:
+        return ['accountId', 'tokenId', 'tokenSecret', 'consumerKey', 'consumerSecret'];
       case IntegrationProvider.SAP:
         return ['host', 'port', 'username', 'client'];
       case IntegrationProvider.ORACLE:

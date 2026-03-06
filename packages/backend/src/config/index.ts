@@ -65,6 +65,11 @@ const ALLOWED_ENV_KEYS = new Set([
   'VAPID_PUBLIC_KEY',
   'VAPID_PRIVATE_KEY',
   'VAPID_SUBJECT',
+  'NETSUITE_ACCOUNT_ID',
+  'NETSUITE_TOKEN_ID',
+  'NETSUITE_TOKEN_SECRET',
+  'NETSUITE_CONSUMER_KEY',
+  'NETSUITE_CONSUMER_SECRET',
 ]);
 
 /**
@@ -295,6 +300,15 @@ export default {
     vapidPublicKey: getEnv('VAPID_PUBLIC_KEY', ''),
     vapidPrivateKey: getEnv('VAPID_PRIVATE_KEY', ''),
     vapidSubject: getEnv('VAPID_SUBJECT', 'mailto:admin@wms.local'),
+  },
+
+  // NetSuite Token-Based Authentication (TBA)
+  netsuite: {
+    accountId: getEnv('NETSUITE_ACCOUNT_ID', ''),
+    tokenId: getEnv('NETSUITE_TOKEN_ID', ''),
+    tokenSecret: getEnv('NETSUITE_TOKEN_SECRET', ''),
+    consumerKey: getEnv('NETSUITE_CONSUMER_KEY', ''),
+    consumerSecret: getEnv('NETSUITE_CONSUMER_SECRET', ''),
   },
 
   // Check if all required env vars are set

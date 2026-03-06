@@ -379,6 +379,24 @@ router.delete(
 // ============================================================================
 
 /**
+ * GET /api/multi-entity/user-organizations
+ * Get organizations (entities) for the current user
+ * Returns entities the authenticated user has access to
+ */
+router.get(
+  '/user-organizations',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    const entities = await multiEntityService.getUserEntities(userId);
+    res.json(entities);
+  })
+);
+
+/**
  * GET /api/multi-entity/entities/:id/users
  * Get users assigned to an entity
  */

@@ -7,8 +7,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { IntegrationsRepository } from '../repositories/IntegrationsRepository';
 import { IntegrationsService } from '../services/IntegrationsService';
+import { NetSuiteOrderSyncService } from '../services/NetSuiteOrderSyncService';
 import { authenticate, authorize } from '../middleware/auth';
-import { UserRole } from '@opsui/shared';
+import { UserRole, IntegrationProvider } from '@opsui/shared';
 import { getPool } from '../db/client';
 
 const router = Router();
@@ -391,6 +392,150 @@ router.delete(
         return;
       }
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================================
+// NETSUITE-SPECIFIC ROUTES
+// ============================================================================
+
+const netSuiteSyncService = new NetSuiteOrderSyncService();
+
+/**
+ * POST /api/integrations/netsuite/test-connection
+ * Test NetSuite connection using TBA credentials
+ * Access: ADMIN, SUPERVISOR
+ */
+router.post(
+  '/netsuite/test-connection',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, _next: NextFunction) => {
+    try {
+      const result = await netSuiteSyncService.testConnection();
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to connect to NetSuite',
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/integrations/netsuite/orders/preview
+ * Preview NetSuite orders without importing them
+ * Access: ADMIN, SUPERVISOR
+ */
+router.get(
+  '/netsuite/orders/preview',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const status = req.query.status as string;
+
+      const result = await netSuiteSyncService.previewOrders({
+        limit,
+        status,
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/integrations/netsuite/sync-orders
+ * Sync sales orders from NetSuite to WMS
+ * Access: ADMIN, SUPERVISOR
+ */
+router.post(
+  '/netsuite/sync-orders',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { limit, status, lastSyncAt } = req.body;
+
+      // Find the NetSuite integration
+      const integrations = await repository.findAll({
+        provider: IntegrationProvider.NETSUITE,
+      });
+
+      if (integrations.length === 0) {
+        res.status(400).json({
+          error: 'No NetSuite integration configured. Please create a NetSuite integration first.',
+        });
+        return;
+      }
+
+      const integration = integrations[0];
+      const userId = (req as any).user.userId;
+
+      // Create a sync job record
+      const job = await service.createSyncJob(integration.integrationId, 'FULL', userId);
+
+      // Perform the sync
+      const result = await netSuiteSyncService.syncOrders(integration.integrationId, {
+        limit: limit || 50,
+        status: status || '_pendingFulfillment',
+        lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : integration.lastSyncAt,
+      });
+
+      res.json({
+        jobId: job.jobId,
+        ...result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/integrations/:integrationId/netsuite/sync-orders
+ * Sync sales orders from NetSuite for a specific integration
+ * Access: ADMIN, SUPERVISOR
+ */
+router.post(
+  '/:integrationId/netsuite/sync-orders',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const integration = await repository.findById(req.params.integrationId);
+
+      if (!integration) {
+        res.status(404).json({ error: 'Integration not found' });
+        return;
+      }
+
+      if (integration.provider !== IntegrationProvider.NETSUITE) {
+        res.status(400).json({ error: 'This endpoint is only for NetSuite integrations' });
+        return;
+      }
+
+      const { limit, status, lastSyncAt } = req.body;
+      const userId = (req as any).user.userId;
+
+      // Create a sync job record
+      const job = await service.createSyncJob(integration.integrationId, 'FULL', userId);
+
+      // Perform the sync
+      const result = await netSuiteSyncService.syncOrders(integration.integrationId, {
+        limit: limit || 50,
+        status: status || '_pendingFulfillment',
+        lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : integration.lastSyncAt,
+      });
+
+      res.json({
+        jobId: job.jobId,
+        ...result,
+      });
     } catch (error) {
       next(error);
     }

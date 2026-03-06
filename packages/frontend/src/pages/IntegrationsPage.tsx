@@ -54,6 +54,7 @@ import {
   useTestConnection,
   useToggleIntegration,
   useWebhookEvents,
+  apiClient,
 } from '@/services/api';
 import { cn } from '@/lib/utils';
 
@@ -501,6 +502,12 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
   const toggleIntegration = useToggleIntegration();
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    success: boolean;
+    message: string;
+    count?: number;
+  } | null>(null);
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -533,6 +540,30 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
       }
     );
   };
+
+  const handleSyncOrders = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const response = await apiClient.post(
+        `/integrations/${integration.integrationId}/netsuite/sync-orders`
+      );
+      setSyncResult({
+        success: true,
+        message: response.data.message || 'Sync completed',
+        count: response.data.imported,
+      });
+    } catch (error) {
+      setSyncResult({
+        success: false,
+        message: error instanceof Error ? error.message : 'Sync failed',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const isNetSuite = integration.provider === IntegrationProvider.NETSUITE;
 
   // Determine connection status class
   const getConnectionStatusClass = () => {
@@ -598,8 +629,35 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
         </div>
       )}
 
+      {syncResult && (
+        <div
+          className={`mb-4 p-3 rounded-lg text-sm ${
+            syncResult.success
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+          }`}
+        >
+          {syncResult.message}
+          {syncResult.count !== undefined ? ` (${syncResult.count} orders imported)` : ''}
+        </div>
+      )}
+
       <div className="flex items-center justify-between pt-4 border-t border-white/[0.05]">
         <div className="flex space-x-2">
+          {isNetSuite && (
+            <button
+              onClick={handleSyncOrders}
+              disabled={syncing || !integration.enabled}
+              className="p-2 text-blue-400 hover:text-blue-300 rounded-lg hover:bg-blue-500/10 transition-all disabled:opacity-50"
+              title="Sync Orders from NetSuite"
+            >
+              {syncing ? (
+                <ArrowPathIcon className="h-5 w-5 animate-spin" />
+              ) : (
+                <ArrowPathIcon className="h-5 w-5" />
+              )}
+            </button>
+          )}
           <button
             onClick={handleTestConnection}
             disabled={testing}
@@ -896,26 +954,138 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  API Key / Access Token
-                </label>
-                <input
-                  type="password"
-                  value={formData.configuration.auth.apiKey || ''}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      configuration: {
-                        ...formData.configuration,
-                        auth: { ...formData.configuration.auth, apiKey: e.target.value },
-                      },
-                    })
-                  }
-                  placeholder="Enter API key"
-                  className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
+              {/* NetSuite TBA Fields */}
+              {formData.provider === IntegrationProvider.NETSUITE && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Account ID *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.configuration.auth.accountId || ''}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          configuration: {
+                            ...formData.configuration,
+                            auth: { ...formData.configuration.auth, accountId: e.target.value },
+                          },
+                        })
+                      }
+                      placeholder="TSTDRV1234567"
+                      className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Token ID *
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.configuration.auth.tokenId || ''}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          configuration: {
+                            ...formData.configuration,
+                            auth: { ...formData.configuration.auth, tokenId: e.target.value },
+                          },
+                        })
+                      }
+                      placeholder="Enter Token ID"
+                      className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Token Secret *
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.configuration.auth.tokenSecret || ''}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          configuration: {
+                            ...formData.configuration,
+                            auth: { ...formData.configuration.auth, tokenSecret: e.target.value },
+                          },
+                        })
+                      }
+                      placeholder="Enter Token Secret"
+                      className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Consumer Key *
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.configuration.auth.consumerKey || ''}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          configuration: {
+                            ...formData.configuration,
+                            auth: { ...formData.configuration.auth, consumerKey: e.target.value },
+                          },
+                        })
+                      }
+                      placeholder="Enter Consumer Key"
+                      className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Consumer Secret *
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.configuration.auth.consumerSecret || ''}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          configuration: {
+                            ...formData.configuration,
+                            auth: {
+                              ...formData.configuration.auth,
+                              consumerSecret: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      placeholder="Enter Consumer Secret"
+                      className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Generic API Key for other providers */}
+              {formData.provider !== IntegrationProvider.NETSUITE && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    API Key / Access Token
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.configuration.auth.apiKey || ''}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        configuration: {
+                          ...formData.configuration,
+                          auth: { ...formData.configuration.auth, apiKey: e.target.value },
+                        },
+                      })
+                    }
+                    placeholder="Enter API key"
+                    className="w-full px-3 py-2 border border-gray-700 rounded-md bg-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              )}
 
               <div className="flex items-center">
                 <input
