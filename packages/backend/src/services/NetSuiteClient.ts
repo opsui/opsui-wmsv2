@@ -61,6 +61,14 @@ export interface NetSuiteListResponse<T> {
   totalResults: number;
 }
 
+export interface NetSuiteCredentials {
+  accountId: string;
+  tokenId: string;
+  tokenSecret: string;
+  consumerKey: string;
+  consumerSecret: string;
+}
+
 export class NetSuiteClient {
   private accountId: string;
   private tokenId: string;
@@ -69,18 +77,22 @@ export class NetSuiteClient {
   private consumerSecret: string;
   private baseUrl: string;
 
-  constructor() {
-    this.accountId = config.netsuite.accountId;
-    this.tokenId = config.netsuite.tokenId;
-    this.tokenSecret = config.netsuite.tokenSecret;
-    this.consumerKey = config.netsuite.consumerKey;
-    this.consumerSecret = config.netsuite.consumerSecret;
+  constructor(credentials?: NetSuiteCredentials) {
+    this.accountId = credentials?.accountId || config.netsuite.accountId;
+    this.tokenId = credentials?.tokenId || config.netsuite.tokenId;
+    this.tokenSecret = credentials?.tokenSecret || config.netsuite.tokenSecret;
+    this.consumerKey = credentials?.consumerKey || config.netsuite.consumerKey;
+    this.consumerSecret = credentials?.consumerSecret || config.netsuite.consumerSecret;
 
     if (!this.accountId || !this.tokenId || !this.consumerKey) {
-      throw new Error('NetSuite credentials not configured. Set NETSUITE_* environment variables.');
+      throw new Error(
+        'NetSuite credentials not configured. Provide credentials or set NETSUITE_* environment variables.'
+      );
     }
 
-    this.baseUrl = `https://${this.accountId}.suitetalk.api.netsuite.com/services/rest`;
+    // NetSuite REST API requires account ID with underscores replaced by hyphens and lowercased
+    const restAccountId = this.accountId.toLowerCase().replace(/_/g, '-');
+    this.baseUrl = `https://${restAccountId}.suitetalk.api.netsuite.com/services/rest`;
   }
 
   private generateOAuthHeader(method: string, fullUrl: string): string {
@@ -153,7 +165,8 @@ export class NetSuiteClient {
         },
       };
       if (bodyStr) {
-        reqOptions.headers!['Content-Length'] = Buffer.byteLength(bodyStr);
+        (reqOptions.headers as Record<string, string | number>)['Content-Length'] =
+          Buffer.byteLength(bodyStr);
       }
 
       const req = https.request(reqOptions, res => {
@@ -235,13 +248,7 @@ export class NetSuiteClient {
   ): Promise<NetSuiteListResponse<NetSuiteSalesOrder>> {
     const query: Record<string, string> = {
       limit: String(options.limit || 50),
-      offset: String(options.offset || 0),
     };
-
-    // Filter for orders pending fulfillment
-    if (options.status) {
-      query.q = `status IS "${options.status}"`;
-    }
 
     const result = await this.request<NetSuiteListResponse<NetSuiteSalesOrder>>({
       method: 'GET',
@@ -253,6 +260,54 @@ export class NetSuiteClient {
       throw new Error(
         `Failed to fetch sales orders: ${result.status} - ${JSON.stringify(result.data)}`
       );
+    }
+
+    return result.data;
+  }
+
+  /**
+   * Fetch item fulfillments from NetSuite - these are orders ready for picking/packing.
+   * This endpoint may have different permissions than salesOrder.
+   */
+  async getItemFulfillments(
+    options: {
+      limit?: number;
+      offset?: number;
+    } = {}
+  ): Promise<NetSuiteListResponse<any>> {
+    const query: Record<string, string> = {
+      limit: String(options.limit || 50),
+    };
+
+    const result = await this.request<NetSuiteListResponse<any>>({
+      method: 'GET',
+      path: '/record/v1/itemFulfillment',
+      query,
+    });
+
+    if (result.status !== 200) {
+      throw new Error(
+        `Failed to fetch item fulfillments: ${result.status} - ${JSON.stringify(result.data)}`
+      );
+    }
+
+    return result.data;
+  }
+
+  /**
+   * Fetch a single item fulfillment with full details
+   */
+  async getItemFulfillment(id: string): Promise<any> {
+    const result = await this.request<any>({
+      method: 'GET',
+      path: `/record/v1/itemFulfillment/${encodeURIComponent(id)}`,
+      query: {
+        expandSubResources: 'true',
+      },
+    });
+
+    if (result.status !== 200) {
+      throw new Error(`Failed to fetch item fulfillment ${id}: ${result.status}`);
     }
 
     return result.data;

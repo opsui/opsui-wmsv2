@@ -18,4 +18,3 @@ export { orderService } from './OrderService';
 export { inventoryService } from './InventoryService';
 export { metricsService } from './MetricsService';
 export { authService } from './AuthService';
-export { netSuiteOrderSyncService } from './NetSuiteOrderSyncService';

@@ -9,8 +9,10 @@ import { IntegrationsRepository } from '../repositories/IntegrationsRepository';
 import { IntegrationsService } from '../services/IntegrationsService';
 import { NetSuiteOrderSyncService } from '../services/NetSuiteOrderSyncService';
 import { authenticate, authorize } from '../middleware/auth';
-import { UserRole, IntegrationProvider } from '@opsui/shared';
+import { UserRole, IntegrationProvider, OrderPriority } from '@opsui/shared';
 import { getPool } from '../db/client';
+import { logger } from '../config/logger';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 const repository = new IntegrationsRepository(getPool());
@@ -41,7 +43,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (req.query.status) filters.status = req.query.status;
 
     const integrations = await repository.findAll(filters);
-    res.json(integrations);
+    res.json({ integrations, total: integrations.length });
   } catch (error) {
     next(error);
   }
@@ -402,7 +404,19 @@ router.delete(
 // NETSUITE-SPECIFIC ROUTES
 // ============================================================================
 
-const netSuiteSyncService = new NetSuiteOrderSyncService();
+/**
+ * Create a NetSuiteOrderSyncService using credentials from an integration's DB config
+ */
+function createNetSuiteSyncService(integration: any): NetSuiteOrderSyncService {
+  const authConfig = integration.configuration?.auth || integration.configuration || {};
+  return new NetSuiteOrderSyncService({
+    accountId: authConfig.accountId,
+    tokenId: authConfig.tokenId,
+    tokenSecret: authConfig.tokenSecret,
+    consumerKey: authConfig.consumerKey,
+    consumerSecret: authConfig.consumerSecret,
+  });
+}
 
 /**
  * POST /api/integrations/netsuite/test-connection
@@ -414,7 +428,16 @@ router.post(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: Request, res: Response, _next: NextFunction) => {
     try {
-      const result = await netSuiteSyncService.testConnection();
+      // Find the NetSuite integration to get DB credentials
+      const integrations = await repository.findAll({
+        provider: IntegrationProvider.NETSUITE,
+      });
+      if (integrations.length === 0) {
+        res.status(400).json({ success: false, message: 'No NetSuite integration configured.' });
+        return;
+      }
+      const syncService = createNetSuiteSyncService(integrations[0]);
+      const result = await syncService.testConnection();
       res.json(result);
     } catch (error: any) {
       res.status(400).json({
@@ -435,10 +458,19 @@ router.get(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const integrations = await repository.findAll({
+        provider: IntegrationProvider.NETSUITE,
+      });
+      if (integrations.length === 0) {
+        res.status(400).json({ error: 'No NetSuite integration configured.' });
+        return;
+      }
+      const syncService = createNetSuiteSyncService(integrations[0]);
+
       const limit = parseInt(req.query.limit as string) || 20;
       const status = req.query.status as string;
 
-      const result = await netSuiteSyncService.previewOrders({
+      const result = await syncService.previewOrders({
         limit,
         status,
       });
@@ -475,13 +507,14 @@ router.post(
       }
 
       const integration = integrations[0];
+      const syncService = createNetSuiteSyncService(integration);
       const userId = (req as any).user.userId;
 
       // Create a sync job record
-      const job = await service.createSyncJob(integration.integrationId, 'FULL', userId);
+      const job = await service.createSyncJob(integration.integrationId, 'ORDER_SYNC', userId);
 
       // Perform the sync
-      const result = await netSuiteSyncService.syncOrders(integration.integrationId, {
+      const result = await syncService.syncOrders(integration.integrationId, {
         limit: limit || 50,
         status: status || '_pendingFulfillment',
         lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : integration.lastSyncAt,
@@ -520,13 +553,14 @@ router.post(
       }
 
       const { limit, status, lastSyncAt } = req.body;
+      const syncService = createNetSuiteSyncService(integration);
       const userId = (req as any).user.userId;
 
       // Create a sync job record
-      const job = await service.createSyncJob(integration.integrationId, 'FULL', userId);
+      const job = await service.createSyncJob(integration.integrationId, 'ORDER_SYNC', userId);
 
       // Perform the sync
-      const result = await netSuiteSyncService.syncOrders(integration.integrationId, {
+      const result = await syncService.syncOrders(integration.integrationId, {
         limit: limit || 50,
         status: status || '_pendingFulfillment',
         lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : integration.lastSyncAt,
@@ -539,6 +573,188 @@ router.post(
     } catch (error) {
       next(error);
     }
+  }
+);
+
+// ============================================================================
+// CSV IMPORT - Alternative to NetSuite API sync
+// ============================================================================
+
+/**
+ * POST /api/integrations/:integrationId/csv-import
+ * Import orders from CSV data (alternative to NetSuite API sync)
+ * Access: ADMIN, SUPERVISOR
+ *
+ * CSV Format:
+ * order_id,customer_name,sku,quantity,priority,shipping_address,city,state,postcode,country
+ * SO-001,Acme Corp,SKU-001,5,HIGH,123 Main St,Auckland,Auckland,1010,NZ
+ */
+router.post(
+  '/:integrationId/csv-import',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const integration = await repository.findById(req.params.integrationId);
+      if (!integration) {
+        res.status(404).json({ error: 'Integration not found' });
+        return;
+      }
+
+      const { csvData } = req.body;
+      if (!csvData || typeof csvData !== 'string') {
+        res.status(400).json({ error: 'csvData is required as a string' });
+        return;
+      }
+
+      const pool = getPool();
+      const userId = (req as any).user.userId;
+
+      // Parse CSV
+      const lines = csvData.trim().split('\n');
+      if (lines.length < 2) {
+        res.status(400).json({ error: 'CSV must have at least a header and one data row' });
+        return;
+      }
+
+      const header = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
+      const result = {
+        totalProcessed: lines.length - 1,
+        succeeded: 0,
+        failed: 0,
+        skipped: 0,
+        details: {
+          imported: [] as string[],
+          failed: [] as Array<{ row: number; error: string }>,
+          skipped: [] as Array<{ row: number; reason: string }>,
+        },
+      };
+
+      // Group lines by order_id to handle multi-line orders
+      const orderMap = new Map<string, any[]>();
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map((v: string) => v.trim());
+        const row: Record<string, string> = {};
+
+        header.forEach((h: string, idx: number) => {
+          row[h] = values[idx] || '';
+        });
+
+        const orderId =
+          row['order_id'] || row['orderid'] || row['order'] || row['reference'] || `CSV-${i}`;
+
+        if (!orderMap.has(orderId)) {
+          orderMap.set(orderId, []);
+        }
+        orderMap.get(orderId)!.push(row);
+      }
+
+      // Process each order
+      for (const [orderId, rows] of orderMap) {
+        try {
+          // Check if order already exists
+          const existingCheck = await pool.query(
+            `SELECT order_id FROM orders WHERE customer_reference = $1`,
+            [orderId]
+          );
+
+          if (existingCheck.rows.length > 0) {
+            result.skipped++;
+            result.details.skipped.push({ row: 0, reason: `Order ${orderId} already exists` });
+            continue;
+          }
+
+          const firstRow = rows[0];
+
+          // Create order ID
+          const newOrderId = `ORD-${uuidv4().substring(0, 8).toUpperCase()}`;
+          const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+
+          // Determine priority
+          let priority = OrderPriority.NORMAL;
+          if (firstRow['priority']) {
+            const p = firstRow['priority'].toUpperCase();
+            if (p === 'URGENT' || p === 'HIGH') priority = OrderPriority.HIGH;
+            else if (p === 'LOW') priority = OrderPriority.LOW;
+          }
+
+          // Create order
+          await pool.query(
+            `INSERT INTO orders (
+              order_id, order_number, customer_id, customer_name, status, priority,
+              customer_reference, notes, shipping_address_street1, shipping_address_city,
+              shipping_address_state, shipping_address_postcode, shipping_address_country,
+              created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())`,
+            [
+              newOrderId,
+              orderNumber,
+              firstRow['customer_id'] || 'CSV',
+              firstRow['customer_name'] || firstRow['customer'] || 'CSV Import',
+              'PENDING',
+              priority,
+              orderId,
+              firstRow['notes'] || `Imported from CSV via ${integration.name}`,
+              firstRow['shipping_address'] || firstRow['address'] || '',
+              firstRow['city'] || '',
+              firstRow['state'] || '',
+              firstRow['postcode'] || firstRow['zip'] || '',
+              firstRow['country'] || 'NZ',
+            ]
+          );
+
+          // Create order items
+          for (const row of rows) {
+            const sku = row['sku'] || row['item'] || row['product'];
+            const quantity = parseInt(row['quantity'] || row['qty'] || '1', 10);
+
+            if (!sku) continue;
+
+            const itemId = `ITM-${uuidv4().substring(0, 8).toUpperCase()}`;
+
+            await pool.query(
+              `INSERT INTO order_items (item_id, order_id, sku, quantity, status, created_at)
+               VALUES ($1, $2, $3, $4, $5, NOW())`,
+              [itemId, newOrderId, sku, quantity, 'PENDING']
+            );
+          }
+
+          result.succeeded++;
+          result.details.imported.push(orderId);
+          logger.info('CSV order imported', { orderId, newOrderId, itemCount: rows.length });
+        } catch (error: any) {
+          result.failed++;
+          result.details.failed.push({ row: 0, error: error.message });
+          logger.error('Failed to import CSV order', { orderId, error: error.message });
+        }
+      }
+
+      // Log to sync job
+      const job = await service.createSyncJob(integration.integrationId, 'CSV_IMPORT', userId);
+
+      res.json({ jobId: job.jobId, ...result });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/integrations/:integrationId/csv-template
+ * Get a CSV template for order import
+ */
+router.get(
+  '/:integrationId/csv-template',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, _next: NextFunction) => {
+    const template = `order_id,customer_name,sku,quantity,priority,shipping_address,city,state,postcode,country,notes
+SO-001,Acme Corporation,SKU-001,5,HIGH,123 Main Street,Auckland,Auckland,1010,NZ,Urgent delivery
+SO-001,Acme Corporation,SKU-002,3,HIGH,123 Main Street,Auckland,Auckland,1010,NZ,
+SO-002,Business Ltd,SKU-003,10,NORMAL,456 Queen Street,Wellington,Wellington,6011,NZ,`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="order-import-template.csv"');
+    res.send(template);
   }
 );
 

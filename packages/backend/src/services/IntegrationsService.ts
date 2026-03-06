@@ -44,7 +44,7 @@ export class IntegrationsService {
     const created = await this.repository.create(integration);
 
     // Create initial sync job to test connection
-    await this.createSyncJob(created.integrationId, 'FULL', 'system');
+    await this.createSyncJob(created.integrationId, 'FULL_SYNC', 'system');
 
     return created;
   }
@@ -107,7 +107,7 @@ export class IntegrationsService {
 
   async createSyncJob(
     integrationId: string,
-    syncType: 'FULL' | 'INCREMENTAL',
+    syncType: 'FULL_SYNC' | 'INCREMENTAL_SYNC' | 'ORDER_SYNC',
     triggeredBy: string
   ): Promise<SyncJob> {
     const integration = await this.repository.findById(integrationId);
@@ -237,7 +237,14 @@ export class IntegrationsService {
     details: any;
   }> {
     try {
-      const netSuiteSyncService = new NetSuiteOrderSyncService();
+      const authConfig = integration.configuration?.auth || integration.configuration || {};
+      const netSuiteSyncService = new NetSuiteOrderSyncService({
+        accountId: authConfig.accountId,
+        tokenId: authConfig.tokenId,
+        tokenSecret: authConfig.tokenSecret,
+        consumerKey: authConfig.consumerKey,
+        consumerSecret: authConfig.consumerSecret,
+      });
 
       const result = await netSuiteSyncService.syncOrders(integration.integrationId, {
         lastSyncAt: integration.lastSyncAt,

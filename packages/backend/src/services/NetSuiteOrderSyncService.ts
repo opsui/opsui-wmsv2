@@ -8,12 +8,17 @@
  * @dependencies NetSuiteClient, OrderRepository, IntegrationsRepository
  */
 
-import { NetSuiteClient, NetSuiteSalesOrder, NetSuiteSalesOrderLine } from './NetSuiteClient';
+import {
+  NetSuiteClient,
+  NetSuiteCredentials,
+  NetSuiteSalesOrder,
+  NetSuiteSalesOrderLine,
+} from './NetSuiteClient';
 import { OrderRepository } from '../repositories/OrderRepository';
 import { IntegrationsRepository } from '../repositories/IntegrationsRepository';
 import { logger } from '../config/logger';
 import { query } from '../db/client';
-import { OrderPriority, Integration, SyncStatus } from '@opsui/shared';
+import { OrderPriority } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
@@ -60,17 +65,20 @@ export interface NetSuiteOrderPreview {
 export class NetSuiteOrderSyncService {
   private client: NetSuiteClient;
   private orderRepository: OrderRepository;
-  private integrationsRepository: IntegrationsRepository;
+  private integrationsRepository: IntegrationsRepository | null = null;
 
   constructor(
-    client?: NetSuiteClient,
+    credentialsOrClient?: NetSuiteCredentials | NetSuiteClient,
     orderRepository?: OrderRepository,
     integrationsRepository?: IntegrationsRepository
   ) {
-    this.client = client || new NetSuiteClient();
+    if (credentialsOrClient instanceof NetSuiteClient) {
+      this.client = credentialsOrClient;
+    } else {
+      this.client = new NetSuiteClient(credentialsOrClient);
+    }
     this.orderRepository = orderRepository || new OrderRepository();
-    // integrationsRepository will be injected or null for standalone use
-    this.integrationsRepository = integrationsRepository!;
+    this.integrationsRepository = integrationsRepository || null;
   }
 
   // ========================================================================
@@ -81,8 +89,8 @@ export class NetSuiteOrderSyncService {
    * Sync sales orders from NetSuite to WMS
    */
   async syncOrders(
-    integrationId: string,
-    options: NetSuiteSyncOptions = {}
+    _integrationId: string,
+    _options: NetSuiteSyncOptions = {}
   ): Promise<NetSuiteSyncResult> {
     const result: NetSuiteSyncResult = {
       totalProcessed: 0,
@@ -97,39 +105,58 @@ export class NetSuiteOrderSyncService {
     };
 
     try {
-      logger.info('Starting NetSuite order sync', { integrationId, options });
+      logger.info('Starting NetSuite order sync');
 
-      // Fetch sales orders from NetSuite
-      // Default to pending fulfillment status
-      const status = options.status || '_pendingFulfillment';
-      const limit = options.limit || 50;
+      // Try Item Fulfillments first (these are orders ready for picking/packing)
+      // If that fails due to permissions, fall back to Sales Orders
+      const limit = _options.limit || 50;
+      let items: Array<{ id: string }> = [];
+      let useItemFulfillments = true;
 
-      const response = await this.client.getSalesOrders({
-        limit,
-        status,
-      });
+      try {
+        const response = await this.client.getItemFulfillments({ limit });
+        items = response.items || [];
+        logger.info('Fetched item fulfillments from NetSuite', {
+          count: items.length,
+          hasMore: response.hasMore,
+        });
+      } catch (error: any) {
+        logger.warn('Failed to fetch item fulfillments, trying sales orders', {
+          error: error.message,
+        });
+        useItemFulfillments = false;
 
-      result.totalProcessed = response.items?.length || 0;
+        // Fall back to sales orders
+        const response = await this.client.getSalesOrders({ limit });
+        items = response.items || [];
+        logger.info('Fetched sales orders from NetSuite', {
+          count: items.length,
+        });
+      }
 
-      logger.info('Fetched sales orders from NetSuite', {
-        count: result.totalProcessed,
-        hasMore: response.hasMore,
-      });
+      result.totalProcessed = items.length;
 
-      // Process each sales order
-      for (const item of response.items || []) {
+      // Process each record
+      for (const item of items) {
         try {
-          // Get full order details with line items
-          const salesOrder = await this.client.getSalesOrder(item.id);
-          const syncResult = await this.syncSingleOrder(salesOrder, options);
+          let syncResult;
+          if (useItemFulfillments) {
+            // Get full item fulfillment details
+            const fulfillment = await this.client.getItemFulfillment(item.id);
+            syncResult = await this.syncSingleFulfillment(fulfillment, _options);
+          } else {
+            // Get full sales order details
+            const salesOrder = await this.client.getSalesOrder(item.id);
+            syncResult = await this.syncSingleOrder(salesOrder, _options);
+          }
 
           if (syncResult.imported) {
             result.succeeded++;
-            result.details.imported.push(salesOrder.tranId);
+            result.details.imported.push(syncResult.tranId || item.id);
           } else if (syncResult.skipped) {
             result.skipped++;
             result.details.skipped.push({
-              tranId: salesOrder.tranId,
+              tranId: syncResult.tranId || item.id,
               reason: syncResult.reason || 'Unknown reason',
             });
           }
@@ -156,7 +183,6 @@ export class NetSuiteOrderSyncService {
       return result;
     } catch (error: any) {
       logger.error('NetSuite order sync failed', {
-        integrationId,
         error: error.message,
       });
       throw error;
@@ -164,11 +190,119 @@ export class NetSuiteOrderSyncService {
   }
 
   /**
+   * Sync a single item fulfillment from NetSuite
+   * Item Fulfillments represent orders ready for picking/packing
+   */
+  private async syncSingleFulfillment(
+    fulfillment: any,
+    _options: NetSuiteSyncOptions
+  ): Promise<{ imported: boolean; skipped: boolean; reason?: string; tranId?: string }> {
+    const tranId = fulfillment.tranId || fulfillment.id;
+
+    // Check if order already exists
+    const existingOrder = await this.findOrderByExternalId(tranId);
+    if (existingOrder) {
+      logger.info('Fulfillment already exists, skipping', { tranId, orderId: existingOrder });
+      return { imported: false, skipped: true, reason: 'Order already imported', tranId };
+    }
+
+    // Get line items from fulfillment
+    const lineItems = fulfillment.item?.items || fulfillment.item || [];
+    if (!Array.isArray(lineItems) || lineItems.length === 0) {
+      return { imported: false, skipped: true, reason: 'No line items in fulfillment', tranId };
+    }
+
+    // Validate SKUs
+    const mappedItems = lineItems.map((line: any) => ({
+      item: { id: line.item?.id, refName: line.item?.refName || line.itemName },
+      quantity: line.quantity || 1,
+    }));
+
+    const skuValidation = await this.validateSkus(mappedItems);
+    if (!skuValidation.valid) {
+      return {
+        imported: false,
+        skipped: true,
+        reason: `Missing SKUs: ${skuValidation.missingSkus.join(', ')}`,
+        tranId,
+      };
+    }
+
+    // Create WMS order from fulfillment
+    try {
+      const order = await this.createWMSOrderFromFulfillment(fulfillment);
+      logger.info('Created WMS order from NetSuite fulfillment', {
+        orderId: order.orderId,
+        tranId,
+        itemCount: lineItems.length,
+      });
+      return { imported: true, skipped: false, tranId };
+    } catch (error: any) {
+      logger.error('Failed to create WMS order from fulfillment', { tranId, error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Create a WMS order from a NetSuite item fulfillment
+   */
+  private async createWMSOrderFromFulfillment(fulfillment: any) {
+    const lineItems = fulfillment.item?.items || fulfillment.item || [];
+    const tranId = fulfillment.tranId || fulfillment.id;
+
+    // Map fulfillment items to WMS order items
+    const items = await Promise.all(
+      lineItems.map(async (line: any) => {
+        const sku = await this.findSkuByNetSuiteItem(
+          line.item?.id,
+          line.item?.refName || line.itemName
+        );
+        return {
+          sku: sku || line.item?.refName || line.itemName || '',
+          quantity: line.quantity || 1,
+        };
+      })
+    );
+
+    // Get address info
+    const shippingAddr = fulfillment.shippingAddress || {};
+
+    // Determine priority
+    const priority = this.calculatePriority(fulfillment.shipDate);
+
+    // Create order
+    const order = await this.orderRepository.createOrderWithItems({
+      customerId: fulfillment.entity?.id || fulfillment.createdFrom?.id || 'NETSUITE',
+      customerName:
+        fulfillment.entity?.refName || fulfillment.createdFrom?.refName || 'NetSuite Order',
+      priority,
+      items,
+      externalOrderId: tranId,
+      customerReference: tranId,
+      notes: fulfillment.memo || `Imported from NetSuite Fulfillment - ${tranId}`,
+      shippingAddress: {
+        street1: shippingAddr.addr1 || '',
+        street2: shippingAddr.addr2 || '',
+        city: shippingAddr.city || '',
+        state: shippingAddr.state || '',
+        postalCode: shippingAddr.zip || '',
+        country: shippingAddr.country?.refName || '',
+      },
+      requiredDate: fulfillment.shipDate ? new Date(fulfillment.shipDate) : undefined,
+    } as any);
+
+    // Store external reference
+    await this.storeExternalOrderId(order.orderId, tranId, fulfillment.id);
+
+    return order;
+  }
+
+  /**
    * Sync a single sales order from NetSuite
    */
   private async syncSingleOrder(
     salesOrder: NetSuiteSalesOrder,
-    options: NetSuiteSyncOptions
+    _options: NetSuiteSyncOptions
   ): Promise<{ imported: boolean; skipped: boolean; reason?: string }> {
     const tranId = salesOrder.tranId;
 
@@ -270,7 +404,7 @@ export class NetSuiteOrderSyncService {
    */
   private calculatePriority(shipDate?: string): OrderPriority {
     if (!shipDate) {
-      return OrderPriority.MEDIUM;
+      return OrderPriority.NORMAL;
     }
 
     const ship = new Date(shipDate);
@@ -282,7 +416,7 @@ export class NetSuiteOrderSyncService {
     } else if (daysUntilShip <= 3) {
       return OrderPriority.HIGH;
     } else if (daysUntilShip <= 7) {
-      return OrderPriority.MEDIUM;
+      return OrderPriority.NORMAL;
     }
     return OrderPriority.LOW;
   }
@@ -491,6 +625,3 @@ export class NetSuiteOrderSyncService {
     return this.client.testConnection();
   }
 }
-
-// Singleton instance
-export const netSuiteOrderSyncService = new NetSuiteOrderSyncService();
