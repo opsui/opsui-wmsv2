@@ -107,12 +107,13 @@ export class NetSuiteOrderSyncService {
     try {
       logger.info('Starting NetSuite order sync');
 
-      // Try Item Fulfillments first (these are orders ready for picking/packing)
-      // If that fails due to permissions, fall back to Sales Orders
       const limit = _options.limit || 50;
+      let useSuiteQL = false;
+      let suiteqlOrders: any[] = [];
       let items: Array<{ id: string }> = [];
       let useItemFulfillments = true;
 
+      // Try Item Fulfillments first, then Sales Orders Record API, then SuiteQL
       try {
         const response = await this.client.getItemFulfillments({ limit });
         items = response.items || [];
@@ -121,55 +122,99 @@ export class NetSuiteOrderSyncService {
           hasMore: response.hasMore,
         });
       } catch (error: any) {
-        logger.warn('Failed to fetch item fulfillments, trying sales orders', {
+        logger.warn('Failed to fetch item fulfillments, trying sales orders Record API', {
           error: error.message,
         });
         useItemFulfillments = false;
 
-        // Fall back to sales orders
-        const response = await this.client.getSalesOrders({ limit });
-        items = response.items || [];
-        logger.info('Fetched sales orders from NetSuite', {
-          count: items.length,
-        });
+        try {
+          const response = await this.client.getSalesOrders({ limit });
+          items = response.items || [];
+          logger.info('Fetched sales orders via Record API', { count: items.length });
+        } catch (recordApiError: any) {
+          logger.warn('Record API failed, falling back to SuiteQL', {
+            error: recordApiError.message,
+          });
+
+          // Final fallback: SuiteQL
+          try {
+            suiteqlOrders = await this.client.getSalesOrdersViaSuiteQL(limit);
+            useSuiteQL = true;
+            logger.info('Fetched sales orders via SuiteQL', { count: suiteqlOrders.length });
+          } catch (suiteqlError: any) {
+            logger.error('All NetSuite fetch methods failed', {
+              recordApi: recordApiError.message,
+              suiteql: suiteqlError.message,
+            });
+            throw new Error(
+              `Cannot access NetSuite orders. Record API: ${recordApiError.message}. SuiteQL: ${suiteqlError.message}. ` +
+                'Please ensure the role has REST Web Services and Sales Order permissions.'
+            );
+          }
+        }
       }
 
-      result.totalProcessed = items.length;
+      if (useSuiteQL) {
+        // Process SuiteQL results
+        result.totalProcessed = suiteqlOrders.length;
 
-      // Process each record
-      for (const item of items) {
-        try {
-          let syncResult;
-          if (useItemFulfillments) {
-            // Get full item fulfillment details
-            const fulfillment = await this.client.getItemFulfillment(item.id);
-            syncResult = await this.syncSingleFulfillment(fulfillment, _options);
-          } else {
-            // Get full sales order details
-            const salesOrder = await this.client.getSalesOrder(item.id);
-            syncResult = await this.syncSingleOrder(salesOrder, _options);
-          }
-
-          if (syncResult.imported) {
-            result.succeeded++;
-            result.details.imported.push(syncResult.tranId || item.id);
-          } else if (syncResult.skipped) {
-            result.skipped++;
-            result.details.skipped.push({
-              tranId: syncResult.tranId || item.id,
-              reason: syncResult.reason || 'Unknown reason',
+        for (const order of suiteqlOrders) {
+          try {
+            const syncResult = await this.syncSuiteQLOrder(order, _options);
+            if (syncResult.imported) {
+              result.succeeded++;
+              result.details.imported.push(syncResult.tranId || order.id);
+            } else if (syncResult.skipped) {
+              result.skipped++;
+              result.details.skipped.push({
+                tranId: syncResult.tranId || order.id,
+                reason: syncResult.reason || 'Unknown reason',
+              });
+            }
+          } catch (error: any) {
+            result.failed++;
+            result.details.failed.push({
+              tranId: order.tranid || order.id,
+              error: error.message || 'Unknown error',
             });
           }
-        } catch (error: any) {
-          result.failed++;
-          result.details.failed.push({
-            tranId: item.id,
-            error: error.message || 'Unknown error',
-          });
-          logger.error('Failed to sync NetSuite order', {
-            orderId: item.id,
-            error: error.message,
-          });
+        }
+      } else {
+        // Process Record API results
+        result.totalProcessed = items.length;
+
+        for (const item of items) {
+          try {
+            let syncResult;
+            if (useItemFulfillments) {
+              const fulfillment = await this.client.getItemFulfillment(item.id);
+              syncResult = await this.syncSingleFulfillment(fulfillment, _options);
+            } else {
+              const salesOrder = await this.client.getSalesOrder(item.id);
+              syncResult = await this.syncSingleOrder(salesOrder, _options);
+            }
+
+            if (syncResult.imported) {
+              result.succeeded++;
+              result.details.imported.push(syncResult.tranId || item.id);
+            } else if (syncResult.skipped) {
+              result.skipped++;
+              result.details.skipped.push({
+                tranId: syncResult.tranId || item.id,
+                reason: syncResult.reason || 'Unknown reason',
+              });
+            }
+          } catch (error: any) {
+            result.failed++;
+            result.details.failed.push({
+              tranId: item.id,
+              error: error.message || 'Unknown error',
+            });
+            logger.error('Failed to sync NetSuite order', {
+              orderId: item.id,
+              error: error.message,
+            });
+          }
         }
       }
 
@@ -187,6 +232,74 @@ export class NetSuiteOrderSyncService {
       });
       throw error;
     }
+  }
+
+  /**
+   * Sync a single order fetched via SuiteQL
+   */
+  private async syncSuiteQLOrder(
+    order: any,
+    _options: NetSuiteSyncOptions
+  ): Promise<{ imported: boolean; skipped: boolean; reason?: string; tranId?: string }> {
+    const tranId = order.tranid || order.tranId || String(order.id);
+
+    // Check if already imported
+    const existingOrder = await this.findOrderByExternalId(tranId);
+    if (existingOrder) {
+      return { imported: false, skipped: true, reason: 'Order already imported', tranId };
+    }
+
+    // Get line items via SuiteQL
+    let lineItems: any[] = [];
+    try {
+      const fullOrder = await this.client.getSalesOrderViaSuiteQL(String(order.id));
+      lineItems = fullOrder.lineItems || [];
+    } catch {
+      // If we can't get lines, still create the order header
+      logger.warn('Could not fetch line items for SuiteQL order', { tranId });
+    }
+
+    if (lineItems.length === 0) {
+      return { imported: false, skipped: true, reason: 'No line items found', tranId };
+    }
+
+    // Map SuiteQL line items to WMS format
+    const items = await Promise.all(
+      lineItems.map(async (line: any) => {
+        const sku = await this.findSkuByNetSuiteItem(
+          String(line.item),
+          line.itemName || line.itemname
+        );
+        return {
+          sku: sku || line.itemName || line.itemname || String(line.item),
+          quantity: line.quantity || 1,
+        };
+      })
+    );
+
+    // Create WMS order
+    const priority = this.calculatePriority(order.shipDate || order.shipdate);
+    const wmsOrder = await this.orderRepository.createOrderWithItems({
+      customerId: String(order.entity || 'NETSUITE'),
+      customerName: order.entityName || order.entityname || 'NetSuite Order',
+      priority,
+      items,
+      externalOrderId: tranId,
+      customerReference: tranId,
+      notes: order.memo || `Imported from NetSuite (SuiteQL) - ${tranId}`,
+      requiredDate:
+        order.shipDate || order.shipdate ? new Date(order.shipDate || order.shipdate) : undefined,
+    } as any);
+
+    await this.storeExternalOrderId(wmsOrder.orderId, tranId, String(order.id));
+
+    logger.info('Created WMS order from NetSuite SuiteQL', {
+      orderId: wmsOrder.orderId,
+      tranId,
+      itemCount: items.length,
+    });
+
+    return { imported: true, skipped: false, tranId };
   }
 
   /**

@@ -361,8 +361,10 @@ export class IntegrationsRepository {
     jobId: string,
     log: Omit<SyncLogEntry, 'logId' | 'timestamp'>
   ): Promise<SyncLogEntry> {
+    const logId = `LOG-${nanoid(12)}`.toUpperCase();
     const query = `
       INSERT INTO sync_job_logs (
+        log_id,
         job_id,
         level,
         message,
@@ -371,11 +373,12 @@ export class IntegrationsRepository {
         entity_id,
         external_id,
         timestamp
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
 
     const values = [
+      logId,
       jobId,
       log.level,
       log.message,

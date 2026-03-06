@@ -373,6 +373,106 @@ export class NetSuiteClient {
   }
 
   /**
+   * Execute a SuiteQL query against NetSuite.
+   * SuiteQL often works when the Record API is blocked by role permissions.
+   */
+  async suiteqlQuery<T = any>(
+    sql: string,
+    limit = 50,
+    offset = 0
+  ): Promise<{
+    items: T[];
+    hasMore: boolean;
+    totalResults: number;
+  }> {
+    const result = await this.request<any>({
+      method: 'POST',
+      path: '/query/v1/suiteql',
+      query: { limit: String(limit), offset: String(offset) },
+      body: { q: sql },
+    });
+
+    if (result.status !== 200) {
+      throw new Error(`SuiteQL query failed: ${result.status} - ${JSON.stringify(result.data)}`);
+    }
+
+    return {
+      items: result.data.items || [],
+      hasMore: result.data.hasMore || false,
+      totalResults: result.data.totalResults || 0,
+    };
+  }
+
+  /**
+   * Fetch sales orders via SuiteQL (fallback when Record API lacks permissions)
+   */
+  async getSalesOrdersViaSuiteQL(limit = 50): Promise<any[]> {
+    const sql = `
+      SELECT
+        t.id,
+        t.tranid AS tranId,
+        t.status,
+        t.trandate AS tranDate,
+        t.shipdate AS shipDate,
+        t.memo,
+        t.entity,
+        BUILTIN.DF(t.entity) AS entityName,
+        BUILTIN.DF(t.status) AS statusName
+      FROM transaction t
+      WHERE t.type = 'SalesOrd'
+      ORDER BY t.trandate DESC
+    `;
+    const result = await this.suiteqlQuery(sql, limit);
+    return result.items;
+  }
+
+  /**
+   * Fetch a single sales order with line items via SuiteQL
+   */
+  async getSalesOrderViaSuiteQL(id: string): Promise<any> {
+    // Get the order header
+    const headerSql = `
+      SELECT
+        t.id,
+        t.tranid AS "tranId",
+        t.status,
+        t.trandate AS "tranDate",
+        t.shipdate AS "shipDate",
+        t.memo,
+        t.entity,
+        BUILTIN.DF(t.entity) AS "entityName",
+        BUILTIN.DF(t.status) AS "statusName",
+        t.shipaddress AS "shippingAddress"
+      FROM transaction t
+      WHERE t.id = ${id}
+    `;
+    const header = await this.suiteqlQuery(headerSql, 1);
+    if (header.items.length === 0) {
+      throw new Error(`Sales order ${id} not found`);
+    }
+
+    // Get line items
+    const linesSql = `
+      SELECT
+        tl.item,
+        BUILTIN.DF(tl.item) AS "itemName",
+        tl.quantity,
+        tl.rate,
+        tl.amount,
+        tl.line
+      FROM transactionline tl
+      WHERE tl.transaction = ${id}
+        AND tl.mainline = 'F'
+        AND tl.item IS NOT NULL
+    `;
+    const lines = await this.suiteqlQuery(linesSql, 1000);
+
+    const order = header.items[0];
+    order.lineItems = lines.items;
+    return order;
+  }
+
+  /**
    * Create an item fulfillment record in NetSuite
    */
   async createItemFulfillment(
