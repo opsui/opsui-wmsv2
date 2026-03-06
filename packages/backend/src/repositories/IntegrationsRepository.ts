@@ -239,8 +239,10 @@ export class IntegrationsRepository {
   // ========================================================================
 
   async createSyncJob(job: Omit<SyncJob, 'jobId' | 'logEntries'>): Promise<SyncJob> {
+    const jobId = `JOB-${nanoid(12)}`.toUpperCase();
     const query = `
       INSERT INTO sync_jobs (
+        job_id,
         integration_id,
         sync_type,
         direction,
@@ -251,11 +253,12 @@ export class IntegrationsRepository {
         records_succeeded,
         records_failed,
         error_message
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
 
     const values = [
+      jobId,
       job.integrationId,
       job.syncType,
       job.direction,
