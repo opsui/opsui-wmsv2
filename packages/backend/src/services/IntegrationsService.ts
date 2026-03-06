@@ -464,7 +464,9 @@ export class IntegrationsService {
 
   private validateConfiguration(provider: IntegrationProvider, configuration: any): void {
     const requiredAuthFields = this.getRequiredFieldsForProvider(provider);
-    const missingFields = requiredAuthFields.filter(field => !configuration.auth?.[field]);
+    // Check both configuration.auth and configuration directly (for flexibility)
+    const config = configuration.auth || configuration;
+    const missingFields = requiredAuthFields.filter(field => !config[field]);
 
     if (missingFields.length > 0) {
       throw new Error(

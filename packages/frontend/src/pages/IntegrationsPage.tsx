@@ -791,6 +791,10 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
   const isEdit = !!integration;
   const createIntegration = useCreateIntegration();
   const updateIntegration = useUpdateIntegration();
+  // Get auth config from either configuration.auth or configuration directly
+  const existingConfig = integration?.configuration as any;
+  const existingAuth = existingConfig?.auth || existingConfig || {};
+
   const [formData, setFormData] = useState<IntegrationFormData>({
     name: integration?.name || '',
     description: integration?.description || '',
@@ -800,10 +804,15 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
     configuration: {
       auth: {
         type: ApiAuthType.API_KEY,
-        apiKey: '',
+        apiKey: existingAuth.apiKey || '',
+        accountId: existingAuth.accountId || '',
+        tokenId: existingAuth.tokenId || '',
+        tokenSecret: existingAuth.tokenSecret || '',
+        consumerKey: existingAuth.consumerKey || '',
+        consumerSecret: existingAuth.consumerSecret || '',
       },
-      baseUrl: '',
-      apiVersion: '',
+      baseUrl: existingConfig?.baseUrl || '',
+      apiVersion: existingConfig?.apiVersion || '',
     },
     syncSettings: {
       direction: SyncDirection.INBOUND,
@@ -823,13 +832,26 @@ function IntegrationModal({ integration, onClose, onSave }: IntegrationModalProp
     e.preventDefault();
 
     try {
+      // For NetSuite, flatten the auth config to top level
+      const submitData = { ...formData };
+      if (formData.provider === IntegrationProvider.NETSUITE) {
+        submitData.configuration = {
+          ...formData.configuration,
+          accountId: formData.configuration.auth.accountId,
+          tokenId: formData.configuration.auth.tokenId,
+          tokenSecret: formData.configuration.auth.tokenSecret,
+          consumerKey: formData.configuration.auth.consumerKey,
+          consumerSecret: formData.configuration.auth.consumerSecret,
+        };
+      }
+
       if (isEdit && integration) {
         await updateIntegration.mutateAsync({
           integrationId: integration.integrationId,
-          updates: formData,
+          updates: submitData,
         });
       } else {
-        await createIntegration.mutateAsync(formData);
+        await createIntegration.mutateAsync(submitData);
       }
       onSave();
     } catch (error) {
