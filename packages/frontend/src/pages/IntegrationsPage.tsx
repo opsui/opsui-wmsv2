@@ -54,8 +54,8 @@ import {
   useTestConnection,
   useToggleIntegration,
   useWebhookEvents,
-  apiClient,
 } from '@/services/api';
+import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
