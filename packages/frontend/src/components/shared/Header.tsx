@@ -2389,25 +2389,25 @@ export function Header() {
         <div className="w-full">
           {/* Mobile: Logo centered above toolbar, desktop: horizontal layout */}
           <div className="relative flex flex-col items-center mobile:flex-row mobile:items-center mobile:h-14 px-4 py-2 mobile:py-0">
-            {/* Mobile: Top row with hamburger only. Desktop: Left side with menu and logo */}
-            <div className="flex items-center justify-start w-full mobile:w-auto mb-2 mobile:mb-0">
-              {/* Hamburger - always visible on mobile, desktop keeps it */}
+            {/* Desktop: Left side with hamburger and logo inline */}
+            <div className="hidden mobile:flex items-center gap-2">
+              {/* Hamburger menu */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
-                className="p-2 text-purple-800 dark:text-gray-300 hover:bg-purple-100/60 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
+                className="p-1.5 text-purple-800 dark:text-gray-300 hover:bg-purple-100/60 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
                 aria-label="Open menu"
               >
-                <Bars3Icon className="h-6 w-6 text-purple-800 dark:text-gray-300" />
+                <Bars3Icon className="h-5 w-5 text-purple-800 dark:text-gray-300" />
               </button>
 
-              {/* Logo - centered on mobile in its own row below, left on desktop */}
+              {/* Logo - inline on desktop */}
               <button
                 onClick={() => {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="hidden mobile:flex text-xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
+                className="flex text-lg font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
@@ -2426,8 +2426,21 @@ export function Header() {
               </button>
             </div>
 
+            {/* Mobile: Top row with hamburger only */}
+            <div className="flex mobile:hidden items-center justify-start w-full mb-1">
+              {/* Hamburger - mobile only */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                onMouseEnter={() => setMobileMenuOpen(true)}
+                className="p-2 text-purple-800 dark:text-gray-300 hover:bg-purple-100/60 dark:hover:bg-white/[0.05] touch-target rounded-lg transition-colors"
+                aria-label="Open menu"
+              >
+                <Bars3Icon className="h-6 w-6 text-purple-800 dark:text-gray-300" />
+              </button>
+            </div>
+
             {/* Mobile: Centered Logo above toolbar */}
-            <div className="flex mobile:hidden items-center justify-center mb-2">
+            <div className="flex mobile:hidden items-center justify-center mb-1">
               <button
                 onClick={() => {
                   const homePath = getHomePathForRole(effectiveRole, user.role);

@@ -361,7 +361,7 @@ export function Breadcrumb({
     if (accountingConfig.tabLabels[subPath]) {
       return (
         <nav
-          className={`mb-6 flex items-center gap-1.5 text-sm ${className}`}
+          className={`mb-2 flex items-center gap-1.5 text-sm ${className}`}
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
           {isAdminInRoleView && (
