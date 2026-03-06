@@ -210,20 +210,48 @@ export function useHardwareCapabilities(): HardwareCapabilities {
     const refreshRate = cachedRefreshRate.current;
 
     // Determine if performance mode should be enabled.
-    // deviceMemory API may return undefined on older browsers — treat undefined as low-memory.
+    // Only enable for genuinely LOW-END devices, not medium or high-end devices.
+    // Performance mode disables animations and reduces visual fidelity,
+    // so we should be conservative about enabling it.
     const mem = hardware.deviceMemory ?? 4;
+
+    // Check for software renderers (definitely low-end)
+    const isSoftwareRenderer =
+      hardware.gpuRenderer?.includes('SwiftShader') ||
+      hardware.gpuRenderer?.includes('llvmpipe') ||
+      hardware.gpuRenderer?.includes('Microsoft Basic Render');
+
+    // If device has a discrete GPU (NVIDIA, AMD Radeon, etc.), it's NOT low-end
+    // Discrete GPUs are a strong indicator of a capable device
+    const hasDiscreteGPU =
+      !hardware.isIntegratedGPU ||
+      hardware.gpuRenderer?.includes('NVIDIA') ||
+      hardware.gpuRenderer?.includes('Radeon') ||
+      hardware.gpuRenderer?.includes('GeForce');
+
+    // Check for known low-end integrated GPUs
+    const isLowEndIntegratedGPU =
+      hardware.isIntegratedGPU &&
+      !hasDiscreteGPU &&
+      (hardware.gpuRenderer?.includes('HD Graphics') ||
+        hardware.gpuRenderer?.includes('UHD Graphics') ||
+        hardware.gpuRenderer?.includes('Mesa'));
+
     const shouldUsePerformanceMode =
-      tier === 'low' ||
-      tier === 'medium' ||
-      hardware.isIntegratedGPU ||
-      mem <= 8 ||
-      hardware.cpuCores <= 4 ||
-      (isOnBattery && isLowPowerMode) ||
-      (hardware.gpuRenderer?.includes('HD Graphics') &&
-        !hardware.gpuRenderer?.includes('HD Graphics 5')) ||
-      hardware.gpuRenderer?.includes('UHD Graphics') ||
-      hardware.gpuRenderer?.includes('Mesa') ||
-      hardware.gpuRenderer?.includes('Intel');
+      // Devices with discrete GPUs should NEVER use performance mode
+      !hasDiscreteGPU &&
+      // Software renderers (definitely low-end)
+      (isSoftwareRenderer ||
+        // Only LOW tier devices need performance mode
+        tier === 'low' ||
+        // Very low memory (less than 4GB) AND no discrete GPU
+        (mem < 4 && !hasDiscreteGPU) ||
+        // Dual-core or single-core CPUs AND no discrete GPU
+        (hardware.cpuCores <= 2 && !hasDiscreteGPU) ||
+        // Low-power mode while on battery
+        (isOnBattery && isLowPowerMode) ||
+        // Known low-end integrated GPUs
+        isLowEndIntegratedGPU);
 
     setCapabilities({
       cpuCores: hardware.cpuCores,
