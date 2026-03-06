@@ -677,23 +677,49 @@ export function CycleCountingPage() {
         <div className="space-y-6">
           {/* Header */}
           <div
-            className="flex justify-between items-center"
+            className="flex flex-col mobile:flex-row mobile:items-end justify-between gap-6"
             style={{ animation: 'precision-stagger-in 0.4s ease-out' }}
           >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/10">
-                <ClipboardDocumentListIcon className="h-8 w-8 text-purple-400" />
+            <div className="flex flex-col mobile:items-center gap-5 mobile:gap-5 w-full mobile:w-auto">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-500/20 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                  <ClipboardDocumentListIcon className="h-8 w-8 text-purple-400" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-['Space_Grotesk',sans-serif]">
+                    Cycle Counting
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    Manage scheduled and ad-hoc inventory cycle counts
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-['Space_Grotesk',sans-serif]">
-                  Cycle Counting
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Manage scheduled and ad-hoc inventory cycle counts
-                </p>
+              {/* Mobile: Navigation and button below title */}
+              <div
+                className="flex mobile:hidden items-center gap-3 overflow-x-auto pb-2 w-full -mx-2 px-2"
+                style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
+              >
+                <style>{`
+                  .cycle-count-scroll::-webkit-scrollbar { height: 6px; }
+                  .cycle-count-scroll::-webkit-scrollbar-track { background: #1f2937; border-radius: 3px; }
+                  .cycle-count-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+                  .cycle-count-scroll::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+                `}</style>
+                <CycleCountNavigation activePage={activeTab} onLocalTabChange={handleTabChange} />
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  disabled={!canCreatePlan || activeTab !== 'counts'}
+                  className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-0 disabled:pointer-events-none transition-opacity flex-shrink-0 ${
+                    !canCreatePlan || activeTab !== 'counts' ? 'invisible' : ''
+                  }`}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  New Cycle Count
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            {/* Desktop: Navigation and button on the right */}
+            <div className="hidden mobile:flex items-center gap-3">
               <CycleCountNavigation activePage={activeTab} onLocalTabChange={handleTabChange} />
               <button
                 onClick={() => setShowCreateModal(true)}

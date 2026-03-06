@@ -340,22 +340,23 @@ export default function LeaveRequestsPage() {
 
           {/* Tabs with animated indicator */}
           <div className="relative mb-8">
-            <div className="flex gap-1 p-1 rounded-xl bg-slate-900/50 border border-white/5 w-fit">
+            <div className="flex gap-1 p-1 rounded-xl bg-slate-900/50 border border-white/5 w-full sm:w-fit overflow-x-auto touch-scroll scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
               <button
                 onClick={() => setActiveTab('pending')}
-                className={`relative px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`relative px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'pending' ? 'text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {activeTab === 'pending' && (
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg shadow-lg shadow-purple-500/25" />
                 )}
-                <span className="relative flex items-center gap-2">
-                  <ClockIcon className="h-4 w-4" />
-                  Pending
+                <span className="relative flex items-center gap-1.5 sm:gap-2">
+                  <ClockIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Pending</span>
+                  <span className="xs:hidden">Pend</span>
                   {requests.length > 0 && (
                     <span
-                      className={`px-2 py-0.5 rounded-full text-xs ${
+                      className={`px-1.5 sm:px-2 py-0.5 rounded-full text-xs ${
                         activeTab === 'pending'
                           ? 'bg-white/20 text-white'
                           : 'bg-purple-500/20 text-purple-400'
@@ -368,16 +369,17 @@ export default function LeaveRequestsPage() {
               </button>
               <button
                 onClick={() => setActiveTab('balances')}
-                className={`relative px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`relative px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'balances' ? 'text-slate-900' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {activeTab === 'balances' && (
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-lg shadow-lg shadow-purple-500/25" />
                 )}
-                <span className="relative flex items-center gap-2">
-                  <CalendarDaysIcon className="h-4 w-4" />
-                  Leave Balances
+                <span className="relative flex items-center gap-1.5 sm:gap-2">
+                  <CalendarDaysIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Leave Balances</span>
+                  <span className="xs:hidden">Balances</span>
                 </span>
               </button>
             </div>

@@ -385,27 +385,40 @@ function ARAgingPage() {
         ) : (
           <div className="space-y-6">
             {/* Summary Header */}
-            <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
-              <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 text-center">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="mb-8 p-2.5 sm:p-4 min-[1000px]:p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
+              <div className="flex flex-col min-[1000px]:flex-row items-center justify-center gap-2 min-[1000px]:gap-12 text-center">
+                {/* Total Outstanding */}
+                <div className="flex items-center gap-1 min-[1000px]:gap-3">
+                  <span className="text-[10px] sm:text-xs min-[1000px]:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     Total Outstanding
                   </span>
-                  <span className="text-3xl font-bold ledger-currency text-amber-600 dark:text-amber-400">
+                  <span className="text-base sm:text-xl min-[1000px]:text-3xl font-bold ledger-currency text-amber-600 dark:text-amber-400 leading-tight">
                     <AnimatedNumber value={mockReport.totalOutstanding} delay={100} />
                   </span>
                 </div>
-                <div className="hidden md:block w-px h-12 bg-gray-300 dark:bg-gray-700" />
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Total Invoices</span>
-                  <span className="text-3xl font-bold text-gray-900 dark:text-white">
+
+                {/* Divider - hidden on smaller screens */}
+                <div className="hidden min-[1000px]:block w-px h-12 bg-gray-300 dark:bg-gray-700" />
+
+                {/* Total Invoices */}
+                <div className="flex items-center gap-1 min-[1000px]:gap-3">
+                  <span className="text-[10px] sm:text-xs min-[1000px]:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    Total Invoices
+                  </span>
+                  <span className="text-base sm:text-xl min-[1000px]:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
                     {mockReport.buckets.reduce((sum, b) => sum + b.count, 0)}
                   </span>
                 </div>
-                <div className="hidden md:block w-px h-12 bg-gray-300 dark:bg-gray-700" />
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Report Date</span>
-                  <span className="text-lg font-medium text-gray-900 dark:text-white">
+
+                {/* Divider - hidden on smaller screens */}
+                <div className="hidden min-[1000px]:block w-px h-12 bg-gray-300 dark:bg-gray-700" />
+
+                {/* Report Date */}
+                <div className="flex items-center gap-1 min-[1000px]:gap-3">
+                  <span className="text-[10px] sm:text-xs min-[1000px]:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    Report Date
+                  </span>
+                  <span className="text-sm sm:text-base min-[1000px]:text-xl font-medium text-gray-900 dark:text-white leading-tight">
                     {new Date(mockReport.asOfDate).toLocaleDateString()}
                   </span>
                 </div>

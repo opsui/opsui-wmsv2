@@ -541,7 +541,7 @@ export function ProductSearchPage() {
         )}
 
         {/* Page Header - Distinctive Typography */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 relative">
           {/* Decorative corner accent */}
           <div className="absolute -top-2 -left-2 w-8 h-8 border-l-2 border-t-2 border-purple-500/30 rounded-tl-lg" />
 

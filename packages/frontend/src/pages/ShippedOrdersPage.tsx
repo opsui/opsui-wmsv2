@@ -220,7 +220,7 @@ export function ShippedOrdersPage() {
               Track and manage all shipped orders with real-time status updates
             </p>
           </div>
-          <div className="shipping-hero-stats hidden md:flex">
+          <div className="shipping-hero-stats">
             <div className="shipping-stat-mini">
               <span className="shipping-stat-mini-value">{orders.length}</span>
               <span className="shipping-stat-mini-label">Total Shipped</span>

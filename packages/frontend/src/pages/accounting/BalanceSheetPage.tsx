@@ -106,7 +106,7 @@ function AccountSection({
         {accounts.map((account, idx) => (
           <div
             key={account.accountId}
-            className="group flex items-center justify-between py-2.5 px-3 -mx-3 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-200 cursor-default"
+            className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 py-2.5 px-3 -mx-3 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-200 cursor-default"
             style={{ animationDelay: `${animationDelay + idx * 50}ms` }}
           >
             <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
@@ -332,9 +332,9 @@ function BalanceSheetPage() {
             </div>
 
             {/* Actions & Date */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
               {/* Date Picker */}
-              <div className="relative group">
+              <div className="relative group w-full sm:w-auto">
                 <label
                   htmlFor="as-of-date"
                   className="absolute -top-2 left-3 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-900 px-2 rounded"
@@ -351,21 +351,21 @@ function BalanceSheetPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
                 <Button
                   variant="secondary"
                   onClick={exportToCSV}
-                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30"
+                  className="action-button-enhanced flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30 w-full sm:w-auto"
                 >
-                  <ArrowDownTrayIcon className="h-4 w-4" />
+                  <ArrowDownTrayIcon className="h-4 w-4 flex-shrink-0" />
                   <span className="hidden sm:inline">Export</span>
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={handlePrint}
-                  className="action-button-enhanced flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30"
+                  className="action-button-enhanced flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-100 dark:bg-purple-500/20 border border-purple-300 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-500/30 w-full sm:w-auto"
                 >
-                  <PrinterIcon className="h-4 w-4" />
+                  <PrinterIcon className="h-4 w-4 flex-shrink-0" />
                   <span className="hidden sm:inline">Print</span>
                 </Button>
               </div>
@@ -389,23 +389,27 @@ function BalanceSheetPage() {
         ) : balanceSheet ? (
           <>
             {/* Balance Equation Header */}
-            <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50">
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-center">
-                <div className="flex items-center gap-2">
+            <div className="mb-8 p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50 overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-5 items-center justify-center gap-4 sm:gap-8 text-center w-full">
+                <div className="flex flex-col sm:flex-row gap-2 sm:justify-center">
                   <span className="ledger-currency text-2xl font-bold text-blue-600 dark:text-blue-400">
                     <AnimatedNumber value={balanceSheet.assets.total} delay={200} />
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">Assets</span>
                 </div>
-                <span className="text-2xl text-gray-400 dark:text-gray-500">=</span>
-                <div className="flex items-center gap-2">
+                <div className="text-center">
+                  <span className="text-2xl text-gray-400 dark:text-gray-500">=</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 sm:justify-center">
                   <span className="ledger-currency text-2xl font-bold text-rose-600 dark:text-rose-400">
                     <AnimatedNumber value={balanceSheet.liabilities.total} delay={400} />
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">Liabilities</span>
                 </div>
-                <span className="text-2xl text-gray-400 dark:text-gray-500">+</span>
-                <div className="flex items-center gap-2">
+                <div className="text-center">
+                  <span className="text-2xl text-gray-400 dark:text-gray-500">+</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 sm:justify-center">
                   <span className="ledger-currency text-2xl font-bold text-purple-600 dark:text-purple-400">
                     <AnimatedNumber value={balanceSheet.equity.total} delay={600} />
                   </span>
@@ -604,7 +608,7 @@ function BalanceSheetPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <ScaleIcon
                           className={`h-5 w-5 ${isBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}
                         />
@@ -630,13 +634,13 @@ function BalanceSheetPage() {
                     </div>
 
                     <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col sm:flex-row sm:justify-between w-full">
                         <span>Assets</span>
                         <span className="ledger-currency text-blue-600 dark:text-blue-400">
                           {formatCurrency(balanceSheet.assets.total)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col sm:flex-row sm:justify-between w-full">
                         <span>Liabilities + Equity</span>
                         <span className="ledger-currency text-purple-600 dark:text-purple-400">
                           {formatCurrency(
@@ -645,7 +649,7 @@ function BalanceSheetPage() {
                         </span>
                       </div>
                       <div className="h-px bg-gray-200 dark:bg-gray-700/30 my-2" />
-                      <div className="flex justify-between font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:justify-between font-semibold w-full">
                         <span>Difference</span>
                         <span
                           className={`ledger-currency ${isBalanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}

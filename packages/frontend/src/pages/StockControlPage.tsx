@@ -746,26 +746,45 @@ function DashboardTab() {
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div
+              className="overflow-x-auto"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
+            >
+              <style>{`
+                div[style*="scrollbar-width"]::-webkit-scrollbar {
+                  height: 8px;
+                }
+                div[style*="scrollbar-width"]::-webkit-scrollbar-track {
+                  background: #1f2937;
+                  border-radius: 4px;
+                }
+                div[style*="scrollbar-width"]::-webkit-scrollbar-thumb {
+                  background: #4b5563;
+                  border-radius: 4px;
+                }
+                div[style*="scrollbar-width"]::-webkit-scrollbar-thumb:hover {
+                  background: #6b7280;
+                }
+              `}</style>
+              <table className="w-full min-w-[600px]">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-white/10">
-                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
                       Time
                     </th>
-                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
                       Type
                     </th>
-                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
                       SKU
                     </th>
-                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
                       Quantity
                     </th>
-                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
                       Location
                     </th>
-                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">
+                    <th className="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
                       Reason
                     </th>
                   </tr>
@@ -785,10 +804,10 @@ function DashboardTab() {
                         key={txn.transactionId}
                         className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]"
                       >
-                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {new Date(txn.timestamp).toLocaleString()}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 whitespace-nowrap">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               txn.type === 'RECEIPT'
@@ -803,11 +822,11 @@ function DashboardTab() {
                             {txn.type}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">
+                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium whitespace-nowrap">
                           {txn.sku}
                         </td>
                         <td
-                          className={`py-3 px-4 font-medium ${
+                          className={`py-3 px-4 font-medium whitespace-nowrap ${
                             txn.quantity > 0
                               ? 'text-green-600 dark:text-success-400'
                               : 'text-red-600 dark:text-error-400'
@@ -816,10 +835,10 @@ function DashboardTab() {
                           {txn.quantity > 0 ? '+' : ''}
                           {txn.quantity}
                         </td>
-                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {txn.binLocation || '-'}
                         </td>
-                        <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm">
+                        <td className="py-3 px-4 text-gray-500 dark:text-gray-400 text-sm whitespace-nowrap">
                           {txn.reason}
                         </td>
                       </tr>
@@ -1811,34 +1830,44 @@ export function StockControlPage() {
 
           {/* Page Header - Asymmetric Industrial Design */}
           <div className="inventory-stagger-in">
-            <div className="flex flex-col md:flex-row md:items-end gap-6">
-              {/* Left side - Icon and Title */}
-              <div className="flex items-center gap-5">
-                <div className="relative">
-                  {/* Outer ring animation */}
-                  <div className="absolute inset-0 bg-blue-500/20 rounded-2xl animate-pulse" />
-                  {/* Main icon container */}
-                  <div className="relative p-4 bg-gradient-to-br from-blue-500/25 to-blue-600/15 rounded-2xl border border-blue-500/40 shadow-lg shadow-blue-500/20 backdrop-blur-sm">
-                    <CubeIcon className="h-9 w-9 text-blue-400" />
+            <div className="flex flex-col mobile:flex-row mobile:items-end justify-between gap-6">
+              <div className="flex flex-col mobile:items-center gap-5 mobile:gap-5 w-full mobile:w-auto">
+                <div className="flex items-center gap-5">
+                  <div className="relative">
+                    {/* Outer ring animation */}
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-2xl animate-pulse" />
+                    {/* Main icon container */}
+                    <div className="relative p-4 bg-gradient-to-br from-blue-500/25 to-blue-600/15 rounded-2xl border border-blue-500/40 shadow-lg shadow-blue-500/20 backdrop-blur-sm">
+                      <CubeIcon className="h-9 w-9 text-blue-400" />
+                    </div>
+                    {/* Corner accent */}
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
                   </div>
-                  {/* Corner accent */}
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
+                  <div>
+                    <h1 className="stock-control-title text-3xl mobile:text-4xl text-gray-900 dark:text-white">
+                      Stock Control
+                    </h1>
+                    <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                      Inventory Command Center
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="stock-control-title text-3xl md:text-4xl text-gray-900 dark:text-white">
-                    Stock Control
-                  </h1>
-                  <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
-                    Inventory Command Center
-                  </p>
+                {/* Mobile: Live indicator below title */}
+                <div className="flex mobile:hidden items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
+                  <div className="relative">
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                    <div className="absolute inset-0 w-2 h-2 bg-green-400 rounded-full animate-ping" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    Live Inventory Data
+                  </span>
                 </div>
               </div>
-
-              {/* Right side - Live indicator */}
-              <div className="md:ml-auto flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
+              {/* Desktop: Live indicator on the right */}
+              <div className="hidden mobile:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
                 <div className="relative">
-                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
-                  <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+                  <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  <div className="absolute inset-0 w-2 h-2 bg-green-400 rounded-full animate-ping" />
                 </div>
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                   Live Inventory Data

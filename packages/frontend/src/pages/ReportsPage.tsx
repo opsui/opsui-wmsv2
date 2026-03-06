@@ -472,61 +472,85 @@ function ReportsTab({
   return (
     <div>
       {/* Actions Bar */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex gap-2">
-          <button
-            onClick={() => onFilterChange('ALL')}
-            className={cn(
-              'px-4 py-2 rounded-md font-medium transition-colors',
-              filter === 'ALL'
-                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
-            )}
+      <div className="mb-6">
+        <div className="flex items-center justify-between gap-4">
+          {/* Filter buttons with horizontal scroll */}
+          <div
+            className="reports-scroll flex gap-2 overflow-x-auto pb-2 flex-1 -mx-2 px-2"
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
           >
-            All Reports
-          </button>
+            <style>{`
+              .reports-scroll::-webkit-scrollbar {
+                height: 6px;
+              }
+              .reports-scroll::-webkit-scrollbar-track {
+                background: #1f2937;
+                border-radius: 3px;
+              }
+              .reports-scroll::-webkit-scrollbar-thumb {
+                background: #4b5563;
+                border-radius: 3px;
+              }
+              .reports-scroll::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+              }
+            `}</style>
+            <button
+              onClick={() => onFilterChange('ALL')}
+              className={cn(
+                'min-w-[80px] px-5 py-2 rounded-md font-medium transition-colors text-center',
+                filter === 'ALL'
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                  : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
+              )}
+            >
+              All
+              <br />
+              Reports
+            </button>
+            <button
+              onClick={() => onFilterChange(ReportType.INVENTORY)}
+              className={cn(
+                'min-w-[80px] px-5 py-2 rounded-md font-medium transition-colors whitespace-nowrap',
+                filter === ReportType.INVENTORY
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                  : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
+              )}
+            >
+              Inventory
+            </button>
+            <button
+              onClick={() => onFilterChange(ReportType.ORDERS)}
+              className={cn(
+                'min-w-[80px] px-5 py-2 rounded-md font-medium transition-colors whitespace-nowrap',
+                filter === ReportType.ORDERS
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                  : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
+              )}
+            >
+              Orders
+            </button>
+            <button
+              onClick={() => onFilterChange(ReportType.PICKING_PERFORMANCE)}
+              className={cn(
+                'min-w-[100px] px-5 py-2 rounded-md font-medium transition-colors whitespace-nowrap',
+                filter === ReportType.PICKING_PERFORMANCE
+                  ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                  : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
+              )}
+            >
+              Performance
+            </button>
+          </div>
+
           <button
-            onClick={() => onFilterChange(ReportType.INVENTORY)}
-            className={cn(
-              'px-4 py-2 rounded-md font-medium transition-colors',
-              filter === ReportType.INVENTORY
-                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
-            )}
+            onClick={onCreateReport}
+            className="flex items-center min-w-[110px] px-5 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors whitespace-nowrap flex-shrink-0"
           >
-            Inventory
-          </button>
-          <button
-            onClick={() => onFilterChange(ReportType.ORDERS)}
-            className={cn(
-              'px-4 py-2 rounded-md font-medium transition-colors',
-              filter === ReportType.ORDERS
-                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
-            )}
-          >
-            Orders
-          </button>
-          <button
-            onClick={() => onFilterChange(ReportType.PICKING_PERFORMANCE)}
-            className={cn(
-              'px-4 py-2 rounded-md font-medium transition-colors',
-              filter === ReportType.PICKING_PERFORMANCE
-                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                : 'bg-white/5 text-gray-300 border border-white/[0.08] hover:bg-white/10'
-            )}
-          >
-            Performance
+            <PlusIcon className="h-5 w-5 mr-2" />
+            New Report
           </button>
         </div>
-
-        <button
-          onClick={onCreateReport}
-          className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          New Report
-        </button>
       </div>
 
       {/* Search Bar */}

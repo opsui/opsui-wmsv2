@@ -3458,9 +3458,17 @@ html.light .shipping-subtitle {
 
 /* Hero stats */
 .shipping-hero-stats {
-  display: flex;
-  gap: 1.5rem;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
   align-items: center;
+}
+
+@media (min-width: 768px) {
+  .shipping-hero-stats {
+    flex-direction: row !important;
+    gap: 1.5rem !important;
+  }
 }
 
 .shipping-stat-mini {

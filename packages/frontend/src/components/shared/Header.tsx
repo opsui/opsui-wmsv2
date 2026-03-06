@@ -424,7 +424,7 @@ function MobileMenu({
 
       {/* Menu Drawer with enhanced styling */}
       <div
-        className={`fixed inset-y-0 left-0 z-[110] w-[340px] max-w-[90vw] transform transition-all duration-500 ease-out ${
+        className={`fixed inset-y-0 left-0 z-[110] max-w-[90vw] transform transition-all duration-500 ease-out ${
           isClosing || !isVisible ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'
         }`}
         onMouseEnter={handleMouseEnter}
@@ -2388,9 +2388,9 @@ export function Header() {
       <header className="relative z-50 bg-transparent border-none">
         <div className="w-full">
           {/* Mobile: Logo centered above toolbar, desktop: horizontal layout */}
-          <div className="relative flex flex-col md:flex-row md:items-center md:h-14 px-4 py-2 md:py-0">
+          <div className="relative flex flex-col items-center mobile:flex-row mobile:items-center mobile:h-14 px-4 py-2 mobile:py-0">
             {/* Mobile: Top row with hamburger only. Desktop: Left side with menu and logo */}
-            <div className="flex items-center justify-between md:justify-start w-full md:w-auto mb-2 md:mb-0">
+            <div className="flex items-center justify-start w-full mobile:w-auto mb-2 mobile:mb-0">
               {/* Hamburger - always visible on mobile, desktop keeps it */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -2407,7 +2407,7 @@ export function Header() {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="hidden md:flex text-xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
+                className="hidden mobile:flex text-xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
@@ -2427,7 +2427,7 @@ export function Header() {
             </div>
 
             {/* Mobile: Centered Logo above toolbar */}
-            <div className="flex md:hidden items-center justify-center mb-2">
+            <div className="flex mobile:hidden items-center justify-center mb-2">
               <button
                 onClick={() => {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
@@ -2446,7 +2446,7 @@ export function Header() {
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
             <div
-              className={`relative flex items-center justify-center gap-1 p-1 mx-auto md:mx-0 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-[340px] max-w-[90vw]' : 'w-auto'}`}
+              className={`relative flex items-center justify-center gap-1 p-1 mx-auto mobile:mx-0 mobile:absolute mobile:left-1/2 mobile:top-1/2 mobile:-translate-x-1/2 mobile:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-[340px] max-w-[90vw]' : 'w-auto'}`}
             >
               {/* Animated gradient border - smooth Dynamic Island transition - thicker border via padding */}
               <div
@@ -2468,7 +2468,7 @@ export function Header() {
                 <div
                   className={
                     isMobileSearchActive
-                      ? 'hidden md:contents'
+                      ? 'hidden mobile:contents'
                       : isDesktopSearchActive
                         ? 'hidden'
                         : 'contents'

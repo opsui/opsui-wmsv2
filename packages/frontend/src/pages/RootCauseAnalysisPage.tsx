@@ -699,16 +699,34 @@ export function RootCauseAnalysisPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Root Cause Analysis
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Identify and categorize the underlying causes of inventory variances
-              </p>
+          <div className="flex flex-col mobile:flex-row mobile:items-end justify-between gap-6 animate-fade-in">
+            <div className="flex flex-col mobile:items-center gap-5 mobile:gap-5 w-full mobile:w-auto">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Root Cause Analysis
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Identify and categorize the underlying causes of inventory variances
+                </p>
+              </div>
+              {/* Mobile: Navigation below title */}
+              <div
+                className="flex mobile:hidden items-center gap-3 overflow-x-auto pb-2 w-full -mx-2 px-2"
+                style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
+              >
+                <style>{`
+                  .root-cause-scroll::-webkit-scrollbar { height: 6px; }
+                  .root-cause-scroll::-webkit-scrollbar-track { background: #1f2937; border-radius: 3px; }
+                  .root-cause-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+                  .root-cause-scroll::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+                `}</style>
+                <CycleCountNavigation activePage="root-cause" />
+              </div>
             </div>
-            <CycleCountNavigation activePage="root-cause" />
+            {/* Desktop: Navigation on the right */}
+            <div className="hidden mobile:flex">
+              <CycleCountNavigation activePage="root-cause" />
+            </div>
           </div>
 
           {/* Filters Bar */}

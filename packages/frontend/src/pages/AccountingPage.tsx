@@ -744,7 +744,7 @@ function AccountingPage() {
 
         {/* Tabs - Refined */}
         <div className="mb-8">
-          <div className="flex items-center gap-1 overflow-x-auto pb-2">
+          <div className="flex items-center gap-1 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll scrollbar-hide">
             {tabs.map((tab, index) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -756,7 +756,7 @@ function AccountingPage() {
                   aria-selected={isActive}
                   aria-controls={`panel-${tab.id}`}
                   id={`tab-${tab.id}`}
-                  className={`ledger-tab flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`ledger-tab flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                     isActive
                       ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
@@ -764,7 +764,7 @@ function AccountingPage() {
                   style={{ animationDelay: `${150 + index * 50}ms` }}
                 >
                   <Icon
-                    className={`h-4 w-4 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}
+                    className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}
                   />
                   <span>{tab.label}</span>
                 </button>

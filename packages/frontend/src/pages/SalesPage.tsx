@@ -957,7 +957,7 @@ function SalesPage() {
 
         {/* Tab Navigation - Premium Pills */}
         {!isLoading && (
-          <div className="flex gap-2 mb-10">
+          <div className="flex gap-1.5 sm:gap-2 mb-8 sm:mb-10 overflow-x-auto touch-scroll -mx-4 px-4 sm:mx-0 sm:px-0 pb-2 sm:pb-0 scrollbar-hide">
             {[
               { key: 'dashboard' as TabType, label: 'Dashboard', icon: ChartBarIcon },
               { key: 'customers' as TabType, label: 'Customers', icon: UserGroupIcon },
@@ -971,7 +971,7 @@ function SalesPage() {
                 <button
                   key={tab.key}
                   onClick={() => setTab(tab.key)}
-                  className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                  className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-colors duration-200 whitespace-nowrap flex-shrink-0 ${
                     isActive
                       ? 'text-purple-700 dark:text-purple-300'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -979,15 +979,15 @@ function SalesPage() {
                 >
                   {isActive &&
                     (noMotion ? (
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-xl border border-purple-200 dark:border-purple-500/30" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-lg sm:rounded-xl border border-purple-200 dark:border-purple-500/30" />
                     ) : (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-xl border border-purple-200 dark:border-purple-500/30"
+                        className="absolute inset-0 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 rounded-lg sm:rounded-xl border border-purple-200 dark:border-purple-500/30"
                         transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
                       />
                     ))}
-                  <Icon className="h-4 w-4 relative z-10" />
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 relative z-10 flex-shrink-0" />
                   <span className="relative z-10">{tab.label}</span>
                 </button>
               );

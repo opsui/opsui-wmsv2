@@ -1347,38 +1347,26 @@ function InwardsGoodsPage() {
           {/* Page Header - Industrial Dock Design */}
           <div className="mb-8 flex flex-col md:flex-row md:items-end gap-6">
             {/* Left side - Icon and Title */}
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                {/* Outer ring animation */}
-                <div className="absolute inset-0 bg-orange-500/20 rounded-2xl animate-pulse" />
-                {/* Main icon container */}
-                <div className="relative p-4 bg-gradient-to-br from-orange-500/25 to-amber-500/15 rounded-2xl border border-orange-500/40 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
-                  <TruckIcon className="h-9 w-9 text-orange-400" />
-                </div>
-                {/* Corner accent */}
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-                  Inwards Goods
-                </h1>
-                <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
-                  Receiving Dock
-                </p>
-              </div>
-            </div>
-
-            {/* Right side - Actions and live indicator */}
-            <div className="md:ml-auto flex items-center gap-4">
-              {/* Live dock activity indicator */}
-              <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-transparent rounded-lg border border-orange-500/20">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-5">
                 <div className="relative">
-                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
-                  <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+                  {/* Outer ring animation */}
+                  <div className="absolute inset-0 bg-orange-500/20 rounded-2xl animate-pulse" />
+                  {/* Main icon container */}
+                  <div className="relative p-4 bg-gradient-to-br from-orange-500/25 to-amber-500/15 rounded-2xl border border-orange-500/40 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
+                    <TruckIcon className="h-9 w-9 text-orange-400" />
+                  </div>
+                  {/* Corner accent */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50" />
                 </div>
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                  Dock Active
-                </span>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Inwards Goods
+                  </h1>
+                  <p className="mt-1.5 text-gray-500 dark:text-gray-400 text-sm tracking-wide uppercase">
+                    Receiving Dock
+                  </p>
+                </div>
               </div>
 
               {/* Action buttons */}
@@ -1399,6 +1387,19 @@ function InwardsGoodsPage() {
                   <InboxIcon className="h-5 w-5" />
                   New Receipt
                 </Button>
+              </div>
+            </div>
+
+            {/* Right side - Live dock activity indicator */}
+            <div className="md:ml-auto flex items-center">
+              <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-500/10 to-transparent rounded-lg border border-orange-500/20">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+                  <div className="absolute inset-0 w-2.5 h-2.5 bg-green-400 rounded-full animate-ping" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Dock Active
+                </span>
               </div>
             </div>
           </div>

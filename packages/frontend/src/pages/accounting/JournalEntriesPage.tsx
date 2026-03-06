@@ -1252,29 +1252,33 @@ function JournalEntriesPage() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full" role="table" aria-label="Journal entries">
+                  <div className="mobile-table-container">
+                    <table
+                      className="min-w-[900px] w-full"
+                      role="table"
+                      aria-label="Journal entries"
+                    >
                       <thead>
                         <tr className="border-b border-slate-200 dark:border-slate-700">
-                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28 whitespace-nowrap">
                             Entry #
                           </th>
-                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32 whitespace-nowrap">
                             Date
                           </th>
-                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">
                             Description
                           </th>
-                          <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
+                          <th className="text-left py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-24 whitespace-nowrap">
                             Period
                           </th>
-                          <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28">
+                          <th className="text-center py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28 whitespace-nowrap">
                             Status
                           </th>
-                          <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32">
+                          <th className="text-right py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-28 whitespace-nowrap">
                             Total
                           </th>
-                          <th className="text-center py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20">
+                          <th className="text-center py-3 px-2 sm:px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-20 whitespace-nowrap">
                             Actions
                           </th>
                         </tr>
@@ -1289,13 +1293,13 @@ function JournalEntriesPage() {
                               animationDelay: `${index * 50}ms`,
                             }}
                           >
-                            <td className="py-4 px-4">
-                              <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            <td className="py-4 px-2 sm:px-4">
+                              <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors whitespace-nowrap">
                                 {entry.entryNumber}
                               </span>
                             </td>
-                            <td className="py-4 px-4">
-                              <span className="text-sm text-slate-600 dark:text-slate-300 font-mono">
+                            <td className="py-4 px-2 sm:px-4">
+                              <span className="text-sm text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
                                 {new Date(entry.entryDate).toLocaleDateString('en-US', {
                                   month: 'short',
                                   day: 'numeric',
@@ -1303,25 +1307,25 @@ function JournalEntriesPage() {
                                 })}
                               </span>
                             </td>
-                            <td className="py-4 px-4">
+                            <td className="py-4 px-2 sm:px-4">
                               <span className="text-sm text-slate-700 dark:text-slate-300 line-clamp-1">
                                 {entry.description}
                               </span>
                             </td>
-                            <td className="py-4 px-4">
-                              <span className="text-sm text-slate-500 dark:text-slate-400 font-mono">
+                            <td className="py-4 px-2 sm:px-4">
+                              <span className="text-sm text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
                                 {entry.fiscalPeriod}
                               </span>
                             </td>
-                            <td className="py-4 px-4 text-center">
+                            <td className="py-4 px-2 sm:px-4 text-center">
                               <JournalEntryStatusBadge status={entry.status} />
                             </td>
-                            <td className="py-4 px-4 text-right">
-                              <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white">
+                            <td className="py-4 px-2 sm:px-4 text-right">
+                              <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">
                                 {formatCurrency(entry.totalDebit)}
                               </span>
                             </td>
-                            <td className="py-4 px-4 text-center">
+                            <td className="py-4 px-2 sm:px-4 text-center">
                               <button
                                 onClick={e => {
                                   e.stopPropagation();

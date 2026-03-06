@@ -345,9 +345,9 @@ export function ProductionPage() {
         <Breadcrumb />
 
         {/* Page Header with industrial styling */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-3">
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30">
                 <BoltIcon className="h-6 w-6 text-white" />
               </div>
@@ -355,69 +355,62 @@ export function ProductionPage() {
                 Manufacturing Execution System
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight mb-2">
+            <h1 className="text-4xl sm:text-5xl font-extralight text-white tracking-tight">
               Production Management
             </h1>
             <p className="text-slate-400 font-light">
               Monitor, control, and optimize manufacturing operations
             </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              className="flex items-center gap-2 h-11 px-5 border-slate-700 hover:border-purple-500/30"
-              onClick={() => setIsCreateBOMModalOpen(true)}
-            >
-              <DocumentTextIcon className="h-4 w-4" />
-              New BOM
-            </Button>
-            <Button
-              variant="primary"
-              className="flex items-center gap-2 h-11 px-5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white font-medium shadow-lg shadow-purple-500/25"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <PlusIcon className="h-4 w-4" />
-              New Order
-            </Button>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full">
+              <Button
+                variant="secondary"
+                className="flex items-center justify-center gap-3 h-11 px-6 border-slate-700 hover:border-purple-500/30 w-full sm:w-auto min-w-0"
+                onClick={() => setIsCreateBOMModalOpen(true)}
+              >
+                <DocumentTextIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">New BOM</span>
+              </Button>
+              <Button
+                variant="primary"
+                className="flex items-center justify-center gap-3 h-11 px-6 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 text-white font-medium shadow-lg shadow-purple-500/25 w-full sm:w-auto min-w-0"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <PlusIcon className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">New Order</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Tab Navigation with industrial styling */}
+        {/* Tab Navigation */}
         <div className="mb-8">
-          <div className="flex gap-1 p-1 rounded-xl bg-slate-900/50 border border-slate-800 w-fit overflow-x-auto">
-            {TABS.map(tab => {
+          <div className="flex items-center gap-1 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 touch-scroll scrollbar-hide">
+            {TABS.map((tab, index) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 whitespace-nowrap ${
+                  className={`flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                     isActive
-                      ? 'text-slate-900'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                      ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent'
                   }`}
+                  style={{ animationDelay: `${150 + index * 50}ms` }}
                 >
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-lg shadow-purple-500/25" />
-                  )}
-                  <Icon className="h-4 w-4 relative" />
-                  <span className="relative">{tab.label}</span>
+                  <Icon
+                    className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}
+                  />
+                  <span>{tab.label}</span>
                   {tab.id === 'dashboard' && dashboardMetrics.overdueOrders > 0 && (
-                    <span
-                      className={`relative ml-1 w-2 h-2 rounded-full ${
-                        isActive ? 'bg-slate-900' : 'bg-rose-400 animate-pulse'
-                      }`}
-                    />
+                    <span className="ml-2 w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
                   )}
                 </button>
               );
             })}
           </div>
         </div>
-
-        {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">

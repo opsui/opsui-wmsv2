@@ -304,8 +304,8 @@ export function ScheduleManagementPage() {
       <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Page Header */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col mobile:flex-row mobile:items-end justify-between gap-6">
+            <div className="flex flex-col mobile:items-center gap-5 mobile:gap-5 w-full mobile:w-auto">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
                   <CalendarDaysIcon className="h-6 w-6 text-blue-500 dark:text-blue-400" />
@@ -315,8 +315,29 @@ export function ScheduleManagementPage() {
                   Automate your cycle counts by creating recurring schedules
                 </p>
               </div>
+              {/* Mobile: Navigation and button below title */}
+              <div
+                className="flex mobile:hidden items-center gap-3 overflow-x-auto pb-2 w-full -mx-2 px-2"
+                style={{ scrollbarWidth: 'thin', scrollbarColor: '#4b5563 #1f2937' }}
+              >
+                <style>{`
+                  .schedule-scroll::-webkit-scrollbar { height: 6px; }
+                  .schedule-scroll::-webkit-scrollbar-track { background: #1f2937; border-radius: 3px; }
+                  .schedule-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+                  .schedule-scroll::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+                `}</style>
+                <CycleCountNavigation activePage="schedules" />
+                <button
+                  onClick={handleCreate}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex-shrink-0"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  Create Schedule
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+            {/* Desktop: Navigation and button on the right */}
+            <div className="hidden mobile:flex items-center gap-3">
               <CycleCountNavigation activePage="schedules" />
               <button
                 onClick={handleCreate}
