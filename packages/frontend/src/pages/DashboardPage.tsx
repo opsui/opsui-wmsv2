@@ -415,6 +415,8 @@ export function DashboardPage() {
     [UserRole.ADMIN]: [],
     [UserRole.DISPATCH]: [],
     [UserRole.ACCOUNTING]: [],
+    [UserRole.HR_MANAGER]: [],
+    [UserRole.HR_ADMIN]: [],
   };
 
   // Explicitly type roleActivities to ensure it satisfies Record<UserRole, any[]>
