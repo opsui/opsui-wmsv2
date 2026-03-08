@@ -7532,7 +7532,7 @@ html.light .integration-card-enhanced {
   }
   
   /* Touch targets - WCAG 2.5.5 compliant */
-  button, a, input, select, textarea, [role="button"], .clickable {
+  button:not(.toolbar-btn), a, input, select, textarea, [role="button"], .clickable {
     min-height: 44px !important;
     min-width: 44px !important;
   }

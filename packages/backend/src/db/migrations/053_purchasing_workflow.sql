@@ -19,58 +19,19 @@
 -- ============================================================================
 
 -- Requisition Status Enum
-CREATE TYPE requisition_status AS ENUM (
-  'DRAFT',
-  'SUBMITTED',
-  'PENDING_APPROVAL',
-  'APPROVED',
-  'REJECTED',
-  'CANCELLED',
-  'CONVERTED_TO_PO'
-);
+DO $$ BEGIN CREATE TYPE requisition_status AS ENUM ('DRAFT','SUBMITTED','PENDING_APPROVAL','APPROVED','REJECTED','CANCELLED','CONVERTED_TO_PO'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- RFQ Status Enum
-CREATE TYPE rfq_status AS ENUM (
-  'DRAFT',
-  'SENT',
-  'RESPONSES_PENDING',
-  'RESPONSES_RECEIVED',
-  'UNDER_REVIEW',
-  'AWARDED',
-  'CANCELLED'
-);
+DO $$ BEGIN CREATE TYPE rfq_status AS ENUM ('DRAFT','SENT','RESPONSES_PENDING','RESPONSES_RECEIVED','UNDER_REVIEW','AWARDED','CANCELLED'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Vendor Response Status Enum
-CREATE TYPE vendor_response_status AS ENUM (
-  'PENDING',
-  'RECEIVED',
-  'ACCEPTED',
-  'REJECTED',
-  'WITHDRAWN'
-);
+DO $$ BEGIN CREATE TYPE vendor_response_status AS ENUM ('PENDING','RECEIVED','ACCEPTED','REJECTED','WITHDRAWN'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Three-Way Match Status Enum
-CREATE TYPE three_way_match_status AS ENUM (
-  'PENDING_RECEIPT',
-  'PARTIALLY_RECEIVED',
-  'FULLY_RECEIVED',
-  'PENDING_INVOICE',
-  'INVOICE_RECEIVED',
-  'MATCHED',
-  'VARIANCE_DETECTED',
-  'DISCREPANCY_RESOLVED',
-  'READY_TO_PAY',
-  'PAID'
-);
+DO $$ BEGIN CREATE TYPE three_way_match_status AS ENUM ('PENDING_RECEIPT','PARTIALLY_RECEIVED','FULLY_RECEIVED','PENDING_INVOICE','INVOICE_RECEIVED','MATCHED','VARIANCE_DETECTED','DISCREPANCY_RESOLVED','READY_TO_PAY','PAID'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Vendor Rating Category Enum
-CREATE TYPE vendor_rating_category AS ENUM (
-  'QUALITY',
-  'DELIVERY',
-  'COMMUNICATION',
-  'PRICE',
-  'OVERALL'
-);
+DO $$ BEGIN CREATE TYPE vendor_rating_category AS ENUM ('QUALITY','DELIVERY','COMMUNICATION','PRICE','OVERALL'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================================
 -- TABLES: PURCHASE REQUISITIONS
@@ -113,13 +74,13 @@ CREATE TABLE IF NOT EXISTS purchase_requisitions (
   CONSTRAINT chk_required_by_after_request CHECK (required_by >= request_date)
 );
 
-CREATE INDEX idx_pr_entity ON purchase_requisitions(entity_id);
-CREATE INDEX idx_pr_requested_by ON purchase_requisitions(requested_by);
-CREATE INDEX idx_pr_status ON purchase_requisitions(approval_status);
-CREATE INDEX idx_pr_required_by ON purchase_requisitions(required_by);
-CREATE INDEX idx_pr_department ON purchase_requisitions(department);
-CREATE INDEX idx_pr_job_number ON purchase_requisitions(job_number);
-CREATE INDEX idx_pr_approval_status ON purchase_requisitions(approval_status);
+CREATE INDEX IF NOT EXISTS idx_pr_entity ON purchase_requisitions(entity_id);
+CREATE INDEX IF NOT EXISTS idx_pr_requested_by ON purchase_requisitions(requested_by);
+CREATE INDEX IF NOT EXISTS idx_pr_status ON purchase_requisitions(approval_status);
+CREATE INDEX IF NOT EXISTS idx_pr_required_by ON purchase_requisitions(required_by);
+CREATE INDEX IF NOT EXISTS idx_pr_department ON purchase_requisitions(department);
+CREATE INDEX IF NOT EXISTS idx_pr_job_number ON purchase_requisitions(job_number);
+CREATE INDEX IF NOT EXISTS idx_pr_approval_status ON purchase_requisitions(approval_status);
 
 COMMENT ON TABLE purchase_requisitions IS 'Internal purchase requisitions - request to buy goods/services before PO creation';
 COMMENT ON COLUMN purchase_requisitions.entity_id IS 'Multi-entity: which entity is requesting';
@@ -156,9 +117,9 @@ CREATE TABLE IF NOT EXISTS purchase_requisition_lines (
   CONSTRAINT chk_pr_line_cost CHECK (estimated_unit_cost IS NULL OR estimated_unit_cost >= 0)
 );
 
-CREATE INDEX idx_prl_requisition ON purchase_requisition_lines(requisition_id);
-CREATE INDEX idx_prl_sku ON purchase_requisition_lines(sku);
-CREATE INDEX idx_prl_vendor ON purchase_requisition_lines(suggested_vendor_id);
+CREATE INDEX IF NOT EXISTS idx_prl_requisition ON purchase_requisition_lines(requisition_id);
+CREATE INDEX IF NOT EXISTS idx_prl_sku ON purchase_requisition_lines(sku);
+CREATE INDEX IF NOT EXISTS idx_prl_vendor ON purchase_requisition_lines(suggested_vendor_id);
 
 COMMENT ON TABLE purchase_requisition_lines IS 'Line items for purchase requisitions';
 
@@ -176,9 +137,9 @@ CREATE TABLE IF NOT EXISTS requisition_approvals (
   UNIQUE(requisition_id, approval_level, approver_id)
 );
 
-CREATE INDEX idx_ra_requisition ON requisition_approvals(requisition_id);
-CREATE INDEX idx_ra_approver ON requisition_approvals(approver_id);
-CREATE INDEX idx_ra_status ON requisition_approvals(approval_status);
+CREATE INDEX IF NOT EXISTS idx_ra_requisition ON requisition_approvals(requisition_id);
+CREATE INDEX IF NOT EXISTS idx_ra_approver ON requisition_approvals(approver_id);
+CREATE INDEX IF NOT EXISTS idx_ra_status ON requisition_approvals(approval_status);
 
 COMMENT ON TABLE requisition_approvals IS 'Multi-level approval workflow for purchase requisitions';
 
@@ -231,12 +192,12 @@ CREATE TABLE IF NOT EXISTS rfq_headers (
   CONSTRAINT chk_rfq_response_date CHECK (response_by_date >= quote_due_date)
 );
 
-CREATE INDEX idx_rfq_entity ON rfq_headers(entity_id);
-CREATE INDEX idx_rfq_status ON rfq_headers(rfq_status);
-CREATE INDEX idx_rfq_source ON rfq_headers(source_type, source_id);
-CREATE INDEX idx_rfq_due_date ON rfq_headers(quote_due_date);
-CREATE INDEX idx_rfq_created_by ON rfq_headers(created_by);
-CREATE INDEX idx_rfq_awarded_vendor ON rfq_headers(awarded_to_vendor_id);
+CREATE INDEX IF NOT EXISTS idx_rfq_entity ON rfq_headers(entity_id);
+CREATE INDEX IF NOT EXISTS idx_rfq_status ON rfq_headers(rfq_status);
+CREATE INDEX IF NOT EXISTS idx_rfq_source ON rfq_headers(source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_rfq_due_date ON rfq_headers(quote_due_date);
+CREATE INDEX IF NOT EXISTS idx_rfq_created_by ON rfq_headers(created_by);
+CREATE INDEX IF NOT EXISTS idx_rfq_awarded_vendor ON rfq_headers(awarded_to_vendor_id);
 
 COMMENT ON TABLE rfq_headers IS 'Request for Quotation headers - solicit bids from multiple vendors';
 
@@ -267,8 +228,8 @@ CREATE TABLE IF NOT EXISTS rfq_lines (
   CONSTRAINT chk_rfq_line_quantity CHECK (quantity > 0)
 );
 
-CREATE INDEX idx_rfq_l_header ON rfq_lines(rfq_id);
-CREATE INDEX idx_rfq_l_sku ON rfq_lines(sku);
+CREATE INDEX IF NOT EXISTS idx_rfq_l_header ON rfq_lines(rfq_id);
+CREATE INDEX IF NOT EXISTS idx_rfq_l_sku ON rfq_lines(sku);
 
 COMMENT ON TABLE rfq_lines IS 'Line items for RFQs';
 
@@ -301,9 +262,9 @@ CREATE TABLE IF NOT EXISTS rfq_vendors (
   CONSTRAINT uq_rfq_vendor UNIQUE(rfq_id, vendor_id)
 );
 
-CREATE INDEX idx_rfq_v_rfq ON rfq_vendors(rfq_id);
-CREATE INDEX idx_rfq_v_vendor ON rfq_vendors(vendor_id);
-CREATE INDEX idx_rfq_v_status ON rfq_vendors(status);
+CREATE INDEX IF NOT EXISTS idx_rfq_v_rfq ON rfq_vendors(rfq_id);
+CREATE INDEX IF NOT EXISTS idx_rfq_v_vendor ON rfq_vendors(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_rfq_v_status ON rfq_vendors(status);
 
 COMMENT ON TABLE rfq_vendors IS 'Vendors invited to participate in RFQ';
 
@@ -348,9 +309,9 @@ CREATE TABLE IF NOT EXISTS rfq_vendor_responses (
   CONSTRAINT chk_rfq_response_total CHECK (grand_total > 0)
 );
 
-CREATE INDEX idx_rqr_rfq_vendor ON rfq_vendor_responses(rfq_vendor_id);
-CREATE INDEX idx_rqr_rfq ON rfq_vendor_responses(rfq_id);
-CREATE INDEX idx_rqr_vendor ON rfq_vendor_responses(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_rqr_rfq_vendor ON rfq_vendor_responses(rfq_vendor_id);
+CREATE INDEX IF NOT EXISTS idx_rqr_rfq ON rfq_vendor_responses(rfq_id);
+CREATE INDEX IF NOT EXISTS idx_rqr_vendor ON rfq_vendor_responses(vendor_id);
 
 COMMENT ON TABLE rfq_vendor_responses IS 'Vendor quotation responses to RFQs';
 
@@ -387,8 +348,8 @@ CREATE TABLE IF NOT EXISTS rfq_response_lines (
   CONSTRAINT chk_rfq_response_line_qty CHECK (quantity > 0)
 );
 
-CREATE INDEX idx_rfqrl_response ON rfq_response_lines(response_id);
-CREATE INDEX idx_rfqrl_rfq_line ON rfq_response_lines(rfq_line_id);
+CREATE INDEX IF NOT EXISTS idx_rfqrl_response ON rfq_response_lines(response_id);
+CREATE INDEX IF NOT EXISTS idx_rfqrl_rfq_line ON rfq_response_lines(rfq_line_id);
 
 COMMENT ON TABLE rfq_response_lines IS 'Line items from vendor RFQ responses';
 
@@ -445,11 +406,11 @@ CREATE TABLE IF NOT EXISTS vendor_item_catalogs (
   CONSTRAINT uq_vendor_sku UNIQUE(vendor_id, vendor_sku)
 );
 
-CREATE INDEX idx_vic_vendor ON vendor_item_catalogs(vendor_id);
-CREATE INDEX idx_vic_internal_sku ON vendor_item_catalogs(internal_sku);
-CREATE INDEX idx_vic_active ON vendor_item_catalogs(is_active);
-CREATE INDEX idx_vic_preferred ON vendor_item_catalogs(is_preferred);
-CREATE INDEX idx_vic_entity ON vendor_item_catalogs(entity_id);
+CREATE INDEX IF NOT EXISTS idx_vic_vendor ON vendor_item_catalogs(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_vic_internal_sku ON vendor_item_catalogs(internal_sku);
+CREATE INDEX IF NOT EXISTS idx_vic_active ON vendor_item_catalogs(is_active);
+CREATE INDEX IF NOT EXISTS idx_vic_preferred ON vendor_item_catalogs(is_preferred);
+CREATE INDEX IF NOT EXISTS idx_vic_entity ON vendor_item_catalogs(entity_id);
 
 COMMENT ON TABLE vendor_item_catalogs IS 'Vendor-specific item catalogs with pricing and lead times';
 
@@ -529,13 +490,13 @@ CREATE TABLE IF NOT EXISTS purchase_order_headers (
   CONSTRAINT chk_po_delivery CHECK (requested_delivery_date >= order_date)
 );
 
-CREATE INDEX idx_poh_entity ON purchase_order_headers(entity_id);
-CREATE INDEX idx_poh_vendor ON purchase_order_headers(vendor_id);
-CREATE INDEX idx_poh_status ON purchase_order_headers(po_status);
-CREATE INDEX idx_poh_3way_status ON purchase_order_headers(three_way_match_status);
-CREATE INDEX idx_poh_order_date ON purchase_order_headers(order_date);
-CREATE INDEX idx_poh_source ON purchase_order_headers(source_type, source_id);
-CREATE INDEX idx_poh_delivery_date ON purchase_order_headers(requested_delivery_date);
+CREATE INDEX IF NOT EXISTS idx_poh_entity ON purchase_order_headers(entity_id);
+CREATE INDEX IF NOT EXISTS idx_poh_vendor ON purchase_order_headers(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_poh_status ON purchase_order_headers(po_status);
+CREATE INDEX IF NOT EXISTS idx_poh_3way_status ON purchase_order_headers(three_way_match_status);
+CREATE INDEX IF NOT EXISTS idx_poh_order_date ON purchase_order_headers(order_date);
+CREATE INDEX IF NOT EXISTS idx_poh_source ON purchase_order_headers(source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_poh_delivery_date ON purchase_order_headers(requested_delivery_date);
 
 COMMENT ON TABLE purchase_order_headers IS 'Purchase order headers with three-way matching support';
 
@@ -562,7 +523,7 @@ CREATE TABLE IF NOT EXISTS purchase_order_lines (
   line_total DECIMAL(12,2) GENERATED ALWAYS AS (quantity_ordered * unit_price) STORED,
   tax_amount DECIMAL(12,2) DEFAULT 0,
   freight_amount DECIMAL(12,2) DEFAULT 0,
-  total_amount DECIMAL(12,2) GENERATED ALWAYS AS (line_total + tax_amount + freight_amount) STORED,
+  total_amount DECIMAL(12,2) GENERATED ALWAYS AS ((quantity_ordered * unit_price) + tax_amount + freight_amount) STORED,
 
   -- Receipt & Invoice
   amount_received DECIMAL(12,2) GENERATED ALWAYS AS (quantity_received * unit_price) STORED,
@@ -584,9 +545,9 @@ CREATE TABLE IF NOT EXISTS purchase_order_lines (
   CONSTRAINT chk_pol_price CHECK (unit_price >= 0)
 );
 
-CREATE INDEX idx_pol_po ON purchase_order_lines(po_id);
-CREATE INDEX idx_pol_sku ON purchase_order_lines(sku);
-CREATE INDEX idx_pol_3way_status ON purchase_order_lines(three_way_match_status);
+CREATE INDEX IF NOT EXISTS idx_pol_po ON purchase_order_lines(po_id);
+CREATE INDEX IF NOT EXISTS idx_pol_sku ON purchase_order_lines(sku);
+CREATE INDEX IF NOT EXISTS idx_pol_3way_status ON purchase_order_lines(three_way_match_status);
 
 COMMENT ON TABLE purchase_order_lines IS 'Purchase order lines with three-way matching at line level';
 
@@ -634,11 +595,11 @@ CREATE TABLE IF NOT EXISTS three_way_match_details (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_3wm_po ON three_way_match_details(po_id);
-CREATE INDEX idx_3wm_po_line ON three_way_match_details(po_line_id);
-CREATE INDEX idx_3wm_receipt ON three_way_match_details(receipt_id);
-CREATE INDEX idx_3wm_invoice ON three_way_match_details(invoice_id);
-CREATE INDEX idx_3wm_status ON three_way_match_details(match_status);
+CREATE INDEX IF NOT EXISTS idx_3wm_po ON three_way_match_details(po_id);
+CREATE INDEX IF NOT EXISTS idx_3wm_po_line ON three_way_match_details(po_line_id);
+CREATE INDEX IF NOT EXISTS idx_3wm_receipt ON three_way_match_details(receipt_id);
+CREATE INDEX IF NOT EXISTS idx_3wm_invoice ON three_way_match_details(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_3wm_status ON three_way_match_details(match_status);
 
 COMMENT ON TABLE three_way_match_details IS 'Three-way matching details between PO, Receipt, and Invoice';
 
@@ -674,9 +635,9 @@ CREATE TABLE IF NOT EXISTS purchase_receipts (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_pr_po ON purchase_receipts(po_id);
-CREATE INDEX idx_pr_vendor ON purchase_receipts(vendor_id);
-CREATE INDEX idx_pr_date ON purchase_receipts(receipt_date);
+CREATE INDEX IF NOT EXISTS idx_pr_po ON purchase_receipts(po_id);
+CREATE INDEX IF NOT EXISTS idx_pr_vendor ON purchase_receipts(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_pr_date ON purchase_receipts(receipt_date);
 
 COMMENT ON TABLE purchase_receipts IS 'Goods receipt notes linked to purchase orders';
 
@@ -727,10 +688,10 @@ CREATE TABLE IF NOT EXISTS purchase_receipt_lines (
   CONSTRAINT chk_prl_qty CHECK (quantity_received > 0)
 );
 
-CREATE INDEX idx_prl_receipt ON purchase_receipt_lines(receipt_id);
-CREATE INDEX idx_prl_po_line ON purchase_receipt_lines(po_line_id);
-CREATE INDEX idx_prl_sku ON purchase_receipt_lines(sku);
-CREATE INDEX idx_prl_lot ON purchase_receipt_lines(lot_number);
+CREATE INDEX IF NOT EXISTS idx_prl_receipt ON purchase_receipt_lines(receipt_id);
+CREATE INDEX IF NOT EXISTS idx_prl_po_line ON purchase_receipt_lines(po_line_id);
+CREATE INDEX IF NOT EXISTS idx_prl_sku ON purchase_receipt_lines(sku);
+CREATE INDEX IF NOT EXISTS idx_prl_lot ON purchase_receipt_lines(lot_number);
 
 COMMENT ON TABLE purchase_receipt_lines IS 'Line items for purchase receipts with quality and putaway tracking';
 
@@ -795,10 +756,10 @@ CREATE TABLE IF NOT EXISTS vendor_performance_summary (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_vps_vendor ON vendor_performance_summary(vendor_id);
-CREATE INDEX idx_vps_entity ON vendor_performance_summary(entity_id);
-CREATE INDEX idx_vps_period ON vendor_performance_summary(period_start, period_end);
-CREATE INDEX idx_vps_overall_rating ON vendor_performance_summary(overall_rating);
+CREATE INDEX IF NOT EXISTS idx_vps_vendor ON vendor_performance_summary(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_vps_entity ON vendor_performance_summary(entity_id);
+CREATE INDEX IF NOT EXISTS idx_vps_period ON vendor_performance_summary(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_vps_overall_rating ON vendor_performance_summary(overall_rating);
 
 COMMENT ON TABLE vendor_performance_summary IS 'Vendor performance metrics and ratings';
 
@@ -845,12 +806,12 @@ CREATE TABLE IF NOT EXISTS vendor_performance_events (
   CONSTRAINT chk_vpe_score CHECK (score_impact BETWEEN -10 AND 10)
 );
 
-CREATE INDEX idx_vpe_vendor ON vendor_performance_events(vendor_id);
-CREATE INDEX idx_vpe_entity ON vendor_performance_events(entity_id);
-CREATE INDEX idx_vpe_type ON vendor_performance_events(event_type);
-CREATE INDEX idx_vpe_category ON vendor_performance_events(event_category);
-CREATE INDEX idx_vpe_date ON vendor_performance_events(event_date);
-CREATE INDEX idx_vpe_reference ON vendor_performance_events(reference_type, reference_id);
+CREATE INDEX IF NOT EXISTS idx_vpe_vendor ON vendor_performance_events(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_vpe_entity ON vendor_performance_events(entity_id);
+CREATE INDEX IF NOT EXISTS idx_vpe_type ON vendor_performance_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_vpe_category ON vendor_performance_events(event_category);
+CREATE INDEX IF NOT EXISTS idx_vpe_date ON vendor_performance_events(event_date);
+CREATE INDEX IF NOT EXISTS idx_vpe_reference ON vendor_performance_events(reference_type, reference_id);
 
 COMMENT ON TABLE vendor_performance_events IS 'Individual performance events for vendor scoring';
 
@@ -903,10 +864,10 @@ CREATE TABLE IF NOT EXISTS vendor_scorecards (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_vs_vendor ON vendor_scorecards(vendor_id);
-CREATE INDEX idx_vs_entity ON vendor_scorecards(entity_id);
-CREATE INDEX idx_vs_period ON vendor_scorecards(review_period_start, review_period_end);
-CREATE INDEX idx_vs_reviewer ON vendor_scorecards(reviewed_by);
+CREATE INDEX IF NOT EXISTS idx_vs_vendor ON vendor_scorecards(vendor_id);
+CREATE INDEX IF NOT EXISTS idx_vs_entity ON vendor_scorecards(entity_id);
+CREATE INDEX IF NOT EXISTS idx_vs_period ON vendor_scorecards(review_period_start, review_period_end);
+CREATE INDEX IF NOT EXISTS idx_vs_reviewer ON vendor_scorecards(reviewed_by);
 
 COMMENT ON TABLE vendor_scorecards IS 'Formal vendor scorecard reviews';
 
@@ -1117,7 +1078,7 @@ SELECT
   pr.requisition_number,
   pr.requested_by,
   u.email AS requester_email,
-  u.first_name || ' ' || u.last_name AS requester_name,
+  u.name AS requester_name,
   pr.department,
   pr.cost_center,
   pr.required_by,
@@ -1129,7 +1090,7 @@ FROM purchase_requisitions pr
 JOIN users u ON u.user_id = pr.requested_by
 LEFT JOIN purchase_requisition_lines prl ON prl.requisition_id = pr.requisition_id
 WHERE pr.approval_status IN ('SUBMITTED', 'PENDING_APPROVAL')
-GROUP BY pr.requisition_id, pr.requisition_number, pr.requested_by, u.email, u.first_name, u.last_name, pr.department, pr.cost_center, pr.required_by, pr.approval_status, pr.created_at
+GROUP BY pr.requisition_id, pr.requisition_number, pr.requested_by, u.email, u.name, pr.department, pr.cost_center, pr.required_by, pr.approval_status, pr.created_at
 ORDER BY pr.required_by ASC;
 
 COMMENT ON VIEW v_open_purchase_requisitions IS 'Purchase requisitions awaiting approval';

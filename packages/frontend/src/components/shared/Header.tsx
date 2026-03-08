@@ -2426,9 +2426,9 @@ export function Header() {
               </button>
             </div>
 
-            {/* Mobile: Top row with hamburger only */}
-            <div className="flex mobile:hidden items-center justify-start w-full mb-1">
-              {/* Hamburger - mobile only */}
+            {/* Mobile: Top row with hamburger + centered logo */}
+            <div className="flex mobile:hidden items-center w-full mb-1">
+              {/* Hamburger - left */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 onMouseEnter={() => setMobileMenuOpen(true)}
@@ -2437,20 +2437,18 @@ export function Header() {
               >
                 <Bars3Icon className="h-6 w-6 text-purple-800 dark:text-gray-300" />
               </button>
-            </div>
 
-            {/* Mobile: Centered Logo above toolbar */}
-            <div className="flex mobile:hidden items-center justify-center mb-1">
+              {/* Logo - centered */}
               <button
                 onClick={() => {
                   const homePath = getHomePathForRole(effectiveRole, user.role);
                   navigate(homePath);
                 }}
-                className="text-2xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer relative group overflow-hidden"
+                className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold tracking-tight dark:text-white text-purple-900 cursor-pointer"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 title="Go to home"
               >
-                <span className="relative z-10 transition-all duration-300">
+                <span className="transition-all duration-300">
                   Ops
                   <span className="text-purple-500 dark:text-purple-400 transition-colors">UI</span>
                 </span>
@@ -2459,66 +2457,82 @@ export function Header() {
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
             <div
-              className={`relative flex items-center justify-center gap-1 p-1 mx-auto mobile:mx-0 mobile:absolute mobile:left-1/2 mobile:top-1/2 mobile:-translate-x-1/2 mobile:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-[340px] max-w-[90vw]' : 'w-auto'}`}
+              className={`relative flex items-center justify-center gap-1 mx-auto mobile:mx-0 mobile:absolute mobile:left-1/2 mobile:top-1/2 mobile:-translate-x-1/2 mobile:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-[340px] max-w-[90vw]' : 'w-auto'}`}
             >
-              {/* Animated gradient border - smooth Dynamic Island transition - thicker border via padding */}
+              {/* Toolbar pill wrapper */}
               <div
-                className={`absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600 opacity-70 animate-gradient-shift bg-[length:200%_100%] transition-all duration-300 ease-out ${isMobileSearchActive ? 'rounded-2xl' : 'rounded-full'}`}
-              />
-              {/* Inner container with glass effect - smooth transition for all properties - overflow-visible for dropdown */}
-              <div
-                className={`relative flex items-center justify-center gap-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl overflow-visible transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-full rounded-xl px-3 py-1' : 'w-auto px-2 py-1 rounded-full'}`}
+                className={`relative rounded-full shadow-[0_0_8px_rgba(168,85,247,0.3)] transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
               >
-                {/* Subtle purple glow on hover - pointer-events-none to not block clicks */}
-                <div className="absolute inset-0 rounded-full bg-purple-500/0 hover:bg-purple-500/10 transition-colors duration-300 pointer-events-none" />
-                {/* Global Search — passes callback so it can hide sibling icons on mobile and desktop */}
-                <GlobalSearch
-                  onMobileSearchActive={setIsMobileSearchActive}
-                  onDesktopSearchActive={setIsDesktopSearchActive}
-                />
-
-                {/* Other toolbar icons: hidden on mobile while search is expanded, hidden on desktop while search is expanded */}
+                {/* Content area — p-[3px] reserves space for border, overflow-hidden clips the white bg to the rounded shape */}
                 <div
-                  className={
-                    isMobileSearchActive
-                      ? 'hidden mobile:contents'
-                      : isDesktopSearchActive
-                        ? 'hidden'
-                        : 'contents'
-                  }
+                  className={`p-[3px] rounded-full overflow-hidden ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
                 >
-                  {/* Theme Toggle */}
-                  <ThemeToggle />
-
-                  {/* Notification Panel */}
-                  <NotificationPanel />
-
-                  {/* Divider */}
-                  <div className="w-px h-5 bg-gradient-to-b from-transparent via-purple-400/50 to-transparent mx-1" />
-
-                  {/* Settings button */}
-                  <button
-                    onClick={() => navigate('/role-settings?section=role-switcher')}
-                    className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-purple-300 hover:text-purple-700 dark:hover:bg-purple-500/10 hover:bg-purple-50 rounded-lg transition-colors"
-                    title="Settings"
-                    aria-label="Settings"
-                    style={{ '--glow-color': 'rgba(168, 85, 247, 0.15)' }}
+                  <div
+                    className={`flex items-center justify-center gap-1 bg-white dark:bg-gray-900 rounded-[9996px] transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
                   >
-                    <CogIcon className="toolbar-icon-cog h-5 w-5" />
-                  </button>
+                    {/* Global Search — passes callback so it can hide sibling icons on mobile and desktop */}
+                    <GlobalSearch
+                      onMobileSearchActive={setIsMobileSearchActive}
+                      onDesktopSearchActive={setIsDesktopSearchActive}
+                    />
 
-                  {/* Logout button */}
-                  <button
-                    onClick={handleLogout}
-                    disabled={logoutMutation.isPending}
-                    className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
-                    title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                    aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
-                    style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
-                  >
-                    <ArrowRightStartOnRectangleIcon className="toolbar-icon-exit h-5 w-5" />
-                  </button>
+                    {/* Other toolbar icons: hidden on mobile while search is expanded, hidden on desktop while search is expanded */}
+                    <div
+                      className={
+                        isMobileSearchActive
+                          ? 'hidden mobile:contents'
+                          : isDesktopSearchActive
+                            ? 'hidden'
+                            : 'contents'
+                      }
+                    >
+                      {/* Theme Toggle */}
+                      <ThemeToggle />
+
+                      {/* Notification Panel */}
+                      <NotificationPanel />
+
+                      {/* Divider */}
+                      <div className="w-px h-5 bg-gradient-to-b from-transparent via-purple-400/50 to-transparent mx-1" />
+
+                      {/* Settings button */}
+                      <button
+                        onClick={() => navigate('/role-settings?section=role-switcher')}
+                        className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-purple-300 hover:text-purple-700 dark:hover:bg-purple-500/10 hover:bg-purple-50 rounded-lg transition-colors"
+                        title="Settings"
+                        aria-label="Settings"
+                        style={{ '--glow-color': 'rgba(168, 85, 247, 0.15)' }}
+                      >
+                        <CogIcon className="toolbar-icon-cog h-5 w-5" />
+                      </button>
+
+                      {/* Logout button */}
+                      <button
+                        onClick={handleLogout}
+                        disabled={logoutMutation.isPending}
+                        className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
+                        title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                        aria-label={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                        style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
+                      >
+                        <ArrowRightStartOnRectangleIcon className="toolbar-icon-exit h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
+                {/* Gradient border overlay — rendered ON TOP of content, pointer-events-none so clicks pass through */}
+                <div
+                  className={`absolute inset-0 rounded-full pointer-events-none animate-gradient-shift bg-[length:200%_100%] ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
+                  style={{
+                    background: 'linear-gradient(to right, #a855f7, #8b5cf6, #9333ea)',
+                    backgroundSize: '200% 100%',
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    maskComposite: 'exclude',
+                    padding: '3px',
+                  }}
+                />
               </div>
             </div>
           </div>
