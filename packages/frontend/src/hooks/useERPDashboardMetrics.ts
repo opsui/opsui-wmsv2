@@ -339,7 +339,7 @@ export function useERPDashboardMetrics(navigate: (path: string) => void) {
       id: 'purchasing',
       title: 'Purchasing',
       icon: ShoppingCartIcon,
-      navigateTo: '/purchasing',
+      navigateTo: '/stock-control',
       isLoading: purchLoading,
       metrics: [
         {
@@ -347,28 +347,28 @@ export function useERPDashboardMetrics(navigate: (path: string) => void) {
           value: formatCurrency(purch?.total_open_order_value),
           icon: ShoppingCartIcon,
           color: 'primary',
-          onClick: () => navigate('/purchasing'),
+          onClick: () => navigate('/stock-control'),
         },
         {
           title: 'Past Due POs',
           value: purch?.orders_past_due ?? 0,
           icon: ExclamationTriangleIcon,
           color: (purch?.orders_past_due ?? 0) > 0 ? 'error' : 'success',
-          onClick: () => navigate('/purchasing'),
+          onClick: () => navigate('/stock-control'),
         },
         {
           title: 'Pending Receipts',
           value: purch?.pending_receipts ?? 0,
           icon: TruckIcon,
           color: (purch?.pending_receipts ?? 0) > 0 ? 'warning' : 'success',
-          onClick: () => navigate('/purchasing'),
+          onClick: () => navigate('/inwards'),
         },
         {
           title: 'Match Exceptions',
           value: purch?.match_exceptions ?? 0,
           icon: ExclamationTriangleIcon,
           color: (purch?.match_exceptions ?? 0) > 0 ? 'error' : 'success',
-          onClick: () => navigate('/purchasing'),
+          onClick: () => navigate('/stock-control'),
         },
       ],
     });
