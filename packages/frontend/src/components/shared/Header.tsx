@@ -354,6 +354,23 @@ function MobileMenu({
     };
   }, [isOpen]);
 
+  // Handle Escape key to close the menu
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     return () => {
       if (closeTimeoutRef.current) {
@@ -1164,10 +1181,19 @@ function NotificationPanel() {
   };
 
   const handleMouseLeave = () => {
-    // Delay before closing to allow mouse to reach the dropdown
+    // Delay before closing to allow mouse to reach the dropdown content
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false);
     }, 50);
+  };
+
+  const handleClick = () => {
+    // Clear any pending close timeout from mouse leave
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsOpen(!isOpen);
   };
 
   return (
@@ -1178,6 +1204,7 @@ function NotificationPanel() {
       onMouseLeave={handleMouseLeave}
     >
       <button
+        onClick={handleClick}
         className="toolbar-btn relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
         aria-label={`Notifications: ${unreadCount} unread`}
         style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
