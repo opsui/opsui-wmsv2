@@ -115,7 +115,7 @@ export class IntegrationsService {
       throw new Error('Integration not found');
     }
 
-    if (integration.status !== IntegrationStatus.CONNECTED) {
+    if (integration.status !== IntegrationStatus.CONNECTED && integration.status !== 'ACTIVE') {
       throw new Error('Integration must be connected to run sync jobs');
     }
 

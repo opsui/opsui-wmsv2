@@ -25,6 +25,14 @@ async function fix() {
   const orgCode = wmsOrg.rows[0].organization_code;
   const linkId = wmsLink.rows[0].organization_user_id;
 
+  // Get NetSuite integration from wms_db
+  const wmsIntegration = await wms.query(
+    `SELECT i.* FROM integrations i
+     JOIN integration_organizations io ON io.integration_id = i.integration_id
+     WHERE io.organization_id = $1 AND i.provider = 'NETSUITE'`,
+    [orgId]
+  );
+
   console.log('Canonical IDs from wms_db:');
   console.log('  User ID:', userId);
   console.log('  Org ID:', orgId);
@@ -36,6 +44,8 @@ async function fix() {
     await aapClient.query('BEGIN');
 
     // Remove old mismatched records
+    await aapClient.query('DELETE FROM integration_organizations');
+    await aapClient.query("DELETE FROM integrations WHERE provider = 'NETSUITE'");
     await aapClient.query('DELETE FROM organization_users');
     await aapClient.query("DELETE FROM users WHERE email = 'stores@aap.co.nz'");
     await aapClient.query("DELETE FROM organizations WHERE slug = 'aap'");
@@ -78,6 +88,36 @@ async function fix() {
       ) VALUES ($1, $2, $3, 'ORG_OWNER', true, true, true, true, true, true, NOW(), NOW(), NOW())`,
       [linkId, orgId, userId]
     );
+
+    // Mirror NetSuite integration if it exists in wms_db
+    if (wmsIntegration.rows.length > 0) {
+      const int = wmsIntegration.rows[0];
+      await aapClient.query(
+        `INSERT INTO integrations (
+          integration_id, name, description, type, provider, status,
+          configuration, sync_settings, enabled, created_by,
+          created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+        [
+          int.integration_id,
+          int.name,
+          int.description,
+          int.type,
+          int.provider,
+          int.status,
+          JSON.stringify(int.configuration),
+          JSON.stringify(int.sync_settings),
+          int.enabled,
+          userId,
+        ]
+      );
+      await aapClient.query(
+        `INSERT INTO integration_organizations (integration_id, organization_id)
+         VALUES ($1, $2)`,
+        [int.integration_id, orgId]
+      );
+      console.log('Mirrored NetSuite integration:', int.integration_id);
+    }
 
     await aapClient.query('COMMIT');
     console.log('\naap_db data fixed with matching IDs');

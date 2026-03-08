@@ -42,6 +42,10 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (req.query.provider) filters.provider = req.query.provider;
     if (req.query.status) filters.status = req.query.status;
 
+    // Scope integrations to the user's organization
+    const organizationId = (req as any).user?.organizationId;
+    if (organizationId) filters.organizationId = organizationId;
+
     const integrations = await repository.findAll(filters);
     res.json({ integrations, total: integrations.length });
   } catch (error) {
@@ -77,6 +81,10 @@ router.post(
   authorize(UserRole.ADMIN),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Scope new integration to the user's organization
+      const organizationId = (req as any).user?.organizationId;
+      if (organizationId) req.body.organizationId = organizationId;
+
       const integration = await service.createIntegration(req.body);
       res.status(201).json(integration);
     } catch (error: any) {
@@ -428,9 +436,11 @@ router.post(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: Request, res: Response, _next: NextFunction) => {
     try {
-      // Find the NetSuite integration to get DB credentials
+      // Find the NetSuite integration for this organization
+      const orgId = (req as any).user?.organizationId;
       const integrations = await repository.findAll({
         provider: IntegrationProvider.NETSUITE,
+        ...(orgId ? { organizationId: orgId } : {}),
       });
       if (integrations.length === 0) {
         res.status(400).json({ success: false, message: 'No NetSuite integration configured.' });
@@ -458,8 +468,10 @@ router.get(
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const orgId = (req as any).user?.organizationId;
       const integrations = await repository.findAll({
         provider: IntegrationProvider.NETSUITE,
+        ...(orgId ? { organizationId: orgId } : {}),
       });
       if (integrations.length === 0) {
         res.status(400).json({ error: 'No NetSuite integration configured.' });
@@ -494,9 +506,11 @@ router.post(
     try {
       const { limit, status, lastSyncAt } = req.body;
 
-      // Find the NetSuite integration
+      // Find the NetSuite integration for this organization
+      const orgId = (req as any).user?.organizationId;
       const integrations = await repository.findAll({
         provider: IntegrationProvider.NETSUITE,
+        ...(orgId ? { organizationId: orgId } : {}),
       });
 
       if (integrations.length === 0) {

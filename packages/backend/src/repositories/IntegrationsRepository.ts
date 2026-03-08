@@ -33,6 +33,7 @@ export class IntegrationsRepository {
     type?: IntegrationType;
     provider?: IntegrationProvider;
     status?: IntegrationStatus;
+    organizationId?: string;
   }): Promise<Integration[]> {
     let query = `
       SELECT
@@ -46,6 +47,7 @@ export class IntegrationsRepository {
         i.sync_settings,
         i.webhook_settings,
         i.enabled,
+        io.organization_id,
         i.created_by,
         i.updated_by,
         i.last_sync_at,
@@ -61,6 +63,7 @@ export class IntegrationsRepository {
           ) ORDER BY ca.created_at
         ) FILTER (WHERE ca.carrier_account_id IS NOT NULL) as carrier_accounts
       FROM integrations i
+      LEFT JOIN integration_organizations io ON io.integration_id = i.integration_id
       LEFT JOIN carrier_accounts ca ON ca.integration_id = i.integration_id
     `;
 
@@ -80,13 +83,17 @@ export class IntegrationsRepository {
       conditions.push(`i.status = $${paramIndex++}`);
       params.push(filters.status);
     }
+    if (filters?.organizationId) {
+      conditions.push(`io.organization_id = $${paramIndex++}`);
+      params.push(filters.organizationId);
+    }
 
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
     query += `
-      GROUP BY i.integration_id
+      GROUP BY i.integration_id, io.organization_id
       ORDER BY i.created_at DESC
     `;
 
@@ -107,6 +114,7 @@ export class IntegrationsRepository {
         i.sync_settings,
         i.webhook_settings,
         i.enabled,
+        io.organization_id,
         i.created_by,
         i.updated_by,
         i.last_sync_at,
@@ -122,9 +130,10 @@ export class IntegrationsRepository {
           ) ORDER BY ca.created_at
         ) FILTER (WHERE ca.carrier_account_id IS NOT NULL) as carrier_accounts
       FROM integrations i
+      LEFT JOIN integration_organizations io ON io.integration_id = i.integration_id
       LEFT JOIN carrier_accounts ca ON ca.integration_id = i.integration_id
       WHERE i.integration_id = $1
-      GROUP BY i.integration_id
+      GROUP BY i.integration_id, io.organization_id
     `;
 
     const result = await this.pool.query(query, [integrationId]);
@@ -169,7 +178,19 @@ export class IntegrationsRepository {
     ];
 
     const result = await this.pool.query(query, values);
-    return this.mapRowToIntegration(result.rows[0]);
+    const created = this.mapRowToIntegration(result.rows[0]);
+
+    // Link integration to organization if provided
+    if (integration.organizationId) {
+      await this.pool.query(
+        `INSERT INTO integration_organizations (integration_id, organization_id)
+         VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [created.integrationId, integration.organizationId]
+      );
+      created.organizationId = integration.organizationId;
+    }
+
+    return created;
   }
 
   async update(
@@ -642,6 +663,7 @@ export class IntegrationsRepository {
       syncSettings: row.sync_settings,
       webhookSettings: row.webhook_settings,
       enabled: row.enabled ?? true,
+      organizationId: row.organization_id,
       createdBy: row.created_by,
       createdAt: row.created_at,
       updatedBy: row.updated_by,

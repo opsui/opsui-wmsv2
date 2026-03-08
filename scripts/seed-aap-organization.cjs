@@ -4,6 +4,8 @@
  * Creates the AAP organization (NetSuite customer) and admin user.
  */
 
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../packages/backend/.env') });
 const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
@@ -126,6 +128,62 @@ async function seedAAPOrganization() {
       console.log('Linked user to organization as ORG_OWNER');
     } else {
       console.log('User already linked to organization');
+    }
+
+    // 4. Create NetSuite integration record
+    const existingIntegration = await client.query(
+      `SELECT i.* FROM integrations i
+       JOIN integration_organizations io ON io.integration_id = i.integration_id
+       WHERE io.organization_id = $1 AND i.provider = $2`,
+      [organizationId, 'NETSUITE']
+    );
+
+    if (existingIntegration.rows.length === 0) {
+      const integrationId = `INT-${uuidv4().substring(0, 8).toUpperCase()}`;
+
+      await client.query(
+        `INSERT INTO integrations (
+          integration_id, name, description, type, provider, status,
+          configuration, sync_settings, enabled, created_by,
+          created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+        [
+          integrationId,
+          'AAP NetSuite',
+          'NetSuite ERP integration for AAP',
+          'ERP',
+          'NETSUITE',
+          'PENDING',
+          JSON.stringify({
+            auth: {
+              type: 'OAUTH1',
+              accountId: process.env.NETSUITE_ACCOUNT_ID || '7438866',
+              tokenId: process.env.NETSUITE_TOKEN_ID || '',
+              tokenSecret: process.env.NETSUITE_TOKEN_SECRET || '',
+              consumerKey: process.env.NETSUITE_CONSUMER_KEY || '',
+              consumerSecret: process.env.NETSUITE_CONSUMER_SECRET || '',
+            },
+          }),
+          JSON.stringify({
+            direction: 'BIDIRECTIONAL',
+            frequency: 'MANUAL',
+            syncTypes: ['ORDER_SYNC'],
+          }),
+          true,
+          userId,
+        ]
+      );
+
+      // Link integration to AAP organization
+      await client.query(
+        `INSERT INTO integration_organizations (integration_id, organization_id)
+         VALUES ($1, $2)`,
+        [integrationId, organizationId]
+      );
+
+      console.log('Created NetSuite integration:', integrationId);
+    } else {
+      console.log('NetSuite integration already exists');
     }
 
     await client.query('COMMIT');
