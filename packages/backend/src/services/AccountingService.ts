@@ -2563,6 +2563,67 @@ export class AccountingService {
   // PHASE 3: FIXED ASSETS
   // ========================================================================
 
+  async getFixedAssets(filters?: {
+    category?: string;
+    status?: string;
+    location?: string;
+  }): Promise<FixedAsset[]> {
+    try {
+      let query = `
+        SELECT
+          asset_id as "assetId",
+          asset_number as "assetNumber",
+          asset_name as "assetName",
+          asset_category as "assetCategory",
+          serial_number as "serialNumber",
+          purchase_date as "purchaseDate",
+          purchase_cost as "purchaseCost",
+          salvage_value as "salvageValue",
+          useful_life as "usefulLife",
+          depreciation_method as "depreciationMethod",
+          current_book_value as "currentBookValue",
+          accumulated_depreciation as "accumulatedDepreciation",
+          status,
+          location,
+          created_at as "createdAt",
+          updated_at as "updatedAt"
+        FROM acct_fixed_assets
+        WHERE 1=1
+      `;
+      const params: any[] = [];
+      let paramCount = 0;
+
+      if (filters?.category) {
+        paramCount++;
+        query += ` AND asset_category = $${paramCount}`;
+        params.push(filters.category);
+      }
+      if (filters?.status) {
+        paramCount++;
+        query += ` AND status = $${paramCount}`;
+        params.push(filters.status);
+      }
+      if (filters?.location) {
+        paramCount++;
+        query += ` AND location = $${paramCount}`;
+        params.push(filters.location);
+      }
+
+      query += ` ORDER BY asset_number`;
+
+      const result = await dbQuery(query, params);
+      return result.rows as FixedAsset[];
+    } catch (error: any) {
+      if (error.message?.includes('does not exist')) {
+        console.log(
+          '[AccountingService] acct_fixed_assets table does not exist, returning empty assets'
+        );
+        return [];
+      }
+      throw error;
+    }
+  }
+
   async createFixedAsset(data: CreateFixedAssetDTO): Promise<FixedAsset> {
     const assetId = this.generateId('FA');
 

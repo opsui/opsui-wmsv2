@@ -1079,6 +1079,28 @@ router.post(
 // ============================================================================
 
 /**
+ * GET /api/accounting/fixed-assets
+ * Get all fixed assets
+ */
+router.get(
+  '/fixed-assets',
+  accountingAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const category = req.query.category as string | undefined;
+    const status = req.query.status as string | undefined;
+    const location = req.query.location as string | undefined;
+
+    const assets = await accountingService.getFixedAssets({
+      category,
+      status,
+      location,
+    });
+
+    res.json(assets);
+  })
+);
+
+/**
  * POST /api/accounting/fixed-assets
  * Create a fixed asset
  */

@@ -9,6 +9,8 @@
 import { ForbiddenError } from '@opsui/shared';
 import { NextFunction, Response } from 'express';
 import { logger } from '../config/logger';
+import { getDefaultPool } from '../db/client';
+import { enterTenantPool, tenantPoolManager } from '../db/tenantContext';
 import { organizationUserRepository } from '../repositories/OrganizationRepository';
 import { AuthenticatedRequest } from './auth';
 
@@ -59,13 +61,26 @@ export async function organizationContext(
     // Set organization context
     req.organizationId = organizationId;
 
-    // Log for debugging
+    // Log organization context
+    logger.info('Organization context resolved', {
+      userId: req.user.userId,
+      organizationId: organizationId || 'NONE',
+      source: headerOrgId ? 'header' : req.user.organizationId ? 'token' : 'default',
+    });
+
+    // Route to tenant database if organization has a dedicated database
     if (organizationId) {
-      logger.debug('Organization context set', {
-        userId: req.user.userId,
+      const databaseName = await getOrganizationDatabase(organizationId);
+      logger.info('Database lookup result', {
         organizationId,
-        source: headerOrgId ? 'header' : req.user.organizationId ? 'token' : 'default',
+        databaseName: databaseName || 'NULL (shared)',
       });
+      if (databaseName) {
+        const tenantPool = tenantPoolManager.getPool(databaseName);
+        // Use enterWith() to persist tenant pool across Express middleware chain
+        enterTenantPool(tenantPool);
+        logger.info('Tenant database routed', { organizationId, database: databaseName });
+      }
     }
 
     next();
@@ -251,6 +266,47 @@ export function requireOrganizationPermission(
       next(error);
     }
   };
+}
+
+// ============================================================================
+// TENANT DATABASE ROUTING
+// ============================================================================
+
+// Cache org -> database_name mappings (refreshed every 5 minutes)
+const dbNameCache = new Map<string, string | null>();
+let dbNameCacheExpiry = 0;
+const DB_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Look up the dedicated database name for an organization.
+ * Returns null if the org uses the default shared database.
+ * Uses the default (system) pool to query the organizations table.
+ */
+async function getOrganizationDatabase(organizationId: string): Promise<string | null> {
+  // Check cache
+  const now = Date.now();
+  if (now < dbNameCacheExpiry && dbNameCache.has(organizationId)) {
+    return dbNameCache.get(organizationId) ?? null;
+  }
+
+  try {
+    const result = await getDefaultPool().query(
+      'SELECT database_name FROM organizations WHERE organization_id = $1',
+      [organizationId]
+    );
+
+    const databaseName = result.rows[0]?.database_name || null;
+    dbNameCache.set(organizationId, databaseName);
+    dbNameCacheExpiry = now + DB_CACHE_TTL;
+
+    return databaseName;
+  } catch (error) {
+    logger.error('Failed to look up organization database', {
+      organizationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 // ============================================================================

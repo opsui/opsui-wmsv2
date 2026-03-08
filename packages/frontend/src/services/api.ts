@@ -6009,8 +6009,11 @@ export const reportsApi = {
   createReport: async (
     report: Omit<Report, 'reportId' | 'createdAt' | 'updatedAt' | 'createdBy'>
   ): Promise<Report> => {
-    const response = await apiClient.post<Report>('/reports', report);
-    return response.data;
+    const response = await apiClient.post<{ success: boolean; data: { report: Report } }>(
+      '/reports',
+      report
+    );
+    return response.data.data.report;
   },
 
   /**
@@ -6240,7 +6243,7 @@ export const reportsApi = {
       | 'errorMessage'
     >
   ): Promise<ExportJob> => {
-    const response = await apiClient.post<ExportJob>('/reports/exports', job);
+    const response = await apiClient.post<ExportJob>('/reports/export', job);
     return response.data;
   },
 
@@ -9037,5 +9040,33 @@ export const useLeaveTypes = () => {
     queryKey: ['hr', 'leave-types'],
     queryFn: hrApi.getLeaveTypes,
     staleTime: 300000, // 5 minutes
+  });
+};
+
+// ============================================================================
+// CROSS-MODULE DASHBOARD HOOKS
+// ============================================================================
+
+export const usePurchasingDashboard = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ['purchasing', 'dashboard'],
+    queryFn: async () => {
+      const response = await apiClient.get('/purchasing/dashboard');
+      return response.data;
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 60000,
+  });
+};
+
+export const useProjectsDashboardMetrics = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ['projects', 'dashboard', 'metrics'],
+    queryFn: async () => {
+      const response = await apiClient.get('/projects/dashboard/metrics');
+      return response.data;
+    },
+    enabled: options?.enabled ?? true,
+    staleTime: 60000,
   });
 };

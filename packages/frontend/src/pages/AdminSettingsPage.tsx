@@ -29,7 +29,11 @@ import {
 import { useMyRoles } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import { UserRole } from '@opsui/shared';
+import { organizationApi } from '@/services/organizationApi';
+import { useQuery } from '@tanstack/react-query';
 import { getUserRoleColor, saveUserRoleColor } from '@/components/shared/Badge';
+import type { User } from '@opsui/shared';
+import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import {
   CogIcon,
   ArrowLeftIcon,
@@ -996,6 +1000,9 @@ function AdminSettingsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {/* Organization Information */}
+                    <OrganizationSection user={user} />
+
                     {/* Change Password */}
                     <div className="p-4 bg-gray-100 dark:bg-gray-800/50 rounded-xl">
                       <div className="flex items-center gap-3 mb-3">
@@ -1030,6 +1037,126 @@ function AdminSettingsPage() {
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+// ============================================================================
+// ORGANIZATION SECTION COMPONENT
+// ============================================================================
+
+interface OrganizationSectionProps {
+  user: User | null;
+}
+
+function OrganizationSection({ user }: OrganizationSectionProps) {
+  // Fetch user's organizations
+  const { data: userOrganizations, isLoading } = useQuery({
+    queryKey: ['organizations', 'my'],
+    queryFn: () => organizationApi.getMyOrganizations(),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const primaryOrg =
+    userOrganizations?.organizations?.find((org: any) => org.isPrimary) ||
+    userOrganizations?.organizations?.[0];
+
+  if (isLoading) {
+    return (
+      <div className="p-4 bg-gray-100 dark:bg-gray-800/50 rounded-xl">
+        <div className="flex items-center gap-3">
+          <BuildingOfficeIcon className="h-6 w-6 text-blue-400 animate-pulse" />
+          <div>
+            <h3 className="text-sm font-semibold text-white">Organization</h3>
+            <p className="text-xs text-gray-400">Loading organization info...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 bg-gray-100 dark:bg-gray-800/50 rounded-xl">
+      <div className="flex items-center gap-3 mb-3">
+        <BuildingOfficeIcon className="h-6 w-6 text-blue-400" />
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold text-white">Organization</h3>
+          <p className="text-xs text-gray-400">Your organization membership</p>
+        </div>
+      </div>
+
+      {primaryOrg ? (
+        <div className="space-y-3">
+          {/* Organization Name */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">Name</span>
+            <span className="text-sm font-medium text-white">{primaryOrg.organizationName}</span>
+          </div>
+
+          {/* Organization ID - The key piece for integrations */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">Organization ID</span>
+            <div className="flex items-center gap-2">
+              <code className="text-xs font-mono bg-gray-700 px-2 py-1 rounded text-green-400">
+                {primaryOrg.organizationId}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(primaryOrg.organizationId);
+                  playSound('success');
+                }}
+                className="p-1 hover:bg-gray-600 rounded transition-colors"
+                title="Copy Organization ID"
+              >
+                <ClipboardDocumentListIcon className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+          </div>
+
+          {/* Organization Slug */}
+          {primaryOrg.slug && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Slug</span>
+              <span className="text-sm text-gray-300">@{primaryOrg.slug}</span>
+            </div>
+          )}
+
+          {/* Role in Organization */}
+          {primaryOrg.role && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">Your Role</span>
+              <Badge size="sm" variant="primary">
+                {primaryOrg.role}
+              </Badge>
+            </div>
+          )}
+
+          {/* Primary Badge */}
+          {primaryOrg.isPrimary && (
+            <div className="mt-2 pt-2 border-t border-gray-700">
+              <span className="text-xs text-blue-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                Primary Organization
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-sm text-gray-400">
+          <p>No organization membership found.</p>
+          <p className="text-xs mt-1">Contact your administrator to be added to an organization.</p>
+        </div>
+      )}
+
+      {/* Multiple Organizations Info */}
+      {userOrganizations?.organizations?.length > 1 && (
+        <div className="mt-3 pt-3 border-t border-gray-700">
+          <p className="text-xs text-gray-400">
+            Member of {userOrganizations.organizations.length} organizations
+          </p>
+        </div>
+      )}
     </div>
   );
 }

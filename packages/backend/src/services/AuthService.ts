@@ -39,6 +39,8 @@ import { userRepository } from '../repositories/UserRepository';
 import { generateToken, generateRefreshToken, JWTPayload } from '../middleware/auth';
 import { logger } from '../config/logger';
 import { tokenBlacklistService } from './TokenBlacklistService';
+import { getDefaultPool } from '../db/client';
+import { tenantPoolManager, runWithTenantPool } from '../db/tenantContext';
 import bcrypt from 'bcrypt';
 
 // ============================================================================
@@ -74,8 +76,13 @@ export class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthTokens> {
     logger.info('Login attempt', { email: credentials.email });
 
-    // Verify credentials
-    const user = await userRepository.verifyPassword(credentials.email, credentials.password);
+    // Try to verify credentials in the default database first
+    let user = await userRepository.verifyPassword(credentials.email, credentials.password);
+
+    // If not found in default DB, search across tenant databases
+    if (!user) {
+      user = await this.findUserAcrossTenants(credentials.email, credentials.password);
+    }
 
     if (!user) {
       logger.warn('Login failed - invalid credentials', { email: credentials.email });
@@ -83,16 +90,31 @@ export class AuthService {
     }
 
     // Set user to active and update last login time
-    const { query } = await import('../db/client');
-    await query(
-      `UPDATE users
-       SET active = true,
-           last_login_at = NOW()
-       WHERE user_id = $1`,
-      [user.userId]
-    );
+    // Use the correct database context for this user
+    const organizationId = (user as any).defaultOrganizationId as string | undefined;
+    const updateFn = async () => {
+      const { query } = await import('../db/client');
+      await query(
+        `UPDATE users
+         SET active = true,
+             last_login_at = NOW()
+         WHERE user_id = $1`,
+        [user!.userId]
+      );
+    };
 
-    // User is now active (we just set it to true)
+    if (organizationId) {
+      const dbName = await this.getOrgDatabaseName(organizationId);
+      if (dbName) {
+        const pool = tenantPoolManager.getPool(dbName);
+        await runWithTenantPool(pool, updateFn);
+      } else {
+        await updateFn();
+      }
+    } else {
+      await updateFn();
+    }
+
     logger.info('User activated on login', { userId: user.userId });
 
     // Generate tokens
@@ -108,8 +130,6 @@ export class AuthService {
       role: user.role,
     });
 
-    // The user object from verifyPassword already has sensitive data removed and all fields mapped
-    // Just use it directly
     logger.info('Login successful', { email: credentials.email, userId: user.userId });
 
     return {
@@ -117,6 +137,96 @@ export class AuthService {
       refreshToken,
       user,
     };
+  }
+
+  /**
+   * Search for a user across all tenant databases.
+   * Called when user is not found in the default database.
+   */
+  private async findUserAcrossTenants(email: string, password: string): Promise<User | null> {
+    try {
+      // Get all organizations with dedicated databases
+      const result = await getDefaultPool().query(
+        'SELECT organization_id, database_name FROM organizations WHERE database_name IS NOT NULL'
+      );
+
+      for (const row of result.rows) {
+        try {
+          const pool = tenantPoolManager.getPool(row.database_name);
+          const found = await runWithTenantPool(pool, () =>
+            userRepository.verifyPassword(email, password)
+          );
+          if (found) {
+            logger.info('User found in tenant database', {
+              email,
+              database: row.database_name,
+              organizationId: row.organization_id,
+            });
+            return found;
+          }
+        } catch (err) {
+          logger.debug('User not found in tenant database', {
+            database: row.database_name,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+    } catch (err) {
+      logger.error('Failed to search tenant databases during login', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return null;
+  }
+
+  /**
+   * Search for a user by ID across all tenant databases.
+   * Called when user is not found in the default database (e.g., during token refresh).
+   */
+  private async findUserByIdAcrossTenants(userId: string): Promise<User | null> {
+    try {
+      const result = await getDefaultPool().query(
+        'SELECT organization_id, database_name FROM organizations WHERE database_name IS NOT NULL'
+      );
+
+      for (const row of result.rows) {
+        try {
+          const pool = tenantPoolManager.getPool(row.database_name);
+          const found = await runWithTenantPool(pool, () => userRepository.findById(userId));
+          if (found) {
+            logger.info('User found by ID in tenant database', {
+              userId,
+              database: row.database_name,
+            });
+            return found;
+          }
+        } catch (err) {
+          logger.debug('User not found by ID in tenant database', {
+            database: row.database_name,
+          });
+        }
+      }
+    } catch (err) {
+      logger.error('Failed to search tenant databases for user by ID', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+    return null;
+  }
+
+  /**
+   * Look up the dedicated database name for an organization.
+   */
+  private async getOrgDatabaseName(organizationId: string): Promise<string | null> {
+    try {
+      const result = await getDefaultPool().query(
+        'SELECT database_name FROM organizations WHERE organization_id = $1',
+        [organizationId]
+      );
+      return result.rows[0]?.database_name || null;
+    } catch {
+      return null;
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -143,8 +253,11 @@ export class AuthService {
       throw new UnauthorizedError('Invalid refresh token');
     }
 
-    // Get user
-    const user = await userRepository.findById(payload.userId);
+    // Get user - try default DB first, then tenant databases
+    let user = await userRepository.findById(payload.userId);
+    if (!user) {
+      user = await this.findUserByIdAcrossTenants(payload.userId);
+    }
 
     if (!user || !user.active) {
       throw new UnauthorizedError('User not found or inactive');
@@ -163,8 +276,6 @@ export class AuthService {
       role: user.role,
     });
 
-    // The user object from findById already has all fields mapped
-    // Just use it directly
     logger.info('Token refreshed', { userId: user.userId });
 
     return {

@@ -10,6 +10,7 @@ import { Pool, PoolClient as PoolClientType, QueryResult, types } from 'pg';
 // Re-export PoolClient for use in repositories
 export type PoolClient = PoolClientType;
 import { logger } from '../config/logger';
+import { getCurrentTenantPool, tenantPoolManager } from './tenantContext';
 
 // ============================================================================
 // ENUM TYPE PARSERS
@@ -47,9 +48,51 @@ const poolConfig = {
 let pool: Pool | null = null;
 
 /**
- * Get or create the database connection pool
+ * Get the default (system) database pool.
+ * Use this for system-level queries (auth, organization lookups).
+ */
+export function getDefaultPool(): Pool {
+  if (!pool) {
+    pool = new Pool(poolConfig);
+
+    pool.on('error', err => {
+      logger.error('Unexpected database pool error (will attempt recovery)', {
+        error: err.message,
+        stack: err.stack,
+      });
+    });
+
+    pool.on('connect', () => {
+      logger.debug('New database client connected');
+    });
+
+    pool.on('remove', () => {
+      logger.debug('Database client removed from pool');
+    });
+
+    logger.info('Database connection pool created', {
+      host: poolConfig.host,
+      port: poolConfig.port,
+      database: poolConfig.database,
+      min: poolConfig.min,
+      max: poolConfig.max,
+    });
+  }
+
+  return pool;
+}
+
+/**
+ * Get the active database connection pool.
+ * Returns the tenant-specific pool if set via AsyncLocalStorage,
+ * otherwise falls back to the default system pool.
  */
 export function getPool(): Pool {
+  // Check for tenant-specific pool in async context
+  // Set by enterTenantPool() in organizationContext middleware or runWithTenantPool()
+  const tenantPool = getCurrentTenantPool();
+  if (tenantPool) return tenantPool;
+
   if (!pool) {
     pool = new Pool(poolConfig);
 
@@ -85,6 +128,9 @@ export function getPool(): Pool {
  * Close the database connection pool
  */
 export async function closePool(): Promise<void> {
+  // Close all tenant pools
+  await tenantPoolManager.closeAll();
+
   if (pool) {
     await pool.end();
     pool = null;

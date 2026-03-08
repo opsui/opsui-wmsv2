@@ -672,59 +672,90 @@ router.post(
 );
 
 /**
- * POST /api/developer/run-account-id-fix
- * Fix account_id column length to support UUIDs
+ * POST /api/developer/run-accounting-id-fix
+ * Fix all accounting ID columns to support longer generated IDs
+ * Fixes the "value too long for type character varying(20)" error
  */
 router.post(
-  '/run-account-id-fix',
+  '/run-accounting-id-fix',
   requireDevelopment,
   authenticate,
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
-    try {
-      // Alter the account_id column to support UUIDs
-      await pool.query(`
-        ALTER TABLE IF EXISTS acct_chart_of_accounts 
-        ALTER COLUMN account_id TYPE VARCHAR(50)
-      `);
+    const changes: string[] = [];
+    const errors: string[] = [];
 
-      // Also update any related columns
-      await pool.query(`
-        ALTER TABLE IF EXISTS acct_journal_entry_lines 
-        ALTER COLUMN account_id TYPE VARCHAR(50)
-      `);
+    // List of table/column alterations to apply
+    const alterations = [
+      // Chart of accounts
+      { table: 'acct_chart_of_accounts', column: 'account_id' },
+      { table: 'acct_chart_of_accounts', column: 'parent_account_id' },
 
-      await pool.query(`
-        ALTER TABLE IF EXISTS acct_trial_balance_lines 
-        ALTER COLUMN account_id TYPE VARCHAR(50)
-      `);
+      // Journal entries
+      { table: 'acct_journal_entries', column: 'journal_entry_id' },
+      { table: 'acct_journal_entries', column: 'reversal_entry_id' },
+      { table: 'acct_journal_entry_lines', column: 'line_id' },
+      { table: 'acct_journal_entry_lines', column: 'journal_entry_id' },
+      { table: 'acct_journal_entry_lines', column: 'account_id' },
 
-      await pool.query(`
-        ALTER TABLE IF EXISTS acct_budget_lines 
-        ALTER COLUMN account_id TYPE VARCHAR(50)
-      `);
+      // Trial balance
+      { table: 'acct_trial_balance', column: 'trial_balance_id' },
+      { table: 'acct_trial_balance_lines', column: 'line_id' },
+      { table: 'acct_trial_balance_lines', column: 'trial_balance_id' },
+      { table: 'acct_trial_balance_lines', column: 'account_id' },
 
-      await pool.query(`
-        ALTER TABLE IF EXISTS acct_forecast_lines 
-        ALTER COLUMN account_id TYPE VARCHAR(50)
-      `);
+      // Budgets
+      { table: 'acct_budgets', column: 'budget_id' },
+      { table: 'acct_budget_lines', column: 'line_id' },
+      { table: 'acct_budget_lines', column: 'budget_id' },
+      { table: 'acct_budget_lines', column: 'account_id' },
 
-      res.json({
-        success: true,
-        message: 'Account ID column length fixed to support UUIDs',
-        changes: [
-          'acct_chart_of_accounts.account_id -> VARCHAR(50)',
-          'acct_journal_entry_lines.account_id -> VARCHAR(50)',
-          'acct_trial_balance_lines.account_id -> VARCHAR(50)',
-          'acct_budget_lines.account_id -> VARCHAR(50)',
-          'acct_forecast_lines.account_id -> VARCHAR(50)',
-        ],
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        error: error.message,
-      });
+      // Forecasts
+      { table: 'acct_forecasts', column: 'forecast_id' },
+      { table: 'acct_forecast_lines', column: 'line_id' },
+      { table: 'acct_forecast_lines', column: 'forecast_id' },
+      { table: 'acct_forecast_lines', column: 'account_id' },
+
+      // Fixed assets - THE KEY FIX
+      { table: 'acct_fixed_assets', column: 'asset_id' },
+      { table: 'acct_depreciation_schedule', column: 'schedule_id' },
+      { table: 'acct_depreciation_schedule', column: 'asset_id' },
+      { table: 'acct_asset_disposals', column: 'disposal_id' },
+      { table: 'acct_asset_disposals', column: 'asset_id' },
+
+      // Other accounting tables
+      { table: 'acct_exchange_rates', column: 'rate_id' },
+      { table: 'acct_audit_log', column: 'audit_id' },
+      { table: 'acct_document_attachments', column: 'attachment_id' },
+      { table: 'acct_approvals', column: 'approval_id' },
+      { table: 'acct_ar_payments', column: 'payment_id' },
+      { table: 'acct_credit_memos', column: 'memo_id' },
+      { table: 'acct_ap_payments', column: 'payment_id' },
+      { table: 'acct_bank_reconciliations', column: 'reconciliation_id' },
+      { table: 'acct_revenue_contracts', column: 'contract_id' },
+      { table: 'acct_periods', column: 'period_id' },
+    ];
+
+    for (const { table, column } of alterations) {
+      try {
+        await pool.query(`
+          ALTER TABLE IF EXISTS ${table} 
+          ALTER COLUMN ${column} TYPE VARCHAR(50)
+        `);
+        changes.push(`${table}.${column} -> VARCHAR(50)`);
+      } catch (e: any) {
+        // Ignore errors for non-existent tables/columns
+        if (!e.message.includes('does not exist') && !e.message.includes('cannot alter')) {
+          errors.push(`${table}.${column}: ${e.message}`);
+        }
+      }
     }
+
+    res.json({
+      success: true,
+      message: `Fixed ${changes.length} ID columns to VARCHAR(50)`,
+      changes,
+      errors: errors.length > 0 ? errors : undefined,
+    });
   })
 );
 

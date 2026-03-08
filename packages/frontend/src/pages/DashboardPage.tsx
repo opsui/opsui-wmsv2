@@ -27,7 +27,10 @@ import {
   useToast,
   type AuditLogFilters,
 } from '@/components/shared';
+import { ERPKPISummary } from '@/components/shared/ERPKPISummary';
+import { MetricCard } from '@/components/shared/MetricCard';
 import { useDebouncedInvalidation } from '@/hooks/useDebouncedInvalidation';
+import { useERPDashboardMetrics } from '@/hooks/useERPDashboardMetrics';
 import {
   useInventoryUpdates,
   useNotifications,
@@ -41,6 +44,7 @@ import {
   useAllStockControllersPerformance,
   useAuditLogs,
   useDashboardMetrics,
+  useHourlyThroughput,
   useOrderStatusBreakdown,
   useRoleActivity,
   useRoleDetails,
@@ -58,7 +62,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { OrderStatus, UserRole } from '@opsui/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { memo, useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ============================================================================
@@ -84,6 +88,30 @@ const staggerStylesCore = `
   .dashboard-stagger-4 { animation: dashboard-stagger-in 0.6s ease-out 0.4s both; }
   .dashboard-stagger-5 { animation: dashboard-stagger-in 0.6s ease-out 0.5s both; }
   .dashboard-stagger-6 { animation: dashboard-stagger-in 0.6s ease-out 0.6s both; }
+  .dashboard-stagger-7 { animation: dashboard-stagger-in 0.6s ease-out 0.7s both; }
+  .dashboard-stagger-8 { animation: dashboard-stagger-in 0.6s ease-out 0.75s both; }
+  .dashboard-stagger-9 { animation: dashboard-stagger-in 0.6s ease-out 0.8s both; }
+  .dashboard-stagger-10 { animation: dashboard-stagger-in 0.6s ease-out 0.85s both; }
+  .dashboard-stagger-11 { animation: dashboard-stagger-in 0.6s ease-out 0.9s both; }
+  .dashboard-stagger-12 { animation: dashboard-stagger-in 0.6s ease-out 0.95s both; }
+  .dashboard-stagger-13 { animation: dashboard-stagger-in 0.6s ease-out 1.0s both; }
+  .dashboard-stagger-14 { animation: dashboard-stagger-in 0.6s ease-out 1.05s both; }
+  .dashboard-stagger-15 { animation: dashboard-stagger-in 0.6s ease-out 1.1s both; }
+  .dashboard-stagger-16 { animation: dashboard-stagger-in 0.6s ease-out 1.15s both; }
+  .dashboard-stagger-17 { animation: dashboard-stagger-in 0.6s ease-out 1.2s both; }
+  .dashboard-stagger-18 { animation: dashboard-stagger-in 0.6s ease-out 1.25s both; }
+  .dashboard-stagger-19 { animation: dashboard-stagger-in 0.6s ease-out 1.3s both; }
+  .dashboard-stagger-20 { animation: dashboard-stagger-in 0.6s ease-out 1.35s both; }
+  .dashboard-stagger-21 { animation: dashboard-stagger-in 0.6s ease-out 1.4s both; }
+  .dashboard-stagger-22 { animation: dashboard-stagger-in 0.6s ease-out 1.45s both; }
+  .dashboard-stagger-23 { animation: dashboard-stagger-in 0.6s ease-out 1.5s both; }
+  .dashboard-stagger-24 { animation: dashboard-stagger-in 0.6s ease-out 1.55s both; }
+  .dashboard-stagger-25 { animation: dashboard-stagger-in 0.6s ease-out 1.6s both; }
+  .dashboard-stagger-26 { animation: dashboard-stagger-in 0.6s ease-out 1.65s both; }
+  .dashboard-stagger-27 { animation: dashboard-stagger-in 0.6s ease-out 1.7s both; }
+  .dashboard-stagger-28 { animation: dashboard-stagger-in 0.6s ease-out 1.75s both; }
+  .dashboard-stagger-29 { animation: dashboard-stagger-in 0.6s ease-out 1.8s both; }
+  .dashboard-stagger-30 { animation: dashboard-stagger-in 0.6s ease-out 1.85s both; }
 
   .metric-card-glow {
     box-shadow: 0 0 20px rgba(168, 85, 247, 0.12);
@@ -122,128 +150,6 @@ const staggerStylesInfinite = `
 // SUBCOMPONENTS
 // ============================================================================
 
-// Module-level constant — never recreated on render
-const METRIC_CARD_COLOR_STYLES = {
-  primary: {
-    bg: 'bg-gradient-to-br from-purple-500/20 via-violet-600/10 to-purple-500/20 dark:from-purple-500/20 dark:via-violet-600/10 dark:to-purple-500/20',
-    icon: 'bg-gradient-to-br from-purple-500 to-violet-600 text-white shadow-purple-500/40',
-    border: 'border-purple-400/30 dark:border-purple-500/20',
-    glow: 'hover:shadow-purple-500/20',
-  },
-  success: {
-    bg: 'bg-gradient-to-br from-emerald-500/20 via-green-600/10 to-teal-500/20 dark:from-emerald-500/20 dark:via-green-600/10 dark:to-teal-500/20',
-    icon: 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/40',
-    border: 'border-emerald-400/30 dark:border-emerald-500/20',
-    glow: 'hover:shadow-emerald-500/20',
-  },
-  warning: {
-    bg: 'bg-gradient-to-br from-amber-500/20 via-orange-600/10 to-yellow-500/20 dark:from-amber-500/20 dark:via-orange-600/10 dark:to-yellow-500/20',
-    icon: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-amber-500/40',
-    border: 'border-amber-400/30 dark:border-amber-500/20',
-    glow: 'hover:shadow-amber-500/20',
-  },
-  error: {
-    bg: 'bg-gradient-to-br from-red-500/20 via-rose-600/10 to-pink-500/20 dark:from-red-500/20 dark:via-rose-600/10 dark:to-pink-500/20',
-    icon: 'bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-red-500/40',
-    border: 'border-red-400/30 dark:border-red-500/20',
-    glow: 'hover:shadow-red-500/20',
-  },
-} as const;
-
-const MetricCard = memo(function MetricCard({
-  title,
-  value,
-  icon: Icon,
-  color = 'primary',
-  onClick,
-  index = 0,
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  color?: 'primary' | 'success' | 'warning' | 'error';
-  onClick?: () => void;
-  index?: number;
-}) {
-  const style = METRIC_CARD_COLOR_STYLES[color];
-
-  return (
-    <div
-      onClick={onClick}
-      className={`${onClick ? 'cursor-pointer' : ''} dashboard-stagger-${index + 1}`}
-    >
-      <Card
-        variant="glass"
-        className={`
-          relative overflow-hidden
-          ${style.bg} ${style.border}
-          border backdrop-blur-xl
-          transition-all duration-500 ease-out
-          hover:scale-[1.02] hover:-translate-y-1
-          hover:shadow-2xl ${style.glow}
-          group h-full
-          before:absolute before:inset-0 
-          before:bg-gradient-to-br before:from-white/10 before:to-transparent
-          before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
-        `}
-      >
-        {/* Decorative corner accent */}
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-white/5 to-transparent rounded-bl-full opacity-50" />
-
-        <CardContent className="p-4 sm:p-5 lg:p-6 relative">
-          <div className="flex flex-col items-center text-center gap-3">
-            {/* Icon with enhanced styling */}
-            <div
-              className={`
-                p-3 sm:p-4 rounded-2xl 
-                ${style.icon}
-                shadow-lg
-                transition-all duration-500 
-                group-hover:scale-110 group-hover:rotate-3
-                group-hover:shadow-xl
-                shrink-0
-                relative
-                after:absolute after:inset-0 after:rounded-2xl
-                after:bg-gradient-to-br after:from-white/30 after:to-transparent
-              `}
-            >
-              <Icon className="h-6 w-6 sm:h-7 sm:w-7 relative z-10" />
-            </div>
-
-            {/* Content */}
-            <div className="flex flex-col items-center gap-1">
-              <p
-                className="
-                text-xs sm:text-sm font-bold 
-                text-gray-600 dark:text-gray-400
-                uppercase tracking-widest
-                leading-tight text-center
-                transition-colors duration-300
-                group-hover:text-gray-700 dark:group-hover:text-gray-300
-              "
-              >
-                {title}
-              </p>
-              <p
-                className="
-                text-3xl sm:text-4xl lg:text-5xl font-black 
-                text-gray-900 dark:text-white
-                tracking-tight 
-                transition-all duration-300
-                group-hover:scale-105
-                font-['JetBrains_Mono',monospace]
-              "
-              >
-                {value}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-});
-
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -281,6 +187,9 @@ export function DashboardPage() {
   >('monthly');
   const [activityView, setActivityView] = useState<'role-activity' | 'audit-logs'>('role-activity');
   const [auditLogFilters, setAuditLogFilters] = useState<AuditLogFilters>({});
+
+  // Cross-module ERP KPIs
+  const { sections: erpSections } = useERPDashboardMetrics(navigate);
 
   // ==========================================================================
   // Real-time WebSocket Subscriptions
@@ -367,6 +276,44 @@ export function DashboardPage() {
       enabled: canSupervise(),
     }
   );
+
+  // Hourly throughput data for hero card sparklines
+  const { data: hourlyThroughputData } = useHourlyThroughput({
+    enabled: canSupervise(),
+  });
+
+  // Transform hourly throughput data into sparkline format for each metric card
+  const sparklineData = useMemo(() => {
+    if (!hourlyThroughputData || !Array.isArray(hourlyThroughputData)) {
+      return {
+        activeStaff: [],
+        ordersPerHour: [],
+        queueDepth: [],
+        exceptions: [],
+      };
+    }
+
+    // Assuming hourlyThroughputData is an array of { hour: string, orders: number, picks: number, ... }
+    // Transform for each metric
+    return {
+      activeStaff: hourlyThroughputData.slice(-8).map((d: any) => ({
+        value: d.activePickers ?? d.activeStaff ?? 0,
+        label: d.hour ?? d.label,
+      })),
+      ordersPerHour: hourlyThroughputData.slice(-8).map((d: any) => ({
+        value: d.ordersPerHour ?? d.orders ?? 0,
+        label: d.hour ?? d.label,
+      })),
+      queueDepth: hourlyThroughputData.slice(-8).map((d: any) => ({
+        value: d.queueDepth ?? 0,
+        label: d.hour ?? d.label,
+      })),
+      exceptions: hourlyThroughputData.slice(-8).map((d: any) => ({
+        value: d.exceptions ?? 0,
+        label: d.hour ?? d.label,
+      })),
+    };
+  }, [hourlyThroughputData]);
 
   const {
     data: orderStatusBreakdown,
@@ -616,6 +563,7 @@ export function DashboardPage() {
             icon={UserGroupIcon}
             color="primary"
             index={0}
+            sparkline={sparklineData.activeStaff}
           />
           <MetricCard
             title="Orders/Hour"
@@ -623,6 +571,7 @@ export function DashboardPage() {
             icon={ArrowTrendingUpIcon}
             color="success"
             index={1}
+            sparkline={sparklineData.ordersPerHour}
           />
           <MetricCard
             title="Queue Depth"
@@ -631,6 +580,7 @@ export function DashboardPage() {
             color="warning"
             onClick={() => navigate('/orders')}
             index={2}
+            sparkline={sparklineData.queueDepth}
           />
           <MetricCard
             title="Exceptions"
@@ -639,6 +589,7 @@ export function DashboardPage() {
             color={metrics.exceptions > 0 ? 'error' : 'success'}
             onClick={() => (window.location.href = '/exceptions')}
             index={3}
+            sparkline={sparklineData.exceptions}
           />
         </div>
 
@@ -671,6 +622,9 @@ export function DashboardPage() {
             onRoleChange={setPerformanceRole}
           />
         </div>
+
+        {/* Cross-Module ERP KPI Summary */}
+        {hasBaseAdminRole && <ERPKPISummary sections={erpSections} />}
 
         {/* Unified Role Activity / Audit Logs */}
         <div className="flex flex-col gap-4">

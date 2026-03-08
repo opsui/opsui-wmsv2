@@ -160,10 +160,30 @@ router.post(
 
     console.log('[POST /users] User created:', newUser);
 
-    // If organizationId is provided, assign user to organization
-    if (organizationId) {
+    // Determine which organization to assign the user to
+    let targetOrgId = organizationId;
+
+    // If no organizationId provided, auto-assign to creator's primary organization
+    if (!targetOrgId && req.user?.userId) {
+      try {
+        const creatorOrgs = await organizationService.getUserOrganizations(req.user.userId);
+        const primaryOrg = creatorOrgs.organizations.find((o: any) => o.isPrimary);
+        if (primaryOrg) {
+          targetOrgId = primaryOrg.organizationId;
+          console.log(
+            "[POST /users] Auto-assigning to creator's primary organization:",
+            targetOrgId
+          );
+        }
+      } catch (error) {
+        console.log("[POST /users] Could not get creator's organization:", error);
+      }
+    }
+
+    // Assign user to organization
+    if (targetOrgId) {
       await organizationUserRepository.assignUser({
-        organizationId,
+        organizationId: targetOrgId,
         userId: newUser.userId,
         role: organizationRole || 'ORG_MEMBER',
         isPrimary: true,
@@ -175,7 +195,7 @@ router.post(
 
       console.log('[POST /users] User assigned to organization:', {
         userId: newUser.userId,
-        organizationId,
+        organizationId: targetOrgId,
         role: organizationRole || 'ORG_MEMBER',
       });
     }

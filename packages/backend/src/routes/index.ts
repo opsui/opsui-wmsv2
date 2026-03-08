@@ -5,6 +5,8 @@
  */
 
 import { Router } from 'express';
+import { authenticate } from '../middleware/auth';
+import { organizationContext } from '../middleware/organizationContext';
 import accountingRoutes from './accounting';
 import advancedInventoryRoutes from './advancedInventory';
 import authRoutes from './auth';
@@ -66,6 +68,20 @@ router.use('/health', healthRoutes);
 // API v1 routes (require auth)
 const v1Router = Router();
 v1Router.use('/auth', authRoutes);
+
+// Tenant database routing - authenticate first, then resolve org and route to dedicated DB
+v1Router.use((req, res, next) => {
+  // Skip for auth routes - they handle their own auth
+  if (req.path.startsWith('/auth')) return next();
+
+  // Authenticate to get req.user, then set org context for tenant routing
+  authenticate(req as any, res, (err?: any) => {
+    if (err) return next(err);
+    if (!(req as any).user) return next();
+    organizationContext(req as any, res, next).catch(next);
+  });
+});
+
 v1Router.use('/orders', orderRoutes);
 v1Router.use('/inventory', inventoryRoutes);
 v1Router.use('/metrics', metricsRoutes);
@@ -119,8 +135,8 @@ v1Router.use('/waves', waveRoutes);
 v1Router.use('/zones', zoneRoutes);
 v1Router.use('/slotting', slottingRoutes);
 
-// Mount API v1
-router.use('/v1', v1Router);
+// Mount API v1 - app.ts already mounts this router at /api/v1
+router.use('/', v1Router);
 
 // Legacy routes (for backward compatibility)
 router.use('/auth', authRoutes);

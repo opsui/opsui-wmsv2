@@ -1018,7 +1018,7 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form id="report-form" onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-white mb-1">Report Name *</label>
               <input
@@ -1156,6 +1156,7 @@ function ReportModal({ report, onClose, onSave }: ReportModalProps) {
           </button>
           <button
             type="submit"
+            form="report-form"
             disabled={isSubmitting}
             className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
           >
