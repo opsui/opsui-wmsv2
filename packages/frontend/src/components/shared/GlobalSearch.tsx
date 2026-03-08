@@ -31,6 +31,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 // Map icon names to actual components
@@ -294,6 +295,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // -------------------------------------------------------------------------
   // Mobile expand / collapse helpers
@@ -313,18 +315,19 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   const collapseMobile = useCallback(() => {
     setMobileInputAnimState('exiting');
-    // Wait for exit animation to complete before hiding
+    // Step 1: Start pill shrink transition immediately
+    onMobileSearchActive?.(false);
+    setIsOpen(false);
+    setQuery('');
+    setResults({ orders: [], skus: [], users: [], pages: [] });
+    setTotalItems(0);
+    inputRef.current?.blur();
+    // Step 2: After pill transition completes, swap content (input → button)
     setTimeout(() => {
       isMobileExpandedRef.current = false;
       setMobileInputAnimState('hidden');
       setIsMobileExpanded(false);
-      setIsOpen(false);
-      setQuery('');
-      setResults({ orders: [], skus: [], users: [], pages: [] });
-      setTotalItems(0);
-      onMobileSearchActive?.(false);
-      inputRef.current?.blur();
-    }, 200);
+    }, 300);
   }, [onMobileSearchActive]);
 
   // -------------------------------------------------------------------------
@@ -418,7 +421,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(target))
+      ) {
         setIsOpen(false);
         if (isMobileExpandedRef.current) {
           collapseMobile();
@@ -606,19 +614,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
               <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </button>
           )}
-
-          {/* Results dropdown for mobile - positioned right below toolbar */}
-          {isOpen && (query || isLoading) && (
-            <div className="fixed inset-x-4 top-16 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto animate-fade-in">
-              <SearchResults
-                results={results}
-                isLoading={isLoading}
-                onSelectItem={handleNavigation}
-                selectedIndex={selectedIndex}
-                totalItems={totalItems}
-              />
-            </div>
-          )}
         </div>
       )}
 
@@ -649,21 +644,39 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
               <XMarkIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </button>
           )}
-
-          {/* Desktop results dropdown */}
-          {isOpen && (query || isLoading) && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-              <SearchResults
-                results={results}
-                isLoading={isLoading}
-                onSelectItem={handleNavigation}
-                selectedIndex={selectedIndex}
-                totalItems={totalItems}
-              />
-            </div>
-          )}
         </div>
       )}
+
+      {/* Search results dropdown — portaled to body to escape overflow-hidden pill */}
+      {isOpen &&
+        (query || isLoading) &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[50vh] overflow-y-auto animate-fade-in"
+            style={{
+              top: (containerRef.current?.getBoundingClientRect().bottom ?? 120) + 8,
+              left:
+                window.innerWidth < 768
+                  ? 16
+                  : (containerRef.current?.getBoundingClientRect().left ?? 0),
+              right: window.innerWidth < 768 ? 16 : undefined,
+              width:
+                window.innerWidth < 768
+                  ? undefined
+                  : (containerRef.current?.getBoundingClientRect().width ?? 400),
+            }}
+          >
+            <SearchResults
+              results={results}
+              isLoading={isLoading}
+              onSelectItem={handleNavigation}
+              selectedIndex={selectedIndex}
+              totalItems={totalItems}
+            />
+          </div>,
+          document.body
+        )}
     </>
   );
 };

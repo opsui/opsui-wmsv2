@@ -2456,16 +2456,14 @@ export function Header() {
             </div>
 
             {/* Toolbar - centered on mobile (flex), absolute centered on desktop */}
-            <div
-              className={`relative flex items-center justify-center gap-1 mx-auto mobile:mx-0 mobile:absolute mobile:left-1/2 mobile:top-1/2 mobile:-translate-x-1/2 mobile:-translate-y-1/2 transition-all duration-300 ease-out ${isMobileSearchActive ? 'w-[340px] max-w-[90vw]' : 'w-auto'}`}
-            >
+            <div className="relative flex items-center justify-center gap-1 mx-auto mobile:mx-0 mobile:absolute mobile:left-1/2 mobile:top-1/2 mobile:-translate-x-1/2 mobile:-translate-y-1/2 transition-all duration-300 ease-out">
               {/* Toolbar pill wrapper */}
               <div
                 className={`relative rounded-full shadow-[0_0_8px_rgba(168,85,247,0.3)] transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
               >
                 {/* Content area — p-[3px] reserves space for border, overflow-hidden clips the white bg to the rounded shape */}
                 <div
-                  className={`p-[3px] rounded-full overflow-hidden ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
+                  className={`p-[3px] rounded-full overflow-hidden transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
                 >
                   <div
                     className={`flex items-center justify-center gap-1 bg-white dark:bg-gray-900 rounded-[9996px] transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
