@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "cd ../shared && npm run build",
-    "build": "tsc --noEmitOnError false || true && vite build",
+    "build": "vite build",
     "build:analyze": "tsc --noEmitOnError false || true && vite build && open dist/stats.html",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
