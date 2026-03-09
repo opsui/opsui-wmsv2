@@ -5,7 +5,7 @@
  * Uses NetSuiteClient with TBA OAuth 1.0 for REST Record API calls.
  *
  * @domain integrations
- * @dependencies NetSuiteClient, OrderRepository, IntegrationsRepository
+ * @dependencies NetSuiteClient, OrderRepository
  */
 
 import {
@@ -15,7 +15,6 @@ import {
   NetSuiteSalesOrderLine,
 } from './NetSuiteClient';
 import { OrderRepository } from '../repositories/OrderRepository';
-import { IntegrationsRepository } from '../repositories/IntegrationsRepository';
 import { logger } from '../config/logger';
 import { query } from '../db/client';
 import { OrderPriority } from '@opsui/shared';
@@ -65,12 +64,10 @@ export interface NetSuiteOrderPreview {
 export class NetSuiteOrderSyncService {
   private client: NetSuiteClient;
   private orderRepository: OrderRepository;
-  private integrationsRepository: IntegrationsRepository | null = null;
 
   constructor(
     credentialsOrClient?: NetSuiteCredentials | NetSuiteClient,
-    orderRepository?: OrderRepository,
-    integrationsRepository?: IntegrationsRepository
+    orderRepository?: OrderRepository
   ) {
     if (credentialsOrClient instanceof NetSuiteClient) {
       this.client = credentialsOrClient;
@@ -78,7 +75,6 @@ export class NetSuiteOrderSyncService {
       this.client = new NetSuiteClient(credentialsOrClient);
     }
     this.orderRepository = orderRepository || new OrderRepository();
-    this.integrationsRepository = integrationsRepository || null;
   }
 
   // ========================================================================
@@ -108,12 +104,10 @@ export class NetSuiteOrderSyncService {
       logger.info('Starting NetSuite order sync');
 
       const limit = _options.limit || 50;
-      let useSuiteQL = false;
-      let suiteqlOrders: any[] = [];
       let items: Array<{ id: string }> = [];
       let useItemFulfillments = true;
 
-      // Try Item Fulfillments first, then Sales Orders Record API, then SuiteQL
+      // Try Item Fulfillments first, then Sales Orders Record API
       try {
         const response = await this.client.getItemFulfillments({ limit });
         items = response.items || [];
@@ -132,89 +126,49 @@ export class NetSuiteOrderSyncService {
           items = response.items || [];
           logger.info('Fetched sales orders via Record API', { count: items.length });
         } catch (recordApiError: any) {
-          logger.warn('Record API failed, falling back to SuiteQL', {
+          logger.error('All NetSuite fetch methods failed', {
             error: recordApiError.message,
           });
-
-          // Final fallback: SuiteQL
-          try {
-            suiteqlOrders = await this.client.getSalesOrdersViaSuiteQL(limit);
-            useSuiteQL = true;
-            logger.info('Fetched sales orders via SuiteQL', { count: suiteqlOrders.length });
-          } catch (suiteqlError: any) {
-            logger.error('All NetSuite fetch methods failed', {
-              recordApi: recordApiError.message,
-              suiteql: suiteqlError.message,
-            });
-            throw new Error(
-              `Cannot access NetSuite orders. Record API: ${recordApiError.message}. SuiteQL: ${suiteqlError.message}. ` +
-                'Please ensure the role has REST Web Services and Sales Order permissions.'
-            );
-          }
+          throw new Error(
+            `Cannot access NetSuite orders: ${recordApiError.message}. ` +
+              'Please ensure the role has REST Web Services and Sales Order permissions.'
+          );
         }
       }
 
-      if (useSuiteQL) {
-        // Process SuiteQL results
-        result.totalProcessed = suiteqlOrders.length;
+      result.totalProcessed = items.length;
 
-        for (const order of suiteqlOrders) {
-          try {
-            const syncResult = await this.syncSuiteQLOrder(order, _options);
-            if (syncResult.imported) {
-              result.succeeded++;
-              result.details.imported.push(syncResult.tranId || order.id);
-            } else if (syncResult.skipped) {
-              result.skipped++;
-              result.details.skipped.push({
-                tranId: syncResult.tranId || order.id,
-                reason: syncResult.reason || 'Unknown reason',
-              });
-            }
-          } catch (error: any) {
-            result.failed++;
-            result.details.failed.push({
-              tranId: order.tranid || order.id,
-              error: error.message || 'Unknown error',
+      for (const item of items) {
+        try {
+          let syncResult;
+          if (useItemFulfillments) {
+            const fulfillment = await this.client.getItemFulfillment(item.id);
+            syncResult = await this.syncSingleFulfillment(fulfillment, _options);
+          } else {
+            const salesOrder = await this.client.getSalesOrder(item.id);
+            syncResult = await this.syncSingleOrder(salesOrder, _options);
+          }
+
+          if (syncResult.imported) {
+            result.succeeded++;
+            result.details.imported.push(syncResult.tranId || item.id);
+          } else if (syncResult.skipped) {
+            result.skipped++;
+            result.details.skipped.push({
+              tranId: syncResult.tranId || item.id,
+              reason: syncResult.reason || 'Unknown reason',
             });
           }
-        }
-      } else {
-        // Process Record API results
-        result.totalProcessed = items.length;
-
-        for (const item of items) {
-          try {
-            let syncResult;
-            if (useItemFulfillments) {
-              const fulfillment = await this.client.getItemFulfillment(item.id);
-              syncResult = await this.syncSingleFulfillment(fulfillment, _options);
-            } else {
-              const salesOrder = await this.client.getSalesOrder(item.id);
-              syncResult = await this.syncSingleOrder(salesOrder, _options);
-            }
-
-            if (syncResult.imported) {
-              result.succeeded++;
-              result.details.imported.push(syncResult.tranId || item.id);
-            } else if (syncResult.skipped) {
-              result.skipped++;
-              result.details.skipped.push({
-                tranId: syncResult.tranId || item.id,
-                reason: syncResult.reason || 'Unknown reason',
-              });
-            }
-          } catch (error: any) {
-            result.failed++;
-            result.details.failed.push({
-              tranId: item.id,
-              error: error.message || 'Unknown error',
-            });
-            logger.error('Failed to sync NetSuite order', {
-              orderId: item.id,
-              error: error.message,
-            });
-          }
+        } catch (error: any) {
+          result.failed++;
+          result.details.failed.push({
+            tranId: item.id,
+            error: error.message || 'Unknown error',
+          });
+          logger.error('Failed to sync NetSuite order', {
+            orderId: item.id,
+            error: error.message,
+          });
         }
       }
 
@@ -232,74 +186,6 @@ export class NetSuiteOrderSyncService {
       });
       throw error;
     }
-  }
-
-  /**
-   * Sync a single order fetched via SuiteQL
-   */
-  private async syncSuiteQLOrder(
-    order: any,
-    _options: NetSuiteSyncOptions
-  ): Promise<{ imported: boolean; skipped: boolean; reason?: string; tranId?: string }> {
-    const tranId = order.tranid || order.tranId || String(order.id);
-
-    // Check if already imported
-    const existingOrder = await this.findOrderByExternalId(tranId);
-    if (existingOrder) {
-      return { imported: false, skipped: true, reason: 'Order already imported', tranId };
-    }
-
-    // Get line items via SuiteQL
-    let lineItems: any[] = [];
-    try {
-      const fullOrder = await this.client.getSalesOrderViaSuiteQL(String(order.id));
-      lineItems = fullOrder.lineItems || [];
-    } catch {
-      // If we can't get lines, still create the order header
-      logger.warn('Could not fetch line items for SuiteQL order', { tranId });
-    }
-
-    if (lineItems.length === 0) {
-      return { imported: false, skipped: true, reason: 'No line items found', tranId };
-    }
-
-    // Map SuiteQL line items to WMS format
-    const items = await Promise.all(
-      lineItems.map(async (line: any) => {
-        const sku = await this.findSkuByNetSuiteItem(
-          String(line.item),
-          line.itemName || line.itemname
-        );
-        return {
-          sku: sku || line.itemName || line.itemname || String(line.item),
-          quantity: line.quantity || 1,
-        };
-      })
-    );
-
-    // Create WMS order
-    const priority = this.calculatePriority(order.shipDate || order.shipdate);
-    const wmsOrder = await this.orderRepository.createOrderWithItems({
-      customerId: String(order.entity || 'NETSUITE'),
-      customerName: order.entityName || order.entityname || 'NetSuite Order',
-      priority,
-      items,
-      externalOrderId: tranId,
-      customerReference: tranId,
-      notes: order.memo || `Imported from NetSuite (SuiteQL) - ${tranId}`,
-      requiredDate:
-        order.shipDate || order.shipdate ? new Date(order.shipDate || order.shipdate) : undefined,
-    } as any);
-
-    await this.storeExternalOrderId(wmsOrder.orderId, tranId, String(order.id));
-
-    logger.info('Created WMS order from NetSuite SuiteQL', {
-      orderId: wmsOrder.orderId,
-      tranId,
-      itemCount: items.length,
-    });
-
-    return { imported: true, skipped: false, tranId };
   }
 
   /**
@@ -331,7 +217,7 @@ export class NetSuiteOrderSyncService {
       quantity: line.quantity || 1,
     }));
 
-    const skuValidation = await this.validateSkus(mappedItems);
+    const skuValidation = await this.validateSkus(mappedItems as NetSuiteSalesOrderLine[]);
     if (!skuValidation.valid) {
       return {
         imported: false,
@@ -416,20 +302,20 @@ export class NetSuiteOrderSyncService {
   private async syncSingleOrder(
     salesOrder: NetSuiteSalesOrder,
     _options: NetSuiteSyncOptions
-  ): Promise<{ imported: boolean; skipped: boolean; reason?: string }> {
+  ): Promise<{ imported: boolean; skipped: boolean; reason?: string; tranId?: string }> {
     const tranId = salesOrder.tranId;
 
     // Check if order already exists (by external order ID)
     const existingOrder = await this.findOrderByExternalId(tranId);
     if (existingOrder) {
       logger.info('Order already exists, skipping', { tranId, orderId: existingOrder });
-      return { imported: false, skipped: true, reason: 'Order already imported' };
+      return { imported: false, skipped: true, reason: 'Order already imported', tranId };
     }
 
     // Validate line items have SKUs that exist in WMS
     const lineItems = salesOrder.item?.items || [];
     if (lineItems.length === 0) {
-      return { imported: false, skipped: true, reason: 'No line items in order' };
+      return { imported: false, skipped: true, reason: 'No line items in order', tranId };
     }
 
     // Validate all SKUs exist before creating order
@@ -439,6 +325,7 @@ export class NetSuiteOrderSyncService {
         imported: false,
         skipped: true,
         reason: `Missing SKUs: ${skuValidation.missingSkus.join(', ')}`,
+        tranId,
       };
     }
 
@@ -450,7 +337,7 @@ export class NetSuiteOrderSyncService {
         tranId,
         itemCount: lineItems.length,
       });
-      return { imported: true, skipped: false };
+      return { imported: true, skipped: false, tranId };
     } catch (error: any) {
       logger.error('Failed to create WMS order', { tranId, error: error.message });
       throw error;
