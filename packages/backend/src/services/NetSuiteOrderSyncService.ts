@@ -489,8 +489,8 @@ export class NetSuiteOrderSyncService {
     if (result.rows.length > 0) return;
 
     await query(
-      `INSERT INTO skus (sku, name, active, bin_locations, created_at, updated_at)
-       VALUES ($1, $2, true, ARRAY['UNASSIGNED'], NOW(), NOW())
+      `INSERT INTO skus (sku, name, category, active, bin_locations, created_at, updated_at)
+       VALUES ($1, $2, 'NETSUITE', true, ARRAY['UNASSIGNED'], NOW(), NOW())
        ON CONFLICT (sku) DO NOTHING`,
       [skuCode, itemName]
     );
