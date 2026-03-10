@@ -152,72 +152,90 @@ export class NetSuiteOrderSyncService {
       logger.info('Starting NetSuite order sync');
 
       const limit = _options.limit || 50;
-      let items: Array<{ id: string }> = [];
-      let useItemFulfillments = true;
 
-      // Try Item Fulfillments first, then Sales Orders Record API
+      // Sync both Sales Orders (picking) and Item Fulfillments (packing)
+      // 1. Item Fulfillments → imported as PICKED (ready for packing)
       try {
-        const response = await this.client.getItemFulfillments({ limit });
-        items = response.items || [];
+        const fulfillmentResponse = await this.client.getItemFulfillments({ limit });
+        const fulfillmentItems = fulfillmentResponse.items || [];
         logger.info('Fetched item fulfillments from NetSuite', {
-          count: items.length,
-          hasMore: response.hasMore,
+          count: fulfillmentItems.length,
+          hasMore: fulfillmentResponse.hasMore,
         });
-      } catch (error: any) {
-        logger.warn('Failed to fetch item fulfillments, trying sales orders Record API', {
-          error: error.message,
-        });
-        useItemFulfillments = false;
 
-        try {
-          const response = await this.client.getSalesOrders({ limit });
-          items = response.items || [];
-          logger.info('Fetched sales orders via Record API', { count: items.length });
-        } catch (recordApiError: any) {
-          logger.error('All NetSuite fetch methods failed', {
-            error: recordApiError.message,
-          });
-          throw new Error(
-            `Cannot access NetSuite orders: ${recordApiError.message}. ` +
-              'Please ensure the role has REST Web Services and Sales Order permissions.'
-          );
-        }
-      }
+        result.totalProcessed += fulfillmentItems.length;
 
-      result.totalProcessed = items.length;
-
-      for (const item of items) {
-        try {
-          let syncResult;
-          if (useItemFulfillments) {
+        for (const item of fulfillmentItems) {
+          try {
             const fulfillment = await this.client.getItemFulfillment(item.id);
-            syncResult = await this.syncSingleFulfillment(fulfillment, _options);
-          } else {
-            const salesOrder = await this.client.getSalesOrder(item.id);
-            syncResult = await this.syncSingleOrder(salesOrder, _options);
-          }
+            const syncResult = await this.syncSingleFulfillment(fulfillment, _options);
 
-          if (syncResult.imported) {
-            result.succeeded++;
-            result.details.imported.push(syncResult.tranId || item.id);
-          } else if (syncResult.skipped) {
-            result.skipped++;
-            result.details.skipped.push({
-              tranId: syncResult.tranId || item.id,
-              reason: syncResult.reason || 'Unknown reason',
+            if (syncResult.imported) {
+              result.succeeded++;
+              result.details.imported.push(syncResult.tranId || item.id);
+            } else if (syncResult.skipped) {
+              result.skipped++;
+              result.details.skipped.push({
+                tranId: syncResult.tranId || item.id,
+                reason: syncResult.reason || 'Unknown reason',
+              });
+            }
+          } catch (error: any) {
+            result.failed++;
+            result.details.failed.push({
+              tranId: item.id,
+              error: error.message || 'Unknown error',
+            });
+            logger.error('Failed to sync NetSuite fulfillment', {
+              orderId: item.id,
+              error: error.message,
             });
           }
-        } catch (error: any) {
-          result.failed++;
-          result.details.failed.push({
-            tranId: item.id,
-            error: error.message || 'Unknown error',
-          });
-          logger.error('Failed to sync NetSuite order', {
-            orderId: item.id,
-            error: error.message,
-          });
         }
+      } catch (error: any) {
+        logger.warn('Failed to fetch item fulfillments', { error: error.message });
+      }
+
+      // 2. Sales Orders (pending fulfillment) → imported as PENDING (ready for picking)
+      try {
+        const soResponse = await this.client.getSalesOrders({ limit, status: '_pendingFulfillment' });
+        const soItems = soResponse.items || [];
+        logger.info('Fetched pending sales orders from NetSuite', {
+          count: soItems.length,
+          hasMore: soResponse.hasMore,
+        });
+
+        result.totalProcessed += soItems.length;
+
+        for (const item of soItems) {
+          try {
+            const salesOrder = await this.client.getSalesOrder(item.id);
+            const syncResult = await this.syncSingleOrder(salesOrder, _options);
+
+            if (syncResult.imported) {
+              result.succeeded++;
+              result.details.imported.push(syncResult.tranId || item.id);
+            } else if (syncResult.skipped) {
+              result.skipped++;
+              result.details.skipped.push({
+                tranId: syncResult.tranId || item.id,
+                reason: syncResult.reason || 'Unknown reason',
+              });
+            }
+          } catch (error: any) {
+            result.failed++;
+            result.details.failed.push({
+              tranId: item.id,
+              error: error.message || 'Unknown error',
+            });
+            logger.error('Failed to sync NetSuite sales order', {
+              orderId: item.id,
+              error: error.message,
+            });
+          }
+        }
+      } catch (error: any) {
+        logger.warn('Failed to fetch sales orders', { error: error.message });
       }
 
       logger.info('NetSuite order sync completed', {
@@ -283,6 +301,16 @@ export class NetSuiteOrderSyncService {
     const orderId = generateOrderId();
     const priority = this.calculatePriority(fulfillment.shipDate);
 
+    // Map NetSuite fulfillment shipStatus to WMS order status
+    // Item Fulfillments are already picked in NetSuite → import as PICKED (ready for packing)
+    const shipStatus = (fulfillment.shipStatus || '').toLowerCase();
+    let wmsStatus = 'PICKED'; // Default: fulfillments are ready for packing
+    if (shipStatus.includes('shipped')) {
+      wmsStatus = 'SHIPPED';
+    } else if (shipStatus.includes('packed')) {
+      wmsStatus = 'PACKED';
+    }
+
     const shippingAddr = fulfillment.shippingAddress || {};
     const shippingAddress =
       shippingAddr.addr1 || shippingAddr.city
@@ -301,7 +329,7 @@ export class NetSuiteOrderSyncService {
         order_id, customer_id, customer_name, priority, status, progress,
         shipping_address, notes, customer_reference, external_order_id, required_date,
         organization_id, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+      ) VALUES ($1, $2, $3, $4, $11::order_status, 0, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
       [
         orderId,
         fulfillment.entity?.id || fulfillment.createdFrom?.id || 'NETSUITE',
@@ -313,6 +341,7 @@ export class NetSuiteOrderSyncService {
         tranId,
         fulfillment.shipDate ? new Date(fulfillment.shipDate) : null,
         this.organizationId,
+        wmsStatus,
       ]
     );
 

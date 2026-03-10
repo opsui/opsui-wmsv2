@@ -523,11 +523,17 @@ export class NetSuiteClient {
     // Line items
     const lineItems = this.parseLineItems(response);
 
+    // Ship status (_picked, _packed, _shipped)
+    const shipStatusRaw = this.extractAttribute(response, 'shipStatus', '_scriptId') ||
+      this.extractTag(response, 'shipStatus') || '';
+    const shipStatus = shipStatusRaw.replace(/<[^>]*>/g, '').trim().toLowerCase();
+
     return {
       id: internalId || id,
       tranId: tranId || id,
       memo,
       shipDate: shipDate || undefined,
+      shipStatus,
       entity: { id: entityId, refName: entityName },
       createdFrom: { id: createdFromId, refName: createdFromName.replace(/<[^>]*>/g, '').trim() },
       item: lineItems.length > 0 ? { items: lineItems } : lineItems,
