@@ -270,6 +270,8 @@ export class NetSuiteOrderSyncService {
       const skuCode = sku || line.item?.refName || line.itemName || `NS-${i}`;
       const itemName = line.description || line.item?.refName || skuCode;
 
+      await this.ensureSku(skuCode, itemName);
+
       const skuResult = await query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
         [skuCode]
@@ -386,7 +388,10 @@ export class NetSuiteOrderSyncService {
       const skuCode = sku || line.item?.refName || line.item?.id || `NS-${i}`;
       const itemName = line.description || line.item?.refName || skuCode;
 
-      // Try to get bin location from WMS
+      // Ensure SKU exists in catalog (auto-create if missing)
+      await this.ensureSku(skuCode, itemName);
+
+      // Get bin location from WMS
       const skuResult = await query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
         [skuCode]
@@ -474,6 +479,22 @@ export class NetSuiteOrderSyncService {
 
     // Return the NetSuite item name as the SKU identifier
     return netSuiteItemName || netSuiteItemId || null;
+  }
+
+  /**
+   * Ensure a SKU exists in the WMS catalog. Creates it if missing.
+   */
+  private async ensureSku(skuCode: string, itemName: string): Promise<void> {
+    const result = await query(`SELECT sku FROM skus WHERE sku = $1`, [skuCode]);
+    if (result.rows.length > 0) return;
+
+    await query(
+      `INSERT INTO skus (sku, name, active, bin_locations, created_at, updated_at)
+       VALUES ($1, $2, true, ARRAY['UNASSIGNED'], NOW(), NOW())
+       ON CONFLICT (sku) DO NOTHING`,
+      [skuCode, itemName]
+    );
+    logger.info('Auto-created SKU from NetSuite item', { sku: skuCode, name: itemName });
   }
 
   /**
