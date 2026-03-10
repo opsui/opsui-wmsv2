@@ -450,10 +450,10 @@ export class NetSuiteOrderSyncService {
     netSuiteItemId?: string,
     netSuiteItemName?: string
   ): Promise<string | null> {
-    // Try to find by NetSuite item ID stored in SKU external_id or custom field
+    // Try to find by SKU code or barcode matching NetSuite item ID
     if (netSuiteItemId) {
       const result = await query(
-        `SELECT sku FROM skus WHERE (external_id = $1 OR sku = $1) AND active = true`,
+        `SELECT sku FROM skus WHERE (sku = $1 OR barcode = $1) AND active = true`,
         [netSuiteItemId]
       );
       if (result.rows.length > 0) {
@@ -461,7 +461,7 @@ export class NetSuiteOrderSyncService {
       }
     }
 
-    // Fallback to matching by name
+    // Fallback to matching by name or SKU code
     if (netSuiteItemName) {
       const result = await query(
         `SELECT sku FROM skus WHERE (name ILIKE $1 OR sku ILIKE $1) AND active = true`,
@@ -472,7 +472,7 @@ export class NetSuiteOrderSyncService {
       }
     }
 
-    // Last resort: use the NetSuite item name as the SKU
+    // Return the NetSuite item name as the SKU identifier
     return netSuiteItemName || netSuiteItemId || null;
   }
 
