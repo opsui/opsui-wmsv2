@@ -33,6 +33,7 @@ import {
 import wsServer from './websocket';
 import { recurringScheduleService } from './services/RecurringScheduleService';
 import { tokenBlacklistService } from './services/TokenBlacklistService';
+import { netSuiteAutoSync } from './services/NetSuiteAutoSync';
 
 // Export shutdown check for health endpoints
 export const isShuttingDown = checkIfShuttingDown;
@@ -134,16 +135,21 @@ async function main() {
 
     logger.info('Recurring schedule processor initialized (runs every hour)');
 
+    // 8. Start NetSuite auto-sync (every 15 minutes)
+    netSuiteAutoSync.start(15 * 60 * 1000);
+    logger.info('NetSuite auto-sync initialized (runs every 15 minutes)');
+
     // --------------------------------------------------------------------------
     // COMPREHENSIVE GRACEFUL SHUTDOWN
     // --------------------------------------------------------------------------
 
     // Define cleanup tasks
     const cleanupTasks = [
-      // 0. Clear recurring schedule interval
+      // 0. Clear recurring schedule interval and auto-sync
       async () => {
         clearInterval(scheduleInterval);
-        logger.info('✅ Recurring schedule interval cleared');
+        netSuiteAutoSync.stop();
+        logger.info('✅ Recurring schedule interval and auto-sync cleared');
       },
 
       // 1. Wait for active HTTP connections to drain
