@@ -135,9 +135,9 @@ async function main() {
 
     logger.info('Recurring schedule processor initialized (runs every hour)');
 
-    // 8. Start NetSuite auto-sync (every 15 minutes)
-    netSuiteAutoSync.start(15 * 60 * 1000);
-    logger.info('NetSuite auto-sync initialized (runs every 15 minutes)');
+    // 8. Start NetSuite auto-sync (every 30 seconds)
+    netSuiteAutoSync.start(30 * 1000);
+    logger.info('NetSuite auto-sync initialized (runs every 30 seconds)');
 
     // --------------------------------------------------------------------------
     // COMPREHENSIVE GRACEFUL SHUTDOWN
