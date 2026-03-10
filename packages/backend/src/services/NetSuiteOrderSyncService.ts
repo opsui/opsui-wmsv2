@@ -62,6 +62,7 @@ export interface NetSuiteOrderPreview {
 
 export class NetSuiteOrderSyncService {
   private client: NetSuiteClient;
+  private organizationId: string | null = null;
 
   constructor(credentialsOrClient?: NetSuiteCredentials | NetSuiteClient) {
     if (credentialsOrClient instanceof NetSuiteClient) {
@@ -82,6 +83,18 @@ export class NetSuiteOrderSyncService {
     _integrationId: string,
     _options: NetSuiteSyncOptions = {}
   ): Promise<NetSuiteSyncResult> {
+    // Look up the organization this integration belongs to
+    const orgResult = await query(
+      `SELECT organization_id FROM integration_organizations WHERE integration_id = $1 LIMIT 1`,
+      [_integrationId]
+    );
+    this.organizationId = orgResult.rows[0]?.organization_id || null;
+    if (!this.organizationId) {
+      logger.warn('No organization mapping found for integration, orders will have no org scope', {
+        integrationId: _integrationId,
+      });
+    }
+
     const result: NetSuiteSyncResult = {
       totalProcessed: 0,
       succeeded: 0,
@@ -246,8 +259,8 @@ export class NetSuiteOrderSyncService {
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
         shipping_address, notes, customer_reference, external_order_id, required_date,
-        created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, NOW(), NOW())`,
+        organization_id, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
       [
         orderId,
         fulfillment.entity?.id || fulfillment.createdFrom?.id || 'NETSUITE',
@@ -258,6 +271,7 @@ export class NetSuiteOrderSyncService {
         tranId,
         tranId,
         fulfillment.shipDate ? new Date(fulfillment.shipDate) : null,
+        this.organizationId,
       ]
     );
 
@@ -366,8 +380,8 @@ export class NetSuiteOrderSyncService {
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
         shipping_address, notes, customer_reference, external_order_id, required_date,
-        created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, NOW(), NOW())`,
+        organization_id, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
       [
         orderId,
         salesOrder.entity?.id || 'NETSUITE',
@@ -378,6 +392,7 @@ export class NetSuiteOrderSyncService {
         salesOrder.tranId,
         salesOrder.tranId,
         salesOrder.shipDate ? new Date(salesOrder.shipDate) : null,
+        this.organizationId,
       ]
     );
 
@@ -489,10 +504,10 @@ export class NetSuiteOrderSyncService {
     if (result.rows.length > 0) return;
 
     await query(
-      `INSERT INTO skus (sku, name, category, active, bin_locations, created_at, updated_at)
-       VALUES ($1, $2, 'NETSUITE', true, ARRAY['UNASSIGNED'], NOW(), NOW())
+      `INSERT INTO skus (sku, name, category, active, bin_locations, organization_id, created_at, updated_at)
+       VALUES ($1, $2, 'NETSUITE', true, ARRAY['UNASSIGNED'], $3, NOW(), NOW())
        ON CONFLICT (sku) DO NOTHING`,
-      [skuCode, itemName]
+      [skuCode, itemName, this.organizationId]
     );
     logger.info('Auto-created SKU from NetSuite item', { sku: skuCode, name: itemName });
   }
