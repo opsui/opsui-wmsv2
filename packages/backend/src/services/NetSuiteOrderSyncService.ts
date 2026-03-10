@@ -15,8 +15,10 @@ import {
   NetSuiteSalesOrderLine,
 } from './NetSuiteClient';
 import { logger } from '../config/logger';
-import { query } from '../db/client';
+import { query as sharedQuery, getPool } from '../db/client';
+import { tenantPoolManager } from '../db/tenantContext';
 import { OrderPriority, generateOrderId } from '@opsui/shared';
+import { Pool } from 'pg';
 
 // ============================================================================
 // TYPES
@@ -63,6 +65,28 @@ export interface NetSuiteOrderPreview {
 export class NetSuiteOrderSyncService {
   private client: NetSuiteClient;
   private organizationId: string | null = null;
+  private tenantPool: Pool | null = null;
+
+  /**
+   * Execute a query against the correct database (tenant or shared).
+   * Uses tenant pool if the integration's org has a dedicated database.
+   */
+  private async query<T extends Record<string, any> = Record<string, any>>(
+    text: string,
+    params?: any[]
+  ) {
+    if (this.tenantPool) {
+      const start = Date.now();
+      const result = await this.tenantPool.query<any>(text, params);
+      logger.debug('Tenant query executed', {
+        duration: `${Date.now() - start}ms`,
+        rows: result.rowCount,
+        sql: text.substring(0, 100),
+      });
+      return { ...result, rows: result.rows || [] };
+    }
+    return sharedQuery<T>(text, params);
+  }
 
   constructor(credentialsOrClient?: NetSuiteCredentials | NetSuiteClient) {
     if (credentialsOrClient instanceof NetSuiteClient) {
@@ -83,16 +107,33 @@ export class NetSuiteOrderSyncService {
     _integrationId: string,
     _options: NetSuiteSyncOptions = {}
   ): Promise<NetSuiteSyncResult> {
-    // Look up the organization this integration belongs to
-    const orgResult = await query(
-      `SELECT organization_id FROM integration_organizations WHERE integration_id = $1 LIMIT 1`,
+    // Look up the organization this integration belongs to (always from shared DB)
+    const orgResult = await sharedQuery(
+      `SELECT io.organization_id, o.database_name
+       FROM integration_organizations io
+       JOIN organizations o ON o.organization_id = io.organization_id
+       WHERE io.integration_id = $1 LIMIT 1`,
       [_integrationId]
     );
-    this.organizationId = orgResult.rows[0]?.organization_id || null;
+    this.organizationId = orgResult.rows[0]?.organizationId || null;
+    const databaseName = orgResult.rows[0]?.databaseName || null;
+
     if (!this.organizationId) {
       logger.warn('No organization mapping found for integration, orders will have no org scope', {
         integrationId: _integrationId,
       });
+    }
+
+    // If the org has a dedicated tenant database, use that pool for all writes
+    if (databaseName) {
+      this.tenantPool = tenantPoolManager.getPool(databaseName);
+      logger.info('NetSuite sync using tenant database', {
+        integrationId: _integrationId,
+        organizationId: this.organizationId,
+        database: databaseName,
+      });
+    } else {
+      this.tenantPool = null;
     }
 
     const result: NetSuiteSyncResult = {
@@ -255,7 +296,7 @@ export class NetSuiteOrderSyncService {
           }
         : null;
 
-    await query(
+    await this.query(
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
         shipping_address, notes, customer_reference, external_order_id, required_date,
@@ -286,13 +327,13 @@ export class NetSuiteOrderSyncService {
 
       await this.ensureSku(skuCode, itemName);
 
-      const skuResult = await query(
+      const skuResult = await this.query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
         [skuCode]
       );
       const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
 
-      await query(
+      await this.query(
         `INSERT INTO order_items (
           order_item_id, order_id, sku, name, quantity, bin_location, status,
           unit_price, line_total, currency
@@ -376,7 +417,7 @@ export class NetSuiteOrderSyncService {
       : null;
 
     // Insert order
-    await query(
+    await this.query(
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
         shipping_address, notes, customer_reference, external_order_id, required_date,
@@ -407,13 +448,13 @@ export class NetSuiteOrderSyncService {
       await this.ensureSku(skuCode, itemName);
 
       // Get bin location from WMS
-      const skuResult = await query(
+      const skuResult = await this.query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
         [skuCode]
       );
       const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
 
-      await query(
+      await this.query(
         `INSERT INTO order_items (
           order_item_id, order_id, sku, name, quantity, bin_location, status,
           unit_price, line_total, currency
@@ -472,7 +513,7 @@ export class NetSuiteOrderSyncService {
   ): Promise<string | null> {
     // Try to find by SKU code or barcode matching NetSuite item ID
     if (netSuiteItemId) {
-      const result = await query(
+      const result = await this.query(
         `SELECT sku FROM skus WHERE (sku = $1 OR barcode = $1) AND active = true`,
         [netSuiteItemId]
       );
@@ -483,7 +524,7 @@ export class NetSuiteOrderSyncService {
 
     // Fallback to matching by name or SKU code
     if (netSuiteItemName) {
-      const result = await query(
+      const result = await this.query(
         `SELECT sku FROM skus WHERE (name ILIKE $1 OR sku ILIKE $1) AND active = true`,
         [netSuiteItemName]
       );
@@ -500,10 +541,10 @@ export class NetSuiteOrderSyncService {
    * Ensure a SKU exists in the WMS catalog. Creates it if missing.
    */
   private async ensureSku(skuCode: string, itemName: string): Promise<void> {
-    const result = await query(`SELECT sku FROM skus WHERE sku = $1`, [skuCode]);
+    const result = await this.query(`SELECT sku FROM skus WHERE sku = $1`, [skuCode]);
     if (result.rows.length > 0) return;
 
-    await query(
+    await this.query(
       `INSERT INTO skus (sku, name, category, active, bin_locations, organization_id, created_at, updated_at)
        VALUES ($1, $2, 'NETSUITE', true, ARRAY['UNASSIGNED'], $3, NOW(), NOW())
        ON CONFLICT (sku) DO NOTHING`,
@@ -542,7 +583,7 @@ export class NetSuiteOrderSyncService {
    * Find an existing order by external (NetSuite) order ID
    */
   private async findOrderByExternalId(externalOrderId: string): Promise<string | null> {
-    const result = await query(
+    const result = await this.query(
       `SELECT order_id FROM orders WHERE customer_reference = $1 OR order_id IN (
         SELECT order_id FROM order_external_refs WHERE external_order_id = $1
       )`,
@@ -562,13 +603,13 @@ export class NetSuiteOrderSyncService {
   ): Promise<void> {
     try {
       // Store in customer_reference field (already exists in schema)
-      await query(`UPDATE orders SET customer_reference = $1 WHERE order_id = $2`, [
+      await this.query(`UPDATE orders SET customer_reference = $1 WHERE order_id = $2`, [
         tranId,
         orderId,
       ]);
 
       // Also try to store in order_external_refs if it exists
-      await query(
+      await this.query(
         `INSERT INTO order_external_refs (order_id, external_order_id, external_system, external_data)
          VALUES ($1, $2, 'NETSUITE', $3)
          ON CONFLICT (order_id, external_system) DO UPDATE SET external_order_id = $2, external_data = $3`,
