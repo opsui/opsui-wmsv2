@@ -14,10 +14,9 @@ import {
   NetSuiteSalesOrder,
   NetSuiteSalesOrderLine,
 } from './NetSuiteClient';
-import { OrderRepository } from '../repositories/OrderRepository';
 import { logger } from '../config/logger';
 import { query } from '../db/client';
-import { OrderPriority } from '@opsui/shared';
+import { OrderPriority, generateOrderId } from '@opsui/shared';
 
 // ============================================================================
 // TYPES
@@ -63,18 +62,13 @@ export interface NetSuiteOrderPreview {
 
 export class NetSuiteOrderSyncService {
   private client: NetSuiteClient;
-  private orderRepository: OrderRepository;
 
-  constructor(
-    credentialsOrClient?: NetSuiteCredentials | NetSuiteClient,
-    orderRepository?: OrderRepository
-  ) {
+  constructor(credentialsOrClient?: NetSuiteCredentials | NetSuiteClient) {
     if (credentialsOrClient instanceof NetSuiteClient) {
       this.client = credentialsOrClient;
     } else {
       this.client = new NetSuiteClient(credentialsOrClient);
     }
-    this.orderRepository = orderRepository || new OrderRepository();
   }
 
   // ========================================================================
@@ -211,22 +205,6 @@ export class NetSuiteOrderSyncService {
       return { imported: false, skipped: true, reason: 'No line items in fulfillment', tranId };
     }
 
-    // Validate SKUs
-    const mappedItems = lineItems.map((line: any) => ({
-      item: { id: line.item?.id, refName: line.item?.refName || line.itemName },
-      quantity: line.quantity || 1,
-    }));
-
-    const skuValidation = await this.validateSkus(mappedItems as NetSuiteSalesOrderLine[]);
-    if (!skuValidation.valid) {
-      return {
-        imported: false,
-        skipped: true,
-        reason: `Missing SKUs: ${skuValidation.missingSkus.join(', ')}`,
-        tranId,
-      };
-    }
-
     // Create WMS order from fulfillment
     try {
       const order = await this.createWMSOrderFromFulfillment(fulfillment);
@@ -248,52 +226,76 @@ export class NetSuiteOrderSyncService {
   private async createWMSOrderFromFulfillment(fulfillment: any) {
     const lineItems = fulfillment.item?.items || fulfillment.item || [];
     const tranId = fulfillment.tranId || fulfillment.id;
-
-    // Map fulfillment items to WMS order items
-    const items = await Promise.all(
-      lineItems.map(async (line: any) => {
-        const sku = await this.findSkuByNetSuiteItem(
-          line.item?.id,
-          line.item?.refName || line.itemName
-        );
-        return {
-          sku: sku || line.item?.refName || line.itemName || '',
-          quantity: line.quantity || 1,
-        };
-      })
-    );
-
-    // Get address info
-    const shippingAddr = fulfillment.shippingAddress || {};
-
-    // Determine priority
+    const orderId = generateOrderId();
     const priority = this.calculatePriority(fulfillment.shipDate);
 
-    // Create order
-    const order = await this.orderRepository.createOrderWithItems({
-      customerId: fulfillment.entity?.id || fulfillment.createdFrom?.id || 'NETSUITE',
-      customerName:
+    const shippingAddr = fulfillment.shippingAddress || {};
+    const shippingAddress =
+      shippingAddr.addr1 || shippingAddr.city
+        ? {
+            street1: shippingAddr.addr1 || '',
+            street2: shippingAddr.addr2 || '',
+            city: shippingAddr.city || '',
+            state: shippingAddr.state || '',
+            postalCode: shippingAddr.zip || '',
+            country: shippingAddr.country?.refName || '',
+          }
+        : null;
+
+    await query(
+      `INSERT INTO orders (
+        order_id, customer_id, customer_name, priority, status, progress,
+        shipping_address, notes, customer_reference, external_order_id, required_date,
+        created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, NOW(), NOW())`,
+      [
+        orderId,
+        fulfillment.entity?.id || fulfillment.createdFrom?.id || 'NETSUITE',
         fulfillment.entity?.refName || fulfillment.createdFrom?.refName || 'NetSuite Order',
-      priority,
-      items,
-      externalOrderId: tranId,
-      customerReference: tranId,
-      notes: fulfillment.memo || `Imported from NetSuite Fulfillment - ${tranId}`,
-      shippingAddress: {
-        street1: shippingAddr.addr1 || '',
-        street2: shippingAddr.addr2 || '',
-        city: shippingAddr.city || '',
-        state: shippingAddr.state || '',
-        postalCode: shippingAddr.zip || '',
-        country: shippingAddr.country?.refName || '',
-      },
-      requiredDate: fulfillment.shipDate ? new Date(fulfillment.shipDate) : undefined,
-    } as any);
+        priority,
+        shippingAddress ? JSON.stringify(shippingAddress) : null,
+        fulfillment.memo || `Imported from NetSuite Fulfillment - ${tranId}`,
+        tranId,
+        tranId,
+        fulfillment.shipDate ? new Date(fulfillment.shipDate) : null,
+      ]
+    );
 
-    // Store external reference
-    await this.storeExternalOrderId(order.orderId, tranId, fulfillment.id);
+    for (let i = 0; i < lineItems.length; i++) {
+      const line = lineItems[i];
+      const sku = await this.findSkuByNetSuiteItem(
+        line.item?.id,
+        line.item?.refName || line.itemName
+      );
+      const skuCode = sku || line.item?.refName || line.itemName || `NS-${i}`;
+      const itemName = line.description || line.item?.refName || skuCode;
 
-    return order;
+      const skuResult = await query(
+        `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
+        [skuCode]
+      );
+      const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
+
+      await query(
+        `INSERT INTO order_items (
+          order_item_id, order_id, sku, name, quantity, bin_location, status,
+          unit_price, line_total, currency
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, 'NZD')`,
+        [
+          `OI-${orderId}-${i}`,
+          orderId,
+          skuCode,
+          itemName,
+          line.quantity || 1,
+          binLocation,
+          line.rate || 0,
+          line.amount || (line.rate || 0) * (line.quantity || 1),
+        ]
+      );
+    }
+
+    await this.storeExternalOrderId(orderId, tranId, fulfillment.id);
+    return { orderId };
   }
 
   /**
@@ -312,21 +314,10 @@ export class NetSuiteOrderSyncService {
       return { imported: false, skipped: true, reason: 'Order already imported', tranId };
     }
 
-    // Validate line items have SKUs that exist in WMS
+    // Check line items exist
     const lineItems = salesOrder.item?.items || [];
     if (lineItems.length === 0) {
       return { imported: false, skipped: true, reason: 'No line items in order', tranId };
-    }
-
-    // Validate all SKUs exist before creating order
-    const skuValidation = await this.validateSkus(lineItems);
-    if (!skuValidation.valid) {
-      return {
-        imported: false,
-        skipped: true,
-        reason: `Missing SKUs: ${skuValidation.missingSkus.join(', ')}`,
-        tranId,
-      };
     }
 
     // Create WMS order
@@ -349,54 +340,81 @@ export class NetSuiteOrderSyncService {
   // ========================================================================
 
   /**
-   * Create a WMS order from a NetSuite sales order
+   * Create a WMS order from a NetSuite sales order.
+   * Uses direct SQL inserts to handle items that may not exist in WMS SKU catalog.
    */
   private async createWMSOrder(salesOrder: NetSuiteSalesOrder) {
     const lineItems = salesOrder.item?.items || [];
-
-    // Map NetSuite line items to WMS order items
-    const items = await Promise.all(
-      lineItems.map(async line => {
-        // Get SKU from WMS by NetSuite item ID or name
-        const sku = await this.findSkuByNetSuiteItem(line.item?.id, line.item?.refName);
-
-        return {
-          sku: sku || line.item?.refName || '',
-          quantity: line.quantity || 1,
-        };
-      })
-    );
-
-    // Determine priority based on ship date
+    const orderId = generateOrderId();
     const priority = this.calculatePriority(salesOrder.shipDate);
 
-    // Create order using repository
-    const order = await this.orderRepository.createOrderWithItems({
-      customerId: salesOrder.entity?.id || 'NETSUITE',
-      customerName: salesOrder.entity?.refName || 'Unknown Customer',
-      priority,
-      items,
-      // Store NetSuite metadata
-      externalOrderId: salesOrder.tranId,
-      customerReference: salesOrder.tranId,
-      notes: salesOrder.memo || `Imported from NetSuite - ${salesOrder.tranId}`,
-      shippingAddress: salesOrder.shippingAddress
-        ? {
-            street1: salesOrder.shippingAddress.addr1 || '',
-            street2: salesOrder.shippingAddress.addr2 || '',
-            city: salesOrder.shippingAddress.city || '',
-            state: salesOrder.shippingAddress.state || '',
-            postalCode: salesOrder.shippingAddress.zip || '',
-            country: salesOrder.shippingAddress.country?.refName || '',
-          }
-        : undefined,
-      requiredDate: salesOrder.shipDate ? new Date(salesOrder.shipDate) : undefined,
-    } as any);
+    const shippingAddress = salesOrder.shippingAddress
+      ? {
+          street1: salesOrder.shippingAddress.addr1 || '',
+          street2: salesOrder.shippingAddress.addr2 || '',
+          city: salesOrder.shippingAddress.city || '',
+          state: salesOrder.shippingAddress.state || '',
+          postalCode: salesOrder.shippingAddress.zip || '',
+          country: salesOrder.shippingAddress.country?.refName || '',
+        }
+      : null;
 
-    // Store external order ID reference
-    await this.storeExternalOrderId(order.orderId, salesOrder.tranId, salesOrder.id);
+    // Insert order
+    await query(
+      `INSERT INTO orders (
+        order_id, customer_id, customer_name, priority, status, progress,
+        shipping_address, notes, customer_reference, external_order_id, required_date,
+        created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, 'PENDING', 0, $5, $6, $7, $8, $9, NOW(), NOW())`,
+      [
+        orderId,
+        salesOrder.entity?.id || 'NETSUITE',
+        salesOrder.entity?.refName || 'Unknown Customer',
+        priority,
+        shippingAddress ? JSON.stringify(shippingAddress) : null,
+        salesOrder.memo || `Imported from NetSuite - ${salesOrder.tranId}`,
+        salesOrder.tranId,
+        salesOrder.tranId,
+        salesOrder.shipDate ? new Date(salesOrder.shipDate) : null,
+      ]
+    );
 
-    return order;
+    // Insert line items — look up SKU in WMS, fall back to NetSuite item name
+    for (let i = 0; i < lineItems.length; i++) {
+      const line = lineItems[i];
+      const sku = await this.findSkuByNetSuiteItem(line.item?.id, line.item?.refName);
+      const skuCode = sku || line.item?.refName || line.item?.id || `NS-${i}`;
+      const itemName = line.description || line.item?.refName || skuCode;
+
+      // Try to get bin location from WMS
+      const skuResult = await query(
+        `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
+        [skuCode]
+      );
+      const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
+
+      await query(
+        `INSERT INTO order_items (
+          order_item_id, order_id, sku, name, quantity, bin_location, status,
+          unit_price, line_total, currency
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, 'NZD')`,
+        [
+          `OI-${orderId}-${i}`,
+          orderId,
+          skuCode,
+          itemName,
+          line.quantity || 1,
+          binLocation,
+          line.rate || 0,
+          line.amount || (line.rate || 0) * (line.quantity || 1),
+        ]
+      );
+    }
+
+    // Store external reference
+    await this.storeExternalOrderId(orderId, salesOrder.tranId, salesOrder.id);
+
+    return { orderId };
   }
 
   /**
