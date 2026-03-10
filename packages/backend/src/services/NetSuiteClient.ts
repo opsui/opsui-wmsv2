@@ -370,7 +370,8 @@ export class NetSuiteClient {
       status?: string;
     } = {}
   ): Promise<NetSuiteListResponse<NetSuiteSalesOrder>> {
-    const pageSize = options.limit || 50;
+    // NetSuite SOAP minimum page size is 5, maximum is 1000
+    const pageSize = Math.max(5, Math.min(options.limit || 50, 1000));
 
     const searchPrefs = [
       '<tns:searchPreferences>',
@@ -385,9 +386,6 @@ export class NetSuiteClient {
       '    <platformCommon:type operator="anyOf">',
       '      <platformCore:searchValue>_salesOrder</platformCore:searchValue>',
       '    </platformCommon:type>',
-      '    <platformCommon:mainLine operator="is">',
-      '      <platformCore:searchValue>true</platformCore:searchValue>',
-      '    </platformCommon:mainLine>',
       '  </tns:searchRecord>',
       '</tns:search>',
     ].join('\n');
@@ -437,7 +435,7 @@ export class NetSuiteClient {
       offset?: number;
     } = {}
   ): Promise<NetSuiteListResponse<any>> {
-    const pageSize = options.limit || 50;
+    const pageSize = Math.max(5, Math.min(options.limit || 50, 1000));
 
     const searchPrefs = [
       '<tns:searchPreferences>',
@@ -452,9 +450,6 @@ export class NetSuiteClient {
       '    <platformCommon:type operator="anyOf">',
       '      <platformCore:searchValue>_itemFulfillment</platformCore:searchValue>',
       '    </platformCommon:type>',
-      '    <platformCommon:mainLine operator="is">',
-      '      <platformCore:searchValue>true</platformCore:searchValue>',
-      '    </platformCommon:mainLine>',
       '  </tns:searchRecord>',
       '</tns:search>',
     ].join('\n');
@@ -614,7 +609,7 @@ export class NetSuiteClient {
       offset?: number;
     } = {}
   ): Promise<NetSuiteListResponse<any>> {
-    const pageSize = options.limit || 50;
+    const pageSize = Math.max(5, Math.min(options.limit || 50, 1000));
 
     const searchPrefs = [
       '<tns:searchPreferences>',
