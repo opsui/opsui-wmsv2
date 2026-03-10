@@ -1022,7 +1022,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             </CardContent>
           </Card>
         ) : noMotion ? (
-          <ResponsiveGrid columns={3} minColumnWidth={300} gap="md">
+          <ResponsiveGrid columns={2} minColumnWidth={280} gap="md">
             {filteredOrders.map((order: any) => (
               <OrderCard
                 key={order.orderId}
@@ -1039,7 +1039,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             variants={pageVariants}
             initial="hidden"
             animate="visible"
-            className="responsive-grid responsive-grid-3"
+            className="responsive-grid responsive-grid-2"
           >
             {filteredOrders.map((order: any) => (
               <OrderCard
