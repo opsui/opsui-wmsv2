@@ -629,6 +629,7 @@ export class OrderService {
       pickerId?: string;
       page?: number;
       limit?: number;
+      organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[]; total: number }> {
     return orderRepository.getOrderQueue({
@@ -645,6 +646,7 @@ export class OrderService {
     filters: {
       status?: OrderStatus;
       packerId?: string;
+      organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[] }> {
     return orderRepository.getOrdersWithItemsByStatus(filters);

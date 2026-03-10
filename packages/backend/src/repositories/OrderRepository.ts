@@ -191,11 +191,17 @@ export class OrderRepository extends BaseRepository<Order> {
       search?: string;
       limit?: number;
       offset?: number;
+      organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[]; total: number }> {
     const conditions: string[] = [];
     const params: any[] = [];
     let paramIndex = 1;
+
+    if (filters.organizationId) {
+      conditions.push(`o.organization_id = $${paramIndex++}`);
+      params.push(filters.organizationId);
+    }
 
     if (filters.status) {
       conditions.push(`o.status = $${paramIndex++}`);
@@ -318,11 +324,17 @@ export class OrderRepository extends BaseRepository<Order> {
     filters: {
       status?: OrderStatus;
       packerId?: string;
+      organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[]; total: number }> {
     const conditions: string[] = [];
     const params: any[] = [];
     let paramIndex = 1;
+
+    if (filters.organizationId) {
+      conditions.push(`o.organization_id = $${paramIndex++}`);
+      params.push(filters.organizationId);
+    }
 
     if (filters.status) {
       conditions.push(`o.status = $${paramIndex++}`);

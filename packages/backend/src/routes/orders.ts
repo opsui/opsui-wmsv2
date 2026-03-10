@@ -46,6 +46,7 @@ router.get(
       search: req.query.search as string | undefined,
       page: req.query.page ? parseInt(req.query.page as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      organizationId: req.organizationId || undefined,
     };
 
     const result = await orderService.getOrderQueue(filters);
@@ -93,6 +94,7 @@ router.get(
     const filters = {
       status: req.query.status as any,
       packerId: req.query.packerId as string | undefined,
+      organizationId: req.organizationId || undefined,
     };
 
     const result = await orderService.getOrdersWithItemsByStatus(filters);
