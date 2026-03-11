@@ -1223,13 +1223,13 @@ function NotificationPanel() {
       <button
         ref={buttonRef}
         onClick={handleClick}
-        className="toolbar-btn relative p-2 min-w-0 shrink overflow-visible dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
+        className="toolbar-btn relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
         aria-label={`Notifications: ${unreadCount} unread`}
         style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
       >
         <BellIcon className="toolbar-icon-bell h-5 w-5 flex-shrink-0" />
         {unreadCount > 0 && (
-          <span className="notification-badge absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
+          <span className="notification-badge absolute -top-0.5 right-0 min-w-[14px] h-[14px] flex items-center justify-center px-0.5 text-[9px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
