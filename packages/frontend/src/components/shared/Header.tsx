@@ -1218,7 +1218,7 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000]">
           {/* Invisible bridge to maintain hover state */}
           <div className="h-2 -mb-2" />
           {/* Header with gradient accent */}
