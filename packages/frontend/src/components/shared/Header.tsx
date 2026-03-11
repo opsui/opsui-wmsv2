@@ -1179,16 +1179,13 @@ function NotificationPanel() {
       const rect = buttonRef.current.getBoundingClientRect();
       const dropdownWidth = 384; // w-96 = 384px
       
-      // Calculate left position to center dropdown below the bell icon
-      let left = rect.left + rect.width / 2 - dropdownWidth / 2;
-      
-      // Keep dropdown on screen
-      if (left < 16) left = 16;
-      if (left + dropdownWidth > window.innerWidth - 16) left = window.innerWidth - dropdownWidth - 16;
+      // Calculate position: align right edge of dropdown with right edge of button
+      // Using 'right' CSS property is more reliable for right-aligned elements
+      const rightDistance = window.innerWidth - rect.right;
       
       setDropdownPosition({
         top: rect.bottom + 8,
-        left: left,
+        left: rightDistance, // This stores the 'right' value actually
       });
     }
   }, []);
@@ -1246,7 +1243,7 @@ function NotificationPanel() {
           className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000]"
           style={{
             top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
+            right: `${dropdownPosition.left}px`,
           }}
         >
           {/* Header with gradient accent */}
