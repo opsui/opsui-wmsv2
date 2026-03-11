@@ -1127,6 +1127,7 @@ function ThemeToggle() {
 
 function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
@@ -1172,11 +1173,28 @@ function NotificationPanel() {
 
   // Show notification panel for all authenticated users
 
+  const updatePosition = useCallback(() => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      // Position dropdown centered below the bell icon, but ensure it doesn't go off-screen
+      let left = rect.left + rect.width / 2 - 192; // 192 = half of w-96 (384px)
+      // Keep dropdown on screen
+      if (left < 16) left = 16;
+      if (left + 384 > window.innerWidth - 16) left = window.innerWidth - 384 - 16;
+      
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: left,
+      });
+    }
+  }, []);
+
   const handleMouseEnter = () => {
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
+    updatePosition();
     setIsOpen(true);
   };
 
@@ -1193,6 +1211,7 @@ function NotificationPanel() {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
+    updatePosition();
     setIsOpen(!isOpen);
   };
 
@@ -1221,8 +1240,8 @@ function NotificationPanel() {
         <div 
           className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000]"
           style={{
-            top: `${dropdownRef.current?.getBoundingClientRect().bottom + 8}px`,
-            left: `${(dropdownRef.current?.getBoundingClientRect().left || 0) + (dropdownRef.current?.getBoundingClientRect().width || 0) / 2 - 192}px`,
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
           }}
         >
           {/* Header with gradient accent */}
