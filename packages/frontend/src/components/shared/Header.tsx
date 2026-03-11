@@ -1229,7 +1229,7 @@ function NotificationPanel() {
       >
         <BellIcon className="toolbar-icon-bell h-5 w-5 flex-shrink-0" />
         {unreadCount > 0 && (
-          <span className="notification-badge absolute top-0 right-2 min-w-[14px] h-[14px] flex items-center justify-center px-0.5 text-[9px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
+          <span className="notification-badge absolute top-0.5 right-0.5 min-w-[14px] h-[14px] flex items-center justify-center px-0.5 text-[9px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
