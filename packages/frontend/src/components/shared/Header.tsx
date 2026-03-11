@@ -2517,7 +2517,7 @@ export function Header() {
                   className={`p-[3px] rounded-full transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
                 >
                   <div
-                    className={`flex items-center justify-center gap-1 bg-white dark:bg-gray-900 rounded-[9996px] transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
+                    className={`flex items-center justify-center gap-1 bg-white dark:bg-gray-900 rounded-[9996px] overflow-visible transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
                   >
                     {/* Global Search — passes callback so it can hide sibling icons on mobile and desktop */}
                     <GlobalSearch
