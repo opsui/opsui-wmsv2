@@ -1176,11 +1176,14 @@ function NotificationPanel() {
   const updatePosition = useCallback(() => {
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
-      // Position dropdown centered below the bell icon, but ensure it doesn't go off-screen
-      let left = rect.left + rect.width / 2 - 192; // 192 = half of w-96 (384px)
+      const dropdownWidth = 384; // w-96 = 384px
+      
+      // Calculate left position to center dropdown below the bell icon
+      let left = rect.left + rect.width / 2 - dropdownWidth / 2;
+      
       // Keep dropdown on screen
       if (left < 16) left = 16;
-      if (left + 384 > window.innerWidth - 16) left = window.innerWidth - 384 - 16;
+      if (left + dropdownWidth > window.innerWidth - 16) left = window.innerWidth - dropdownWidth - 16;
       
       setDropdownPosition({
         top: rect.bottom + 8,
