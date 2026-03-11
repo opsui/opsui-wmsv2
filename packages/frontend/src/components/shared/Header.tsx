@@ -1218,9 +1218,13 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000]">
-          {/* Invisible bridge to maintain hover state */}
-          <div className="h-2 -mb-2" />
+        <div 
+          className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000]"
+          style={{
+            top: `${dropdownRef.current?.getBoundingClientRect().bottom + 8}px`,
+            left: `${(dropdownRef.current?.getBoundingClientRect().left || 0) + (dropdownRef.current?.getBoundingClientRect().width || 0) / 2 - 192}px`,
+          }}
+        >
           {/* Header with gradient accent */}
           <div className="relative px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 rounded-t-2xl bg-white dark:bg-gray-800">
             {/* Gradient accent line at top */}
