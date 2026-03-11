@@ -1218,9 +1218,9 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced">
+        <div className="absolute top-full left-1/2 -translate-x-1/2 w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced pt-2">
           {/* Header with gradient accent */}
-          <div className="relative px-5 py-4 border-b border-gray-100 dark:border-gray-700/50">
+          <div className="relative px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 rounded-t-2xl bg-white dark:bg-gray-800">
             {/* Gradient accent line at top */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-400 via-purple-400 to-primary-400" />
             <div className="flex items-center justify-between">
@@ -1242,7 +1242,7 @@ function NotificationPanel() {
           </div>
 
           {/* Notification Preview - show recent notifications */}
-          <div className="py-1 max-h-[400px] overflow-y-auto">
+          <div className="py-1 max-h-[400px] overflow-y-auto bg-white dark:bg-gray-800">
             <NotificationPreview
               limit={5}
               onNotificationClick={() => setIsOpen(false)}
@@ -1251,7 +1251,7 @@ function NotificationPanel() {
           </div>
 
           {/* Footer with enhanced styling */}
-          <div className="border-t border-gray-100 dark:border-gray-700/50 px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50">
+          <div className="border-t border-gray-100 dark:border-gray-700/50 px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-2xl">
             <div className="flex gap-2">
               <button
                 onClick={() => {
