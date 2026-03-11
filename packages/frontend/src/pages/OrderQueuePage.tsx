@@ -505,18 +505,71 @@ function OrderCard({
               <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
                 {cfg.progressLabel}
               </span>
-              <span className="text-sm font-black text-purple-400">{order.progress || 0}%</span>
+              <span className="text-sm font-black text-purple-400">
+                {mode === 'packing'
+                  ? Math.round(
+                      (items.reduce(
+                        (sum: number, item: any) => sum + (item.verifiedQuantity || 0),
+                        0
+                      ) /
+                        Math.max(
+                          1,
+                          items.reduce((sum: number, item: any) => sum + item.quantity, 0)
+                        )) *
+                        100
+                    )
+                  : order.progress || 0}
+                %
+              </span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
               {noMotion ? (
                 <div
-                  style={{ width: `${order.progress || 0}%` }}
+                  style={{
+                    width: `${
+                      mode === 'packing'
+                        ? Math.round(
+                            (items.reduce(
+                              (sum: number, item: any) => sum + (item.verifiedQuantity || 0),
+                              0
+                            ) /
+                              Math.max(
+                                1,
+                                items.reduce(
+                                  (sum: number, item: any) => sum + item.quantity,
+                                  0
+                                )
+                              )) *
+                              100
+                          )
+                        : order.progress || 0
+                    }%`,
+                  }}
                   className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400"
                 />
               ) : (
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${order.progress || 0}%` }}
+                  animate={{
+                    width: `${
+                      mode === 'packing'
+                        ? Math.round(
+                            (items.reduce(
+                              (sum: number, item: any) => sum + (item.verifiedQuantity || 0),
+                              0
+                            ) /
+                              Math.max(
+                                1,
+                                items.reduce(
+                                  (sum: number, item: any) => sum + item.quantity,
+                                  0
+                                )
+                              )) *
+                              100
+                          )
+                        : order.progress || 0
+                    }%`,
+                  }}
                   transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
                   className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400 relative"
                 >
