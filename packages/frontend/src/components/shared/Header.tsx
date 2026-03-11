@@ -1177,7 +1177,7 @@ function NotificationPanel() {
   const updatePosition = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      
+
       // Center the dropdown horizontally on the screen (below the centered toolbar pill)
       // The toolbar pill is centered at 50% viewport width
       setDropdownPosition({
@@ -1236,7 +1236,7 @@ function NotificationPanel() {
       </button>
 
       {isOpen && (
-        <div 
+        <div
           className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000] -translate-x-1/2"
           style={{
             top: `${dropdownPosition.top}px`,
@@ -2514,7 +2514,7 @@ export function Header() {
               >
                 {/* Content area — p-[3px] reserves space for border, overflow-hidden clips the white bg to the rounded shape */}
                 <div
-                  className={`p-[3px] rounded-full overflow-hidden transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
+                  className={`p-[3px] rounded-full transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
                 >
                   <div
                     className={`flex items-center justify-center gap-1 bg-white dark:bg-gray-900 rounded-[9996px] transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
