@@ -1129,6 +1129,7 @@ function NotificationPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   const canSupervise = useAuthStore(state => state.canSupervise);
@@ -1174,8 +1175,8 @@ function NotificationPanel() {
   // Show notification panel for all authenticated users
 
   const updatePosition = useCallback(() => {
-    if (dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
       const dropdownWidth = 384; // w-96 = 384px
       
       // Calculate left position to center dropdown below the bell icon
@@ -1226,6 +1227,7 @@ function NotificationPanel() {
       onMouseLeave={handleMouseLeave}
     >
       <button
+        ref={buttonRef}
         onClick={handleClick}
         className="toolbar-btn relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
         aria-label={`Notifications: ${unreadCount} unread`}
