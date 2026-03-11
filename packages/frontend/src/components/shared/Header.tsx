@@ -1177,15 +1177,12 @@ function NotificationPanel() {
   const updatePosition = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const dropdownWidth = 384; // w-96 = 384px
       
-      // Calculate position: align right edge of dropdown with right edge of button
-      // Using 'right' CSS property is more reliable for right-aligned elements
-      const rightDistance = window.innerWidth - rect.right;
-      
+      // Center the dropdown horizontally on the screen (below the centered toolbar pill)
+      // The toolbar pill is centered at 50% viewport width
       setDropdownPosition({
         top: rect.bottom + 8,
-        left: rightDistance, // This stores the 'right' value actually
+        left: 50, // 50% - will be used with translateX(-50%)
       });
     }
   }, []);
@@ -1240,10 +1237,10 @@ function NotificationPanel() {
 
       {isOpen && (
         <div 
-          className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000]"
+          className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000] -translate-x-1/2"
           style={{
             top: `${dropdownPosition.top}px`,
-            right: `${dropdownPosition.left}px`,
+            left: `${dropdownPosition.left}%`,
           }}
         >
           {/* Header with gradient accent */}
