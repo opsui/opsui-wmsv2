@@ -495,17 +495,90 @@ router.get(
 );
 
 /**
+ * GET /api/integrations/netsuite/sync-report
+ * Get sync status report for NetSuite-sourced orders
+ * Access: ADMIN, SUPERVISOR
+ */
+router.get(
+  '/netsuite/sync-report',
+  authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orgId = (req as any).user?.organizationId;
+      const integrations = await repository.findAll({
+        provider: IntegrationProvider.NETSUITE,
+        ...(orgId ? { organizationId: orgId } : {}),
+      });
+
+      if (integrations.length === 0) {
+        res.status(400).json({ error: 'No NetSuite integration configured.' });
+        return;
+      }
+
+      const syncService = createNetSuiteSyncService(integrations[0]);
+      const report = await syncService.getSyncReport();
+
+      res.json(report);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/integrations/netsuite/reconcile
+ * Reconcile WMS orders with NetSuite (clean up stale data)
+ * Access: ADMIN only
+ */
+router.post(
+  '/netsuite/reconcile',
+  authorize(UserRole.ADMIN),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orgId = (req as any).user?.organizationId;
+      const integrations = await repository.findAll({
+        provider: IntegrationProvider.NETSUITE,
+        ...(orgId ? { organizationId: orgId } : {}),
+      });
+
+      if (integrations.length === 0) {
+        res.status(400).json({ error: 'No NetSuite integration configured.' });
+        return;
+      }
+
+      const integration = integrations[0];
+      const syncService = createNetSuiteSyncService(integration);
+
+      logger.info('Starting NetSuite order reconciliation', {
+        userId: (req as any).user?.userId,
+        integrationId: integration.integrationId,
+      });
+
+      const result = await syncService.reconcileOrders(integration.integrationId);
+
+      res.json({
+        message: 'Reconciliation complete',
+        ...result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
  * POST /api/integrations/netsuite/sync-orders
  * Sync sales orders from NetSuite to WMS
  * Access: ADMIN, SUPERVISOR
+ *
+ * Note: This endpoint returns immediately with a job ID.
+ * The sync runs asynchronously. Use GET /sync-jobs/:jobId to check status.
  */
 router.post(
   '/netsuite/sync-orders',
   authorize(UserRole.ADMIN, UserRole.SUPERVISOR),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { limit, status, lastSyncAt } = req.body;
-
       // Find the NetSuite integration for this organization
       const orgId = (req as any).user?.organizationId;
       const integrations = await repository.findAll({
@@ -521,22 +594,17 @@ router.post(
       }
 
       const integration = integrations[0];
-      const syncService = createNetSuiteSyncService(integration);
       const userId = (req as any).user.userId;
 
-      // Create a sync job record
+      // Create a sync job record - this will start the sync asynchronously
       const job = await service.createSyncJob(integration.integrationId, 'ORDER_SYNC', userId);
 
-      // Perform the sync
-      const result = await syncService.syncOrders(integration.integrationId, {
-        limit: limit || 50,
-        status: status || '_pendingFulfillment',
-        lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : integration.lastSyncAt,
-      });
-
-      res.json({
+      // Return immediately with the job ID - don't wait for sync to complete
+      res.status(202).json({
         jobId: job.jobId,
-        ...result,
+        status: 'PENDING',
+        message: 'Sync job started. Use GET /api/integrations/sync-jobs/:jobId to check status.',
+        integrationId: integration.integrationId,
       });
     } catch (error) {
       next(error);
@@ -548,6 +616,9 @@ router.post(
  * POST /api/integrations/:integrationId/netsuite/sync-orders
  * Sync sales orders from NetSuite for a specific integration
  * Access: ADMIN, SUPERVISOR
+ *
+ * Note: This endpoint returns immediately with a job ID.
+ * The sync runs asynchronously. Use GET /sync-jobs/:jobId to check status.
  */
 router.post(
   '/:integrationId/netsuite/sync-orders',
@@ -566,23 +637,17 @@ router.post(
         return;
       }
 
-      const { limit, status, lastSyncAt } = req.body;
-      const syncService = createNetSuiteSyncService(integration);
       const userId = (req as any).user.userId;
 
-      // Create a sync job record
+      // Create a sync job record - this will start the sync asynchronously
       const job = await service.createSyncJob(integration.integrationId, 'ORDER_SYNC', userId);
 
-      // Perform the sync
-      const result = await syncService.syncOrders(integration.integrationId, {
-        limit: limit || 50,
-        status: status || '_pendingFulfillment',
-        lastSyncAt: lastSyncAt ? new Date(lastSyncAt) : integration.lastSyncAt,
-      });
-
-      res.json({
+      // Return immediately with the job ID - don't wait for sync to complete
+      res.status(202).json({
         jobId: job.jobId,
-        ...result,
+        status: 'PENDING',
+        message: 'Sync job started. Use GET /api/integrations/sync-jobs/:jobId to check status.',
+        integrationId: integration.integrationId,
       });
     } catch (error) {
       next(error);

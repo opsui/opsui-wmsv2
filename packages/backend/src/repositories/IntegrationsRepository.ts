@@ -692,6 +692,20 @@ export class IntegrationsRepository {
   }
 
   private mapRowToSyncLogEntry(row: any): SyncLogEntry {
+    let errorDetails = null;
+    if (row.details) {
+      // PostgreSQL JSON column may already return an object
+      if (typeof row.details === 'object') {
+        errorDetails = row.details;
+      } else if (typeof row.details === 'string') {
+        try {
+          errorDetails = JSON.parse(row.details);
+        } catch {
+          // If details is not valid JSON, store as plain string
+          errorDetails = { raw: row.details };
+        }
+      }
+    }
     return {
       logId: row.log_id,
       timestamp: row.timestamp,
@@ -700,7 +714,7 @@ export class IntegrationsRepository {
       entityType: row.entity_type,
       entityId: row.entity_id,
       externalId: row.external_id,
-      errorDetails: row.details ? JSON.parse(row.details) : null,
+      errorDetails,
     };
   }
 

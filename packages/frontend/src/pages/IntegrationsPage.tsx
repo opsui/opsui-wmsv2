@@ -251,6 +251,7 @@ export function IntegrationsPage() {
               setSelectedIntegration(undefined);
               setModalOpen(true);
             }}
+            onGoToSyncJobs={() => setActiveTab('sync-jobs')}
           />
         )}
 
@@ -289,6 +290,7 @@ interface IntegrationsTabProps {
   refetch: () => void;
   onSelectIntegration: (integration: Integration) => void;
   onCreateIntegration: () => void;
+  onGoToSyncJobs: () => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -305,6 +307,7 @@ function IntegrationsTab({
   refetch,
   onSelectIntegration,
   onCreateIntegration,
+  onGoToSyncJobs,
   currentPage,
   totalPages,
   onPageChange,
@@ -440,6 +443,7 @@ function IntegrationsTab({
                 ProviderIcon={ProviderIcon}
                 onSelect={onSelectIntegration}
                 onDelete={handleDeleteIntegration}
+                onGoToSyncJobs={onGoToSyncJobs}
               />
             </div>
           );
@@ -495,9 +499,16 @@ interface IntegrationCardProps {
   ProviderIcon: React.ComponentType<{ className?: string }>;
   onSelect: (integration: Integration) => void;
   onDelete: (integrationId: string) => void;
+  onGoToSyncJobs?: () => void;
 }
 
-function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: IntegrationCardProps) {
+function IntegrationCard({
+  integration,
+  ProviderIcon,
+  onSelect,
+  onDelete,
+  onGoToSyncJobs,
+}: IntegrationCardProps) {
   const testConnection = useTestConnection();
   const toggleIntegration = useToggleIntegration();
   const [testing, setTesting] = useState(false);
@@ -550,9 +561,15 @@ function IntegrationCard({ integration, ProviderIcon, onSelect, onDelete }: Inte
       );
       setSyncResult({
         success: true,
-        message: response.data.message || 'Sync completed',
-        count: response.data.imported,
+        message: response.data.message || 'Sync job started',
+        count: response.data.jobId ? 1 : undefined,
       });
+      // Navigate to sync-jobs tab after a short delay
+      if (onGoToSyncJobs) {
+        setTimeout(() => {
+          onGoToSyncJobs();
+        }, 1500);
+      }
     } catch (error) {
       setSyncResult({
         success: false,
