@@ -564,11 +564,9 @@ function IntegrationCard({
         message: response.data.message || 'Sync job started',
         count: response.data.jobId ? 1 : undefined,
       });
-      // Navigate to sync-jobs tab after a short delay
+      // Navigate to sync-jobs tab immediately
       if (onGoToSyncJobs) {
-        setTimeout(() => {
-          onGoToSyncJobs();
-        }, 1500);
+        onGoToSyncJobs();
       }
     } catch (error) {
       setSyncResult({
