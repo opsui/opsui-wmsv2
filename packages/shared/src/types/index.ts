@@ -546,6 +546,12 @@ export interface Order {
   pickerId?: string;
   packerId?: string;
   progress: number; // 0-100, calculated server-side
+  // NetSuite integration fields
+  netsuiteSoTranId?: string; // NetSuite Sales Order transaction ID (e.g., "SO-1234")
+  netsuiteSoInternalId?: string; // NetSuite internal ID for the sales order
+  netsuiteIfTranId?: string; // NetSuite Item Fulfillment transaction ID
+  netsuiteIfInternalId?: string; // NetSuite internal ID for the item fulfillment
+  netsuiteSource?: string; // Source system (e.g., "NETSUITE")
   // Pricing fields
   subtotal?: number; // Sum of all line item totals
   taxAmount?: number; // Total tax for the order

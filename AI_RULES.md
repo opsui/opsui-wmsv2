@@ -2,8 +2,49 @@
 
 **Purpose**: This file defines boundaries and guardrails for AI agents working on this codebase.
 
-**Version**: 2.0.1
-**Last Updated**: 2026-02-17
+**Version**: 3.0.0
+**Last Updated**: 2026-03-12
+
+---
+
+## ⚠️ AI CONTEXT SYSTEM - READ FIRST
+
+This repository has a **persistent AI context system** that MUST be read at the start of every session.
+
+### Mandatory Context Files (Read in Order)
+
+| File | Purpose | When to Read |
+|------|---------|--------------|
+| `/ai_context.ts` | Machine-readable constants | **EVERY SESSION START** |
+| `/CURRENT_CONTEXT.md` | Session state tracking | **EVERY SESSION START** |
+| `/DATABASE_BOUNDARIES.md` | Database separation rules | Before DB work |
+| `/AI_STARTUP_PROMPT.md` | Session workflow | At session start |
+| `/PROJECT_CONTEXT.md` | Infrastructure overview | When needed |
+| `/SYSTEM_ARCHITECTURE.md` | Architecture patterns | When needed |
+| `/INTEGRATIONS.md` | Integration boundaries | Before integration work |
+
+### Critical Context Rules
+
+```typescript
+// Reference constants from ai_context.ts
+import { AI_CONTEXT } from './ai_context';
+
+// Databases
+const WMS_DB = AI_CONTEXT.DATABASES.WMS;    // TEST - Warehouse operations
+const AAP_DB = AI_CONTEXT.DATABASES.AAP;    // CUSTOMER - App + Integrations
+
+// Rules
+AI_CONTEXT.RULES.forEach(rule => console.log(rule));
+```
+
+### Key Context Facts
+
+1. **Frontend** → Cloudflare Pages (NOT on backend server)
+2. **Backend** → Remote SSH server (103.208.85.233)
+3. **wms_db** → TEST database for warehouse operations
+4. **aap_db** → CUSTOMER database for application + integrations
+5. **Never mix databases** - Use API for cross-system communication
+6. **Integration services** → Use aap_db, access WMS via API only
 
 ---
 

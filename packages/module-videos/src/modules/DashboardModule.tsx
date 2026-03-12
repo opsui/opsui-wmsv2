@@ -375,7 +375,7 @@ const MainScene = () => {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <MetricCard value="12" label="Active Staff" color={colors.accent} delay={0} />
         <MetricCard value="47" label="Orders/Hour" color={colors.success} delay={2} />
-                                        <MetricCard value="156" label="Queue Depth" color={colors.warning} delay={4} />
+        <MetricCard value="156" label="Queue Depth" color={colors.warning} delay={4} />
         <MetricCard value="3" label="Exceptions" color={colors.error} delay={6} />
       </div>
 

@@ -103,6 +103,20 @@ router.get(
 );
 
 /**
+ * GET /api/orders/packing-queue
+ * Get orders ready for packing
+ */
+router.get(
+  '/packing-queue',
+  authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
+  cache({ ttl: 5000 }),
+  asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    const orders = await orderService.getPackingQueue();
+    res.json(orders);
+  })
+);
+
+/**
  * GET /api/orders/:orderId
  * Get order details
  */
@@ -905,20 +919,6 @@ router.post(
       }
       throw error;
     }
-  })
-);
-
-/**
- * GET /api/orders/packing-queue
- * Get orders ready for packing
- */
-router.get(
-  '/packing-queue',
-  authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
-  cache({ ttl: 5000 }),
-  asyncHandler(async (_req: AuthenticatedRequest, res) => {
-    const orders = await orderService.getPackingQueue();
-    res.json(orders);
   })
 );
 

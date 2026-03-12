@@ -1,11 +1,13 @@
 {
+  "$schema": "https://github.com/modelcontextprotocol/spec/blob/main/schema/schema.json",
   "mcpServers": {
     "erp-dev-accelerator": {
       "command": "node",
       "args": [
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server\\dist\\index.js"
       ],
-      "disabled": false
+      "disabled": false,
+      "description": "Custom ERP development tools specific to this WMS project"
     },
     "glm-server": {
       "command": "node",
@@ -13,14 +15,50 @@
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\dist\\index.js"
       ],
       "disabled": false,
+      "description": "GLM AI integration for enhanced AI capabilities (glm-4.7)",
       "env": {
-        "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW"
+        "GLM_API_KEY": "${GLM_API_KEY}",
+        "GLM_MODEL": "glm-4.7"
       }
     },
     "browsermcp": {
       "command": "npx",
       "args": ["@browsermcp/mcp@latest"],
-      "disabled": false
+      "disabled": false,
+      "description": "Browser automation and web scraping capabilities"
+    },
+    "Roblox_Studio": {
+      "command": "cmd.exe",
+      "args": ["/c", "%LOCALAPPDATA%\\Roblox\\mcp.bat"],
+      "disabled": true,
+      "description": "Roblox Studio integration - disabled for WMS project"
+    },
+    "_comment_github": "GitHub integration - auto-detects token from gh CLI",
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "disabled": false,
+      "description": "GitHub API integration for PRs, issues, and code search",
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "_comment_memory": "Recommended: Persistent memory across sessions",
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "disabled": false,
+      "description": "Session persistence for context preservation"
+    },
+    "_comment_postgres": "Use with caution - direct database access",
+    "postgres-wms": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "disabled": false,
+      "description": "WMS database access for development",
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${POSTGRES_CONNECTION_STRING}"
+      }
     }
   }
 }

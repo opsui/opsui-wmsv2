@@ -136,6 +136,7 @@ async function main() {
     logger.info('Recurring schedule processor initialized (runs every hour)');
 
     // 8. Start NetSuite auto-sync (every 30 seconds)
+    // This provides near real-time order updates from NetSuite
     netSuiteAutoSync.start(30 * 1000);
     logger.info('NetSuite auto-sync initialized (runs every 30 seconds)');
 

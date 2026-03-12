@@ -122,7 +122,7 @@ export class IntegrationsService {
     const job = await this.repository.createSyncJob({
       integrationId,
       syncType,
-      direction: integration.syncSettings.direction,
+      direction: integration.syncSettings?.direction || 'INBOUND',
       status: SyncStatus.PENDING,
       startedAt: new Date(),
       startedBy: triggeredBy,
@@ -131,9 +131,12 @@ export class IntegrationsService {
       recordsFailed: 0,
     });
 
-    // Start the sync job asynchronously
-    this.executeSyncJob(job.jobId, integration).catch(error => {
-      console.error(`Failed to execute sync job ${job.jobId}:`, error);
+    // Start the sync job asynchronously (fire and forget - don't await)
+    // This ensures the API returns immediately with the job ID
+    setImmediate(() => {
+      this.executeSyncJob(job.jobId, integration).catch(error => {
+        console.error(`Failed to execute sync job ${job.jobId}:`, error);
+      });
     });
 
     return job;
@@ -185,7 +188,9 @@ export class IntegrationsService {
       await this.repository.createSyncLogEntry(jobId, {
         level: 'ERROR',
         message: 'Sync job failed',
-        errorDetails: { error: error.message },
+        errorDetails: {
+          error: typeof error.message === 'string' ? error.message : JSON.stringify(error),
+        },
       });
 
       // Update integration last sync

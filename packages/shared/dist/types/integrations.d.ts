@@ -76,6 +76,7 @@ export interface Integration {
     syncSettings: SyncSettings;
     webhookSettings?: WebhookSettings;
     enabled: boolean;
+    organizationId?: string;
     createdBy: string;
     createdAt: Date;
     updatedBy?: string;

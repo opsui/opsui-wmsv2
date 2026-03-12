@@ -243,6 +243,11 @@ export interface Order {
     pickerId?: string;
     packerId?: string;
     progress: number;
+    netsuiteSoTranId?: string;
+    netsuiteSoInternalId?: string;
+    netsuiteIfTranId?: string;
+    netsuiteIfInternalId?: string;
+    netsuiteSource?: string;
     subtotal?: number;
     taxAmount?: number;
     shippingCost?: number;

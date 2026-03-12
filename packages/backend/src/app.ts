@@ -27,6 +27,8 @@ import {
   requestSizeLimit,
   sanitizeInput,
 } from './middleware/security';
+import webhooksRoutes from './routes/webhooks';
+import { initializeWebhookProcessor } from './routes/webhooks';
 import { testConnection, setupShutdownHandlers } from './db/client';
 import { setupSwagger } from './docs/swagger';
 import { metricsMiddleware, metricsEndpoint } from './observability/prometheus';
@@ -281,10 +283,15 @@ function setupSystemEndpoints(app: Application): void {
         api: '/api',
         health: '/health',
         ready: '/ready',
+        webhooks: '/webhooks/netsuite',
         docs: !config.isProduction() ? '/api/docs' : undefined,
       },
     });
   });
+
+  // Webhook endpoints (no auth required - verified via signature)
+  // These must be mounted before CSRF protection applies
+  app.use('/webhooks', webhooksRoutes);
 
   // Health endpoint with connection info
   app.get('/health', (_req, res) => {
@@ -383,6 +390,15 @@ export async function startServer(): Promise<void> {
     logger.info('Audit service initialized');
   } catch (error) {
     logger.error('Failed to initialize audit service', { error });
+    // Don't fail startup, just log the error
+  }
+
+  // Initialize Webhook Processor for NetSuite real-time updates
+  try {
+    initializeWebhookProcessor();
+    logger.info('NetSuite webhook processor initialized');
+  } catch (error) {
+    logger.error('Failed to initialize webhook processor', { error });
     // Don't fail startup, just log the error
   }
 

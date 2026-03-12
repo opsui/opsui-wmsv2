@@ -1,0 +1,4 @@
+could not change directory to "/root": Permission denied
+ERROR:  argument of WHERE must be type boolean, not type timestamp with time zone
+LINE 1: ...tarted_at, records_processed FROM sync_jobs WHERE started_at...
+                                                             ^

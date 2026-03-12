@@ -57,6 +57,8 @@ export interface NetSuiteSyncOptions {
   createMissingSkus?: boolean;
   /** Sync start timestamp (for stale cleanup) */
   syncStartTime?: Date;
+  /** Sync mode: full discovery or fast incremental reconciliation */
+  mode?: 'full' | 'incremental';
 }
 
 export interface NetSuiteOrderPreview {
@@ -106,10 +108,16 @@ interface ExistingOrder {
 }
 
 export class NetSuiteOrderSyncService {
+  private static readonly INCREMENTAL_FULFILLMENT_LOOKBACK_MS = 30 * 60 * 1000;
   private client: NetSuiteClient;
   private organizationId: string | null = null;
   private tenantPool: Pool | null = null;
   private itemCache: Map<string, NetSuiteItemDetails> = new Map();
+  private salesOrderCache: Map<string, Promise<NetSuiteSalesOrder>> = new Map();
+  private fulfillmentCache: Map<string, Promise<any>> = new Map();
+  private orderLookupBySoIdCache: Map<string, ExistingOrder | null> = new Map();
+  private orderLookupByIfIdCache: Map<string, ExistingOrder | null> = new Map();
+  private orderLookupByExternalIdCache: Map<string, ExistingOrder | null> = new Map();
 
   /**
    * Choose the most advanced fulfillment status (shipped > packed > picked).
@@ -128,6 +136,87 @@ export class NetSuiteOrderSyncService {
       if (!best) return current;
       return rank(current) >= rank(best) ? current : best;
     }, null);
+  }
+
+  private async mapWithConcurrency<T, R>(
+    items: T[],
+    concurrency: number,
+    mapper: (item: T, index: number) => Promise<R>
+  ): Promise<R[]> {
+    const results: R[] = new Array(items.length);
+    let nextIndex = 0;
+
+    const worker = async () => {
+      while (true) {
+        const currentIndex = nextIndex++;
+        if (currentIndex >= items.length) return;
+        results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+      }
+    };
+
+    const workerCount = Math.max(1, Math.min(concurrency, items.length));
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    return results;
+  }
+
+  private async getSalesOrderCached(soId: string): Promise<NetSuiteSalesOrder> {
+    let promise = this.salesOrderCache.get(soId);
+    if (!promise) {
+      promise = this.client.getSalesOrder(soId);
+      this.salesOrderCache.set(soId, promise);
+    }
+    return promise;
+  }
+
+  private async getItemFulfillmentCached(fulfillmentId: string): Promise<any> {
+    let promise = this.fulfillmentCache.get(fulfillmentId);
+    if (!promise) {
+      promise = this.client.getItemFulfillment(fulfillmentId);
+      this.fulfillmentCache.set(fulfillmentId, promise);
+    }
+    return promise;
+  }
+
+  private resetPerSyncCaches(): void {
+    this.salesOrderCache.clear();
+    this.fulfillmentCache.clear();
+    this.orderLookupBySoIdCache.clear();
+    this.orderLookupByIfIdCache.clear();
+    this.orderLookupByExternalIdCache.clear();
+  }
+
+  private invalidateOrderLookupCaches(): void {
+    this.orderLookupBySoIdCache.clear();
+    this.orderLookupByIfIdCache.clear();
+    this.orderLookupByExternalIdCache.clear();
+  }
+
+  private reduceFulfillmentsForUpsert(fulfillments: any[]): any[] {
+    const bestBySoId = new Map<string, any>();
+    const standalone: any[] = [];
+
+    for (const fulfillment of fulfillments) {
+      const soId = fulfillment.createdFrom?.id;
+      if (!soId) {
+        standalone.push(fulfillment);
+        continue;
+      }
+
+      const existing = bestBySoId.get(soId);
+      bestBySoId.set(
+        soId,
+        existing ? this.selectBestFulfillment([existing, fulfillment]) || fulfillment : fulfillment
+      );
+    }
+
+    return [...bestBySoId.values(), ...standalone];
+  }
+
+  private getOrderStatusFromFulfillmentShipStatus(shipStatus: string): 'PICKED' | 'PACKED' | 'SHIPPED' {
+    const normalizedStatus = (shipStatus || '').toLowerCase();
+    if (normalizedStatus.includes('shipped')) return 'SHIPPED';
+    if (normalizedStatus.includes('packed')) return 'PACKED';
+    return 'PICKED';
   }
 
   /**
@@ -177,6 +266,7 @@ export class NetSuiteOrderSyncService {
       `INSERT INTO orders (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`,
       values
     );
+    this.invalidateOrderLookupCaches();
 
     await this.query(
       `UPDATE order_items
@@ -185,6 +275,7 @@ export class NetSuiteOrderSyncService {
        WHERE order_id = $2`,
       [newOrderId, existingOrderId]
     );
+    this.invalidateOrderLookupCaches();
 
     try {
       await this.query(`UPDATE pick_tasks SET order_id = $1 WHERE order_id = $2`, [
@@ -368,8 +459,10 @@ export class NetSuiteOrderSyncService {
 
     // Clear item cache for fresh sync
     this.itemCache.clear();
+    this.resetPerSyncCaches();
 
     const syncStartTime = _options.syncStartTime || new Date();
+    const syncMode = _options.mode || 'full';
 
     const result: NetSuiteSyncResult = {
       totalProcessed: 0,
@@ -388,7 +481,9 @@ export class NetSuiteOrderSyncService {
     };
 
     try {
-      logger.info('Starting NetSuite three-phase order sync');
+      logger.info('Starting NetSuite three-phase order sync', {
+        mode: syncMode,
+      });
 
       // ====================================================================
       // PHASE 1: Fetch pending fulfillment Sales Orders from NetSuite
@@ -396,24 +491,57 @@ export class NetSuiteOrderSyncService {
       // ====================================================================
 
       let allSalesOrders: NetSuiteSalesOrder[] = [];
+      let pendingSalesOrderSummaries: NetSuiteSalesOrder[] = [];
       let allFulfillments: any[] = [];
-      try {
-        const soResponse = await this.client.getSalesOrders({
-          limit: 200,
-          status: '_pendingFulfillment',
-        });
-        allSalesOrders = (soResponse.items || []) as NetSuiteSalesOrder[];
-        logger.info('Phase 1: Fetched pending sales orders from NetSuite', {
-          count: allSalesOrders.length,
-        });
-      } catch (error: any) {
-        logger.warn('Phase 1: Failed to fetch sales orders', { error: error.message });
+      let phase1FetchSucceeded = false;
+      if (syncMode === 'full') {
+        try {
+          const soResponse = await this.client.getSalesOrders({
+            status: '_pendingFulfillment',
+          });
+          pendingSalesOrderSummaries = (soResponse.items || []) as NetSuiteSalesOrder[];
+          const readySalesOrderSummaries = pendingSalesOrderSummaries.filter(so => so.readyToShip);
+          const salesOrderDetails = await this.mapWithConcurrency(
+            readySalesOrderSummaries,
+            2,
+            async salesOrder => {
+              try {
+                return await this.getSalesOrderCached(salesOrder.id);
+              } catch (error: any) {
+                logger.warn('Failed to fetch full sales order details', {
+                  soInternalId: salesOrder.id,
+                  soTranId: salesOrder.tranId,
+                  error: error.message,
+                });
+                return null;
+              }
+            }
+          );
+          allSalesOrders = salesOrderDetails.filter(Boolean) as NetSuiteSalesOrder[];
+          phase1FetchSucceeded = true;
+          logger.info('Phase 1: Fetched pending sales orders from NetSuite', {
+            count: allSalesOrders.length,
+            summariesFetched: pendingSalesOrderSummaries.length,
+            readySummariesFetched: readySalesOrderSummaries.length,
+            detailFetchFailed: readySalesOrderSummaries.length - allSalesOrders.length,
+            mode: syncMode,
+          });
+        } catch (error: any) {
+          logger.warn('Phase 1: Failed to fetch sales orders', {
+            error: error.message,
+            mode: syncMode,
+          });
+        }
+      } else {
+        logger.info('Phase 1: Skipping sales-order discovery in incremental mode');
       }
 
-      // Build set of SO internal IDs currently pending fulfillment in NetSuite
+      // Track all pending-fulfillment orders plus the subset that should remain in the WMS queue.
       const currentPendingSoIds = new Set<string>();
-      for (const so of allSalesOrders) {
-        if (so.readyToShip) currentPendingSoIds.add(so.id);
+      const currentReadyToShipSoIds = new Set<string>();
+      for (const so of pendingSalesOrderSummaries) {
+        currentPendingSoIds.add(so.id);
+        if (so.readyToShip) currentReadyToShipSoIds.add(so.id);
       }
 
       result.totalProcessed = allSalesOrders.length;
@@ -425,8 +553,19 @@ export class NetSuiteOrderSyncService {
 
       const fulfillmentMap = new Map<string, any[]>();
       try {
-        // Fetch all recent fulfillments in a single page (NetSuite allows up to 1000/page)
-        const ifResponse = await this.client.getItemFulfillments({ limit: 1000 });
+        const fulfillmentModifiedAfter =
+          syncMode === 'incremental'
+            ? new Date(
+                syncStartTime.getTime() -
+                  NetSuiteOrderSyncService.INCREMENTAL_FULFILLMENT_LOOKBACK_MS
+              )
+            : undefined;
+
+        // Incremental syncs use a tight overlap window; full syncs retain the broader sweep.
+        const ifResponse = await this.client.getItemFulfillments({
+          limit: 1000,
+          modifiedAfter: fulfillmentModifiedAfter,
+        });
         allFulfillments = ifResponse.items || [];
         const fulfillments = allFulfillments;
 
@@ -445,6 +584,7 @@ export class NetSuiteOrderSyncService {
           count: fulfillments.length,
           uniqueSOs: fulfillmentMap.size,
           sampleSoIds,
+          modifiedAfter: fulfillmentModifiedAfter?.toISOString() || null,
         });
       } catch (error: any) {
         logger.warn('Phase 1.5: Failed to fetch Item Fulfillments', { error: error.message });
@@ -496,9 +636,15 @@ export class NetSuiteOrderSyncService {
       // ====================================================================
 
       if (allFulfillments.length > 0) {
-        for (const fulfillment of allFulfillments) {
+        const fulfillmentsForUpsert = this.reduceFulfillmentsForUpsert(allFulfillments);
+        logger.info('Phase 2.5: Deduped fulfillments for upsert', {
+          originalCount: allFulfillments.length,
+          dedupedCount: fulfillmentsForUpsert.length,
+        });
+
+        for (const fulfillment of fulfillmentsForUpsert) {
           const soId = fulfillment.createdFrom?.id;
-          if (soId && currentPendingSoIds.has(soId)) {
+          if (soId && currentReadyToShipSoIds.has(soId)) {
             continue; // already handled via SO upsert
           }
           try {
@@ -529,6 +675,7 @@ export class NetSuiteOrderSyncService {
             logger.error('Failed to sync fulfillment', {
               ifId: fulfillment.id,
               error: error.message,
+              stack: error.stack,
             });
           }
         }
@@ -595,7 +742,7 @@ export class NetSuiteOrderSyncService {
 
         // If Phase 1 succeeded, we have a reliable pending set
         // If Phase 1 failed (timeout), currentPendingSoIds will be empty
-        const phase1Succeeded = currentPendingSoIds.size > 0;
+        const phase1Succeeded = phase1FetchSucceeded;
 
         for (const row of activeWmsOrders.rows) {
           const soId = row.netsuite_so_internal_id;
@@ -605,15 +752,16 @@ export class NetSuiteOrderSyncService {
           if (orderStatus === 'PICKING') {
             const fulfillments = fulfillmentMap.get(soId) || [];
             if (fulfillments.length > 0) {
-            const latestFulfillment =
-              this.selectBestFulfillment(fulfillments) || fulfillments[fulfillments.length - 1];
+              const latestFulfillment =
+                this.selectBestFulfillment(fulfillments) || fulfillments[fulfillments.length - 1];
               const shipStatus = (latestFulfillment.shipStatus || '').toLowerCase();
+              const targetStatus = this.getOrderStatusFromFulfillmentShipStatus(shipStatus);
 
               // Fetch full fulfillment details to get line items for verified_quantity sync
               let fulfillmentWithItems = latestFulfillment;
               if (!latestFulfillment.item && latestFulfillment.id) {
                 try {
-                  fulfillmentWithItems = await this.client.getItemFulfillment(latestFulfillment.id);
+                  fulfillmentWithItems = await this.getItemFulfillmentCached(latestFulfillment.id);
                 } catch (error: any) {
                   logger.warn('Failed to fetch fulfillment details for PICKING order item sync', {
                     ifId: latestFulfillment.id,
@@ -622,35 +770,18 @@ export class NetSuiteOrderSyncService {
                 }
               }
 
-              if (shipStatus.includes('shipped')) {
-                // Fulfillment is shipped - mark as SHIPPED
-                await this.updateOrderStatus(row.order_id, 'SHIPPED', {
-                  ifInternalId: latestFulfillment.id,
-                  ifTranId: latestFulfillment.tranId,
-                  items: fulfillmentWithItems.item?.items || [],
-                });
-                result.updated++;
-                result.details.updated.push(row.netsuite_so_tran_id || soId);
-                logger.info('Updated PICKING order to SHIPPED (fulfillment shipped on NetSuite)', {
-                  orderId: row.order_id,
-                  soTranId: row.netsuite_so_tran_id,
-                  shipStatus,
-                });
-              } else {
-                // Fulfillment exists (picked/packed) - move to packing queue
-                await this.updateOrderStatus(row.order_id, 'PICKED', {
-                  ifInternalId: latestFulfillment.id,
-                  ifTranId: latestFulfillment.tranId,
-                  items: fulfillmentWithItems.item?.items || [],
-                });
-                result.updated++;
-                result.details.updated.push(row.netsuite_so_tran_id || soId);
-                logger.info('Updated PICKING order to PICKED (fulfillment created on NetSuite)', {
-                  orderId: row.order_id,
-                  soTranId: row.netsuite_so_tran_id,
-                  shipStatus,
-                });
-              }
+              await this.updateOrderStatus(row.order_id, targetStatus, {
+                ifInternalId: latestFulfillment.id,
+                ifTranId: latestFulfillment.tranId,
+                items: fulfillmentWithItems.item?.items || [],
+              });
+              result.updated++;
+              result.details.updated.push(row.netsuite_so_tran_id || soId);
+              logger.info(`Updated PICKING order to ${targetStatus} (fulfillment found on NetSuite)`, {
+                orderId: row.order_id,
+                soTranId: row.netsuite_so_tran_id,
+                shipStatus,
+              });
               await this.markOrderSynced(row.order_id, syncStartTime);
               continue;
             }
@@ -669,14 +800,17 @@ export class NetSuiteOrderSyncService {
             hasMatch: pendingFulfillments.length > 0,
           });
           if (pendingFulfillments.length > 0) {
-            const latestFulfillment = pendingFulfillments[pendingFulfillments.length - 1];
+            const latestFulfillment =
+              this.selectBestFulfillment(pendingFulfillments) ||
+              pendingFulfillments[pendingFulfillments.length - 1];
             const shipStatus = (latestFulfillment.shipStatus || '').toLowerCase();
+            const targetStatus = this.getOrderStatusFromFulfillmentShipStatus(shipStatus);
 
             // Fetch full fulfillment details to get line items for verified_quantity sync
             let fulfillmentWithItems = latestFulfillment;
             if (!latestFulfillment.item && latestFulfillment.id) {
               try {
-                fulfillmentWithItems = await this.client.getItemFulfillment(latestFulfillment.id);
+                fulfillmentWithItems = await this.getItemFulfillmentCached(latestFulfillment.id);
               } catch (error: any) {
                 logger.warn('Failed to fetch fulfillment details for PENDING order item sync', {
                   ifId: latestFulfillment.id,
@@ -685,42 +819,45 @@ export class NetSuiteOrderSyncService {
               }
             }
 
-            if (shipStatus.includes('shipped')) {
-              // Fulfillment is shipped - mark as SHIPPED
-              await this.updateOrderStatus(row.order_id, 'SHIPPED', {
-                ifInternalId: latestFulfillment.id,
-                ifTranId: latestFulfillment.tranId,
-                items: fulfillmentWithItems.item?.items || [],
-              });
-              result.updated++;
-              result.details.updated.push(row.netsuite_so_tran_id || soId);
-              logger.info('Updated PENDING order to SHIPPED (fulfillment shipped on NetSuite)', {
-                orderId: row.order_id,
-                soTranId: row.netsuite_so_tran_id,
-                shipStatus,
-              });
-            } else {
-              // Fulfillment exists (picked/packed) - move to packing queue
-              await this.updateOrderStatus(row.order_id, 'PICKED', {
-                ifInternalId: latestFulfillment.id,
-                ifTranId: latestFulfillment.tranId,
-                items: fulfillmentWithItems.item?.items || [],
-              });
-              result.updated++;
-              result.details.updated.push(row.netsuite_so_tran_id || soId);
-              logger.info('Updated PENDING order to PICKED (fulfillment created on NetSuite)', {
-                orderId: row.order_id,
-                soTranId: row.netsuite_so_tran_id,
-                shipStatus,
-              });
-            }
+            await this.updateOrderStatus(row.order_id, targetStatus, {
+              ifInternalId: latestFulfillment.id,
+              ifTranId: latestFulfillment.tranId,
+              items: fulfillmentWithItems.item?.items || [],
+            });
+            result.updated++;
+            result.details.updated.push(row.netsuite_so_tran_id || soId);
+            logger.info(`Updated PENDING order to ${targetStatus} (fulfillment found on NetSuite)`, {
+              orderId: row.order_id,
+              soTranId: row.netsuite_so_tran_id,
+              shipStatus,
+            });
             await this.markOrderSynced(row.order_id, syncStartTime);
             continue;
           }
 
           // No fulfillment found - check if SO is still pending in NetSuite
-          if (phase1Succeeded && currentPendingSoIds.has(soId)) {
+          if (phase1Succeeded && currentReadyToShipSoIds.has(soId)) {
             await this.markOrderSynced(row.order_id, syncStartTime);
+            continue;
+          }
+
+          if (phase1Succeeded && currentPendingSoIds.has(soId)) {
+            await this.query(
+              `UPDATE orders
+               SET status = 'CANCELLED'::order_status,
+                   cancelled_at = NOW(),
+                   updated_at = NOW()
+               WHERE order_id = $1 AND status = 'PENDING'`,
+              [row.order_id]
+            );
+            await this.markOrderSynced(row.order_id, syncStartTime);
+            result.cleaned++;
+            result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+            logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
+              orderId: row.order_id,
+              soTranId: row.netsuite_so_tran_id,
+              soId,
+            });
             continue;
           }
 
@@ -728,10 +865,51 @@ export class NetSuiteOrderSyncService {
           // 1. Phase 1 failed (timeout) — need to check individually
           // 2. SO was fulfilled/cancelled on NetSuite
           try {
-            const soDetail = await this.client.getSalesOrder(soId);
+            const soDetail = await this.getSalesOrderCached(soId);
             const soStatus = (soDetail.status?.refName || '').toLowerCase();
+            const soLines = soDetail.item?.items || [];
+            const hasFulfilledQuantity = soLines.some(
+              line => (line.quantityFulfilled || 0) > 0
+            );
 
             if (soStatus.includes('pending fulfillment')) {
+              if (soDetail.readyToShip === false) {
+                await this.query(
+                  `UPDATE orders
+                   SET status = 'CANCELLED'::order_status,
+                       cancelled_at = NOW(),
+                       updated_at = NOW()
+                   WHERE order_id = $1 AND status = 'PENDING'`,
+                  [row.order_id]
+                );
+                await this.markOrderSynced(row.order_id, syncStartTime);
+                result.cleaned++;
+                result.details.cleaned.push(row.netsuite_so_tran_id || soId);
+                logger.info('Cancelled order (SO pending fulfillment but readyToShip is false)', {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  soId,
+                });
+                continue;
+              }
+
+              if (hasFulfilledQuantity) {
+                await this.updateOrderStatus(row.order_id, 'PICKED');
+                await this.markOrderSynced(row.order_id, syncStartTime);
+                result.updated++;
+                result.details.updated.push(row.netsuite_so_tran_id || soId);
+                logger.warn(
+                  'Updated order to PICKED using sales-order fulfilled quantities fallback',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    soId,
+                    soStatus,
+                  }
+                );
+                continue;
+              }
+
               // Still pending — mark synced and keep in queue
               await this.markOrderSynced(row.order_id, syncStartTime);
               logger.debug('Order still pending fulfillment in NetSuite', {
@@ -900,7 +1078,10 @@ export class NetSuiteOrderSyncService {
             stats.withoutFulfillment++;
 
             // Early warning for orders approaching stale threshold
-            if (hoursSinceUpdate > STALE_ORDER_WARNING_HOURS && hoursSinceUpdate <= STALE_ORDER_THRESHOLD_HOURS) {
+            if (
+              hoursSinceUpdate > STALE_ORDER_WARNING_HOURS &&
+              hoursSinceUpdate <= STALE_ORDER_THRESHOLD_HOURS
+            ) {
               stats.warnings++;
               staleOrderActions.warnings.push(row.netsuite_so_tran_id || soId);
               logger.warn('Order approaching stale threshold (no NetSuite fulfillment)', {
@@ -918,7 +1099,7 @@ export class NetSuiteOrderSyncService {
               // Try to fetch SO status to make smart decision
               let soStatus = 'unknown';
               try {
-                const soDetail = await this.client.getSalesOrder(soId);
+                const soDetail = await this.getSalesOrderCached(soId);
                 soStatus = (soDetail.status?.refName || '').toLowerCase();
               } catch (error: any) {
                 logger.debug('Could not fetch SO status for stale order', {
@@ -929,7 +1110,10 @@ export class NetSuiteOrderSyncService {
               }
 
               const isCancelled = soStatus.includes('cancelled');
-              const isClosed = soStatus.includes('closed') || soStatus.includes('fulfilled') || soStatus.includes('billed');
+              const isClosed =
+                soStatus.includes('closed') ||
+                soStatus.includes('fulfilled') ||
+                soStatus.includes('billed');
 
               if (isCancelled) {
                 // SO was cancelled - move to CANCELLED
@@ -948,19 +1132,24 @@ export class NetSuiteOrderSyncService {
                   [row.order_id]
                 );
                 result.cleaned++;
-                result.details.cleaned.push(`${row.netsuite_so_tran_id || soId} (stale->CANCELLED)`);
+                result.details.cleaned.push(
+                  `${row.netsuite_so_tran_id || soId} (stale->CANCELLED)`
+                );
               } else if (row.status === 'PICKED') {
                 // PICKED without fulfillment and not cancelled - move back to PENDING for re-sync
                 stats.stale.pending++;
                 staleOrderActions.movedToPending.push(row.netsuite_so_tran_id || soId);
-                logger.warn('PICKED order has no fulfillment past threshold - moving to PENDING for re-sync', {
-                  orderId: row.order_id,
-                  soTranId: row.netsuite_so_tran_id,
-                  soStatus,
-                  hoursSinceUpdate: Math.round(hoursSinceUpdate),
-                  hoursSinceCreated: Math.round(hoursSinceCreated),
-                  threshold: STALE_ORDER_THRESHOLD_HOURS,
-                });
+                logger.warn(
+                  'PICKED order has no fulfillment past threshold - moving to PENDING for re-sync',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    soStatus,
+                    hoursSinceUpdate: Math.round(hoursSinceUpdate),
+                    hoursSinceCreated: Math.round(hoursSinceCreated),
+                    threshold: STALE_ORDER_THRESHOLD_HOURS,
+                  }
+                );
                 await this.updateOrderStatus(row.order_id, 'PENDING');
                 result.updated++;
                 result.details.updated.push(`${row.netsuite_so_tran_id || soId} (stale->PENDING)`);
@@ -970,13 +1159,16 @@ export class NetSuiteOrderSyncService {
                   // SO is closed/fulfilled but no IF - might be data sync issue
                   stats.stale.kept++;
                   staleOrderActions.keptInPlace.push(row.netsuite_so_tran_id || soId);
-                  logger.warn('PACKING order: SO is closed/fulfilled but no fulfillment found - keeping status', {
-                    orderId: row.order_id,
-                    soTranId: row.netsuite_so_tran_id,
-                    soStatus,
-                    hoursSinceUpdate: Math.round(hoursSinceUpdate),
-                    note: 'May need manual investigation',
-                  });
+                  logger.warn(
+                    'PACKING order: SO is closed/fulfilled but no fulfillment found - keeping status',
+                    {
+                      orderId: row.order_id,
+                      soTranId: row.netsuite_so_tran_id,
+                      soStatus,
+                      hoursSinceUpdate: Math.round(hoursSinceUpdate),
+                      note: 'May need manual investigation',
+                    }
+                  );
                 } else {
                   // SO is still pending - move back to PENDING
                   stats.stale.pending++;
@@ -989,7 +1181,9 @@ export class NetSuiteOrderSyncService {
                   });
                   await this.updateOrderStatus(row.order_id, 'PENDING');
                   result.updated++;
-                  result.details.updated.push(`${row.netsuite_so_tran_id || soId} (PACKING->PENDING)`);
+                  result.details.updated.push(
+                    `${row.netsuite_so_tran_id || soId} (PACKING->PENDING)`
+                  );
                 }
               }
             }
@@ -1007,7 +1201,7 @@ export class NetSuiteOrderSyncService {
           let fulfillmentWithItems = latestFulfillment;
           if (!latestFulfillment.item && latestFulfillment.id) {
             try {
-              fulfillmentWithItems = await this.client.getItemFulfillment(latestFulfillment.id);
+              fulfillmentWithItems = await this.getItemFulfillmentCached(latestFulfillment.id);
             } catch (error: any) {
               logger.warn('Failed to fetch fulfillment details for item sync', {
                 ifId: latestFulfillment.id,
@@ -1130,6 +1324,8 @@ export class NetSuiteOrderSyncService {
   }> {
     const tranId = salesOrder.tranId;
     const soInternalId = salesOrder.id;
+    const soTranId = salesOrder.tranId;
+    const parentSalesOrder = salesOrder;
 
     // Check line items
     const lineItems = salesOrder.item?.items || [];
@@ -1148,6 +1344,7 @@ export class NetSuiteOrderSyncService {
     const hasFulfillment = fulfillments.length > 0;
     const latestFulfillment =
       this.selectBestFulfillment(fulfillments) || fulfillments[fulfillments.length - 1];
+    const ifInternalId = latestFulfillment?.id || null;
     const shipStatus = (latestFulfillment?.shipStatus || '').toLowerCase();
     const isShipped = hasFulfillment && shipStatus.includes('shipped');
     const isPacked = hasFulfillment && shipStatus.includes('packed');
@@ -1181,8 +1378,7 @@ export class NetSuiteOrderSyncService {
       }
 
       if (parentSalesOrder) {
-        const derivedSubtotal =
-          parentSalesOrder.subTotal != null ? parentSalesOrder.subTotal : 0;
+        const derivedSubtotal = parentSalesOrder.subTotal != null ? parentSalesOrder.subTotal : 0;
         const derivedTotal =
           parentSalesOrder.total != null ? parentSalesOrder.total : derivedSubtotal;
         try {
@@ -1212,6 +1408,34 @@ export class NetSuiteOrderSyncService {
           orderId: existing.orderId,
           tranId,
         });
+      } else if (
+        existing.status === 'SHIPPED' &&
+        salesOrder.readyToShip &&
+        !hasFulfillment &&
+        (salesOrder.status?.refName || '').toLowerCase().includes('pending fulfillment')
+      ) {
+        await this.query(
+          `UPDATE orders
+           SET status = 'PENDING'::order_status,
+               shipped_at = NULL,
+               packed_at = NULL,
+               picked_at = NULL,
+               netsuite_if_internal_id = NULL,
+               netsuite_if_tran_id = NULL,
+               progress = 0,
+               updated_at = NOW()
+           WHERE order_id = $1`,
+          [existing.orderId]
+        );
+        updated = true;
+        logger.warn(
+          'Reverted SHIPPED order to PENDING (SO still pending fulfillment with no fulfillment)',
+          {
+            orderId: existing.orderId,
+            tranId,
+            soInternalId,
+          }
+        );
       } else if (hasFulfillment && existing.status === 'PENDING') {
         // Fulfillment exists — move to PACKED/PICKED based on ship status
         const newStatus = isPacked ? 'PACKED' : 'PICKED';
@@ -1298,16 +1522,21 @@ export class NetSuiteOrderSyncService {
     const tranId = fulfillment.tranId || fulfillment.id;
     const ifInternalId = fulfillment.id;
     const soInternalId = fulfillment.createdFrom?.id;
+    const createdFromTranId = fulfillment.createdFrom?.refName
+      ? fulfillment.createdFrom.refName.replace(/^.*#/, '').trim()
+      : null;
     const shipStatus = (fulfillment.shipStatus || '').toLowerCase();
     const isShipped = shipStatus.includes('shipped');
     const isPacked = shipStatus.includes('packed');
 
-    // Fetch the parent Sales Order to get the SO tran ID
     let soTranId: string | null = null;
     let parentSalesOrder: NetSuiteSalesOrder | null = null;
-    if (soInternalId) {
+    soTranId = createdFromTranId;
+
+    const loadParentSalesOrder = async (): Promise<NetSuiteSalesOrder | null> => {
+      if (parentSalesOrder || !soInternalId) return parentSalesOrder;
       try {
-        const salesOrder = await this.client.getSalesOrder(soInternalId);
+        const salesOrder = await this.getSalesOrderCached(soInternalId);
         parentSalesOrder = salesOrder;
         soTranId = salesOrder.tranId;
         logger.debug('Fetched parent Sales Order for IF', {
@@ -1322,7 +1551,8 @@ export class NetSuiteOrderSyncService {
           error: error.message,
         });
       }
-    }
+      return parentSalesOrder;
+    };
 
     // Try to find existing WMS order by the parent SO
     let existing: ExistingOrder | null = null;
@@ -1336,18 +1566,21 @@ export class NetSuiteOrderSyncService {
       existing = await this.findOrderByExternalIdFull(tranId);
     }
     // Also try SO tranId from createdFrom.refName
-    if (!existing && fulfillment.createdFrom?.refName) {
-      const soTranId = fulfillment.createdFrom.refName.replace(/^.*#/, '').trim();
-      if (soTranId) {
-        existing = await this.findOrderByExternalIdFull(soTranId);
+    if (!existing && createdFromTranId) {
+      existing = await this.findOrderByExternalIdFull(createdFromTranId);
+      if (existing) {
+        soTranId = createdFromTranId;
       }
     }
 
     if (existing) {
-      const derivedSubtotal =
-        salesOrder.subTotal != null ? salesOrder.subTotal : subtotal;
+      if (!soTranId && soInternalId) {
+        const salesOrder = await loadParentSalesOrder();
+        soTranId = salesOrder?.tranId || soTranId;
+      }
+      const derivedSubtotal = parentSalesOrder?.subTotal != null ? parentSalesOrder.subTotal : 0;
       const derivedTotal =
-        salesOrder.total != null ? salesOrder.total : derivedSubtotal;
+        parentSalesOrder?.total != null ? parentSalesOrder.total : derivedSubtotal;
 
       // Backfill totals if missing/zero
       try {
@@ -1418,7 +1651,7 @@ export class NetSuiteOrderSyncService {
     if (!Array.isArray(lineItems) || lineItems.length === 0) {
       if (fulfillment.id) {
         try {
-          fulfillmentWithItems = await this.client.getItemFulfillment(fulfillment.id);
+          fulfillmentWithItems = await this.getItemFulfillmentCached(fulfillment.id);
           lineItems = fulfillmentWithItems.item?.items || fulfillmentWithItems.item || [];
         } catch (error: any) {
           logger.warn('Failed to fetch fulfillment details for line items', {
@@ -1431,7 +1664,8 @@ export class NetSuiteOrderSyncService {
 
     if (!Array.isArray(lineItems) || lineItems.length === 0) {
       // Fall back to parent Sales Order line items if fulfillment has none
-      if (parentSalesOrder && (parentSalesOrder.item?.items || []).length > 0) {
+      const salesOrder = parentSalesOrder || (await loadParentSalesOrder());
+      if (salesOrder && (salesOrder.item?.items || []).length > 0) {
         const shipStatus = (fulfillmentWithItems.shipStatus || '').toLowerCase();
         const targetStatus = shipStatus.includes('shipped')
           ? 'SHIPPED'
@@ -1440,8 +1674,8 @@ export class NetSuiteOrderSyncService {
             : 'PICKED';
 
         const order = await this.createWMSOrder(
-          parentSalesOrder,
-          soInternalId || parentSalesOrder.id,
+          salesOrder,
+          soInternalId || salesOrder.id,
           targetStatus,
           syncStartTime,
           fulfillmentWithItems
@@ -1528,7 +1762,7 @@ export class NetSuiteOrderSyncService {
           } else if (order.netsuite_so_internal_id) {
             // For active warehouse orders, check NetSuite for fulfillment status
             try {
-              const soDetail = await this.client.getSalesOrder(order.netsuite_so_internal_id);
+              const soDetail = await this.getSalesOrderCached(order.netsuite_so_internal_id);
               const soStatus = (soDetail.status?.refName || '').toLowerCase();
 
               if (soStatus.includes('cancelled')) {
@@ -1631,6 +1865,10 @@ export class NetSuiteOrderSyncService {
    * Find WMS order by NetSuite Sales Order internal ID
    */
   private async findOrderByNetSuiteSoId(soInternalId: string): Promise<ExistingOrder | null> {
+    if (this.orderLookupBySoIdCache.has(soInternalId)) {
+      return this.orderLookupBySoIdCache.get(soInternalId) || null;
+    }
+
     try {
       const result = await this.query(
         `SELECT order_id, status, netsuite_if_internal_id
@@ -1639,15 +1877,18 @@ export class NetSuiteOrderSyncService {
       );
       if (result.rows.length > 0) {
         const row = result.rows[0];
-        return {
+        const existing = {
           orderId: row.order_id,
           status: row.status,
           netsuiteIfInternalId: row.netsuite_if_internal_id,
         };
+        this.orderLookupBySoIdCache.set(soInternalId, existing);
+        return existing;
       }
     } catch {
       /* column may not exist yet */
     }
+    this.orderLookupBySoIdCache.set(soInternalId, null);
     return null;
   }
 
@@ -1655,6 +1896,10 @@ export class NetSuiteOrderSyncService {
    * Find WMS order by NetSuite Item Fulfillment internal ID
    */
   private async findOrderByNetSuiteIfId(ifInternalId: string): Promise<ExistingOrder | null> {
+    if (this.orderLookupByIfIdCache.has(ifInternalId)) {
+      return this.orderLookupByIfIdCache.get(ifInternalId) || null;
+    }
+
     try {
       const result = await this.query(
         `SELECT order_id, status, netsuite_if_internal_id
@@ -1663,15 +1908,18 @@ export class NetSuiteOrderSyncService {
       );
       if (result.rows.length > 0) {
         const row = result.rows[0];
-        return {
+        const existing = {
           orderId: row.order_id,
           status: row.status,
           netsuiteIfInternalId: row.netsuite_if_internal_id,
         };
+        this.orderLookupByIfIdCache.set(ifInternalId, existing);
+        return existing;
       }
     } catch {
       /* column may not exist yet */
     }
+    this.orderLookupByIfIdCache.set(ifInternalId, null);
     return null;
   }
 
@@ -1680,6 +1928,10 @@ export class NetSuiteOrderSyncService {
    * Returns full order info including status.
    */
   private async findOrderByExternalIdFull(externalOrderId: string): Promise<ExistingOrder | null> {
+    if (this.orderLookupByExternalIdCache.has(externalOrderId)) {
+      return this.orderLookupByExternalIdCache.get(externalOrderId) || null;
+    }
+
     // Check customer_email field
     const result = await this.query(
       `SELECT order_id, status, netsuite_if_internal_id
@@ -1688,11 +1940,13 @@ export class NetSuiteOrderSyncService {
     );
     if (result.rows.length > 0) {
       const row = result.rows[0];
-      return {
+      const existing = {
         orderId: row.order_id,
         status: row.status,
         netsuiteIfInternalId: row.netsuite_if_internal_id || null,
       };
+      this.orderLookupByExternalIdCache.set(externalOrderId, existing);
+      return existing;
     }
 
     // Check customer_reference
@@ -1704,11 +1958,13 @@ export class NetSuiteOrderSyncService {
       );
       if (refResult.rows.length > 0) {
         const row = refResult.rows[0];
-        return {
+        const existing = {
           orderId: row.order_id,
           status: row.status,
           netsuiteIfInternalId: row.netsuite_if_internal_id || null,
         };
+        this.orderLookupByExternalIdCache.set(externalOrderId, existing);
+        return existing;
       }
     } catch {
       /* column may not exist */
@@ -1725,16 +1981,19 @@ export class NetSuiteOrderSyncService {
       );
       if (extResult.rows.length > 0) {
         const row = extResult.rows[0];
-        return {
+        const existing = {
           orderId: row.order_id,
           status: row.status,
           netsuiteIfInternalId: row.netsuite_if_internal_id || null,
         };
+        this.orderLookupByExternalIdCache.set(externalOrderId, existing);
+        return existing;
       }
     } catch {
       /* table may not exist */
     }
 
+    this.orderLookupByExternalIdCache.set(externalOrderId, null);
     return null;
   }
 
@@ -1773,6 +2032,7 @@ export class NetSuiteOrderSyncService {
     }
 
     await this.query(`UPDATE orders SET ${updates.join(', ')} WHERE order_id = $1`, [orderId]);
+    this.invalidateOrderLookupCaches();
 
     // Sync verified_quantity from fulfillment items when moving to PICKED/PACKED/SHIPPED
     if (
@@ -1868,7 +2128,11 @@ export class NetSuiteOrderSyncService {
       subtotal = salesOrder.subTotal;
     }
     const totalAmount =
-      salesOrder.total != null ? salesOrder.total : salesOrder.subTotal != null ? salesOrder.subTotal : subtotal;
+      salesOrder.total != null
+        ? salesOrder.total
+        : salesOrder.subTotal != null
+          ? salesOrder.subTotal
+          : subtotal;
 
     const shippingAddress = salesOrder.shippingAddress
       ? {
@@ -1921,6 +2185,7 @@ export class NetSuiteOrderSyncService {
         targetStatus === 'SHIPPED' ? new Date() : null, // packed_at
       ]
     );
+    this.invalidateOrderLookupCaches();
 
     // Insert line items
     for (let i = 0; i < lineItems.length; i++) {
@@ -1942,6 +2207,9 @@ export class NetSuiteOrderSyncService {
       );
       const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
 
+      // Use quantityCommitted if available (what's actually reserved), fallback to quantity
+      const itemQuantity = line.quantityCommitted || line.quantity || 1;
+
       await this.query(
         `INSERT INTO order_items (
           order_item_id, order_id, sku, name, quantity, bin_location, status,
@@ -1952,16 +2220,16 @@ export class NetSuiteOrderSyncService {
           orderId,
           skuCode,
           itemName,
-          line.quantity || 1,
+          itemQuantity,
           binLocation,
           line.rate || 0,
-          line.amount || (line.rate || 0) * (line.quantity || 1),
+          line.amount || (line.rate || 0) * itemQuantity,
         ]
       );
     }
 
     // Store external reference (legacy compat)
-    await this.storeExternalOrderId(orderId, salesOrder.tranId, salesOrder.id);
+    await this.storeExternalOrderId(orderId, fulfillment.tranId || fulfillment.id, fulfillment.id);
 
     return { orderId };
   }
@@ -2035,6 +2303,7 @@ export class NetSuiteOrderSyncService {
         wmsStatus === 'PACKED' || wmsStatus === 'SHIPPED' ? new Date() : null,
       ]
     );
+    this.invalidateOrderLookupCaches();
 
     for (let i = 0; i < lineItems.length; i++) {
       const line = lineItems[i];
@@ -2303,7 +2572,7 @@ export class NetSuiteOrderSyncService {
 
     for (const item of response.items || []) {
       try {
-        const salesOrder = await this.client.getSalesOrder(item.id);
+        const salesOrder = await this.getSalesOrderCached(item.id);
         const preview = await this.previewSingleOrder(salesOrder);
         orders.push(preview);
       } catch (error: any) {
@@ -2429,7 +2698,6 @@ export class NetSuiteOrderSyncService {
 
       // Fetch current pending fulfillment orders from NetSuite
       const soResponse = await this.client.getSalesOrders({
-        limit: 500,
         status: '_pendingFulfillment',
       });
 
@@ -2455,7 +2723,7 @@ export class NetSuiteOrderSyncService {
             await this.markOrderSynced(order.order_id, new Date());
           } else {
             // Order not in NetSuite pending queue - check actual status
-            const soDetail = await this.client.getSalesOrder(soId);
+            const soDetail = await this.getSalesOrderCached(soId);
             const nsStatus = (soDetail.status?.refName || '').toLowerCase();
 
             if (nsStatus.includes('cancelled')) {
@@ -2653,7 +2921,7 @@ export class NetSuiteOrderSyncService {
       if (!existing) {
         // Try to fetch the parent SO and create the order
         try {
-          const so = await this.client.getSalesOrder(soId);
+          const so = await this.getSalesOrderCached(soId);
           const soTranId = so.tranId;
 
           // Create order from fulfillment

@@ -423,6 +423,15 @@ function OrderCard({
   const noMotion = isPerf || !!prefersReducedMotion;
 
   const items: any[] = order.items || [];
+  const locations = Array.from(
+    new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
+  );
+  const locationLabel =
+    locations.length === 0
+      ? 'UNASSIGNED'
+      : locations.length === 1
+        ? locations[0]
+        : `${locations[0]} +${locations.length - 1}`;
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
@@ -466,8 +475,11 @@ function OrderCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">
-                  {order.orderId}
+                  {order.netsuiteSoTranId || order.orderId}
                 </h3>
+                {order.netsuiteSoTranId && (
+                  <span className="text-[10px] text-slate-500 font-mono">({order.orderId})</span>
+                )}
                 {isUrgent &&
                   (noMotion ? (
                     <BoltIcon className="h-5 w-5 text-orange-400" />
@@ -489,7 +501,7 @@ function OrderCard({
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-2">
             <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-700/50">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Items</p>
               <p className="text-xl font-black text-white">{items.length}</p>
@@ -500,6 +512,9 @@ function OrderCard({
                 ${Number(order.totalAmount || 0).toFixed(2)}
               </p>
             </div>
+          </div>
+          <div className="mb-4 text-xs text-slate-400">
+            Location: <span className="text-slate-200 font-bold">{locationLabel}</span>
           </div>
 
           {/* Progress */}
@@ -866,19 +881,18 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   useEffect(() => {
     const interval = setInterval(() => {
       if (!document.hidden) {
-        queryClient.invalidateQueries({ queryKey: ['orders', cfg.queryKey] });
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
       }
     }, 10000);
     return () => clearInterval(interval);
-  }, [queryClient, cfg.queryKey]);
+  }, [queryClient]);
 
   // WebSocket updates (picking only — packing uses polling)
   const handleOrderUpdate = useCallback(
     (data: { orderId: string; pickerId?: string; pickerName?: string }) => {
-      if (mode !== 'picking') return;
-      queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
       if (data.orderId === lastClaimedOrderIdRef.current) return;
-      if (data.pickerId && data.pickerId !== userId) {
+      if (mode === 'picking' && data.pickerId && data.pickerId !== userId) {
         showToast(
           `Order ${data.orderId} claimed by ${data.pickerName || data.pickerId}`,
           'success',

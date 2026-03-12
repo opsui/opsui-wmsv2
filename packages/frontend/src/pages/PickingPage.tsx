@@ -1013,7 +1013,14 @@ export function PickingPage() {
                 <div className="p-6">
                   {/* Order Info */}
                   <div className="mb-6 pb-6 border-b border-white/[0.08]">
-                    <h1 className="picking-title text-xl text-white truncate">{order.orderId}</h1>
+                    <h1 className="picking-title text-xl text-white truncate">
+                      {order.netsuiteSoTranId || order.orderId}
+                    </h1>
+                    {order.netsuiteSoTranId && (
+                      <p className="mt-0.5 picking-subtitle text-gray-500 text-xs font-mono truncate">
+                        OpsUI: {order.orderId}
+                      </p>
+                    )}
                     <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
                       {order.customerName}
                     </p>
@@ -1228,14 +1235,14 @@ export function PickingPage() {
                         </p>
                         <p
                           className={`quantity-display ${
-                            (currentTask.pickedQuantity ?? 0) >= currentTask.quantity
+                            (currentTask.onHandQuantity ?? 0) >= currentTask.quantity
                               ? 'text-success-400'
-                              : (currentTask.pickedQuantity ?? 0) > 0
+                              : (currentTask.onHandQuantity ?? 0) > 0
                                 ? 'text-warning-400'
                                 : 'text-error-400'
                           }`}
                         >
-                          {currentTask.pickedQuantity ?? 0}
+                          {currentTask.onHandQuantity ?? 0}
                         </p>
                       </div>
                     </div>
@@ -1247,16 +1254,16 @@ export function PickingPage() {
                       </span>
                       <span
                         className={`font-bold text-lg ${
-                          (currentTask.pickedQuantity ?? 0) >= currentTask.quantity
+                          (currentTask.onHandQuantity ?? 0) >= currentTask.quantity
                             ? 'text-success-400'
-                            : (currentTask.pickedQuantity ?? 0) > 0
+                            : (currentTask.onHandQuantity ?? 0) > 0
                               ? 'text-warning-400'
                               : 'text-error-400'
                         }`}
                       >
-                        {currentTask.pickedQuantity ?? 0}
+                        {currentTask.onHandQuantity ?? 0}
                       </span>
-                      {(currentTask.pickedQuantity ?? 0) < currentTask.quantity && (
+                      {(currentTask.onHandQuantity ?? 0) < currentTask.quantity && (
                         <span className="text-xs text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
                           Low Stock
                         </span>

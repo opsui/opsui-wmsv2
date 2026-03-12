@@ -383,6 +383,7 @@ export class IntegrationsRepository {
     log: Omit<SyncLogEntry, 'logId' | 'timestamp'>
   ): Promise<SyncLogEntry> {
     const logId = `LOG-${nanoid(12)}`.toUpperCase();
+    const normalizedLevel = this.normalizeSyncLogLevel(log.level);
     const query = `
       INSERT INTO sync_job_logs (
         log_id,
@@ -401,7 +402,7 @@ export class IntegrationsRepository {
     const values = [
       logId,
       jobId,
-      log.level,
+      normalizedLevel,
       log.message,
       log.errorDetails ? JSON.stringify(log.errorDetails) : null,
       log.entityType || null,
@@ -716,6 +717,21 @@ export class IntegrationsRepository {
       externalId: row.external_id,
       errorDetails,
     };
+  }
+
+  private normalizeSyncLogLevel(level: string): 'INFO' | 'WARNING' | 'ERROR' | 'DEBUG' {
+    switch ((level || '').toUpperCase()) {
+      case 'WARN':
+      case 'WARNING':
+        return 'WARNING';
+      case 'ERROR':
+        return 'ERROR';
+      case 'DEBUG':
+        return 'DEBUG';
+      case 'INFO':
+      default:
+        return 'INFO';
+    }
   }
 
   private mapRowToWebhookEvent(row: any): WebhookEvent {

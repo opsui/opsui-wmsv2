@@ -37,14 +37,12 @@ import {
   useOrderUpdates,
   usePickUpdates,
 } from '@/hooks/useWebSocket';
-import { formatDate } from '@/lib/utils';
 import {
   useAllPackersPerformance,
   useAllPickersPerformance,
   useAllStockControllersPerformance,
   useAuditLogs,
   useDashboardMetrics,
-  useHourlyThroughput,
   useOrderStatusBreakdown,
   useRoleActivity,
   useRoleDetails,
@@ -276,44 +274,6 @@ export function DashboardPage() {
       enabled: canSupervise(),
     }
   );
-
-  // Hourly throughput data for hero card sparklines
-  const { data: hourlyThroughputData } = useHourlyThroughput({
-    enabled: canSupervise(),
-  });
-
-  // Transform hourly throughput data into sparkline format for each metric card
-  const sparklineData = useMemo(() => {
-    if (!hourlyThroughputData || !Array.isArray(hourlyThroughputData)) {
-      return {
-        activeStaff: [],
-        ordersPerHour: [],
-        queueDepth: [],
-        exceptions: [],
-      };
-    }
-
-    // Assuming hourlyThroughputData is an array of { hour: string, orders: number, picks: number, ... }
-    // Transform for each metric
-    return {
-      activeStaff: hourlyThroughputData.slice(-8).map((d: any) => ({
-        value: d.activePickers ?? d.activeStaff ?? 0,
-        label: d.hour ?? d.label,
-      })),
-      ordersPerHour: hourlyThroughputData.slice(-8).map((d: any) => ({
-        value: d.ordersPerHour ?? d.orders ?? 0,
-        label: d.hour ?? d.label,
-      })),
-      queueDepth: hourlyThroughputData.slice(-8).map((d: any) => ({
-        value: d.queueDepth ?? 0,
-        label: d.hour ?? d.label,
-      })),
-      exceptions: hourlyThroughputData.slice(-8).map((d: any) => ({
-        value: d.exceptions ?? 0,
-        label: d.hour ?? d.label,
-      })),
-    };
-  }, [hourlyThroughputData]);
 
   const {
     data: orderStatusBreakdown,
@@ -565,7 +525,6 @@ export function DashboardPage() {
             icon={UserGroupIcon}
             color="primary"
             index={0}
-            sparkline={sparklineData.activeStaff}
           />
           <MetricCard
             title="Orders/Hour"
@@ -573,7 +532,6 @@ export function DashboardPage() {
             icon={ArrowTrendingUpIcon}
             color="success"
             index={1}
-            sparkline={sparklineData.ordersPerHour}
           />
           <MetricCard
             title="Queue Depth"
@@ -582,7 +540,6 @@ export function DashboardPage() {
             color="warning"
             onClick={() => navigate('/orders')}
             index={2}
-            sparkline={sparklineData.queueDepth}
           />
           <MetricCard
             title="Exceptions"
@@ -591,7 +548,6 @@ export function DashboardPage() {
             color={metrics.exceptions > 0 ? 'error' : 'success'}
             onClick={() => (window.location.href = '/exceptions')}
             index={3}
-            sparkline={sparklineData.exceptions}
           />
         </div>
 
