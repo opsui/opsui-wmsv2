@@ -297,10 +297,17 @@ export class OrderRepository extends BaseRepository<Order> {
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
-        const totalAmount = mappedItems.reduce(
+        const computedTotal = mappedItems.reduce(
           (sum: number, item: any) => sum + Number(item.lineTotal || 0),
           0
         );
+        const rowTotal =
+          order.totalAmount != null
+            ? Number(order.totalAmount)
+            : order.total_amount != null
+              ? Number(order.total_amount)
+              : 0;
+        const totalAmount = rowTotal > 0 ? rowTotal : computedTotal;
 
         return {
           ...order,
@@ -379,7 +386,17 @@ export class OrderRepository extends BaseRepository<Order> {
 
         // Map database columns to camelCase for frontend
         const mappedItems = itemsResult.rows.map(mapOrderItem);
-        const totalAmount = mappedItems.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
+        const computedTotal = mappedItems.reduce(
+          (sum, item) => sum + Number(item.lineTotal || 0),
+          0
+        );
+        const rowTotal =
+          order.totalAmount != null
+            ? Number(order.totalAmount)
+            : order.total_amount != null
+              ? Number(order.total_amount)
+              : 0;
+        const totalAmount = rowTotal > 0 ? rowTotal : computedTotal;
 
         return {
           ...order,
