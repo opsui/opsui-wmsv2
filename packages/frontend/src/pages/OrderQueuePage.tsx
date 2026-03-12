@@ -427,11 +427,7 @@ function OrderCard({
     new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
   );
   const locationLabel =
-    locations.length === 0
-      ? 'UNASSIGNED'
-      : locations.length === 1
-        ? locations[0]
-        : `${locations[0]} +${locations.length - 1}`;
+    locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
@@ -835,6 +831,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   });
 
   const allOrdersData = mode === 'picking' ? pickingAllOrders.data : packingAllOrders.data;
+  const activeQueueResult = mode === 'picking' ? pickingQueueResult : packingQueueResult;
+  const activeAllOrdersResult = mode === 'picking' ? pickingAllOrders : packingAllOrders;
+  const isReloading = activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
 
   useEffect(() => {
     setPage(1);
@@ -850,6 +849,18 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     setSearchParams({ status });
     hasAutoDetectedRef.current = true;
   };
+
+  const handleManualReload = useCallback(async () => {
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        activeQueueResult.refetch(),
+        activeAllOrdersResult.refetch(),
+      ]);
+    } catch {
+      showToast(`Failed to reload ${mode} queue`, 'error');
+    }
+  }, [activeAllOrdersResult, activeQueueResult, mode, queryClient, showToast]);
 
   // Auto-detect active/idle tab on mount
   useEffect(() => {
@@ -1082,6 +1093,18 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             mode={mode}
           />
           <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+          <Button
+            variant="secondary"
+            onClick={() => void handleManualReload()}
+            isLoading={isReloading}
+            disabled={isReloading}
+            className="min-h-touch font-bold uppercase tracking-wide"
+          >
+            <span className="flex items-center gap-2">
+              <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
+              Reload
+            </span>
+          </Button>
         </div>
 
         {filteredOrders.length === 0 ? (
