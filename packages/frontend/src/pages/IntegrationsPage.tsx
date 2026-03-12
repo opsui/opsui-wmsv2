@@ -292,8 +292,9 @@ export function IntegrationsPage() {
               setModalOpen(true);
             }}
             onGoToSyncJobs={integration => {
-              setSelectedIntegration(integration);
+              setSelectedIntegrationId(integration.integrationId);
               setActiveTab('sync-jobs');
+              updateUrlParams('sync-jobs', integration.integrationId);
             }}
           />
         )}

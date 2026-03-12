@@ -876,11 +876,11 @@ SO-002,Business Ltd,SKU-003,10,NORMAL,456 Queen Street,Wellington,Wellington,601
 );
 
 /**
- * GET /api/integrations/webhook-events
+ * GET /api/integrations/webhooks/events
  * Get all webhook events across integrations
  */
 router.get(
-  '/webhook-events',
+  '/webhooks/events',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { integrationId, eventType, status, limit } = req.query;
