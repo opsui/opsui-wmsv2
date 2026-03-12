@@ -330,7 +330,11 @@ export class OrderRepository extends BaseRepository<Order> {
   async getOrdersWithItemsByStatus(
     filters: {
       status?: OrderStatus;
+      priority?: OrderPriority;
       packerId?: string;
+      search?: string;
+      limit?: number;
+      offset?: number;
       organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[]; total: number }> {
@@ -348,12 +352,42 @@ export class OrderRepository extends BaseRepository<Order> {
       params.push(filters.status);
     }
 
+    if (filters.priority) {
+      conditions.push(`o.priority = $${paramIndex++}`);
+      params.push(filters.priority);
+    }
+
     if (filters.packerId) {
       conditions.push(`o.packer_id = $${paramIndex++}`);
       params.push(filters.packerId);
     }
 
+    if (filters.search && filters.search.trim()) {
+      const searchParam = `%${filters.search.trim().toLowerCase()}%`;
+      conditions.push(`(
+        LOWER(o.order_id) LIKE $${paramIndex} OR
+        LOWER(COALESCE(o.netsuite_so_tran_id, '')) LIKE $${paramIndex} OR
+        LOWER(COALESCE(o.customer_name, '')) LIKE $${paramIndex} OR
+        EXISTS (
+          SELECT 1 FROM order_items oi
+          WHERE oi.order_id = o.order_id
+          AND (
+            LOWER(oi.sku) LIKE $${paramIndex} OR
+            LOWER(oi.name) LIKE $${paramIndex} OR
+            LOWER(COALESCE(oi.bin_location, '')) LIKE $${paramIndex}
+          )
+        )
+      )`);
+      params.push(searchParam);
+      paramIndex++;
+    }
+
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const limit = filters.limit || 20;
+    const offset = filters.offset || 0;
+
+    const countResult = await query(`SELECT COUNT(*) FROM orders o ${whereClause}`, params);
+    const total = parseInt(countResult.rows[0].count, 10);
 
     // Get orders with items
     // orders.progress is kept up to date for all phases:
@@ -374,8 +408,9 @@ export class OrderRepository extends BaseRepository<Order> {
         END as completed_count
       FROM orders o
       ${whereClause}
-      ORDER BY o.priority DESC, o.created_at ASC`,
-      params
+      ORDER BY o.priority DESC, o.created_at ASC
+      LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+      [...params, limit, offset]
     );
 
     // Get items for each order using centralized queries
@@ -406,7 +441,7 @@ export class OrderRepository extends BaseRepository<Order> {
       })
     );
 
-    return { orders, total: orders.length };
+    return { orders, total };
   }
 
   // --------------------------------------------------------------------------

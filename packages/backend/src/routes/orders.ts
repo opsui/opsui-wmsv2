@@ -93,11 +93,26 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     const filters = {
       status: req.query.status as any,
+      priority: req.query.priority as any,
       packerId: req.query.packerId as string | undefined,
+      search: req.query.search as string | undefined,
+      page: req.query.page ? parseInt(req.query.page as string) : undefined,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
       organizationId: req.organizationId || undefined,
     };
 
     const result = await orderService.getOrdersWithItemsByStatus(filters);
+
+    if (typeof result.total !== 'undefined') {
+      res.setHeader('X-Total-Count', result.total.toString());
+    }
+    if (filters.page) {
+      res.setHeader('X-Page', filters.page.toString());
+    }
+    if (filters.limit) {
+      res.setHeader('X-Page-Size', filters.limit.toString());
+    }
+
     res.json(result);
   })
 );

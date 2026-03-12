@@ -34,10 +34,12 @@ import {
   ClipboardDocumentListIcon,
   CubeIcon,
   ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
   QueueListIcon,
   ShoppingBagIcon,
   TruckIcon,
 } from '@heroicons/react/24/outline';
+import { Input } from '@/components/shared/Input';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -734,6 +736,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>(cfg.idleStatus);
   const [priorityFilter, setPriorityFilter] = useState<OrderPriority | undefined>();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('search') || '');
   const [claimingOrderId, setClaimingOrderId] = useState<string | null>(null);
 
   const isClaimingRef = useRef(false);
@@ -750,6 +754,11 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     setSearchParams(params => {
       params.set('queue', newMode);
       params.delete('status');
+      if (debouncedSearch) {
+        params.set('search', debouncedSearch);
+      } else {
+        params.delete('search');
+      }
       return params;
     });
     setStatusFilter(MODE_CONFIG[newMode].idleStatus);
@@ -765,6 +774,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       ? {
           status: statusFilter,
           priority: priorityFilter,
+          search: debouncedSearch || undefined,
           pickerId:
             statusFilter === 'PICKING' && !(isAdmin && !getEffectiveRole()) ? userId : undefined,
           page,
@@ -776,11 +786,12 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   );
 
   const packingQueueResult = useQuery({
-    queryKey: ['orders', cfg.queryKey, statusFilter, priorityFilter, page, pageSize],
+    queryKey: ['orders', cfg.queryKey, statusFilter, priorityFilter, debouncedSearch, page, pageSize],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append('status', statusFilter);
       if (priorityFilter) params.append('priority', priorityFilter);
+      if (debouncedSearch) params.append('search', debouncedSearch);
       if (statusFilter === cfg.activeStatus && !(isAdmin && !getEffectiveRole())) {
         params.append('packerId', currentUser?.userId || '');
       }
@@ -820,7 +831,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     queryFn: async () => {
       if (!currentUser?.userId) return { orders: [] };
       const response = await apiClient.get(
-        `/orders/full?status=${OrderStatus.PACKING}&packerId=${currentUser.userId}`
+        `/orders/full?status=${OrderStatus.PACKING}&packerId=${currentUser.userId}&limit=100`
       );
       return response.data;
     },
@@ -837,7 +848,39 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, priorityFilter]);
+  }, [statusFilter, priorityFilter, debouncedSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setSearchParams(params => {
+      if (statusFilter) {
+        params.set('status', statusFilter);
+      } else {
+        params.delete('status');
+      }
+
+      if (adminMode) {
+        params.set('queue', adminMode);
+      } else if (queueParam) {
+        params.set('queue', queueParam);
+      }
+
+      if (debouncedSearch) {
+        params.set('search', debouncedSearch);
+      } else {
+        params.delete('search');
+      }
+
+      return params;
+    }, { replace: true });
+  }, [adminMode, debouncedSearch, queueParam, setSearchParams, statusFilter]);
 
   const orders = queueData?.orders || [];
 
@@ -846,7 +889,6 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
   const handleStatusFilterChange = (status: OrderStatus) => {
     setStatusFilter(status);
-    setSearchParams({ status });
     hasAutoDetectedRef.current = true;
   };
 
@@ -1087,6 +1129,17 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-4">
+          <div className="relative w-full max-w-md">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Input
+              type="search"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder={`Search ${mode} queue`}
+              className="pl-10"
+              aria-label={`Search ${mode} queue`}
+            />
+          </div>
           <StatusFilterDropdown
             value={statusFilter}
             onChange={handleStatusFilterChange}

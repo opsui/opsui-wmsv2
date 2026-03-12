@@ -627,6 +627,7 @@ export class OrderService {
       status?: OrderStatus;
       priority?: OrderPriority;
       pickerId?: string;
+      search?: string;
       page?: number;
       limit?: number;
       organizationId?: string;
@@ -645,11 +646,18 @@ export class OrderService {
   async getOrdersWithItemsByStatus(
     filters: {
       status?: OrderStatus;
+      priority?: OrderPriority;
       packerId?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
       organizationId?: string;
     } = {}
-  ): Promise<{ orders: Order[] }> {
-    return orderRepository.getOrdersWithItemsByStatus(filters);
+  ): Promise<{ orders: Order[]; total: number }> {
+    return orderRepository.getOrdersWithItemsByStatus({
+      ...filters,
+      offset: filters.page && filters.limit ? (filters.page - 1) * filters.limit : undefined,
+    });
   }
 
   // --------------------------------------------------------------------------
