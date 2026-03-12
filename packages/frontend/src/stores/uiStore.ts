@@ -257,7 +257,9 @@ const HOVER_DEBOUNCE_MS = 150;
  * Play a sound notification
  * Uses clean, Apple-like sounds with proper envelopes and harmonics
  */
-export function playSound(type: 'success' | 'error' | 'warning' | 'info' | 'hover' | 'click'): void {
+export function playSound(
+  type: 'success' | 'error' | 'warning' | 'info' | 'hover' | 'click'
+): void {
   const soundEnabled = useUIStore.getState().soundEnabled;
   if (!soundEnabled) return;
 
