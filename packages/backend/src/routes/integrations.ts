@@ -819,6 +819,44 @@ router.post(
 );
 
 /**
+ * GET /api/integrations/:integrationId/syncs
+ * Get sync history for an integration
+ */
+router.get(
+  '/:integrationId/syncs',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { integrationId } = req.params;
+      const limit = parseInt(req.query.limit as string) || 50;
+
+      const syncJobs = await repository.findSyncJobs(integrationId, limit);
+
+      res.json({
+        syncs: syncJobs.map(job => ({
+          jobId: job.jobId,
+          integrationId: job.integrationId,
+          syncType: job.syncType,
+          direction: job.direction,
+          status: job.status,
+          startedAt: job.startedAt,
+          completedAt: job.completedAt,
+          recordsProcessed: job.recordsProcessed,
+          recordsSucceeded: job.recordsSucceeded,
+          recordsFailed: job.recordsFailed,
+          errorMessage: job.errorMessage,
+          durationMs: job.startedAt && job.completedAt
+            ? new Date(job.completedAt).getTime() - new Date(job.startedAt).getTime()
+            : null,
+        })),
+        total: syncJobs.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
  * GET /api/integrations/:integrationId/csv-template
  * Get a CSV template for order import
  */
