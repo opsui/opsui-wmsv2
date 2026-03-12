@@ -881,7 +881,7 @@ const NavDropdown = memo(function NavDropdown({
 
   return (
     <div
-      className="relative z-[9999] min-w-0 shrink"
+      className="relative z-[9999] min-w-0 shrink pr-1"
       ref={dropdownRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
