@@ -300,7 +300,13 @@ export function IntegrationsPage() {
           />
         )}
 
-        {activeTab === 'sync-jobs' && <SyncJobsTab selectedIntegration={selectedIntegration} />}
+        {activeTab === 'sync-jobs' && (
+          <SyncJobsTab
+            selectedIntegration={selectedIntegration}
+            integrations={integrations}
+            onSelectIntegration={integration => handleSelectIntegration(integration)}
+          />
+        )}
 
         {activeTab === 'webhooks' && <WebhooksTab />}
 
@@ -810,9 +816,11 @@ function StatusBadge({ status, enabled }: StatusBadgeProps) {
 
 interface SyncJobsTabProps {
   selectedIntegration?: Integration;
+  integrations: Integration[];
+  onSelectIntegration: (integration: Integration) => void;
 }
 
-function SyncJobsTab({ selectedIntegration }: SyncJobsTabProps) {
+function SyncJobsTab({ selectedIntegration, integrations, onSelectIntegration }: SyncJobsTabProps) {
   const {
     data: syncHistory,
     isLoading,
@@ -822,11 +830,61 @@ function SyncJobsTab({ selectedIntegration }: SyncJobsTabProps) {
   if (!selectedIntegration) {
     return (
       <div className="glass-card rounded-lg p-6">
-        <div className="text-center py-12">
-          <ArrowPathIcon className="mx-auto h-12 w-12 text-gray-600" />
-          <p className="mt-2 text-gray-400">Select an integration to view sync history</p>
-          <p className="text-sm text-gray-500">Click on an integration card to see its sync jobs</p>
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-white">Sync History</h3>
+          <p className="text-sm text-gray-400">Select an integration to view its sync jobs</p>
         </div>
+        {integrations.length === 0 ? (
+          <div className="text-center py-8">
+            <ArrowPathIcon className="mx-auto h-12 w-12 text-gray-600" />
+            <p className="mt-2 text-gray-400">No integrations available</p>
+            <p className="text-sm text-gray-500">
+              Create an integration first to view sync history
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {integrations.map(integration => (
+              <button
+                key={integration.integrationId}
+                onClick={() => onSelectIntegration(integration)}
+                className="flex items-center justify-between p-4 bg-white/[0.02] rounded-lg border border-white/[0.05] hover:bg-white/[0.06] hover:border-purple-500/30 transition-all text-left w-full"
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      integration.status === IntegrationStatus.CONNECTED
+                        ? 'bg-green-500'
+                        : integration.status === IntegrationStatus.PAUSED ||
+                            integration.status === IntegrationStatus.DISCONNECTED
+                          ? 'bg-gray-500'
+                          : 'bg-red-500'
+                    }`}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-white">{integration.name}</p>
+                    <p className="text-xs text-gray-500">{integration.provider}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                  <span
+                    className={`px-2 py-1 rounded ${
+                      integration.status === IntegrationStatus.CONNECTED
+                        ? 'bg-green-500/10 text-green-400'
+                        : integration.status === IntegrationStatus.PAUSED ||
+                            integration.status === IntegrationStatus.DISCONNECTED
+                          ? 'bg-gray-500/10 text-gray-400'
+                          : 'bg-red-500/10 text-red-400'
+                    }`}
+                  >
+                    {integration.status}
+                  </span>
+                  <ChevronLeftIcon className="h-4 w-4 rotate-180" />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -946,11 +1004,7 @@ function SyncJobsTab({ selectedIntegration }: SyncJobsTabProps) {
 // ============================================================================
 
 function WebhooksTab() {
-  const {
-    data: webhookData,
-    isLoading,
-    error,
-  } = useWebhookEvents({ limit: 50 });
+  const { data: webhookData, isLoading, error } = useWebhookEvents({ limit: 50 });
 
   if (isLoading) {
     return (
