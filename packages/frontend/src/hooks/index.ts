@@ -14,6 +14,7 @@ export * from './useLongPress';
 export * from './usePageTracking';
 export * from './usePerformance';
 export * from './useSEO';
+export * from './useSoundEffects';
 export * from './useSwipe';
 export * from './useUndo';
 export * from './useWebSocket';

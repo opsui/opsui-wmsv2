@@ -8,10 +8,12 @@
  * - Distinctive typography with Archivo font
  * - Glow effects for emphasis
  * - Full dark mode support via Tailwind classes
+ * - Satisfying hover and click sound effects
  */
 
-import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { ButtonHTMLAttributes, forwardRef, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { useSoundEffects } from '@/hooks';
 
 // ============================================================================
 // TYPES
@@ -24,6 +26,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
   /** Enable responsive sizing (scales with viewport) */
   responsive?: boolean;
+  /** Disable sound effects for this button */
+  noSound?: boolean;
 }
 
 // ============================================================================
@@ -39,12 +43,30 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       responsive = false,
       disabled,
+      noSound = false,
       className,
       children,
+      onClick,
       ...props
     },
     ref
   ) => {
+    // Sound effects hook
+    const soundHandlers = useSoundEffects({
+      hover: !noSound,
+      click: !noSound,
+      disabled: disabled || isLoading,
+    });
+
+    // Handle click with sound
+    const handleClick = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        soundHandlers.playClickSound();
+        onClick?.(e);
+      },
+      [onClick, soundHandlers]
+    );
+
     const baseStyles = [
       'inline-flex items-center justify-center font-semibold rounded-xl',
       'transition-all duration-200 ease-out',
@@ -98,6 +120,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           fontFamily: "'Archivo', sans-serif",
           letterSpacing: '-0.01em',
         }}
+        onMouseEnter={soundHandlers.onMouseEnter}
+        onTouchStart={soundHandlers.onTouchStart}
+        onClick={handleClick}
         {...props}
       >
         {/* Shimmer effect overlay */}

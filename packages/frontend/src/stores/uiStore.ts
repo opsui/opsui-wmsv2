@@ -249,13 +249,26 @@ export function initializePerformanceMode(): void {
   }
 }
 
+// Global debounce tracking for hover sounds
+let lastHoverSoundTime = 0;
+const HOVER_DEBOUNCE_MS = 150;
+
 /**
  * Play a sound notification
  * Uses clean, Apple-like sounds with proper envelopes and harmonics
  */
-export function playSound(type: 'success' | 'error' | 'warning' | 'info'): void {
+export function playSound(type: 'success' | 'error' | 'warning' | 'info' | 'hover' | 'click'): void {
   const soundEnabled = useUIStore.getState().soundEnabled;
   if (!soundEnabled) return;
+
+  // Debounce hover sounds to prevent audio spam
+  if (type === 'hover') {
+    const now = Date.now();
+    if (now - lastHoverSoundTime < HOVER_DEBOUNCE_MS) {
+      return;
+    }
+    lastHoverSoundTime = now;
+  }
 
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   const currentTime = audioContext.currentTime;
@@ -296,6 +309,22 @@ export function playSound(type: 'success' | 'error' | 'warning' | 'info'): void 
       createTone(audioContext, masterGain, 880.0, 'sine', 0, 0.05, 0.05); // A5
       masterGain.gain.setValueAtTime(0.05, currentTime);
       masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.1);
+      break;
+
+    case 'hover':
+      // Very subtle tick - like iOS UI hover feedback
+      createTone(audioContext, masterGain, 1200.0, 'sine', 0, 0.015, 0.025); // D#6
+      masterGain.gain.setValueAtTime(0.02, currentTime);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.04);
+      break;
+
+    case 'click':
+      // Satisfying pop - like iOS keyboard tap
+      createTone(audioContext, masterGain, 800.0, 'sine', 0, 0.03, 0.05); // G5
+      // Add a subtle harmonic for richness
+      createTone(audioContext, masterGain, 1600.0, 'sine', 0, 0.02, 0.03); // G6
+      masterGain.gain.setValueAtTime(0.04, currentTime);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.08);
       break;
   }
 
