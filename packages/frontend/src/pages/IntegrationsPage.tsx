@@ -54,6 +54,7 @@ import {
   useTestConnection,
   useToggleIntegration,
   useWebhookEvents,
+  useSyncHistory,
 } from '@/services/api';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
@@ -255,7 +256,7 @@ export function IntegrationsPage() {
           />
         )}
 
-        {activeTab === 'sync-jobs' && <SyncJobsTab />}
+        {activeTab === 'sync-jobs' && <SyncJobsTab selectedIntegration={selectedIntegration} />}
 
         {activeTab === 'webhooks' && <WebhooksTab />}
 
@@ -763,13 +764,134 @@ function StatusBadge({ status, enabled }: StatusBadgeProps) {
 // SYNC JOBS TAB
 // ============================================================================
 
-function SyncJobsTab() {
+interface SyncJobsTabProps {
+  selectedIntegration?: Integration;
+}
+
+function SyncJobsTab({ selectedIntegration }: SyncJobsTabProps) {
+  const {
+    data: syncHistory,
+    isLoading,
+    error,
+  } = useSyncHistory(selectedIntegration?.integrationId || '', { limit: 50 });
+
+  if (!selectedIntegration) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="text-center py-12">
+          <ArrowPathIcon className="mx-auto h-12 w-12 text-gray-600" />
+          <p className="mt-2 text-gray-400">Select an integration to view sync history</p>
+          <p className="text-sm text-gray-500">Click on an integration card to see its sync jobs</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <ArrowPathIcon className="h-8 w-8 animate-spin text-purple-500" />
+          <span className="ml-3 text-gray-400">Loading sync history...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="text-center py-12">
+          <XCircleIcon className="mx-auto h-12 w-12 text-red-500" />
+          <p className="mt-2 text-red-400">Failed to load sync history</p>
+          <p className="text-sm text-gray-500">{(error as any).message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const syncs = syncHistory?.syncs || [];
+
+  if (syncs.length === 0) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="text-center py-12">
+          <ArrowPathIcon className="mx-auto h-12 w-12 text-gray-600" />
+          <p className="mt-2 text-gray-400">No sync jobs yet</p>
+          <p className="text-sm text-gray-500">
+            Click the sync button on the integration to start a sync
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-lg p-6">
-      <div className="text-center py-12">
-        <ArrowPathIcon className="mx-auto h-12 w-12 text-gray-600" />
-        <p className="mt-2 text-gray-400">Select an integration to view sync history</p>
-        <p className="text-sm text-gray-500">Sync jobs will appear here when integrations run</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white">Sync History</h3>
+          <p className="text-sm text-gray-400">{selectedIntegration.name}</p>
+        </div>
+        <span className="text-sm text-gray-500">{syncs.length} jobs</span>
+      </div>
+
+      <div className="space-y-3">
+        {syncs.map((sync: any) => (
+          <div
+            key={sync.jobId}
+            className="bg-white/[0.02] rounded-lg p-4 border border-white/[0.05] hover:bg-white/[0.04] transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {sync.status === 'COMPLETED' ? (
+                  <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                ) : sync.status === 'FAILED' ? (
+                  <XCircleIcon className="h-5 w-5 text-red-500" />
+                ) : sync.status === 'RUNNING' ? (
+                  <ArrowPathIcon className="h-5 w-5 text-blue-500 animate-spin" />
+                ) : (
+                  <ClockIcon className="h-5 w-5 text-yellow-500" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-white">{sync.syncType}</p>
+                  <p className="text-xs text-gray-500 font-mono">{sync.jobId}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`text-sm font-medium ${
+                    sync.status === 'COMPLETED'
+                      ? 'text-green-400'
+                      : sync.status === 'FAILED'
+                        ? 'text-red-400'
+                        : sync.status === 'RUNNING'
+                          ? 'text-blue-400'
+                          : 'text-yellow-400'
+                  }`}
+                >
+                  {sync.status}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {sync.startedAt ? new Date(sync.startedAt).toLocaleString() : 'N/A'}
+                </p>
+              </div>
+            </div>
+            {(sync.recordsProcessed > 0 || sync.errorMessage) && (
+              <div className="mt-3 pt-3 border-t border-white/[0.05]">
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>
+                    {sync.recordsSucceeded} succeeded / {sync.recordsFailed} failed
+                  </span>
+                  {sync.durationMs && <span>{sync.durationMs}ms</span>}
+                </div>
+                {sync.errorMessage && (
+                  <p className="mt-2 text-xs text-red-400 truncate">{sync.errorMessage}</p>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
