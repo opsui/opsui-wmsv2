@@ -122,6 +122,7 @@ export function IntegrationsPage() {
   const [selectedIntegrationId, setSelectedIntegrationId] = useState<string | undefined>(
     integrationIdFromUrl || undefined
   );
+  const [modalIntegration, setModalIntegration] = useState<Integration | undefined>();
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | IntegrationStatus>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -284,11 +285,11 @@ export function IntegrationsPage() {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             onSelectIntegration={integration => {
-              setSelectedIntegration(integration);
+              setModalIntegration(integration);
               setModalOpen(true);
             }}
             onCreateIntegration={() => {
-              setSelectedIntegration(undefined);
+              setModalIntegration(undefined);
               setModalOpen(true);
             }}
             onGoToSyncJobs={integration => {
@@ -306,7 +307,7 @@ export function IntegrationsPage() {
         {/* Integration Modal */}
         {modalOpen && (
           <IntegrationModal
-            integration={selectedIntegration}
+            integration={modalIntegration}
             onClose={() => setModalOpen(false)}
             onSave={() => {
               setModalOpen(false);
