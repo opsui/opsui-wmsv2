@@ -875,4 +875,44 @@ SO-002,Business Ltd,SKU-003,10,NORMAL,456 Queen Street,Wellington,Wellington,601
   }
 );
 
+/**
+ * GET /api/integrations/webhook-events
+ * Get all webhook events across integrations
+ */
+router.get(
+  '/webhook-events',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { integrationId, eventType, status, limit } = req.query;
+
+      const filters: any = {};
+      if (integrationId) filters.integrationId = integrationId as string;
+      if (eventType) filters.eventType = eventType as string;
+      if (status) filters.status = status as string;
+
+      const events = await repository.findWebhookEvents(
+        Object.keys(filters).length > 0 ? filters : undefined,
+        parseInt(limit as string) || 50
+      );
+
+      res.json({
+        events: events.map(event => ({
+          eventId: event.eventId,
+          integrationId: event.integrationId,
+          eventType: event.eventType,
+          payload: event.payload,
+          status: event.status,
+          receivedAt: event.receivedAt,
+          processedAt: event.processedAt,
+          processingAttempts: event.processingAttempts,
+          errorMessage: event.errorMessage,
+        })),
+        total: events.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;

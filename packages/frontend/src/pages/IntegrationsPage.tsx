@@ -45,7 +45,7 @@ import {
   WebhookEventType,
 } from '@opsui/shared';
 import { Header, Pagination, ConfirmDialog, Button, Breadcrumb } from '@/components/shared';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useIntegrations,
   useCreateIntegration,
@@ -110,10 +110,18 @@ interface IntegrationFormData {
 
 export function IntegrationsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read initial state from URL params
+  const tabFromUrl = searchParams.get('tab') as 'integrations' | 'sync-jobs' | 'webhooks' | null;
+  const integrationIdFromUrl = searchParams.get('integrationId');
+
   const [activeTab, setActiveTab] = useState<'integrations' | 'sync-jobs' | 'webhooks'>(
-    'integrations'
+    tabFromUrl || 'integrations'
   );
-  const [selectedIntegration, setSelectedIntegration] = useState<Integration | undefined>();
+  const [selectedIntegrationId, setSelectedIntegrationId] = useState<string | undefined>(
+    integrationIdFromUrl || undefined
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<'ALL' | IntegrationStatus>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,7 +139,38 @@ export function IntegrationsPage() {
   } = useIntegrations();
   const integrations = integrationsData?.integrations || [];
 
-  const filteredIntegrations = integrations.filter(integration => {
+  // Find the selected integration from the list
+  const selectedIntegration = selectedIntegrationId
+    ? integrations.find((i: Integration) => i.integrationId === selectedIntegrationId)
+    : undefined;
+
+  // Update URL when tab or selected integration changes
+  const updateUrlParams = (tab: string, integrationId?: string) => {
+    const params = new URLSearchParams();
+    if (tab !== 'integrations') {
+      params.set('tab', tab);
+    }
+    if (integrationId) {
+      params.set('integrationId', integrationId);
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  const handleTabChange = (tab: 'integrations' | 'sync-jobs' | 'webhooks') => {
+    setActiveTab(tab);
+    updateUrlParams(tab, selectedIntegrationId);
+  };
+
+  const handleSelectIntegration = (integration: Integration, switchToSyncJobs = false) => {
+    setSelectedIntegrationId(integration.integrationId);
+    const newTab = switchToSyncJobs ? 'sync-jobs' : activeTab;
+    if (switchToSyncJobs) {
+      setActiveTab('sync-jobs');
+    }
+    updateUrlParams(newTab, integration.integrationId);
+  };
+
+  const filteredIntegrations = integrations.filter((integration: Integration) => {
     // Status filter
     if (filter !== 'ALL' && integration.status !== filter) return false;
 
@@ -905,13 +944,107 @@ function SyncJobsTab({ selectedIntegration }: SyncJobsTabProps) {
 // ============================================================================
 
 function WebhooksTab() {
-  // Webhook events endpoint not implemented yet - showing placeholder
+  const {
+    data: webhookData,
+    isLoading,
+    error,
+  } = useWebhookEvents({ limit: 50 });
+
+  if (isLoading) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <ArrowPathIcon className="h-8 w-8 animate-spin text-purple-500" />
+          <span className="ml-3 text-gray-400">Loading webhook events...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="text-center py-12">
+          <XCircleIcon className="mx-auto h-12 w-12 text-red-500" />
+          <p className="mt-2 text-red-400">Failed to load webhook events</p>
+          <p className="text-sm text-gray-500">{(error as any).message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const events = webhookData?.events || [];
+
+  if (events.length === 0) {
+    return (
+      <div className="glass-card rounded-lg p-6">
+        <div className="text-center py-12">
+          <ServerIcon className="mx-auto h-12 w-12 text-gray-600" />
+          <p className="mt-2 text-gray-400">No webhook events yet</p>
+          <p className="text-sm text-gray-500">Webhook events from NetSuite will appear here</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-lg p-6">
-      <div className="text-center py-12">
-        <ServerIcon className="mx-auto h-12 w-12 text-gray-600" />
-        <p className="mt-2 text-gray-400">Webhook events</p>
-        <p className="text-sm text-gray-500">Webhook events will appear here when received</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-white">Webhook Events</h3>
+          <p className="text-sm text-gray-400">Incoming webhooks from external systems</p>
+        </div>
+        <span className="text-sm text-gray-500">{events.length} events</span>
+      </div>
+
+      <div className="space-y-3">
+        {events.map((event: any) => (
+          <div
+            key={event.eventId}
+            className="bg-white/[0.02] rounded-lg p-4 border border-white/[0.05] hover:bg-white/[0.04] transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {event.status === 'PROCESSED' ? (
+                  <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                ) : event.status === 'FAILED' ? (
+                  <XCircleIcon className="h-5 w-5 text-red-500" />
+                ) : event.status === 'PROCESSING' ? (
+                  <ArrowPathIcon className="h-5 w-5 text-blue-500 animate-spin" />
+                ) : (
+                  <ClockIcon className="h-5 w-5 text-yellow-500" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-white">{event.eventType}</p>
+                  <p className="text-xs text-gray-500 font-mono">{event.eventId}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`text-sm font-medium ${
+                    event.status === 'PROCESSED'
+                      ? 'text-green-400'
+                      : event.status === 'FAILED'
+                        ? 'text-red-400'
+                        : event.status === 'PROCESSING'
+                          ? 'text-blue-400'
+                          : 'text-yellow-400'
+                  }`}
+                >
+                  {event.status}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {event.receivedAt ? new Date(event.receivedAt).toLocaleString() : 'N/A'}
+                </p>
+              </div>
+            </div>
+            {event.errorMessage && (
+              <div className="mt-3 pt-3 border-t border-white/[0.05]">
+                <p className="text-xs text-red-400 truncate">{event.errorMessage}</p>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
