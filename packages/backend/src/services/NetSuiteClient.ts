@@ -26,6 +26,7 @@ import { getNetSuiteRateLimiter, getNetSuiteConcurrencyLimiter } from '../utils/
 export interface NetSuiteSalesOrder {
   id: string;
   tranId: string;
+  otherRefNum?: string;
   status: { id: string; refName: string };
   entity: { id: string; refName: string };
   tranDate: string;
@@ -293,6 +294,7 @@ export class NetSuiteClient {
   private parseSalesOrderFromXml(recordXml: string): NetSuiteSalesOrder {
     const internalId = this.extractAttribute(recordXml, 'record', 'internalId');
     const tranId = this.extractTag(recordXml, 'tranId');
+    const otherRefNum = this.extractTag(recordXml, 'otherRefNum');
     const tranDate = this.extractTag(recordXml, 'tranDate');
     const shipDate = this.extractTag(recordXml, 'shipDate');
     const memo = this.extractTag(recordXml, 'memo');
@@ -330,6 +332,7 @@ export class NetSuiteClient {
     return {
       id: internalId,
       tranId: tranId || internalId,
+      otherRefNum: otherRefNum || undefined,
       status: { id: statusId, refName: statusName },
       entity: { id: entityId, refName: entityName },
       tranDate,
@@ -818,7 +821,9 @@ export class NetSuiteClient {
               break;
             }
 
-            fulfillments = fulfillments.concat(this.parseFulfillmentsFromSearchResponse(pageResponse));
+            fulfillments = fulfillments.concat(
+              this.parseFulfillmentsFromSearchResponse(pageResponse)
+            );
           } catch (err: any) {
             logger.error('Error fetching targeted fulfillment page', {
               page,
@@ -1030,8 +1035,15 @@ export class NetSuiteClient {
     binNumber: string;
     description: string;
   }> {
-    // Try inventoryItem first, then assemblyItem if it fails (NetSuite has different item types)
-    const itemTypes = ['inventoryItem', 'assemblyItem'];
+    // NetSuite line items can point at multiple concrete item record types.
+    const itemTypes = [
+      'inventoryItem',
+      'assemblyItem',
+      'kitItem',
+      'lotNumberedInventoryItem',
+      'serializedInventoryItem',
+      'nonInventorySaleItem',
+    ];
     let response = '';
 
     for (const itemType of itemTypes) {
@@ -1090,15 +1102,14 @@ export class NetSuiteClient {
    */
   async createItemFulfillment(
     salesOrderId: string,
-    _fulfillmentData: Record<string, unknown>
+    fulfillmentData: Record<string, unknown>
   ): Promise<string> {
     // Initialize fulfillment from sales order
     const body = [
       '<tns:initialize>',
       '  <tns:initializeRecord>',
       '    <platformCore:type>itemFulfillment</platformCore:type>',
-      '    <platformCore:reference xsi:type="platformCore:RecordRef"',
-      `      type="salesOrder" internalId="${this.escapeXml(salesOrderId)}"/>`,
+      `    <platformCore:reference xsi:type="platformCore:InitializeRef" type="salesOrder" internalId="${this.escapeXml(salesOrderId)}"/>`,
       '  </tns:initializeRecord>',
       '</tns:initialize>',
     ].join('\n');
@@ -1111,14 +1122,23 @@ export class NetSuiteClient {
       throw new Error(`Failed to create item fulfillment for SO ${salesOrderId}: ${fault}`);
     }
 
-    // Extract the initialized record and add it
-    const addBody = [
-      '<tns:add>',
-      `  <tns:record xsi:type="tranSales:ItemFulfillment" internalId="">`,
-      `    <tranSales:createdFrom internalId="${this.escapeXml(salesOrderId)}"/>`,
-      '  </tns:record>',
-      '</tns:add>',
-    ].join('\n');
+    const initializedRecord = this.extractInitializedFulfillmentRecord(response);
+    if (!initializedRecord) {
+      throw new Error(
+        `Failed to create item fulfillment for SO ${salesOrderId}: missing initialized record`
+      );
+    }
+
+    const { recordXml: fulfillmentRecord, receivableLineCount } =
+      this.markReceivableFulfillmentLines(initializedRecord, fulfillmentData);
+
+    if (receivableLineCount === 0) {
+      throw new Error(
+        `Failed to create item fulfillment for SO ${salesOrderId}: no receivable fulfillment lines returned by NetSuite`
+      );
+    }
+
+    const addBody = ['<tns:add>', `  ${fulfillmentRecord}`, '</tns:add>'].join('\n');
 
     const addEnvelope = this.buildEnvelope('', addBody);
     const addResponse = await this.soapRequest('add', addEnvelope);
@@ -1130,6 +1150,102 @@ export class NetSuiteClient {
 
     const newId = this.extractAttribute(addResponse, 'baseRef', 'internalId');
     return newId;
+  }
+
+  private extractInitializedFulfillmentRecord(response: string): string | null {
+    const match = response.match(/<record\b[\s\S]*?<\/record>/);
+    return match ? match[0] : null;
+  }
+
+  private markReceivableFulfillmentLines(
+    initializedRecord: string,
+    fulfillmentData: Record<string, unknown>
+  ): { recordXml: string; receivableLineCount: number } {
+    let receivableLineCount = 0;
+    const lineSelections = this.parseFulfillmentLineSelections(fulfillmentData);
+
+    const recordXml = initializedRecord.replace(
+      /<tranSales:item>([\s\S]*?)<\/tranSales:item>/g,
+      (fullMatch, itemBody: string) => {
+        const quantityRemainingRaw = this.extractTag(itemBody, 'quantityRemaining') || '0';
+        const quantityRemaining = Number(quantityRemainingRaw);
+        const orderLine = this.extractTag(itemBody, 'orderLine') || '';
+        const itemInternalId = this.extractAttribute(itemBody, 'item', 'internalId') || '';
+        const selectedLine = lineSelections.find(
+          line =>
+            (line.orderLine && line.orderLine === orderLine) ||
+            (line.itemId && line.itemId === itemInternalId)
+        );
+        const shouldReceive = selectedLine
+          ? Number.isFinite(quantityRemaining) && quantityRemaining > 0 && selectedLine.quantity > 0
+          : lineSelections.length === 0 &&
+            Number.isFinite(quantityRemaining) &&
+            quantityRemaining > 0;
+
+        if (shouldReceive) {
+          receivableLineCount += 1;
+        }
+
+        let updatedBody = itemBody;
+
+        if (itemBody.includes('<tranSales:itemReceive>')) {
+          updatedBody = updatedBody.replace(
+            /<tranSales:itemReceive>(true|false)<\/tranSales:itemReceive>/,
+            `<tranSales:itemReceive>${shouldReceive ? 'true' : 'false'}</tranSales:itemReceive>`
+          );
+        } else {
+          updatedBody = `<tranSales:itemReceive>${shouldReceive ? 'true' : 'false'}</tranSales:itemReceive>${updatedBody}`;
+        }
+
+        if (selectedLine && shouldReceive && Number.isFinite(selectedLine.quantity)) {
+          if (updatedBody.includes('<tranSales:quantity>')) {
+            updatedBody = updatedBody.replace(
+              /<tranSales:quantity>[\s\S]*?<\/tranSales:quantity>/,
+              `<tranSales:quantity>${selectedLine.quantity}</tranSales:quantity>`
+            );
+          } else if (updatedBody.includes('<tranSales:quantityRemaining>')) {
+            updatedBody = updatedBody.replace(
+              /<tranSales:quantityRemaining>[\s\S]*?<\/tranSales:quantityRemaining>/,
+              match => `${match}<tranSales:quantity>${selectedLine.quantity}</tranSales:quantity>`
+            );
+          } else {
+            updatedBody = `${updatedBody}<tranSales:quantity>${selectedLine.quantity}</tranSales:quantity>`;
+          }
+        }
+
+        return `<tranSales:item>${updatedBody}</tranSales:item>`;
+      }
+    );
+
+    return { recordXml, receivableLineCount };
+  }
+
+  private parseFulfillmentLineSelections(
+    fulfillmentData: Record<string, unknown>
+  ): Array<{ orderLine?: string; itemId?: string; quantity: number }> {
+    const lines = Array.isArray(fulfillmentData.lines) ? fulfillmentData.lines : [];
+    const parsed: Array<{ orderLine?: string; itemId?: string; quantity: number }> = [];
+
+    for (const line of lines as unknown[]) {
+      if (!line || typeof line !== 'object') continue;
+
+      const candidate = line as Record<string, unknown>;
+      const quantity = Number(candidate.quantity ?? 0);
+      const orderLine =
+        candidate.orderLine != null && candidate.orderLine !== ''
+          ? String(candidate.orderLine)
+          : undefined;
+      const itemId =
+        candidate.itemId != null && candidate.itemId !== '' ? String(candidate.itemId) : undefined;
+
+      if ((!orderLine && !itemId) || !Number.isFinite(quantity)) {
+        continue;
+      }
+
+      parsed.push({ orderLine, itemId, quantity });
+    }
+
+    return parsed;
   }
 
   // ==========================================================================

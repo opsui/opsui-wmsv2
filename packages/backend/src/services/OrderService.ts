@@ -53,8 +53,9 @@ import { orderRepository } from '../repositories/OrderRepository';
 import { pickTaskRepository } from '../repositories/PickTaskRepository';
 import { validateOrderItems, validatePickSKU, validatePickQuantity } from '@opsui/shared';
 import { logger } from '../config/logger';
-import { query } from '../db/client';
+import { getDefaultPool, query } from '../db/client';
 import { notificationService } from './NotificationService';
+import { NetSuiteClient } from './NetSuiteClient';
 import wsServer from '../websocket';
 
 // ============================================================================
@@ -62,6 +63,154 @@ import wsServer from '../websocket';
 // ============================================================================
 
 export class OrderService {
+  private pickBestExistingFulfillment(
+    fulfillments: Array<{ id?: string; tranId?: string; shipStatus?: string }>
+  ): { id?: string; tranId?: string; shipStatus?: string } | null {
+    if (!fulfillments.length) return null;
+
+    const rank = (shipStatus?: string): number => {
+      const normalized = (shipStatus || '').toLowerCase();
+      if (normalized.includes('shipped')) return 3;
+      if (normalized.includes('packed')) return 2;
+      if (normalized.includes('picked')) return 1;
+      return 0;
+    };
+
+    return [...fulfillments].sort((a, b) => {
+      const rankDiff = rank(b.shipStatus) - rank(a.shipStatus);
+      if (rankDiff !== 0) return rankDiff;
+
+      const aId = Number(a.id || 0);
+      const bId = Number(b.id || 0);
+      if (Number.isFinite(aId) && Number.isFinite(bId)) {
+        return bId - aId;
+      }
+
+      return String(b.id || '').localeCompare(String(a.id || ''));
+    })[0];
+  }
+
+  private async createNetSuiteFulfillmentForPickedOrder(orderId: string): Promise<void> {
+    const orderResult = await query(
+      `SELECT
+         o.organization_id,
+         o.netsuite_so_internal_id,
+         o.netsuite_so_tran_id,
+         o.netsuite_if_internal_id
+       FROM orders o
+       WHERE o.order_id = $1
+         AND o.netsuite_so_internal_id IS NOT NULL
+       LIMIT 1`,
+      [orderId]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return;
+    }
+
+    const order = orderResult.rows[0];
+    if (order.netsuiteIfInternalId) {
+      return;
+    }
+
+    const integrationResult = await getDefaultPool().query(
+      `SELECT
+         i.integration_id,
+         i.configuration
+       FROM integration_organizations io
+       JOIN integrations i ON i.integration_id = io.integration_id
+       WHERE io.organization_id = $1
+         AND i.provider = 'NETSUITE'
+         AND i.enabled = true
+       ORDER BY i.updated_at DESC NULLS LAST, i.created_at DESC
+       LIMIT 1`,
+      [order.organizationId]
+    );
+
+    if (integrationResult.rows.length === 0) {
+      logger.warn('No enabled NetSuite integration found for picked order', {
+        orderId,
+        organizationId: order.organizationId,
+        netsuiteSoTranId: order.netsuiteSoTranId,
+      });
+      return;
+    }
+
+    const integration = integrationResult.rows[0];
+    const authConfig = integration.configuration?.auth || integration.configuration || {};
+
+    const client = new NetSuiteClient({
+      accountId: authConfig.accountId,
+      tokenId: authConfig.tokenId,
+      tokenSecret: authConfig.tokenSecret,
+      consumerKey: authConfig.consumerKey,
+      consumerSecret: authConfig.consumerSecret,
+    });
+
+    const existingFulfillments = await client.getItemFulfillmentsBySalesOrder([
+      order.netsuiteSoInternalId,
+    ]);
+    const existingFulfillment = this.pickBestExistingFulfillment(existingFulfillments);
+
+    if (existingFulfillment?.id) {
+      await query(
+        `UPDATE orders
+         SET netsuite_if_internal_id = $1,
+             netsuite_if_tran_id = COALESCE($2, netsuite_if_tran_id),
+             netsuite_last_synced_at = NOW(),
+             updated_at = NOW()
+         WHERE order_id = $3`,
+        [existingFulfillment.id, existingFulfillment.tranId || null, orderId]
+      );
+
+      logger.info('Linked existing NetSuite fulfillment for picked order', {
+        orderId,
+        integrationId: integration.integration_id,
+        netsuiteSoInternalId: order.netsuiteSoInternalId,
+        netsuiteSoTranId: order.netsuiteSoTranId,
+        netsuiteIfInternalId: existingFulfillment.id,
+        netsuiteIfTranId: existingFulfillment.tranId || null,
+        shipStatus: existingFulfillment.shipStatus || null,
+      });
+      return;
+    }
+
+    const fulfillmentId = await client.createItemFulfillment(order.netsuiteSoInternalId, {});
+    let fulfillmentTranId: string | null = null;
+
+    try {
+      const fulfillment = await client.getItemFulfillment(fulfillmentId);
+      fulfillmentTranId = fulfillment?.tranId || null;
+    } catch (error: any) {
+      logger.warn('NetSuite fulfillment created but detail fetch failed', {
+        orderId,
+        integrationId: integration.integration_id,
+        netsuiteSoTranId: order.netsuiteSoTranId,
+        netsuiteIfInternalId: fulfillmentId,
+        error: error.message,
+      });
+    }
+
+    await query(
+      `UPDATE orders
+       SET netsuite_if_internal_id = $1,
+           netsuite_if_tran_id = COALESCE($2, netsuite_if_tran_id),
+           netsuite_last_synced_at = NOW(),
+           updated_at = NOW()
+       WHERE order_id = $3`,
+      [fulfillmentId, fulfillmentTranId, orderId]
+    );
+
+    logger.info('Created NetSuite fulfillment for picked order', {
+      orderId,
+      integrationId: integration.integration_id,
+      netsuiteSoInternalId: order.netsuiteSoInternalId,
+      netsuiteSoTranId: order.netsuiteSoTranId,
+      netsuiteIfInternalId: fulfillmentId,
+      netsuiteIfTranId: fulfillmentTranId,
+    });
+  }
+
   // --------------------------------------------------------------------------
   // CREATE ORDER
   // --------------------------------------------------------------------------
@@ -753,6 +902,8 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async completeOrder(orderId: string, dto: CompleteOrderDTO): Promise<Order> {
+    await this.createNetSuiteFulfillmentForPickedOrder(orderId);
+
     const order = await orderRepository.updateStatus(orderId, OrderStatus.PICKED);
 
     // Send notification to all users about order being completed

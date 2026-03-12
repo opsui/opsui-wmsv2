@@ -533,6 +533,7 @@ export interface Order {
   orderId: string;
   customerId: string;
   customerName: string;
+  customerPoNumber?: string;
   priority: OrderPriority;
   status: OrderStatus;
   createdAt: Date;
@@ -560,6 +561,7 @@ export interface Order {
   totalAmount?: number; // Final total (subtotal + tax + shipping - discount)
   currency?: string; // Currency code for the order
   // Shipping fields (populated when order is SHIPPED)
+  shippingAddress?: Address;
   carrier?: string;
   trackingNumber?: string;
 }

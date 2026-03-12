@@ -20,8 +20,7 @@ describe('NetSuiteClient', () => {
 
   it('uses RecordRef search values when fetching fulfillments by sales order', async () => {
     const client = new NetSuiteClient(credentials);
-    const soapRequest = jest
-      .spyOn(client as any, 'soapRequest')
+    const soapRequest = jest.spyOn(client as any, 'soapRequest')
       .mockResolvedValue(`<?xml version="1.0" encoding="UTF-8"?>
         <searchResponse>
           <platformCore:status isSuccess="true" />
@@ -60,8 +59,7 @@ describe('NetSuiteClient', () => {
     const client = new NetSuiteClient(credentials);
     const soapRequest = jest.spyOn(client as any, 'soapRequest');
 
-    soapRequest
-      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <searchResponse>
           <platformCore:status isSuccess="true" />
           <platformCore:totalRecords>2</platformCore:totalRecords>
@@ -74,8 +72,7 @@ describe('NetSuiteClient', () => {
               <shipStatus>_picked</shipStatus>
             </record>
           </recordList>
-        </searchResponse>`)
-      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        </searchResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <searchMoreWithIdResponse>
           <platformCore:status isSuccess="true" />
           <recordList>
@@ -96,8 +93,7 @@ describe('NetSuiteClient', () => {
 
   it('uses caller-provided modifiedAfter when fetching item fulfillments', async () => {
     const client = new NetSuiteClient(credentials);
-    const soapRequest = jest
-      .spyOn(client as any, 'soapRequest')
+    const soapRequest = jest.spyOn(client as any, 'soapRequest')
       .mockResolvedValue(`<?xml version="1.0" encoding="UTF-8"?>
         <searchResponse>
           <platformCore:status isSuccess="true" />
@@ -112,5 +108,176 @@ describe('NetSuiteClient', () => {
     const [, envelope] = soapRequest.mock.calls[0];
     expect(envelope).toContain('<platformCommon:lastModifiedDate operator="after">');
     expect(envelope).toContain('2026-03-13T09:30:00.000Z');
+  });
+
+  it('falls back to kitItem when fetching item details for NetSuite kit records', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <getResponse>
+          <platformCore:status isSuccess="false" />
+          <platformCore:faultstring>The record you are attempting to load has a different type: kititem from the type specified: inventoryitem.</platformCore:faultstring>
+        </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <getResponse>
+          <platformCore:status isSuccess="false" />
+          <platformCore:faultstring>The record you are attempting to load has a different type: kititem from the type specified: assemblyitem.</platformCore:faultstring>
+        </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <getResponse>
+          <platformCore:status isSuccess="true" />
+          <record internalId="3223" xsi:type="listAcct:KitItem">
+            <itemId>INFINITY GARAGE</itemId>
+            <displayName>INFINITY GARAGE</displayName>
+            <upcCode>9421036673999</upcCode>
+            <preferredBinNumber>I1A</preferredBinNumber>
+          </record>
+        </getResponse>`);
+
+    const item = await client.getInventoryItem('3223');
+
+    expect(item).toEqual(
+      expect.objectContaining({
+        id: '3223',
+        itemId: 'INFINITY GARAGE',
+        displayName: 'INFINITY GARAGE',
+        upcCode: '9421036673999',
+        binNumber: 'I1A',
+      })
+    );
+    expect(soapRequest).toHaveBeenCalledTimes(3);
+    expect(soapRequest.mock.calls[2][1]).toContain('type="kitItem"');
+  });
+
+  it('uses InitializeRef and picked ship status when creating item fulfillments', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <initializeResponse>
+          <platformCore:status isSuccess="true" />
+          <record xsi:type="tranSales:ItemFulfillment">
+            <tranSales:shipStatus>_picked</tranSales:shipStatus>
+            <tranSales:itemList>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:quantityRemaining>1</tranSales:quantityRemaining>
+              </tranSales:item>
+            </tranSales:itemList>
+          </record>
+        </initializeResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <addResponse>
+          <platformCore:status isSuccess="true" />
+          <baseRef internalId="1609999" />
+        </addResponse>`);
+
+    const fulfillmentId = await client.createItemFulfillment('1604613', {});
+
+    expect(fulfillmentId).toBe('1609999');
+
+    const [, initializeEnvelope] = soapRequest.mock.calls[0];
+    expect(initializeEnvelope).toContain('<tns:initializeRecord>');
+    expect(initializeEnvelope).toContain(
+      '<platformCore:reference xsi:type="platformCore:InitializeRef" type="salesOrder" internalId="1604613"/>'
+    );
+
+    const [, addEnvelope] = soapRequest.mock.calls[1];
+    expect(addEnvelope).toContain('<tranSales:itemReceive>true</tranSales:itemReceive>');
+    expect(addEnvelope).toContain('<tranSales:shipStatus>_picked</tranSales:shipStatus>');
+  });
+
+  it('only marks receivable fulfillment lines for receipt', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <initializeResponse>
+          <platformCore:status isSuccess="true" />
+          <record xsi:type="tranSales:ItemFulfillment">
+            <tranSales:itemList>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:quantityRemaining>1</tranSales:quantityRemaining>
+              </tranSales:item>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:quantityRemaining>0</tranSales:quantityRemaining>
+              </tranSales:item>
+            </tranSales:itemList>
+          </record>
+        </initializeResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <addResponse>
+          <platformCore:status isSuccess="true" />
+          <baseRef internalId="1609998" />
+        </addResponse>`);
+
+    await client.createItemFulfillment('1604613', {});
+
+    const [, addEnvelope] = soapRequest.mock.calls[1];
+    expect(addEnvelope).toContain('<tranSales:quantityRemaining>1</tranSales:quantityRemaining>');
+    expect(addEnvelope).toContain('<tranSales:itemReceive>true</tranSales:itemReceive>');
+    expect(addEnvelope).toContain('<tranSales:quantityRemaining>0</tranSales:quantityRemaining>');
+    expect(addEnvelope).toContain('<tranSales:itemReceive>false</tranSales:itemReceive>');
+  });
+
+  it('fails clearly when NetSuite initialize returns no receivable lines', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+      <initializeResponse>
+        <platformCore:status isSuccess="true" />
+        <record xsi:type="tranSales:ItemFulfillment">
+          <tranSales:itemList>
+            <tranSales:item>
+              <tranSales:itemReceive>false</tranSales:itemReceive>
+              <tranSales:quantityRemaining>0</tranSales:quantityRemaining>
+            </tranSales:item>
+          </tranSales:itemList>
+        </record>
+      </initializeResponse>`);
+
+    await expect(client.createItemFulfillment('1604613', {})).rejects.toThrow(
+      'no receivable fulfillment lines'
+    );
+    expect(soapRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('supports selecting a subset of fulfillment lines by order line', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <initializeResponse>
+          <platformCore:status isSuccess="true" />
+          <record xsi:type="tranSales:ItemFulfillment">
+            <tranSales:itemList>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:orderLine>1</tranSales:orderLine>
+                <tranSales:quantityRemaining>2</tranSales:quantityRemaining>
+              </tranSales:item>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:orderLine>2</tranSales:orderLine>
+                <tranSales:quantityRemaining>1</tranSales:quantityRemaining>
+              </tranSales:item>
+            </tranSales:itemList>
+          </record>
+        </initializeResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <addResponse>
+          <platformCore:status isSuccess="true" />
+          <baseRef internalId="1609997" />
+        </addResponse>`);
+
+    await client.createItemFulfillment('1604613', {
+      lines: [{ orderLine: 2, quantity: 1 }],
+    });
+
+    const [, addEnvelope] = soapRequest.mock.calls[1];
+    expect(addEnvelope).toContain('<tranSales:orderLine>1</tranSales:orderLine>');
+    expect(addEnvelope).toContain('<tranSales:orderLine>2</tranSales:orderLine>');
+    expect(addEnvelope).toContain('<tranSales:quantity>1</tranSales:quantity>');
+    expect(addEnvelope).toContain('<tranSales:itemReceive>true</tranSales:itemReceive>');
+    expect(addEnvelope).toContain('<tranSales:itemReceive>false</tranSales:itemReceive>');
   });
 });

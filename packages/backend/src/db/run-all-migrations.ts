@@ -92,6 +92,14 @@ const ALL_MIGRATIONS = [
   { file: '058_advanced_inventory.sql', name: '058_advanced_inventory' },
   { file: '059_advanced_financials.sql', name: '059_advanced_financials' },
   { file: '061_add_all_missing_roles.sql', name: '061_add_all_missing_roles' },
+  {
+    file: '104_add_netsuite_available_quantity.sql',
+    name: '104_add_netsuite_available_quantity',
+  },
+  {
+    file: '105_add_order_customer_po_and_nzc_carrier.sql',
+    name: '105_add_order_customer_po_and_nzc_carrier',
+  },
 ];
 
 const isDryRun = process.argv.includes('--dry-run');

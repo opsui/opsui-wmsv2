@@ -69,23 +69,25 @@ describe('NetSuiteOrderSyncService', () => {
 
   it('cancels pending orders when NetSuite still shows pending fulfillment but readyToShip is false', async () => {
     const { client, service } = createService();
-    const queryMock = jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
-        return {
-          rows: [
-            {
-              order_id: 'SO67672',
-              status: 'PENDING',
-              netsuite_so_internal_id: '1580042',
-              netsuite_so_tran_id: 'SO67672',
-            },
-          ],
-          rowCount: 1,
-        };
-      }
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockImplementation(async (sql: string) => {
+        if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+          return {
+            rows: [
+              {
+                order_id: 'SO67672',
+                status: 'PENDING',
+                netsuite_so_internal_id: '1580042',
+                netsuite_so_tran_id: 'SO67672',
+              },
+            ],
+            rowCount: 1,
+          };
+        }
 
-      return { rows: [], rowCount: 0 };
-    });
+        return { rows: [], rowCount: 0 };
+      });
 
     const pendingNotReadySalesOrder: NetSuiteSalesOrder = {
       id: '1580042',
@@ -237,11 +239,15 @@ describe('NetSuiteOrderSyncService', () => {
 
   it('reverts shipped orders to pending when the sales order is still pending fulfillment without a fulfillment', async () => {
     const { service } = createService();
-    const queryMock = jest.spyOn(service as any, 'query').mockResolvedValue({ rows: [], rowCount: 0 });
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockResolvedValue({ rows: [], rowCount: 0 });
 
-    jest
-      .spyOn(service as any, 'findOrderByNetSuiteSoId')
-      .mockResolvedValue({ orderId: 'SO68381', status: 'SHIPPED', netsuiteIfInternalId: '1602045' });
+    jest.spyOn(service as any, 'findOrderByNetSuiteSoId').mockResolvedValue({
+      orderId: 'SO68381',
+      status: 'SHIPPED',
+      netsuiteIfInternalId: '1602045',
+    });
     jest.spyOn(service as any, 'findOrderByExternalIdFull').mockResolvedValue(null);
 
     const salesOrder = baseSalesOrder();
@@ -516,9 +522,63 @@ describe('NetSuiteOrderSyncService', () => {
     });
   });
 
-  it(
-    'moves picking orders directly to packed when NetSuite fulfillment is already packed',
-    async () => {
+  it('refreshes existing order items with NetSuite available quantity and catalog metadata', async () => {
+    const { service } = createService();
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockImplementation(async (sql: string) => {
+        if (sql.includes('SELECT bin_locations[1] as bin_location FROM skus')) {
+          return { rows: [{ bin_location: 'I1A' }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
+    jest
+      .spyOn(service as any, 'findOrderByNetSuiteSoId')
+      .mockResolvedValue({ orderId: 'SO68539', status: 'PICKING', netsuiteIfInternalId: null });
+    jest.spyOn(service as any, 'findOrderByExternalIdFull').mockResolvedValue(null);
+    jest.spyOn(service as any, 'findSkuByNetSuiteItem').mockResolvedValue('INFINITY GARAGE');
+    jest.spyOn(service as any, 'getItemDetails').mockResolvedValue({
+      itemId: 'INFINITY GARAGE',
+      displayName: 'INFINITY GARAGE',
+      upcCode: '9421036673999',
+      binNumber: 'I1A',
+    });
+
+    await (service as any).upsertFromSalesOrder(
+      baseSalesOrder({
+        id: '1604613',
+        tranId: 'SO68539',
+        item: {
+          items: [
+            {
+              item: { id: '3223', refName: 'INFINITY GARAGE' },
+              quantity: 1,
+              quantityCommitted: 1,
+              quantityAvailable: 251,
+              line: 1,
+            },
+          ],
+        },
+      }),
+      new Map(),
+      new Date('2026-03-13T00:00:00.000Z'),
+      {}
+    );
+
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining('netsuite_available_quantity = $2'),
+      ['INFINITY GARAGE', 251, 'I1A', 'SO68539', 'INFINITY GARAGE']
+    );
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('UPDATE pick_tasks'), [
+      'INFINITY GARAGE',
+      'I1A',
+      'SO68539',
+      'INFINITY GARAGE',
+    ]);
+  });
+
+  it('moves picking orders directly to packed when NetSuite fulfillment is already packed', async () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
@@ -565,9 +625,7 @@ describe('NetSuiteOrderSyncService', () => {
       ifTranId: 'IF90005',
       items: [],
     });
-    },
-    15000
-  );
+  }, 15000);
 
   it('chooses the most advanced fulfillment instead of the last one for pending orders', async () => {
     const { client, service } = createService();

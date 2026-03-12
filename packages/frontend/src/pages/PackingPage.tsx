@@ -110,6 +110,30 @@ export function PackingPage() {
 
   // Helper to convert lbs to kg for NZC API
   const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
+  const normalizeShipToAddress = (rawAddress: any, fallbackName: string): Address => ({
+    name: rawAddress?.name || fallbackName || 'Customer',
+    company: rawAddress?.company || undefined,
+    addressLine1: rawAddress?.addressLine1 || rawAddress?.street1 || '',
+    addressLine2: rawAddress?.addressLine2 || rawAddress?.street2 || '',
+    city: rawAddress?.city || '',
+    state: rawAddress?.state || '',
+    postalCode: rawAddress?.postalCode || rawAddress?.zip || '',
+    country:
+      rawAddress?.country === '_newZealand'
+        ? 'NZ'
+        : rawAddress?.country?.id === '_newZealand'
+          ? 'NZ'
+          : rawAddress?.country?.refName || rawAddress?.country || 'NZ',
+    phone: rawAddress?.phone || undefined,
+    email: rawAddress?.email || undefined,
+  });
+  const formatAddressLines = (address: Address): string[] =>
+    [
+      address.addressLine1,
+      address.addressLine2,
+      [address.city, address.state, address.postalCode].filter(Boolean).join(', '),
+      address.country,
+    ].filter(Boolean);
 
   // Fetch carriers for shipping form
   const { data: carriers = [] } = useQuery({
@@ -122,6 +146,13 @@ export function PackingPage() {
 
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const completePackingMutation = useCompletePacking();
+  const shipToAddress = normalizeShipToAddress(
+    order?.shippingAddress,
+    order?.customerName || 'Customer'
+  );
+  const trackingDefault = [order?.netsuiteSoTranId || order?.orderId, order?.customerPoNumber]
+    .filter(Boolean)
+    .join(', ');
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
@@ -308,13 +339,15 @@ export function PackingPage() {
       try {
         const response = await nzcApi.getRates({
           destination: {
-            name: order?.customerName || 'Customer',
-            company: 'Customer Company',
-            addressLine1: '456 Customer Ave',
-            city: 'Auckland',
-            state: '',
-            postalCode: '1010',
-            country: 'NZ',
+            name: shipToAddress.name,
+            company: shipToAddress.company,
+            addressLine1: shipToAddress.addressLine1,
+            city: shipToAddress.city,
+            state: shipToAddress.state,
+            postalCode: shipToAddress.postalCode,
+            country: shipToAddress.country,
+            phone: shipToAddress.phone,
+            email: shipToAddress.email,
           },
           packages: [
             {
@@ -348,7 +381,13 @@ export function PackingPage() {
 
     const timeoutId = setTimeout(fetchNZCRates, 500);
     return () => clearTimeout(timeoutId);
-  }, [selectedCarrierId, totalWeight, totalPackages, carriers, order]);
+  }, [selectedCarrierId, totalWeight, totalPackages, carriers, shipToAddress]);
+
+  useEffect(() => {
+    if (!trackingNumber.trim() && trackingDefault) {
+      setTrackingNumber(trackingDefault);
+    }
+  }, [trackingDefault, trackingNumber]);
 
   if (!orderId) {
     return <div>No order ID provided</div>;
@@ -786,15 +825,6 @@ export function PackingPage() {
         country: 'NZ',
       };
 
-      const shipToAddress: Address = {
-        name: order?.customerName || 'Customer',
-        addressLine1: '456 Customer Ave',
-        city: 'Auckland',
-        state: '',
-        postalCode: '1010',
-        country: 'NZ',
-      };
-
       if (isNZCCarrier) {
         if (!selectedQuote) {
           showToast('Please select a shipping rate/quote', 'error');
@@ -813,6 +843,8 @@ export function PackingPage() {
             state: shipToAddress.state,
             postalCode: shipToAddress.postalCode,
             country: shipToAddress.country,
+            phone: shipToAddress.phone,
+            email: shipToAddress.email,
           },
           packages: [
             {
@@ -1233,9 +1265,11 @@ export function PackingPage() {
                         Shipping To
                       </p>
                       <p className="text-white font-semibold">{order.customerName}</p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        In production, customer address will be loaded from order details
-                      </p>
+                      <div className="text-sm text-gray-400 mt-1 space-y-1">
+                        {formatAddressLines(shipToAddress).map(line => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
                     </div>
 
                     {/* NZC Rates Display */}

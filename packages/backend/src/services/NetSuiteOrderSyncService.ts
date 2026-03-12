@@ -212,7 +212,9 @@ export class NetSuiteOrderSyncService {
     return [...bestBySoId.values(), ...standalone];
   }
 
-  private getOrderStatusFromFulfillmentShipStatus(shipStatus: string): 'PICKED' | 'PACKED' | 'SHIPPED' {
+  private getOrderStatusFromFulfillmentShipStatus(
+    shipStatus: string
+  ): 'PICKED' | 'PACKED' | 'SHIPPED' {
     const normalizedStatus = (shipStatus || '').toLowerCase();
     if (normalizedStatus.includes('shipped')) return 'SHIPPED';
     if (normalizedStatus.includes('packed')) return 'PACKED';
@@ -358,6 +360,7 @@ export class NetSuiteOrderSyncService {
       { name: 'netsuite_if_tran_id', type: 'VARCHAR(50)' },
       { name: 'netsuite_last_synced_at', type: 'TIMESTAMP WITH TIME ZONE' },
       { name: 'netsuite_source', type: 'VARCHAR(20)' },
+      { name: 'customer_po_number', type: 'VARCHAR(100)' },
     ];
 
     for (const col of columns) {
@@ -777,11 +780,14 @@ export class NetSuiteOrderSyncService {
               });
               result.updated++;
               result.details.updated.push(row.netsuite_so_tran_id || soId);
-              logger.info(`Updated PICKING order to ${targetStatus} (fulfillment found on NetSuite)`, {
-                orderId: row.order_id,
-                soTranId: row.netsuite_so_tran_id,
-                shipStatus,
-              });
+              logger.info(
+                `Updated PICKING order to ${targetStatus} (fulfillment found on NetSuite)`,
+                {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  shipStatus,
+                }
+              );
               await this.markOrderSynced(row.order_id, syncStartTime);
               continue;
             }
@@ -826,11 +832,14 @@ export class NetSuiteOrderSyncService {
             });
             result.updated++;
             result.details.updated.push(row.netsuite_so_tran_id || soId);
-            logger.info(`Updated PENDING order to ${targetStatus} (fulfillment found on NetSuite)`, {
-              orderId: row.order_id,
-              soTranId: row.netsuite_so_tran_id,
-              shipStatus,
-            });
+            logger.info(
+              `Updated PENDING order to ${targetStatus} (fulfillment found on NetSuite)`,
+              {
+                orderId: row.order_id,
+                soTranId: row.netsuite_so_tran_id,
+                shipStatus,
+              }
+            );
             await this.markOrderSynced(row.order_id, syncStartTime);
             continue;
           }
@@ -868,9 +877,7 @@ export class NetSuiteOrderSyncService {
             const soDetail = await this.getSalesOrderCached(soId);
             const soStatus = (soDetail.status?.refName || '').toLowerCase();
             const soLines = soDetail.item?.items || [];
-            const hasFulfilledQuantity = soLines.some(
-              line => (line.quantityFulfilled || 0) > 0
-            );
+            const hasFulfilledQuantity = soLines.some(line => (line.quantityFulfilled || 0) > 0);
 
             if (soStatus.includes('pending fulfillment')) {
               if (soDetail.readyToShip === false) {
@@ -1385,14 +1392,17 @@ export class NetSuiteOrderSyncService {
           await this.query(
             `UPDATE orders
              SET subtotal = CASE WHEN subtotal IS NULL OR subtotal = 0 THEN $1 ELSE subtotal END,
-                 total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END
+                 total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END,
+                 customer_po_number = COALESCE(customer_po_number, $4)
              WHERE order_id = $3`,
-            [derivedSubtotal, derivedTotal, existing.orderId]
+            [derivedSubtotal, derivedTotal, existing.orderId, parentSalesOrder.otherRefNum || null]
           );
         } catch {
           /* safe to ignore */
         }
       }
+
+      await this.syncExistingOrderItemsFromSalesOrder(existing.orderId, lineItems);
 
       // UPDATE existing order
       let updated = false;
@@ -1460,10 +1470,11 @@ export class NetSuiteOrderSyncService {
           `UPDATE orders SET netsuite_so_internal_id = COALESCE(netsuite_so_internal_id, $1),
                              netsuite_so_tran_id = COALESCE(netsuite_so_tran_id, $2),
                              netsuite_source = 'NETSUITE',
+                             customer_po_number = COALESCE(customer_po_number, $4),
                              subtotal = COALESCE(subtotal, (SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = $3)),
                              total_amount = COALESCE(total_amount, (SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = $3))
            WHERE order_id = $3`,
-          [soInternalId, tranId, existing.orderId]
+          [soInternalId, tranId, existing.orderId, salesOrder.otherRefNum || null]
         );
       } catch {
         /* safe to ignore */
@@ -1587,9 +1598,10 @@ export class NetSuiteOrderSyncService {
         await this.query(
           `UPDATE orders
            SET subtotal = CASE WHEN subtotal IS NULL OR subtotal = 0 THEN $1 ELSE subtotal END,
-               total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END
+               total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END,
+               customer_po_number = COALESCE(customer_po_number, $4)
            WHERE order_id = $3`,
-          [derivedSubtotal, derivedTotal, existing.orderId]
+          [derivedSubtotal, derivedTotal, existing.orderId, parentSalesOrder?.otherRefNum || null]
         );
       } catch {
         /* safe to ignore */
@@ -2148,7 +2160,7 @@ export class NetSuiteOrderSyncService {
     await this.query(
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
-        shipping_address, customer_email, organization_id,
+        shipping_address, customer_email, organization_id, customer_po_number,
         subtotal, total_amount,
         netsuite_so_internal_id, netsuite_so_tran_id,
         netsuite_if_internal_id, netsuite_if_tran_id,
@@ -2156,11 +2168,11 @@ export class NetSuiteOrderSyncService {
         picked_at, shipped_at, packed_at,
         created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5::order_status, $6, $7, $8, $9,
-        $10, $11,
-        $12, $13, $14, $15,
-        'NETSUITE', $16,
-        $17, $18, $19,
+        $1, $2, $3, $4, $5::order_status, $6, $7, $8, $9, $10,
+        $11, $12,
+        $13, $14, $15, $16,
+        'NETSUITE', $17,
+        $18, $19, $20,
         NOW(), NOW()
       )`,
       [
@@ -2173,6 +2185,7 @@ export class NetSuiteOrderSyncService {
         shippingAddress ? JSON.stringify(shippingAddress) : null,
         `netsuite:${salesOrder.tranId}`,
         this.organizationId,
+        salesOrder.otherRefNum || null,
         subtotal,
         totalAmount,
         soInternalId,
@@ -2213,8 +2226,8 @@ export class NetSuiteOrderSyncService {
       await this.query(
         `INSERT INTO order_items (
           order_item_id, order_id, sku, name, quantity, bin_location, status,
-          unit_price, line_total, currency
-        ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, 'NZD')`,
+          unit_price, line_total, currency, netsuite_available_quantity
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, 'NZD', $9)`,
         [
           `OI-${orderId}-${i}`,
           orderId,
@@ -2224,6 +2237,7 @@ export class NetSuiteOrderSyncService {
           binLocation,
           line.rate || 0,
           line.amount || (line.rate || 0) * itemQuantity,
+          line.quantityAvailable ?? null,
         ]
       );
     }
@@ -2330,8 +2344,8 @@ export class NetSuiteOrderSyncService {
       await this.query(
         `INSERT INTO order_items (
           order_item_id, order_id, sku, name, quantity, bin_location, status,
-          unit_price, line_total, currency
-        ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, 'NZD')`,
+          unit_price, line_total, currency, netsuite_available_quantity
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING', $7, $8, 'NZD', $9)`,
         [
           `OI-${orderId}-${i}`,
           orderId,
@@ -2341,6 +2355,7 @@ export class NetSuiteOrderSyncService {
           binLocation,
           line.rate || 0,
           line.amount || (line.rate || 0) * (line.quantity || 1),
+          line.quantityAvailable ?? null,
         ]
       );
     }
@@ -2483,6 +2498,58 @@ export class NetSuiteOrderSyncService {
       barcode,
       bin,
     });
+  }
+
+  private async syncExistingOrderItemsFromSalesOrder(
+    orderId: string,
+    lineItems: NetSuiteSalesOrderLine[]
+  ): Promise<void> {
+    for (const line of lineItems) {
+      const sku = await this.findSkuByNetSuiteItem(line.item?.id, line.item?.refName);
+      const skuCode = sku || line.item?.refName || line.item?.id;
+      if (!skuCode) continue;
+
+      const itemDetails = await this.getItemDetails(line.item?.id);
+      const rawName = itemDetails?.displayName || line.item?.refName || skuCode;
+      const itemName = decodeHtmlEntities(rawName);
+      const barcode = itemDetails?.upcCode || undefined;
+      const nsBin = itemDetails?.binNumber || undefined;
+
+      await this.ensureSku(skuCode, itemName, barcode, nsBin);
+
+      const skuResult = await this.query(
+        `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
+        [skuCode]
+      );
+      const binLocation = skuResult.rows[0]?.bin_location || 'UNASSIGNED';
+
+      await this.query(
+        `UPDATE order_items
+         SET name = COALESCE(NULLIF(name, ''), $1::varchar),
+             netsuite_available_quantity = $2::numeric,
+             bin_location = CASE
+               WHEN (bin_location IS NULL OR bin_location = '' OR bin_location = 'UNASSIGNED')
+                    AND $3::varchar IS NOT NULL AND $3::varchar <> '' THEN $3::varchar
+               ELSE bin_location
+             END
+         WHERE order_id = $4
+           AND sku = $5`,
+        [itemName, line.quantityAvailable ?? null, binLocation, orderId, skuCode]
+      );
+
+      await this.query(
+        `UPDATE pick_tasks
+         SET name = COALESCE(NULLIF(name, ''), $1::varchar),
+             target_bin = CASE
+               WHEN (target_bin IS NULL OR target_bin = '' OR target_bin = 'UNASSIGNED')
+                    AND $2::varchar IS NOT NULL AND $2::varchar <> '' THEN $2::varchar
+               ELSE target_bin
+             END
+         WHERE order_id = $3
+           AND sku = $4`,
+        [itemName, binLocation, orderId, skuCode]
+      );
+    }
   }
 
   /**

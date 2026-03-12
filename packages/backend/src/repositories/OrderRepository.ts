@@ -301,11 +301,12 @@ export class OrderRepository extends BaseRepository<Order> {
           (sum: number, item: any) => sum + Number(item.lineTotal || 0),
           0
         );
+        const legacyRow = order as any;
         const rowTotal =
           order.totalAmount != null
             ? Number(order.totalAmount)
-            : order.total_amount != null
-              ? Number(order.total_amount)
+            : legacyRow.total_amount != null
+              ? Number(legacyRow.total_amount)
               : 0;
         const totalAmount = rowTotal > 0 ? rowTotal : computedTotal;
 
@@ -425,11 +426,12 @@ export class OrderRepository extends BaseRepository<Order> {
           (sum, item) => sum + Number(item.lineTotal || 0),
           0
         );
+        const legacyRow = order as any;
         const rowTotal =
           order.totalAmount != null
             ? Number(order.totalAmount)
-            : order.total_amount != null
-              ? Number(order.total_amount)
+            : legacyRow.total_amount != null
+              ? Number(legacyRow.total_amount)
               : 0;
         const totalAmount = rowTotal > 0 ? rowTotal : computedTotal;
 

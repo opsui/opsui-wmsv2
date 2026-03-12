@@ -35,11 +35,13 @@ export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
     COALESCE(s.unit_price, 0) as unit_price,
     COALESCE(pt.quantity * s.unit_price, 0) as line_total,
     COALESCE(
-      i_specific.available,
-      i_total.total_available,
+      NULLIF(i_specific.available, 0),
+      NULLIF(i_total.total_available, 0),
+      oi.netsuite_available_quantity,
       0
     ) as on_hand_quantity
   FROM pick_tasks pt
+  LEFT JOIN order_items oi ON pt.order_item_id = oi.order_item_id
   LEFT JOIN skus s ON pt.sku = s.sku
   LEFT JOIN inventory_units i_specific ON pt.sku = i_specific.sku AND pt.target_bin = i_specific.bin_location
   LEFT JOIN (
