@@ -252,7 +252,10 @@ export function IntegrationsPage() {
               setSelectedIntegration(undefined);
               setModalOpen(true);
             }}
-            onGoToSyncJobs={() => setActiveTab('sync-jobs')}
+            onGoToSyncJobs={integration => {
+              setSelectedIntegration(integration);
+              setActiveTab('sync-jobs');
+            }}
           />
         )}
 
@@ -291,7 +294,7 @@ interface IntegrationsTabProps {
   refetch: () => void;
   onSelectIntegration: (integration: Integration) => void;
   onCreateIntegration: () => void;
-  onGoToSyncJobs: () => void;
+  onGoToSyncJobs: (integration: Integration) => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -500,7 +503,7 @@ interface IntegrationCardProps {
   ProviderIcon: React.ComponentType<{ className?: string }>;
   onSelect: (integration: Integration) => void;
   onDelete: (integrationId: string) => void;
-  onGoToSyncJobs?: () => void;
+  onGoToSyncJobs?: (integration: Integration) => void;
 }
 
 function IntegrationCard({
@@ -567,7 +570,7 @@ function IntegrationCard({
       });
       // Navigate to sync-jobs tab immediately
       if (onGoToSyncJobs) {
-        onGoToSyncJobs();
+        onGoToSyncJobs(integration);
       }
     } catch (error) {
       setSyncResult({
