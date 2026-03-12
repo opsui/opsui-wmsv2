@@ -1099,11 +1099,10 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             isLoading={isReloading}
             disabled={isReloading}
             className="min-h-touch font-bold uppercase tracking-wide"
+            title={`Reload ${mode} queue`}
+            aria-label={`Reload ${mode} queue`}
           >
-            <span className="flex items-center gap-2">
-              <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
-              Reload
-            </span>
+            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
