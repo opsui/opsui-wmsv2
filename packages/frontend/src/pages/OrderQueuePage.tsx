@@ -52,6 +52,9 @@ import { apiClient } from '@/lib/api-client';
 
 export type QueueMode = 'picking' | 'packing';
 
+const STANDARD_QUEUE_REFETCH_MS = 5000;
+const PERFORMANCE_QUEUE_REFETCH_MS = 15000;
+
 // Per-mode configuration
 const MODE_CONFIG = {
   picking: {
@@ -535,10 +538,7 @@ function OrderCard({
                             ) /
                               Math.max(
                                 1,
-                                items.reduce(
-                                  (sum: number, item: any) => sum + item.quantity,
-                                  0
-                                )
+                                items.reduce((sum: number, item: any) => sum + item.quantity, 0)
                               )) *
                               100
                           )
@@ -560,10 +560,7 @@ function OrderCard({
                             ) /
                               Math.max(
                                 1,
-                                items.reduce(
-                                  (sum: number, item: any) => sum + item.quantity,
-                                  0
-                                )
+                                items.reduce((sum: number, item: any) => sum + item.quantity, 0)
                               )) *
                               100
                           )
@@ -704,6 +701,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const isPerf = useIsPerformanceMode();
   const prefersReducedMotion = useReducedMotion();
   const noMotion = isPerf || !!prefersReducedMotion;
+  const queueRefetchInterval = noMotion
+    ? PERFORMANCE_QUEUE_REFETCH_MS
+    : STANDARD_QUEUE_REFETCH_MS;
   const canPick = useAuthStore(state => state.canPick);
   const canPack = useAuthStore(state => state.canPack);
   const userId = useAuthStore(state => state.user?.userId);
@@ -759,6 +759,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           page,
           limit: pageSize,
           enabled: true,
+          refetchInterval: queueRefetchInterval,
         }
       : { status: 'PENDING' as OrderStatus, page: 1, limit: 1, enabled: false } // dummy — disabled below
   );
@@ -781,7 +782,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     // Throttle packing poll to 15s on perf-mode devices — 5s causes a full card
     // list reconciliation every 5 seconds which saturates the main thread on i5-4570.
     // WebSocket handles real-time updates for picking; packing uses polling only.
-    refetchInterval: noMotion ? 15000 : 5000,
+    refetchOnWindowFocus: true,
+    refetchInterval: () => (document.hidden ? false : queueRefetchInterval),
   });
 
   const queueData = mode === 'picking' ? pickingQueueResult.data : packingQueueResult.data;
@@ -797,6 +799,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           limit: 100,
           refetchOnMount: 'always',
           enabled: true,
+          refetchInterval: queueRefetchInterval,
         }
       : { status: 'PENDING' as OrderStatus, page: 1, limit: 1, enabled: false }
   );
@@ -812,6 +815,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     },
     enabled: mode === 'packing',
     refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: () => (document.hidden ? false : queueRefetchInterval),
   });
 
   const allOrdersData = mode === 'picking' ? pickingAllOrders.data : packingAllOrders.data;

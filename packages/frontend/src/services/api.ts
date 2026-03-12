@@ -1040,12 +1040,18 @@ export const useOrderQueue = (params?: {
   limit?: number;
   enabled?: boolean;
   refetchOnMount?: boolean | 'always';
+  refetchInterval?: number | false;
 }) => {
   return useQuery({
     queryKey: ['orders', 'queue', params],
     queryFn: () => orderApi.getOrderQueue(params),
     enabled: params?.enabled ?? true,
     refetchOnMount: params?.refetchOnMount,
+    refetchOnWindowFocus: true,
+    refetchInterval:
+      params?.refetchInterval === undefined
+        ? () => (document.hidden ? false : 5000)
+        : () => (document.hidden ? false : params.refetchInterval),
   });
 };
 
