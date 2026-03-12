@@ -72,6 +72,9 @@ describe('MetricsService', () => {
       expect(result.throughput).toHaveProperty('today', 450);
       expect(result.throughput).toHaveProperty('week', 2100);
       expect(result.throughput).toHaveProperty('month', 8500);
+      expect(mockQuery.mock.calls[2][0]).toContain(
+        "status IN ('PENDING', 'PICKING', 'PICKED', 'PACKING')"
+      );
     });
   });
 

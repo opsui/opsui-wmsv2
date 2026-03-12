@@ -48,11 +48,11 @@ export class MetricsService {
 
     const ordersPickedPerHour = parseInt(ordersPerHourResult.rows[0].count, 10);
 
-    // Queue depth (orders waiting to be picked)
+    // Queue depth (all active warehouse work across picking, totes, and packing queues)
     const queueDepthResult = await query(
       `SELECT COUNT(*) as count
        FROM orders
-       WHERE status IN ('PENDING', 'PICKING')`
+       WHERE status IN ('PENDING', 'PICKING', 'PICKED', 'PACKING')`
     );
 
     const queueDepth = parseInt(queueDepthResult.rows[0].count, 10);
