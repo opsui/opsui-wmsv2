@@ -260,6 +260,17 @@ export function Breadcrumb({
   // Get auth state to detect admin users in role-switching mode
   const user = useAuthStore(state => state.user);
   const activeRole = useAuthStore(state => state.activeRole);
+  const shouldForceHardNavigation = /^\/(orders|packing)\/[^/]+\/(pick|pack)$/.test(
+    location.pathname
+  );
+  const navigateSafely = (path: string) => {
+    if (shouldForceHardNavigation) {
+      window.location.assign(path);
+      return;
+    }
+
+    navigate(path);
+  };
 
   // Check if user is an admin in role-switching mode
   const isAdminInRoleView = user?.role === UserRole.ADMIN && activeRole !== null;
@@ -275,7 +286,7 @@ export function Breadcrumb({
           <>
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigateSafely('/dashboard')}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
             >
               <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -292,7 +303,7 @@ export function Breadcrumb({
             {item.path ? (
               <button
                 type="button"
-                onClick={() => navigate(item.path!)}
+                onClick={() => navigateSafely(item.path!)}
                 className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
               >
                 {item.icon && (
@@ -370,7 +381,7 @@ export function Breadcrumb({
             <>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigateSafely('/dashboard')}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
                 <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -381,7 +392,7 @@ export function Breadcrumb({
           )}
           <button
             type="button"
-            onClick={() => navigate('/accounting')}
+            onClick={() => navigateSafely('/accounting')}
             className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
           >
             {showHomeIcon && (
@@ -410,7 +421,7 @@ export function Breadcrumb({
           <>
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigateSafely('/dashboard')}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
             >
               <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -421,7 +432,7 @@ export function Breadcrumb({
         )}
         <button
           type="button"
-          onClick={() => navigate(nestedRouteMatch!.basePath)}
+          onClick={() => navigateSafely(nestedRouteMatch!.basePath)}
           className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
         >
           {showHomeIcon && (
@@ -462,7 +473,7 @@ export function Breadcrumb({
             >
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigateSafely('/dashboard')}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
                 <UserCircleIcon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
@@ -497,7 +508,7 @@ export function Breadcrumb({
             type="button"
             onClick={() => {
               // Clear tab parameter to return to overview/dashboard
-              navigate(path);
+              navigateSafely(path);
             }}
             className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
           >
