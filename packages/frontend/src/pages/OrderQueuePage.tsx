@@ -437,6 +437,12 @@ function OrderCard({
     : {
         variants: cardVariants,
         layout: true,
+        exit: {
+          opacity: 0,
+          scale: 0.96,
+          y: 20,
+          transition: { duration: 0.2, ease: 'easeInOut' },
+        },
         whileHover: { y: -4, transition: { duration: 0.2 } },
       };
 
@@ -1188,16 +1194,18 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             animate="visible"
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-responsive"
           >
-            {filteredOrders.map((order: any) => (
-              <OrderCard
-                key={order.orderId}
-                order={order}
-                onClaim={handleClaim}
-                isClaiming={isClaiming}
-                claimingOrderId={claimingOrderId}
-                mode={mode}
-              />
-            ))}
+            <AnimatePresence mode="popLayout">
+              {filteredOrders.map((order: any) => (
+                <OrderCard
+                  key={order.orderId}
+                  order={order}
+                  onClaim={handleClaim}
+                  isClaiming={isClaiming}
+                  claimingOrderId={claimingOrderId}
+                  mode={mode}
+                />
+              ))}
+            </AnimatePresence>
           </motion.div>
         )}
 
