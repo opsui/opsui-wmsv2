@@ -1222,9 +1222,10 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           </p>
         </div>
 
-        {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
-        {(isAdmin || (canPick() && canPack())) && (
-          <div className="flex justify-center">
+        {/* Toolbar row: Mode Switcher left, Filters right */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
+          {(isAdmin || (canPick() && canPack())) ? (
             <div className="inline-flex rounded-xl bg-slate-800/80 p-1.5 border-2 border-slate-700">
               <button
                 onClick={() => handleAdminModeSwitch('picking')}
@@ -1249,10 +1250,10 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 Packing Queue
               </button>
             </div>
-          </div>
-        )}
+          ) : <div />}
 
-        <div className="flex flex-wrap items-center justify-center gap-4">
+          {/* Filters on the right */}
+          <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-full max-w-md">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
             <Input
@@ -1286,6 +1287,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           >
             <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`} />
           </Button>
+          </div>
         </div>
 
         {noMotion ? (
