@@ -198,6 +198,7 @@ export function PackingPage() {
   const [shipmentCreated, setShipmentCreated] = useState(false);
   const [nzcConnotes, setNzcConnotes] = useState<string[]>([]);
   const [nzcPackageRows, setNzcPackageRows] = useState<NzcPackageRow[]>([createNzcPackageRow()]);
+  const [reprintingConnotes, setReprintingConnotes] = useState<Record<string, boolean>>({});
   const [manualAddressEditEnabled, setManualAddressEditEnabled] = useState(false);
   const [confirmManualAddressEdit, setConfirmManualAddressEdit] = useState(false);
   const packingQueuePath =
@@ -1178,6 +1179,18 @@ export function PackingPage() {
     setShowShippingForm(true);
   };
 
+  const handleReprintLabel = async (connote: string) => {
+    setReprintingConnotes(current => ({ ...current, [connote]: true }));
+    try {
+      await nzcApi.reprintLabel(connote, 1);
+      showToast(`NZC reprint requested for ${connote}`, 'success');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to reprint label', 'error');
+    } finally {
+      setReprintingConnotes(current => ({ ...current, [connote]: false }));
+    }
+  };
+
   const confirmCreateShipment = async () => {
     await handleCreateShipment(true);
   };
@@ -2124,22 +2137,9 @@ export function PackingPage() {
                                   <Button
                                     variant="secondary"
                                     size="sm"
-                                    onClick={() => {
-                                      const printSource = getNzcLabelSource(label);
-                                      const newWindow = window.open();
-                                      if (newWindow) {
-                                        newWindow.document.write(
-                                          `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
-                                          ${
-                                            printSource.isPdf
-                                              ? `<iframe src="${printSource.src}" style="width:100%;height:100vh;border:none;"></iframe>`
-                                              : `<img src="${printSource.src}" style="max-width:100%;" />`
-                                          }
-                                        </body></html>`
-                                        );
-                                        newWindow.document.close();
-                                      }
-                                    }}
+                                    onClick={() => handleReprintLabel(label.connote)}
+                                    isLoading={!!reprintingConnotes[label.connote]}
+                                    disabled={!!reprintingConnotes[label.connote]}
                                   >
                                     <PrinterIcon className="h-4 w-4 mr-2" />
                                     Print Label
