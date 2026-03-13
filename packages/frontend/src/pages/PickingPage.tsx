@@ -179,7 +179,7 @@ const formatAddressLines = (address?: Address | null): string[] => {
     address.company,
     address.addressLine1,
     address.addressLine2,
-    [address.city, address.state, address.postalCode].filter(Boolean).join(' '),
+    [address.city, address.state, address.postalCode].filter(Boolean).join(', '),
     formatNetSuiteDisplayText(address.country),
   ]
     .map(line => (typeof line === 'string' ? line.trim() : ''))
@@ -1323,7 +1323,7 @@ export function PickingPage() {
       ? new Date(fulfillmentPreviewOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
       : new Date().toLocaleDateString('en-NZ');
     const shippingMethodLabel = formatNetSuiteDisplayText(
-      fulfillmentPreviewOrder.shippingMethod || fulfillmentPreviewOrder.carrier || 'Warehouse Pick'
+      fulfillmentPreviewOrder.shippingMethod || fulfillmentPreviewOrder.carrier || 'Not specified'
     );
     const netsuiteCustomerId = fulfillmentPreviewOrder.customerId || '-';
     const pageLabel = 'Page 1 of 1';
