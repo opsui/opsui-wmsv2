@@ -38,7 +38,7 @@ import {
 import { Address, Carrier, NZCQuote, OrderStatus } from '@opsui/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENT
@@ -134,6 +134,7 @@ const createNzcPackageRow = (presetId: string = NZC_DEFAULT_PRESET_ID): NzcPacka
 
 export function PackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
@@ -196,12 +197,13 @@ export function PackingPage() {
   const [nzcRateError, setNzcRateError] = useState<string | null>(null);
   const [shipmentCreated, setShipmentCreated] = useState(false);
   const [nzcConnotes, setNzcConnotes] = useState<string[]>([]);
-  const [nzcPackageRows, setNzcPackageRows] = useState<NzcPackageRow[]>([
-    createNzcPackageRow(),
-  ]);
+  const [nzcPackageRows, setNzcPackageRows] = useState<NzcPackageRow[]>([createNzcPackageRow()]);
   const [manualAddressEditEnabled, setManualAddressEditEnabled] = useState(false);
   const [confirmManualAddressEdit, setConfirmManualAddressEdit] = useState(false);
-  const packingQueuePath = '/packing?status=PACKING';
+  const packingQueuePath =
+    typeof location.state?.returnTo === 'string' && location.state.returnTo.length > 0
+      ? location.state.returnTo
+      : '/packing?status=PACKING';
 
   // Helper to convert lbs to kg for NZC API
   const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
@@ -436,8 +438,7 @@ export function PackingPage() {
       } catch (error: any) {
         const errorMessage = error?.response?.data?.error || error?.message || '';
         const isAlreadyPackingRace =
-          typeof errorMessage === 'string' &&
-          errorMessage.includes('current status: PACKING');
+          typeof errorMessage === 'string' && errorMessage.includes('current status: PACKING');
 
         if (!isAlreadyPackingRace || !currentUserId) {
           throw error;
@@ -446,7 +447,10 @@ export function PackingPage() {
         const latestOrderResponse = await apiClient.get(`/orders/${orderId}`);
         const latestOrder = latestOrderResponse.data;
 
-        if (latestOrder?.status === OrderStatus.PACKING && latestOrder?.packerId === currentUserId) {
+        if (
+          latestOrder?.status === OrderStatus.PACKING &&
+          latestOrder?.packerId === currentUserId
+        ) {
           console.log('[PackingPage] Claim race resolved - order already packed by current user', {
             orderId,
             packerId: currentUserId,
@@ -673,11 +677,7 @@ export function PackingPage() {
 
     const timeoutId = setTimeout(fetchNZCRates, 500);
     return () => clearTimeout(timeoutId);
-  }, [
-    isNZCCarrier,
-    builtNzcPackagesKey,
-    editableShipToAddress,
-  ]);
+  }, [isNZCCarrier, builtNzcPackagesKey, editableShipToAddress]);
 
   useEffect(() => {
     if (!trackingNumber.trim() && trackingDefault) {
@@ -713,7 +713,8 @@ export function PackingPage() {
 
     setNzcPackageRows(rows =>
       rows.map(row =>
-        row.presetId === NZC_DEFAULT_PRESET_ID || !nzcPackageOptions.some(preset => preset.id === row.presetId)
+        row.presetId === NZC_DEFAULT_PRESET_ID ||
+        !nzcPackageOptions.some(preset => preset.id === row.presetId)
           ? { ...createNzcPackageRow(defaultPreset.id), rowId: row.rowId, units: row.units }
           : row
       )
@@ -1237,7 +1238,10 @@ export function PackingPage() {
 
         const connoteList = Array.from(
           new Set(
-            [nzcShipment.ConsignmentNo, ...(nzcShipment.Packages || []).map(pkg => pkg.ConsignmentNo)]
+            [
+              nzcShipment.ConsignmentNo,
+              ...(nzcShipment.Packages || []).map(pkg => pkg.ConsignmentNo),
+            ]
               .filter(Boolean)
               .map(connote => String(connote))
           )
@@ -1255,9 +1259,7 @@ export function PackingPage() {
         );
 
         if (connoteList.length > 1) {
-          await Promise.all(
-            connoteList.slice(1).map(connote => nzcApi.reprintLabel(connote, 1))
-          );
+          await Promise.all(connoteList.slice(1).map(connote => nzcApi.reprintLabel(connote, 1)));
         }
 
         setNzcConnotes(connoteList);
@@ -1462,7 +1464,12 @@ export function PackingPage() {
       <Header />
       <main className="relative z-10 px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8">
         {/* Breadcrumb Navigation */}
-        <Breadcrumb />
+        <Breadcrumb
+          items={[
+            { label: 'Packing Queue', path: packingQueuePath },
+            { label: `Packing Order ${orderId}` },
+          ]}
+        />
 
         {/* View Mode Banner */}
         {isViewMode && (
@@ -1672,11 +1679,7 @@ export function PackingPage() {
                                 ? preset.kg
                                 : lbsToKg(parseFloat(row.customWeightLbs || '0'));
                             const rowCubic =
-                              preset?.cubicM3 != null
-                                ? preset.cubicM3
-                                : isCustom
-                                  ? undefined
-                                  : 0;
+                              preset?.cubicM3 != null ? preset.cubicM3 : isCustom ? undefined : 0;
 
                             return (
                               <div
@@ -2086,7 +2089,10 @@ export function PackingPage() {
                               >
                                 <div className="flex items-center justify-between gap-3">
                                   <span className="text-sm text-gray-300">
-                                    Label for <span className="font-mono text-primary-400">{label.connote}</span>
+                                    Label for{' '}
+                                    <span className="font-mono text-primary-400">
+                                      {label.connote}
+                                    </span>
                                   </span>
                                   <Button
                                     variant="secondary"

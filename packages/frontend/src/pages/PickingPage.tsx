@@ -46,7 +46,7 @@ import {
 import { ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 // ============================================================================
 // COMPONENT
@@ -54,6 +54,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 export function PickingPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
@@ -102,7 +103,10 @@ export function PickingPage() {
   const [showUndoPickModal, setShowUndoPickModal] = useState(false);
   const [isUndoingPick, setIsUndoingPick] = useState(false);
   const [undoPickItemIndex, setUndoPickItemIndex] = useState<number | null>(null);
-  const pickingQueuePath = '/orders?status=PICKING';
+  const pickingQueuePath =
+    typeof location.state?.returnTo === 'string' && location.state.returnTo.length > 0
+      ? location.state.returnTo
+      : '/orders?status=PICKING';
 
   // Confirm dialog states
   const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{
@@ -1012,7 +1016,12 @@ export function PickingPage() {
       <ResponsiveContainer variant="fluid" padding="lg">
         <main className="relative z-10 space-y-responsive">
           {/* Breadcrumb Navigation */}
-          <Breadcrumb />
+          <Breadcrumb
+            items={[
+              { label: 'Picking Queue', path: pickingQueuePath },
+              { label: `Picking Order ${orderId}` },
+            ]}
+          />
 
           {/* View Mode Banner */}
           {isViewMode && (

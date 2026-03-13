@@ -639,87 +639,63 @@ function OrderCard({
             {items.length > 0 && (
               <div className="overflow-y-auto space-y-2 mb-4 max-h-48">
                 {items.map((item: any, idx: number) => {
-                const qty =
-                  mode === 'packing' ? item.verifiedQuantity || 0 : item.pickedQuantity || 0;
-                const isCompleted =
-                  item.status === 'COMPLETED' ||
-                  item.status === 'FULLY_PICKED' ||
-                  qty >= item.quantity;
-                const isSkipped = item.status === 'SKIPPED';
-                const isPartial = !isCompleted && !isSkipped && qty > 0 && qty < item.quantity;
+                  const qty =
+                    mode === 'packing' ? item.verifiedQuantity || 0 : item.pickedQuantity || 0;
+                  const isCompleted =
+                    item.status === 'COMPLETED' ||
+                    item.status === 'FULLY_PICKED' ||
+                    qty >= item.quantity;
+                  const isSkipped = item.status === 'SKIPPED';
+                  const isPartial = !isCompleted && !isSkipped && qty > 0 && qty < item.quantity;
 
-                const statusStyles = isCompleted
-                  ? 'border-purple-500/50 bg-purple-500/10'
-                  : isSkipped
-                    ? 'border-orange-500/50 bg-orange-500/10'
-                    : isPartial
-                      ? 'border-blue-500/50 bg-blue-500/10'
-                      : 'border-slate-700/50 bg-slate-800/50';
+                  const statusStyles = isCompleted
+                    ? 'border-purple-500/50 bg-purple-500/10'
+                    : isSkipped
+                      ? 'border-orange-500/50 bg-orange-500/10'
+                      : isPartial
+                        ? 'border-blue-500/50 bg-blue-500/10'
+                        : 'border-slate-700/50 bg-slate-800/50';
 
-                const ItemEl = noMotion ? 'div' : motion.div;
-                const itemProps = noMotion
-                  ? {}
-                  : {
-                      initial: { opacity: 0, x: -10 },
-                      animate: { opacity: 1, x: 0 },
-                      transition: { delay: idx * 0.05 },
-                    };
+                  const ItemEl = noMotion ? 'div' : motion.div;
+                  const itemProps = noMotion
+                    ? {}
+                    : {
+                        initial: { opacity: 0, x: -10 },
+                        animate: { opacity: 1, x: 0 },
+                        transition: { delay: idx * 0.05 },
+                      };
 
-                return (
-                  <ItemEl
-                    key={`${order.orderId}-item-${idx}`}
-                    {...(itemProps as any)}
-                    className={`text-xs p-3 rounded-lg border-l-4 ${statusStyles}`}
-                  >
-                    <div className="flex items-start gap-2 mb-1">
-                      <span className="font-bold text-slate-200 text-xs">{item.sku}</span>
-                      <span className="text-slate-500">·</span>
-                      <span className="text-slate-400 flex-1 truncate">{item.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500 text-[10px]">
-                        LOC: <span className="text-slate-300 font-bold">{item.binLocation}</span>
-                      </span>
-                      <span
-                        className={`font-bold text-sm ${isCompleted ? 'text-purple-400' : isSkipped ? 'text-orange-400' : 'text-slate-300'}`}
-                      >
-                        {isSkipped ? 'SKIPPED' : `${qty}/${item.quantity}`}
-                      </span>
-                    </div>
-                  </ItemEl>
-                );
-              })}
-            </div>
-          )}
+                  return (
+                    <ItemEl
+                      key={`${order.orderId}-item-${idx}`}
+                      {...(itemProps as any)}
+                      className={`text-xs p-3 rounded-lg border-l-4 ${statusStyles}`}
+                    >
+                      <div className="flex items-start gap-2 mb-1">
+                        <span className="font-bold text-slate-200 text-xs">{item.sku}</span>
+                        <span className="text-slate-500">·</span>
+                        <span className="text-slate-400 flex-1 truncate">{item.name}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 text-[10px]">
+                          LOC: <span className="text-slate-300 font-bold">{item.binLocation}</span>
+                        </span>
+                        <span
+                          className={`font-bold text-sm ${isCompleted ? 'text-purple-400' : isSkipped ? 'text-orange-400' : 'text-slate-300'}`}
+                        >
+                          {isSkipped ? 'SKIPPED' : `${qty}/${item.quantity}`}
+                        </span>
+                      </div>
+                    </ItemEl>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Action button */}
           <div className="mt-auto pt-2">
             {noMotion ? (
-              <Button
-              fullWidth
-              size="lg"
-              variant="primary"
-              onClick={() => onClaim(order.orderId, order.status)}
-              disabled={
-                isClaiming ||
-                (order.status !== cfg.idleStatus && order.status !== cfg.activeStatus) ||
-                (order.status === cfg.idleStatus && claimingOrderId === order.orderId)
-              }
-              isLoading={order.status === cfg.idleStatus && claimingOrderId === order.orderId}
-              className="font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-slate-900 border-0 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] transition-all duration-300"
-            >
-              {isActive ? (
-                cfg.continueButtonLabel
-              ) : (
-                <span className="flex items-center gap-2">
-                  <cfg.claimButtonIcon className="h-5 w-5" />
-                  {cfg.claimButtonLabel}
-                </span>
-              )}
-            </Button>
-          ) : (
-            <motion.div whileTap={{ scale: 0.98 }}>
               <Button
                 fullWidth
                 size="lg"
@@ -742,8 +718,32 @@ function OrderCard({
                   </span>
                 )}
               </Button>
-            </motion.div>
-          )}
+            ) : (
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <Button
+                  fullWidth
+                  size="lg"
+                  variant="primary"
+                  onClick={() => onClaim(order.orderId, order.status)}
+                  disabled={
+                    isClaiming ||
+                    (order.status !== cfg.idleStatus && order.status !== cfg.activeStatus) ||
+                    (order.status === cfg.idleStatus && claimingOrderId === order.orderId)
+                  }
+                  isLoading={order.status === cfg.idleStatus && claimingOrderId === order.orderId}
+                  className="font-bold uppercase tracking-wider bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-400 hover:to-violet-400 text-slate-900 border-0 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] transition-all duration-300"
+                >
+                  {isActive ? (
+                    cfg.continueButtonLabel
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <cfg.claimButtonIcon className="h-5 w-5" />
+                      {cfg.claimButtonLabel}
+                    </span>
+                  )}
+                </Button>
+              </motion.div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -813,6 +813,25 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     setPage(1);
     hasAutoDetectedRef.current = false;
   };
+
+  const getActiveQueuePath = useCallback(
+    (queueMode: QueueMode) =>
+      queueMode === 'packing' ? '/packing?status=PACKING' : '/orders?status=PICKING',
+    []
+  );
+
+  const navigateToOrderDetail = useCallback(
+    (queueMode: QueueMode, orderId: string) => {
+      const detailPath =
+        queueMode === 'packing' ? `/packing/${orderId}/pack` : `/orders/${orderId}/pick`;
+      navigate(detailPath, {
+        state: {
+          returnTo: getActiveQueuePath(queueMode),
+        },
+      });
+    },
+    [getActiveQueuePath, navigate]
+  );
 
   // --- Data fetching ---
   // Picking mode uses useOrderQueue; packing mode uses a direct apiClient call (different endpoint)
@@ -904,8 +923,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   // Minimum spin duration for smooth reload animation (both manual and auto)
   const [isSpinAnimationActive, setIsSpinAnimationActive] = useState(false);
   const spinAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isActuallyFetching =
-    activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
+  const isActuallyFetching = activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
 
   // Track fetches and ensure minimum spin duration
   useEffect(() => {
@@ -957,10 +975,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     if (!trimmedSearch || scannedOrderRef.current === trimmedSearch) return;
 
     // Check all available orders (queue + all orders list)
-    const allOrders = [
-      ...(queueData?.orders || []),
-      ...(allOrdersData?.orders || []),
-    ];
+    const allOrders = [...(queueData?.orders || []), ...(allOrdersData?.orders || [])];
     const matchedOrder = allOrders.find(
       (o: any) =>
         o.orderId?.toLowerCase() === trimmedSearch.toLowerCase() ||
@@ -971,14 +986,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       scannedOrderRef.current = trimmedSearch;
       setSearchTerm('');
       setDebouncedSearch('');
-      // Navigate directly to the order
-      if (mode === 'picking') {
-        navigate(`/orders/${matchedOrder.orderId}/pick`);
-      } else {
-        navigate(`/packing/${matchedOrder.orderId}/pack`);
-      }
+      navigateToOrderDetail(mode, matchedOrder.orderId);
     }
-  }, [searchTerm, queueData, allOrdersData, mode, navigate]);
+  }, [searchTerm, queueData, allOrdersData, mode, navigateToOrderDetail]);
 
   useEffect(() => {
     setSearchParams(
@@ -1090,7 +1100,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
     // Packing: continue active order
     if (mode === 'packing' && orderStatus === OrderStatus.PACKING) {
-      navigate(`/packing/${orderId}/pack`);
+      navigateToOrderDetail(mode, orderId);
       return;
     }
 
@@ -1102,7 +1112,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         /* silent */
       }
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
-      navigate(`/orders/${orderId}/pick`);
+      navigateToOrderDetail(mode, orderId);
       return;
     }
 
@@ -1118,11 +1128,11 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       if (mode === 'picking') {
         await claimPickingMutation.mutateAsync({ orderId, dto: { pickerId: userId } });
         showToast(`Order ${orderId} claimed successfully`, 'success');
-        navigate(`/orders/${orderId}/pick`);
+        navigateToOrderDetail(mode, orderId);
       } else {
         await claimPackingMutation.mutateAsync({ orderId, packerId: userId });
         showToast(`Order ${orderId} claimed successfully`, 'success');
-        navigate(`/packing/${orderId}/pack`);
+        navigateToOrderDetail(mode, orderId);
       }
     } catch (error: any) {
       const msg =
