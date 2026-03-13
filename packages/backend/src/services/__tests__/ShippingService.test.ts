@@ -190,6 +190,7 @@ describe('ShippingService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ carrier_id: 'CARR-001' }] }) // carrier lookup
         .mockResolvedValueOnce({ rows: [mockCreatedShipment] }) // INSERT
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
@@ -255,6 +256,7 @@ describe('ShippingService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ carrier_id: 'CARR-001' }] }) // carrier lookup
         .mockRejectedValueOnce(new Error('Database error')); // INSERT
 
       await expect(service.createShipment(dto)).rejects.toThrow('Database error');
@@ -871,6 +873,7 @@ describe('ShippingService', () => {
 
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ carrier_id: 'CARR-001' }] }) // carrier lookup
         .mockResolvedValueOnce({
           rows: [
             {

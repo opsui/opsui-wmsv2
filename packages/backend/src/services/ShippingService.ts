@@ -30,6 +30,82 @@ import {
 // ============================================================================
 
 export class ShippingService {
+  private async resolveCarrierIdForShipment(
+    client: Awaited<ReturnType<typeof getPool>>,
+    carrierId: string
+  ): Promise<string> {
+    const directMatch = await client.query<{ carrier_id: string }>(
+      `SELECT carrier_id FROM carriers WHERE carrier_id = $1`,
+      [carrierId]
+    );
+
+    if (directMatch.rows.length > 0) {
+      return directMatch.rows[0].carrier_id;
+    }
+
+    const fallbackMatch = await client.query<{ carrier_id: string }>(
+      `SELECT carrier_id
+         FROM carriers
+        WHERE carrier_code = $1
+           OR UPPER(name) = UPPER($1)
+        LIMIT 1`,
+      [carrierId]
+    );
+
+    if (fallbackMatch.rows.length > 0) {
+      return fallbackMatch.rows[0].carrier_id;
+    }
+
+    const normalizedCarrierId = carrierId.trim().toUpperCase();
+    if (
+      normalizedCarrierId === 'CARR-NZC' ||
+      normalizedCarrierId === 'NZC' ||
+      normalizedCarrierId === 'NZ COURIERS'
+    ) {
+      await client.query(
+        `INSERT INTO carriers (
+          carrier_id,
+          name,
+          carrier_code,
+          service_types,
+          contact_email,
+          api_endpoint,
+          is_active,
+          requires_account_number,
+          requires_package_dimensions,
+          requires_weight
+        )
+        VALUES (
+          'CARR-NZC',
+          'NZ Couriers',
+          'NZC',
+          ARRAY['Courier', 'CourierPost', 'Overnight', 'Rural'],
+          'support@nzcouriers.co.nz',
+          'https://api.gosweetspot.com',
+          true,
+          false,
+          true,
+          true
+        )
+        ON CONFLICT (carrier_code) DO UPDATE SET
+          carrier_id = EXCLUDED.carrier_id,
+          name = EXCLUDED.name,
+          service_types = EXCLUDED.service_types,
+          contact_email = EXCLUDED.contact_email,
+          api_endpoint = EXCLUDED.api_endpoint,
+          is_active = EXCLUDED.is_active,
+          requires_account_number = EXCLUDED.requires_account_number,
+          requires_package_dimensions = EXCLUDED.requires_package_dimensions,
+          requires_weight = EXCLUDED.requires_weight,
+          updated_at = NOW()`
+      );
+
+      return 'CARR-NZC';
+    }
+
+    throw new Error(`Carrier ${carrierId} not found`);
+  }
+
   // ==========================================================================
   // CARRIER METHODS
   // ==========================================================================
@@ -324,6 +400,8 @@ export class ShippingService {
     try {
       await client.query('BEGIN');
 
+      const resolvedCarrierId = await this.resolveCarrierIdForShipment(client, dto.carrierId);
+
       // Generate shipment ID
       const shipmentId = `SHP-${nanoid(10)}`.toUpperCase();
 
@@ -338,7 +416,7 @@ export class ShippingService {
         [
           shipmentId,
           dto.orderId,
-          dto.carrierId,
+          resolvedCarrierId,
           dto.serviceType,
           dto.shippingMethod,
           JSON.stringify(dto.shipFromAddress),

@@ -97,7 +97,21 @@ describe('NZCService', () => {
 
       const result = await service.getRates(mockDestination, mockPackages);
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({
+        ...mockResponse,
+        Available: [],
+        Quotes: [
+          {
+            ...mockResponse.Quotes[0],
+            Service: 'NZ Couriers - Standard Overnight',
+            DeliveryType: 'Standard Overnight',
+            CarrierServiceType: undefined,
+            IsResidentialDelivery: undefined,
+            IsRuralDelivery: undefined,
+            IsSaturdayDelivery: undefined,
+          },
+        ],
+      });
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.test.com/api/rates',
         expect.objectContaining({
@@ -199,11 +213,17 @@ describe('NZCService', () => {
 
       const result = await service.createShipment(mockDestination, mockPackages, quoteId);
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({
+        ConsignmentNo: 'CN-123456',
+        ConsignmentId: 'CID-789',
+        Packages: [],
+        Errors: [],
+      });
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.test.com/api/shipments',
         expect.objectContaining({
           method: 'POST',
+          body: expect.stringContaining('"IsSignatureRequired":true'),
         })
       );
     });

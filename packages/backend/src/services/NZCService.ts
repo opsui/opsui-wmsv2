@@ -102,6 +102,7 @@ export interface NZCShipmentRequest extends NZCRateRequest {
   QuoteId: string;
   DeliveryReference?: string;
   PrintToPrinter?: boolean;
+  IsSignatureRequired?: boolean;
 }
 
 /**
@@ -394,6 +395,7 @@ export class NZCService {
         QuoteId: quoteId,
         DeliveryReference: senderReference || undefined,
         PrintToPrinter: printToPrinter,
+        IsSignatureRequired: true,
       };
 
       logger.info('[NZC] Creating shipment', {
@@ -401,6 +403,7 @@ export class NZCService {
         quoteId,
         senderReference,
         printToPrinter,
+        isSignatureRequired: true,
         packageCount: packages.length,
       });
 
@@ -529,8 +532,7 @@ export class NZCService {
           this._stringOrEmpty(consignment.ConsignmentNo) ||
           this._stringOrEmpty(consignment.ConsignmentNumber),
         ConsignmentId:
-          this._stringOrEmpty(consignment.ConsignmentId) ||
-          this._stringOrEmpty(consignment.Id),
+          this._stringOrEmpty(consignment.ConsignmentId) || this._stringOrEmpty(consignment.Id),
       })),
       Errors: errors,
     };
