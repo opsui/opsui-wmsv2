@@ -377,6 +377,26 @@ describe('NetSuiteOrderSyncService', () => {
     );
   });
 
+  it('clears stale ownership when moving an order back to pending', async () => {
+    const client = new NetSuiteClient(credentials);
+    const service = new NetSuiteOrderSyncService(client);
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockResolvedValue({ rows: [], rowCount: 0 });
+
+    await (service as any).updateOrderStatus('SO70014', 'PENDING');
+
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining("SET status = 'PENDING'::order_status"),
+      ['SO70014']
+    );
+    const updateSql = String(queryMock.mock.calls[0][0]);
+    expect(updateSql).toContain('picker_id = NULL');
+    expect(updateSql).toContain('packer_id = NULL');
+    expect(updateSql).toContain('claimed_at = NULL');
+    expect(updateSql).toContain('progress = 0');
+  });
+
   it('moves a packing queue order back to picked when the linked fulfillment is only picked', async () => {
     const { client, service } = createService();
 

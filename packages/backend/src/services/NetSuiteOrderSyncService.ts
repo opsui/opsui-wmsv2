@@ -2233,7 +2233,14 @@ export class NetSuiteOrderSyncService {
   ): Promise<void> {
     const updates: string[] = [`status = '${newStatus}'::order_status`, 'updated_at = NOW()'];
 
-    if (newStatus === 'PICKED') {
+    if (newStatus === 'PENDING') {
+      updates.push('picker_id = NULL');
+      updates.push('packer_id = NULL');
+      updates.push('claimed_at = NULL');
+      updates.push('packed_at = NULL');
+      updates.push('shipped_at = NULL');
+      updates.push('progress = 0');
+    } else if (newStatus === 'PICKED') {
       updates.push('picked_at = COALESCE(picked_at, NOW())');
       updates.push('packer_id = NULL');
       updates.push('packed_at = NULL');
