@@ -41,7 +41,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Input } from '@/components/shared/Input';
 import { OrderPriority, OrderStatus } from '@opsui/shared';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -801,6 +801,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       return response.data;
     },
     enabled: mode === 'packing',
+    placeholderData: keepPreviousData,
     // Throttle packing poll to 15s on perf-mode devices — 5s causes a full card
     // list reconciliation every 5 seconds which saturates the main thread on i5-4570.
     // WebSocket handles real-time updates for picking; packing uses polling only.
@@ -872,15 +873,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         params.set('queue', queueParam);
       }
 
-      if (debouncedSearch) {
-        params.set('search', debouncedSearch);
-      } else {
-        params.delete('search');
-      }
-
       return params;
     }, { replace: true });
-  }, [adminMode, debouncedSearch, queueParam, setSearchParams, statusFilter]);
+  }, [adminMode, queueParam, setSearchParams, statusFilter]);
 
   const orders = queueData?.orders || [];
 
@@ -1045,7 +1040,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !queueData) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -1135,6 +1130,13 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
               type="search"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  setDebouncedSearch(searchTerm.trim());
+                  setPage(1);
+                }
+              }}
               placeholder={`Search ${mode} queue`}
               className="pl-10"
               aria-label={`Search ${mode} queue`}
@@ -1149,8 +1151,6 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           <Button
             variant="secondary"
             onClick={() => void handleManualReload()}
-            isLoading={isReloading}
-            disabled={isReloading}
             className="min-h-touch font-bold uppercase tracking-wide"
             title={`Reload ${mode} queue`}
             aria-label={`Reload ${mode} queue`}

@@ -54,7 +54,13 @@ import {
   type RuleType,
   type User,
 } from '@opsui/shared';
-import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryOptions,
+} from '@tanstack/react-query';
 
 // ============================================================================
 // AUTH API
@@ -1046,6 +1052,7 @@ export const useOrderQueue = (params?: {
     queryKey: ['orders', 'queue', params],
     queryFn: () => orderApi.getOrderQueue(params),
     enabled: params?.enabled ?? true,
+    placeholderData: keepPreviousData,
     refetchOnMount: params?.refetchOnMount,
     refetchOnWindowFocus: true,
     refetchInterval:
