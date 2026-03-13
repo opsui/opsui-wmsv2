@@ -185,6 +185,41 @@ describe('NetSuiteClient', () => {
     expect(addEnvelope).toContain('<tranSales:shipStatus>_picked</tranSales:shipStatus>');
   });
 
+  it('updates item fulfillments to shipped with a package tracking number', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest
+      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <getResponse>
+          <platformCore:status isSuccess="true" />
+          <record xsi:type="tranSales:ItemFulfillment" internalId="1609999">
+            <tranSales:shipStatus>_packed</tranSales:shipStatus>
+            <tranSales:packageList replaceAll="false">
+              <tranSales:package>
+                <tranSales:packageDescr>Old Carrier</tranSales:packageDescr>
+              </tranSales:package>
+            </tranSales:packageList>
+          </record>
+        </getResponse>`)
+      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <updateResponse>
+          <platformCore:status isSuccess="true" />
+        </updateResponse>`);
+
+    await client.updateItemFulfillmentShipment('1609999', {
+      trackingNumber: 'BYAF038638',
+      carrier: 'NZ Couriers',
+    });
+
+    const [, updateEnvelope] = soapRequest.mock.calls[1];
+    expect(updateEnvelope).toContain('<tranSales:shipStatus>_shipped</tranSales:shipStatus>');
+    expect(updateEnvelope).toContain(
+      '<tranSales:packageTrackingNumber>BYAF038638</tranSales:packageTrackingNumber>'
+    );
+    expect(updateEnvelope).toContain('<tranSales:packageDescr>NZ Couriers</tranSales:packageDescr>');
+  });
+
   it('only marks receivable fulfillment lines for receipt', async () => {
     const client = new NetSuiteClient(credentials);
     const soapRequest = jest.spyOn(client as any, 'soapRequest');

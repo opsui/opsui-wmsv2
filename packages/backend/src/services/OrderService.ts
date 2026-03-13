@@ -63,6 +63,43 @@ import wsServer from '../websocket';
 // ============================================================================
 
 export class OrderService {
+  private async getNetSuiteClientForOrganization(organizationId: string): Promise<{
+    client: NetSuiteClient;
+    integrationId: string;
+  } | null> {
+    const integrationResult = await getDefaultPool().query(
+      `SELECT
+         i.integration_id,
+         i.configuration
+       FROM integration_organizations io
+       JOIN integrations i ON i.integration_id = io.integration_id
+       WHERE io.organization_id = $1
+         AND i.provider = 'NETSUITE'
+         AND i.enabled = true
+       ORDER BY i.updated_at DESC NULLS LAST, i.created_at DESC
+       LIMIT 1`,
+      [organizationId]
+    );
+
+    if (integrationResult.rows.length === 0) {
+      return null;
+    }
+
+    const integration = integrationResult.rows[0];
+    const authConfig = integration.configuration?.auth || integration.configuration || {};
+
+    return {
+      integrationId: integration.integration_id,
+      client: new NetSuiteClient({
+        accountId: authConfig.accountId,
+        tokenId: authConfig.tokenId,
+        tokenSecret: authConfig.tokenSecret,
+        consumerKey: authConfig.consumerKey,
+        consumerSecret: authConfig.consumerSecret,
+      }),
+    };
+  }
+
   private pickBestExistingFulfillment(
     fulfillments: Array<{ id?: string; tranId?: string; shipStatus?: string }>
   ): { id?: string; tranId?: string; shipStatus?: string } | null {
@@ -113,21 +150,9 @@ export class OrderService {
       return;
     }
 
-    const integrationResult = await getDefaultPool().query(
-      `SELECT
-         i.integration_id,
-         i.configuration
-       FROM integration_organizations io
-       JOIN integrations i ON i.integration_id = io.integration_id
-       WHERE io.organization_id = $1
-         AND i.provider = 'NETSUITE'
-         AND i.enabled = true
-       ORDER BY i.updated_at DESC NULLS LAST, i.created_at DESC
-       LIMIT 1`,
-      [order.organizationId]
-    );
+    const integration = await this.getNetSuiteClientForOrganization(order.organizationId);
 
-    if (integrationResult.rows.length === 0) {
+    if (!integration) {
       logger.warn('No enabled NetSuite integration found for picked order', {
         orderId,
         organizationId: order.organizationId,
@@ -135,17 +160,7 @@ export class OrderService {
       });
       return;
     }
-
-    const integration = integrationResult.rows[0];
-    const authConfig = integration.configuration?.auth || integration.configuration || {};
-
-    const client = new NetSuiteClient({
-      accountId: authConfig.accountId,
-      tokenId: authConfig.tokenId,
-      tokenSecret: authConfig.tokenSecret,
-      consumerKey: authConfig.consumerKey,
-      consumerSecret: authConfig.consumerSecret,
-    });
+    const client = integration.client;
 
     const existingFulfillments = await client.getItemFulfillmentsBySalesOrder([
       order.netsuiteSoInternalId,
@@ -165,7 +180,7 @@ export class OrderService {
 
       logger.info('Linked existing NetSuite fulfillment for picked order', {
         orderId,
-        integrationId: integration.integration_id,
+        integrationId: integration.integrationId,
         netsuiteSoInternalId: order.netsuiteSoInternalId,
         netsuiteSoTranId: order.netsuiteSoTranId,
         netsuiteIfInternalId: existingFulfillment.id,
@@ -184,7 +199,7 @@ export class OrderService {
     } catch (error: any) {
       logger.warn('NetSuite fulfillment created but detail fetch failed', {
         orderId,
-        integrationId: integration.integration_id,
+        integrationId: integration.integrationId,
         netsuiteSoTranId: order.netsuiteSoTranId,
         netsuiteIfInternalId: fulfillmentId,
         error: error.message,
@@ -203,11 +218,64 @@ export class OrderService {
 
     logger.info('Created NetSuite fulfillment for picked order', {
       orderId,
-      integrationId: integration.integration_id,
+      integrationId: integration.integrationId,
       netsuiteSoInternalId: order.netsuiteSoInternalId,
       netsuiteSoTranId: order.netsuiteSoTranId,
       netsuiteIfInternalId: fulfillmentId,
       netsuiteIfTranId: fulfillmentTranId,
+    });
+  }
+
+  private async syncNetSuiteShipment(
+    orderId: string,
+    dto: { carrier: string; trackingNumber: string }
+  ): Promise<void> {
+    const orderResult = await query(
+      `SELECT
+         o.organization_id,
+         o.netsuite_if_internal_id,
+         o.netsuite_if_tran_id,
+         o.netsuite_so_tran_id
+       FROM orders o
+       WHERE o.order_id = $1
+       LIMIT 1`,
+      [orderId]
+    );
+
+    if (orderResult.rows.length === 0) {
+      return;
+    }
+
+    const order = orderResult.rows[0];
+    if (!order.netsuiteIfInternalId) {
+      logger.warn('Skipping NetSuite shipment sync because no fulfillment is linked', {
+        orderId,
+        netsuiteSoTranId: order.netsuiteSoTranId,
+      });
+      return;
+    }
+
+    const integration = await this.getNetSuiteClientForOrganization(order.organizationId);
+    if (!integration) {
+      logger.warn('No enabled NetSuite integration found for shipment sync', {
+        orderId,
+        organizationId: order.organizationId,
+        netsuiteSoTranId: order.netsuiteSoTranId,
+      });
+      return;
+    }
+
+    await integration.client.updateItemFulfillmentShipment(order.netsuiteIfInternalId, {
+      trackingNumber: dto.trackingNumber,
+      carrier: dto.carrier,
+    });
+
+    logger.info('Updated NetSuite fulfillment to shipped with tracking', {
+      orderId,
+      integrationId: integration.integrationId,
+      netsuiteIfInternalId: order.netsuiteIfInternalId,
+      netsuiteIfTranId: order.netsuiteIfTranId,
+      trackingNumber: dto.trackingNumber,
     });
   }
 
@@ -1104,6 +1172,18 @@ export class OrderService {
 
     if (order.status !== OrderStatus.PACKED) {
       throw new ConflictError(`Order is not in PACKED status (current status: ${order.status})`);
+    }
+
+    try {
+      await this.syncNetSuiteShipment(orderId, dto);
+    } catch (error: any) {
+      logger.error('Failed to sync shipped order to NetSuite', {
+        orderId,
+        carrier: dto.carrier,
+        trackingNumber: dto.trackingNumber,
+        error: error.message,
+      });
+      throw error;
     }
 
     await query(

@@ -1152,9 +1152,103 @@ export class NetSuiteClient {
     return newId;
   }
 
+  async updateItemFulfillmentShipment(
+    itemFulfillmentId: string,
+    shipmentData: { trackingNumber: string; carrier?: string }
+  ): Promise<void> {
+    const body = [
+      '<tns:get>',
+      '  <tns:baseRef xsi:type="platformCore:RecordRef"',
+      `    type="itemFulfillment" internalId="${this.escapeXml(itemFulfillmentId)}"/>`,
+      '</tns:get>',
+    ].join('\n');
+
+    const envelope = this.buildEnvelope('', body);
+    const response = await this.soapRequest('get', envelope);
+
+    if (!response.includes('isSuccess="true"')) {
+      const fault =
+        this.extractTag(response, 'faultstring') || this.extractTag(response, 'message');
+      throw new Error(
+        `Failed to fetch item fulfillment ${itemFulfillmentId} for shipment update: ${fault || 'Unknown error'}`
+      );
+    }
+
+    const recordXml = this.extractInitializedFulfillmentRecord(response);
+    if (!recordXml) {
+      throw new Error(
+        `Failed to update item fulfillment ${itemFulfillmentId}: missing record payload`
+      );
+    }
+
+    const updatedRecord = this.applyShipmentDetailsToFulfillmentRecord(recordXml, shipmentData);
+    const updateBody = ['<tns:update>', `  ${updatedRecord}`, '</tns:update>'].join('\n');
+    const updateEnvelope = this.buildEnvelope('', updateBody);
+    const updateResponse = await this.soapRequest('update', updateEnvelope);
+
+    if (!updateResponse.includes('isSuccess="true"')) {
+      const fault =
+        this.extractTag(updateResponse, 'faultstring') || this.extractTag(updateResponse, 'message');
+      throw new Error(
+        `Failed to update item fulfillment ${itemFulfillmentId}: ${fault || 'Unknown error'}`
+      );
+    }
+  }
+
   private extractInitializedFulfillmentRecord(response: string): string | null {
     const match = response.match(/<record\b[\s\S]*?<\/record>/);
     return match ? match[0] : null;
+  }
+
+  private applyShipmentDetailsToFulfillmentRecord(
+    recordXml: string,
+    shipmentData: { trackingNumber: string; carrier?: string }
+  ): string {
+    let updatedRecord = recordXml;
+    const escapedTrackingNumber = this.escapeXml(shipmentData.trackingNumber);
+    const escapedCarrier = shipmentData.carrier ? this.escapeXml(shipmentData.carrier) : '';
+
+    if (updatedRecord.includes('<tranSales:shipStatus>')) {
+      updatedRecord = updatedRecord.replace(
+        /<tranSales:shipStatus>[\s\S]*?<\/tranSales:shipStatus>/,
+        '<tranSales:shipStatus>_shipped</tranSales:shipStatus>'
+      );
+    } else {
+      updatedRecord = updatedRecord.replace(
+        /<\/record>/,
+        '<tranSales:shipStatus>_shipped</tranSales:shipStatus></record>'
+      );
+    }
+
+    const packagePayload = [
+      '<tranSales:package>',
+      escapedCarrier ? `<tranSales:packageDescr>${escapedCarrier}</tranSales:packageDescr>` : '',
+      `<tranSales:packageTrackingNumber>${escapedTrackingNumber}</tranSales:packageTrackingNumber>`,
+      '</tranSales:package>',
+    ]
+      .filter(Boolean)
+      .join('');
+
+    if (updatedRecord.includes('<tranSales:packageList')) {
+      if (updatedRecord.includes('<tranSales:package>')) {
+        updatedRecord = updatedRecord.replace(
+          /<tranSales:package>[\s\S]*?<\/tranSales:package>/,
+          packagePayload
+        );
+      } else {
+        updatedRecord = updatedRecord.replace(
+          /<\/tranSales:packageList>/,
+          `${packagePayload}</tranSales:packageList>`
+        );
+      }
+    } else {
+      updatedRecord = updatedRecord.replace(
+        /<\/record>/,
+        `<tranSales:packageList replaceAll="false">${packagePayload}</tranSales:packageList></record>`
+      );
+    }
+
+    return updatedRecord;
   }
 
   private markReceivableFulfillmentLines(

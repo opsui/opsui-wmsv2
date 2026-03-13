@@ -23,7 +23,7 @@ import {
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
-import { nzcApi, useCompletePacking, useOrder } from '@/services/api';
+import { nzcApi, useCompletePacking, useOrder, useShipOrder } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
@@ -215,6 +215,7 @@ export function PackingPage() {
 
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const completePackingMutation = useCompletePacking();
+  const shipOrderMutation = useShipOrder();
   const baseShipToAddress = normalizeShipToAddress(
     order?.shippingAddress,
     order?.customerName || 'Customer'
@@ -1123,7 +1124,7 @@ export function PackingPage() {
 
         showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
 
-        await apiClient.post('/shipping/shipments', {
+        const shipmentResponse = await apiClient.post('/shipping/shipments', {
           orderId,
           carrierId: selectedCarrierId,
           serviceType: selectedQuote.Service,
@@ -1135,6 +1136,14 @@ export function PackingPage() {
           createdBy: currentUser?.userId,
         });
 
+        const shipment = shipmentResponse.data;
+
+        if (shipment?.shipmentId) {
+          await apiClient.post(`/shipping/shipments/${shipment.shipmentId}/tracking`, {
+            trackingNumber: connote,
+          });
+        }
+
         await completePackingMutation.mutateAsync({
           orderId,
           dto: {
@@ -1143,7 +1152,14 @@ export function PackingPage() {
           },
         });
 
+        await shipOrderMutation.mutateAsync({
+          orderId,
+          carrier: selectedCarrier?.name || selectedCarrier?.carrierCode || 'NZ Couriers',
+          trackingNumber: connote,
+        });
+
         showToast('Order packed and shipped successfully!', 'success');
+        navigate('/packing');
       } else {
         const shipmentResponse = await apiClient.post('/shipping/shipments', {
           orderId,
