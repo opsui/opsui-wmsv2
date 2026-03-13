@@ -36,6 +36,9 @@ export interface NZCDestination {
  * NZC Package dimensions
  */
 export interface NZCPackage {
+  PackageStockId?: number;
+  Name?: string;
+  Type?: string;
   Length: number; // cm
   Width: number; // cm
   Height: number; // cm
@@ -90,6 +93,8 @@ export interface NZCRateResponse {
  */
 export interface NZCShipmentRequest extends NZCRateRequest {
   QuoteId: string;
+  DeliveryReference?: string;
+  PrintToPrinter?: boolean;
 }
 
 /**
@@ -249,18 +254,24 @@ export class NZCService {
   async createShipment(
     destination: NZCDestination,
     packages: NZCPackage[],
-    quoteId: string
+    quoteId: string,
+    senderReference?: string,
+    printToPrinter: boolean = true
   ): Promise<NZCShipmentResponse> {
     try {
       const requestBody: NZCShipmentRequest = {
         Destination: destination,
         Packages: packages,
         QuoteId: quoteId,
+        DeliveryReference: senderReference || undefined,
+        PrintToPrinter: printToPrinter,
       };
 
       logger.info('[NZC] Creating shipment', {
         destination: destination.Name,
         quoteId,
+        senderReference,
+        printToPrinter,
         packageCount: packages.length,
       });
 

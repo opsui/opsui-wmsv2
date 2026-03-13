@@ -47,6 +47,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 type NzcPackagePreset = {
   id: string;
   label: string;
+  packageStockId?: number;
+  name?: string;
+  type?: string;
   kg?: number;
   cubicM3?: number;
   length?: number;
@@ -230,6 +233,9 @@ export function PackingPage() {
         ...nzcStockSizes.map((stock: NzcStockSize) => ({
           id: String(stock.PackageStockId || stock.Name || 'UNKNOWN'),
           label: stock.Name || 'NZC Stock',
+          packageStockId: stock.PackageStockId,
+          name: stock.Name,
+          type: stock.Type,
           kg: stock.Weight,
           cubicM3: stock.Cubic,
           length: stock.Length,
@@ -258,6 +264,9 @@ export function PackingPage() {
 
     return [
       {
+        packageStockId: selectedNzcPreset?.packageStockId,
+        name: selectedNzcPreset?.name,
+        type: selectedNzcPreset?.type,
         length: selectedNzcPackageIsCustom
           ? parseFloat(nzcCustomLength || '0') || 10
           : selectedNzcPreset?.length,
@@ -271,6 +280,45 @@ export function PackingPage() {
         units: packageUnits,
       },
     ];
+  };
+
+  const printNZCLabel = (label: { data: string; contentType: string }) => {
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
+    if (!printWindow) {
+      showToast('Popup blocked. Use Print Label to print manually.', 'warning');
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>NZC Shipping Label</title>
+          <style>
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: #ffffff;
+            }
+            img {
+              display: block;
+              width: 100%;
+              height: auto;
+            }
+          </style>
+        </head>
+        <body>
+          <img src="data:${label.contentType};base64,${label.data}" alt="NZC Shipping Label" />
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 150);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   // Claim order for packing mutation
@@ -1037,6 +1085,8 @@ export function PackingPage() {
             weight: pkg.weight || weightKg,
           })),
           quoteId: selectedQuote.QuoteId,
+          senderReference: trackingNumber.trim() || undefined,
+          printToPrinter: true,
         });
 
         const connote = nzcShipment.ConsignmentNo;
@@ -1045,6 +1095,7 @@ export function PackingPage() {
 
         const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
         setNzcLabel(label);
+        printNZCLabel(label);
 
         showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
 
@@ -1389,22 +1440,21 @@ export function PackingPage() {
                       </div>
                     )}
 
-                    <div>
-                      <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                        {isNZCCarrier ? 'Sender Reference' : 'Tracking Number'}
-                        {!isNZCCarrier && ' (Optional)'}
-                      </label>
-                      <input
-                        type="text"
-                        value={trackingNumber}
-                        onChange={e => setTrackingNumber(e.target.value)}
-                        placeholder={
-                          isNZCCarrier ? 'Enter sender reference...' : 'Enter tracking number...'
-                        }
-                        disabled={isCreatingShipment || isViewMode}
-                        className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                      />
-                    </div>
+                    {!isNZCCarrier && (
+                      <div>
+                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                          Tracking Number (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={trackingNumber}
+                          onChange={e => setTrackingNumber(e.target.value)}
+                          placeholder="Enter tracking number..."
+                          disabled={isCreatingShipment || isViewMode}
+                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                        />
+                      </div>
+                    )}
 
                     {/* Package Details */}
                     {isNZCCarrier ? (
@@ -1633,6 +1683,21 @@ export function PackingPage() {
                           </Button>
                         )}
                       </div>
+                      {isNZCCarrier && (
+                        <div className="mb-4">
+                          <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                            Sender Reference
+                          </label>
+                          <input
+                            type="text"
+                            value={trackingNumber}
+                            onChange={e => setTrackingNumber(e.target.value)}
+                            placeholder="SO number, customer PO"
+                            disabled={isCreatingShipment || isViewMode}
+                            className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                          />
+                        </div>
+                      )}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
                           ['Name', 'name'],

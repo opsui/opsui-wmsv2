@@ -2749,6 +2749,9 @@ export interface NZCRateRequest {
     email?: string;
   };
   packages: Array<{
+    packageStockId?: number;
+    name?: string;
+    type?: string;
     length?: number; // cm
     width?: number; // cm
     height?: number; // cm
@@ -2775,6 +2778,8 @@ export interface NZCRateResponse {
  */
 export interface NZCShipmentRequest extends NZCRateRequest {
   quoteId: string;
+  senderReference?: string;
+  printToPrinter?: boolean;
 }
 
 /**

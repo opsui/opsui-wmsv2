@@ -106,6 +106,9 @@ router.post(
     };
 
     const nzcPackages = packages.map((pkg: any) => ({
+      PackageStockId: pkg.packageStockId || undefined,
+      Name: pkg.name || undefined,
+      Type: pkg.type || undefined,
       Length: pkg.length || 0,
       Width: pkg.width || 0,
       Height: pkg.height || 0,
@@ -137,7 +140,7 @@ router.post(
   '/shipments',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const { destination, packages, quoteId } = req.body;
+    const { destination, packages, quoteId, senderReference, printToPrinter } = req.body;
 
     // Validate required fields
     if (!destination || !packages || !quoteId || packages.length === 0) {
@@ -181,6 +184,9 @@ router.post(
     };
 
     const nzcPackages = packages.map((pkg: any) => ({
+      PackageStockId: pkg.packageStockId || undefined,
+      Name: pkg.name || undefined,
+      Type: pkg.type || undefined,
       Length: pkg.length || 0,
       Width: pkg.width || 0,
       Height: pkg.height || 0,
@@ -188,7 +194,13 @@ router.post(
       Units: pkg.units || 1,
     }));
 
-    const result = await nzcService.createShipment(nzcDestination, nzcPackages, quoteId);
+    const result = await nzcService.createShipment(
+      nzcDestination,
+      nzcPackages,
+      quoteId,
+      senderReference,
+      printToPrinter !== false
+    );
     res.status(201).json(result);
   })
 );
