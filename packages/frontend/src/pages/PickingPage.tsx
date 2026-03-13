@@ -1256,30 +1256,49 @@ export function PickingPage() {
       <div className="min-h-screen">
         <style>{`
           @media print {
-            @page { size: A4 landscape; margin: 12mm; }
+            @page { size: A4; margin: 10mm; }
             html, body {
               background: white !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
               color-adjust: exact !important;
             }
-            body * { visibility: hidden !important; }
-            #fulfillment-slip-print, #fulfillment-slip-print * { visibility: visible !important; }
+            /* Hide everything first */
+            body > * { display: none !important; }
+            /* Show only the print container */
+            body > div > #fulfillment-slip-print,
             #fulfillment-slip-print {
-              position: absolute; inset: 0; width: 100%;
-              background: white !important; color: black !important;
-              padding: 0;
+              display: block !important;
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              background: white !important;
+              color: black !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
-              color-adjust: exact !important;
             }
             #fulfillment-slip-actions { display: none !important; }
             .print-hide { display: none !important; }
+            /* Hide icons in print */
+            #fulfillment-slip-print svg { display: none !important; }
+            /* Simplify gradient bars for print */
+            .bg-gradient-to-b { background: #9ca3af !important; }
             .fulfillment-slip-print-color {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
               color-adjust: exact !important;
             }
+            /* Compact spacing for print */
+            #fulfillment-slip-print .px-8 { padding-left: 16px !important; padding-right: 16px !important; }
+            #fulfillment-slip-print .py-6 { padding-top: 12px !important; padding-bottom: 12px !important; }
+            #fulfillment-slip-print .py-5 { padding-top: 10px !important; padding-bottom: 10px !important; }
+            #fulfillment-slip-print .py-4 { padding-top: 8px !important; padding-bottom: 8px !important; }
+            #fulfillment-slip-print .gap-8 { gap: 24px !important; }
+            /* Remove shadows and rounded corners for print */
+            #fulfillment-slip-print .shadow-sm { box-shadow: none !important; }
+            #fulfillment-slip-print .rounded-xl { border-radius: 0 !important; }
+            #fulfillment-slip-print .rounded-lg { border-radius: 0 !important; }
           }
         `}</style>
 
