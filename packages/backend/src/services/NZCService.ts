@@ -482,7 +482,8 @@ export class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const contentType = response.headers.get('content-type') || 'image/png';
+      const headerContentType = response.headers.get('content-type') || '';
+      const contentType = this._normalizeLabelContentType(headerContentType, format);
       const buffer = await response.arrayBuffer();
       const base64 = Buffer.from(buffer).toString('base64');
 
@@ -501,6 +502,24 @@ export class NZCService {
       logger.error('[NZC] Error fetching label', error);
       throw error;
     }
+  }
+
+  private _normalizeLabelContentType(contentType: string, format: NZCLabelFormat): string {
+    const normalized = contentType.toLowerCase();
+
+    if (normalized.includes('image/png')) {
+      return 'image/png';
+    }
+
+    if (normalized.includes('application/pdf')) {
+      return 'application/pdf';
+    }
+
+    if (format === NZCLabelFormat.PDF || format === NZCLabelFormat.PDF_100X175) {
+      return 'application/pdf';
+    }
+
+    return 'image/png';
   }
 
   private _normalizeShipmentResponse(rawData: unknown): NZCShipmentResponse {

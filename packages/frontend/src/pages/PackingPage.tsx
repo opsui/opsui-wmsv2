@@ -298,7 +298,24 @@ export function PackingPage() {
     return zones;
   };
 
+  const getNzcLabelSource = (label: { data: string; contentType: string }) => {
+    const normalizedContentType = (label.contentType || '').toLowerCase();
+
+    if (normalizedContentType.includes('pdf') || label.data.startsWith('JVBERi0')) {
+      return {
+        src: `data:application/pdf;base64,${label.data}`,
+        isPdf: true,
+      };
+    }
+
+    return {
+      src: `data:image/png;base64,${label.data}`,
+      isPdf: false,
+    };
+  };
+
   const printNZCLabel = (label: { data: string; contentType: string }) => {
+    const labelSource = getNzcLabelSource(label);
     const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
     if (!printWindow) {
       showToast('Popup blocked. Use Print Label to print manually.', 'warning');
@@ -315,15 +332,20 @@ export function PackingPage() {
               padding: 0;
               background: #ffffff;
             }
-            img {
+            img, iframe {
               display: block;
               width: 100%;
               height: auto;
+              border: 0;
             }
           </style>
         </head>
         <body>
-          <img src="data:${label.contentType};base64,${label.data}" alt="NZC Shipping Label" />
+          ${
+            labelSource.isPdf
+              ? `<iframe src="${labelSource.src}" title="NZC Shipping Label" style="height:100vh;"></iframe>`
+              : `<img src="${labelSource.src}" alt="NZC Shipping Label" />`
+          }
           <script>
             window.onload = function() {
               setTimeout(function() {
@@ -1871,22 +1893,43 @@ export function PackingPage() {
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-2">
-                          <img
-                            src={`data:${nzcLabel.contentType};base64,${nzcLabel.data}`}
-                            alt="Shipping Label"
-                            className="w-full h-auto max-h-[400px] object-contain"
-                          />
+                          {(() => {
+                            const labelSource = getNzcLabelSource(nzcLabel);
+
+                            if (labelSource.isPdf) {
+                              return (
+                                <iframe
+                                  src={labelSource.src}
+                                  title="Shipping Label"
+                                  className="w-full h-[420px] rounded-lg border-0"
+                                />
+                              );
+                            }
+
+                            return (
+                              <img
+                                src={labelSource.src}
+                                alt="Shipping Label"
+                                className="w-full h-auto max-h-[400px] object-contain"
+                              />
+                            );
+                          })()}
                         </div>
                         <div className="flex gap-2">
                           <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => {
+                              const labelSource = getNzcLabelSource(nzcLabel);
                               const newWindow = window.open();
                               if (newWindow) {
                                 newWindow.document.write(
                                   `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
-                                  <img src="data:${nzcLabel.contentType};base64,${nzcLabel.data}" style="max-width:100%;" />
+                                  ${
+                                    labelSource.isPdf
+                                      ? `<iframe src="${labelSource.src}" style="width:100%;height:100vh;border:none;"></iframe>`
+                                      : `<img src="${labelSource.src}" style="max-width:100%;" />`
+                                  }
                                 </body></html>`
                                 );
                                 newWindow.document.close();
