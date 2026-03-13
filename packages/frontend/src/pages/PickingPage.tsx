@@ -34,15 +34,20 @@ import { useCompleteOrder, useLogException, useOrder, usePickItem } from '@/serv
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
+  CalendarDaysIcon,
   CheckIcon,
+  ClipboardDocumentListIcon,
+  CubeIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  ForwardIcon,
   MinusCircleIcon,
+  PencilSquareIcon,
   PrinterIcon,
+  TruckIcon,
+  UserGroupIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
-  ForwardIcon,
-  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import { Address, ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -56,6 +61,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 export function PickingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
+  const returnToFromSearch = new URLSearchParams(location.search).get('returnTo');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
@@ -107,7 +113,9 @@ export function PickingPage() {
   const pickingQueuePath =
     typeof location.state?.returnTo === 'string' && location.state.returnTo.length > 0
       ? location.state.returnTo
-      : '/orders?status=PICKING';
+      : typeof returnToFromSearch === 'string' && returnToFromSearch.length > 0
+        ? returnToFromSearch
+        : '/orders?status=PICKING';
 
   // Confirm dialog states
   const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{
@@ -126,6 +134,7 @@ export function PickingPage() {
   const logExceptionMutation = useLogException();
   const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
   const autoPrintFulfillmentRef = useRef(false);
+  const fulfillmentSlipPrintRef = useRef<HTMLDivElement | null>(null);
 
   const formatAddressLines = (address?: Address) =>
     [
@@ -142,8 +151,94 @@ export function PickingPage() {
   const handlePrintFulfillmentSlip = async () => {
     setIsPrintingFulfillmentSlip(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      window.print();
+      const slipElement = fulfillmentSlipPrintRef.current;
+      if (!slipElement) {
+        throw new Error('Packing slip preview is not ready yet');
+      }
+
+      const printFrame = document.createElement('iframe');
+      printFrame.setAttribute('aria-hidden', 'true');
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+
+      document.body.appendChild(printFrame);
+
+      const printDocument =
+        printFrame.contentDocument || printFrame.contentWindow?.document || null;
+      if (!printDocument) {
+        document.body.removeChild(printFrame);
+        throw new Error('Unable to prepare packing slip for printing');
+      }
+
+      printDocument.open();
+      printDocument.write(`
+        <!doctype html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <title>Fulfillment Slip</title>
+            <style>
+              @page {
+                size: auto;
+                margin: 12mm;
+              }
+
+              html, body {
+                margin: 0;
+                padding: 0;
+                background: #ffffff;
+                color: #0f172a;
+                font-family: Arial, Helvetica, sans-serif;
+              }
+
+              body {
+                padding: 0;
+              }
+
+              * {
+                box-sizing: border-box;
+              }
+
+              .print-root {
+                width: 100%;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-root">${slipElement.outerHTML}</div>
+          </body>
+        </html>
+      `);
+      printDocument.close();
+
+      await new Promise(resolve => {
+        const frameWindow = printFrame.contentWindow;
+        if (!frameWindow) {
+          resolve(null);
+          return;
+        }
+
+        const triggerPrint = () => {
+          frameWindow.focus();
+          frameWindow.print();
+          window.setTimeout(() => {
+            if (document.body.contains(printFrame)) {
+              document.body.removeChild(printFrame);
+            }
+            resolve(null);
+          }, 500);
+        };
+
+        if (printDocument.readyState === 'complete') {
+          triggerPrint();
+        } else {
+          printFrame.onload = triggerPrint;
+        }
+      });
     } finally {
       setTimeout(() => setIsPrintingFulfillmentSlip(false), 250);
     }
@@ -1061,7 +1156,7 @@ export function PickingPage() {
               width: 100%;
               background: white !important;
               color: black !important;
-              padding: 24px;
+              padding: 0;
             }
 
             #fulfillment-slip-actions {
@@ -1076,116 +1171,212 @@ export function PickingPage() {
             <Breadcrumb
               items={[
                 { label: 'Picking Queue', path: pickingQueuePath },
-                { label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}` },
+                {
+                  label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}`,
+                },
               ]}
             />
 
             <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
               <div
                 id="fulfillment-slip-print"
-                className="bg-white text-slate-900 rounded-2xl p-6 sm:p-8 space-y-6"
+                ref={fulfillmentSlipPrintRef}
+                className="bg-white text-slate-900 print:p-0 print:rounded-none"
               >
-                <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-6">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-                      Fulfillment Printout
-                    </p>
-                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-                      {fulfillmentPreviewOrder.netsuiteIfTranId ||
-                        fulfillmentPreviewOrder.netsuiteSoTranId ||
-                        fulfillmentPreviewOrder.orderId}
-                    </h1>
-                    <p className="mt-2 text-sm text-slate-600">
-                      Sales Order:{' '}
-                      <span className="font-mono">
-                        {fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId}
-                      </span>
-                    </p>
-                    {fulfillmentPreviewOrder.customerPoNumber && (
-                      <p className="mt-1 text-sm text-slate-600">
-                        Customer PO:{' '}
-                        <span className="font-medium">
-                          {fulfillmentPreviewOrder.customerPoNumber}
+                {/* Header with gradient accent */}
+                <div className="relative bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 text-white px-8 py-6 print:bg-white print:text-black print:border-b-2 print:border-purple-600">
+                  <div className="absolute inset-0 opacity-10 print:hidden">
+                    <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]" />
+                  </div>
+                  <div className="relative flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center print:bg-purple-600 print:text-white">
+                          <CubeIcon className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80 print:text-purple-600">
+                            Packing Slip
+                          </p>
+                          <h1 className="text-2xl font-bold tracking-tight print:text-black">
+                            {fulfillmentPreviewOrder.netsuiteIfTranId ||
+                              fulfillmentPreviewOrder.netsuiteSoTranId ||
+                              fulfillmentPreviewOrder.orderId}
+                          </h1>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm">
+                      <div className="inline-flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5 print:bg-gray-100">
+                        <CalendarDaysIcon className="h-4 w-4 text-white/70 print:text-purple-600" />
+                        <span className="font-medium print:text-gray-700">
+                          {new Date().toLocaleDateString('en-NZ', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
                         </span>
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="text-right text-sm text-slate-600">
-                    <p>
-                      Completed:{' '}
-                      <span className="font-medium">
-                        {new Date().toLocaleString('en-NZ', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </p>
-                    <p className="mt-1">
-                      Picker:{' '}
-                      <span className="font-medium">
-                        {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                      Customer
-                    </p>
-                    <p className="mt-3 text-lg font-semibold text-slate-900">
-                      {fulfillmentPreviewOrder.customerName}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-600 font-mono">
-                      {fulfillmentPreviewOrder.orderId}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                      Ship To
-                    </p>
-                    <div className="mt-3 space-y-1 text-sm text-slate-700">
-                      {previewAddressLines.length > 0 ? (
-                        previewAddressLines.map(line => <p key={line}>{line}</p>)
-                      ) : (
-                        <p>No shipping details available</p>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 overflow-hidden">
-                  <div className="grid grid-cols-[1.2fr,1fr,120px,120px] gap-4 bg-slate-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
-                    <span>Item</span>
-                    <span>SKU</span>
-                    <span className="text-right">Picked</span>
-                    <span className="text-right">Required</span>
+                {/* Order Info Bar */}
+                <div className="bg-slate-50 border-b border-slate-200 px-8 py-4 print:bg-white">
+                  <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                        SO #
+                      </span>
+                      <span className="font-mono font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.netsuiteSoTranId ||
+                          fulfillmentPreviewOrder.orderId}
+                      </span>
+                    </div>
+                    {fulfillmentPreviewOrder.customerPoNumber && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                          PO #
+                        </span>
+                        <span className="font-mono font-semibold text-slate-900">
+                          {fulfillmentPreviewOrder.customerPoNumber}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                        Picker
+                      </span>
+                      <span className="font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                        Picked
+                      </span>
+                      <span className="font-mono text-purple-600 font-bold">
+                        {new Date().toLocaleTimeString('en-NZ', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
                   </div>
-                  <div className="divide-y divide-slate-200">
-                    {(fulfillmentPreviewOrder.items || []).map((item: any) => (
-                      <div
-                        key={item.orderItemId}
-                        className="grid grid-cols-[1.2fr,1fr,120px,120px] gap-4 px-4 py-3 text-sm"
-                      >
-                        <div>
-                          <p className="font-medium text-slate-900">{item.name}</p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Bin: {formatBinLocation(item.binLocation)}
+                </div>
+
+                {/* Main Content */}
+                <div className="p-8 space-y-6">
+                  {/* Customer & Shipping Info */}
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 p-5 print:bg-white print:border-gray-300">
+                      <div className="flex items-center gap-2 mb-3">
+                        <UserGroupIcon className="h-4 w-4 text-purple-600" />
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                          Customer
+                        </p>
+                      </div>
+                      <p className="text-xl font-bold text-slate-900">
+                        {fulfillmentPreviewOrder.customerName}
+                      </p>
+                      <p className="mt-2 text-sm font-mono text-slate-600 bg-white rounded-lg px-3 py-1.5 inline-block border border-slate-200">
+                        {fulfillmentPreviewOrder.orderId}
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-5 print:bg-white print:border-gray-300">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TruckIcon className="h-4 w-4 text-purple-600" />
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600">
+                          Ship To
+                        </p>
+                      </div>
+                      <div className="space-y-0.5 text-sm text-slate-700">
+                        {previewAddressLines.length > 0 ? (
+                          previewAddressLines.map((line, i) => (
+                            <p key={line} className={i === 0 ? 'font-semibold text-slate-900' : ''}>
+                              {line}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-slate-400 italic">No shipping details available</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items Table */}
+                  <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none">
+                    <div className="bg-gradient-to-r from-slate-800 to-slate-700 print:bg-gray-200">
+                      <div className="grid grid-cols-12 gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.15em] text-white print:text-gray-700">
+                        <span className="col-span-5">Item</span>
+                        <span className="col-span-3">SKU</span>
+                        <span className="col-span-2 text-center">Bin</span>
+                        <span className="col-span-1 text-center">Picked</span>
+                        <span className="col-span-1 text-center">Qty</span>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-slate-100 print:divide-gray-200">
+                      {(fulfillmentPreviewOrder.items || []).map((item: any, idx: number) => (
+                        <div
+                          key={item.orderItemId}
+                          className={`grid grid-cols-12 gap-2 px-5 py-4 text-sm items-center ${
+                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                          } print:bg-white`}
+                        >
+                          <div className="col-span-5">
+                            <p className="font-semibold text-slate-900">{item.name}</p>
+                          </div>
+                          <p className="col-span-3 font-mono text-slate-700 text-xs">{item.sku}</p>
+                          <p className="col-span-2 text-center">
+                            <span className="inline-flex items-center justify-center min-w-[3rem] px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-bold print:bg-gray-100">
+                              {formatBinLocation(item.binLocation)}
+                            </span>
+                          </p>
+                          <p className="col-span-1 text-center">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-700 font-bold text-sm print:bg-gray-100">
+                              {item.pickedQuantity}
+                            </span>
+                          </p>
+                          <p className="col-span-1 text-center font-semibold text-slate-700">
+                            {item.quantity}
                           </p>
                         </div>
-                        <p className="font-mono text-slate-700">{item.sku}</p>
-                        <p className="text-right font-semibold text-slate-900">
-                          {item.pickedQuantity}
-                        </p>
-                        <p className="text-right text-slate-700">{item.quantity}</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Footer Summary */}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                    <div className="flex items-center gap-6 text-sm text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                          <ClipboardDocumentListIcon className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase tracking-wider">
+                            Total Items
+                          </p>
+                          <p className="font-bold text-slate-900">
+                            {(fulfillmentPreviewOrder.items || []).reduce(
+                              (sum: number, item: any) => sum + item.pickedQuantity,
+                              0
+                            )}
+                          </p>
+                        </div>
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Signature area */}
+                    <div className="text-right print:flex print:gap-8">
+                      <div className="inline-block">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
+                          Verified By
+                        </p>
+                        <div className="w-40 border-b-2 border-slate-300 border-dashed h-6" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1202,10 +1393,7 @@ export function PickingPage() {
                   <PrinterIcon className="h-5 w-5 mr-2" />
                   Print Packing Slip
                 </Button>
-                <Button
-                  variant="success"
-                  onClick={() => navigate('/orders?status=PENDING')}
-                >
+                <Button variant="success" onClick={() => navigate('/orders?status=PENDING')}>
                   Done
                 </Button>
               </div>
