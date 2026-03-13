@@ -179,7 +179,9 @@ const formatAddressLines = (address?: Address | null): string[] => {
     address.company,
     address.addressLine1,
     address.addressLine2,
-    [address.city, address.state, address.postalCode].filter(Boolean).join(', '),
+    address.city,
+    address.state,
+    address.postalCode,
     formatNetSuiteDisplayText(address.country),
   ]
     .map(line => (typeof line === 'string' ? line.trim() : ''))
