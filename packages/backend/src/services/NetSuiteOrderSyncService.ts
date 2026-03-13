@@ -1438,7 +1438,8 @@ export class NetSuiteOrderSyncService {
           } else if (
             !shipStatus.includes('packed') &&
             !shipStatus.includes('shipped') &&
-            row.status !== 'PICKED'
+            row.status !== 'PICKED' &&
+            row.status !== 'PACKING'
           ) {
             // Fulfillment exists but is only picked - ensure WMS is back in PICKED state.
             await this.updateOrderStatus(row.order_id, 'PICKED', {
@@ -1596,13 +1597,18 @@ export class NetSuiteOrderSyncService {
         const derivedSubtotal = parentSalesOrder.subTotal != null ? parentSalesOrder.subTotal : 0;
         const derivedTotal =
           parentSalesOrder.total != null ? parentSalesOrder.total : derivedSubtotal;
+        const shippingAddress = this.buildWmsShippingAddress(parentSalesOrder.shippingAddress);
         try {
           await this.query(
             `UPDATE orders
              SET subtotal = CASE WHEN subtotal IS NULL OR subtotal = 0 THEN $1 ELSE subtotal END,
                  total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END,
                  customer_po_number = COALESCE(customer_po_number, $4),
-                 netsuite_order_date = COALESCE(netsuite_order_date, $5)
+                 netsuite_order_date = COALESCE(netsuite_order_date, $5),
+                 shipping_address = CASE
+                   WHEN $6::jsonb IS NOT NULL THEN $6::jsonb
+                   ELSE shipping_address
+                 END
              WHERE order_id = $3`,
             [
               derivedSubtotal,
@@ -1610,6 +1616,7 @@ export class NetSuiteOrderSyncService {
               existing.orderId,
               parentSalesOrder.otherRefNum || null,
               parentSalesOrder.tranDate || null,
+              shippingAddress ? JSON.stringify(shippingAddress) : null,
             ]
           );
         } catch {
@@ -1639,19 +1646,7 @@ export class NetSuiteOrderSyncService {
         !hasFulfillment &&
         (salesOrder.status?.refName || '').toLowerCase().includes('pending fulfillment')
       ) {
-        await this.query(
-          `UPDATE orders
-           SET status = 'PENDING'::order_status,
-               shipped_at = NULL,
-               packed_at = NULL,
-               picked_at = NULL,
-               netsuite_if_internal_id = NULL,
-               netsuite_if_tran_id = NULL,
-               progress = 0,
-               updated_at = NOW()
-           WHERE order_id = $1`,
-          [existing.orderId]
-        );
+        await this.updateOrderStatus(existing.orderId, 'PENDING');
         updated = true;
         logger.warn(
           'Reverted SHIPPED order to PENDING (SO still pending fulfillment with no fulfillment)',
@@ -2401,6 +2396,58 @@ export class NetSuiteOrderSyncService {
     return map;
   }
 
+  private buildWmsShippingAddress(address?: {
+    addressee?: string;
+    attention?: string;
+    addr1?: string;
+    addr2?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    phone?: string;
+    email?: string;
+    country?: { id?: string; refName?: string } | string;
+  } | null) {
+    if (!address) {
+      return null;
+    }
+
+    const company = address.addressee?.trim() || undefined;
+    const contactName = address.attention?.trim() || company;
+    const country =
+      typeof address.country === 'string'
+        ? address.country
+        : address.country?.refName || address.country?.id || '';
+
+    if (
+      !contactName &&
+      !company &&
+      !address.addr1 &&
+      !address.addr2 &&
+      !address.city &&
+      !address.state &&
+      !address.zip &&
+      !address.phone &&
+      !address.email &&
+      !country
+    ) {
+      return null;
+    }
+
+    return {
+      name: contactName || undefined,
+      company,
+      street1: address.addr1 || '',
+      street2: address.addr2 || '',
+      city: address.city || '',
+      state: address.state || '',
+      postalCode: address.zip || '',
+      country,
+      phone: address.phone || undefined,
+      email: address.email || undefined,
+    };
+  }
+
   // ========================================================================
   // ORDER CREATION (updated with tracking columns)
   // ========================================================================
@@ -2434,16 +2481,7 @@ export class NetSuiteOrderSyncService {
           ? salesOrder.subTotal
           : subtotal;
 
-    const shippingAddress = salesOrder.shippingAddress
-      ? {
-          street1: salesOrder.shippingAddress.addr1 || '',
-          street2: salesOrder.shippingAddress.addr2 || '',
-          city: salesOrder.shippingAddress.city || '',
-          state: salesOrder.shippingAddress.state || '',
-          postalCode: salesOrder.shippingAddress.zip || '',
-          country: salesOrder.shippingAddress.country?.refName || '',
-        }
-      : null;
+    const shippingAddress = this.buildWmsShippingAddress(salesOrder.shippingAddress);
 
     await this.query(
       `INSERT INTO orders (
@@ -2560,17 +2598,7 @@ export class NetSuiteOrderSyncService {
     }
 
     const shippingAddr = fulfillment.shippingAddress || {};
-    const shippingAddress =
-      shippingAddr.addr1 || shippingAddr.city
-        ? {
-            street1: shippingAddr.addr1 || '',
-            street2: shippingAddr.addr2 || '',
-            city: shippingAddr.city || '',
-            state: shippingAddr.state || '',
-            postalCode: shippingAddr.zip || '',
-            country: shippingAddr.country?.refName || '',
-          }
-        : null;
+    const shippingAddress = this.buildWmsShippingAddress(shippingAddr);
 
     await this.query(
       `INSERT INTO orders (

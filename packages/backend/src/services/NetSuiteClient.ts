@@ -38,11 +38,15 @@ export interface NetSuiteSalesOrder {
   taxTotal?: number;
   item?: { items: NetSuiteSalesOrderLine[] };
   shippingAddress?: {
+    addressee?: string;
+    attention?: string;
     addr1?: string;
     addr2?: string;
     city?: string;
     state?: string;
     zip?: string;
+    phone?: string;
+    email?: string;
     country?: { id: string; refName: string };
   };
 }
@@ -319,6 +323,51 @@ export class NetSuiteClient {
     return year && month && day ? `${year}-${month}-${day}` : value;
   }
 
+  private parseShippingAddress(block?: string): NetSuiteSalesOrder['shippingAddress'] | undefined {
+    if (!block) {
+      return undefined;
+    }
+
+    const addressee = this.extractTag(block, 'addressee') || this.extractTag(block, 'company');
+    const attention = this.extractTag(block, 'attention');
+    const addr1 = this.extractTag(block, 'addr1');
+    const addr2 = this.extractTag(block, 'addr2');
+    const city = this.extractTag(block, 'city');
+    const state = this.extractTag(block, 'state');
+    const zip = this.extractTag(block, 'zip');
+    const phone = this.extractTag(block, 'addrPhone') || this.extractTag(block, 'phone');
+    const email = this.extractTag(block, 'addrEmail') || this.extractTag(block, 'email');
+    const country = this.extractTag(block, 'country');
+
+    if (
+      !addressee &&
+      !attention &&
+      !addr1 &&
+      !addr2 &&
+      !city &&
+      !state &&
+      !zip &&
+      !phone &&
+      !email &&
+      !country
+    ) {
+      return undefined;
+    }
+
+    return {
+      addressee: addressee || undefined,
+      attention: attention || undefined,
+      addr1: addr1 || undefined,
+      addr2: addr2 || undefined,
+      city: city || undefined,
+      state: state || undefined,
+      zip: zip || undefined,
+      phone: phone || undefined,
+      email: email || undefined,
+      country: country ? { id: country, refName: country } : undefined,
+    };
+  }
+
   private parseSalesOrderFromXml(recordXml: string): NetSuiteSalesOrder {
     const internalId = this.extractAttribute(recordXml, 'record', 'internalId');
     const tranId = this.extractTag(recordXml, 'tranId');
@@ -342,12 +391,7 @@ export class NetSuiteClient {
     // Shipping address
     const shippingBlock =
       this.extractTag(recordXml, 'shippingAddress') || this.extractTag(recordXml, 'shipAddress');
-    const addr1 = this.extractTag(shippingBlock, 'addr1');
-    const addr2 = this.extractTag(shippingBlock, 'addr2');
-    const city = this.extractTag(shippingBlock, 'city');
-    const state = this.extractTag(shippingBlock, 'state');
-    const zip = this.extractTag(shippingBlock, 'zip');
-    const country = this.extractTag(shippingBlock, 'country');
+    const shippingAddress = this.parseShippingAddress(shippingBlock);
 
     // Line items
     const items = this.parseLineItems(recordXml);
@@ -371,17 +415,7 @@ export class NetSuiteClient {
       total,
       taxTotal,
       item: items.length > 0 ? { items } : undefined,
-      shippingAddress:
-        addr1 || city
-          ? {
-              addr1,
-              addr2,
-              city,
-              state,
-              zip,
-              country: country ? { id: country, refName: country } : undefined,
-            }
-          : undefined,
+      shippingAddress,
     };
   }
 
@@ -516,6 +550,9 @@ export class NetSuiteClient {
       const createdFromId = this.extractAttribute(recordXml, 'createdFrom', 'internalId');
       const createdFromName = this.extractTag(recordXml, 'createdFrom') || '';
       const lineItems = this.parseLineItems(recordXml);
+      const shippingBlock =
+        this.extractTag(recordXml, 'shippingAddress') || this.extractTag(recordXml, 'shipAddress');
+      const shippingAddress = this.parseShippingAddress(shippingBlock);
 
       return {
         links: [],
@@ -529,6 +566,7 @@ export class NetSuiteClient {
             }
           : undefined,
         item: lineItems.length > 0 ? { items: lineItems } : undefined,
+        shippingAddress,
       };
     });
   }
@@ -911,6 +949,7 @@ export class NetSuiteClient {
     // Shipping address
     const shippingBlock =
       this.extractTag(response, 'shippingAddress') || this.extractTag(response, 'shipAddress');
+    const shippingAddress = this.parseShippingAddress(shippingBlock);
 
     // Line items
     const lineItems = this.parseLineItems(response);
@@ -934,19 +973,7 @@ export class NetSuiteClient {
       entity: { id: entityId, refName: entityName },
       createdFrom: { id: createdFromId, refName: createdFromName.replace(/<[^>]*>/g, '').trim() },
       item: lineItems.length > 0 ? { items: lineItems } : lineItems,
-      shippingAddress: shippingBlock
-        ? {
-            addr1: this.extractTag(shippingBlock, 'addr1'),
-            addr2: this.extractTag(shippingBlock, 'addr2'),
-            city: this.extractTag(shippingBlock, 'city'),
-            state: this.extractTag(shippingBlock, 'state'),
-            zip: this.extractTag(shippingBlock, 'zip'),
-            country: {
-              id: this.extractTag(shippingBlock, 'country'),
-              refName: this.extractTag(shippingBlock, 'country'),
-            },
-          }
-        : undefined,
+      shippingAddress,
     };
   }
 
