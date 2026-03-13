@@ -1215,27 +1215,28 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
         {noMotion ? (
           filteredOrders.length === 0 ? (
-          <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
-            <CardContent className="p-16 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
-                <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
-              </div>
-              <p className="text-slate-500 font-bold uppercase tracking-wider">{cfg.emptyText}</p>
-            </CardContent>
-          </Card>
+            <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
+              <CardContent className="p-16 text-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
+                  <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
+                </div>
+                <p className="text-slate-500 font-bold uppercase tracking-wider">{cfg.emptyText}</p>
+              </CardContent>
+            </Card>
           ) : (
-          <ResponsiveGrid columns={3} minColumnWidth={320} gap="md">
-            {filteredOrders.map((order: any) => (
-              <OrderCard
-                key={order.orderId}
-                order={order}
-                onClaim={handleClaim}
-                isClaiming={isClaiming}
-                claimingOrderId={claimingOrderId}
-                mode={mode}
-              />
-            ))}
-          </ResponsiveGrid>
+            <ResponsiveGrid columns={3} minColumnWidth={320} gap="md">
+              {filteredOrders.map((order: any) => (
+                <OrderCard
+                  key={order.orderId}
+                  order={order}
+                  onClaim={handleClaim}
+                  isClaiming={isClaiming}
+                  claimingOrderId={claimingOrderId}
+                  mode={mode}
+                />
+              ))}
+            </ResponsiveGrid>
+          )
         ) : (
           <AnimatePresence mode="wait">
             {filteredOrders.length === 0 ? (
