@@ -1068,6 +1068,42 @@ export class NetSuiteOrderSyncService {
           staleThresholdHours: STALE_ORDER_THRESHOLD_HOURS,
         });
 
+        const packingSoIdsWithoutFulfillments = packingOrders.rows
+          .map((row: any) => row.netsuite_so_internal_id)
+          .filter((soId: string) => soId && !fulfillmentMap.has(soId));
+
+        if (packingSoIdsWithoutFulfillments.length > 0) {
+          logger.info(
+            'Phase 3.5: Fetching fulfillments for packing queue orders not in general map',
+            {
+              count: packingSoIdsWithoutFulfillments.length,
+              soIds: packingSoIdsWithoutFulfillments.slice(0, 10),
+            }
+          );
+          try {
+            const specificPackingFulfillments = await this.client.getItemFulfillmentsBySalesOrder(
+              packingSoIdsWithoutFulfillments
+            );
+
+            for (const fulfillment of specificPackingFulfillments) {
+              const soId = fulfillment.createdFrom?.id;
+              if (!soId) continue;
+              const existing = fulfillmentMap.get(soId) || [];
+              existing.push(fulfillment);
+              fulfillmentMap.set(soId, existing);
+            }
+
+            logger.info('Phase 3.5: Added specific packing fulfillments to map', {
+              fetched: specificPackingFulfillments.length,
+              newMapSize: fulfillmentMap.size,
+            });
+          } catch (error: any) {
+            logger.warn('Phase 3.5: Failed to fetch specific packing fulfillments', {
+              error: error.message,
+            });
+          }
+        }
+
         // Track stale orders by action taken for summary logging
         const staleOrderActions = {
           movedToPending: [] as string[],
@@ -1236,7 +1272,7 @@ export class NetSuiteOrderSyncService {
                 ifTranId: latestFulfillment.tranId,
               }
             );
-          } else if (shipStatus.includes('packed') && row.status === 'PICKED') {
+          } else if (shipStatus.includes('packed') && row.status !== 'PACKED') {
             // Fulfillment is packed - mark as PACKED
             await this.updateOrderStatus(row.order_id, 'PACKED', {
               ifInternalId: latestFulfillment.id,
