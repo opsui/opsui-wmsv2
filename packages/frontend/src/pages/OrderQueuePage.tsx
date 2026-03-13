@@ -1199,7 +1199,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           </Button>
         </div>
 
-        {filteredOrders.length === 0 ? (
+        {noMotion ? (
+          filteredOrders.length === 0 ? (
           <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
             <CardContent className="p-16 text-center">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
@@ -1208,7 +1209,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
               <p className="text-slate-500 font-bold uppercase tracking-wider">{cfg.emptyText}</p>
             </CardContent>
           </Card>
-        ) : noMotion ? (
+          ) : (
           <ResponsiveGrid columns={3} minColumnWidth={320} gap="md">
             {filteredOrders.map((order: any) => (
               <OrderCard
@@ -1222,25 +1223,50 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             ))}
           </ResponsiveGrid>
         ) : (
-          <motion.div
-            variants={pageVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-responsive"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredOrders.map((order: any) => (
-                <OrderCard
-                  key={order.orderId}
-                  order={order}
-                  onClaim={handleClaim}
-                  isClaiming={isClaiming}
-                  claimingOrderId={claimingOrderId}
-                  mode={mode}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <AnimatePresence mode="wait">
+            {filteredOrders.length === 0 ? (
+              <motion.div
+                key="empty-state"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
+                  <CardContent className="p-16 text-center">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700">
+                      <cfg.emptyIcon className="h-10 w-10 text-slate-600" />
+                    </div>
+                    <p className="text-slate-500 font-bold uppercase tracking-wider">
+                      {cfg.emptyText}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="queue-grid"
+                variants={pageVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-responsive"
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredOrders.map((order: any) => (
+                    <OrderCard
+                      key={order.orderId}
+                      order={order}
+                      onClaim={handleClaim}
+                      isClaiming={isClaiming}
+                      claimingOrderId={claimingOrderId}
+                      mode={mode}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
 
         {queueData?.total && queueData.total > 0 && (
