@@ -104,6 +104,7 @@ const EmployeesPage = createLazyPage(() => import('@/pages/hr/EmployeesPage'));
 const OrganizationsPage = createLazyPage(() => import('@/pages/admin/OrganizationsPage'));
 const MultiEntitySetupPage = createLazyPage(() => import('@/pages/admin/MultiEntitySetupPage'));
 const TimesheetsPage = createLazyPage(() => import('@/pages/hr/TimesheetsPage'));
+const TimesheetEntryPage = createLazyPage(() => import('@/pages/hr/TimesheetEntryPage'));
 const PayrollDashboardPage = createLazyPage(() => import('@/pages/hr/PayrollDashboardPage'));
 const PayrollProcessingPage = createLazyPage(() => import('@/pages/hr/PayrollProcessingPage'));
 const PayrollRunsPage = createLazyPage(() => import('@/pages/hr/PayrollRunsPage'));
@@ -1047,6 +1048,22 @@ function AppInner() {
           element={
             <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.PICKER, UserRole.PACKER]}>
               <TimesheetsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/timesheets/new"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.PICKER, UserRole.PACKER]}>
+              <TimesheetEntryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hr/timesheets/:timesheetId"
+          element={
+            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.PICKER, UserRole.PACKER]}>
+              <TimesheetEntryPage />
             </ProtectedRoute>
           }
         />

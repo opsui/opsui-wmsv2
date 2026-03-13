@@ -20,7 +20,9 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { Header } from '@/components/shared/Header';
-import { Card } from '@/components/shared/Card';
+import { Card, CardHeader, CardTitle } from '@/components/shared/Card';
+import { hrApi } from '@/services/api';
+import { useUIStore } from '@/stores/uiStore';
 
 interface TimesheetEntry {
   entryId?: string;
@@ -57,6 +59,44 @@ interface Employee {
   employeeNumber?: string;
 }
 
+/**
+ * Transform database entries (with workType) to UI format (separate hour fields)
+ */
+const transformDbEntriesToUiFormat = (dbEntries: any[]): TimesheetEntry[] => {
+  const entriesByDate: Record<string, TimesheetEntry> = {};
+
+  for (const dbEntry of dbEntries) {
+    const dateKey = new Date(dbEntry.workDate).toISOString().split('T')[0];
+
+    if (!entriesByDate[dateKey]) {
+      entriesByDate[dateKey] = {
+        workDate: dateKey,
+        regularHours: 0,
+        overtime1_5Hours: 0,
+        overtime2_0Hours: 0,
+        breakMinutes: dbEntry.breakHours ? Math.round(dbEntry.breakHours * 60) : 0,
+        notes: dbEntry.description || '',
+      };
+    }
+
+    switch (dbEntry.workType) {
+      case 'REGULAR':
+        entriesByDate[dateKey].regularHours += dbEntry.hoursWorked;
+        break;
+      case 'OVERTIME_1_5':
+        entriesByDate[dateKey].overtime1_5Hours += dbEntry.hoursWorked;
+        break;
+      case 'OVERTIME_2_0':
+        entriesByDate[dateKey].overtime2_0Hours += dbEntry.hoursWorked;
+        break;
+    }
+  }
+
+  return Object.values(entriesByDate).sort((a, b) =>
+    a.workDate.localeCompare(b.workDate)
+  );
+};
+
 export default function TimesheetEntryPage() {
   const { timesheetId } = useParams();
   const navigate = useNavigate();
@@ -75,29 +115,48 @@ export default function TimesheetEntryPage() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  // Get theme from UI store
+  const theme = useUIStore(state => state.theme);
+
+  // Helper to determine if we're in light mode
+  const isLightMode = () => {
+    if (theme === 'light') return true;
+    if (theme === 'dark') return false;
+    // Auto mode - check system preference
+    return window.matchMedia('(prefers-color-scheme: light)').matches;
+  };
+
   useEffect(() => {
-    if (timesheetId) {
-      fetchTimesheet();
-    } else {
-      // Check if user is manager
-      const userRole = localStorage.getItem('userRole');
-      setIsManager(userRole === 'ADMIN' || userRole === 'SUPERVISOR' || userRole === 'ACCOUNTING');
-      if (isManager) {
-        fetchEmployees();
+    const initPage = async () => {
+      if (timesheetId) {
+        await fetchTimesheet();
+      } else {
+        // Check if user is manager
+        const userRole = localStorage.getItem('userRole');
+        const isMgr = userRole === 'ADMIN' || userRole === 'HR_MANAGER' || userRole === 'HR_ADMIN';
+        setIsManager(isMgr);
+
+        if (isMgr) {
+          await fetchEmployees();
+        } else {
+          // Regular employee - auto-load their timesheet for current week
+          await loadCurrentUserTimesheet();
+        }
       }
-    }
+    };
+
+    initPage();
   }, [timesheetId, weekStart]);
 
   const fetchTimesheet = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/hr/timesheets/${timesheetId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      const data = await hrApi.getTimesheet(timesheetId);
+      const uiEntries = transformDbEntriesToUiFormat(data.entries || []);
+      setTimesheet({
+        ...data,
+        entries: uiEntries,
       });
-      if (response.ok) {
-        const data = await response.json();
-        setTimesheet(data);
-      }
     } catch (error) {
       console.error('Error fetching timesheet:', error);
     } finally {
@@ -107,15 +166,54 @@ export default function TimesheetEntryPage() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('/api/hr/employees?status=ACTIVE', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setEmployees(data);
-      }
+      const data = await hrApi.getEmployees({ status: 'ACTIVE' });
+      setEmployees(data);
     } catch (error) {
       console.error('Error fetching employees:', error);
+    }
+  };
+
+  const loadCurrentUserTimesheet = async () => {
+    setLoading(true);
+    try {
+      // Get current user's email from auth storage
+      let userEmail = '';
+      try {
+        const storage = localStorage.getItem('wms-auth-storage');
+        if (storage) {
+          const parsed = JSON.parse(storage);
+          userEmail = parsed.state.user?.email || '';
+        }
+      } catch (e) {
+        // Ignore storage parsing errors
+      }
+
+      // Get current user's employee ID
+      const employees = await hrApi.getEmployees({ status: 'ACTIVE' });
+      const currentEmployee = employees.find((e: any) => e.email === userEmail);
+
+      let currentEmployeeId = '';
+      if (currentEmployee) {
+        currentEmployeeId = currentEmployee.employeeId;
+        setSelectedEmployeeId(currentEmployeeId);
+      }
+
+      // Then try to load the timesheet
+      const data = await hrApi.getMyCurrentTimesheet(weekStart);
+      if (data && data.timesheetId) {
+        const uiEntries = transformDbEntriesToUiFormat(data.entries || []);
+        setTimesheet({
+          ...data,
+          entries: uiEntries,
+        });
+      } else {
+        createNewTimesheet();
+      }
+    } catch (error) {
+      console.error('Error loading timesheet:', error);
+      createNewTimesheet();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,25 +222,19 @@ export default function TimesheetEntryPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `/api/hr/timesheets/employee/${selectedEmployeeId}?weekStart=${weekStart}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data) {
-          setTimesheet(data);
-        } else {
-          // Create new timesheet
-          createNewTimesheet();
-        }
+      const data = await hrApi.getEmployeeTimesheetForWeek(selectedEmployeeId, weekStart);
+      if (data && data.timesheetId) {
+        const uiEntries = transformDbEntriesToUiFormat(data.entries || []);
+        setTimesheet({
+          ...data,
+          entries: uiEntries,
+        });
       } else {
         createNewTimesheet();
       }
     } catch (error) {
       console.error('Error loading timesheet:', error);
+      createNewTimesheet();
     } finally {
       setLoading(false);
     }
@@ -168,11 +260,12 @@ export default function TimesheetEntryPage() {
 
     setTimesheet({
       timesheetId: '',
-      employeeId: selectedEmployeeId,
-      employeeName:
-        employees.find(e => e.employeeId === selectedEmployeeId)?.firstName +
-          ' ' +
-          employees.find(e => e.employeeId === selectedEmployeeId)?.lastName || '',
+      employeeId: selectedEmployeeId || '',
+      employeeName: isManager
+        ? (employees.find(e => e.employeeId === selectedEmployeeId)?.firstName +
+            ' ' +
+            employees.find(e => e.employeeId === selectedEmployeeId)?.lastName || '')
+        : 'My Timesheet',
       weekStartDate: weekStart,
       weekEndDate: weekEndObj.toISOString().split('T')[0],
       totalRegularHours: 0,
@@ -209,54 +302,52 @@ export default function TimesheetEntryPage() {
 
     setLoading(true);
     try {
-      const method = timesheet.timesheetId ? 'PUT' : 'POST';
-      const url = timesheet.timesheetId
-        ? `/api/hr/timesheets/${timesheet.timesheetId}`
-        : '/api/hr/timesheets';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(timesheet),
+      const data = await hrApi.saveDraftTimesheet({
+        timesheetId: timesheet.timesheetId || undefined,
+        employeeId: timesheet.employeeId,
+        weekStartDate: timesheet.weekStartDate,
+        entries: timesheet.entries,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTimesheet(data);
-        alert('Timesheet saved successfully');
-      }
+      const uiEntries = transformDbEntriesToUiFormat(data.entries || []);
+      setTimesheet({
+        ...data,
+        entries: uiEntries,
+      });
+      alert('Timesheet saved successfully');
     } catch (error) {
       console.error('Error saving timesheet:', error);
-      alert('Error saving timesheet');
+      alert(`Error saving timesheet: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
   const submitTimesheet = async () => {
-    if (!timesheet || !timesheet.timesheetId) return;
+    if (!timesheet) return;
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/hr/timesheets/${timesheet.timesheetId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+      // First save the draft
+      const savedData = await hrApi.saveDraftTimesheet({
+        timesheetId: timesheet.timesheetId || undefined,
+        employeeId: timesheet.employeeId,
+        weekStartDate: timesheet.weekStartDate,
+        entries: timesheet.entries,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setTimesheet(data);
+      // Then submit it for approval
+      if (savedData.timesheetId) {
+        const data = await hrApi.submitDraftTimesheet(savedData.timesheetId);
+        const uiEntries = transformDbEntriesToUiFormat(data.entries || []);
+        setTimesheet({
+          ...data,
+          entries: uiEntries,
+        });
         alert('Timesheet submitted for approval');
       }
     } catch (error) {
       console.error('Error submitting timesheet:', error);
-      alert('Error submitting timesheet');
+      alert(`Error submitting timesheet: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -267,19 +358,9 @@ export default function TimesheetEntryPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/hr/timesheets/${timesheet.timesheetId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTimesheet(data);
-        alert('Timesheet approved');
-      }
+      const data = await hrApi.approveTimesheet(timesheet.timesheetId);
+      setTimesheet(data);
+      alert('Timesheet approved');
     } catch (error) {
       console.error('Error approving timesheet:', error);
       alert('Error approving timesheet');
@@ -293,22 +374,11 @@ export default function TimesheetEntryPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/hr/timesheets/${timesheet.timesheetId}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ rejectionReason }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTimesheet(data);
-        setRejectModalOpen(false);
-        setRejectionReason('');
-        alert('Timesheet rejected');
-      }
+      const data = await hrApi.rejectTimesheet(timesheet.timesheetId, rejectionReason);
+      setTimesheet(data);
+      setRejectModalOpen(false);
+      setRejectionReason('');
+      alert('Timesheet rejected');
     } catch (error) {
       console.error('Error rejecting timesheet:', error);
       alert('Error rejecting timesheet');
@@ -327,9 +397,29 @@ export default function TimesheetEntryPage() {
     return date.getDate();
   };
 
+  const goToPreviousWeek = () => {
+    const currentWeekStart = new Date(weekStart);
+    currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+    setWeekStart(currentWeekStart.toISOString().split('T')[0]);
+  };
+
+  const goToNextWeek = () => {
+    const currentWeekStart = new Date(weekStart);
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    setWeekStart(currentWeekStart.toISOString().split('T')[0]);
+  };
+
+  const goToToday = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    setWeekStart(monday.toISOString().split('T')[0]);
+  };
+
   if (loading && !timesheet) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -340,7 +430,7 @@ export default function TimesheetEntryPage() {
   const canSubmit = timesheet?.status === 'DRAFT';
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
@@ -348,15 +438,15 @@ export default function TimesheetEntryPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/hr/timesheets')}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-slate-800 rounded-lg transition-colors"
             >
-              <ArrowLeftIcon className="h-5 w-5 text-slate-400" />
+              <ArrowLeftIcon className="h-5 w-5 text-gray-500 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {timesheetId ? 'Edit Timesheet' : 'New Timesheet'}
               </h1>
-              {timesheet && <p className="text-slate-400 text-sm">{timesheet.employeeName}</p>}
+              {timesheet && <p className="text-gray-500 dark:text-slate-400 text-sm">{timesheet.employeeName}</p>}
             </div>
           </div>
 
@@ -365,21 +455,21 @@ export default function TimesheetEntryPage() {
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
                   timesheet.status === 'DRAFT'
-                    ? 'bg-slate-500/20 text-slate-400'
+                    ? 'bg-gray-200 dark:bg-slate-500/20 text-gray-600 dark:text-slate-400'
                     : timesheet.status === 'SUBMITTED'
-                      ? 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                       : timesheet.status === 'APPROVED'
-                        ? 'bg-emerald-500/20 text-emerald-400'
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                         : timesheet.status === 'REJECTED'
-                          ? 'bg-red-500/20 text-red-400'
-                          : 'bg-blue-500/20 text-blue-400'
+                          ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+                          : 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400'
                 }`}
               >
                 {timesheet.status}
               </span>
 
               {timesheet.approvedBy && (
-                <span className="text-slate-400 text-sm">Approved by {timesheet.approvedBy}</span>
+                <span className="text-gray-500 dark:text-slate-400 text-sm">Approved by {timesheet.approvedBy}</span>
               )}
             </div>
           )}
@@ -387,14 +477,17 @@ export default function TimesheetEntryPage() {
 
         {/* Manager View - Select Employee and Week */}
         {isManager && !timesheetId && (
-          <Card title="Select Timesheet" className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Select Timesheet</CardTitle>
+            </CardHeader>
+            <div className="space-y-4">
               <div>
-                <label className="block text-slate-400 text-sm mb-2">Employee</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-sm mb-2">Employee</label>
                 <select
                   value={selectedEmployeeId}
                   onChange={e => setSelectedEmployeeId(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-4 py-2 text-gray-900 dark:text-white"
                 >
                   <option value="">Select Employee</option>
                   {employees.map(emp => (
@@ -407,78 +500,147 @@ export default function TimesheetEntryPage() {
               </div>
 
               <div>
-                <label className="block text-slate-400 text-sm mb-2">Week Start</label>
-                <input
-                  type="date"
-                  value={weekStart}
-                  onChange={e => setWeekStart(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
-                />
+                <label className="block text-gray-600 dark:text-slate-400 text-sm mb-2">Week Start (includes future weeks)</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={goToPreviousWeek}
+                    className="px-3 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                    title="Previous week"
+                  >
+                    <MinusIcon className="h-4 w-4" />
+                  </button>
+                  <input
+                    type="date"
+                    value={weekStart}
+                    onChange={e => setWeekStart(e.target.value)}
+                    className="flex-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-4 py-2 text-gray-900 dark:text-white"
+                  />
+                  <button
+                    onClick={goToNextWeek}
+                    className="px-3 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+                    title="Next week"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={goToToday}
+                    className="px-3 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg transition-colors text-sm"
+                    title="Go to current week"
+                  >
+                    Today
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-end">
-                <button
-                  onClick={loadEmployeeTimesheet}
-                  disabled={!selectedEmployeeId}
-                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Load Timesheet
-                </button>
-              </div>
+              <button
+                onClick={loadEmployeeTimesheet}
+                disabled={!selectedEmployeeId}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Load Timesheet
+              </button>
             </div>
           </Card>
         )}
 
         {timesheet && (
           <>
+            {/* Week Navigator - for easy navigation between weeks including future weeks */}
+            {!timesheetId && (
+              <div className="mb-6 flex items-center justify-center gap-4">
+                <button
+                  onClick={goToPreviousWeek}
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-lg transition-colors border border-gray-300 dark:border-slate-700"
+                >
+                  <MinusIcon className="h-4 w-4" />
+                  Previous Week
+                </button>
+                <button
+                  onClick={goToToday}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  Current Week
+                </button>
+                <button
+                  onClick={goToNextWeek}
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-900 dark:text-white rounded-lg transition-colors border border-gray-300 dark:border-slate-700"
+                >
+                  Next Week
+                  <PlusIcon className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
             {/* Week Summary */}
-            <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Card title="Week Period" className="bg-slate-800/50">
-                <p className="text-white text-sm font-medium">
+            <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {/* Week Period - no navigation buttons */}
+              <Card className="bg-gray-100 dark:bg-slate-800/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Week Period</CardTitle>
+                </CardHeader>
+                <p className="text-gray-900 dark:text-white text-sm font-medium text-center">
                   {new Date(timesheet.weekStartDate).toLocaleDateString()} -{' '}
                   {new Date(timesheet.weekEndDate).toLocaleDateString()}
                 </p>
               </Card>
 
-              <Card title="Regular Hours" className="bg-slate-800/50">
-                <p className="text-blue-400 text-2xl font-bold">
+              <Card className="bg-gray-100 dark:bg-slate-800/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Regular Hours</CardTitle>
+                </CardHeader>
+                <p className="!text-blue-600 dark:!text-blue-400 text-2xl font-bold">
                   {timesheet.totalRegularHours.toFixed(1)}h
                 </p>
               </Card>
 
-              <Card title="Overtime 1.5x" className="bg-slate-800/50">
-                <p className="text-amber-400 text-2xl font-bold">
+              <Card className="bg-gray-100 dark:bg-slate-800/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Overtime 1.5x</CardTitle>
+                </CardHeader>
+                <p className="!text-amber-600 dark:!text-amber-400 text-2xl font-bold">
                   {timesheet.totalOvertime1_5Hours.toFixed(1)}h
                 </p>
               </Card>
 
-              <Card title="Overtime 2.0x" className="bg-slate-800/50">
-                <p className="text-purple-400 text-2xl font-bold">
+              <Card className="bg-gray-100 dark:bg-slate-800/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Overtime 2.0x</CardTitle>
+                </CardHeader>
+                <p className="!text-purple-600 dark:!text-purple-400 text-2xl font-bold">
                   {timesheet.totalOvertime2_0Hours.toFixed(1)}h
                 </p>
               </Card>
 
-              <Card title="Total Hours" className="bg-slate-800/50">
-                <p className="text-emerald-400 text-2xl font-bold">
+              <Card className="bg-gray-100 dark:bg-slate-800/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Total Hours</CardTitle>
+                </CardHeader>
+                <p className="!text-emerald-600 dark:!text-emerald-400 text-2xl font-bold">
                   {timesheet.totalHours.toFixed(1)}h
                 </p>
               </Card>
             </div>
 
             {/* Timesheet Grid */}
-            <Card title="Time Entry" className="mb-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Time Entry</CardTitle>
+              </CardHeader>
+
+              {/* Timesheet Table - Horizontal scroll for all screen sizes */}
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <table className="min-w-[550px] w-full">
                   <thead>
-                    <tr className="text-left text-slate-400 text-xs border-b border-slate-700/50">
-                      <th className="pb-3 font-medium w-24">Day</th>
-                      <th className="pb-3 font-medium w-16">Date</th>
-                      <th className="pb-3 font-medium">Regular Hours</th>
-                      <th className="pb-3 font-medium">OT 1.5x</th>
-                      <th className="pb-3 font-medium">OT 2.0x</th>
-                      <th className="pb-3 font-medium">Break (min)</th>
-                      <th className="pb-3 font-medium">Total</th>
-                      <th className="pb-3 font-medium">Notes</th>
+                    <tr className="text-left text-gray-500 dark:text-slate-400 text-xs border-b border-gray-200 dark:border-slate-700/50">
+                      <th className="pb-3 pr-3 font-medium whitespace-nowrap">Day</th>
+                      <th className="pb-3 pr-3 font-medium whitespace-nowrap">Date</th>
+                      <th className="pb-3 pr-3 font-medium !text-blue-600 dark:!text-blue-400 whitespace-nowrap">Regular</th>
+                      <th className="pb-3 pr-3 font-medium !text-amber-600 dark:!text-amber-400 whitespace-nowrap">OT 1.5x</th>
+                      <th className="pb-3 pr-3 font-medium !text-purple-600 dark:!text-purple-400 whitespace-nowrap">OT 2.0x</th>
+                      <th className="pb-3 pr-3 font-medium whitespace-nowrap">Break</th>
+                      <th className="pb-3 pr-3 font-medium !text-emerald-600 dark:!text-emerald-400 whitespace-nowrap">Total</th>
+                      <th className="pb-3 font-medium whitespace-nowrap">Notes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -488,16 +650,16 @@ export default function TimesheetEntryPage() {
                         (entry.overtime1_5Hours || 0) +
                         (entry.overtime2_0Hours || 0);
                       return (
-                        <tr key={index} className="border-b border-slate-700/30">
-                          <td className="py-3">
-                            <span className="text-white font-medium">
+                        <tr key={index} className="border-b border-gray-200 dark:border-slate-700/30">
+                          <td className="py-3 pr-3 whitespace-nowrap">
+                            <span className="text-gray-900 dark:text-white font-medium">
                               {getDayName(entry.workDate)}
                             </span>
                           </td>
-                          <td className="py-3">
-                            <span className="text-slate-400">{getDayNumber(entry.workDate)}</span>
+                          <td className="py-3 pr-3 whitespace-nowrap">
+                            <span className="text-gray-500 dark:text-slate-400">{getDayNumber(entry.workDate)}</span>
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 pr-3 whitespace-nowrap">
                             {isEditable ? (
                               <input
                                 type="number"
@@ -512,13 +674,22 @@ export default function TimesheetEntryPage() {
                                     parseFloat(e.target.value) || 0
                                   )
                                 }
-                                className="w-20 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-sm"
+                                onFocus={e => {
+                                  if (e.target.value === '0') e.target.value = '';
+                                }}
+                                onBlur={e => {
+                                  if (e.target.value === '') {
+                                    e.target.value = '0';
+                                    updateEntry(index, 'regularHours', 0);
+                                  }
+                                }}
+                                className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-slate-300">{entry.regularHours}h</span>
+                              <span className="text-gray-700 dark:text-slate-300">{entry.regularHours}h</span>
                             )}
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 pr-3 whitespace-nowrap">
                             {isEditable ? (
                               <input
                                 type="number"
@@ -533,13 +704,22 @@ export default function TimesheetEntryPage() {
                                     parseFloat(e.target.value) || 0
                                   )
                                 }
-                                className="w-20 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-sm"
+                                onFocus={e => {
+                                  if (e.target.value === '0') e.target.value = '';
+                                }}
+                                onBlur={e => {
+                                  if (e.target.value === '') {
+                                    e.target.value = '0';
+                                    updateEntry(index, 'overtime1_5Hours', 0);
+                                  }
+                                }}
+                                className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-slate-300">{entry.overtime1_5Hours}h</span>
+                              <span className="text-gray-700 dark:text-slate-300">{entry.overtime1_5Hours}h</span>
                             )}
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 pr-3 whitespace-nowrap">
                             {isEditable ? (
                               <input
                                 type="number"
@@ -554,13 +734,22 @@ export default function TimesheetEntryPage() {
                                     parseFloat(e.target.value) || 0
                                   )
                                 }
-                                className="w-20 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-sm"
+                                onFocus={e => {
+                                  if (e.target.value === '0') e.target.value = '';
+                                }}
+                                onBlur={e => {
+                                  if (e.target.value === '') {
+                                    e.target.value = '0';
+                                    updateEntry(index, 'overtime2_0Hours', 0);
+                                  }
+                                }}
+                                className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-slate-300">{entry.overtime2_0Hours}h</span>
+                              <span className="text-gray-700 dark:text-slate-300">{entry.overtime2_0Hours}h</span>
                             )}
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 pr-3 whitespace-nowrap">
                             {isEditable ? (
                               <input
                                 type="number"
@@ -571,26 +760,35 @@ export default function TimesheetEntryPage() {
                                 onChange={e =>
                                   updateEntry(index, 'breakMinutes', parseInt(e.target.value) || 0)
                                 }
-                                className="w-20 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-sm"
+                                onFocus={e => {
+                                  if (e.target.value === '0') e.target.value = '';
+                                }}
+                                onBlur={e => {
+                                  if (e.target.value === '') {
+                                    e.target.value = '0';
+                                    updateEntry(index, 'breakMinutes', 0);
+                                  }
+                                }}
+                                className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-slate-300">{entry.breakMinutes}m</span>
+                              <span className="text-gray-700 dark:text-slate-300">{entry.breakMinutes}m</span>
                             )}
                           </td>
-                          <td className="py-3">
-                            <span className="text-white font-semibold">{total.toFixed(1)}h</span>
+                          <td className="py-3 pr-3 whitespace-nowrap">
+                            <span className="text-gray-900 dark:text-white font-semibold">{total.toFixed(1)}h</span>
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 whitespace-nowrap">
                             {isEditable ? (
                               <input
                                 type="text"
                                 value={entry.notes || ''}
                                 onChange={e => updateEntry(index, 'notes', e.target.value)}
                                 placeholder="Add notes..."
-                                className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-sm"
+                                className="w-24 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-2 py-2 text-gray-900 dark:text-white text-sm"
                               />
                             ) : (
-                              <span className="text-slate-400 text-sm">{entry.notes || '-'}</span>
+                              <span className="text-gray-500 dark:text-slate-400 text-sm">{entry.notes || '-'}</span>
                             )}
                           </td>
                         </tr>
@@ -609,7 +807,7 @@ export default function TimesheetEntryPage() {
                     <button
                       onClick={saveTimesheet}
                       disabled={loading}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                     >
                       <ArrowPathIcon className="h-4 w-4" />
                       Save Draft
@@ -618,7 +816,7 @@ export default function TimesheetEntryPage() {
                       <button
                         onClick={submitTimesheet}
                         disabled={loading}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                       >
                         <CheckIcon className="h-4 w-4" />
                         Submit for Approval
@@ -640,7 +838,7 @@ export default function TimesheetEntryPage() {
                   <button
                     onClick={approveTimesheet}
                     disabled={loading}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                   >
                     <CheckIcon className="h-4 w-4" />
                     Approve
@@ -651,16 +849,19 @@ export default function TimesheetEntryPage() {
 
             {/* Audit Trail */}
             {(timesheet.submittedDate || timesheet.approvedDate) && (
-              <Card title="Audit Trail" className="mt-6">
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Audit Trail</CardTitle>
+                </CardHeader>
                 <div className="space-y-2 text-sm">
                   {timesheet.submittedDate && (
-                    <div className="flex items-center gap-2 text-slate-300">
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-slate-300">
                       <DocumentTextIcon className="h-4 w-4" />
                       <span>Submitted on {new Date(timesheet.submittedDate).toLocaleString()}</span>
                     </div>
                   )}
                   {timesheet.approvedDate && (
-                    <div className="flex items-center gap-2 text-slate-300">
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-slate-300">
                       <CheckIcon className="h-4 w-4" />
                       <span>
                         Approved by {timesheet.approvedBy} on{' '}
@@ -669,7 +870,7 @@ export default function TimesheetEntryPage() {
                     </div>
                   )}
                   {timesheet.rejectionReason && (
-                    <div className="flex items-center gap-2 text-red-400">
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
                       <XMarkIcon className="h-4 w-4" />
                       <span>Rejection reason: {timesheet.rejectionReason}</span>
                     </div>
@@ -683,9 +884,9 @@ export default function TimesheetEntryPage() {
         {/* Reject Modal */}
         {rejectModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-700">
-              <h3 className="text-lg font-semibold text-white mb-4">Reject Timesheet</h3>
-              <p className="text-slate-400 text-sm mb-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reject Timesheet</h3>
+              <p className="text-gray-600 dark:text-slate-400 text-sm mb-4">
                 Please provide a reason for rejecting this timesheet.
               </p>
               <textarea
@@ -693,7 +894,7 @@ export default function TimesheetEntryPage() {
                 onChange={e => setRejectionReason(e.target.value)}
                 placeholder="Enter rejection reason..."
                 rows={3}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white mb-4"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white mb-4"
               />
               <div className="flex gap-3 justify-end">
                 <button
@@ -701,14 +902,14 @@ export default function TimesheetEntryPage() {
                     setRejectModalOpen(false);
                     setRejectionReason('');
                   }}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg"
+                  className="px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={rejectTimesheet}
                   disabled={!rejectionReason.trim() || loading}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-slate-700 text-white rounded-lg"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 dark:disabled:bg-slate-700 text-white rounded-lg"
                 >
                   Reject Timesheet
                 </button>

@@ -52,6 +52,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { ConfirmDialog } from './ConfirmDialog';
 import GlobalSearch from './GlobalSearch';
 import { UserRoleBadge } from './index';
 
@@ -1628,6 +1629,7 @@ export function Header() {
   const setActiveRole = useAuthStore(state => state.setActiveRole);
   const getEffectiveRole = useAuthStore(state => state.getEffectiveRole);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   /** True while the global search is expanded on mobile – hides other toolbar icons */
   const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
   /** True while the global search is expanded on desktop – hides other toolbar icons */
@@ -1649,6 +1651,10 @@ export function Header() {
   // Determine if user should see role switcher (admin OR has additional granted roles)
   const hasRoleSwitcher = user?.role === UserRole.ADMIN || additionalRoles.length > 0;
 
+  const requestLogout = useCallback(() => {
+    setShowLogoutConfirm(true);
+  }, []);
+
   const handleLogout = useCallback(async () => {
     try {
       // Call backend logout endpoint to clear current_view and active orders
@@ -1661,6 +1667,7 @@ export function Header() {
       logout();
       // Navigate to login page
       navigate('/login');
+      setShowLogoutConfirm(false);
     }
   }, [logoutMutation, logout, navigate]);
 
@@ -2571,7 +2578,7 @@ export function Header() {
 
                       {/* Logout button */}
                       <button
-                        onClick={handleLogout}
+                        onClick={requestLogout}
                         disabled={logoutMutation.isPending}
                         className="toolbar-btn p-2 dark:text-gray-400 text-gray-600 dark:hover:text-error-400 hover:text-error-600 dark:hover:bg-error-500/10 hover:bg-error-50 rounded-lg transition-colors disabled:opacity-50"
                         title={logoutMutation.isPending ? 'Logging out...' : 'Logout'}
@@ -2612,7 +2619,7 @@ export function Header() {
         userRole={user.role}
         userId={user.userId}
         getEffectiveRole={getEffectiveRole}
-        onLogout={handleLogout}
+        onLogout={requestLogout}
         onNavigate={handleNavigateWithRole}
         hasRoleSwitcher={hasRoleSwitcher}
         allRoleViews={allRoleViews}
@@ -2620,6 +2627,18 @@ export function Header() {
         currentPath={location.pathname}
         currentSearch={location.search}
         onHoverOff={() => setMobileMenuOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+        title="Log out?"
+        message="You will be signed out of OpsUI and returned to the login screen."
+        confirmText="Log out"
+        cancelText="Stay signed in"
+        variant="danger"
+        isLoading={logoutMutation.isPending}
       />
     </>
   );

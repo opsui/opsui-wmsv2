@@ -122,15 +122,85 @@ const NZC_PACKAGE_PRESETS: NzcPackagePreset[] = [
   { id: 'NZC_PP_PLASTIC_A3', label: 'NZC PP Plastic A3+' },
 ];
 
-const createNzcPackageRow = (presetId: string = NZC_DEFAULT_PRESET_ID): NzcPackageRow => ({
-  rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-  presetId,
-  units: '1',
-  customLength: '10',
-  customWidth: '10',
-  customHeight: '10',
-  customWeightLbs: '1.0',
-});
+const PACKING_THEME_STYLE_ID = 'packing-live-theme-styles';
+
+const packingThemeStyles = `
+  html.light .packing-live-page .picking-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.98) 100%);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: 0 18px 40px rgba(148, 163, 184, 0.18);
+  }
+
+  html.light .packing-live-page .packing-divider {
+    border-color: rgba(148, 163, 184, 0.3) !important;
+  }
+
+  html.light .packing-live-page .packing-surface-panel {
+    background: rgba(248, 250, 252, 0.88);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  html.light .packing-live-page .barcode-display {
+    background: rgba(248, 250, 252, 0.96);
+    border-color: rgba(168, 85, 247, 0.24);
+  }
+
+  html.light .packing-live-page .barcode-display::before {
+    background: rgba(168, 85, 247, 0.45);
+  }
+
+  html.light .packing-live-page .pick-item-card {
+    background: rgba(248, 250, 252, 0.96);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  html.light .packing-live-page .pick-item-card:hover {
+    background: rgba(241, 245, 249, 0.98);
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+
+  html.light .packing-live-page .pick-item-card.active {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.08);
+  }
+
+  html.light .packing-live-page .scanner-modal-content {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-color: rgba(168, 85, 247, 0.22);
+    box-shadow: 0 25px 50px rgba(148, 163, 184, 0.25), 0 0 80px rgba(168, 85, 247, 0.08);
+  }
+
+  html.light .packing-live-page .picking-card .picking-title,
+  html.light .packing-live-page .scanner-modal-content .picking-title {
+    color: #0f172a !important;
+  }
+
+  html.light .packing-live-page .picking-card .picking-subtitle:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700),
+  html.light .packing-live-page .packing-surface-panel .picking-subtitle:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700),
+  html.light .packing-live-page .scanner-modal-content .picking-subtitle:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700) {
+    color: #64748b !important;
+  }
+
+  html.light .packing-live-page .hero-number,
+  html.light .packing-live-page .quantity-display {
+    background: linear-gradient(180deg, #0f172a 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+  }
+`;
+
+const packingSurfacePanelClass =
+  'packing-surface-panel rounded-xl border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02] p-4';
+const packingSurfacePanelSpacedClass = `${packingSurfacePanelClass} space-y-4`;
+const packingInputClass =
+  'packing-input w-full rounded-xl px-4 py-3 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50';
+const packingSelectClass = `${packingInputClass} [&_option]:bg-white dark:[&_option]:bg-gray-900 [&_option]:text-gray-900 dark:[&_option]:text-white`;
+const packingReadonlyInputClass =
+  'packing-input w-full rounded-xl px-4 py-3 bg-gray-100 dark:bg-white/[0.03] border border-gray-300 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 focus:outline-none disabled:opacity-70';
 
 export function PackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -284,6 +354,19 @@ export function PackingPage() {
     (carrier: Carrier) => carrier.carrierId === selectedCarrierId
   );
   const isNZCCarrier = selectedCarrier?.carrierCode === 'NZC';
+  const selectedNzcPreset = nzcPackageOptions.find(
+    preset => preset.id === selectedNzcPackagePreset
+  );
+  const selectedNzcPackageIsCustom = selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID;
+
+  useEffect(() => {
+    if (!document.getElementById(PACKING_THEME_STYLE_ID)) {
+      const style = document.createElement('style');
+      style.id = PACKING_THEME_STYLE_ID;
+      style.textContent = packingThemeStyles;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
@@ -767,7 +850,7 @@ export function PackingPage() {
   // Show claim loading state - Distinctive warehouse loading animation
   if (claimMutation.isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="packing-live-page min-h-screen flex items-center justify-center">
         <div className="warehouse-loading">
           <div className="warehouse-loading-icon" />
           <div className="warehouse-loading-bars">
@@ -778,8 +861,12 @@ export function PackingPage() {
             <div className="warehouse-loading-bar" />
           </div>
           <div className="text-center">
-            <p className="picking-title text-white text-xl mb-2">Claiming Order</p>
-            <p className="picking-subtitle text-gray-400 text-sm">Preparing your pack list...</p>
+            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
+              Claiming Order
+            </p>
+            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+              Preparing your pack list...
+            </p>
           </div>
         </div>
       </div>
@@ -789,7 +876,7 @@ export function PackingPage() {
   // Show claim error
   if (claimError) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="packing-live-page min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-error-500/20 flex items-center justify-center">
             <ExclamationCircleIcon className="h-8 w-8 text-error-400" />
@@ -816,7 +903,7 @@ export function PackingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="packing-live-page min-h-screen flex items-center justify-center">
         <div className="warehouse-loading">
           <div className="warehouse-loading-icon" />
           <div className="warehouse-loading-bars">
@@ -827,8 +914,12 @@ export function PackingPage() {
             <div className="warehouse-loading-bar" />
           </div>
           <div className="text-center">
-            <p className="picking-title text-white text-xl mb-2">Loading Order</p>
-            <p className="picking-subtitle text-gray-400 text-sm">Retrieving pack details...</p>
+            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
+              Loading Order
+            </p>
+            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+              Retrieving pack details...
+            </p>
           </div>
         </div>
       </div>
@@ -837,7 +928,7 @@ export function PackingPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="packing-live-page min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
           <p className="picking-subtitle text-gray-400 mb-6">Order not found</p>
           <Button onClick={() => navigate(packingQueuePath)}>Back to Queue</Button>
@@ -1490,7 +1581,7 @@ export function PackingPage() {
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   return (
-    <div className="min-h-screen">
+    <div className="packing-live-page min-h-screen">
       {/* Industrial grid background texture - fixed position to not affect scroll */}
       <div
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
@@ -1521,12 +1612,12 @@ export function PackingPage() {
               <ExclamationCircleIcon className="h-5 w-5 text-primary-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="picking-title text-white">
+              <p className="picking-title text-gray-900 dark:text-white">
                 {order.status === 'PACKED' || order.status === 'SHIPPED'
                   ? 'Viewing completed order'
                   : "Viewing this packer's work in real-time"}
               </p>
-              <p className="picking-subtitle text-gray-400 text-sm mt-0.5">
+              <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm mt-0.5">
                 You are in view-only mode. Interactions are disabled.
               </p>
             </div>
@@ -1540,9 +1631,11 @@ export function PackingPage() {
             <div className="picking-card rounded-2xl lg:sticky lg:top-20 industrial-corners">
               <div className="p-6">
                 {/* Order Info */}
-                <div className="mb-6 pb-6 border-b border-white/[0.08]">
-                  <h1 className="picking-title text-xl text-white truncate">{order.orderId}</h1>
-                  <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
+                <div className="mb-6 pb-6 border-b packing-divider border-white/[0.08]">
+                  <h1 className="picking-title text-xl text-gray-900 dark:text-white truncate">
+                    {order.orderId}
+                  </h1>
+                  <p className="mt-1 picking-subtitle text-gray-600 dark:text-gray-400 text-sm truncate">
                     {order.customerName}
                   </p>
                 </div>
@@ -1588,18 +1681,26 @@ export function PackingPage() {
 
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between items-center">
-                    <span className="picking-subtitle text-gray-400 text-sm">Verified</span>
+                    <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+                      Verified
+                    </span>
                     <span className="hero-number text-lg text-success-400">{verifiedCount}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="picking-subtitle text-gray-400 text-sm">Remaining</span>
+                    <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+                      Remaining
+                    </span>
                     <span className="hero-number text-lg text-warning-400">
                       {totalItems - verifiedCount}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="picking-subtitle text-gray-400 text-sm">Total</span>
-                    <span className="hero-number text-lg text-white">{totalItems}</span>
+                    <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+                      Total
+                    </span>
+                    <span className="hero-number text-lg text-gray-900 dark:text-white">
+                      {totalItems}
+                    </span>
                   </div>
                 </div>
 
@@ -1624,15 +1725,19 @@ export function PackingPage() {
               /* Shipping Details Form */
               <div ref={shippingFormRef}>
                 <div className="picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners">
-                  <div className="p-6 border-b border-white/[0.08]">
+                  <div className="p-6 border-b packing-divider border-white/[0.08]">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                        <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
                           Shipping Details
                         </p>
-                        <h2 className="picking-title text-xl text-white">Create Shipment</h2>
+                        <h2 className="picking-title text-xl text-gray-900 dark:text-white">
+                          Create Shipment
+                        </h2>
                       </div>
-                      <span className="text-sm text-gray-400 font-mono">{order.orderId}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                        {order.orderId}
+                      </span>
                     </div>
                   </div>
                   <div className="p-6 space-y-6">
@@ -1645,7 +1750,7 @@ export function PackingPage() {
                         value={selectedCarrierId}
                         onChange={e => setSelectedCarrierId(e.target.value)}
                         disabled={isCreatingShipment || isViewMode}
-                        className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                        className={packingSelectClass}
                       >
                         <option value="">Select a carrier...</option>
                         {carriersWithFallback.map((carrier: Carrier) => (
@@ -1666,7 +1771,7 @@ export function PackingPage() {
                           value={serviceType}
                           onChange={e => setServiceType(e.target.value)}
                           disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                          className={packingSelectClass}
                         >
                           <option value="Ground">Ground</option>
                           <option value="Express">Express</option>
@@ -1687,222 +1792,169 @@ export function PackingPage() {
                           onChange={e => setTrackingNumber(e.target.value)}
                           placeholder="Enter tracking number..."
                           disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                          className={packingInputClass}
                         />
                       </div>
                     )}
 
                     {/* Package Details */}
                     {isNZCCarrier ? (
-                      <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4 space-y-4">
+                      <div className={packingSurfacePanelSpacedClass}>
                         <div className="flex items-center justify-between gap-3">
                           <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
                             NZC Package Setup
                           </p>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">
-                              Multiple rows supported. Mixed stock types will print separate labels.
-                            </span>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={addNzcPackageRow}
-                              disabled={isCreatingShipment || isViewMode}
-                            >
-                              Add Package
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          {nzcPackageRows.map((row, index) => {
-                            const preset = getNzcPresetById(row.presetId);
-                            const isCustom = isCustomNzcPreset(row.presetId);
-                            const rowWeightKg =
-                              preset?.kg != null
-                                ? preset.kg
-                                : lbsToKg(parseFloat(row.customWeightLbs || '0'));
-                            const rowCubic =
-                              preset?.cubicM3 != null ? preset.cubicM3 : isCustom ? undefined : 0;
-
-                            return (
-                              <div
-                                key={row.rowId}
-                                className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 space-y-4"
-                              >
-                                <div className="flex items-center justify-between gap-3">
-                                  <p className="text-sm font-semibold text-white">
-                                    Package {index + 1}
-                                  </p>
-                                  {nzcPackageRows.length > 1 && (
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      onClick={() => removeNzcPackageRow(row.rowId)}
-                                      disabled={isCreatingShipment || isViewMode}
-                                    >
-                                      Remove
-                                    </Button>
-                                  )}
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Stock / Package Type <span className="text-error-400">*</span>
-                                    </label>
-                                    <select
-                                      value={row.presetId}
-                                      onChange={e =>
-                                        updateNzcPackageRow(row.rowId, { presetId: e.target.value })
-                                      }
-                                      disabled={isCreatingShipment || isViewMode}
-                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
-                                    >
-                                      {nzcPackageOptions.map(option => (
-                                        <option key={option.id} value={option.id}>
-                                          {option.label}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Units <span className="text-error-400">*</span>
-                                    </label>
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      value={row.units}
-                                      onChange={e =>
-                                        updateNzcPackageRow(row.rowId, { units: e.target.value })
-                                      }
-                                      disabled={isCreatingShipment || isViewMode}
-                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Length (cm)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.1"
-                                      value={isCustom ? row.customLength : preset?.length || ''}
-                                      onChange={e =>
-                                        updateNzcPackageRow(row.rowId, {
-                                          customLength: e.target.value,
-                                        })
-                                      }
-                                      disabled={isCreatingShipment || isViewMode || !isCustom}
-                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Width (cm)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.1"
-                                      value={isCustom ? row.customWidth : preset?.width || ''}
-                                      onChange={e =>
-                                        updateNzcPackageRow(row.rowId, {
-                                          customWidth: e.target.value,
-                                        })
-                                      }
-                                      disabled={isCreatingShipment || isViewMode || !isCustom}
-                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Height (cm)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.1"
-                                      value={isCustom ? row.customHeight : preset?.height || ''}
-                                      onChange={e =>
-                                        updateNzcPackageRow(row.rowId, {
-                                          customHeight: e.target.value,
-                                        })
-                                      }
-                                      disabled={isCreatingShipment || isViewMode || !isCustom}
-                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      KG
-                                    </label>
-                                    <input
-                                      type="text"
-                                      readOnly
-                                      value={rowWeightKg > 0 ? rowWeightKg.toFixed(3) : '0.000'}
-                                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Cubic (m3)
-                                    </label>
-                                    <input
-                                      type="text"
-                                      readOnly
-                                      value={rowCubic != null ? rowCubic.toFixed(4) : 'Custom'}
-                                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                                      Weight Reference (lbs)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      min="0.01"
-                                      step="0.01"
-                                      value={row.customWeightLbs}
-                                      onChange={e =>
-                                        updateNzcPackageRow(row.rowId, {
-                                          customWeightLbs: e.target.value,
-                                        })
-                                      }
-                                      placeholder="Enter weight..."
-                                      disabled={isCreatingShipment || isViewMode || !isCustom}
-                                      className={`w-full rounded-xl px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                        isCustom
-                                          ? 'bg-white/[0.05] border border-white/[0.08] text-white'
-                                          : 'bg-white/[0.03] border border-white/[0.05] text-gray-400 cursor-not-allowed'
-                                      } disabled:opacity-50`}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                          <span className="text-xs text-gray-500">
+                            Matches NZ Couriers stock naming
+                          </span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
-                              Total Packages
-                            </p>
-                            <p className="text-xl font-semibold text-white">
-                              {derivedNzcTotalPackages}
-                            </p>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Stock / Package Type <span className="text-error-400">*</span>
+                            </label>
+                            <select
+                              value={selectedNzcPackagePreset}
+                              onChange={e => setSelectedNzcPackagePreset(e.target.value)}
+                              disabled={isCreatingShipment || isViewMode}
+                              className={packingSelectClass}
+                            >
+                              {nzcPackageOptions.map(preset => (
+                                <option key={preset.id} value={preset.id}>
+                                  {preset.label}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-                            <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
-                              Total Weight (lbs)
-                            </p>
-                            <p className="text-xl font-semibold text-white">
-                              {derivedNzcTotalWeightLbs.toFixed(2)}
-                            </p>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Units <span className="text-error-400">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={totalPackages}
+                              onChange={e => setTotalPackages(e.target.value)}
+                              disabled={isCreatingShipment || isViewMode}
+                              className={packingInputClass}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Length (cm)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={
+                                selectedNzcPackageIsCustom
+                                  ? nzcCustomLength
+                                  : selectedNzcPreset?.length || ''
+                              }
+                              onChange={e => setNzcCustomLength(e.target.value)}
+                              disabled={
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
+                              }
+                              className={packingInputClass}
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Width (cm)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={
+                                selectedNzcPackageIsCustom
+                                  ? nzcCustomWidth
+                                  : selectedNzcPreset?.width || ''
+                              }
+                              onChange={e => setNzcCustomWidth(e.target.value)}
+                              disabled={
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
+                              }
+                              className={packingInputClass}
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Height (cm)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={
+                                selectedNzcPackageIsCustom
+                                  ? nzcCustomHeight
+                                  : selectedNzcPreset?.height || ''
+                              }
+                              onChange={e => setNzcCustomHeight(e.target.value)}
+                              disabled={
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
+                              }
+                              className={packingInputClass}
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              KG
+                            </label>
+                            <input
+                              type="text"
+                              readOnly
+                              value={
+                                selectedNzcPreset?.kg != null
+                                  ? selectedNzcPreset.kg.toFixed(3)
+                                  : lbsToKg(parseFloat(totalWeight || '0')).toFixed(3)
+                              }
+                              className={packingReadonlyInputClass}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Cubic (m3)
+                            </label>
+                            <input
+                              type="text"
+                              readOnly
+                              value={
+                                selectedNzcPreset?.cubicM3 != null
+                                  ? selectedNzcPreset.cubicM3.toFixed(4)
+                                  : selectedNzcPackageIsCustom
+                                    ? 'Custom'
+                                    : '0.0000'
+                              }
+                              className={packingReadonlyInputClass}
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Weight Reference (lbs)
+                            </label>
+                            <input
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              value={totalWeight}
+                              onChange={e => setTotalWeight(e.target.value)}
+                              placeholder="Enter weight..."
+                              disabled={
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
+                              }
+                              className={`w-full rounded-xl px-4 py-3 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                                selectedNzcPackageIsCustom
+                                  ? 'bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] text-gray-900 dark:text-white'
+                                  : 'bg-gray-100 dark:bg-white/[0.03] border border-gray-300 dark:border-white/[0.05] text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                              } disabled:opacity-50`}
+                            />
                           </div>
                         </div>
                       </div>
@@ -1918,7 +1970,7 @@ export function PackingPage() {
                             value={totalPackages}
                             onChange={e => setTotalPackages(e.target.value)}
                             disabled={isCreatingShipment || isViewMode}
-                            className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            className={packingInputClass}
                           />
                         </div>
                         <div>
@@ -1933,20 +1985,22 @@ export function PackingPage() {
                             onChange={e => setTotalWeight(e.target.value)}
                             placeholder="Enter weight..."
                             disabled={isCreatingShipment || isViewMode}
-                            className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            className={packingInputClass}
                           />
                         </div>
                       </div>
                     )}
 
                     {/* Shipping Address Info */}
-                    <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4">
+                    <div className={packingSurfacePanelClass}>
                       <div className="flex items-center justify-between gap-3 mb-4">
                         <div>
                           <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
                             Shipping To
                           </p>
-                          <p className="text-white font-semibold">{editableShipToAddress.name}</p>
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {editableShipToAddress.name}
+                          </p>
                         </div>
                         {!manualAddressEditEnabled ? (
                           <Button
@@ -1983,7 +2037,7 @@ export function PackingPage() {
                             onChange={e => setTrackingNumber(e.target.value)}
                             placeholder="SO number, customer PO"
                             disabled={isCreatingShipment || isViewMode}
-                            className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            className={packingInputClass}
                           />
                         </div>
                       )}
@@ -2018,8 +2072,8 @@ export function PackingPage() {
                               }
                               className={`w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                                 manualAddressEditEnabled
-                                  ? 'bg-white/[0.05] border border-white/[0.08] text-white'
-                                  : 'bg-white/[0.03] border border-white/[0.05] text-gray-400 cursor-not-allowed'
+                                  ? 'bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] text-gray-900 dark:text-white'
+                                  : 'bg-gray-100 dark:bg-white/[0.03] border border-gray-300 dark:border-white/[0.05] text-gray-500 dark:text-gray-400 cursor-not-allowed'
                               } disabled:opacity-70`}
                             />
                           </div>
@@ -2029,23 +2083,23 @@ export function PackingPage() {
 
                     {/* NZC Rates Display */}
                     {isNZCCarrier && (
-                      <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
+                      <div className={`${packingSurfacePanelClass} border-primary-500/30 space-y-3`}>
                         <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
                           Available Shipping Rates
                         </p>
                         {isFetchingRates && (
-                          <div className="flex items-center gap-2 text-gray-400">
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
                             <span className="text-sm">Fetching rates...</span>
                           </div>
                         )}
                         {!isFetchingRates && nzcRateError && (
-                          <div className="rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-200">
+                          <div className="rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-700 dark:text-error-200">
                             {nzcRateError}
                           </div>
                         )}
                         {!isFetchingRates && !nzcRateError && nzcRateList.length === 0 && (
-                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
+                          <div className="rounded-xl border border-gray-200 dark:border-white/[0.08] bg-gray-100 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                             No NZC rates available yet. Check the shipping address, package stock,
                             units, and weight.
                           </div>
@@ -2058,36 +2112,36 @@ export function PackingPage() {
                                 className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                                   selectedQuote?.QuoteId === quote.QuoteId
                                     ? 'bg-primary-500/20 border-primary-500'
-                                    : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05]'
+                                    : 'bg-gray-50 dark:bg-white/[0.02] border-gray-200 dark:border-white/[0.08] hover:bg-gray-100 dark:hover:bg-white/[0.05]'
                                 }`}
                                 onClick={() => setSelectedQuote(quote)}
                               >
                                 <div className="flex-1">
-                                  <p className="picking-title text-white text-sm">
+                                  <p className="picking-title text-sm text-gray-900 dark:text-white">
                                     {quote.Service}
                                   </p>
                                   <div className="mt-1 flex flex-wrap items-center gap-2">
                                     {quote.DeliveryType && (
-                                      <span className="rounded-full border border-primary-500/30 bg-primary-500/10 px-2 py-0.5 text-xs text-primary-200">
+                                      <span className="rounded-full border border-primary-500/30 bg-primary-500/10 px-2 py-0.5 text-xs text-primary-700 dark:text-primary-200">
                                         {quote.DeliveryType}
                                       </span>
                                     )}
                                     {getQuoteZones(quote).map(zone => (
                                       <span
                                         key={`${quote.QuoteId}-${zone}`}
-                                        className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs text-gray-300"
+                                        className="rounded-full border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/[0.04] px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300"
                                       >
                                         {zone}
                                       </span>
                                     ))}
                                     {quote.IsSaturdayDelivery && (
-                                      <span className="rounded-full border border-warning-500/30 bg-warning-500/10 px-2 py-0.5 text-xs text-warning-200">
+                                      <span className="rounded-full border border-warning-500/30 bg-warning-500/10 px-2 py-0.5 text-xs text-warning-700 dark:text-warning-200">
                                         Saturday
                                       </span>
                                     )}
                                   </div>
                                   {(quote.Description || quote.TransitDays) && (
-                                    <p className="mt-2 text-sm text-gray-400">
+                                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                       {quote.Description?.trim() ||
                                         (quote.TransitDays
                                           ? `${quote.TransitDays} days transit`
@@ -2108,17 +2162,17 @@ export function PackingPage() {
                     )}
 
                     {/* NZC Label Display */}
-                    {nzcLabels.length > 0 && (
-                      <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
+                    {nzcLabel && (
+                      <div className={`${packingSurfacePanelClass} border-success-500/30 space-y-4`}>
                         <div className="flex items-center justify-between">
                           <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
                             Shipping Labels
                           </p>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-400">Connotes:</span>
-                            <span className="font-mono text-primary-400">
-                              {nzcConnotes.join(', ')}
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              Connote:
                             </span>
+                            <span className="font-mono text-primary-400">{nzcConnote}</span>
                           </div>
                         </div>
                         <div className="space-y-4">
@@ -2199,7 +2253,7 @@ export function PackingPage() {
 
                     {isViewMode && (
                       <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                        <p className="picking-subtitle text-primary-300 text-sm">
+                        <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
                           Interactions are disabled in view-only mode
                         </p>
                       </div>
@@ -2239,10 +2293,10 @@ export function PackingPage() {
                   <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success-500/20 flex items-center justify-center animate-bounce-in">
                     <CheckIcon className="h-10 w-10 text-success-400" />
                   </div>
-                  <h2 className="picking-title text-3xl text-white mb-3 animate-celebrate">
+                  <h2 className="picking-title text-3xl text-gray-900 dark:text-white mb-3 animate-celebrate">
                     All Items Verified!
                   </h2>
-                  <p className="picking-subtitle text-gray-400 mb-8">
+                  <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-8">
                     Order is ready to be packed and shipped.
                   </p>
                   <Button
@@ -2261,13 +2315,15 @@ export function PackingPage() {
               <div
                 className={`picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners ${scanSuccess ? 'item-flash' : ''}`}
               >
-                <div className="p-6 border-b border-white/[0.08]">
+                <div className="p-6 border-b packing-divider border-white/[0.08]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                      <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
                         Current Pack Task
                       </p>
-                      <h2 className="picking-title text-xl text-white">{currentItem.name}</h2>
+                      <h2 className="picking-title text-xl text-gray-900 dark:text-white">
+                        {currentItem.name}
+                      </h2>
                     </div>
                     <div className="flex items-center gap-3">
                       {!isViewMode && (
@@ -2293,10 +2349,10 @@ export function PackingPage() {
                   <div>
                     {currentItem.barcode ? (
                       <div className="barcode-display rounded-xl px-5 py-4">
-                        <p className="text-primary-400 text-xs uppercase tracking-wider mb-2">
+                        <p className="text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-2">
                           Scan Barcode
                         </p>
-                        <p className="text-2xl text-white tracking-widest font-mono">
+                        <p className="text-2xl text-gray-900 dark:text-white tracking-widest font-mono">
                           {currentItem.barcode}
                         </p>
                       </div>
@@ -2312,7 +2368,7 @@ export function PackingPage() {
                   {/* Quantity Display */}
                   <div className="flex items-center justify-center gap-8 py-6">
                     <div className="text-center">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                      <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-3">
                         Verified
                       </p>
                       <p className="quantity-display text-primary-400">
@@ -2321,10 +2377,12 @@ export function PackingPage() {
                     </div>
                     <div className="text-5xl text-gray-600 font-light">/</div>
                     <div className="text-center">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                      <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-3">
                         Needed
                       </p>
-                      <p className="quantity-display text-white">{currentItem.quantity}</p>
+                      <p className="quantity-display text-gray-900 dark:text-white">
+                        {currentItem.quantity}
+                      </p>
                     </div>
                   </div>
 
@@ -2339,8 +2397,8 @@ export function PackingPage() {
                   </div>
 
                   {/* Items in Order - Integrated into Current Pack Task */}
-                  <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.08]">
-                    <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-4">
+                  <div className={`${packingSurfacePanelClass} p-4`}>
+                    <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-4">
                       Items in Order ({order.items?.length || 0})
                     </p>
                     <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
@@ -2413,8 +2471,8 @@ export function PackingPage() {
                                       : isSkipped
                                         ? 'text-warning-300'
                                         : isCurrent
-                                          ? 'text-white'
-                                          : 'text-gray-300'
+                                          ? 'text-gray-900 dark:text-white'
+                                          : 'text-gray-700 dark:text-gray-300'
                                   }`}
                                 >
                                   {item.name}
@@ -2442,7 +2500,7 @@ export function PackingPage() {
                                       ? 'text-warning-300'
                                       : isCurrent
                                         ? 'text-primary-400'
-                                        : 'text-gray-300'
+                                        : 'text-gray-700 dark:text-gray-300'
                                 }`}
                               >
                                 {isSkipped
@@ -2523,7 +2581,7 @@ export function PackingPage() {
                   {/* Scan Instruction */}
                   {currentItem.barcode && (
                     <div className="scan-instruction">
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
                         Scan this barcode:{' '}
                         <span className="font-mono font-semibold text-primary-400">
                           {currentItem.barcode}
@@ -2534,7 +2592,7 @@ export function PackingPage() {
 
                   {isViewMode && (
                     <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                      <p className="picking-subtitle text-primary-300 text-sm">
+                      <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
                         Interactions are disabled in view-only mode
                       </p>
                     </div>
@@ -2544,7 +2602,9 @@ export function PackingPage() {
             ) : (
               /* No Current Task */
               <div className="picking-card rounded-2xl p-8 text-center industrial-corners">
-                <p className="picking-subtitle text-gray-400">No items to verify</p>
+                <p className="picking-subtitle text-gray-600 dark:text-gray-400">
+                  No items to verify
+                </p>
               </div>
             )}
           </div>
@@ -2588,39 +2648,41 @@ export function PackingPage() {
               </div>
 
               <div className="p-6 space-y-4">
-                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
-                  <p className="picking-title text-white">{order.items[skipItemIndex].name}</p>
-                  <p className="text-sm text-gray-400 font-mono mt-1">
+                <div className={packingSurfacePanelClass}>
+                  <p className="picking-title text-gray-900 dark:text-white">
+                    {order.items[skipItemIndex].name}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
                     {order.items[skipItemIndex].sku}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
                     {order.items[skipItemIndex].binLocation}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Reason for skipping <span className="text-error-400">*</span>
                   </label>
                   <textarea
                     value={skipReason}
                     onChange={e => setSkipReason(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-warning-500 focus:border-warning-500 text-white placeholder-gray-500"
+                    className={`${packingInputClass} focus:ring-warning-500 focus:border-warning-500`}
                     placeholder="e.g., Item not found, Damaged, etc."
                   />
                 </div>
 
                 <div className="p-4 bg-warning-500/10 border border-warning-500/30 rounded-xl">
-                  <p className="picking-subtitle text-warning-300 text-sm">
+                  <p className="picking-subtitle text-warning-700 dark:text-warning-300 text-sm">
                     <strong>Warning:</strong> Skipping this item will mark it as skipped. You can
                     revert this later if needed.
                   </p>
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+              <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
                 <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
                   Cancel
                 </Button>
@@ -2695,19 +2757,21 @@ export function PackingPage() {
               </div>
 
               <div className="p-6 space-y-4">
-                <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
-                  <p className="picking-title text-white">{order.items[overrideItemIndex].name}</p>
-                  <p className="text-sm text-gray-400 font-mono mt-1">
+                <div className={packingSurfacePanelClass}>
+                  <p className="picking-title text-gray-900 dark:text-white">
+                    {order.items[overrideItemIndex].name}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
                     {order.items[overrideItemIndex].sku}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Required: {order.items[overrideItemIndex].quantity} | Currently Verified:{' '}
                     {order.items[overrideItemIndex].verifiedQuantity || 0}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     New Verified Quantity <span className="text-error-400">*</span>
                   </label>
                   <input
@@ -2717,48 +2781,48 @@ export function PackingPage() {
                     value={overrideQuantity}
                     onChange={e => setOverrideQuantity(e.target.value)}
                     onFocus={e => e.target.select()}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
+                    className={`${packingInputClass} font-mono text-lg`}
                   />
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                     Max: {order.items[overrideItemIndex].quantity} (cannot exceed required quantity)
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Reason <span className="text-error-400">*</span>
                   </label>
                   <textarea
                     value={overrideReason}
                     onChange={e => setOverrideReason(e.target.value)}
                     rows={2}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                    className={packingInputClass}
                     placeholder="e.g., Found damaged item, Correcting count, etc."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Additional Notes (optional)
                   </label>
                   <textarea
                     value={overrideNotes}
                     onChange={e => setOverrideNotes(e.target.value)}
                     rows={2}
-                    className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                    className={packingInputClass}
                     placeholder="Any additional details..."
                   />
                 </div>
 
                 <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                  <p className="picking-subtitle text-primary-300 text-sm">
+                  <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
                     <strong>Note:</strong> This action will be logged and audited. Supervisors will
                     be able to review this override.
                   </p>
                 </div>
               </div>
 
-              <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
+              <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
                 <Button variant="ghost" onClick={() => setShowOverrideModal(false)}>
                   Cancel
                 </Button>

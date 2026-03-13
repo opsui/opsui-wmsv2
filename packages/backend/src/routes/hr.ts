@@ -210,6 +210,78 @@ router.put(
   })
 );
 
+/**
+ * GET /api/hr/timesheets/employee/:id?weekStart=:date
+ * Get existing timesheet for employee and week, or return null
+ */
+router.get(
+  '/timesheets/employee/:id',
+  employeeAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const employeeId = req.params.id;
+    const weekStart = req.query.weekStart as string;
+
+    if (!weekStart) {
+      res.status(400).json({ error: 'weekStart query parameter is required' });
+      return;
+    }
+
+    const timesheet = await hrService.getEmployeeTimesheetForWeek(employeeId, weekStart);
+    res.json(timesheet);
+  })
+);
+
+/**
+ * GET /api/hr/my-timesheet/current?weekStart=:date
+ * Get current user's timesheet for the week
+ */
+router.get(
+  '/my-timesheet/current',
+  employeeAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const weekStart = req.query.weekStart as string;
+
+    const employees = await hrService.getEmployees({ search: req.user?.email || '' });
+    if (employees.length === 0) {
+      res.status(404).json({ error: 'Employee not found' });
+      return;
+    }
+
+    const employeeId = employees[0].employeeId;
+    const timesheet = await hrService.getEmployeeTimesheetForWeek(employeeId, weekStart);
+    res.json(timesheet);
+  })
+);
+
+/**
+ * POST /api/hr/timesheets/draft
+ * Create or update a draft timesheet
+ */
+router.post(
+  '/timesheets/draft',
+  employeeAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const timesheet = await hrService.saveDraftTimesheet(req.body);
+    res.json(timesheet);
+  })
+);
+
+/**
+ * POST /api/hr/timesheets/:id/submit
+ * Submit a draft timesheet for approval
+ */
+router.post(
+  '/timesheets/:id/submit',
+  employeeAuth,
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    const timesheet = await hrService.submitDraftTimesheet(
+      req.params.id,
+      req.user?.userId || ''
+    );
+    res.json(timesheet);
+  })
+);
+
 // ============================================================================
 // PAYROLL
 // ============================================================================

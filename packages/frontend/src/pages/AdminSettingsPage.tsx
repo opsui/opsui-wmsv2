@@ -115,6 +115,16 @@ const settingsAnimationStyles = `
     transform: translateY(-2px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(168, 85, 247, 0.1);
   }
+
+  .settings-role-color-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  @media (max-width: 550px) {
+    .settings-role-color-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+  }
 `;
 
 // ============================================================================
@@ -402,6 +412,53 @@ function AdminSettingsPage() {
   const [roleColors, setRoleColors] = useState<Record<string, string>>({});
   const [originalRoleColors, setOriginalRoleColors] = useState<Record<string, string>>({});
 
+  const themeBadge = (
+    <div className="inline-flex w-fit max-w-full flex-wrap items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-800/30 border border-gray-200 dark:border-gray-700/50">
+      <span className="text-sm text-gray-600 dark:text-gray-400">Theme:</span>
+      <span className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
+        {theme}
+      </span>
+      {theme === 'dark' ? (
+        <MoonIcon className="h-4 w-4 text-purple-400" />
+      ) : theme === 'light' ? (
+        <SunIcon className="h-4 w-4 text-amber-500" />
+      ) : (
+        <ComputerDesktopIcon className="h-4 w-4 text-blue-400" />
+      )}
+    </div>
+  );
+
+  const settingsHeroIcon = (
+    <div
+      className="
+        relative w-fit shrink-0 self-start p-4 rounded-2xl
+        bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-pink-500/10
+        border border-blue-400/20
+        shadow-lg shadow-blue-500/10
+      "
+    >
+      <CogIcon className="h-9 w-9 text-blue-400" />
+      {/* Animated ring */}
+      <div className="absolute inset-0 rounded-2xl border-2 border-blue-400/30 animate-pulse" />
+    </div>
+  );
+
+  const settingsHeroCopy = (
+    <div className="min-w-0">
+      <h1
+        className="
+          text-4xl sm:text-5xl font-black tracking-tight
+          font-['Archivo',sans-serif]
+        "
+      >
+        <span className="settings-title-gradient">Settings</span>
+      </h1>
+      <p className="mt-2 text-base text-gray-600 dark:text-gray-400 max-w-md">
+        Personalize your workspace and preferences
+      </p>
+    </div>
+  );
+
   // Update roles when granted roles change, using JSON comparison for stability
   useEffect(() => {
     const visibility = loadRoleVisibility();
@@ -566,62 +623,34 @@ function AdminSettingsPage() {
           <div className="absolute -left-4 -top-4 w-40 h-40 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -right-4 bottom-0 w-32 h-32 bg-gradient-to-tl from-pink-500/5 to-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex items-center gap-5 settings-fade-up">
-              {/* Icon with gradient background */}
-              <div
-                className="
-                relative p-4 rounded-2xl
-                bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-pink-500/10
-                border border-blue-400/20
-                shadow-lg shadow-blue-500/10
-              "
-              >
-                <CogIcon className="h-9 w-9 text-blue-400" />
-                {/* Animated ring */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-blue-400/30 animate-pulse" />
-              </div>
-
-              <div>
-                <h1
-                  className="
-                  text-4xl sm:text-5xl font-black tracking-tight
-                  font-['Archivo',sans-serif]
-                "
-                >
-                  <span className="settings-title-gradient">Settings</span>
-                </h1>
-                <p className="mt-2 text-base text-gray-600 dark:text-gray-400 max-w-md">
-                  Personalize your workspace and preferences
-                </p>
+          <div className="relative">
+            <div className="flex items-start gap-4 sm:gap-5 settings-fade-up min-w-0 mobile:hidden">
+              {settingsHeroIcon}
+              <div className="min-w-0 flex-1">
+                {settingsHeroCopy}
+                <div className="mt-4">{themeBadge}</div>
               </div>
             </div>
 
-            {/* Quick actions */}
             <div
-              className="flex items-center gap-3 settings-fade-up"
-              style={{ animationDelay: '0.2s' }}
+              className="hidden mobile:flex mobile:items-center mobile:justify-between gap-6"
             >
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800/50 dark:to-gray-800/30 border border-gray-200 dark:border-gray-700/50">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Theme:</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
-                  {theme}
-                </span>
-                {theme === 'dark' ? (
-                  <MoonIcon className="h-4 w-4 text-purple-400" />
-                ) : theme === 'light' ? (
-                  <SunIcon className="h-4 w-4 text-amber-500" />
-                ) : (
-                  <ComputerDesktopIcon className="h-4 w-4 text-blue-400" />
-                )}
+              <div className="flex items-center gap-5 settings-fade-up min-w-0">
+                {settingsHeroIcon}
+                {settingsHeroCopy}
+              </div>
+
+              {/* Quick actions */}
+              <div className="flex items-center gap-3 settings-fade-up" style={{ animationDelay: '0.2s' }}>
+                {themeBadge}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)]">
           {/* Sidebar Navigation */}
-          <div className="lg:col-span-1">
+          <div className="min-w-0">
             <Card variant="glass" className="sticky top-8">
               <CardContent className="p-3">
                 <nav className="space-y-1">
@@ -632,7 +661,7 @@ function AdminSettingsPage() {
                       <button
                         key={section.key}
                         onClick={() => setSection(section.key)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        className={`w-full min-w-0 flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-left transition-all duration-200 ${
                           isActive
                             ? 'text-gray-900 bg-primary-100 border border-primary-300 dark:text-white dark:bg-primary-500/25 dark:border-primary-500/40 dark:shadow-lg dark:shadow-primary-500/20'
                             : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-white/10 border border-gray-300 dark:border-gray-700/50'
@@ -641,7 +670,9 @@ function AdminSettingsPage() {
                         <div className="flex items-center justify-center w-4 flex-shrink-0">
                           <Icon className={`h-4 w-4 ${isActive ? 'text-primary-400' : ''}`} />
                         </div>
-                        <span className="text-left flex-1">{section.label}</span>
+                        <span className="min-w-0 flex-1 leading-tight break-words">
+                          {section.label}
+                        </span>
                       </button>
                     );
                   })}
@@ -651,7 +682,7 @@ function AdminSettingsPage() {
           </div>
 
           {/* Content Area */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="min-w-0 space-y-6">
             {/* Role Switcher Settings */}
             {currentSection === 'role-switcher' && (
               <>
@@ -732,7 +763,7 @@ function AdminSettingsPage() {
                                   </div>
                                 )}
                               </div>
-                              <div className="grid grid-cols-8 md:grid-cols-15 gap-2">
+                              <div className="grid settings-role-color-grid gap-2 md:grid-cols-15">
                                 {[
                                   '#ef4444',
                                   '#f97316',
@@ -928,49 +959,56 @@ function AdminSettingsPage() {
                   <CardContent className="space-y-6">
                     {/* Sound Toggle */}
                     <div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-start justify-between gap-4 mobile:items-center">
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
                           {soundEnabled ? (
-                            <SpeakerWaveIcon className="h-6 w-6 text-green-400" />
+                            <SpeakerWaveIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-400 mobile:mt-0 mobile:h-6 mobile:w-6" />
                           ) : (
-                            <SpeakerXMarkIcon className="h-6 w-6 text-gray-500" />
+                            <SpeakerXMarkIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-500 mobile:mt-0 mobile:h-6 mobile:w-6" />
                           )}
-                          <div>
+                          <div className="min-w-0">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                               Sound Effects
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                               Play sounds for notifications and actions
                             </p>
                           </div>
                         </div>
                         <button
+                          type="button"
                           onClick={() => setSoundEnabled(!soundEnabled)}
-                          className={`relative w-16 h-8 rounded-full transition-all duration-200 ${
-                            soundEnabled
-                              ? 'bg-primary-500 shadow-lg shadow-primary-500/30'
-                              : 'bg-gray-600'
-                          }`}
+                          aria-pressed={soundEnabled}
+                          aria-label={soundEnabled ? 'Disable sound effects' : 'Enable sound effects'}
+                          className="relative flex h-11 w-14 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 mobile:h-8 mobile:w-16"
                         >
                           <span
-                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform duration-200 flex items-center justify-center ${
-                              soundEnabled ? 'translate-x-8' : ''
+                            className={`pointer-events-none relative block h-7 w-12 rounded-full transition-all duration-200 mobile:h-8 mobile:w-14 ${
+                              soundEnabled
+                                ? 'bg-primary-500 shadow-lg shadow-primary-500/30'
+                                : 'bg-gray-600'
                             }`}
-                          />
+                          >
+                            <span
+                              className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 mobile:h-7 mobile:w-7 ${
+                                soundEnabled ? 'translate-x-5 mobile:translate-x-6' : ''
+                              }`}
+                            />
+                          </span>
                         </button>
                       </div>
                     </div>
 
                     {/* Test Sound Button */}
                     <div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <BellIcon className="h-6 w-6 text-blue-400" />
-                          <div>
+                      <div className="flex items-start justify-between gap-4 mobile:items-center">
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                          <BellIcon className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-400 mobile:mt-0 mobile:h-6 mobile:w-6" />
+                          <div className="min-w-0">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                               Test Sounds
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                               Preview notification sounds
                             </p>
                           </div>
@@ -980,6 +1018,7 @@ function AdminSettingsPage() {
                           size="sm"
                           onClick={() => playSound('success')}
                           disabled={!soundEnabled}
+                          className="flex-shrink-0 self-start mobile:self-auto"
                         >
                           Play Test Sound
                         </Button>

@@ -58,6 +58,100 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 // COMPONENT
 // ============================================================================
 
+const PICKING_THEME_STYLE_ID = 'picking-live-theme-styles';
+
+const pickingThemeStyles = `
+  html.light .picking-live-page .picking-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 252, 0.98) 100%);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: 0 18px 40px rgba(148, 163, 184, 0.18);
+  }
+
+  html.light .picking-live-page .picking-divider {
+    border-color: rgba(148, 163, 184, 0.3) !important;
+  }
+
+  html.light .picking-live-page .picking-surface-panel {
+    background: rgba(248, 250, 252, 0.88);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  html.light .picking-live-page .barcode-display {
+    background: rgba(248, 250, 252, 0.96);
+    border-color: rgba(168, 85, 247, 0.24);
+  }
+
+  html.light .picking-live-page .barcode-display::before {
+    background: rgba(168, 85, 247, 0.45);
+  }
+
+  html.light .picking-live-page .pick-item-card {
+    background: rgba(248, 250, 252, 0.96);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+
+  html.light .picking-live-page .pick-item-card:hover {
+    background: rgba(241, 245, 249, 0.98);
+    border-color: rgba(168, 85, 247, 0.25);
+  }
+
+  html.light .picking-live-page .pick-item-card.active {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.08);
+  }
+
+  html.light .picking-live-page .pick-item-card.completed {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.28);
+  }
+
+  html.light .picking-live-page .pick-item-card.skipped {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.28);
+  }
+
+  html.light .picking-live-page .scanner-modal-content {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-color: rgba(168, 85, 247, 0.22);
+    box-shadow: 0 25px 50px rgba(148, 163, 184, 0.25), 0 0 80px rgba(168, 85, 247, 0.08);
+  }
+
+  html.light .picking-live-page .picking-card .picking-title,
+  html.light .picking-live-page .scanner-modal-content .picking-title {
+    color: #0f172a !important;
+  }
+
+  html.light .picking-live-page .picking-card .picking-subtitle:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700),
+  html.light .picking-live-page .picking-surface-panel .picking-subtitle:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700),
+  html.light .picking-live-page .scanner-modal-content .picking-subtitle:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700) {
+    color: #64748b !important;
+  }
+
+  html.light .picking-live-page .scanner-modal-content .step-indicator span {
+    color: #334155 !important;
+  }
+
+  html.light .picking-live-page .scanner-modal-content .step-indicator-line {
+    background: rgba(148, 163, 184, 0.35);
+  }
+
+  html.light .picking-live-page .hero-number:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700),
+  html.light .picking-live-page .quantity-display:not(.text-primary-300):not(.text-primary-400):not(.text-primary-600):not(.text-primary-700):not(.text-warning-300):not(.text-warning-400):not(.text-warning-700):not(.text-success-300):not(.text-success-400):not(.text-success-700):not(.text-error-300):not(.text-error-400):not(.text-error-700) {
+    background: linear-gradient(180deg, #0f172a 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+  }
+`;
+
+const pickingSurfacePanelClass =
+  'picking-surface-panel rounded-xl border border-gray-200 dark:border-white/[0.08] bg-gray-50 dark:bg-white/[0.02] p-4';
+const pickingInputClass =
+  'w-full px-4 py-3 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500';
+
 export function PickingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
@@ -132,347 +226,15 @@ export function PickingPage() {
   const pickMutation = usePickItem();
   const completeMutation = useCompleteOrder();
   const logExceptionMutation = useLogException();
-  const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
-  const autoPrintFulfillmentRef = useRef(false);
 
-  const formatAddressLines = (address?: Address) =>
-    [
-      address?.name,
-      address?.company && address?.company !== address?.name ? address.company : null,
-      address?.addressLine1,
-      address?.addressLine2,
-      [address?.city, address?.state].filter(Boolean).join(', '),
-      [address?.postalCode, address?.country].filter(Boolean).join(' '),
-      address?.phone ? `Phone: ${address.phone}` : null,
-      address?.email ? `Email: ${address.email}` : null,
-    ].filter(Boolean) as string[];
-
-  const escapePrintHtml = (value: string) =>
-    value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-
-  const buildFulfillmentSlipPrintHtml = (completedOrder: any) => {
-    const previewAddressLines = formatAddressLines(completedOrder.shippingAddress);
-    const billToLines = previewAddressLines;
-    const orderDate = completedOrder.netsuiteOrderDate
-      ? new Date(completedOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
-      : new Date().toLocaleDateString('en-NZ');
-    const completedAt = new Date().toLocaleString('en-NZ', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    const shipToHtml =
-      previewAddressLines.length > 0
-        ? previewAddressLines
-            .map(line => `<div class="meta-line">${escapePrintHtml(String(line))}</div>`)
-            .join('')
-        : '<div class="meta-line">No shipping details available</div>';
-
-    const billToHtml =
-      billToLines.length > 0
-        ? billToLines
-            .map(line => `<div class="meta-line">${escapePrintHtml(String(line))}</div>`)
-            .join('')
-        : '<div class="meta-line">No billing details available</div>';
-
-    const rowsHtml = ((completedOrder.items || []) as any[])
-      .map(
-        item => `
-          <tr>
-            <td class="mono">${escapePrintHtml(String(item.sku || ''))}</td>
-            <td>
-              <div class="item-name">${escapePrintHtml(String(item.name || ''))}</div>
-              <div class="item-sub">Bin: ${escapePrintHtml(
-                String(formatBinLocation(item.binLocation || ''))
-              )}</div>
-            </td>
-            <td class="num">${escapePrintHtml(String(item.quantity ?? 0))}</td>
-            <td class="num">0</td>
-            <td class="num">${escapePrintHtml(String(item.pickedQuantity ?? 0))}</td>
-          </tr>
-        `
-      )
-      .join('');
-
-    return `
-      <!doctype html>
-      <html lang="en">
-        <head>
-          <meta charset="utf-8" />
-          <title>Fulfillment Slip</title>
-          <style>
-            @page {
-              size: A4 landscape;
-              margin: 10mm;
-            }
-
-            html, body {
-              margin: 0;
-              padding: 0;
-              background: #ffffff;
-              color: #0f172a;
-              font-family: Arial, Helvetica, sans-serif;
-            }
-
-            * {
-              box-sizing: border-box;
-            }
-
-            .sheet {
-              width: 100%;
-              padding: 0;
-            }
-
-            .header {
-              display: flex;
-              align-items: flex-start;
-              justify-content: space-between;
-              gap: 32px;
-              margin-bottom: 28px;
-            }
-
-            .brand-block {
-              display: flex;
-              align-items: flex-start;
-              gap: 18px;
-              min-width: 420px;
-            }
-
-            .brand-logo {
-              width: 168px;
-              height: auto;
-            }
-
-            .brand-address {
-              padding-top: 8px;
-              font-size: 13px;
-              line-height: 1.25;
-              color: #111827;
-            }
-
-            .slip-meta {
-              min-width: 360px;
-            }
-
-            .slip-title {
-              margin: 0 0 18px;
-              font-size: 26px;
-              font-weight: 700;
-            }
-
-            .meta-grid {
-              display: grid;
-              grid-template-columns: 180px 1fr;
-              row-gap: 8px;
-              column-gap: 12px;
-              font-size: 13px;
-            }
-
-            .label {
-              font-weight: 700;
-            }
-
-            .address-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 42px;
-              margin-bottom: 28px;
-            }
-
-            .address-panel-title {
-              font-size: 15px;
-              font-weight: 700;
-              margin-bottom: 8px;
-            }
-
-            .mono {
-              font-family: "Courier New", Courier, monospace;
-            }
-
-            .meta-line {
-              margin: 1px 0;
-              font-size: 13px;
-              line-height: 1.25;
-            }
-
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              table-layout: fixed;
-            }
-
-            thead th {
-              text-align: left;
-              background: #b8b8b8;
-              color: #ffffff;
-              font-size: 11px;
-              padding: 6px 8px;
-              border: 1px solid #b8b8b8;
-            }
-
-            tbody td {
-              padding: 10px 8px;
-              border: 1px solid #b7b7b7;
-              vertical-align: top;
-              font-size: 13px;
-            }
-
-            .item-name {
-              font-weight: 700;
-              margin-bottom: 4px;
-            }
-
-            .item-sub {
-              color: #64748b;
-              font-size: 12px;
-              margin-top: 4px;
-            }
-
-            .num {
-              text-align: right;
-            }
-          </style>
-        </head>
-        <body>
-            <div class="sheet">
-              <div class="header">
-                <div class="brand-block">
-                  <img class="brand-logo" src="/arrowhead-logo.svg" alt="Arrowhead Alarm Products" />
-                  <div class="brand-address">
-                    <div>1A Emirali Road,</div>
-                    <div>Silverdale, 0932</div>
-                    <div>Auckland</div>
-                    <div>New Zealand</div>
-                  </div>
-                </div>
-                <div class="slip-meta">
-                  <div class="slip-title">Packing Slip</div>
-                  <div class="meta-grid">
-                    <div class="label">Order Date</div>
-                    <div>${escapePrintHtml(orderDate)}</div>
-                    <div class="label">Sales Order #</div>
-                    <div>${escapePrintHtml(
-                      String(completedOrder.netsuiteSoTranId || completedOrder.orderId)
-                    )}</div>
-                    <div class="label">Account Number</div>
-                    <div>${escapePrintHtml(String(completedOrder.customerId || ''))}</div>
-                    <div class="label">Customer PO #</div>
-                    <div>${escapePrintHtml(String(completedOrder.customerPoNumber || ''))}</div>
-                    <div class="label">Shipping Method</div>
-                    <div>${escapePrintHtml(String(completedOrder.carrier || 'Warehouse Pick'))}</div>
-                    <div class="label">Fulfillment #</div>
-                    <div>${escapePrintHtml(
-                      String(
-                        completedOrder.netsuiteIfTranId ||
-                          completedOrder.netsuiteSoTranId ||
-                          completedOrder.orderId
-                      )
-                    )}</div>
-                    <div class="label">Completed</div>
-                    <div>${escapePrintHtml(completedAt)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="address-grid">
-                <div>
-                  <div class="address-panel-title">Ship To</div>
-                  ${shipToHtml}
-                </div>
-                <div>
-                  <div class="address-panel-title">Bill To</div>
-                  ${billToHtml}
-                </div>
-              </div>
-
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 24%;">Item</th>
-                  <th style="width: 46%;">Description</th>
-                  <th style="width: 10%; text-align: right;">Ordered</th>
-                  <th style="width: 10%; text-align: right;">B/O</th>
-                  <th style="width: 10%; text-align: right;">Shipped</th>
-                </tr>
-              </thead>
-              <tbody>${rowsHtml}</tbody>
-            </table>
-          </div>
-        </body>
-      </html>
-    `;
-  };
-
-  const handlePrintFulfillmentSlip = async () => {
-    setIsPrintingFulfillmentSlip(true);
-    try {
-      if (!fulfillmentPreviewOrder) {
-        throw new Error('Packing slip preview is not ready yet');
-      }
-
-      const printFrame = document.createElement('iframe');
-      printFrame.setAttribute('aria-hidden', 'true');
-      printFrame.style.position = 'fixed';
-      printFrame.style.right = '0';
-      printFrame.style.bottom = '0';
-      printFrame.style.width = '0';
-      printFrame.style.height = '0';
-      printFrame.style.border = '0';
-
-      document.body.appendChild(printFrame);
-
-      const printDocument =
-        printFrame.contentDocument || printFrame.contentWindow?.document || null;
-      if (!printDocument) {
-        document.body.removeChild(printFrame);
-        throw new Error('Unable to prepare packing slip for printing');
-      }
-
-      printDocument.open();
-      printDocument.write(buildFulfillmentSlipPrintHtml(fulfillmentPreviewOrder));
-      printDocument.close();
-
-      await new Promise(resolve => {
-        const frameWindow = printFrame.contentWindow;
-        if (!frameWindow) {
-          resolve(null);
-          return;
-        }
-
-        const triggerPrint = () => {
-          frameWindow.focus();
-          frameWindow.print();
-          window.setTimeout(() => {
-            if (document.body.contains(printFrame)) {
-              document.body.removeChild(printFrame);
-            }
-            resolve(null);
-          }, 500);
-        };
-
-        if (printDocument.readyState === 'complete') {
-          triggerPrint();
-        } else {
-          printFrame.onload = triggerPrint;
-        }
-      });
-    } finally {
-      setTimeout(() => setIsPrintingFulfillmentSlip(false), 250);
+  useEffect(() => {
+    if (!document.getElementById(PICKING_THEME_STYLE_ID)) {
+      const style = document.createElement('style');
+      style.id = PICKING_THEME_STYLE_ID;
+      style.textContent = pickingThemeStyles;
+      document.head.appendChild(style);
     }
-  };
-
-  const handleFulfillmentPreviewReady = (completedOrder: any) => {
-    setFulfillmentPreviewOrder(completedOrder);
-    autoPrintFulfillmentRef.current = true;
-  };
+  }, []);
 
   // ==========================================================================
   // Real-time WebSocket Subscriptions
@@ -818,7 +580,7 @@ export function PickingPage() {
   // Show claim loading state - Distinctive warehouse loading animation
   if (claimMutation.isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="picking-live-page min-h-screen flex items-center justify-center">
         <div className="warehouse-loading">
           <div className="warehouse-loading-icon" />
           <div className="warehouse-loading-bars">
@@ -829,8 +591,12 @@ export function PickingPage() {
             <div className="warehouse-loading-bar" />
           </div>
           <div className="text-center">
-            <p className="picking-title text-white text-xl mb-2">Claiming Order</p>
-            <p className="picking-subtitle text-gray-400 text-sm">Preparing your pick list...</p>
+            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
+              Claiming Order
+            </p>
+            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+              Preparing your pick list...
+            </p>
           </div>
         </div>
       </div>
@@ -840,13 +606,15 @@ export function PickingPage() {
   // Show claim error
   if (claimError) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-error-500/20 flex items-center justify-center">
             <ExclamationCircleIcon className="h-8 w-8 text-error-400" />
           </div>
-          <h2 className="picking-title text-2xl text-white mb-3">Cannot Start Picking</h2>
-          <p className="picking-subtitle text-gray-400 mb-6">{claimError}</p>
+          <h2 className="picking-title text-2xl text-gray-900 dark:text-white mb-3">
+            Cannot Start Picking
+          </h2>
+          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">{claimError}</p>
           <div className="flex gap-3 justify-center">
             <Button variant="secondary" onClick={() => navigate(pickingQueuePath)}>
               Back to Queue
@@ -867,7 +635,7 @@ export function PickingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="picking-live-page min-h-screen flex items-center justify-center">
         <div className="warehouse-loading">
           <div className="warehouse-loading-icon" />
           <div className="warehouse-loading-bars">
@@ -878,8 +646,12 @@ export function PickingPage() {
             <div className="warehouse-loading-bar" />
           </div>
           <div className="text-center">
-            <p className="picking-title text-white text-xl mb-2">Loading Order</p>
-            <p className="picking-subtitle text-gray-400 text-sm">Retrieving pick details...</p>
+            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
+              Loading Order
+            </p>
+            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+              Retrieving pick details...
+            </p>
           </div>
         </div>
       </div>
@@ -888,10 +660,12 @@ export function PickingPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
-          <p className="picking-subtitle text-gray-400 mb-6">Order not found</p>
-          <Button onClick={() => navigate(pickingQueuePath)}>Back to Queue</Button>
+          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">
+            Order not found
+          </p>
+          <Button onClick={() => navigate('/orders')}>Back to Queue</Button>
         </div>
       </div>
     );
@@ -1359,149 +1133,8 @@ export function PickingPage() {
   const circumference = 2 * Math.PI * 45; // radius = 45
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
-  if (fulfillmentPreviewOrder) {
-    const previewAddressLines = formatAddressLines(fulfillmentPreviewOrder.shippingAddress);
-    const billToLines = previewAddressLines;
-    const orderDate = fulfillmentPreviewOrder.netsuiteOrderDate
-      ? new Date(fulfillmentPreviewOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
-      : new Date().toLocaleDateString('en-NZ');
-
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <ResponsiveContainer variant="fluid" padding="lg">
-          <main className="relative z-10 space-y-responsive">
-            <Breadcrumb
-              items={[
-                { label: 'Picking Queue', path: pickingQueuePath },
-                {
-                  label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}`,
-                },
-              ]}
-            />
-
-            <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
-              <div id="fulfillment-slip-print" className="bg-white text-slate-900 p-8 space-y-8">
-                <div className="flex items-start justify-between gap-8">
-                  <div className="flex items-start gap-5">
-                    <img
-                      src="/arrowhead-logo.svg"
-                      alt="Arrowhead Alarm Products"
-                      className="w-40 h-auto object-contain"
-                    />
-                    <div className="pt-2 text-sm leading-5 text-slate-800">
-                      <div>1A Emirali Road,</div>
-                      <div>Silverdale, 0932</div>
-                      <div>Auckland</div>
-                      <div>New Zealand</div>
-                    </div>
-                  </div>
-                  <div className="min-w-[360px]">
-                    <h1 className="text-5xl font-bold tracking-tight text-slate-950">
-                      Packing Slip
-                    </h1>
-                    <dl className="mt-6 grid grid-cols-[170px,1fr] gap-y-2 gap-x-4 text-[15px]">
-                      <dt className="font-bold text-slate-950">Order Date</dt>
-                      <dd>{orderDate}</dd>
-                      <dt className="font-bold text-slate-950">Sales Order #</dt>
-                      <dd>
-                        {fulfillmentPreviewOrder.netsuiteSoTranId ||
-                          fulfillmentPreviewOrder.orderId}
-                      </dd>
-                      <dt className="font-bold text-slate-950">Account Number</dt>
-                      <dd>{fulfillmentPreviewOrder.customerId || ''}</dd>
-                      <dt className="font-bold text-slate-950">Customer PO #</dt>
-                      <dd>{fulfillmentPreviewOrder.customerPoNumber || ''}</dd>
-                      <dt className="font-bold text-slate-950">Shipping Method</dt>
-                      <dd>{fulfillmentPreviewOrder.carrier || 'Warehouse Pick'}</dd>
-                      <dt className="font-bold text-slate-950">Fulfillment #</dt>
-                      <dd>
-                        {fulfillmentPreviewOrder.netsuiteIfTranId ||
-                          fulfillmentPreviewOrder.netsuiteSoTranId ||
-                          fulfillmentPreviewOrder.orderId}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-10 text-[15px]">
-                  <div>
-                    <p className="mb-3 text-2xl font-bold text-slate-950">Ship To</p>
-                    <div className="space-y-0.5 text-slate-900">
-                      {previewAddressLines.length > 0 ? (
-                        previewAddressLines.map(line => <p key={`ship-${line}`}>{line}</p>)
-                      ) : (
-                        <p>No shipping details available</p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-3 text-2xl font-bold text-slate-950">Bill To</p>
-                    <div className="space-y-0.5 text-slate-900">
-                      {billToLines.length > 0 ? (
-                        billToLines.map(line => <p key={`bill-${line}`}>{line}</p>)
-                      ) : (
-                        <p>No billing details available</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-[#b7b7b7]">
-                  <div className="grid grid-cols-[24%,46%,10%,10%,10%] bg-[#b8b8b8] px-3 py-1.5 text-[13px] font-bold text-white">
-                    <span>Item</span>
-                    <span>Description</span>
-                    <span className="text-right">Ordered</span>
-                    <span className="text-right">B/O</span>
-                    <span className="text-right">Shipped</span>
-                  </div>
-                  <div>
-                    {(fulfillmentPreviewOrder.items || []).map((item: any) => (
-                      <div
-                        key={item.orderItemId}
-                        className="grid grid-cols-[24%,46%,10%,10%,10%] border-t border-[#b7b7b7] px-3 py-4 text-[15px]"
-                      >
-                        <div>{item.sku}</div>
-                        <div>
-                          <div>{item.name}</div>
-                          <div className="mt-1 text-[13px] text-slate-600">
-                            Bin: {formatBinLocation(item.binLocation)}
-                          </div>
-                        </div>
-                        <div className="text-right">{item.quantity}</div>
-                        <div className="text-right">0</div>
-                        <div className="text-right">{item.pickedQuantity}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                id="fulfillment-slip-actions"
-                className="flex flex-wrap items-center justify-end gap-3 border-t border-white/[0.08] px-6 py-5"
-              >
-                <Button
-                  variant="secondary"
-                  onClick={handlePrintFulfillmentSlip}
-                  isLoading={isPrintingFulfillmentSlip}
-                >
-                  <PrinterIcon className="h-5 w-5 mr-2" />
-                  Print Packing Slip
-                </Button>
-                <Button variant="success" onClick={() => navigate('/orders?status=PENDING')}>
-                  Done
-                </Button>
-              </div>
-            </div>
-          </main>
-        </ResponsiveContainer>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen">
+    <div className="picking-live-page min-h-screen">
       {/* Industrial grid background texture - fixed position to not affect scroll */}
       <div
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
@@ -1533,12 +1166,12 @@ export function PickingPage() {
                 <ExclamationCircleIcon className="h-5 w-5 text-primary-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="picking-title text-white">
+                <p className="picking-title text-gray-900 dark:text-white">
                   {order.status === 'PICKED' || order.status === 'SHIPPED'
                     ? 'Viewing completed order'
                     : "Viewing this picker's work in real-time"}
                 </p>
-                <p className="picking-subtitle text-gray-400 text-sm mt-0.5">
+                <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm mt-0.5">
                   You are in view-only mode. Interactions are disabled.
                 </p>
               </div>
@@ -1552,8 +1185,8 @@ export function PickingPage() {
               <div className="picking-card rounded-2xl lg:sticky lg:top-20 industrial-corners">
                 <div className="p-6">
                   {/* Order Info */}
-                  <div className="mb-6 pb-6 border-b border-white/[0.08]">
-                    <h1 className="picking-title text-xl text-white truncate">
+                  <div className="mb-6 pb-6 border-b picking-divider border-white/[0.08]">
+                    <h1 className="picking-title text-xl text-gray-900 dark:text-white truncate">
                       {order.netsuiteSoTranId || order.orderId}
                     </h1>
                     {order.netsuiteSoTranId && (
@@ -1561,7 +1194,7 @@ export function PickingPage() {
                         OpsUI: {order.orderId}
                       </p>
                     )}
-                    <p className="mt-1 picking-subtitle text-gray-400 text-sm truncate">
+                    <p className="mt-1 picking-subtitle text-gray-600 dark:text-gray-400 text-sm truncate">
                       {order.customerName}
                     </p>
                   </div>
@@ -1613,18 +1246,26 @@ export function PickingPage() {
 
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between items-center">
-                      <span className="picking-subtitle text-gray-400 text-sm">Completed</span>
+                      <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+                        Completed
+                      </span>
                       <span className="hero-number text-lg text-success-400">{completedTasks}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="picking-subtitle text-gray-400 text-sm">Remaining</span>
+                      <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+                        Remaining
+                      </span>
                       <span className="hero-number text-lg text-warning-400">
                         {totalTasks - completedTasks}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="picking-subtitle text-gray-400 text-sm">Total</span>
-                      <span className="hero-number text-lg text-white">{totalTasks}</span>
+                      <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+                        Total
+                      </span>
+                      <span className="hero-number text-lg text-gray-900 dark:text-white">
+                        {totalTasks}
+                      </span>
                     </div>
                   </div>
 
@@ -1678,10 +1319,10 @@ export function PickingPage() {
                     <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success-500/20 flex items-center justify-center animate-bounce-in">
                       <CheckIcon className="h-10 w-10 text-success-400" />
                     </div>
-                    <h2 className="picking-title text-3xl text-white mb-3 animate-celebrate">
+                    <h2 className="picking-title text-3xl text-gray-900 dark:text-white mb-3 animate-celebrate">
                       All Items Picked!
                     </h2>
-                    <p className="picking-subtitle text-gray-400 mb-8">
+                    <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-8">
                       Order is ready to be completed and sent to packing.
                     </p>
                     <Button
@@ -1701,13 +1342,15 @@ export function PickingPage() {
                 <div
                   className={`picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners ${scanSuccess ? 'item-flash' : ''}`}
                 >
-                  <div className="p-6 border-b border-white/[0.08]">
+                  <div className="p-6 border-b picking-divider border-white/[0.08]">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="picking-subtitle text-primary-400 text-xs uppercase tracking-wider mb-1">
+                        <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
                           Current Pick Task
                         </p>
-                        <h2 className="picking-title text-xl text-white">{currentTask.name}</h2>
+                        <h2 className="picking-title text-xl text-gray-900 dark:text-white">
+                          {currentTask.name}
+                        </h2>
                       </div>
                       <div className="flex items-center gap-3">
                         {!isViewMode && (
@@ -1735,16 +1378,16 @@ export function PickingPage() {
                     <div>
                       {currentTask.barcode ? (
                         <div className="barcode-display rounded-xl px-5 py-4">
-                          <p className="text-primary-400 text-xs uppercase tracking-wider mb-2">
+                          <p className="text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-2">
                             Scan Barcode
                           </p>
-                          <p className="text-2xl text-white tracking-widest font-mono">
+                          <p className="text-2xl text-gray-900 dark:text-white tracking-widest font-mono">
                             {currentTask.barcode}
                           </p>
                         </div>
                       ) : (
                         <div className="bg-warning-500/10 border border-warning-500/30 rounded-xl px-5 py-4">
-                          <p className="text-warning-400 text-sm">
+                          <p className="text-warning-700 dark:text-warning-400 text-sm">
                             No barcode assigned - scan or enter item code manually
                           </p>
                         </div>
@@ -1754,7 +1397,7 @@ export function PickingPage() {
                     {/* Quantity Display */}
                     <div className="flex items-center justify-center gap-8 py-6">
                       <div className="text-center">
-                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-3">
                           Picked
                         </p>
                         <p className="quantity-display text-primary-400">
@@ -1763,14 +1406,16 @@ export function PickingPage() {
                       </div>
                       <div className="text-5xl text-gray-600 font-light">/</div>
                       <div className="text-center">
-                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-3">
                           Needed
                         </p>
-                        <p className="quantity-display text-white">{currentTask.quantity}</p>
+                        <p className="quantity-display text-gray-900 dark:text-white">
+                          {currentTask.quantity}
+                        </p>
                       </div>
                       <div className="text-5xl text-gray-600 font-light hidden sm:block">|</div>
                       <div className="text-center hidden sm:block">
-                        <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-3">
+                        <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-3">
                           On Hand
                         </p>
                         <p
@@ -1789,7 +1434,7 @@ export function PickingPage() {
 
                     {/* On Hand indicator for mobile */}
                     <div className="sm:hidden flex items-center justify-center gap-2 mb-4">
-                      <span className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
+                      <span className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider">
                         On Hand:
                       </span>
                       <span
@@ -1804,7 +1449,7 @@ export function PickingPage() {
                         {currentTask.onHandQuantity ?? 0}
                       </span>
                       {(currentTask.onHandQuantity ?? 0) < currentTask.quantity && (
-                        <span className="text-xs text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
+                        <span className="text-xs text-error-700 dark:text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
                           Low Stock
                         </span>
                       )}
@@ -1821,8 +1466,8 @@ export function PickingPage() {
                     </div>
 
                     {/* Items in Order - Integrated into Current Pick Task */}
-                    <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.08]">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-4">
+                    <div className={pickingSurfacePanelClass}>
+                      <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-4">
                         Items in Order ({order.items?.length || 0})
                       </p>
                       <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
@@ -1891,12 +1536,12 @@ export function PickingPage() {
                                   <p
                                     className={`font-medium text-sm truncate ${
                                       isCompleted
-                                        ? 'text-success-300 line-through'
+                                        ? 'text-success-700 dark:text-success-300 line-through'
                                         : isSkipped
-                                          ? 'text-warning-300'
+                                          ? 'text-warning-700 dark:text-warning-300'
                                           : isCurrent
-                                            ? 'text-white'
-                                            : 'text-gray-300'
+                                            ? 'text-gray-900 dark:text-white'
+                                            : 'text-gray-700 dark:text-gray-300'
                                     }`}
                                   >
                                     {item.name}
@@ -1906,7 +1551,7 @@ export function PickingPage() {
                                       {item.binLocation}
                                     </p>
                                     {isSkipped && item.skipReason && (
-                                      <p className="text-xs text-warning-300 truncate">
+                                      <p className="text-xs text-warning-700 dark:text-warning-300 truncate">
                                         ({item.skipReason})
                                       </p>
                                     )}
@@ -1919,12 +1564,12 @@ export function PickingPage() {
                                 <p
                                   className={`font-semibold text-sm font-mono ${
                                     isCompleted
-                                      ? 'text-success-300'
+                                      ? 'text-success-700 dark:text-success-300'
                                       : isSkipped
-                                        ? 'text-warning-300'
+                                        ? 'text-warning-700 dark:text-warning-300'
                                         : isCurrent
                                           ? 'text-primary-400'
-                                          : 'text-gray-300'
+                                          : 'text-gray-700 dark:text-gray-300'
                                   }`}
                                 >
                                   {isSkipped
@@ -2001,7 +1646,7 @@ export function PickingPage() {
                     {/* Scan Instruction */}
                     {currentTask.barcode && (
                       <div className="scan-instruction">
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
                           Scan this barcode:{' '}
                           <span className="font-mono font-semibold text-primary-400">
                             {currentTask.barcode}
@@ -2027,7 +1672,7 @@ export function PickingPage() {
                     )}
                     {isViewMode && (
                       <div className="bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 text-center">
-                        <p className="picking-subtitle text-primary-300 text-sm">
+                        <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
                           Interactions are disabled in view-only mode
                         </p>
                       </div>
@@ -2037,7 +1682,9 @@ export function PickingPage() {
               ) : (
                 /* No Current Task */
                 <div className="picking-card rounded-2xl p-8 text-center industrial-corners">
-                  <p className="picking-subtitle text-gray-400">No items to pick</p>
+                  <p className="picking-subtitle text-gray-600 dark:text-gray-400">
+                    No items to pick
+                  </p>
                 </div>
               )}
             </div>

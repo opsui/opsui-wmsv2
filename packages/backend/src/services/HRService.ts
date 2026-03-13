@@ -484,6 +484,190 @@ class HRService {
     return (await hrRepository.timesheets.findById(timesheetId)) as HRTimesheet;
   }
 
+  /**
+   * Get timesheet for employee and specific week
+   * Returns null if not found (doesn't auto-create)
+   */
+  async getEmployeeTimesheetForWeek(
+    employeeId: string,
+    weekStart: string
+  ): Promise<(HRTimesheet & { entries: HRTimesheetEntry[] }) | null> {
+    const weekStartDate = new Date(weekStart);
+    const weekEndDate = new Date(weekStartDate);
+    weekEndDate.setDate(weekEndDate.getDate() + 6);
+
+    const timesheet = await hrRepository.timesheets.findByEmployeeAndPeriod(
+      employeeId,
+      weekStartDate.toISOString().split('T')[0],
+      weekEndDate.toISOString().split('T')[0]
+    );
+
+    if (!timesheet) {
+      return null;
+    }
+
+    return await hrRepository.timesheets.findWithEntries(timesheet.timesheetId);
+  }
+
+  /**
+   * Save or update a draft timesheet
+   * Handles conversion from UI format to database format
+   */
+  async saveDraftTimesheet(data: {
+    timesheetId?: string;
+    employeeId: string;
+    weekStartDate: string;
+    entries: Array<{
+      workDate: string;
+      regularHours: number;
+      overtime1_5Hours: number;
+      overtime2_0Hours: number;
+      breakMinutes: number;
+      notes?: string;
+    }>;
+  }): Promise<HRTimesheet & { entries: HRTimesheetEntry[] }> {
+    const periodStartDate = new Date(data.weekStartDate);
+    const periodEndDate = new Date(periodStartDate);
+    periodEndDate.setDate(periodEndDate.getDate() + 6);
+
+    const timesheetId = data.timesheetId || `TS-${Date.now()}`;
+
+    return await hrRepository.withTransaction(async client => {
+      const dbEntries: HRTimesheetEntry[] = [];
+      let totalRegularHours = 0;
+      let totalOvertimeHours = 0;
+
+      for (const uiEntry of data.entries) {
+        // Regular hours entry
+        if (uiEntry.regularHours > 0) {
+          const entryId = `TSE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          dbEntries.push({
+            entryId,
+            timesheetId,
+            workDate: new Date(uiEntry.workDate),
+            workType: 'REGULAR' as any,
+            hoursWorked: uiEntry.regularHours,
+            breakHours: (uiEntry.breakMinutes || 0) / 60,
+            description: uiEntry.notes || null,
+            taskType: null,
+            orderId: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          totalRegularHours += uiEntry.regularHours;
+        }
+
+        // Overtime 1.5x entry
+        if (uiEntry.overtime1_5Hours > 0) {
+          const entryId = `TSE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          dbEntries.push({
+            entryId,
+            timesheetId,
+            workDate: new Date(uiEntry.workDate),
+            workType: 'OVERTIME_1_5' as any,
+            hoursWorked: uiEntry.overtime1_5Hours,
+            breakHours: 0,
+            description: uiEntry.notes ? `${uiEntry.notes} (OT 1.5x)` : 'Overtime 1.5x',
+            taskType: null,
+            orderId: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          totalOvertimeHours += uiEntry.overtime1_5Hours;
+        }
+
+        // Overtime 2.0x entry
+        if (uiEntry.overtime2_0Hours > 0) {
+          const entryId = `TSE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          dbEntries.push({
+            entryId,
+            timesheetId,
+            workDate: new Date(uiEntry.workDate),
+            workType: 'OVERTIME_2_0' as any,
+            hoursWorked: uiEntry.overtime2_0Hours,
+            breakHours: 0,
+            description: uiEntry.notes ? `${uiEntry.notes} (OT 2.0x)` : 'Overtime 2.0x',
+            taskType: null,
+            orderId: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          totalOvertimeHours += uiEntry.overtime2_0Hours;
+        }
+      }
+
+      // Upsert timesheet header
+      await client.query(
+        `INSERT INTO hr_timesheets (timesheet_id, employee_id, period_start_date, period_end_date,
+         status, total_regular_hours, total_overtime_hours, total_hours)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (timesheet_id)
+         DO UPDATE SET
+           status = EXCLUDED.status,
+           total_regular_hours = EXCLUDED.total_regular_hours,
+           total_overtime_hours = EXCLUDED.total_overtime_hours,
+           total_hours = EXCLUDED.total_hours,
+           updated_at = NOW()`,
+        [
+          timesheetId,
+          data.employeeId,
+          periodStartDate.toISOString().split('T')[0],
+          periodEndDate.toISOString().split('T')[0],
+          'DRAFT',
+          totalRegularHours,
+          totalOvertimeHours,
+          totalRegularHours + totalOvertimeHours,
+        ]
+      );
+
+      // Delete existing entries
+      await client.query('DELETE FROM hr_timesheet_entries WHERE timesheet_id = $1', [timesheetId]);
+
+      // Insert new entries
+      for (const entry of dbEntries) {
+        await client.query(
+          `INSERT INTO hr_timesheet_entries (entry_id, timesheet_id, work_date, work_type, hours_worked,
+           break_hours, description, task_type, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [
+            entry.entryId,
+            entry.timesheetId,
+            entry.workDate,
+            entry.workType,
+            entry.hoursWorked,
+            entry.breakHours,
+            entry.description,
+            entry.taskType,
+            entry.createdAt,
+            entry.updatedAt,
+          ]
+        );
+      }
+
+      return (await hrRepository.timesheets.findWithEntries(timesheetId))!;
+    });
+  }
+
+  /**
+   * Submit a draft timesheet for approval
+   */
+  async submitDraftTimesheet(timesheetId: string, userId: string): Promise<HRTimesheet> {
+    const timesheet = await hrRepository.timesheets.findById(timesheetId);
+    if (!timesheet) {
+      throw new NotFoundError('Timesheet', timesheetId);
+    }
+
+    if (timesheet.status !== 'DRAFT') {
+      throw new Error('Only draft timesheets can be submitted');
+    }
+
+    return (await hrRepository.timesheets.updateStatus(
+      timesheetId,
+      'SUBMITTED',
+      userId
+    )) as HRTimesheet;
+  }
+
   // =========================================================================
   // PAYROLL PROCESSING
   // =========================================================================

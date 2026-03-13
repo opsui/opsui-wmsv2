@@ -230,6 +230,7 @@ export interface Order {
     orderId: string;
     customerId: string;
     customerName: string;
+    customerPoNumber?: string;
     priority: OrderPriority;
     status: OrderStatus;
     createdAt: Date;
@@ -254,6 +255,7 @@ export interface Order {
     discountAmount?: number;
     totalAmount?: number;
     currency?: string;
+    shippingAddress?: Address;
     carrier?: string;
     trackingNumber?: string;
 }
@@ -2140,6 +2142,11 @@ export interface NZCQuote {
     Carrier: string;
     Service: string;
     TotalPrice: number;
+    DeliveryType?: string;
+    CarrierServiceType?: string;
+    IsResidentialDelivery?: boolean;
+    IsRuralDelivery?: boolean;
+    IsSaturdayDelivery?: boolean;
     TransitDays?: number;
     Description?: string;
 }
@@ -2159,6 +2166,9 @@ export interface NZCRateRequest {
         email?: string;
     };
     packages: Array<{
+        packageStockId?: number;
+        name?: string;
+        type?: string;
         length?: number;
         width?: number;
         height?: number;
@@ -2183,6 +2193,8 @@ export interface NZCRateResponse {
  */
 export interface NZCShipmentRequest extends NZCRateRequest {
     quoteId: string;
+    senderReference?: string;
+    printToPrinter?: boolean;
 }
 /**
  * NZC Shipment Response

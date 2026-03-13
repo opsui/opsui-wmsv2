@@ -228,6 +228,11 @@ const exceptionThemeStyles = `
     animation: hero-stat-glow 3s ease-in-out infinite;
   }
 
+  /* Keep the hero stat visible when it also uses staggered entry */
+  .exception-stagger-item.hero-stat-glow {
+    animation: exception-stagger-in 0.3s ease-out forwards, hero-stat-glow 3s ease-in-out infinite;
+  }
+
   /* Industrial typography */
   .exception-display-font {
     font-family: 'Archivo', sans-serif;
@@ -466,6 +471,14 @@ const exceptionThemeStyles = `
     padding: 14px 16px;
   }
 
+  .exception-search-icon {
+    pointer-events: none;
+  }
+
+  .exception-search-input {
+    padding-left: 3rem;
+  }
+
   /* iPhone 14 Pro Max specific fixes */
   @media (max-width: 440px) {
     .exception-hero-grid {
@@ -484,6 +497,10 @@ const exceptionThemeStyles = `
     /* Smaller header text for narrow screens */
     .exception-display-font {
       letter-spacing: -0.04em;
+    }
+
+    .exception-search-input {
+      padding-left: 3.25rem;
     }
   }
 
@@ -1393,14 +1410,14 @@ export function ExceptionsPage() {
                       Search
                     </label>
                     <div className="relative">
-                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                      <MagnifyingGlassIcon className="exception-search-icon absolute left-4 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
                       <input
                         type="text"
                         inputMode="search"
                         placeholder="ID, Order, SKU..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-base sm:text-sm text-white placeholder-gray-600 exception-mono-font focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all exception-mobile-input exception-focus-visible"
+                        className="exception-search-input w-full pr-4 py-3 sm:py-2.5 bg-white/[0.02] border border-white/[0.08] rounded-lg text-base sm:text-sm text-white placeholder-gray-600 exception-mono-font focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.04] transition-all exception-mobile-input exception-focus-visible"
                       />
                     </div>
                   </div>

@@ -4,7 +4,7 @@
   "description": "OpsUI Frontend - Warehouse Operations Management",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config vite.config.ts",
     "prebuild": "cd ../shared && npm run build",
     "build": "vite build",
     "build:analyze": "tsc --noEmitOnError false || true && vite build && open dist/stats.html",

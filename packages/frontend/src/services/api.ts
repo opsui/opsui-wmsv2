@@ -8780,6 +8780,54 @@ export const hrApi = {
   },
 
   /**
+   * Get timesheet for employee and week
+   */
+  getEmployeeTimesheetForWeek: async (employeeId: string, weekStart: string) => {
+    const response = await apiClient.get('/hr/timesheets/employee/' + employeeId, {
+      params: { weekStart },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get current user's timesheet for the week
+   */
+  getMyCurrentTimesheet: async (weekStart: string) => {
+    const response = await apiClient.get('/hr/my-timesheet/current', {
+      params: { weekStart },
+    });
+    return response.data;
+  },
+
+  /**
+   * Save or update a draft timesheet
+   */
+  saveDraftTimesheet: async (data: {
+    timesheetId?: string;
+    employeeId: string;
+    weekStartDate: string;
+    entries: Array<{
+      workDate: string;
+      regularHours: number;
+      overtime1_5Hours: number;
+      overtime2_0Hours: number;
+      breakMinutes: number;
+      notes?: string;
+    }>;
+  }) => {
+    const response = await apiClient.post('/hr/timesheets/draft', data);
+    return response.data;
+  },
+
+  /**
+   * Submit a draft timesheet for approval
+   */
+  submitDraftTimesheet: async (timesheetId: string) => {
+    const response = await apiClient.post(`/hr/timesheets/${timesheetId}/submit`);
+    return response.data;
+  },
+
+  /**
    * Get payroll periods
    */
   getPayrollPeriods: async () => {
