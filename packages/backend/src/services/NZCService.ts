@@ -224,28 +224,41 @@ export class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const rawData = (await response.json()) as Partial<NZCRateResponse>;
+      const rawData = (await response.json()) as unknown;
+      const rawObject =
+        rawData && typeof rawData === 'object' ? (rawData as Partial<NZCRateResponse>) : {};
       const data: NZCRateResponse = {
-        Quotes: Array.isArray(rawData.Quotes) ? rawData.Quotes : [],
-        Suppressed: Array.isArray(rawData.Suppressed) ? rawData.Suppressed : [],
-        Rejected: Array.isArray(rawData.Rejected) ? rawData.Rejected : [],
-        ValidationErrors: rawData.ValidationErrors || {},
+        Quotes: Array.isArray(rawObject.Quotes) ? rawObject.Quotes : [],
+        Suppressed: Array.isArray(rawObject.Suppressed) ? rawObject.Suppressed : [],
+        Rejected: Array.isArray(rawObject.Rejected) ? rawObject.Rejected : [],
+        ValidationErrors:
+          rawObject.ValidationErrors && typeof rawObject.ValidationErrors === 'object'
+            ? rawObject.ValidationErrors
+            : {},
       };
+      const quoteCount = Array.isArray(data.Quotes) ? data.Quotes.length : 0;
+      const rejectedCount = Array.isArray(data.Rejected) ? data.Rejected.length : 0;
+      const suppressedCount = Array.isArray(data.Suppressed) ? data.Suppressed.length : 0;
+      const validationErrorCount =
+        data.ValidationErrors && typeof data.ValidationErrors === 'object'
+          ? Object.keys(data.ValidationErrors).length
+          : 0;
 
       // Log validation errors if any
-      if (data.ValidationErrors && Object.keys(data.ValidationErrors).length > 0) {
+      if (validationErrorCount > 0) {
         logger.warn('[NZC] Rate validation errors', data.ValidationErrors);
       }
 
       // Log rejected quotes if any
-      if (data.Rejected && data.Rejected.length > 0) {
+      if (rejectedCount > 0) {
         logger.warn('[NZC] Rejected quotes', data.Rejected);
       }
 
       logger.info('[NZC] Rates fetched successfully', {
-        quoteCount: data.Quotes.length,
-        rejectedCount: data.Rejected.length,
-        suppressedCount: data.Suppressed.length,
+        quoteCount,
+        rejectedCount,
+        suppressedCount,
+        validationErrorCount,
       });
 
       return data;
