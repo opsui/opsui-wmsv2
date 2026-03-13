@@ -1480,7 +1480,7 @@ export function PickingPage() {
                                   : 'text-gray-800 print:text-black'
                               }
                             >
-                              {line}
+                              {line}{i < previewAddressLines.length - 1 ? ',' : ''}
                             </p>
                           ))
                         ) : (
@@ -1511,7 +1511,7 @@ export function PickingPage() {
                                   : 'text-gray-800 print:text-black'
                               }
                             >
-                              {line}
+                              {line}{i < billToLines.length - 1 ? ',' : ''}
                             </p>
                           ))
                         ) : (
