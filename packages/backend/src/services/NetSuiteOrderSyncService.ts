@@ -2263,6 +2263,27 @@ export class NetSuiteOrderSyncService {
     await this.query(`UPDATE orders SET ${updates.join(', ')} WHERE order_id = $1`, [orderId]);
     this.invalidateOrderLookupCaches();
 
+    // If an order moves back to PENDING, clear all item-level picking/packing progress
+    // so it re-enters the queue as a genuinely fresh order.
+    if (newStatus === 'PENDING') {
+      try {
+        await this.query(
+          `UPDATE order_items
+           SET picked_quantity = 0,
+               verified_quantity = 0,
+               status = 'PENDING'::order_item_status,
+               skip_reason = NULL
+           WHERE order_id = $1`,
+          [orderId]
+        );
+      } catch (error: any) {
+        logger.warn('Failed to reset order_items when moving order back to PENDING', {
+          orderId,
+          error: error.message,
+        });
+      }
+    }
+
     // If an order moves back to PICKED from a later packing/shipping state,
     // clear stale packing verification so the pack flow must be redone.
     if (newStatus === 'PICKED') {

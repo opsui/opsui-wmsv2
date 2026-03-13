@@ -395,6 +395,13 @@ describe('NetSuiteOrderSyncService', () => {
     expect(updateSql).toContain('packer_id = NULL');
     expect(updateSql).toContain('claimed_at = NULL');
     expect(updateSql).toContain('progress = 0');
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('SET picked_quantity = 0'), [
+      'SO70014',
+    ]);
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining("status = 'PENDING'::order_item_status"),
+      ['SO70014']
+    );
   });
 
   it('moves a packing queue order back to picked when the linked fulfillment is only picked', async () => {
