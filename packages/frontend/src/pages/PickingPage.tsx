@@ -38,6 +38,7 @@ import {
   CheckIcon,
   ClipboardDocumentListIcon,
   CubeIcon,
+  DocumentChartBarIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   ForwardIcon,
@@ -1130,6 +1131,304 @@ export function PickingPage() {
   const progressPercent = order?.progress || 0;
   const circumference = 2 * Math.PI * 45; // radius = 45
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
+  if (fulfillmentPreviewOrder) {
+    const previewAddressLines = formatAddressLines(fulfillmentPreviewOrder.shippingAddress);
+    const billToLines = previewAddressLines;
+    const orderDate = fulfillmentPreviewOrder.netsuiteOrderDate
+      ? new Date(fulfillmentPreviewOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
+      : new Date().toLocaleDateString('en-NZ');
+
+    return (
+      <div className="min-h-screen">
+        <style>{`
+          @media print {
+            body * { visibility: hidden !important; }
+            #fulfillment-slip-print, #fulfillment-slip-print * { visibility: visible !important; }
+            #fulfillment-slip-print {
+              position: absolute; inset: 0; width: 100%;
+              background: white !important; color: black !important;
+              padding: 0;
+            }
+            #fulfillment-slip-actions { display: none !important; }
+            .print-hide { display: none !important; }
+          }
+        `}</style>
+
+        <Header />
+        <ResponsiveContainer variant="fluid" padding="lg">
+          <main className="relative z-10 space-y-responsive">
+            <Breadcrumb
+              items={[
+                { label: 'Picking Queue', path: pickingQueuePath },
+                { label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}` },
+              ]}
+            />
+
+            <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
+              <div id="fulfillment-slip-print" className="bg-white text-slate-900">
+                {/* Header Section */}
+                <div className="relative border-b-2 border-slate-200">
+                  {/* Accent stripe */}
+                  <div className="h-2 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-600 print:bg-gray-600" />
+
+                  <div className="px-8 py-6">
+                    <div className="flex items-start justify-between gap-8">
+                      {/* Logo & Company */}
+                      <div className="flex items-start gap-5">
+                        <div className="w-36 h-auto">
+                          <img
+                            src="/arrowhead-logo.svg"
+                            alt="Arrowhead Alarm Products"
+                            className="w-full h-auto object-contain"
+                          />
+                        </div>
+                        <div className="pt-1 text-sm leading-relaxed text-slate-600">
+                          <p className="font-semibold text-slate-800">Arrowhead Alarm Products</p>
+                          <p>1A Emirali Road</p>
+                          <p>Silverdale 0932, Auckland</p>
+                          <p>New Zealand</p>
+                        </div>
+                      </div>
+
+                      {/* Document Title */}
+                      <div className="text-right">
+                        <div className="inline-block">
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600 print:text-gray-600">
+                            Fulfillment Document
+                          </p>
+                          <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900">
+                            Packing Slip
+                          </h1>
+                        </div>
+                        <div className="mt-4 inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-300">
+                          <CalendarDaysIcon className="h-4 w-4 text-slate-400" />
+                          <span className="text-sm font-medium text-slate-700">{orderDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Info Grid */}
+                <div className="px-8 py-5 bg-slate-50 border-b border-slate-200 print:bg-white">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Sales Order</p>
+                      <p className="font-mono font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fulfillment #</p>
+                      <p className="font-mono font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Customer PO</p>
+                      <p className="font-mono font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.customerPoNumber || '—'}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Account #</p>
+                      <p className="font-mono font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.customerId || '—'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Addresses Section */}
+                <div className="px-8 py-6">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* Ship To */}
+                    <div className="relative">
+                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-violet-500 rounded-full print:bg-gray-400" />
+                      <div className="flex items-center gap-2 mb-3">
+                        <TruckIcon className="h-5 w-5 text-purple-500 print:text-gray-500" />
+                        <h2 className="text-lg font-bold text-slate-900">Ship To</h2>
+                      </div>
+                      <div className="space-y-0.5 text-sm text-slate-700 pl-1">
+                        {previewAddressLines.length > 0 ? (
+                          previewAddressLines.map((line, i) => (
+                            <p key={`ship-${line}`} className={i === 0 ? 'font-semibold text-slate-900' : ''}>
+                              {line}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-slate-400 italic">No shipping details available</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bill To */}
+                    <div className="relative">
+                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full print:bg-gray-300" />
+                      <div className="flex items-center gap-2 mb-3">
+                        <DocumentChartBarIcon className="h-5 w-5 text-slate-400 print:text-gray-500" />
+                        <h2 className="text-lg font-bold text-slate-900">Bill To</h2>
+                      </div>
+                      <div className="space-y-0.5 text-sm text-slate-700 pl-1">
+                        {billToLines.length > 0 ? (
+                          billToLines.map((line, i) => (
+                            <p key={`bill-${line}`} className={i === 0 ? 'font-semibold text-slate-900' : ''}>
+                              {line}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-slate-400 italic">Same as shipping address</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shipping Method Badge */}
+                  <div className="mt-6 flex items-center gap-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Shipping Method</span>
+                    <span className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold print:bg-gray-100 print:text-gray-700">
+                      <TruckIcon className="h-3.5 w-3.5" />
+                      {fulfillmentPreviewOrder.carrier || 'Warehouse Pick'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Items Table */}
+                <div className="px-8 pb-6">
+                  <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none">
+                    {/* Table Header */}
+                    <div className="bg-slate-800 print:bg-gray-200">
+                      <div className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider text-white print:text-gray-700">
+                        <span className="col-span-3">Item / SKU</span>
+                        <span className="col-span-5">Description</span>
+                        <span className="col-span-1 text-center">Ord</span>
+                        <span className="col-span-1 text-center">B/O</span>
+                        <span className="col-span-2 text-center">Shipped</span>
+                      </div>
+                    </div>
+
+                    {/* Table Body */}
+                    <div className="divide-y divide-slate-100 print:divide-gray-200">
+                      {(fulfillmentPreviewOrder.items || []).map((item: any, idx: number) => (
+                        <div
+                          key={item.orderItemId}
+                          className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
+                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'
+                          } print:bg-white`}
+                        >
+                          <div className="col-span-3">
+                            <p className="font-mono font-bold text-slate-900">{item.sku}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">Bin: {formatBinLocation(item.binLocation)}</p>
+                          </div>
+                          <div className="col-span-5">
+                            <p className="text-slate-700 font-medium">{item.name}</p>
+                          </div>
+                          <div className="col-span-1 text-center font-semibold text-slate-600">
+                            {item.quantity}
+                          </div>
+                          <div className="col-span-1 text-center text-slate-400">
+                            0
+                          </div>
+                          <div className="col-span-2 text-center">
+                            <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md bg-green-100 text-green-700 font-bold print:bg-gray-100 print:text-gray-700">
+                              {item.pickedQuantity}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Table Footer */}
+                    <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 print:bg-white">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <ClipboardDocumentListIcon className="h-4 w-4" />
+                          <span>Total Items:</span>
+                          <span className="font-bold text-slate-900">
+                            {(fulfillmentPreviewOrder.items || []).reduce(
+                              (sum: number, item: any) => sum + item.pickedQuantity,
+                              0
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <span>SKUs:</span>
+                          <span className="font-bold text-slate-900">
+                            {(fulfillmentPreviewOrder.items || []).length}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Section */}
+                <div className="px-8 py-6 border-t-2 border-slate-200">
+                  <div className="flex items-end justify-between">
+                    {/* Picked By */}
+                    <div className="text-sm">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Picked By</p>
+                      <p className="font-semibold text-slate-900">
+                        {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
+                      </p>
+                      <p className="text-slate-500 text-xs mt-1">
+                        {new Date().toLocaleString('en-NZ', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+
+                    {/* Signature Areas */}
+                    <div className="flex gap-12">
+                      <div className="text-center">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Packed By</p>
+                        <div className="w-36 border-b-2 border-slate-300 h-8" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Verified By</p>
+                        <div className="w-36 border-b-2 border-slate-300 h-8" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Document Footer */}
+                <div className="px-8 py-4 bg-slate-100 border-t border-slate-200 print:bg-white">
+                  <p className="text-center text-xs text-slate-400">
+                    This document was generated electronically from OpsUI Warehouse Management System
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons (not printed) */}
+              <div
+                id="fulfillment-slip-actions"
+                className="flex flex-wrap items-center justify-end gap-3 border-t border-white/[0.08] px-6 py-5"
+              >
+                <Button
+                  variant="secondary"
+                  onClick={handlePrintFulfillmentSlip}
+                  isLoading={isPrintingFulfillmentSlip}
+                >
+                  <PrinterIcon className="h-5 w-5 mr-2" />
+                  Print Packing Slip
+                </Button>
+                <Button variant="success" onClick={() => navigate('/orders?status=PENDING')}>
+                  Done
+                </Button>
+              </div>
+            </div>
+          </main>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
 
   return (
     <div className="picking-live-page min-h-screen">
