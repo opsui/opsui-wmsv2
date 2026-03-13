@@ -293,7 +293,7 @@ export class OrderService {
 
   private async syncNetSuiteShipment(
     orderId: string,
-    dto: { carrier: string; trackingNumber: string }
+    dto: { carrier: string; trackingNumber: string; packageWeight?: number }
   ): Promise<void> {
     const orderResult = await query(
       `SELECT
@@ -333,6 +333,7 @@ export class OrderService {
     await integration.client.updateItemFulfillmentShipment(order.netsuiteIfInternalId, {
       trackingNumber: dto.trackingNumber,
       carrier: dto.carrier,
+      packageWeight: dto.packageWeight,
     });
 
     logger.info('Updated NetSuite fulfillment to shipped with tracking', {
@@ -1229,7 +1230,7 @@ export class OrderService {
 
   async shipOrder(
     orderId: string,
-    dto: { carrier: string; trackingNumber: string; shippedBy: string }
+    dto: { carrier: string; trackingNumber: string; shippedBy: string; packageWeight?: number }
   ): Promise<Order> {
     logger.info('Shipping order', {
       orderId,

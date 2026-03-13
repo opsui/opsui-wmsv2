@@ -1081,7 +1081,7 @@ router.post(
       return;
     }
 
-    const { carrier, tracking_number } = req.body;
+    const { carrier, tracking_number, package_weight } = req.body;
 
     if (!carrier || !tracking_number) {
       res.status(400).json({
@@ -1096,6 +1096,12 @@ router.post(
         carrier,
         trackingNumber: tracking_number,
         shippedBy: req.user.userId,
+        packageWeight:
+          typeof package_weight === 'number'
+            ? package_weight
+            : package_weight != null
+              ? Number(package_weight)
+              : undefined,
       });
       res.json(order);
     } catch (error: any) {

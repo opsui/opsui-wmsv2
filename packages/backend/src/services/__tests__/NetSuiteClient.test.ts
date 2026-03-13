@@ -180,7 +180,7 @@ describe('NetSuiteClient', () => {
       '<platformCore:reference xsi:type="platformCore:InitializeRef" type="salesOrder" internalId="1604613"/>'
     );
 
-    const [, addEnvelope] = soapRequest.mock.calls[1];
+    const [, addEnvelope] = soapRequest.mock.calls[1] as [string, string];
     expect(addEnvelope).toContain('<tranSales:itemReceive>true</tranSales:itemReceive>');
     expect(addEnvelope).toContain('<tranSales:shipStatus>_picked</tranSales:shipStatus>');
   });
@@ -189,8 +189,7 @@ describe('NetSuiteClient', () => {
     const client = new NetSuiteClient(credentials);
     const soapRequest = jest.spyOn(client as any, 'soapRequest');
 
-    soapRequest
-      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <getResponse>
           <platformCore:status isSuccess="true" />
           <record xsi:type="tranSales:ItemFulfillment" internalId="1609999">
@@ -201,8 +200,7 @@ describe('NetSuiteClient', () => {
               </tranSales:package>
             </tranSales:packageList>
           </record>
-        </getResponse>`)
-      .mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <updateResponse>
           <platformCore:status isSuccess="true" />
         </updateResponse>`);
@@ -210,6 +208,7 @@ describe('NetSuiteClient', () => {
     await client.updateItemFulfillmentShipment('1609999', {
       trackingNumber: 'BYAF038638',
       carrier: 'NZ Couriers',
+      packageWeight: 2.5,
     });
 
     const [, updateEnvelope] = soapRequest.mock.calls[1];
@@ -217,7 +216,10 @@ describe('NetSuiteClient', () => {
     expect(updateEnvelope).toContain(
       '<tranSales:packageTrackingNumber>BYAF038638</tranSales:packageTrackingNumber>'
     );
-    expect(updateEnvelope).toContain('<tranSales:packageDescr>NZ Couriers</tranSales:packageDescr>');
+    expect(updateEnvelope).toContain(
+      '<tranSales:packageDescr>NZ Couriers</tranSales:packageDescr>'
+    );
+    expect(updateEnvelope).toContain('<tranSales:packageWeight>2.5</tranSales:packageWeight>');
   });
 
   it('only marks receivable fulfillment lines for receipt', async () => {
@@ -247,11 +249,57 @@ describe('NetSuiteClient', () => {
 
     await client.createItemFulfillment('1604613', {});
 
-    const [, addEnvelope] = soapRequest.mock.calls[1];
+    const [, addEnvelope] = soapRequest.mock.calls[1] as [string, string];
     expect(addEnvelope).toContain('<tranSales:quantityRemaining>1</tranSales:quantityRemaining>');
     expect(addEnvelope).toContain('<tranSales:itemReceive>true</tranSales:itemReceive>');
     expect(addEnvelope).toContain('<tranSales:quantityRemaining>0</tranSales:quantityRemaining>');
     expect(addEnvelope).toContain('<tranSales:itemReceive>false</tranSales:itemReceive>');
+  });
+
+  it('marks receivable fulfillment lines correctly when NetSuite line items contain nested item refs', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest');
+
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <initializeResponse>
+          <platformCore:status isSuccess="true" />
+          <record xsi:type="tranSales:ItemFulfillment">
+            <tranSales:itemList>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:itemName>EC-TOUCH W</tranSales:itemName>
+                <tranSales:item internalId="2311">
+                  <platformCore:name>EC-TOUCH W</platformCore:name>
+                </tranSales:item>
+                <tranSales:orderLine>1</tranSales:orderLine>
+                <tranSales:quantityRemaining>1.0</tranSales:quantityRemaining>
+              </tranSales:item>
+              <tranSales:item>
+                <tranSales:itemReceive>false</tranSales:itemReceive>
+                <tranSales:itemName>EC-KIT KP W</tranSales:itemName>
+                <tranSales:item internalId="3038">
+                  <platformCore:name>EC-KIT KP W</platformCore:name>
+                </tranSales:item>
+                <tranSales:orderLine>15</tranSales:orderLine>
+                <tranSales:quantityRemaining>1.0</tranSales:quantityRemaining>
+              </tranSales:item>
+            </tranSales:itemList>
+          </record>
+        </initializeResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+        <addResponse>
+          <platformCore:status isSuccess="true" />
+          <baseRef internalId="1610001" />
+        </addResponse>`);
+
+    await client.createItemFulfillment('1605078', {});
+
+    const [, addEnvelope] = soapRequest.mock.calls[1];
+    expect(addEnvelope).toContain('<tranSales:orderLine>1</tranSales:orderLine>');
+    expect(addEnvelope).toContain('<tranSales:orderLine>15</tranSales:orderLine>');
+
+    const enabledReceives =
+      String(addEnvelope).match(/<tranSales:itemReceive>true<\/tranSales:itemReceive>/g) || [];
+    expect(enabledReceives).toHaveLength(2);
   });
 
   it('fails clearly when NetSuite initialize returns no receivable lines', async () => {

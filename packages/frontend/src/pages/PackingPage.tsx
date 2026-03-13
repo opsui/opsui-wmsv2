@@ -314,9 +314,14 @@ export function PackingPage() {
     };
   };
 
-  const printNZCLabel = (label: { data: string; contentType: string }) => {
+  const printNZCLabel = (
+    label: { data: string; contentType: string },
+    existingPrintWindow?: Window | null
+  ) => {
     const labelSource = getNzcLabelSource(label);
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
+    const printWindow =
+      existingPrintWindow ||
+      window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
     if (!printWindow) {
       showToast('Popup blocked. Use Print Label to print manually.', 'warning');
       return;
@@ -1092,6 +1097,9 @@ export function PackingPage() {
     }
 
     setIsCreatingShipment(true);
+    const preparedPrintWindow = isNZCCarrier
+      ? window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200')
+      : null;
 
     try {
       const shipFromAddress: Address = {
@@ -1142,7 +1150,7 @@ export function PackingPage() {
 
         const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
         setNzcLabel(label);
-        printNZCLabel(label);
+        printNZCLabel(label, preparedPrintWindow);
 
         showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
 
@@ -1178,6 +1186,7 @@ export function PackingPage() {
           orderId,
           carrier: selectedCarrier?.name || selectedCarrier?.carrierCode || 'NZ Couriers',
           trackingNumber: connote,
+          packageWeight: parseFloat(totalWeight),
         });
 
         showToast('Order packed and shipped successfully!', 'success');
@@ -1217,6 +1226,9 @@ export function PackingPage() {
         navigate('/packing');
       }
     } catch (error) {
+      if (preparedPrintWindow && !preparedPrintWindow.closed) {
+        preparedPrintWindow.close();
+      }
       showToast(error instanceof Error ? error.message : 'Failed to create shipment', 'error');
     } finally {
       setIsCreatingShipment(false);

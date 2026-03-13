@@ -1182,7 +1182,7 @@ export class NetSuiteClient {
 
   async updateItemFulfillmentShipment(
     itemFulfillmentId: string,
-    shipmentData: { trackingNumber: string; carrier?: string }
+    shipmentData: { trackingNumber: string; carrier?: string; packageWeight?: number }
   ): Promise<void> {
     const body = [
       '<tns:get>',
@@ -1231,11 +1231,15 @@ export class NetSuiteClient {
 
   private applyShipmentDetailsToFulfillmentRecord(
     recordXml: string,
-    shipmentData: { trackingNumber: string; carrier?: string }
+    shipmentData: { trackingNumber: string; carrier?: string; packageWeight?: number }
   ): string {
     let updatedRecord = recordXml;
     const escapedTrackingNumber = this.escapeXml(shipmentData.trackingNumber);
     const escapedCarrier = shipmentData.carrier ? this.escapeXml(shipmentData.carrier) : '';
+    const normalizedPackageWeight =
+      typeof shipmentData.packageWeight === 'number' && shipmentData.packageWeight > 0
+        ? shipmentData.packageWeight
+        : 1;
 
     if (updatedRecord.includes('<tranSales:shipStatus>')) {
       updatedRecord = updatedRecord.replace(
@@ -1252,6 +1256,7 @@ export class NetSuiteClient {
     const packagePayload = [
       '<tranSales:package>',
       escapedCarrier ? `<tranSales:packageDescr>${escapedCarrier}</tranSales:packageDescr>` : '',
+      `<tranSales:packageWeight>${normalizedPackageWeight}</tranSales:packageWeight>`,
       `<tranSales:packageTrackingNumber>${escapedTrackingNumber}</tranSales:packageTrackingNumber>`,
       '</tranSales:package>',
     ]
@@ -1288,7 +1293,7 @@ export class NetSuiteClient {
     const lineSelections = this.parseFulfillmentLineSelections(fulfillmentData);
 
     const recordXml = initializedRecord.replace(
-      /<tranSales:item>([\s\S]*?)<\/tranSales:item>/g,
+      /<tranSales:item>([\s\S]*?<tranSales:quantityRemaining>[\s\S]*?<\/tranSales:quantityRemaining>[\s\S]*?)<\/tranSales:item>/g,
       (fullMatch, itemBody: string) => {
         const quantityRemainingRaw = this.extractTag(itemBody, 'quantityRemaining') || '0';
         const quantityRemaining = Number(quantityRemainingRaw);

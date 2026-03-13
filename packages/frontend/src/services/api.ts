@@ -7619,14 +7619,17 @@ export const useShipOrder = () => {
       orderId,
       carrier,
       trackingNumber,
+      packageWeight,
     }: {
       orderId: string;
       carrier: string;
       trackingNumber: string;
+      packageWeight?: number;
     }) => {
       const response = await apiClient.post(`/orders/${orderId}/ship`, {
         carrier,
         tracking_number: trackingNumber,
+        package_weight: packageWeight,
       });
       return response.data;
     },
