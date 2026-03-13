@@ -291,12 +291,40 @@ export class NetSuiteClient {
     return records;
   }
 
+  private normalizeNetSuiteBusinessDate(value: string): string {
+    if (!value) {
+      return value;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return value;
+    }
+
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Pacific/Auckland',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(parsed);
+
+    const year = parts.find(part => part.type === 'year')?.value;
+    const month = parts.find(part => part.type === 'month')?.value;
+    const day = parts.find(part => part.type === 'day')?.value;
+
+    return year && month && day ? `${year}-${month}-${day}` : value;
+  }
+
   private parseSalesOrderFromXml(recordXml: string): NetSuiteSalesOrder {
     const internalId = this.extractAttribute(recordXml, 'record', 'internalId');
     const tranId = this.extractTag(recordXml, 'tranId');
     const otherRefNum = this.extractTag(recordXml, 'otherRefNum');
-    const tranDate = this.extractTag(recordXml, 'tranDate');
-    const shipDate = this.extractTag(recordXml, 'shipDate');
+    const tranDate = this.normalizeNetSuiteBusinessDate(this.extractTag(recordXml, 'tranDate'));
+    const shipDate = this.normalizeNetSuiteBusinessDate(this.extractTag(recordXml, 'shipDate'));
     const memo = this.extractTag(recordXml, 'memo');
     const subTotal = parseFloat(this.extractTag(recordXml, 'subTotal')) || undefined;
     const total = parseFloat(this.extractTag(recordXml, 'total')) || undefined;
@@ -1188,7 +1216,8 @@ export class NetSuiteClient {
 
     if (!updateResponse.includes('isSuccess="true"')) {
       const fault =
-        this.extractTag(updateResponse, 'faultstring') || this.extractTag(updateResponse, 'message');
+        this.extractTag(updateResponse, 'faultstring') ||
+        this.extractTag(updateResponse, 'message');
       throw new Error(
         `Failed to update item fulfillment ${itemFulfillmentId}: ${fault || 'Unknown error'}`
       );
