@@ -223,15 +223,17 @@ export function PackingPage() {
   const trackingDefault = [order?.netsuiteSoTranId || order?.orderId, order?.customerPoNumber]
     .filter(Boolean)
     .join(', ');
-  const carriersWithFallback = carriers.some(
+  const carrierList: Carrier[] = Array.isArray(carriers) ? carriers : [];
+  const nzcStockSizeList: NzcStockSize[] = Array.isArray(nzcStockSizes) ? nzcStockSizes : [];
+  const carriersWithFallback = carrierList.some(
     (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
   )
-    ? carriers
-    : [...carriers, NZC_CARRIER_FALLBACK];
-  const nzcPackageOptions = nzcStockSizes.length
+    ? carrierList
+    : [...carrierList, NZC_CARRIER_FALLBACK];
+  const nzcPackageOptions = nzcStockSizeList.length
     ? [
         NZC_PACKAGE_PRESETS[0],
-        ...nzcStockSizes.map((stock: NzcStockSize) => ({
+        ...nzcStockSizeList.map((stock: NzcStockSize) => ({
           id: String(stock.PackageStockId || stock.Name || 'UNKNOWN'),
           label: stock.Name || 'NZC Stock',
           packageStockId: stock.PackageStockId,
@@ -282,6 +284,7 @@ export function PackingPage() {
       },
     ];
   };
+  const nzcRateList = Array.isArray(nzcRates) ? nzcRates : [];
 
   const printNZCLabel = (label: { data: string; contentType: string }) => {
     const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
@@ -1765,7 +1768,7 @@ export function PackingPage() {
                             {nzcRateError}
                           </div>
                         )}
-                        {!isFetchingRates && !nzcRateError && nzcRates.length === 0 && (
+                        {!isFetchingRates && !nzcRateError && nzcRateList.length === 0 && (
                           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
                             No NZC rates available yet. Check the shipping address, package stock,
                             units, and weight.
@@ -1773,7 +1776,7 @@ export function PackingPage() {
                         )}
                         {!isFetchingRates && (
                           <div className="space-y-2">
-                            {nzcRates.map(quote => (
+                            {nzcRateList.map(quote => (
                               <div
                                 key={quote.QuoteId}
                                 className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
