@@ -376,7 +376,6 @@ export function PackingPage() {
       } catch (error: any) {
         const errorMessage = error?.response?.data?.error || error?.message || '';
         const isAlreadyPackingRace =
-          error?.response?.status === 409 &&
           typeof errorMessage === 'string' &&
           errorMessage.includes('current status: PACKING');
 
@@ -402,6 +401,7 @@ export function PackingPage() {
       console.log('[PackingPage] Order claimed for packing:', data);
       hasClaimedRef.current = true;
       isClaimingRef.current = false;
+      setClaimError(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
     },
