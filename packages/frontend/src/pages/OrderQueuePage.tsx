@@ -1161,7 +1161,30 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             title={`Reload ${mode} queue`}
             aria-label={`Reload ${mode} queue`}
           >
-            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
+            {noMotion ? (
+              <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
+            ) : (
+              <motion.span
+                animate={isReloading ? { rotate: 360 } : { rotate: 0 }}
+                transition={
+                  isReloading
+                    ? {
+                        rotate: {
+                          duration: 0.8,
+                          ease: 'linear',
+                          repeat: Infinity,
+                        },
+                      }
+                    : {
+                        duration: 0.2,
+                        ease: 'easeOut',
+                      }
+                }
+                className="flex items-center justify-center origin-center"
+              >
+                <ArrowPathIcon className="h-4 w-4" />
+              </motion.span>
+            )}
           </Button>
         </div>
 
