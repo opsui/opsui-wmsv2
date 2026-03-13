@@ -284,6 +284,7 @@ export function PackingPage() {
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
   const isClaimingRef = useRef(false);
+  const packingSessionActiveRef = useRef(false);
 
   const getNzcPresetById = (presetId: string) =>
     nzcPackageOptions.find(preset => preset.id === presetId);
@@ -464,6 +465,7 @@ export function PackingPage() {
     onSuccess: data => {
       console.log('[PackingPage] Order claimed for packing:', data);
       hasClaimedRef.current = true;
+      packingSessionActiveRef.current = true;
       isClaimingRef.current = false;
       setClaimError(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -482,6 +484,7 @@ export function PackingPage() {
   useEffect(() => {
     hasClaimedRef.current = false;
     isClaimingRef.current = false;
+    packingSessionActiveRef.current = false;
     setClaimError(null);
   }, [orderId]);
 
@@ -525,6 +528,9 @@ export function PackingPage() {
       if (isAlreadyClaimed || isReadyForPacking) {
         console.log(`[PackingPage] Order already claimed or ready for packing: ${orderId}`);
         hasClaimedRef.current = true;
+        if (!order.packerId || order.packerId === currentUserId) {
+          packingSessionActiveRef.current = true;
+        }
       } else if (order.status === 'PICKED') {
         if (order.packerId && order.packerId !== currentUserId) {
           console.log(
@@ -602,10 +608,18 @@ export function PackingPage() {
     if (allVerified && !showShippingForm) {
       console.log('[PackingPage] All items verified, auto-showing shipping form');
       setShowShippingForm(true);
-    } else if (!allVerified && showShippingForm) {
+      return;
+    }
+
+    const shouldHoldShippingForm =
+      packingSessionActiveRef.current &&
+      !!order &&
+      [OrderStatus.PICKED, OrderStatus.PACKING, OrderStatus.PACKED].includes(order.status);
+
+    if (!allVerified && showShippingForm && !shouldHoldShippingForm) {
       setShowShippingForm(false);
     }
-  }, [allVerified]);
+  }, [allVerified, order, showShippingForm]);
 
   // Scroll shipping form into view when it appears
   useEffect(() => {
@@ -1028,6 +1042,7 @@ export function PackingPage() {
       });
 
       showToast('Item skipped!', 'warning');
+      setShowShippingForm(false);
       setShowSkipModal(false);
       setSkipItemIndex(null);
       setSkipReason('');
@@ -1128,6 +1143,7 @@ export function PackingPage() {
         });
 
         showToast('Verification undone!', 'success');
+        setShowShippingForm(false);
         queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
         await refetch();
 
@@ -1429,6 +1445,7 @@ export function PackingPage() {
       setShowUnclaimModal(false);
       hasClaimedRef.current = false;
       isClaimingRef.current = false;
+      packingSessionActiveRef.current = false;
       setClaimError(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['orders', 'packing-queue'] });
