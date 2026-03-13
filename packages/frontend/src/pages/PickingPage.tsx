@@ -102,6 +102,7 @@ export function PickingPage() {
   const [showUndoPickModal, setShowUndoPickModal] = useState(false);
   const [isUndoingPick, setIsUndoingPick] = useState(false);
   const [undoPickItemIndex, setUndoPickItemIndex] = useState<number | null>(null);
+  const pickingQueuePath = '/orders?status=PICKING';
 
   // Confirm dialog states
   const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{
@@ -481,7 +482,7 @@ export function PickingPage() {
           <h2 className="picking-title text-2xl text-white mb-3">Cannot Start Picking</h2>
           <p className="picking-subtitle text-gray-400 mb-6">{claimError}</p>
           <div className="flex gap-3 justify-center">
-            <Button variant="secondary" onClick={() => navigate('/orders')}>
+            <Button variant="secondary" onClick={() => navigate(pickingQueuePath)}>
               Back to Queue
             </Button>
             <Button
@@ -524,7 +525,7 @@ export function PickingPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
           <p className="picking-subtitle text-gray-400 mb-6">Order not found</p>
-          <Button onClick={() => navigate('/orders')}>Back to Queue</Button>
+          <Button onClick={() => navigate(pickingQueuePath)}>Back to Queue</Button>
         </div>
       </div>
     );
@@ -659,7 +660,7 @@ export function PickingPage() {
         sessionStorage.removeItem(pickingTaskStorageKey);
       }
       showToast('Order completed!', 'success');
-      navigate('/orders');
+      navigate('/orders?status=PENDING');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }
@@ -679,7 +680,7 @@ export function PickingPage() {
       }
       showToast('Order completed!', 'success');
       setCompleteOrderConfirm({ isOpen: false, skippedItems: [] });
-      navigate('/orders');
+      navigate('/orders?status=PENDING');
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }

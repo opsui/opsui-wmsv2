@@ -201,6 +201,7 @@ export function PackingPage() {
   ]);
   const [manualAddressEditEnabled, setManualAddressEditEnabled] = useState(false);
   const [confirmManualAddressEdit, setConfirmManualAddressEdit] = useState(false);
+  const packingQueuePath = '/packing?status=PACKING';
 
   // Helper to convert lbs to kg for NZC API
   const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
@@ -777,7 +778,7 @@ export function PackingPage() {
           <h2 className="picking-title text-2xl text-white mb-3">Cannot Start Packing</h2>
           <p className="picking-subtitle text-gray-400 mb-6">{claimError}</p>
           <div className="flex gap-3 justify-center">
-            <Button variant="secondary" onClick={() => navigate('/packing')}>
+            <Button variant="secondary" onClick={() => navigate(packingQueuePath)}>
               Back to Queue
             </Button>
             <Button
@@ -820,7 +821,7 @@ export function PackingPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
           <p className="picking-subtitle text-gray-400 mb-6">Order not found</p>
-          <Button onClick={() => navigate('/packing')}>Back to Queue</Button>
+          <Button onClick={() => navigate(packingQueuePath)}>Back to Queue</Button>
         </div>
       </div>
     );
@@ -1304,7 +1305,7 @@ export function PackingPage() {
         });
 
         showToast('Order packed and shipped successfully!', 'success');
-        navigate('/packing');
+        navigate(packingQueuePath);
       } else {
         const shipmentResponse = await apiClient.post('/shipping/shipments', {
           orderId,
@@ -1337,7 +1338,7 @@ export function PackingPage() {
         });
 
         showToast('Order packed and shipped successfully!', 'success');
-        navigate('/packing');
+        navigate(packingQueuePath);
       }
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to create shipment', 'error');
@@ -1421,7 +1422,7 @@ export function PackingPage() {
       queryClient.invalidateQueries({ queryKey: ['orders', 'packing-queue'] });
       queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
       queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
-      navigate('/packing');
+      navigate(packingQueuePath);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Failed to unclaim order';
       showToast(errorMsg, 'error');
@@ -2135,7 +2136,7 @@ export function PackingPage() {
                             <Button
                               variant="success"
                               size="sm"
-                              onClick={() => navigate('/packing')}
+                              onClick={() => navigate(packingQueuePath)}
                             >
                               Done
                             </Button>
