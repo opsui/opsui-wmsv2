@@ -57,6 +57,38 @@ export type QueueMode = 'picking' | 'packing';
 const STANDARD_QUEUE_REFETCH_MS = 5000;
 const PERFORMANCE_QUEUE_REFETCH_MS = 15000;
 
+function formatNetSuiteOrderDate(value: string | Date | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    const isoDateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoDateMatch) {
+      const [, year, month, day] = isoDateMatch;
+      const utcDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+      return utcDate.toLocaleDateString('en-NZ', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
+    }
+  }
+
+  const parsedDate = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  return parsedDate.toLocaleDateString('en-NZ', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 // Per-mode configuration
 const MODE_CONFIG = {
   picking: {
@@ -430,13 +462,7 @@ function OrderCard({
   );
   const locationLabel = locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
   const rawNetSuiteOrderDate = order.netsuiteOrderDate || order.netsuite_order_date;
-  const netsuiteOrderDateLabel = rawNetSuiteOrderDate
-    ? new Date(rawNetSuiteOrderDate).toLocaleDateString('en-NZ', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    : null;
+  const netsuiteOrderDateLabel = formatNetSuiteOrderDate(rawNetSuiteOrderDate);
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
@@ -874,7 +900,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   // Minimum spin duration for smooth reload animation
   const [isManualReloading, setIsManualReloading] = useState(false);
   const manualReloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isReloading = isManualReloading || activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
+  const isReloading =
+    isManualReloading || activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
 
   // Cleanup timeout on unmount
   useEffect(() => {
