@@ -356,6 +356,7 @@ export class NetSuiteOrderSyncService {
     const columns = [
       { name: 'netsuite_so_internal_id', type: 'VARCHAR(50)' },
       { name: 'netsuite_so_tran_id', type: 'VARCHAR(50)' },
+      { name: 'netsuite_order_date', type: 'DATE' },
       { name: 'netsuite_if_internal_id', type: 'VARCHAR(50)' },
       { name: 'netsuite_if_tran_id', type: 'VARCHAR(50)' },
       { name: 'netsuite_last_synced_at', type: 'TIMESTAMP WITH TIME ZONE' },
@@ -1393,9 +1394,16 @@ export class NetSuiteOrderSyncService {
             `UPDATE orders
              SET subtotal = CASE WHEN subtotal IS NULL OR subtotal = 0 THEN $1 ELSE subtotal END,
                  total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END,
-                 customer_po_number = COALESCE(customer_po_number, $4)
+                 customer_po_number = COALESCE(customer_po_number, $4),
+                 netsuite_order_date = COALESCE(netsuite_order_date, $5)
              WHERE order_id = $3`,
-            [derivedSubtotal, derivedTotal, existing.orderId, parentSalesOrder.otherRefNum || null]
+            [
+              derivedSubtotal,
+              derivedTotal,
+              existing.orderId,
+              parentSalesOrder.otherRefNum || null,
+              parentSalesOrder.tranDate || null,
+            ]
           );
         } catch {
           /* safe to ignore */
@@ -1471,10 +1479,17 @@ export class NetSuiteOrderSyncService {
                              netsuite_so_tran_id = COALESCE(netsuite_so_tran_id, $2),
                              netsuite_source = 'NETSUITE',
                              customer_po_number = COALESCE(customer_po_number, $4),
+                             netsuite_order_date = COALESCE(netsuite_order_date, $5),
                              subtotal = COALESCE(subtotal, (SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = $3)),
                              total_amount = COALESCE(total_amount, (SELECT COALESCE(SUM(line_total), 0) FROM order_items WHERE order_id = $3))
            WHERE order_id = $3`,
-          [soInternalId, tranId, existing.orderId, salesOrder.otherRefNum || null]
+          [
+            soInternalId,
+            tranId,
+            existing.orderId,
+            salesOrder.otherRefNum || null,
+            salesOrder.tranDate || null,
+          ]
         );
       } catch {
         /* safe to ignore */
@@ -1599,9 +1614,16 @@ export class NetSuiteOrderSyncService {
           `UPDATE orders
            SET subtotal = CASE WHEN subtotal IS NULL OR subtotal = 0 THEN $1 ELSE subtotal END,
                total_amount = CASE WHEN total_amount IS NULL OR total_amount = 0 THEN $2 ELSE total_amount END,
-               customer_po_number = COALESCE(customer_po_number, $4)
+               customer_po_number = COALESCE(customer_po_number, $4),
+               netsuite_order_date = COALESCE(netsuite_order_date, $5)
            WHERE order_id = $3`,
-          [derivedSubtotal, derivedTotal, existing.orderId, parentSalesOrder?.otherRefNum || null]
+          [
+            derivedSubtotal,
+            derivedTotal,
+            existing.orderId,
+            parentSalesOrder?.otherRefNum || null,
+            parentSalesOrder?.tranDate || null,
+          ]
         );
       } catch {
         /* safe to ignore */
@@ -2160,7 +2182,7 @@ export class NetSuiteOrderSyncService {
     await this.query(
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
-        shipping_address, customer_email, organization_id, customer_po_number,
+        shipping_address, customer_email, organization_id, customer_po_number, netsuite_order_date,
         subtotal, total_amount,
         netsuite_so_internal_id, netsuite_so_tran_id,
         netsuite_if_internal_id, netsuite_if_tran_id,
@@ -2168,11 +2190,11 @@ export class NetSuiteOrderSyncService {
         picked_at, shipped_at, packed_at,
         created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5::order_status, $6, $7, $8, $9, $10,
-        $11, $12,
-        $13, $14, $15, $16,
-        'NETSUITE', $17,
-        $18, $19, $20,
+        $1, $2, $3, $4, $5::order_status, $6, $7, $8, $9, $10, $11,
+        $12, $13,
+        $14, $15, $16, $17,
+        'NETSUITE', $18,
+        $19, $20, $21,
         NOW(), NOW()
       )`,
       [
@@ -2186,6 +2208,7 @@ export class NetSuiteOrderSyncService {
         `netsuite:${salesOrder.tranId}`,
         this.organizationId,
         salesOrder.otherRefNum || null,
+        salesOrder.tranDate || null,
         subtotal,
         totalAmount,
         soInternalId,
@@ -2286,16 +2309,16 @@ export class NetSuiteOrderSyncService {
     await this.query(
       `INSERT INTO orders (
         order_id, customer_id, customer_name, priority, status, progress,
-        shipping_address, customer_email, organization_id,
+        shipping_address, customer_email, organization_id, netsuite_order_date,
         netsuite_so_internal_id, netsuite_so_tran_id, netsuite_if_internal_id, netsuite_if_tran_id,
         netsuite_source, netsuite_last_synced_at,
         picked_at, shipped_at, packed_at,
         created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5::order_status, 0, $6, $7, $8,
-        $9, $10, $11, $12,
-        'NETSUITE', $13,
-        $14, $15, $16,
+        $1, $2, $3, $4, $5::order_status, 0, $6, $7, $8, $9,
+        $10, $11, $12, $13,
+        'NETSUITE', $14,
+        $15, $16, $17,
         NOW(), NOW()
       )`,
       [
@@ -2307,6 +2330,7 @@ export class NetSuiteOrderSyncService {
         shippingAddress ? JSON.stringify(shippingAddress) : null,
         `netsuite:${tranId}`,
         this.organizationId,
+        null,
         fulfillment.createdFrom?.id || null, // SO internal ID
         soTranId || null, // SO tran ID (fetched from parent SO)
         fulfillment.id, // IF internal ID

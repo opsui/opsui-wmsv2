@@ -550,6 +550,7 @@ export interface Order {
   // NetSuite integration fields
   netsuiteSoTranId?: string; // NetSuite Sales Order transaction ID (e.g., "SO-1234")
   netsuiteSoInternalId?: string; // NetSuite internal ID for the sales order
+  netsuiteOrderDate?: Date | string; // NetSuite sales order transaction date
   netsuiteIfTranId?: string; // NetSuite Item Fulfillment transaction ID
   netsuiteIfInternalId?: string; // NetSuite internal ID for the item fulfillment
   netsuiteSource?: string; // Source system (e.g., "NETSUITE")

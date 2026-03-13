@@ -429,6 +429,14 @@ function OrderCard({
     new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
   );
   const locationLabel = locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
+  const rawNetSuiteOrderDate = order.netsuiteOrderDate || order.netsuite_order_date;
+  const netsuiteOrderDateLabel = rawNetSuiteOrderDate
+    ? new Date(rawNetSuiteOrderDate).toLocaleDateString('en-NZ', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : null;
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
@@ -496,6 +504,12 @@ function OrderCard({
                   ))}
               </div>
               <p className="text-sm text-slate-400 mt-1 truncate">{order.customerName}</p>
+              {netsuiteOrderDateLabel && (
+                <p className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider">
+                  Order Date:{' '}
+                  <span className="text-slate-300 font-semibold">{netsuiteOrderDateLabel}</span>
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2 ml-2">
               <OrderPriorityBadge priority={order.priority} />
