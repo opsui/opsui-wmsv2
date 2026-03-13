@@ -335,6 +335,7 @@ export function PackingPage() {
               margin: 0;
               padding: 0;
               background: #ffffff;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             }
             img, iframe {
               display: block;
@@ -354,6 +355,9 @@ export function PackingPage() {
             window.onload = function() {
               setTimeout(function() {
                 window.print();
+                setTimeout(function() {
+                  window.close();
+                }, 400);
               }, 150);
             };
           </script>
@@ -1127,6 +1131,49 @@ export function PackingPage() {
     const preparedPrintWindow = isNZCCarrier
       ? window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200')
       : null;
+
+    if (preparedPrintWindow) {
+      preparedPrintWindow.document.write(`
+        <html>
+          <head>
+            <title>Preparing NZC Label</title>
+            <style>
+              html, body {
+                margin: 0;
+                min-height: 100%;
+                display: grid;
+                place-items: center;
+                background: #0f172a;
+                color: #e2e8f0;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              }
+              .wrap {
+                text-align: center;
+              }
+              .spinner {
+                width: 42px;
+                height: 42px;
+                margin: 0 auto 16px;
+                border-radius: 9999px;
+                border: 3px solid rgba(148, 163, 184, 0.25);
+                border-top-color: #22c55e;
+                animation: spin 0.8s linear infinite;
+              }
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="wrap">
+              <div class="spinner"></div>
+              <div>Preparing shipping label...</div>
+            </div>
+          </body>
+        </html>
+      `);
+      preparedPrintWindow.document.close();
+    }
 
     try {
       const shipFromAddress: Address = {
