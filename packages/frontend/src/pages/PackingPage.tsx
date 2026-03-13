@@ -925,22 +925,25 @@ export function PackingPage() {
       } catch (error: any) {
         const errorMessage =
           error?.response?.data?.error || error?.message || 'Failed to verify item';
-        const requiresReclaim =
+        const errorCode = error?.response?.data?.code;
+        const isNotPackingConflict =
           error?.response?.status === 409 &&
-          typeof errorMessage === 'string' &&
-          errorMessage.includes('current status: PICKED');
+          (errorCode === 'NOT_PACKING' ||
+            (typeof errorMessage === 'string' && errorMessage.includes('not in PACKING status')));
 
-        if (!requiresReclaim) {
+        if (!isNotPackingConflict) {
           throw error;
         }
 
-        showToast('Order moved back to picked. Reclaiming packing session...', 'warning');
         const latestOrder = await refetch();
         const latestStatus = latestOrder.data?.status;
 
         if (latestStatus === OrderStatus.PICKED) {
+          showToast('Order moved back to picked. Reclaiming packing session...', 'warning');
           await claimMutation.mutateAsync(orderId!);
           await refetch();
+          await verifyItem();
+        } else if (latestStatus === OrderStatus.PACKING) {
           await verifyItem();
         } else {
           throw error;

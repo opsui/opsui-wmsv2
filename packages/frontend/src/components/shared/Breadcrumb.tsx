@@ -274,6 +274,7 @@ export function Breadcrumb({
         {isAdminInRoleView && (
           <>
             <button
+              type="button"
               onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
             >
@@ -290,6 +291,7 @@ export function Breadcrumb({
             )}
             {item.path ? (
               <button
+                type="button"
                 onClick={() => navigate(item.path!)}
                 className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
               >
@@ -367,6 +369,7 @@ export function Breadcrumb({
           {isAdminInRoleView && (
             <>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard')}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
@@ -377,6 +380,7 @@ export function Breadcrumb({
             </>
           )}
           <button
+            type="button"
             onClick={() => navigate('/accounting')}
             className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
           >
@@ -405,6 +409,7 @@ export function Breadcrumb({
         {isAdminInRoleView && (
           <>
             <button
+              type="button"
               onClick={() => navigate('/dashboard')}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
             >
@@ -415,6 +420,7 @@ export function Breadcrumb({
           </>
         )}
         <button
+          type="button"
           onClick={() => navigate(nestedRouteMatch!.basePath)}
           className="flex items-center gap-1.5 px-2 py-1 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-all duration-200 group"
         >
@@ -455,6 +461,7 @@ export function Breadcrumb({
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
               <button
+                type="button"
                 onClick={() => navigate('/dashboard')}
                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all duration-200 group"
               >
@@ -487,6 +494,7 @@ export function Breadcrumb({
             </>
           )}
           <button
+            type="button"
             onClick={() => {
               // Clear tab parameter to return to overview/dashboard
               navigate(path);
