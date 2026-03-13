@@ -1285,9 +1285,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           </div>
         )}
 
-        <div className="flex justify-center">
-          <div className="w-full max-w-5xl rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-3 shadow-lg">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex justify-center relative z-30">
+          <div className="w-full max-w-5xl rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-2.5 shadow-lg">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
               <div className="relative min-w-0 flex-1 lg:max-w-xs">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
@@ -1302,12 +1302,12 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                     }
                   }}
                   placeholder="Search..."
-                  className="h-11 pl-10 text-sm"
+                  className="h-10 pl-10 text-sm"
                   aria-label={`Search ${mode} queue`}
                 />
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:flex-1">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:flex-1">
                 <StatusFilterDropdown
                   value={statusFilter}
                   onChange={handleStatusFilterChange}
@@ -1364,6 +1364,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="relative z-10"
               >
                 <Card variant="glass" className="bg-slate-900/50 border-2 border-slate-700">
                   <CardContent className="p-16 text-center">
