@@ -153,8 +153,8 @@ const pickingSurfacePanelClass =
 const pickingInputClass =
   'w-full px-4 py-3 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500';
 
-const fulfillmentSlipHeaderColor = '#b8b8b8';
-const fulfillmentSlipAccentColor = '#6b7280';
+const fulfillmentSlipHeaderColor = '#374151';
+const fulfillmentSlipAccentColor = '#1f2937';
 const formatAddressLines = (address?: Address | null): string[] => {
   if (!address) {
     return [];
@@ -1316,8 +1316,8 @@ export function PickingPage() {
                           alt="Arrowhead Alarm Products"
                           className="w-36 h-auto"
                         />
-                        <div className="pt-1 text-sm leading-relaxed text-slate-600">
-                          <p className="font-semibold text-slate-800">Arrowhead Alarm Products</p>
+                        <div className="pt-1 text-sm leading-relaxed text-slate-800 print:text-black">
+                          <p className="font-semibold text-slate-900 print:text-black">Arrowhead Alarm Products</p>
                           <p>1A Emirali Road</p>
                           <p>Silverdale 0932, Auckland</p>
                           <p>New Zealand</p>
@@ -1328,18 +1328,17 @@ export function PickingPage() {
                       <div className="text-right">
                         <div className="inline-block">
                           <p
-                            className="text-xs font-bold uppercase tracking-[0.2em]"
-                            style={{ color: fulfillmentSlipAccentColor }}
+                            className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black"
                           >
                             Fulfillment Document
                           </p>
-                          <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900">
+                          <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
                             Packing Slip
                           </h1>
                         </div>
-                        <div className="mt-4 inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-300">
-                          <CalendarDaysIcon className="h-4 w-4 text-slate-400" />
-                          <span className="text-sm font-medium text-slate-700">{orderDate}</span>
+                        <div className="mt-4 inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
+                          <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
+                          <span className="text-sm font-medium text-slate-800 print:text-black">{orderDate}</span>
                         </div>
                       </div>
                     </div>
@@ -1347,40 +1346,40 @@ export function PickingPage() {
                 </div>
 
                 {/* Order Info Grid */}
-                <div className="px-8 py-5 bg-slate-50 border-b border-slate-200 print:bg-white">
+                <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
                         Sales Order
                       </p>
-                      <p className="font-mono font-semibold text-slate-900">
+                      <p className="font-mono font-semibold text-slate-900 print:text-black">
                         {fulfillmentPreviewOrder.netsuiteSoTranId ||
                           fulfillmentPreviewOrder.orderId}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
                         Fulfillment #
                       </p>
-                      <p className="font-mono font-semibold text-slate-900">
+                      <p className="font-mono font-semibold text-slate-900 print:text-black">
                         {fulfillmentPreviewOrder.netsuiteIfTranId ||
                           fulfillmentPreviewOrder.netsuiteSoTranId ||
                           fulfillmentPreviewOrder.orderId}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
                         Customer PO
                       </p>
-                      <p className="font-mono font-semibold text-slate-900">
+                      <p className="font-mono font-semibold text-slate-900 print:text-black">
                         {fulfillmentPreviewOrder.customerPoNumber || '—'}
                       </p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
                         Account #
                       </p>
-                      <p className="font-mono font-semibold text-slate-900">
+                      <p className="font-mono font-semibold text-slate-900 print:text-black">
                         {fulfillmentPreviewOrder.customerId || '—'}
                       </p>
                     </div>
@@ -1392,46 +1391,46 @@ export function PickingPage() {
                   <div className="grid md:grid-cols-2 gap-8">
                     {/* Ship To */}
                     <div className="relative">
-                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-violet-500 rounded-full print:bg-gray-400" />
+                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-600 to-slate-500 rounded-full print:bg-gray-500" />
                       <div className="flex items-center gap-2 mb-3">
-                        <TruckIcon className="h-5 w-5 text-purple-500 print:text-gray-500" />
-                        <h2 className="text-lg font-bold text-slate-900">Ship To</h2>
+                        <TruckIcon className="h-5 w-5 text-slate-600 print:text-gray-600" />
+                        <h2 className="text-lg font-bold text-slate-900 print:text-black">Ship To</h2>
                       </div>
-                      <div className="space-y-0.5 text-sm text-slate-700 pl-1">
+                      <div className="space-y-0.5 text-sm text-slate-800 pl-1 print:text-black">
                         {previewAddressLines.length > 0 ? (
                           previewAddressLines.map((line, i) => (
                             <p
                               key={`ship-${line}`}
-                              className={i === 0 ? 'font-semibold text-slate-900' : ''}
+                              className={i === 0 ? 'font-semibold text-slate-900 print:text-black' : ''}
                             >
                               {line}
                             </p>
                           ))
                         ) : (
-                          <p className="text-slate-400 italic">No shipping details available</p>
+                          <p className="text-slate-600 italic print:text-black">No shipping details available</p>
                         )}
                       </div>
                     </div>
 
                     {/* Bill To */}
                     <div className="relative">
-                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-400 to-slate-300 rounded-full print:bg-gray-300" />
+                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-500 to-slate-400 rounded-full print:bg-gray-400" />
                       <div className="flex items-center gap-2 mb-3">
-                        <DocumentChartBarIcon className="h-5 w-5 text-slate-400 print:text-gray-500" />
-                        <h2 className="text-lg font-bold text-slate-900">Bill To</h2>
+                        <DocumentChartBarIcon className="h-5 w-5 text-slate-500 print:text-gray-600" />
+                        <h2 className="text-lg font-bold text-slate-900 print:text-black">Bill To</h2>
                       </div>
-                      <div className="space-y-0.5 text-sm text-slate-700 pl-1">
+                      <div className="space-y-0.5 text-sm text-slate-800 pl-1 print:text-black">
                         {billToLines.length > 0 ? (
                           billToLines.map((line, i) => (
                             <p
                               key={`bill-${line}`}
-                              className={i === 0 ? 'font-semibold text-slate-900' : ''}
+                              className={i === 0 ? 'font-semibold text-slate-900 print:text-black' : ''}
                             >
                               {line}
                             </p>
                           ))
                         ) : (
-                          <p className="text-slate-400 italic">Same as shipping address</p>
+                          <p className="text-slate-600 italic print:text-black">Same as shipping address</p>
                         )}
                       </div>
                     </div>
@@ -1439,12 +1438,12 @@ export function PickingPage() {
 
                   {/* Shipping Method Badge */}
                   <div className="mt-6 flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 print:text-black">
                       Shipping Method
                     </span>
                     <span
                       className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold fulfillment-slip-print-color"
-                      style={{ backgroundColor: '#e5e7eb', color: '#374151' }}
+                      style={{ backgroundColor: '#e5e7eb', color: '#1f2937' }}
                     >
                       <TruckIcon className="h-3.5 w-3.5" />
                       {fulfillmentPreviewOrder.carrier || 'Warehouse Pick'}
@@ -1454,7 +1453,7 @@ export function PickingPage() {
 
                 {/* Items Table */}
                 <div className="px-8 pb-6">
-                  <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none">
+                  <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none print:border-gray-400">
                     {/* Table Header */}
                     <div
                       className="fulfillment-slip-print-color"
@@ -1473,31 +1472,31 @@ export function PickingPage() {
                     </div>
 
                     {/* Table Body */}
-                    <div className="divide-y divide-slate-100 print:divide-gray-200">
+                    <div className="divide-y divide-slate-200 print:divide-gray-300">
                       {(fulfillmentPreviewOrder.items || []).map((item: any, idx: number) => (
                         <div
                           key={item.orderItemId}
                           className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
-                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'
+                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
                           } print:bg-white`}
                         >
                           <div className="col-span-3">
-                            <p className="font-mono font-bold text-slate-900">{item.sku}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">
+                            <p className="font-mono font-bold text-slate-900 print:text-black">{item.sku}</p>
+                            <p className="text-xs text-slate-600 mt-0.5 print:text-black">
                               Bin: {formatBinLocation(item.binLocation)}
                             </p>
                           </div>
                           <div className="col-span-5">
-                            <p className="text-slate-700 font-medium">{item.name}</p>
+                            <p className="text-slate-800 font-medium print:text-black">{item.name}</p>
                           </div>
-                          <div className="col-span-1 text-center font-semibold text-slate-600">
+                          <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
                             {item.quantity}
                           </div>
-                          <div className="col-span-1 text-center text-slate-400">0</div>
+                          <div className="col-span-1 text-center text-slate-600 print:text-black">0</div>
                           <div className="col-span-2 text-center">
                             <span
                               className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
-                              style={{ backgroundColor: '#e5e7eb', color: '#374151' }}
+                              style={{ backgroundColor: '#d1d5db', color: '#111827' }}
                             >
                               {item.pickedQuantity}
                             </span>
@@ -1507,21 +1506,21 @@ export function PickingPage() {
                     </div>
 
                     {/* Table Footer */}
-                    <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 print:bg-white">
+                    <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 text-slate-600">
+                        <div className="flex items-center gap-2 text-slate-800 print:text-black">
                           <ClipboardDocumentListIcon className="h-4 w-4" />
                           <span>Total Items:</span>
-                          <span className="font-bold text-slate-900">
+                          <span className="font-bold text-slate-900 print:text-black">
                             {(fulfillmentPreviewOrder.items || []).reduce(
                               (sum: number, item: any) => sum + item.pickedQuantity,
                               0
                             )}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-600">
+                        <div className="flex items-center gap-2 text-slate-800 print:text-black">
                           <span>SKUs:</span>
-                          <span className="font-bold text-slate-900">
+                          <span className="font-bold text-slate-900 print:text-black">
                             {(fulfillmentPreviewOrder.items || []).length}
                           </span>
                         </div>
@@ -1531,17 +1530,17 @@ export function PickingPage() {
                 </div>
 
                 {/* Footer Section */}
-                <div className="px-8 py-6 border-t-2 border-slate-200">
+                <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
                   <div className="flex items-end justify-between">
                     {/* Picked By */}
                     <div className="text-sm">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
                         Picked By
                       </p>
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-slate-900 print:text-black">
                         {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
                       </p>
-                      <p className="text-slate-500 text-xs mt-1">
+                      <p className="text-slate-700 text-xs mt-1 print:text-black">
                         {new Date().toLocaleString('en-NZ', {
                           weekday: 'short',
                           day: 'numeric',
@@ -1556,24 +1555,24 @@ export function PickingPage() {
                     {/* Signature Areas */}
                     <div className="flex gap-12">
                       <div className="text-center">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
                           Packed By
                         </p>
-                        <div className="w-36 border-b-2 border-slate-300 h-8" />
+                        <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
                           Verified By
                         </p>
-                        <div className="w-36 border-b-2 border-slate-300 h-8" />
+                        <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Document Footer */}
-                <div className="px-8 py-4 bg-slate-100 border-t border-slate-200 print:bg-white">
-                  <p className="text-center text-xs text-slate-400">
+                <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
+                  <p className="text-center text-xs text-slate-600 print:text-black">
                     This document was generated electronically from OpsUI Warehouse Management
                     System
                   </p>
