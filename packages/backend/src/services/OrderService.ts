@@ -69,7 +69,7 @@ export class OrderService {
       const netsuiteOrderDate = legacyOrder.netsuiteOrderDate || legacyOrder.netsuite_order_date;
       const netsuiteSoInternalId =
         legacyOrder.netsuiteSoInternalId || legacyOrder.netsuite_so_internal_id;
-      return !netsuiteOrderDate && netsuiteSoInternalId && order.organizationId;
+      return !netsuiteOrderDate && netsuiteSoInternalId && legacyOrder.organizationId;
     });
 
     if (!missingOrders.length) {
@@ -86,16 +86,17 @@ export class OrderService {
         const legacyOrder = order as any;
         const netsuiteSoInternalId =
           legacyOrder.netsuiteSoInternalId || legacyOrder.netsuite_so_internal_id;
+        const organizationId = legacyOrder.organizationId;
 
-        if (!netsuiteSoInternalId || !order.organizationId) {
+        if (!netsuiteSoInternalId || !organizationId) {
           return;
         }
 
         try {
-          let integration = clientCache.get(order.organizationId);
+          let integration = clientCache.get(organizationId);
           if (integration === undefined) {
-            integration = await this.getNetSuiteClientForOrganization(order.organizationId);
-            clientCache.set(order.organizationId, integration);
+            integration = await this.getNetSuiteClientForOrganization(organizationId);
+            clientCache.set(organizationId, integration);
           }
 
           if (!integration) {
