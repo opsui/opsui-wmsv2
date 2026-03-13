@@ -169,23 +169,33 @@ const formatNetSuiteDisplayText = (value?: string | null): string => {
     .replace(/\b\w/g, char => char.toUpperCase());
 };
 
-const formatAddressLines = (address?: Address | null): string[] => {
+interface AddressLine {
+  label: string;
+  value: string;
+}
+
+const formatAddressLines = (address?: Address | null): AddressLine[] => {
   if (!address) {
     return [];
   }
 
-  return [
-    address.name,
-    address.company,
-    address.addressLine1,
-    address.addressLine2,
-    address.city,
-    address.state,
-    address.postalCode,
-    formatNetSuiteDisplayText(address.country),
-  ]
-    .map(line => (typeof line === 'string' ? line.trim() : ''))
-    .filter(Boolean);
+  const lines: { label: string; value: string | undefined | null }[] = [
+    { label: 'Name', value: address.name },
+    { label: 'Company', value: address.company },
+    { label: 'Address', value: address.addressLine1 },
+    { label: '', value: address.addressLine2 },
+    { label: 'City', value: address.city },
+    { label: 'State', value: address.state },
+    { label: 'Postal Code', value: address.postalCode },
+    { label: 'Country', value: formatNetSuiteDisplayText(address.country) },
+  ];
+
+  return lines
+    .map(line => ({
+      label: line.label,
+      value: typeof line.value === 'string' ? line.value.trim() : '',
+    }))
+    .filter(line => line.value);
 };
 
 const fulfillmentSlipLogoUrl = '/arrowhead-logo.png';
@@ -1471,18 +1481,20 @@ export function PickingPage() {
                           Ship To
                         </h2>
                       </div>
-                      <div className="space-y-0.5 text-sm pl-1">
+                      <div className="space-y-1 text-sm pl-1">
                         {previewAddressLines.length > 0 ? (
                           previewAddressLines.map((line, i) => (
-                            <p
-                              key={`ship-${line}`}
-                              className={
-                                i === 0
-                                  ? 'font-semibold text-gray-900 print:text-black'
-                                  : 'text-gray-800 print:text-black'
-                              }
-                            >
-                              {line}{i < previewAddressLines.length - 1 ? ',' : ''}
+                            <p key={`ship-${i}`} className="text-gray-800 print:text-black">
+                              {line.label ? (
+                                <>
+                                  <span className="font-medium text-gray-600 print:text-black">
+                                    {line.label}:
+                                  </span>{' '}
+                                  {line.value}
+                                </>
+                              ) : (
+                                line.value
+                              )}
                             </p>
                           ))
                         ) : (
@@ -1502,18 +1514,20 @@ export function PickingPage() {
                           Bill To
                         </h2>
                       </div>
-                      <div className="space-y-0.5 text-sm pl-1">
+                      <div className="space-y-1 text-sm pl-1">
                         {billToLines.length > 0 ? (
                           billToLines.map((line, i) => (
-                            <p
-                              key={`bill-${line}`}
-                              className={
-                                i === 0
-                                  ? 'font-semibold text-gray-900 print:text-black'
-                                  : 'text-gray-800 print:text-black'
-                              }
-                            >
-                              {line}{i < billToLines.length - 1 ? ',' : ''}
+                            <p key={`bill-${i}`} className="text-gray-800 print:text-black">
+                              {line.label ? (
+                                <>
+                                  <span className="font-medium text-gray-600 print:text-black">
+                                    {line.label}:
+                                  </span>{' '}
+                                  {line.value}
+                                </>
+                              ) : (
+                                line.value
+                              )}
                             </p>
                           ))
                         ) : (
