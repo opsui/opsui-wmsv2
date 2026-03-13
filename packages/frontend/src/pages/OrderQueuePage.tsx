@@ -1222,10 +1222,47 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           </p>
         </div>
 
-        {/* Toolbar row: Mode Switcher left, Filters right */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
-          {(isAdmin || (canPick() && canPack())) ? (
+        {/* Fixed filters at top right */}
+        <div className="fixed top-16 right-4 z-40 flex items-center gap-2 bg-slate-900/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-slate-700/50 shadow-lg">
+          <div className="relative w-40">
+            <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+            <Input
+              type="search"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  setDebouncedSearch(searchTerm.trim());
+                  setPage(1);
+                }
+              }}
+              placeholder="Search..."
+              className="pl-8 h-8 text-sm"
+              aria-label={`Search ${mode} queue`}
+            />
+          </div>
+          <StatusFilterDropdown
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+            mode={mode}
+          />
+          <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void handleManualReload()}
+            className="h-8 px-2"
+            title={`Reload ${mode} queue`}
+            aria-label={`Reload ${mode} queue`}
+          >
+            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`} />
+          </Button>
+        </div>
+
+        {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
+        {(isAdmin || (canPick() && canPack())) && (
+          <div className="flex justify-center">
             <div className="inline-flex rounded-xl bg-slate-800/80 p-1.5 border-2 border-slate-700">
               <button
                 onClick={() => handleAdminModeSwitch('picking')}
@@ -1250,45 +1287,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 Packing Queue
               </button>
             </div>
-          ) : <div />}
-
-          {/* Filters on the right */}
-          <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full max-w-md">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-            <Input
-              type="search"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  setDebouncedSearch(searchTerm.trim());
-                  setPage(1);
-                }
-              }}
-              placeholder={`Search ${mode} queue`}
-              className="pl-10"
-              aria-label={`Search ${mode} queue`}
-            />
           </div>
-          <StatusFilterDropdown
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-            mode={mode}
-          />
-          <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
-          <Button
-            variant="secondary"
-            onClick={() => void handleManualReload()}
-            className="min-h-touch font-bold uppercase tracking-wide"
-            title={`Reload ${mode} queue`}
-            aria-label={`Reload ${mode} queue`}
-          >
-            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`} />
-          </Button>
-          </div>
-        </div>
+        )}
 
         {noMotion ? (
           filteredOrders.length === 0 ? (
