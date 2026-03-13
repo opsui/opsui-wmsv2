@@ -264,6 +264,7 @@ describe('ShippingService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [{ carrier_id: 'CARR-001' }] }) // carrier lookup
+        .mockResolvedValueOnce({ rows: [] }) // existing shipment lookup
         .mockResolvedValueOnce({ rows: [mockCreatedShipment] }) // INSERT
         .mockResolvedValueOnce({ rows: [] }); // COMMIT
 
@@ -312,6 +313,78 @@ describe('ShippingService', () => {
           orderId: 'ORD-001',
         })
       );
+    });
+
+    it('should reuse an existing shipment for the order instead of inserting a duplicate', async () => {
+      const dto: CreateShipmentDTO = {
+        orderId: 'ORD-EXISTING-001',
+        carrierId: 'CARR-001',
+        serviceType: 'express',
+        shippingMethod: 'ground',
+        shipFromAddress: {
+          name: 'Warehouse',
+          addressLine1: '123 Main St',
+          city: 'Auckland',
+          state: 'Auckland',
+          postalCode: '1010',
+          country: 'NZ',
+        } as Address,
+        shipToAddress: {
+          name: 'Customer',
+          addressLine1: '456 Hereford St',
+          city: 'Christchurch',
+          state: 'Canterbury',
+          postalCode: '8051',
+          country: 'NZ',
+        } as Address,
+        totalWeight: 2.5,
+        totalPackages: 1,
+        createdBy: 'user-123',
+      };
+
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ carrier_id: 'CARR-001' }] }) // carrier lookup
+        .mockResolvedValueOnce({ rows: [{ shipment_id: 'SHP-EXISTING001' }] }) // existing shipment
+        .mockResolvedValueOnce({ rows: [] }) // COMMIT
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              shipment_id: 'SHP-EXISTING001',
+              order_id: 'ORD-EXISTING-001',
+              carrier_id: 'CARR-001',
+              service_type: 'express',
+              shipping_method: 'ground',
+              tracking_number: 'BYAF038646',
+              tracking_url: null,
+              ship_from_address: JSON.stringify(dto.shipFromAddress),
+              ship_to_address: JSON.stringify(dto.shipToAddress),
+              total_weight: '2.5',
+              total_packages: '1',
+              dimensions: null,
+              total_cost: '0',
+              status: 'pending',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // labels
+
+      const result = await service.createShipment(dto);
+
+      expect(result.shipmentId).toBe('SHP-EXISTING001');
+      expect(logger.info).toHaveBeenCalledWith(
+        'Shipment already exists for order, reusing existing shipment',
+        {
+          orderId: 'ORD-EXISTING-001',
+          shipmentId: 'SHP-EXISTING001',
+        }
+      );
+
+      const insertCall = global.mockPool.query.mock.calls.find(
+        (call: unknown[]) =>
+          typeof call[0] === 'string' && call[0].includes('INSERT INTO shipments')
+      );
+      expect(insertCall).toBeUndefined();
     });
 
     it('should rollback on error', async () => {
@@ -947,6 +1020,7 @@ describe('ShippingService', () => {
       global.mockPool.query
         .mockResolvedValueOnce({ rows: [] }) // BEGIN
         .mockResolvedValueOnce({ rows: [{ carrier_id: 'CARR-001' }] }) // carrier lookup
+        .mockResolvedValueOnce({ rows: [] }) // existing shipment lookup
         .mockResolvedValueOnce({
           rows: [
             {

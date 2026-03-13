@@ -402,6 +402,24 @@ export class ShippingService {
 
       const resolvedCarrierId = await this.resolveCarrierIdForShipment(client, dto.carrierId);
 
+      const existingShipmentResult = await client.query(
+        `SELECT shipment_id
+           FROM shipments
+          WHERE order_id = $1
+          LIMIT 1`,
+        [dto.orderId]
+      );
+
+      if (existingShipmentResult.rows.length > 0) {
+        await client.query('COMMIT');
+        const existingShipmentId = existingShipmentResult.rows[0].shipment_id;
+        logger.info('Shipment already exists for order, reusing existing shipment', {
+          orderId: dto.orderId,
+          shipmentId: existingShipmentId,
+        });
+        return await this.getShipment(existingShipmentId);
+      }
+
       // Generate shipment ID
       const shipmentId = `SHP-${nanoid(10)}`.toUpperCase();
 

@@ -1090,15 +1090,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         showToast(`Order ${orderId} claimed successfully`, 'success');
         navigate(`/orders/${orderId}/pick`);
       } else {
-        await claimPackingMutation.mutateAsync(
-          { orderId, packerId: userId },
-          {
-            onSuccess: () => {
-              showToast(`Order ${orderId} claimed successfully`, 'success');
-              navigate(`/packing/${orderId}/pack`);
-            },
-          }
-        );
+        await claimPackingMutation.mutateAsync({ orderId, packerId: userId });
+        showToast(`Order ${orderId} claimed successfully`, 'success');
+        navigate(`/packing/${orderId}/pack`);
       }
     } catch (error: any) {
       const msg =
