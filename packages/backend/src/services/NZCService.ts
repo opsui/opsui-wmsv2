@@ -224,7 +224,13 @@ export class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = (await response.json()) as NZCRateResponse;
+      const rawData = (await response.json()) as Partial<NZCRateResponse>;
+      const data: NZCRateResponse = {
+        Quotes: Array.isArray(rawData.Quotes) ? rawData.Quotes : [],
+        Suppressed: Array.isArray(rawData.Suppressed) ? rawData.Suppressed : [],
+        Rejected: Array.isArray(rawData.Rejected) ? rawData.Rejected : [],
+        ValidationErrors: rawData.ValidationErrors || {},
+      };
 
       // Log validation errors if any
       if (data.ValidationErrors && Object.keys(data.ValidationErrors).length > 0) {
@@ -239,6 +245,7 @@ export class NZCService {
       logger.info('[NZC] Rates fetched successfully', {
         quoteCount: data.Quotes.length,
         rejectedCount: data.Rejected.length,
+        suppressedCount: data.Suppressed.length,
       });
 
       return data;
