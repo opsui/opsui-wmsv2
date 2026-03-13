@@ -870,7 +870,20 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const allOrdersData = mode === 'picking' ? pickingAllOrders.data : packingAllOrders.data;
   const activeQueueResult = mode === 'picking' ? pickingQueueResult : packingQueueResult;
   const activeAllOrdersResult = mode === 'picking' ? pickingAllOrders : packingAllOrders;
-  const isReloading = activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
+
+  // Minimum spin duration for smooth reload animation
+  const [isManualReloading, setIsManualReloading] = useState(false);
+  const manualReloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isReloading = isManualReloading || activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (manualReloadTimeoutRef.current) {
+        clearTimeout(manualReloadTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -916,14 +929,27 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   };
 
   const handleManualReload = useCallback(async () => {
+    // Ensure minimum spin duration for smooth animation
+    setIsManualReloading(true);
+    if (manualReloadTimeoutRef.current) {
+      clearTimeout(manualReloadTimeoutRef.current);
+    }
+
+    const minSpinDuration = new Promise(resolve => {
+      manualReloadTimeoutRef.current = setTimeout(resolve, 500);
+    });
+
     try {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['orders'] }),
         activeQueueResult.refetch(),
         activeAllOrdersResult.refetch(),
+        minSpinDuration,
       ]);
     } catch {
       showToast(`Failed to reload ${mode} queue`, 'error');
+    } finally {
+      setIsManualReloading(false);
     }
   }, [activeAllOrdersResult, activeQueueResult, mode, queryClient, showToast]);
 
@@ -1183,33 +1209,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             title={`Reload ${mode} queue`}
             aria-label={`Reload ${mode} queue`}
           >
-            {noMotion ? (
-              <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
-            ) : (
-              <motion.span
-                animate={isReloading ? 'spinning' : 'idle'}
-                variants={{
-                  spinning: { rotate: 360 },
-                  idle: { rotate: 0 },
-                }}
-                transition={
-                  isReloading
-                    ? {
-                        rotate: {
-                          duration: 0.8,
-                          ease: 'linear',
-                          repeat: Infinity,
-                        },
-                      }
-                    : {
-                        duration: 0,
-                      }
-                }
-                className="flex items-center justify-center origin-center"
-              >
-                <ArrowPathIcon className="h-4 w-4" />
-              </motion.span>
-            )}
+            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
 
