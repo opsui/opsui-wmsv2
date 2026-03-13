@@ -303,18 +303,28 @@ export class NZCService {
       this._stringOrEmpty(raw.id);
     const carrier =
       this._stringOrEmpty(raw.Carrier) ||
+      this._stringOrEmpty(raw.CarrierName) ||
       this._stringOrEmpty(raw.carriername) ||
       this._stringOrEmpty(raw.carrier) ||
       'NZC';
     const deliveryType =
       this._stringOrEmpty(raw.Service) ||
+      this._stringOrEmpty(raw.DeliveryType) ||
       this._stringOrEmpty(raw.deliverytype) ||
+      this._stringOrEmpty(raw.CarrierServiceType) ||
       this._stringOrEmpty(raw.carrierservicetype);
     const serviceStandard =
-      this._stringOrEmpty(raw.servicestandard) || this._stringOrEmpty(raw.Description);
-    const totalPrice = this._numberOrZero(raw.TotalPrice ?? raw.charge ?? raw.cost);
-    const transitDays = this._numberOrUndefined(raw.TransitDays ?? raw.transitdays);
-    const description = this._stringOrEmpty(raw.comments) || serviceStandard;
+      this._stringOrEmpty(raw.ServiceStandard) ||
+      this._stringOrEmpty(raw.servicestandard) ||
+      this._stringOrEmpty(raw.Description);
+    const totalPrice = this._numberOrZero(
+      raw.TotalPrice ?? raw.Charge ?? raw.Cost ?? raw.charge ?? raw.cost
+    );
+    const transitDays = this._numberOrUndefined(
+      raw.TransitDays ?? raw.Transitdays ?? raw.transitdays
+    );
+    const description =
+      this._stringOrEmpty(raw.Comments) || this._stringOrEmpty(raw.comments) || serviceStandard;
 
     return {
       QuoteId: quoteId,

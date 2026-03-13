@@ -88,23 +88,7 @@ router.post(
     }
 
     // Convert to NZC format
-    const nzcDestination = {
-      Name: destination.company || destination.name || 'Customer',
-      NameDisplay: destination.company
-        ? `${destination.company} - ${destination.city}`
-        : `${destination.name} - ${destination.city}`,
-      Address: {
-        StreetAddress: destination.addressLine1,
-        Suburb: destination.city,
-        City: destination.city,
-        PostCode: destination.postalCode,
-        CountryCode: toNzcCountryCode(destination.country),
-        State: destination.state || '',
-      },
-      ContactPerson: destination.name,
-      PhoneNumber: destination.phone || '',
-      Email: destination.email || '',
-    };
+    const nzcDestination = buildNzcDestination(destination);
 
     const nzcPackages = packages.map((pkg: any) => ({
       PackageStockId: pkg.packageStockId || undefined,
@@ -167,23 +151,7 @@ router.post(
     }
 
     // Convert to NZC format
-    const nzcDestination = {
-      Name: destination.company || destination.name || 'Customer',
-      NameDisplay: destination.company
-        ? `${destination.company} - ${destination.city}`
-        : `${destination.name} - ${destination.city}`,
-      Address: {
-        StreetAddress: destination.addressLine1,
-        Suburb: destination.city,
-        City: destination.city,
-        PostCode: destination.postalCode,
-        CountryCode: toNzcCountryCode(destination.country),
-        State: destination.state || '',
-      },
-      ContactPerson: destination.name,
-      PhoneNumber: destination.phone || '',
-      Email: destination.email || '',
-    };
+    const nzcDestination = buildNzcDestination(destination);
 
     const nzcPackages = packages.map((pkg: any) => ({
       PackageStockId: pkg.packageStockId || undefined,
@@ -291,6 +259,39 @@ router.get(
 );
 
 export default router;
+
+function buildNzcDestination(destination: any) {
+  const countryCode = toNzcCountryCode(destination.country);
+  const locality = String(destination.city || '').trim();
+  const region = String(destination.state || '').trim();
+  const suburb =
+    countryCode === 'NZ' && locality
+      ? locality
+      : String(destination.suburb || destination.city || '').trim();
+  const city =
+    countryCode === 'NZ' && region && region.toUpperCase() !== locality.toUpperCase()
+      ? region
+      : locality;
+
+  return {
+    Name: destination.company || destination.name || 'Customer',
+    NameDisplay: destination.company
+      ? `${destination.company} - ${locality || city}`
+      : `${destination.name} - ${locality || city}`,
+    Address: {
+      StreetAddress: destination.addressLine1,
+      Suburb: suburb,
+      City: city,
+      PostCode: destination.postalCode,
+      CountryCode: countryCode,
+      State: region,
+    },
+    ContactPerson: destination.name,
+    PhoneNumber: destination.phone || '',
+    Email: destination.email || '',
+  };
+}
+
 function toNzcCountryCode(country?: string): string {
   if (!country) return 'NZ';
   const normalized = String(country).trim().toUpperCase();
