@@ -63,6 +63,70 @@ import wsServer from '../websocket';
 // ============================================================================
 
 export class OrderService {
+  private async backfillMissingNetSuiteOrderDates<T extends Order>(orders: T[]): Promise<T[]> {
+    const missingOrders = orders.filter(order => {
+      const legacyOrder = order as any;
+      const netsuiteOrderDate = legacyOrder.netsuiteOrderDate || legacyOrder.netsuite_order_date;
+      const netsuiteSoInternalId =
+        legacyOrder.netsuiteSoInternalId || legacyOrder.netsuite_so_internal_id;
+      return !netsuiteOrderDate && netsuiteSoInternalId && order.organizationId;
+    });
+
+    if (!missingOrders.length) {
+      return orders;
+    }
+
+    const clientCache = new Map<
+      string,
+      Awaited<ReturnType<OrderService['getNetSuiteClientForOrganization']>>
+    >();
+
+    await Promise.all(
+      missingOrders.map(async order => {
+        const legacyOrder = order as any;
+        const netsuiteSoInternalId =
+          legacyOrder.netsuiteSoInternalId || legacyOrder.netsuite_so_internal_id;
+
+        if (!netsuiteSoInternalId || !order.organizationId) {
+          return;
+        }
+
+        try {
+          let integration = clientCache.get(order.organizationId);
+          if (integration === undefined) {
+            integration = await this.getNetSuiteClientForOrganization(order.organizationId);
+            clientCache.set(order.organizationId, integration);
+          }
+
+          if (!integration) {
+            return;
+          }
+
+          const salesOrder = await integration.client.getSalesOrder(String(netsuiteSoInternalId));
+          if (!salesOrder?.tranDate) {
+            return;
+          }
+
+          await query(`UPDATE orders SET netsuite_order_date = $1 WHERE order_id = $2`, [
+            salesOrder.tranDate,
+            order.orderId,
+          ]);
+
+          legacyOrder.netsuite_order_date = salesOrder.tranDate;
+          legacyOrder.netsuiteOrderDate = salesOrder.tranDate;
+        } catch (error: any) {
+          logger.warn('Failed to backfill NetSuite order date for queue order', {
+            orderId: order.orderId,
+            netsuiteSoInternalId,
+            error: error.message,
+          });
+        }
+      })
+    );
+
+    return orders;
+  }
+
   private async getNetSuiteClientForOrganization(organizationId: string): Promise<{
     client: NetSuiteClient;
     integrationId: string;
@@ -850,10 +914,12 @@ export class OrderService {
       organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[]; total: number }> {
-    return orderRepository.getOrderQueue({
+    const result = await orderRepository.getOrderQueue({
       ...filters,
       offset: filters.page && filters.limit ? (filters.page - 1) * filters.limit : undefined,
     });
+    result.orders = await this.backfillMissingNetSuiteOrderDates(result.orders);
+    return result;
   }
 
   // --------------------------------------------------------------------------
@@ -871,10 +937,12 @@ export class OrderService {
       organizationId?: string;
     } = {}
   ): Promise<{ orders: Order[]; total: number }> {
-    return orderRepository.getOrdersWithItemsByStatus({
+    const result = await orderRepository.getOrdersWithItemsByStatus({
       ...filters,
       offset: filters.page && filters.limit ? (filters.page - 1) * filters.limit : undefined,
     });
+    result.orders = await this.backfillMissingNetSuiteOrderDates(result.orders);
+    return result;
   }
 
   // --------------------------------------------------------------------------
