@@ -1215,7 +1215,7 @@ function NotificationPanel() {
 
   return (
     <div
-      className="relative z-[9999] min-w-0 shrink"
+      className="relative z-[9999] min-w-0 shrink overflow-visible"
       ref={dropdownRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -1223,7 +1223,7 @@ function NotificationPanel() {
       <button
         ref={buttonRef}
         onClick={handleClick}
-        className="toolbar-btn relative p-2 min-w-0 shrink dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
+        className="toolbar-btn relative p-2 min-w-0 shrink overflow-visible dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
         aria-label={`Notifications: ${unreadCount} unread`}
         style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
       >
