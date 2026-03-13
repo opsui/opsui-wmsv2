@@ -480,7 +480,7 @@ function OrderCard({
       };
 
   return (
-    <CardWrapper {...(cardWrapperProps as any)} className="relative group">
+    <CardWrapper {...(cardWrapperProps as any)} className="relative group h-full">
       {isUrgent &&
         (noMotion ? (
           <div className="absolute -inset-1 rounded-2xl border border-orange-500/40" />
@@ -692,8 +692,9 @@ function OrderCard({
           )}
 
           {/* Action button */}
-          {noMotion ? (
-            <Button
+          <div className="mt-auto pt-2">
+            {noMotion ? (
+              <Button
               fullWidth
               size="lg"
               variant="primary"
@@ -741,6 +742,7 @@ function OrderCard({
               </Button>
             </motion.div>
           )}
+          </div>
         </CardContent>
       </Card>
     </CardWrapper>
