@@ -2235,6 +2235,8 @@ export class NetSuiteOrderSyncService {
 
     if (newStatus === 'PICKED') {
       updates.push('picked_at = COALESCE(picked_at, NOW())');
+      updates.push('packer_id = NULL');
+      updates.push('packed_at = NULL');
       updates.push('progress = 100');
     } else if (newStatus === 'PACKED') {
       updates.push('packed_at = COALESCE(packed_at, NOW())');

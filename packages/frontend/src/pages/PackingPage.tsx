@@ -416,9 +416,9 @@ export function PackingPage() {
         return;
       }
 
-      // Check if order is already claimed by current user
-      const isAlreadyClaimed = order?.packerId === currentUserId;
-      const isReadyForPacking = order?.status === 'PICKED' || order?.status === 'PACKING';
+      // Only PACKING means an active packing session already exists.
+      const isAlreadyClaimed = order?.status === 'PACKING' && order?.packerId === currentUserId;
+      const isReadyForPacking = order?.status === 'PACKING';
 
       // Prevent multiple claim attempts
       if (
