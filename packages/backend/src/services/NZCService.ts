@@ -516,7 +516,9 @@ export class NZCService {
     return {
       ConsignmentNo:
         this._stringOrEmpty(raw.ConsignmentNo) ||
+        this._stringOrEmpty(raw.Connote) ||
         this._stringOrEmpty(firstConsignment.ConsignmentNo) ||
+        this._stringOrEmpty(firstConsignment.Connote) ||
         this._stringOrEmpty(firstConsignment.ConsignmentNumber),
       ConsignmentId:
         this._stringOrEmpty(raw.ConsignmentId) ||
