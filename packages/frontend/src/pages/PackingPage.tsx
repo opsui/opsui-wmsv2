@@ -366,10 +366,37 @@ export function PackingPage() {
   // Claim order for packing mutation
   const claimMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      const response = await apiClient.post(`/orders/${orderId}/claim-for-packing`, {
-        packer_id: useAuthStore.getState().user?.userId,
-      });
-      return response.data;
+      const currentUserId = useAuthStore.getState().user?.userId;
+
+      try {
+        const response = await apiClient.post(`/orders/${orderId}/claim-for-packing`, {
+          packer_id: currentUserId,
+        });
+        return response.data;
+      } catch (error: any) {
+        const errorMessage = error?.response?.data?.error || error?.message || '';
+        const isAlreadyPackingRace =
+          error?.response?.status === 409 &&
+          typeof errorMessage === 'string' &&
+          errorMessage.includes('current status: PACKING');
+
+        if (!isAlreadyPackingRace || !currentUserId) {
+          throw error;
+        }
+
+        const latestOrderResponse = await apiClient.get(`/orders/${orderId}`);
+        const latestOrder = latestOrderResponse.data;
+
+        if (latestOrder?.status === OrderStatus.PACKING && latestOrder?.packerId === currentUserId) {
+          console.log('[PackingPage] Claim race resolved - order already packed by current user', {
+            orderId,
+            packerId: currentUserId,
+          });
+          return latestOrder;
+        }
+
+        throw error;
+      }
     },
     onSuccess: data => {
       console.log('[PackingPage] Order claimed for packing:', data);
