@@ -461,6 +461,41 @@ function OrderCard({
     new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
   );
   const locationLabel = locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
+  const netsuiteOrderDateLabel = order.netsuiteOrderDate
+    ? (() => {
+        const raw = String(order.netsuiteOrderDate).trim();
+        const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (dateOnlyMatch) {
+          const [, year, month, day] = dateOnlyMatch;
+          const monthIndex = Number(month) - 1;
+          const monthLabel = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+          ][monthIndex];
+
+          return monthLabel ? `${day} ${monthLabel} ${year}` : raw;
+        }
+
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime())
+          ? null
+          : parsed.toLocaleDateString('en-NZ', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            });
+      })()
+    : null;
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
