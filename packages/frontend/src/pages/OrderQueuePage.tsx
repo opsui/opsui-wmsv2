@@ -1209,7 +1209,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             title={`Reload ${mode} queue`}
             aria-label={`Reload ${mode} queue`}
           >
-            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
+            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`} />
           </Button>
         </div>
 
@@ -1300,6 +1300,13 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(100%); }
+        }
+        @keyframes reload-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .reload-icon-spinning {
+          animation: reload-spin 1s linear infinite;
         }
       `}</style>
     </div>
