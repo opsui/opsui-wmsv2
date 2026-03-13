@@ -233,6 +233,7 @@ export function PickingPage() {
         ? returnToFromSearch
         : '/orders?status=PICKING';
   const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
+  const fulfillmentPreviewStorageKey = orderId ? `picking-fulfillment-preview:${orderId}` : null;
 
   // Confirm dialog states
   const [completeOrderConfirm, setCompleteOrderConfirm] = useState<{
@@ -362,6 +363,41 @@ export function PickingPage() {
     setFulfillmentPreviewOrder(completedOrder);
     autoPrintFulfillmentRef.current = true;
   }, []);
+
+  useEffect(() => {
+    if (!fulfillmentPreviewStorageKey) {
+      return;
+    }
+
+    if (!fulfillmentPreviewOrder) {
+      sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+      return;
+    }
+
+    sessionStorage.setItem(fulfillmentPreviewStorageKey, JSON.stringify(fulfillmentPreviewOrder));
+  }, [fulfillmentPreviewOrder, fulfillmentPreviewStorageKey]);
+
+  useEffect(() => {
+    if (!fulfillmentPreviewStorageKey || fulfillmentPreviewOrder) {
+      return;
+    }
+
+    const savedPreview = sessionStorage.getItem(fulfillmentPreviewStorageKey);
+    if (!savedPreview) {
+      return;
+    }
+
+    try {
+      const parsedPreview = JSON.parse(savedPreview);
+      if (parsedPreview?.orderId === orderId) {
+        setFulfillmentPreviewOrder(parsedPreview);
+      } else {
+        sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+      }
+    } catch {
+      sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+    }
+  }, [fulfillmentPreviewOrder, fulfillmentPreviewStorageKey, orderId]);
 
   const handlePrintFulfillmentSlip = useCallback(async () => {
     const slipElement = document.getElementById('fulfillment-slip-print');
@@ -1256,49 +1292,20 @@ export function PickingPage() {
       <div className="min-h-screen">
         <style>{`
           @media print {
-            @page { size: A4; margin: 10mm; }
+            @page { size: A4 landscape; margin: 10mm; }
             html, body {
               background: white !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
-              color-adjust: exact !important;
             }
-            /* Hide everything first */
-            body > * { display: none !important; }
-            /* Show only the print container */
-            body > div > #fulfillment-slip-print,
+            /* Hide header, breadcrumb, and action buttons */
+            header, nav, #fulfillment-slip-actions, .print-hide { display: none !important; }
+            /* Print area fills page */
             #fulfillment-slip-print {
-              display: block !important;
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
               background: white !important;
-              color: black !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
-            #fulfillment-slip-actions { display: none !important; }
-            .print-hide { display: none !important; }
-            /* Hide icons in print */
-            #fulfillment-slip-print svg { display: none !important; }
-            /* Simplify gradient bars for print */
-            .bg-gradient-to-b { background: #9ca3af !important; }
-            .fulfillment-slip-print-color {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-              color-adjust: exact !important;
-            }
-            /* Compact spacing for print */
-            #fulfillment-slip-print .px-8 { padding-left: 16px !important; padding-right: 16px !important; }
-            #fulfillment-slip-print .py-6 { padding-top: 12px !important; padding-bottom: 12px !important; }
-            #fulfillment-slip-print .py-5 { padding-top: 10px !important; padding-bottom: 10px !important; }
-            #fulfillment-slip-print .py-4 { padding-top: 8px !important; padding-bottom: 8px !important; }
-            #fulfillment-slip-print .gap-8 { gap: 24px !important; }
-            /* Remove shadows and rounded corners for print */
-            #fulfillment-slip-print .shadow-sm { box-shadow: none !important; }
-            #fulfillment-slip-print .rounded-xl { border-radius: 0 !important; }
-            #fulfillment-slip-print .rounded-lg { border-radius: 0 !important; }
           }
         `}</style>
 
@@ -1637,7 +1644,15 @@ export function PickingPage() {
                   <PrinterIcon className="h-5 w-5 mr-2" />
                   Print Packing Slip
                 </Button>
-                <Button variant="success" onClick={() => navigate('/orders?status=PENDING')}>
+                <Button
+                  variant="success"
+                  onClick={() => {
+                    if (fulfillmentPreviewStorageKey) {
+                      sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+                    }
+                    navigate('/orders?status=PENDING');
+                  }}
+                >
                   Done
                 </Button>
               </div>
