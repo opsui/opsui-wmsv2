@@ -1389,26 +1389,26 @@ export function PickingPage() {
                       {/* Document Title */}
                       <div className="ml-auto min-w-[20rem] max-w-[24rem]">
                         <div className="flex items-start justify-between gap-6">
-                          <div className="text-left">
+                          <div className="text-center">
                             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
                               Fulfillment Document
                             </p>
                             <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
                               Packing Slip
                             </h1>
+                            <div className="mt-3 flex justify-center">
+                              <div className="inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
+                                <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
+                                <span className="text-sm font-medium text-slate-800 print:text-black">
+                                  {orderDate}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                           <div className="text-right">
                             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 print:text-black">
                               {pageLabel}
                             </p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex justify-center">
-                          <div className="inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
-                            <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
-                            <span className="text-sm font-medium text-slate-800 print:text-black">
-                              {orderDate}
-                            </span>
                           </div>
                         </div>
                       </div>
