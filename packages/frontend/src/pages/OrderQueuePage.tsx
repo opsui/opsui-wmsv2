@@ -1286,8 +1286,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         )}
 
         <div className="flex justify-center relative z-30">
-          <div className="w-full max-w-5xl rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-2.5 shadow-lg">
-            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="w-full max-w-5xl rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-2 shadow-lg">
+            <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-2">
               <div className="relative min-w-0 flex-1 lg:max-w-xs">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
@@ -1302,12 +1302,12 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                     }
                   }}
                   placeholder="Search..."
-                  className="h-10 pl-10 text-sm"
+                  className="h-9 pl-10 text-sm"
                   aria-label={`Search ${mode} queue`}
                 />
               </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:flex-1">
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-end sm:gap-2 lg:flex-1">
                 <StatusFilterDropdown
                   value={statusFilter}
                   onChange={handleStatusFilterChange}
@@ -1318,7 +1318,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                   variant="secondary"
                   size="sm"
                   onClick={() => void handleManualReload()}
-                  className="h-11 px-4 self-end sm:self-auto"
+                  className="h-9 px-3 self-end sm:self-auto"
                   title={`Reload ${mode} queue`}
                   aria-label={`Reload ${mode} queue`}
                 >
