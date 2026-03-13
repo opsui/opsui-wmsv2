@@ -134,7 +134,6 @@ export function PickingPage() {
   const logExceptionMutation = useLogException();
   const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
   const autoPrintFulfillmentRef = useRef(false);
-  const fulfillmentSlipPrintRef = useRef<HTMLDivElement | null>(null);
 
   const formatAddressLines = (address?: Address) =>
     [
@@ -148,11 +147,274 @@ export function PickingPage() {
       address?.email ? `Email: ${address.email}` : null,
     ].filter(Boolean) as string[];
 
+  const escapePrintHtml = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const buildFulfillmentSlipPrintHtml = (completedOrder: any) => {
+    const previewAddressLines = formatAddressLines(completedOrder.shippingAddress);
+    const billToLines = previewAddressLines;
+    const orderDate = completedOrder.netsuiteOrderDate
+      ? new Date(completedOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
+      : new Date().toLocaleDateString('en-NZ');
+    const completedAt = new Date().toLocaleString('en-NZ', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const shipToHtml =
+      previewAddressLines.length > 0
+        ? previewAddressLines
+            .map(line => `<div class="meta-line">${escapePrintHtml(String(line))}</div>`)
+            .join('')
+        : '<div class="meta-line">No shipping details available</div>';
+
+    const billToHtml =
+      billToLines.length > 0
+        ? billToLines
+            .map(line => `<div class="meta-line">${escapePrintHtml(String(line))}</div>`)
+            .join('')
+        : '<div class="meta-line">No billing details available</div>';
+
+    const rowsHtml = ((completedOrder.items || []) as any[])
+      .map(
+        item => `
+          <tr>
+            <td class="mono">${escapePrintHtml(String(item.sku || ''))}</td>
+            <td>
+              <div class="item-name">${escapePrintHtml(String(item.name || ''))}</div>
+              <div class="item-sub">Bin: ${escapePrintHtml(
+                String(formatBinLocation(item.binLocation || ''))
+              )}</div>
+            </td>
+            <td class="num">${escapePrintHtml(String(item.quantity ?? 0))}</td>
+            <td class="num">0</td>
+            <td class="num">${escapePrintHtml(String(item.pickedQuantity ?? 0))}</td>
+          </tr>
+        `
+      )
+      .join('');
+
+    return `
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title>Fulfillment Slip</title>
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 10mm;
+            }
+
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: #ffffff;
+              color: #0f172a;
+              font-family: Arial, Helvetica, sans-serif;
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+
+            .sheet {
+              width: 100%;
+              padding: 0;
+            }
+
+            .header {
+              display: flex;
+              align-items: flex-start;
+              justify-content: space-between;
+              gap: 32px;
+              margin-bottom: 28px;
+            }
+
+            .brand-block {
+              display: flex;
+              align-items: flex-start;
+              gap: 18px;
+              min-width: 420px;
+            }
+
+            .brand-logo {
+              width: 168px;
+              height: auto;
+            }
+
+            .brand-address {
+              padding-top: 8px;
+              font-size: 13px;
+              line-height: 1.25;
+              color: #111827;
+            }
+
+            .slip-meta {
+              min-width: 360px;
+            }
+
+            .slip-title {
+              margin: 0 0 18px;
+              font-size: 26px;
+              font-weight: 700;
+            }
+
+            .meta-grid {
+              display: grid;
+              grid-template-columns: 180px 1fr;
+              row-gap: 8px;
+              column-gap: 12px;
+              font-size: 13px;
+            }
+
+            .label {
+              font-weight: 700;
+            }
+
+            .address-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 42px;
+              margin-bottom: 28px;
+            }
+
+            .address-panel-title {
+              font-size: 15px;
+              font-weight: 700;
+              margin-bottom: 8px;
+            }
+
+            .mono {
+              font-family: "Courier New", Courier, monospace;
+            }
+
+            .meta-line {
+              margin: 1px 0;
+              font-size: 13px;
+              line-height: 1.25;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              table-layout: fixed;
+            }
+
+            thead th {
+              text-align: left;
+              background: #b8b8b8;
+              color: #ffffff;
+              font-size: 11px;
+              padding: 6px 8px;
+              border: 1px solid #b8b8b8;
+            }
+
+            tbody td {
+              padding: 10px 8px;
+              border: 1px solid #b7b7b7;
+              vertical-align: top;
+              font-size: 13px;
+            }
+
+            .item-name {
+              font-weight: 700;
+              margin-bottom: 4px;
+            }
+
+            .item-sub {
+              color: #64748b;
+              font-size: 12px;
+              margin-top: 4px;
+            }
+
+            .num {
+              text-align: right;
+            }
+          </style>
+        </head>
+        <body>
+            <div class="sheet">
+              <div class="header">
+                <div class="brand-block">
+                  <img class="brand-logo" src="/arrowhead-logo.svg" alt="Arrowhead Alarm Products" />
+                  <div class="brand-address">
+                    <div>1A Emirali Road,</div>
+                    <div>Silverdale, 0932</div>
+                    <div>Auckland</div>
+                    <div>New Zealand</div>
+                  </div>
+                </div>
+                <div class="slip-meta">
+                  <div class="slip-title">Packing Slip</div>
+                  <div class="meta-grid">
+                    <div class="label">Order Date</div>
+                    <div>${escapePrintHtml(orderDate)}</div>
+                    <div class="label">Sales Order #</div>
+                    <div>${escapePrintHtml(
+                      String(completedOrder.netsuiteSoTranId || completedOrder.orderId)
+                    )}</div>
+                    <div class="label">Account Number</div>
+                    <div>${escapePrintHtml(String(completedOrder.customerId || ''))}</div>
+                    <div class="label">Customer PO #</div>
+                    <div>${escapePrintHtml(String(completedOrder.customerPoNumber || ''))}</div>
+                    <div class="label">Shipping Method</div>
+                    <div>${escapePrintHtml(String(completedOrder.carrier || 'Warehouse Pick'))}</div>
+                    <div class="label">Fulfillment #</div>
+                    <div>${escapePrintHtml(
+                      String(
+                        completedOrder.netsuiteIfTranId ||
+                          completedOrder.netsuiteSoTranId ||
+                          completedOrder.orderId
+                      )
+                    )}</div>
+                    <div class="label">Completed</div>
+                    <div>${escapePrintHtml(completedAt)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="address-grid">
+                <div>
+                  <div class="address-panel-title">Ship To</div>
+                  ${shipToHtml}
+                </div>
+                <div>
+                  <div class="address-panel-title">Bill To</div>
+                  ${billToHtml}
+                </div>
+              </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 24%;">Item</th>
+                  <th style="width: 46%;">Description</th>
+                  <th style="width: 10%; text-align: right;">Ordered</th>
+                  <th style="width: 10%; text-align: right;">B/O</th>
+                  <th style="width: 10%; text-align: right;">Shipped</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
   const handlePrintFulfillmentSlip = async () => {
     setIsPrintingFulfillmentSlip(true);
     try {
-      const slipElement = fulfillmentSlipPrintRef.current;
-      if (!slipElement) {
+      if (!fulfillmentPreviewOrder) {
         throw new Error('Packing slip preview is not ready yet');
       }
 
@@ -175,44 +437,7 @@ export function PickingPage() {
       }
 
       printDocument.open();
-      printDocument.write(`
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8" />
-            <title>Fulfillment Slip</title>
-            <style>
-              @page {
-                size: auto;
-                margin: 12mm;
-              }
-
-              html, body {
-                margin: 0;
-                padding: 0;
-                background: #ffffff;
-                color: #0f172a;
-                font-family: Arial, Helvetica, sans-serif;
-              }
-
-              body {
-                padding: 0;
-              }
-
-              * {
-                box-sizing: border-box;
-              }
-
-              .print-root {
-                width: 100%;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="print-root">${slipElement.outerHTML}</div>
-          </body>
-        </html>
-      `);
+      printDocument.write(buildFulfillmentSlipPrintHtml(fulfillmentPreviewOrder));
       printDocument.close();
 
       await new Promise(resolve => {
@@ -1136,35 +1361,13 @@ export function PickingPage() {
 
   if (fulfillmentPreviewOrder) {
     const previewAddressLines = formatAddressLines(fulfillmentPreviewOrder.shippingAddress);
+    const billToLines = previewAddressLines;
+    const orderDate = fulfillmentPreviewOrder.netsuiteOrderDate
+      ? new Date(fulfillmentPreviewOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
+      : new Date().toLocaleDateString('en-NZ');
 
     return (
       <div className="min-h-screen">
-        <style>{`
-          @media print {
-            body * {
-              visibility: hidden !important;
-            }
-
-            #fulfillment-slip-print,
-            #fulfillment-slip-print * {
-              visibility: visible !important;
-            }
-
-            #fulfillment-slip-print {
-              position: absolute;
-              inset: 0;
-              width: 100%;
-              background: white !important;
-              color: black !important;
-              padding: 0;
-            }
-
-            #fulfillment-slip-actions {
-              display: none !important;
-            }
-          }
-        `}</style>
-
         <Header />
         <ResponsiveContainer variant="fluid" padding="lg">
           <main className="relative z-10 space-y-responsive">
@@ -1178,205 +1381,98 @@ export function PickingPage() {
             />
 
             <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
-              <div
-                id="fulfillment-slip-print"
-                ref={fulfillmentSlipPrintRef}
-                className="bg-white text-slate-900 print:p-0 print:rounded-none"
-              >
-                {/* Header with gradient accent */}
-                <div className="relative bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 text-white px-8 py-6 print:bg-white print:text-black print:border-b-2 print:border-purple-600">
-                  <div className="absolute inset-0 opacity-10 print:hidden">
-                    <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]" />
-                  </div>
-                  <div className="relative flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center print:bg-purple-600 print:text-white">
-                          <CubeIcon className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80 print:text-purple-600">
-                            Packing Slip
-                          </p>
-                          <h1 className="text-2xl font-bold tracking-tight print:text-black">
-                            {fulfillmentPreviewOrder.netsuiteIfTranId ||
-                              fulfillmentPreviewOrder.netsuiteSoTranId ||
-                              fulfillmentPreviewOrder.orderId}
-                          </h1>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right text-sm">
-                      <div className="inline-flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5 print:bg-gray-100">
-                        <CalendarDaysIcon className="h-4 w-4 text-white/70 print:text-purple-600" />
-                        <span className="font-medium print:text-gray-700">
-                          {new Date().toLocaleDateString('en-NZ', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
+              <div id="fulfillment-slip-print" className="bg-white text-slate-900 p-8 space-y-8">
+                <div className="flex items-start justify-between gap-8">
+                  <div className="flex items-start gap-5">
+                    <img
+                      src="/arrowhead-logo.svg"
+                      alt="Arrowhead Alarm Products"
+                      className="w-40 h-auto object-contain"
+                    />
+                    <div className="pt-2 text-sm leading-5 text-slate-800">
+                      <div>1A Emirali Road,</div>
+                      <div>Silverdale, 0932</div>
+                      <div>Auckland</div>
+                      <div>New Zealand</div>
                     </div>
                   </div>
-                </div>
-
-                {/* Order Info Bar */}
-                <div className="bg-slate-50 border-b border-slate-200 px-8 py-4 print:bg-white">
-                  <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
-                        SO #
-                      </span>
-                      <span className="font-mono font-semibold text-slate-900">
+                  <div className="min-w-[360px]">
+                    <h1 className="text-5xl font-bold tracking-tight text-slate-950">
+                      Packing Slip
+                    </h1>
+                    <dl className="mt-6 grid grid-cols-[170px,1fr] gap-y-2 gap-x-4 text-[15px]">
+                      <dt className="font-bold text-slate-950">Order Date</dt>
+                      <dd>{orderDate}</dd>
+                      <dt className="font-bold text-slate-950">Sales Order #</dt>
+                      <dd>
                         {fulfillmentPreviewOrder.netsuiteSoTranId ||
                           fulfillmentPreviewOrder.orderId}
-                      </span>
+                      </dd>
+                      <dt className="font-bold text-slate-950">Account Number</dt>
+                      <dd>{fulfillmentPreviewOrder.customerId || ''}</dd>
+                      <dt className="font-bold text-slate-950">Customer PO #</dt>
+                      <dd>{fulfillmentPreviewOrder.customerPoNumber || ''}</dd>
+                      <dt className="font-bold text-slate-950">Shipping Method</dt>
+                      <dd>{fulfillmentPreviewOrder.carrier || 'Warehouse Pick'}</dd>
+                      <dt className="font-bold text-slate-950">Fulfillment #</dt>
+                      <dd>
+                        {fulfillmentPreviewOrder.netsuiteIfTranId ||
+                          fulfillmentPreviewOrder.netsuiteSoTranId ||
+                          fulfillmentPreviewOrder.orderId}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-10 text-[15px]">
+                  <div>
+                    <p className="mb-3 text-2xl font-bold text-slate-950">Ship To</p>
+                    <div className="space-y-0.5 text-slate-900">
+                      {previewAddressLines.length > 0 ? (
+                        previewAddressLines.map(line => <p key={`ship-${line}`}>{line}</p>)
+                      ) : (
+                        <p>No shipping details available</p>
+                      )}
                     </div>
-                    {fulfillmentPreviewOrder.customerPoNumber && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
-                          PO #
-                        </span>
-                        <span className="font-mono font-semibold text-slate-900">
-                          {fulfillmentPreviewOrder.customerPoNumber}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
-                        Picker
-                      </span>
-                      <span className="font-semibold text-slate-900">
-                        {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 ml-auto">
-                      <span className="text-slate-500 uppercase text-xs font-semibold tracking-wider">
-                        Picked
-                      </span>
-                      <span className="font-mono text-purple-600 font-bold">
-                        {new Date().toLocaleTimeString('en-NZ', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
+                  </div>
+                  <div>
+                    <p className="mb-3 text-2xl font-bold text-slate-950">Bill To</p>
+                    <div className="space-y-0.5 text-slate-900">
+                      {billToLines.length > 0 ? (
+                        billToLines.map(line => <p key={`bill-${line}`}>{line}</p>)
+                      ) : (
+                        <p>No billing details available</p>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Main Content */}
-                <div className="p-8 space-y-6">
-                  {/* Customer & Shipping Info */}
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 p-5 print:bg-white print:border-gray-300">
-                      <div className="flex items-center gap-2 mb-3">
-                        <UserGroupIcon className="h-4 w-4 text-purple-600" />
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                          Customer
-                        </p>
-                      </div>
-                      <p className="text-xl font-bold text-slate-900">
-                        {fulfillmentPreviewOrder.customerName}
-                      </p>
-                      <p className="mt-2 text-sm font-mono text-slate-600 bg-white rounded-lg px-3 py-1.5 inline-block border border-slate-200">
-                        {fulfillmentPreviewOrder.orderId}
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-200 p-5 print:bg-white print:border-gray-300">
-                      <div className="flex items-center gap-2 mb-3">
-                        <TruckIcon className="h-4 w-4 text-purple-600" />
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-purple-600">
-                          Ship To
-                        </p>
-                      </div>
-                      <div className="space-y-0.5 text-sm text-slate-700">
-                        {previewAddressLines.length > 0 ? (
-                          previewAddressLines.map((line, i) => (
-                            <p key={line} className={i === 0 ? 'font-semibold text-slate-900' : ''}>
-                              {line}
-                            </p>
-                          ))
-                        ) : (
-                          <p className="text-slate-400 italic">No shipping details available</p>
-                        )}
-                      </div>
-                    </div>
+                <div className="border border-[#b7b7b7]">
+                  <div className="grid grid-cols-[24%,46%,10%,10%,10%] bg-[#b8b8b8] px-3 py-1.5 text-[13px] font-bold text-white">
+                    <span>Item</span>
+                    <span>Description</span>
+                    <span className="text-right">Ordered</span>
+                    <span className="text-right">B/O</span>
+                    <span className="text-right">Shipped</span>
                   </div>
-
-                  {/* Items Table */}
-                  <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none">
-                    <div className="bg-gradient-to-r from-slate-800 to-slate-700 print:bg-gray-200">
-                      <div className="grid grid-cols-12 gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.15em] text-white print:text-gray-700">
-                        <span className="col-span-5">Item</span>
-                        <span className="col-span-3">SKU</span>
-                        <span className="col-span-2 text-center">Bin</span>
-                        <span className="col-span-1 text-center">Picked</span>
-                        <span className="col-span-1 text-center">Qty</span>
-                      </div>
-                    </div>
-                    <div className="divide-y divide-slate-100 print:divide-gray-200">
-                      {(fulfillmentPreviewOrder.items || []).map((item: any, idx: number) => (
-                        <div
-                          key={item.orderItemId}
-                          className={`grid grid-cols-12 gap-2 px-5 py-4 text-sm items-center ${
-                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                          } print:bg-white`}
-                        >
-                          <div className="col-span-5">
-                            <p className="font-semibold text-slate-900">{item.name}</p>
-                          </div>
-                          <p className="col-span-3 font-mono text-slate-700 text-xs">{item.sku}</p>
-                          <p className="col-span-2 text-center">
-                            <span className="inline-flex items-center justify-center min-w-[3rem] px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-xs font-bold print:bg-gray-100">
-                              {formatBinLocation(item.binLocation)}
-                            </span>
-                          </p>
-                          <p className="col-span-1 text-center">
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-700 font-bold text-sm print:bg-gray-100">
-                              {item.pickedQuantity}
-                            </span>
-                          </p>
-                          <p className="col-span-1 text-center font-semibold text-slate-700">
-                            {item.quantity}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Footer Summary */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                    <div className="flex items-center gap-6 text-sm text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                          <ClipboardDocumentListIcon className="h-4 w-4 text-purple-600" />
-                        </div>
+                  <div>
+                    {(fulfillmentPreviewOrder.items || []).map((item: any) => (
+                      <div
+                        key={item.orderItemId}
+                        className="grid grid-cols-[24%,46%,10%,10%,10%] border-t border-[#b7b7b7] px-3 py-4 text-[15px]"
+                      >
+                        <div>{item.sku}</div>
                         <div>
-                          <p className="text-xs text-slate-500 uppercase tracking-wider">
-                            Total Items
-                          </p>
-                          <p className="font-bold text-slate-900">
-                            {(fulfillmentPreviewOrder.items || []).reduce(
-                              (sum: number, item: any) => sum + item.pickedQuantity,
-                              0
-                            )}
-                          </p>
+                          <div>{item.name}</div>
+                          <div className="mt-1 text-[13px] text-slate-600">
+                            Bin: {formatBinLocation(item.binLocation)}
+                          </div>
                         </div>
+                        <div className="text-right">{item.quantity}</div>
+                        <div className="text-right">0</div>
+                        <div className="text-right">{item.pickedQuantity}</div>
                       </div>
-                    </div>
-
-                    {/* Signature area */}
-                    <div className="text-right print:flex print:gap-8">
-                      <div className="inline-block">
-                        <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-                          Verified By
-                        </p>
-                        <div className="w-40 border-b-2 border-slate-300 border-dashed h-6" />
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
