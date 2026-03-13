@@ -224,11 +224,14 @@ export class OrderRepository extends BaseRepository<Order> {
       conditions.push(`o.picker_id IS NULL`);
     }
 
-    // Search filter - search across order_id, customer_name, and item sku/name
+    // Search filter - search across internal order refs, NetSuite SO refs,
+    // customer name, and item sku/name.
     if (filters.search && filters.search.trim()) {
       const searchParam = `%${filters.search.trim().toLowerCase()}%`;
       conditions.push(`(
         LOWER(o.order_id) LIKE $${paramIndex} OR
+        LOWER(COALESCE(o.netsuite_so_tran_id, '')) LIKE $${paramIndex} OR
+        LOWER(COALESCE(o.external_order_id, '')) LIKE $${paramIndex} OR
         LOWER(o.customer_name) LIKE $${paramIndex} OR
         EXISTS (
           SELECT 1 FROM order_items oi 
