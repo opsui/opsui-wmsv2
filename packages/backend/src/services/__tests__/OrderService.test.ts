@@ -658,6 +658,22 @@ describe('OrderService', () => {
       });
     });
 
+    it('should be idempotent when packing is already completed by the same packer', async () => {
+      const packedOrder = {
+        ...mockOrder,
+        status: OrderStatus.PACKED,
+        packerId: 'packer-123',
+        packedAt: new Date(),
+      };
+
+      orderRepository.getOrderWithItems.mockResolvedValue(packedOrder);
+
+      const result = await orderService.completePacking('ORD-TEST-001', 'packer-123');
+
+      expect(result.status).toBe(OrderStatus.PACKED);
+      expect(orderRepository.update).not.toHaveBeenCalled();
+    });
+
     it('should throw ConflictError when packer does not match', async () => {
       orderRepository.getOrderWithItems.mockResolvedValue({
         ...mockOrder,

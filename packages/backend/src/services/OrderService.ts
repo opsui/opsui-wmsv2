@@ -1212,6 +1212,11 @@ export class OrderService {
       throw new ConflictError(`Order is not assigned to this packer`);
     }
 
+    if (order.status === OrderStatus.PACKED) {
+      logger.info('Order packing already completed', { orderId, packerId });
+      return order;
+    }
+
     // Validate order is in PACKING status
     if (order.status !== OrderStatus.PACKING) {
       throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
