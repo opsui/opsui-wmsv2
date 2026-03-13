@@ -480,7 +480,7 @@ function OrderCard({
       };
 
   return (
-    <CardWrapper {...(cardWrapperProps as any)} className="relative group h-full">
+    <CardWrapper {...(cardWrapperProps as any)} className="relative group h-full flex flex-col">
       {isUrgent &&
         (noMotion ? (
           <div className="absolute -inset-1 rounded-2xl border border-orange-500/40" />
