@@ -72,7 +72,7 @@ describe('NetSuiteOrderSyncService', () => {
     const queryMock = jest
       .spyOn(service as any, 'query')
       .mockImplementation(async (sql: string) => {
-        if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+        if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
           return {
             rows: [
               {
@@ -143,7 +143,7 @@ describe('NetSuiteOrderSyncService', () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
         return {
           rows: [
             {
@@ -274,6 +274,55 @@ describe('NetSuiteOrderSyncService', () => {
     expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68381', expect.any(Date));
   });
 
+  it('reverts shipped orders to pending during sync when NetSuite returns the sales order to ready-to-ship without a fulfillment', async () => {
+    const { client, service } = createService();
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO68563',
+              status: 'SHIPPED',
+              netsuite_so_internal_id: '1708563',
+              netsuite_so_tran_id: 'SO68563',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    jest.spyOn(client, 'getSalesOrders').mockResolvedValue({
+      links: [],
+      count: 1,
+      hasMore: false,
+      items: [baseSalesOrder({ id: '1708563', tranId: 'SO68563' }) as any],
+      offset: 0,
+      totalResults: 1,
+    });
+    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
+      baseSalesOrder({ id: '1708563', tranId: 'SO68563' })
+    );
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
+
+    expect(result.updated).toBe(1);
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO68563', 'PENDING');
+    expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
+  });
+
   it('updates an existing fulfillment-backed order', async () => {
     const { client, service } = createService();
 
@@ -395,6 +444,8 @@ describe('NetSuiteOrderSyncService', () => {
     expect(updateSql).toContain('packer_id = NULL');
     expect(updateSql).toContain('claimed_at = NULL');
     expect(updateSql).toContain('progress = 0');
+    expect(updateSql).toContain('netsuite_if_internal_id = NULL');
+    expect(updateSql).toContain('netsuite_if_tran_id = NULL');
     expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('SET picked_quantity = 0'), [
       'SO70014',
     ]);
@@ -485,7 +536,7 @@ describe('NetSuiteOrderSyncService', () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
         return {
           rows: [
             {
@@ -533,7 +584,7 @@ describe('NetSuiteOrderSyncService', () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
         return {
           rows: [
             {
@@ -581,7 +632,7 @@ describe('NetSuiteOrderSyncService', () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
         return {
           rows: [
             {
@@ -731,7 +782,7 @@ describe('NetSuiteOrderSyncService', () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
         return {
           rows: [
             {
@@ -780,7 +831,7 @@ describe('NetSuiteOrderSyncService', () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
-      if (sql.includes("status IN ('PENDING', 'PICKING')")) {
+      if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
         return {
           rows: [
             {

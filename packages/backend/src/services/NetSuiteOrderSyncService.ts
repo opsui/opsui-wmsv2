@@ -686,9 +686,10 @@ export class NetSuiteOrderSyncService {
       }
 
       // ====================================================================
-      // PHASE 3: Check PENDING/PICKING WMS orders against NetSuite
+      // PHASE 3: Check PENDING/PICKING/SHIPPED WMS orders against NetSuite
       // PENDING orders: transition to PICKED if fulfilled, CANCELLED if cancelled
       // PICKING orders: transition to PICKED if fulfillment exists (picked on NetSuite)
+      // SHIPPED orders: recover back to PENDING if the NetSuite fulfillment was deleted/reset
       // ====================================================================
 
       try {
@@ -696,16 +697,17 @@ export class NetSuiteOrderSyncService {
           `SELECT order_id, status, netsuite_so_internal_id, netsuite_so_tran_id
            FROM orders
            WHERE netsuite_source = 'NETSUITE'
-             AND status IN ('PENDING', 'PICKING')
+             AND status IN ('PENDING', 'PICKING', 'SHIPPED')
              AND netsuite_so_internal_id IS NOT NULL`
         );
 
         // Debug: Log sample SO IDs from WMS PENDING orders
         const wmsSoIds = activeWmsOrders.rows.map((r: any) => r.netsuite_so_internal_id);
-        logger.info('Phase 3: Checking WMS PENDING/PICKING orders against NetSuite', {
+        logger.info('Phase 3: Checking WMS PENDING/PICKING/SHIPPED orders against NetSuite', {
           wmsActiveCount: activeWmsOrders.rows.length,
           wmsPendingCount: activeWmsOrders.rows.filter((r: any) => r.status === 'PENDING').length,
           wmsPickingCount: activeWmsOrders.rows.filter((r: any) => r.status === 'PICKING').length,
+          wmsShippedCount: activeWmsOrders.rows.filter((r: any) => r.status === 'SHIPPED').length,
           netSuitePendingCount: currentPendingSoIds.size,
           wmsSoIds: wmsSoIds.slice(0, 15),
           fulfillmentMapKeys: Array.from(fulfillmentMap.keys()).slice(0, 15),
@@ -797,7 +799,7 @@ export class NetSuiteOrderSyncService {
             continue;
           }
 
-          // Handle PENDING orders - FIRST check if fulfillment exists
+          // Handle PENDING/SHIPPED orders - FIRST check if fulfillment exists
           // If NetSuite created a fulfillment, the order should move to PICKED/SHIPPED
           const pendingFulfillments = fulfillmentMap.get(soId) || [];
           logger.debug('Checking PENDING order for fulfillments', {
@@ -847,6 +849,19 @@ export class NetSuiteOrderSyncService {
 
           // No fulfillment found - check if SO is still pending in NetSuite
           if (phase1Succeeded && currentReadyToShipSoIds.has(soId)) {
+            if (orderStatus === 'SHIPPED') {
+              await this.updateOrderStatus(row.order_id, 'PENDING');
+              result.updated++;
+              result.details.updated.push(row.netsuite_so_tran_id || soId);
+              logger.warn(
+                'Reverted SHIPPED order to PENDING (SO still pending fulfillment with no fulfillment)',
+                {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  soId,
+                }
+              );
+            }
             await this.markOrderSynced(row.order_id, syncStartTime);
             continue;
           }
@@ -908,6 +923,23 @@ export class NetSuiteOrderSyncService {
                 result.details.updated.push(row.netsuite_so_tran_id || soId);
                 logger.warn(
                   'Updated order to PICKED using sales-order fulfilled quantities fallback',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    soId,
+                    soStatus,
+                  }
+                );
+                continue;
+              }
+
+              if (orderStatus === 'SHIPPED') {
+                await this.updateOrderStatus(row.order_id, 'PENDING');
+                await this.markOrderSynced(row.order_id, syncStartTime);
+                result.updated++;
+                result.details.updated.push(row.netsuite_so_tran_id || soId);
+                logger.warn(
+                  'Reverted SHIPPED order to PENDING via sales-order fallback (pending fulfillment with no fulfillment)',
                   {
                     orderId: row.order_id,
                     soTranId: row.netsuite_so_tran_id,
@@ -2239,6 +2271,8 @@ export class NetSuiteOrderSyncService {
       updates.push('claimed_at = NULL');
       updates.push('packed_at = NULL');
       updates.push('shipped_at = NULL');
+      updates.push('netsuite_if_internal_id = NULL');
+      updates.push('netsuite_if_tran_id = NULL');
       updates.push('progress = 0');
     } else if (newStatus === 'PICKED') {
       updates.push('picked_at = COALESCE(picked_at, NOW())');
