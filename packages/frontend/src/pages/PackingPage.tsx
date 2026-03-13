@@ -135,6 +135,7 @@ const createNzcPackageRow = (presetId: string = NZC_DEFAULT_PRESET_ID): NzcPacka
 export function PackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
+  const returnToFromSearch = new URLSearchParams(location.search).get('returnTo');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
@@ -204,6 +205,8 @@ export function PackingPage() {
   const packingQueuePath =
     typeof location.state?.returnTo === 'string' && location.state.returnTo.length > 0
       ? location.state.returnTo
+      : typeof returnToFromSearch === 'string' && returnToFromSearch.length > 0
+        ? returnToFromSearch
       : '/packing?status=PACKING';
 
   // Helper to convert lbs to kg for NZC API

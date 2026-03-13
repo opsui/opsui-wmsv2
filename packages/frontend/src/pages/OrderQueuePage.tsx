@@ -821,14 +821,28 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   );
 
   const navigateToOrderDetail = useCallback(
-    (queueMode: QueueMode, orderId: string) => {
+    (queueMode: QueueMode, orderId: string, options?: { hardReload?: boolean }) => {
       const detailPath =
         queueMode === 'packing' ? `/packing/${orderId}/pack` : `/orders/${orderId}/pick`;
-      navigate(detailPath, {
-        state: {
-          returnTo: getActiveQueuePath(queueMode),
+      const returnTo = getActiveQueuePath(queueMode);
+      const detailUrl = `${detailPath}?returnTo=${encodeURIComponent(returnTo)}`;
+
+      if (options?.hardReload) {
+        window.location.assign(detailUrl);
+        return;
+      }
+
+      navigate(
+        {
+          pathname: detailPath,
+          search: `?returnTo=${encodeURIComponent(returnTo)}`,
         },
-      });
+        {
+          state: {
+            returnTo,
+          },
+        }
+      );
     },
     [getActiveQueuePath, navigate]
   );
@@ -1100,7 +1114,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
     // Packing: continue active order
     if (mode === 'packing' && orderStatus === OrderStatus.PACKING) {
-      navigateToOrderDetail(mode, orderId);
+      navigateToOrderDetail(mode, orderId, { hardReload: mode === 'picking' });
       return;
     }
 
@@ -1112,7 +1126,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
         /* silent */
       }
       queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
-      navigateToOrderDetail(mode, orderId);
+      navigateToOrderDetail(mode, orderId, { hardReload: true });
       return;
     }
 
@@ -1128,7 +1142,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       if (mode === 'picking') {
         await claimPickingMutation.mutateAsync({ orderId, dto: { pickerId: userId } });
         showToast(`Order ${orderId} claimed successfully`, 'success');
-        navigateToOrderDetail(mode, orderId);
+        navigateToOrderDetail(mode, orderId, { hardReload: true });
       } else {
         await claimPackingMutation.mutateAsync({ orderId, packerId: userId });
         showToast(`Order ${orderId} claimed successfully`, 'success');
@@ -1222,44 +1236,6 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           </p>
         </div>
 
-        {/* Fixed filters at top right */}
-        <div className="fixed top-16 right-4 z-40 flex items-center gap-2 bg-slate-900/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-slate-700/50 shadow-lg">
-          <div className="relative w-40">
-            <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
-            <Input
-              type="search"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  setDebouncedSearch(searchTerm.trim());
-                  setPage(1);
-                }
-              }}
-              placeholder="Search..."
-              className="pl-8 h-8 text-sm"
-              aria-label={`Search ${mode} queue`}
-            />
-          </div>
-          <StatusFilterDropdown
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-            mode={mode}
-          />
-          <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => void handleManualReload()}
-            className="h-8 px-2"
-            title={`Reload ${mode} queue`}
-            aria-label={`Reload ${mode} queue`}
-          >
-            <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`} />
-          </Button>
-        </div>
-
         {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
         {(isAdmin || (canPick() && canPack())) && (
           <div className="flex justify-center">
@@ -1289,6 +1265,52 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
             </div>
           </div>
         )}
+
+        <div className="flex justify-center">
+          <div className="w-full max-w-5xl rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-3 shadow-lg">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="relative min-w-0 flex-1 lg:max-w-xs">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <Input
+                  type="search"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      setDebouncedSearch(searchTerm.trim());
+                      setPage(1);
+                    }
+                  }}
+                  placeholder="Search..."
+                  className="h-11 pl-10 text-sm"
+                  aria-label={`Search ${mode} queue`}
+                />
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:flex-1">
+                <StatusFilterDropdown
+                  value={statusFilter}
+                  onChange={handleStatusFilterChange}
+                  mode={mode}
+                />
+                <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void handleManualReload()}
+                  className="h-11 px-4 self-end sm:self-auto"
+                  title={`Reload ${mode} queue`}
+                  aria-label={`Reload ${mode} queue`}
+                >
+                  <ArrowPathIcon
+                    className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`}
+                  />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {noMotion ? (
           filteredOrders.length === 0 ? (
