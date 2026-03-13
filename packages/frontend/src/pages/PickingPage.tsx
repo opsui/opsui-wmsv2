@@ -172,33 +172,7 @@ const formatAddressLines = (address?: Address | null): string[] => {
     .filter(Boolean);
 };
 
-const fulfillmentSlipLogoSvg = `
-  <svg width="220" height="96" viewBox="0 0 220 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Arrowhead Alarm Products">
-    <rect width="220" height="96" fill="white"/>
-    <path d="M19 16H44L28 52H19V16Z" fill="#111111"/>
-    <path d="M46 16H72L57 41H46V16Z" fill="#5A97D6"/>
-    <path d="M46 44H58L64 54H56V62H74V78H38L52 54H46V44Z" fill="#5A97D6"/>
-    <path d="M0 82H9.8L13.2 73.6H29.7L33.1 82H43.1L27 45.4H16.3L0 82ZM16.2 66.4L21.4 53.9L26.5 66.4H16.2Z" fill="#1A1A1A"/>
-    <path d="M46.7 82V45.4H63.3C68.2 45.4 72 46.6 74.7 49C77.3 51.4 78.6 54.6 78.6 58.7C78.6 62.6 77.3 65.8 74.8 68.2C72.2 70.6 68.5 71.8 63.6 71.8H56.2V82H46.7ZM56.2 64.4H62.6C64.8 64.4 66.4 63.9 67.4 62.9C68.5 61.9 69 60.5 69 58.7C69 56.8 68.5 55.4 67.4 54.4C66.4 53.4 64.8 52.9 62.6 52.9H56.2V64.4Z" fill="#1A1A1A"/>
-    <path d="M83.1 82V45.4H92.6V58.5H106.7V45.4H116.2V82H106.7V66.1H92.6V82H83.1Z" fill="#1A1A1A"/>
-    <path d="M121.6 82V45.4H131.1V82H121.6Z" fill="#1A1A1A"/>
-    <path d="M137 82V45.4H146.3L161.3 67.8V45.4H170.5V82H161.5L146.2 59.2V82H137Z" fill="#1A1A1A"/>
-    <path d="M176.1 82V45.4H205.2V52.8H185.5V59.8H203.7V66.9H185.5V74.6H205.5V82H176.1Z" fill="#1A1A1A"/>
-    <path d="M0 94.5V87.6H4.2C5.2 87.6 6 87.9 6.6 88.4C7.2 88.9 7.5 89.5 7.5 90.4C7.5 91.3 7.2 91.9 6.6 92.4C6 93 5.2 93.2 4.2 93.2H1.8V94.5H0ZM1.8 91.8H4.1C4.5 91.8 4.8 91.7 5 91.5C5.3 91.3 5.4 91 5.4 90.6C5.4 90.2 5.3 89.9 5 89.7C4.8 89.5 4.5 89.4 4.1 89.4H1.8V91.8Z" fill="#1A1A1A"/>
-    <path d="M8.9 94.5V87.6H10.7V93H14.4V94.5H8.9Z" fill="#1A1A1A"/>
-    <path d="M15.4 94.5L18.4 87.6H20.3L23.3 94.5H21.4L20.8 93H17.9L17.3 94.5H15.4ZM18.4 91.7H20.2L19.3 89.4L18.4 91.7Z" fill="#1A1A1A"/>
-    <path d="M25.9 94.5V89.1H23.6V87.6H30V89.1H27.7V94.5H25.9Z" fill="#1A1A1A"/>
-    <path d="M31.2 94.5V87.6H36.8V89H33V90.4H36.5V91.8H33V94.5H31.2Z" fill="#1A1A1A"/>
-    <path d="M41.1 94.7C40.1 94.7 39.2 94.4 38.4 93.7C37.7 93 37.3 92.2 37.3 91.1C37.3 90.1 37.7 89.2 38.4 88.5C39.2 87.8 40.1 87.5 41.1 87.5C42.2 87.5 43.1 87.8 43.8 88.5C44.6 89.2 44.9 90.1 44.9 91.1C44.9 92.2 44.6 93 43.8 93.7C43.1 94.4 42.2 94.7 41.1 94.7ZM41.1 93.1C41.7 93.1 42.2 92.9 42.6 92.4C43 92 43.2 91.5 43.2 90.9C43.2 90.3 43 89.8 42.6 89.4C42.2 88.9 41.7 88.7 41.1 88.7C40.5 88.7 40 88.9 39.6 89.4C39.2 89.8 39 90.3 39 90.9C39 91.5 39.2 92 39.6 92.4C40 92.9 40.5 93.1 41.1 93.1Z" fill="#1A1A1A"/>
-    <path d="M46.4 94.5V87.6H50.9C51.9 87.6 52.6 87.8 53.2 88.3C53.8 88.8 54.1 89.5 54.1 90.3C54.1 90.9 53.9 91.4 53.6 91.8C53.2 92.2 52.8 92.5 52.2 92.6L54.4 94.5H52.1L50.1 92.8H48.2V94.5H46.4ZM48.2 91.4H50.6C51 91.4 51.3 91.3 51.6 91.1C51.8 90.9 51.9 90.6 51.9 90.3C51.9 90 51.8 89.8 51.6 89.6C51.3 89.4 51 89.3 50.6 89.3H48.2V91.4Z" fill="#1A1A1A"/>
-    <path d="M55.7 94.5V87.6H57.7L60 91.3L62.4 87.6H64.3V94.5H62.5V90.2L60.4 93.5H59.6L57.5 90.2V94.5H55.7Z" fill="#1A1A1A"/>
-    <path d="M65.9 94.5L68.9 87.6H70.8L73.8 94.5H71.9L71.3 93H68.4L67.8 94.5H65.9ZM68.9 91.7H70.7L69.8 89.4L68.9 91.7Z" fill="#1A1A1A"/>
-    <path d="M76.4 94.5V89.1H74.1V87.6H80.5V89.1H78.2V94.5H76.4Z" fill="#1A1A1A"/>
-    <path d="M81.8 94.5V87.6H83.6V94.5H81.8Z" fill="#1A1A1A"/>
-    <path d="M88.8 94.7C87.7 94.7 86.8 94.4 86.1 93.7C85.3 93 85 92.2 85 91.1C85 90.1 85.3 89.2 86.1 88.5C86.8 87.8 87.7 87.5 88.8 87.5C89.8 87.5 90.7 87.8 91.5 88.5C92.2 89.2 92.6 90.1 92.6 91.1C92.6 92.2 92.2 93 91.5 93.7C90.7 94.4 89.8 94.7 88.8 94.7ZM88.8 93.1C89.4 93.1 89.9 92.9 90.3 92.4C90.7 92 90.9 91.5 90.9 90.9C90.9 90.3 90.7 89.8 90.3 89.4C89.9 88.9 89.4 88.7 88.8 88.7C88.1 88.7 87.6 88.9 87.2 89.4C86.8 89.8 86.6 90.3 86.6 90.9C86.6 91.5 86.8 92 87.2 92.4C87.6 92.9 88.1 93.1 88.8 93.1Z" fill="#1A1A1A"/>
-    <path d="M94 94.5V87.6H95.8L99.4 91.8V87.6H101.2V94.5H99.7L95.8 90V94.5H94Z" fill="#1A1A1A"/>
-  </svg>
-`;
+const fulfillmentSlipLogoUrl = '/arrowhead-logo.png';
 
 export function PickingPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -1337,9 +1311,10 @@ export function PickingPage() {
                     <div className="flex items-start justify-between gap-8">
                       {/* Logo & Company */}
                       <div className="flex items-start gap-5">
-                        <div
-                          className="w-36 h-auto fulfillment-slip-print-color"
-                          dangerouslySetInnerHTML={{ __html: fulfillmentSlipLogoSvg }}
+                        <img
+                          src={fulfillmentSlipLogoUrl}
+                          alt="Arrowhead Alarm Products"
+                          className="w-36 h-auto"
                         />
                         <div className="pt-1 text-sm leading-relaxed text-slate-600">
                           <p className="font-semibold text-slate-800">Arrowhead Alarm Products</p>
