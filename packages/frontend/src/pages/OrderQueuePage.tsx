@@ -873,15 +873,6 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       page,
       pageSize,
     ],
-    queryKey: [
-      'orders',
-      cfg.queryKey,
-      statusFilter,
-      priorityFilter,
-      debouncedSearch,
-      page,
-      pageSize,
-    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append('status', statusFilter);
