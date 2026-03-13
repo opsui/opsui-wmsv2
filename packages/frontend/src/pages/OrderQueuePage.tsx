@@ -950,6 +950,36 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Direct navigation when scanning/pasting an exact order ID
+  const scannedOrderRef = useRef<string | null>(null);
+  useEffect(() => {
+    const trimmedSearch = searchTerm.trim();
+    if (!trimmedSearch || scannedOrderRef.current === trimmedSearch) return;
+
+    // Check all available orders (queue + all orders list)
+    const allOrders = [
+      ...(queueData?.orders || []),
+      ...(allOrdersData?.orders || []),
+    ];
+    const matchedOrder = allOrders.find(
+      (o: any) =>
+        o.orderId?.toLowerCase() === trimmedSearch.toLowerCase() ||
+        o.netsuiteSoTranId?.toLowerCase() === trimmedSearch.toLowerCase()
+    );
+
+    if (matchedOrder) {
+      scannedOrderRef.current = trimmedSearch;
+      setSearchTerm('');
+      setDebouncedSearch('');
+      // Navigate directly to the order
+      if (mode === 'picking') {
+        navigate(`/orders/${matchedOrder.orderId}/pick`);
+      } else {
+        navigate(`/packing/${matchedOrder.orderId}/pack`);
+      }
+    }
+  }, [searchTerm, queueData, allOrdersData, mode, navigate]);
+
   useEffect(() => {
     setSearchParams(
       params => {
