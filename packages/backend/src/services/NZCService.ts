@@ -244,9 +244,13 @@ export class NZCService {
       const rawObject =
         rawData && typeof rawData === 'object' ? (rawData as Partial<NZCRateResponse>) : {};
       const availableRates = Array.isArray((rawObject as { Available?: unknown[] }).Available)
-        ? ((rawObject as { Available?: NZCQuote[] }).Available ?? [])
+        ? (((rawObject as { Available?: unknown[] }).Available ?? []) as unknown[]).map(rate =>
+            this._normalizeAvailableRate(rate)
+          )
         : [];
-      const quoteRates = Array.isArray(rawObject.Quotes) ? rawObject.Quotes : [];
+      const quoteRates = Array.isArray(rawObject.Quotes)
+        ? (rawObject.Quotes as unknown[]).map(rate => this._normalizeAvailableRate(rate))
+        : [];
       const normalizedQuotes = quoteRates.length > 0 ? quoteRates : availableRates;
       const data: NZCRateResponse = {
         Quotes: normalizedQuotes,
@@ -289,6 +293,51 @@ export class NZCService {
       logger.error('[NZC] Error fetching rates', error);
       throw error;
     }
+  }
+
+  private _normalizeAvailableRate(rate: unknown): NZCQuote {
+    const raw = rate && typeof rate === 'object' ? (rate as Record<string, unknown>) : {};
+    const quoteId =
+      this._stringOrEmpty(raw.QuoteId) ||
+      this._stringOrEmpty(raw.quoteId) ||
+      this._stringOrEmpty(raw.id);
+    const carrier =
+      this._stringOrEmpty(raw.Carrier) ||
+      this._stringOrEmpty(raw.carriername) ||
+      this._stringOrEmpty(raw.carrier) ||
+      'NZC';
+    const deliveryType =
+      this._stringOrEmpty(raw.Service) ||
+      this._stringOrEmpty(raw.deliverytype) ||
+      this._stringOrEmpty(raw.carrierservicetype);
+    const serviceStandard =
+      this._stringOrEmpty(raw.servicestandard) || this._stringOrEmpty(raw.Description);
+    const totalPrice = this._numberOrZero(raw.TotalPrice ?? raw.charge ?? raw.cost);
+    const transitDays = this._numberOrUndefined(raw.TransitDays ?? raw.transitdays);
+    const description = this._stringOrEmpty(raw.comments) || serviceStandard;
+
+    return {
+      QuoteId: quoteId,
+      Carrier: carrier,
+      Service: serviceStandard || deliveryType || carrier,
+      TotalPrice: totalPrice,
+      TransitDays: transitDays,
+      Description: description || undefined,
+    };
+  }
+
+  private _stringOrEmpty(value: unknown): string {
+    return typeof value === 'string' ? value : '';
+  }
+
+  private _numberOrZero(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private _numberOrUndefined(value: unknown): number | undefined {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
   }
 
   /**

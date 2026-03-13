@@ -285,6 +285,11 @@ export function PackingPage() {
     ];
   };
   const nzcRateList = Array.isArray(nzcRates) ? nzcRates : [];
+  const getQuotePrice = (quote: NZCQuote) => {
+    const rawQuote = quote as NZCQuote & { charge?: number; cost?: number };
+    const value = Number(rawQuote.TotalPrice ?? rawQuote.charge ?? rawQuote.cost ?? 0);
+    return Number.isFinite(value) ? value : 0;
+  };
 
   const printNZCLabel = (label: { data: string; contentType: string }) => {
     const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
@@ -1798,7 +1803,7 @@ export function PackingPage() {
                                 </div>
                                 <div className="text-right">
                                   <p className="text-lg font-bold text-primary-400">
-                                    ${quote.TotalPrice.toFixed(2)}
+                                    ${getQuotePrice(quote).toFixed(2)}
                                   </p>
                                 </div>
                               </div>
