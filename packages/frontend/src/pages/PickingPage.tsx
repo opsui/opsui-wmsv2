@@ -646,12 +646,12 @@ export function PickingPage() {
   }, [order, currentUser, userRole]);
 
   // Get current pick task
-  const currentTask = order.items[currentTaskIndex];
+  const currentTask = order?.items?.[currentTaskIndex];
 
   // Calculate progress
-  const totalTasks = order.items.length || 0;
+  const totalTasks = order?.items?.length || 0;
   const completedTasks =
-    order.items.filter(item => item.pickedQuantity >= item.quantity).length || 0;
+    order?.items?.filter(item => item.pickedQuantity >= item.quantity).length || 0;
 
   // Reset scan error when current task changes
   useEffect(() => {
@@ -660,7 +660,7 @@ export function PickingPage() {
 
   // Restore the last focused task when possible, otherwise move to the first incomplete item.
   useEffect(() => {
-    if (order.items && order.items.length > 0) {
+    if (order?.items && order.items.length > 0) {
       let nextIndex = order.items.findIndex(item => item.pickedQuantity < item.quantity);
 
       if (pickingTaskStorageKey) {
