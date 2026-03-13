@@ -69,6 +69,22 @@ type NzcStockSize = {
   Availability?: string;
 };
 
+type NzcPackageRow = {
+  rowId: string;
+  presetId: string;
+  units: string;
+  customLength: string;
+  customWidth: string;
+  customHeight: string;
+  customWeightLbs: string;
+};
+
+type NzcRenderedLabel = {
+  connote: string;
+  data: string;
+  contentType: string;
+};
+
 const NZC_DEFAULT_PRESET_ID = 'CUSTOM';
 
 const NZC_CARRIER_FALLBACK: Carrier = {
@@ -105,6 +121,16 @@ const NZC_PACKAGE_PRESETS: NzcPackagePreset[] = [
   { id: 'NZC_ENVIRO360_E360', label: 'NZC Enviro360 (E360)' },
   { id: 'NZC_PP_PLASTIC_A3', label: 'NZC PP Plastic A3+' },
 ];
+
+const createNzcPackageRow = (presetId: string = NZC_DEFAULT_PRESET_ID): NzcPackageRow => ({
+  rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  presetId,
+  units: '1',
+  customLength: '10',
+  customWidth: '10',
+  customHeight: '10',
+  customWeightLbs: '1.0',
+});
 
 export function PackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -165,15 +191,14 @@ export function PackingPage() {
   // NZC-specific state
   const [nzcRates, setNzcRates] = useState<NZCQuote[]>([]);
   const [selectedQuote, setSelectedQuote] = useState<NZCQuote | null>(null);
-  const [nzcLabel, setNzcLabel] = useState<{ data: string; contentType: string } | null>(null);
+  const [nzcLabels, setNzcLabels] = useState<NzcRenderedLabel[]>([]);
   const [isFetchingRates, setIsFetchingRates] = useState(false);
   const [nzcRateError, setNzcRateError] = useState<string | null>(null);
   const [shipmentCreated, setShipmentCreated] = useState(false);
-  const [nzcConnote, setNzcConnote] = useState<string>('');
-  const [selectedNzcPackagePreset, setSelectedNzcPackagePreset] = useState(NZC_DEFAULT_PRESET_ID);
-  const [nzcCustomLength, setNzcCustomLength] = useState('10');
-  const [nzcCustomWidth, setNzcCustomWidth] = useState('10');
-  const [nzcCustomHeight, setNzcCustomHeight] = useState('10');
+  const [nzcConnotes, setNzcConnotes] = useState<string[]>([]);
+  const [nzcPackageRows, setNzcPackageRows] = useState<NzcPackageRow[]>([
+    createNzcPackageRow(),
+  ]);
   const [manualAddressEditEnabled, setManualAddressEditEnabled] = useState(false);
   const [confirmManualAddressEdit, setConfirmManualAddressEdit] = useState(false);
 
@@ -252,39 +277,41 @@ export function PackingPage() {
     (carrier: Carrier) => carrier.carrierId === selectedCarrierId
   );
   const isNZCCarrier = selectedCarrier?.carrierCode === 'NZC';
-  const selectedNzcPreset = nzcPackageOptions.find(
-    preset => preset.id === selectedNzcPackagePreset
-  );
-  const selectedNzcPackageIsCustom = selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID;
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
   const isClaimingRef = useRef(false);
 
-  const buildNzcPackages = () => {
-    const packageUnits = Math.max(1, parseInt(totalPackages || '1', 10) || 1);
-    const presetWeightKg = selectedNzcPreset?.kg;
-    const customWeightKg = lbsToKg(parseFloat(totalWeight || '0'));
+  const getNzcPresetById = (presetId: string) =>
+    nzcPackageOptions.find(preset => preset.id === presetId);
+  const isCustomNzcPreset = (presetId: string) => presetId === NZC_DEFAULT_PRESET_ID;
+  const buildNzcPackages = () =>
+    nzcPackageRows.map(row => {
+      const preset = getNzcPresetById(row.presetId);
+      const isCustom = isCustomNzcPreset(row.presetId);
 
-    return [
-      {
-        packageStockId: selectedNzcPreset?.packageStockId,
-        name: selectedNzcPreset?.name,
-        type: selectedNzcPreset?.type,
-        length: selectedNzcPackageIsCustom
-          ? parseFloat(nzcCustomLength || '0') || 10
-          : selectedNzcPreset?.length,
-        width: selectedNzcPackageIsCustom
-          ? parseFloat(nzcCustomWidth || '0') || 10
-          : selectedNzcPreset?.width,
-        height: selectedNzcPackageIsCustom
-          ? parseFloat(nzcCustomHeight || '0') || 10
-          : selectedNzcPreset?.height,
-        weight: presetWeightKg || customWeightKg,
-        units: packageUnits,
-      },
-    ];
-  };
+      return {
+        packageStockId: preset?.packageStockId,
+        name: preset?.name,
+        type: preset?.type,
+        length: isCustom ? parseFloat(row.customLength || '0') || 10 : preset?.length,
+        width: isCustom ? parseFloat(row.customWidth || '0') || 10 : preset?.width,
+        height: isCustom ? parseFloat(row.customHeight || '0') || 10 : preset?.height,
+        weight: preset?.kg || lbsToKg(parseFloat(row.customWeightLbs || '0')),
+        units: Math.max(1, parseInt(row.units || '1', 10) || 1),
+      };
+    });
+  const builtNzcPackages = buildNzcPackages();
+  const builtNzcPackagesKey = JSON.stringify(builtNzcPackages);
+  const derivedNzcTotalPackages = builtNzcPackages.reduce(
+    (sum, pkg) => sum + Math.max(1, Number(pkg.units || 1)),
+    0
+  );
+  const derivedNzcTotalWeightKg = builtNzcPackages.reduce(
+    (sum, pkg) => sum + (Number(pkg.weight) || 0) * Math.max(1, Number(pkg.units || 1)),
+    0
+  );
+  const derivedNzcTotalWeightLbs = Math.round(kgToLbs(derivedNzcTotalWeightKg) * 100) / 100;
   const nzcRateList = Array.isArray(nzcRates) ? nzcRates : [];
   const getQuotePrice = (quote: NZCQuote) => {
     const rawQuote = quote as NZCQuote & { charge?: number; cost?: number };
@@ -361,6 +388,38 @@ export function PackingPage() {
       </html>
     `);
     printWindow.document.close();
+  };
+
+  const updateNzcPackageRow = (rowId: string, updates: Partial<NzcPackageRow>) => {
+    setNzcPackageRows(rows =>
+      rows.map(row => {
+        if (row.rowId !== rowId) return row;
+
+        const nextRow = { ...row, ...updates };
+        const nextPresetId = updates.presetId ?? row.presetId;
+        const preset = getNzcPresetById(nextPresetId);
+
+        if (preset && !isCustomNzcPreset(nextPresetId)) {
+          if (preset.length != null) nextRow.customLength = String(preset.length);
+          if (preset.width != null) nextRow.customWidth = String(preset.width);
+          if (preset.height != null) nextRow.customHeight = String(preset.height);
+          if (preset.kg != null) nextRow.customWeightLbs = String(kgToLbs(preset.kg));
+        }
+
+        return nextRow;
+      })
+    );
+  };
+
+  const addNzcPackageRow = () => {
+    const defaultPreset =
+      nzcPackageOptions.find(preset => preset.id !== NZC_DEFAULT_PRESET_ID)?.id ||
+      NZC_DEFAULT_PRESET_ID;
+    setNzcPackageRows(rows => [...rows, createNzcPackageRow(defaultPreset)]);
+  };
+
+  const removeNzcPackageRow = (rowId: string) => {
+    setNzcPackageRows(rows => (rows.length > 1 ? rows.filter(row => row.rowId !== rowId) : rows));
   };
 
   // Claim order for packing mutation
@@ -558,7 +617,7 @@ export function PackingPage() {
   // Fetch NZC rates when NZC carrier is selected
   useEffect(() => {
     const fetchNZCRates = async () => {
-      if (!isNZCCarrier || !totalWeight || !totalPackages) {
+      if (!isNZCCarrier || builtNzcPackages.length === 0) {
         setNzcRates([]);
         setSelectedQuote(null);
         setNzcRateError(null);
@@ -582,7 +641,7 @@ export function PackingPage() {
             phone: editableShipToAddress.phone,
             email: editableShipToAddress.email,
           },
-          packages: buildNzcPackages(),
+          packages: builtNzcPackages,
         });
 
         if (response.Quotes && response.Quotes.length > 0) {
@@ -615,13 +674,8 @@ export function PackingPage() {
     return () => clearTimeout(timeoutId);
   }, [
     isNZCCarrier,
-    totalWeight,
-    totalPackages,
+    builtNzcPackagesKey,
     editableShipToAddress,
-    selectedNzcPackagePreset,
-    nzcCustomLength,
-    nzcCustomWidth,
-    nzcCustomHeight,
   ]);
 
   useEffect(() => {
@@ -656,37 +710,22 @@ export function PackingPage() {
       return;
     }
 
-    if (
-      selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID ||
-      !nzcPackageOptions.some(preset => preset.id === selectedNzcPackagePreset)
-    ) {
-      setSelectedNzcPackagePreset(defaultPreset.id);
-    }
-  }, [isNZCCarrier, nzcPackageOptions, selectedNzcPackagePreset]);
-
-  useEffect(() => {
-    if (!selectedNzcPreset || selectedNzcPackageIsCustom) {
-      return;
-    }
-
-    if (selectedNzcPreset.length != null) {
-      setNzcCustomLength(String(selectedNzcPreset.length));
-    }
-    if (selectedNzcPreset.width != null) {
-      setNzcCustomWidth(String(selectedNzcPreset.width));
-    }
-    if (selectedNzcPreset.height != null) {
-      setNzcCustomHeight(String(selectedNzcPreset.height));
-    }
-    if (selectedNzcPreset.kg != null) {
-      setTotalWeight(String(kgToLbs(selectedNzcPreset.kg)));
-    }
-  }, [selectedNzcPreset, selectedNzcPackageIsCustom]);
+    setNzcPackageRows(rows =>
+      rows.map(row =>
+        row.presetId === NZC_DEFAULT_PRESET_ID || !nzcPackageOptions.some(preset => preset.id === row.presetId)
+          ? { ...createNzcPackageRow(defaultPreset.id), rowId: row.rowId, units: row.units }
+          : row
+      )
+    );
+  }, [isNZCCarrier, nzcPackageOptions]);
 
   useEffect(() => {
     setEditableShipToAddress(baseShipToAddress);
     setManualAddressEditEnabled(false);
     setConfirmManualAddressEdit(false);
+    setShipmentCreated(false);
+    setNzcLabels([]);
+    setNzcConnotes([]);
   }, [
     order?.orderId,
     baseShipToAddress.addressLine1,
@@ -1131,12 +1170,18 @@ export function PackingPage() {
       return;
     }
 
-    if (!totalWeight || parseFloat(totalWeight) <= 0) {
+    if (
+      (isNZCCarrier && derivedNzcTotalWeightLbs <= 0) ||
+      (!isNZCCarrier && (!totalWeight || parseFloat(totalWeight) <= 0))
+    ) {
       showToast('Please enter a valid weight', 'error');
       return;
     }
 
-    if (!totalPackages || parseInt(totalPackages) <= 0) {
+    if (
+      (isNZCCarrier && derivedNzcTotalPackages <= 0) ||
+      (!isNZCCarrier && (!totalPackages || parseInt(totalPackages) <= 0))
+    ) {
       showToast('Please enter a valid number of packages', 'error');
       return;
     }
@@ -1169,8 +1214,6 @@ export function PackingPage() {
           return;
         }
 
-        const weightKg = lbsToKg(parseFloat(totalWeight));
-
         const nzcShipment = await nzcApi.createShipment({
           destination: {
             name: editableShipToAddress.name,
@@ -1185,23 +1228,45 @@ export function PackingPage() {
             phone: editableShipToAddress.phone,
             email: editableShipToAddress.email,
           },
-          packages: buildNzcPackages().map(pkg => ({
-            ...pkg,
-            weight: pkg.weight || weightKg,
-          })),
+          packages: builtNzcPackages,
           quoteId: selectedQuote.QuoteId,
           senderReference: trackingNumber.trim() || undefined,
           printToPrinter: true,
         });
 
-        const connote = nzcShipment.ConsignmentNo;
-        setNzcConnote(connote);
+        const connoteList = Array.from(
+          new Set(
+            [nzcShipment.ConsignmentNo, ...(nzcShipment.Packages || []).map(pkg => pkg.ConsignmentNo)]
+              .filter(Boolean)
+              .map(connote => String(connote))
+          )
+        );
+        const primaryConnote = connoteList[0];
+        const labels = await Promise.all(
+          connoteList.map(async connote => {
+            const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
+            return {
+              connote,
+              data: label.data,
+              contentType: label.contentType,
+            };
+          })
+        );
+
+        if (connoteList.length > 1) {
+          await Promise.all(
+            connoteList.slice(1).map(connote => nzcApi.reprintLabel(connote, 1))
+          );
+        }
+
+        setNzcConnotes(connoteList);
         setShipmentCreated(true);
+        setNzcLabels(labels);
 
-        const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
-        setNzcLabel(label);
-
-        showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
+        showToast(
+          `NZC Shipment created! ${connoteList.length > 1 ? `Connotes: ${connoteList.join(', ')}` : `Connote: ${primaryConnote}`}`,
+          'success'
+        );
 
         const shipmentResponse = await apiClient.post('/shipping/shipments', {
           orderId,
@@ -1210,8 +1275,8 @@ export function PackingPage() {
           shippingMethod: 'STANDARD',
           shipFromAddress,
           shipToAddress: editableShipToAddress,
-          totalWeight: parseFloat(totalWeight),
-          totalPackages: parseInt(totalPackages),
+          totalWeight: derivedNzcTotalWeightLbs,
+          totalPackages: derivedNzcTotalPackages,
           createdBy: currentUser?.userId,
         });
 
@@ -1219,7 +1284,7 @@ export function PackingPage() {
 
         if (shipment?.shipmentId) {
           await apiClient.post(`/shipping/shipments/${shipment.shipmentId}/tracking`, {
-            trackingNumber: connote,
+            trackingNumber: connoteList.join(', '),
           });
         }
 
@@ -1234,8 +1299,8 @@ export function PackingPage() {
         await shipOrderMutation.mutateAsync({
           orderId,
           carrier: selectedCarrier?.name || selectedCarrier?.carrierCode || 'NZ Couriers',
-          trackingNumber: connote,
-          packageWeight: parseFloat(totalWeight),
+          trackingNumber: connoteList.join(', '),
+          packageWeight: derivedNzcTotalWeightLbs,
         });
 
         showToast('Order packed and shipped successfully!', 'success');
@@ -1583,157 +1648,214 @@ export function PackingPage() {
                           <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
                             NZC Package Setup
                           </p>
-                          <span className="text-xs text-gray-500">
-                            Matches NZ Couriers stock naming
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Stock / Package Type <span className="text-error-400">*</span>
-                            </label>
-                            <select
-                              value={selectedNzcPackagePreset}
-                              onChange={e => setSelectedNzcPackagePreset(e.target.value)}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              Multiple rows supported. Mixed stock types will print separate labels.
+                            </span>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={addNzcPackageRow}
                               disabled={isCreatingShipment || isViewMode}
-                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
                             >
-                              {nzcPackageOptions.map(preset => (
-                                <option key={preset.id} value={preset.id}>
-                                  {preset.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Units <span className="text-error-400">*</span>
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={totalPackages}
-                              onChange={e => setTotalPackages(e.target.value)}
-                              disabled={isCreatingShipment || isViewMode}
-                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                            />
+                              Add Package
+                            </Button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Length (cm)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.1"
-                              value={
-                                selectedNzcPackageIsCustom
-                                  ? nzcCustomLength
-                                  : selectedNzcPreset?.length || ''
-                              }
-                              onChange={e => setNzcCustomLength(e.target.value)}
-                              disabled={
-                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
-                              }
-                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                            />
-                          </div>
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Width (cm)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.1"
-                              value={
-                                selectedNzcPackageIsCustom
-                                  ? nzcCustomWidth
-                                  : selectedNzcPreset?.width || ''
-                              }
-                              onChange={e => setNzcCustomWidth(e.target.value)}
-                              disabled={
-                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
-                              }
-                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                            />
-                          </div>
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Height (cm)
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.1"
-                              value={
-                                selectedNzcPackageIsCustom
-                                  ? nzcCustomHeight
-                                  : selectedNzcPreset?.height || ''
-                              }
-                              onChange={e => setNzcCustomHeight(e.target.value)}
-                              disabled={
-                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
-                              }
-                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                            />
-                          </div>
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              KG
-                            </label>
-                            <input
-                              type="text"
-                              readOnly
-                              value={
-                                selectedNzcPreset?.kg != null
-                                  ? selectedNzcPreset.kg.toFixed(3)
-                                  : lbsToKg(parseFloat(totalWeight || '0')).toFixed(3)
-                              }
-                              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
-                            />
-                          </div>
+                        <div className="space-y-4">
+                          {nzcPackageRows.map((row, index) => {
+                            const preset = getNzcPresetById(row.presetId);
+                            const isCustom = isCustomNzcPreset(row.presetId);
+                            const rowWeightKg =
+                              preset?.kg != null
+                                ? preset.kg
+                                : lbsToKg(parseFloat(row.customWeightLbs || '0'));
+                            const rowCubic =
+                              preset?.cubicM3 != null
+                                ? preset.cubicM3
+                                : isCustom
+                                  ? undefined
+                                  : 0;
+
+                            return (
+                              <div
+                                key={row.rowId}
+                                className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 space-y-4"
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <p className="text-sm font-semibold text-white">
+                                    Package {index + 1}
+                                  </p>
+                                  {nzcPackageRows.length > 1 && (
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      onClick={() => removeNzcPackageRow(row.rowId)}
+                                      disabled={isCreatingShipment || isViewMode}
+                                    >
+                                      Remove
+                                    </Button>
+                                  )}
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Stock / Package Type <span className="text-error-400">*</span>
+                                    </label>
+                                    <select
+                                      value={row.presetId}
+                                      onChange={e =>
+                                        updateNzcPackageRow(row.rowId, { presetId: e.target.value })
+                                      }
+                                      disabled={isCreatingShipment || isViewMode}
+                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                                    >
+                                      {nzcPackageOptions.map(option => (
+                                        <option key={option.id} value={option.id}>
+                                          {option.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Units <span className="text-error-400">*</span>
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={row.units}
+                                      onChange={e =>
+                                        updateNzcPackageRow(row.rowId, { units: e.target.value })
+                                      }
+                                      disabled={isCreatingShipment || isViewMode}
+                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Length (cm)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.1"
+                                      value={isCustom ? row.customLength : preset?.length || ''}
+                                      onChange={e =>
+                                        updateNzcPackageRow(row.rowId, {
+                                          customLength: e.target.value,
+                                        })
+                                      }
+                                      disabled={isCreatingShipment || isViewMode || !isCustom}
+                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Width (cm)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.1"
+                                      value={isCustom ? row.customWidth : preset?.width || ''}
+                                      onChange={e =>
+                                        updateNzcPackageRow(row.rowId, {
+                                          customWidth: e.target.value,
+                                        })
+                                      }
+                                      disabled={isCreatingShipment || isViewMode || !isCustom}
+                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Height (cm)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.1"
+                                      value={isCustom ? row.customHeight : preset?.height || ''}
+                                      onChange={e =>
+                                        updateNzcPackageRow(row.rowId, {
+                                          customHeight: e.target.value,
+                                        })
+                                      }
+                                      disabled={isCreatingShipment || isViewMode || !isCustom}
+                                      className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      KG
+                                    </label>
+                                    <input
+                                      type="text"
+                                      readOnly
+                                      value={rowWeightKg > 0 ? rowWeightKg.toFixed(3) : '0.000'}
+                                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Cubic (m3)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      readOnly
+                                      value={rowCubic != null ? rowCubic.toFixed(4) : 'Custom'}
+                                      className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                                      Weight Reference (lbs)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="0.01"
+                                      step="0.01"
+                                      value={row.customWeightLbs}
+                                      onChange={e =>
+                                        updateNzcPackageRow(row.rowId, {
+                                          customWeightLbs: e.target.value,
+                                        })
+                                      }
+                                      placeholder="Enter weight..."
+                                      disabled={isCreatingShipment || isViewMode || !isCustom}
+                                      className={`w-full rounded-xl px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                                        isCustom
+                                          ? 'bg-white/[0.05] border border-white/[0.08] text-white'
+                                          : 'bg-white/[0.03] border border-white/[0.05] text-gray-400 cursor-not-allowed'
+                                      } disabled:opacity-50`}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Cubic (m3)
-                            </label>
-                            <input
-                              type="text"
-                              readOnly
-                              value={
-                                selectedNzcPreset?.cubicM3 != null
-                                  ? selectedNzcPreset.cubicM3.toFixed(4)
-                                  : selectedNzcPackageIsCustom
-                                    ? 'Custom'
-                                    : '0.0000'
-                              }
-                              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
-                            />
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                            <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
+                              Total Packages
+                            </p>
+                            <p className="text-xl font-semibold text-white">
+                              {derivedNzcTotalPackages}
+                            </p>
                           </div>
-                          <div>
-                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                              Weight Reference (lbs)
-                            </label>
-                            <input
-                              type="number"
-                              min="0.01"
-                              step="0.01"
-                              value={totalWeight}
-                              onChange={e => setTotalWeight(e.target.value)}
-                              placeholder="Enter weight..."
-                              disabled={
-                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
-                              }
-                              className={`w-full rounded-xl px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                selectedNzcPackageIsCustom
-                                  ? 'bg-white/[0.05] border border-white/[0.08] text-white'
-                                  : 'bg-white/[0.03] border border-white/[0.05] text-gray-400 cursor-not-allowed'
-                              } disabled:opacity-50`}
-                            />
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                            <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
+                              Total Weight (lbs)
+                            </p>
+                            <p className="text-xl font-semibold text-white">
+                              {derivedNzcTotalWeightLbs.toFixed(2)}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1939,64 +2061,76 @@ export function PackingPage() {
                     )}
 
                     {/* NZC Label Display */}
-                    {nzcLabel && (
+                    {nzcLabels.length > 0 && (
                       <div className="bg-white/[0.02] rounded-xl border border-success-500/30 p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
-                            Shipping Label
+                            Shipping Labels
                           </p>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-400">Connote:</span>
-                            <span className="font-mono text-primary-400">{nzcConnote}</span>
+                            <span className="text-sm text-gray-400">Connotes:</span>
+                            <span className="font-mono text-primary-400">
+                              {nzcConnotes.join(', ')}
+                            </span>
                           </div>
                         </div>
-                        <div className="bg-white rounded-lg p-2">
-                          {(() => {
-                            const labelSource = getNzcLabelSource(nzcLabel);
-
-                            if (labelSource.isPdf) {
-                              return (
-                                <iframe
-                                  src={labelSource.src}
-                                  title="Shipping Label"
-                                  className="w-full h-[420px] rounded-lg border-0"
-                                />
-                              );
-                            }
+                        <div className="space-y-4">
+                          {nzcLabels.map(label => {
+                            const labelSource = getNzcLabelSource(label);
 
                             return (
-                              <img
-                                src={labelSource.src}
-                                alt="Shipping Label"
-                                className="w-full h-auto max-h-[400px] object-contain"
-                              />
+                              <div
+                                key={label.connote}
+                                className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 space-y-3"
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-sm text-gray-300">
+                                    Label for <span className="font-mono text-primary-400">{label.connote}</span>
+                                  </span>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                      const printSource = getNzcLabelSource(label);
+                                      const newWindow = window.open();
+                                      if (newWindow) {
+                                        newWindow.document.write(
+                                          `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
+                                          ${
+                                            printSource.isPdf
+                                              ? `<iframe src="${printSource.src}" style="width:100%;height:100vh;border:none;"></iframe>`
+                                              : `<img src="${printSource.src}" style="max-width:100%;" />`
+                                          }
+                                        </body></html>`
+                                        );
+                                        newWindow.document.close();
+                                      }
+                                    }}
+                                  >
+                                    <PrinterIcon className="h-4 w-4 mr-2" />
+                                    Print Label
+                                  </Button>
+                                </div>
+                                <div className="bg-white rounded-lg p-2">
+                                  {labelSource.isPdf ? (
+                                    <iframe
+                                      src={labelSource.src}
+                                      title={`Shipping Label ${label.connote}`}
+                                      className="w-full h-[420px] rounded-lg border-0"
+                                    />
+                                  ) : (
+                                    <img
+                                      src={labelSource.src}
+                                      alt={`Shipping Label ${label.connote}`}
+                                      className="w-full h-auto max-h-[400px] object-contain"
+                                    />
+                                  )}
+                                </div>
+                              </div>
                             );
-                          })()}
+                          })}
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              const labelSource = getNzcLabelSource(nzcLabel);
-                              const newWindow = window.open();
-                              if (newWindow) {
-                                newWindow.document.write(
-                                  `<html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f0f0;">
-                                  ${
-                                    labelSource.isPdf
-                                      ? `<iframe src="${labelSource.src}" style="width:100%;height:100vh;border:none;"></iframe>`
-                                      : `<img src="${labelSource.src}" style="max-width:100%;" />`
-                                  }
-                                </body></html>`
-                                );
-                                newWindow.document.close();
-                              }
-                            }}
-                          >
-                            <PrinterIcon className="h-4 w-4 mr-2" />
-                            Print Label
-                          </Button>
                           {shipmentCreated && (
                             <Button
                               variant="success"
