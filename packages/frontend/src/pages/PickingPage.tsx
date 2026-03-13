@@ -38,12 +38,13 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   MinusCircleIcon,
+  PrinterIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
   ForwardIcon,
   PencilSquareIcon,
 } from '@heroicons/react/24/outline';
-import { ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
+import { Address, ExceptionType, OrderStatus, TaskStatus } from '@opsui/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -116,12 +117,42 @@ export function PickingPage() {
   const [unskipConfirm, setUnskipConfirm] = useState<{ isOpen: boolean; index: number; item: any }>(
     { isOpen: false, index: -1, item: null }
   );
+  const [fulfillmentPreviewOrder, setFulfillmentPreviewOrder] = useState<any | null>(null);
+  const [isPrintingFulfillmentSlip, setIsPrintingFulfillmentSlip] = useState(false);
 
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const pickMutation = usePickItem();
   const completeMutation = useCompleteOrder();
   const logExceptionMutation = useLogException();
   const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
+  const autoPrintFulfillmentRef = useRef(false);
+
+  const formatAddressLines = (address?: Address) =>
+    [
+      address?.name,
+      address?.company && address?.company !== address?.name ? address.company : null,
+      address?.addressLine1,
+      address?.addressLine2,
+      [address?.city, address?.state].filter(Boolean).join(', '),
+      [address?.postalCode, address?.country].filter(Boolean).join(' '),
+      address?.phone ? `Phone: ${address.phone}` : null,
+      address?.email ? `Email: ${address.email}` : null,
+    ].filter(Boolean) as string[];
+
+  const handlePrintFulfillmentSlip = async () => {
+    setIsPrintingFulfillmentSlip(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      window.print();
+    } finally {
+      setTimeout(() => setIsPrintingFulfillmentSlip(false), 250);
+    }
+  };
+
+  const handleFulfillmentPreviewReady = (completedOrder: any) => {
+    setFulfillmentPreviewOrder(completedOrder);
+    autoPrintFulfillmentRef.current = true;
+  };
 
   // ==========================================================================
   // Real-time WebSocket Subscriptions
@@ -206,7 +237,18 @@ export function PickingPage() {
     isClaimingRef.current = false;
     hasSeenInitialDataRef.current = false;
     setClaimError(null);
+    setFulfillmentPreviewOrder(null);
+    autoPrintFulfillmentRef.current = false;
   }, [orderId]);
+
+  useEffect(() => {
+    if (!fulfillmentPreviewOrder || !autoPrintFulfillmentRef.current) {
+      return;
+    }
+
+    autoPrintFulfillmentRef.current = false;
+    void handlePrintFulfillmentSlip();
+  }, [fulfillmentPreviewOrder]);
 
   // Claim order on page mount if not already claimed
   // Use useLayoutEffect to ensure ref updates happen synchronously before React StrictMode's second invocation
@@ -653,7 +695,7 @@ export function PickingPage() {
     }
 
     try {
-      await completeMutation.mutateAsync({
+      const completedOrder = await completeMutation.mutateAsync({
         orderId,
         dto: {
           orderId,
@@ -664,7 +706,7 @@ export function PickingPage() {
         sessionStorage.removeItem(pickingTaskStorageKey);
       }
       showToast('Order completed!', 'success');
-      navigate('/orders?status=PENDING');
+      handleFulfillmentPreviewReady(completedOrder);
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }
@@ -672,7 +714,7 @@ export function PickingPage() {
 
   const confirmCompleteOrder = async () => {
     try {
-      await completeMutation.mutateAsync({
+      const completedOrder = await completeMutation.mutateAsync({
         orderId,
         dto: {
           orderId,
@@ -684,7 +726,7 @@ export function PickingPage() {
       }
       showToast('Order completed!', 'success');
       setCompleteOrderConfirm({ isOpen: false, skippedItems: [] });
-      navigate('/orders?status=PENDING');
+      handleFulfillmentPreviewReady(completedOrder);
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }
@@ -996,6 +1038,183 @@ export function PickingPage() {
   const progressPercent = order?.progress || 0;
   const circumference = 2 * Math.PI * 45; // radius = 45
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
+  if (fulfillmentPreviewOrder) {
+    const previewAddressLines = formatAddressLines(fulfillmentPreviewOrder.shippingAddress);
+
+    return (
+      <div className="min-h-screen">
+        <style>{`
+          @media print {
+            body * {
+              visibility: hidden !important;
+            }
+
+            #fulfillment-slip-print,
+            #fulfillment-slip-print * {
+              visibility: visible !important;
+            }
+
+            #fulfillment-slip-print {
+              position: absolute;
+              inset: 0;
+              width: 100%;
+              background: white !important;
+              color: black !important;
+              padding: 24px;
+            }
+
+            #fulfillment-slip-actions {
+              display: none !important;
+            }
+          }
+        `}</style>
+
+        <Header />
+        <ResponsiveContainer variant="fluid" padding="lg">
+          <main className="relative z-10 space-y-responsive">
+            <Breadcrumb
+              items={[
+                { label: 'Picking Queue', path: pickingQueuePath },
+                { label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}` },
+              ]}
+            />
+
+            <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
+              <div
+                id="fulfillment-slip-print"
+                className="bg-white text-slate-900 rounded-2xl p-6 sm:p-8 space-y-6"
+              >
+                <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                      Fulfillment Printout
+                    </p>
+                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+                      {fulfillmentPreviewOrder.netsuiteIfTranId ||
+                        fulfillmentPreviewOrder.netsuiteSoTranId ||
+                        fulfillmentPreviewOrder.orderId}
+                    </h1>
+                    <p className="mt-2 text-sm text-slate-600">
+                      Sales Order:{' '}
+                      <span className="font-mono">
+                        {fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId}
+                      </span>
+                    </p>
+                    {fulfillmentPreviewOrder.customerPoNumber && (
+                      <p className="mt-1 text-sm text-slate-600">
+                        Customer PO:{' '}
+                        <span className="font-medium">
+                          {fulfillmentPreviewOrder.customerPoNumber}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="text-right text-sm text-slate-600">
+                    <p>
+                      Completed:{' '}
+                      <span className="font-medium">
+                        {new Date().toLocaleString('en-NZ', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </p>
+                    <p className="mt-1">
+                      Picker:{' '}
+                      <span className="font-medium">
+                        {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Customer
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {fulfillmentPreviewOrder.customerName}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600 font-mono">
+                      {fulfillmentPreviewOrder.orderId}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Ship To
+                    </p>
+                    <div className="mt-3 space-y-1 text-sm text-slate-700">
+                      {previewAddressLines.length > 0 ? (
+                        previewAddressLines.map(line => <p key={line}>{line}</p>)
+                      ) : (
+                        <p>No shipping details available</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="grid grid-cols-[1.2fr,1fr,120px,120px] gap-4 bg-slate-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    <span>Item</span>
+                    <span>SKU</span>
+                    <span className="text-right">Picked</span>
+                    <span className="text-right">Required</span>
+                  </div>
+                  <div className="divide-y divide-slate-200">
+                    {(fulfillmentPreviewOrder.items || []).map((item: any) => (
+                      <div
+                        key={item.orderItemId}
+                        className="grid grid-cols-[1.2fr,1fr,120px,120px] gap-4 px-4 py-3 text-sm"
+                      >
+                        <div>
+                          <p className="font-medium text-slate-900">{item.name}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Bin: {formatBinLocation(item.binLocation)}
+                          </p>
+                        </div>
+                        <p className="font-mono text-slate-700">{item.sku}</p>
+                        <p className="text-right font-semibold text-slate-900">
+                          {item.pickedQuantity}
+                        </p>
+                        <p className="text-right text-slate-700">{item.quantity}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                id="fulfillment-slip-actions"
+                className="flex flex-wrap items-center justify-end gap-3 border-t border-white/[0.08] px-6 py-5"
+              >
+                <Button
+                  variant="secondary"
+                  onClick={handlePrintFulfillmentSlip}
+                  isLoading={isPrintingFulfillmentSlip}
+                >
+                  <PrinterIcon className="h-5 w-5 mr-2" />
+                  Print Packing Slip
+                </Button>
+                <Button
+                  variant="success"
+                  onClick={() => navigate('/orders?status=PENDING')}
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
+          </main>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
