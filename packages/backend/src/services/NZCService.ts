@@ -81,6 +81,7 @@ export interface NZCQuote {
  */
 export interface NZCRateResponse {
   Quotes: NZCQuote[];
+  Available?: NZCQuote[];
   Suppressed: any[];
   Rejected: Array<{
     Carrier: string;
@@ -242,8 +243,14 @@ export class NZCService {
       const rawData = (await response.json()) as unknown;
       const rawObject =
         rawData && typeof rawData === 'object' ? (rawData as Partial<NZCRateResponse>) : {};
+      const availableRates = Array.isArray((rawObject as { Available?: unknown[] }).Available)
+        ? ((rawObject as { Available?: NZCQuote[] }).Available ?? [])
+        : [];
+      const quoteRates = Array.isArray(rawObject.Quotes) ? rawObject.Quotes : [];
+      const normalizedQuotes = quoteRates.length > 0 ? quoteRates : availableRates;
       const data: NZCRateResponse = {
-        Quotes: Array.isArray(rawObject.Quotes) ? rawObject.Quotes : [],
+        Quotes: normalizedQuotes,
+        Available: availableRates,
         Suppressed: Array.isArray(rawObject.Suppressed) ? rawObject.Suppressed : [],
         Rejected: Array.isArray(rawObject.Rejected) ? rawObject.Rejected : [],
         ValidationErrors:
@@ -271,6 +278,7 @@ export class NZCService {
 
       logger.info('[NZC] Rates fetched successfully', {
         quoteCount,
+        availableCount: availableRates.length,
         rejectedCount,
         suppressedCount,
         validationErrorCount,
