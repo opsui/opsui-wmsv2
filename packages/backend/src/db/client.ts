@@ -24,6 +24,9 @@ for (const key of Object.keys(types)) {
   }
 }
 
+// Keep DATE columns as raw YYYY-MM-DD strings so business dates don't shift by timezone.
+types.setTypeParser(1082, value => value);
+
 // ============================================================================
 // CONFIGURATION
 // ============================================================================

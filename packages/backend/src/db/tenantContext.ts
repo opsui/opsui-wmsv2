@@ -103,6 +103,9 @@ class TenantPoolManager {
       }
     }
 
+    // Keep DATE columns as raw YYYY-MM-DD strings so tenant-scoped business dates don't shift.
+    types.setTypeParser(1082, value => value);
+
     const pool = new Pool({
       ...this.baseConfig,
       database: databaseName,
