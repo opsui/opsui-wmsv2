@@ -1604,7 +1604,7 @@ export class NetSuiteOrderSyncService {
         const salesOrder = await loadParentSalesOrder();
         soTranId = salesOrder?.tranId || soTranId;
       }
-      const parentSalesOrderData: NetSuiteSalesOrder | null = parentSalesOrder;
+      const parentSalesOrderData = soInternalId ? await loadParentSalesOrder() : parentSalesOrder;
       const derivedSubtotal =
         parentSalesOrderData?.subTotal != null ? parentSalesOrderData.subTotal : 0;
       const derivedTotal =
