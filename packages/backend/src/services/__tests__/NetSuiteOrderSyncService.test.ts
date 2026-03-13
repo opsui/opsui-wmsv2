@@ -274,7 +274,7 @@ describe('NetSuiteOrderSyncService', () => {
     expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68381', expect.any(Date));
   });
 
-  it('updates an existing fulfillment-backed order without fetching the parent sales order', async () => {
+  it('updates an existing fulfillment-backed order', async () => {
     const { client, service } = createService();
 
     jest.spyOn(service as any, 'findOrderByNetSuiteSoId').mockResolvedValue({
@@ -284,8 +284,6 @@ describe('NetSuiteOrderSyncService', () => {
     });
     jest.spyOn(service as any, 'findOrderByNetSuiteIfId').mockResolvedValue(null);
     jest.spyOn(service as any, 'findOrderByExternalIdFull').mockResolvedValue(null);
-
-    const getSalesOrderSpy = jest.spyOn(client, 'getSalesOrder');
 
     const result = await (service as any).upsertFromFulfillment(
       {
@@ -310,7 +308,42 @@ describe('NetSuiteOrderSyncService', () => {
       ifInternalId: '1702001',
       ifTranId: 'IF90010',
     });
-    expect(getSalesOrderSpy).not.toHaveBeenCalled();
+  });
+
+  it('downgrades a packed order back to picked when NetSuite fulfillment is recreated as picked', async () => {
+    const { service } = createService();
+
+    jest.spyOn(service as any, 'findOrderByNetSuiteSoId').mockResolvedValue({
+      orderId: 'SO70010',
+      status: 'PACKED',
+      netsuiteIfInternalId: '1702999',
+    });
+    jest.spyOn(service as any, 'findOrderByNetSuiteIfId').mockResolvedValue(null);
+    jest.spyOn(service as any, 'findOrderByExternalIdFull').mockResolvedValue(null);
+
+    const result = await (service as any).upsertFromFulfillment(
+      {
+        id: '1702002',
+        tranId: 'IF90011',
+        shipStatus: '_picked',
+        createdFrom: { id: '1701001', refName: 'Sales Order #SO70010' },
+      },
+      new Date('2026-03-13T00:00:00.000Z'),
+      {}
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        created: false,
+        updated: true,
+        skipped: false,
+        tranId: 'IF90011',
+      })
+    );
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70010', 'PICKED', {
+      ifInternalId: '1702002',
+      ifTranId: 'IF90011',
+    });
   });
 
   it('caches order lookups by NetSuite sales order id within a sync cycle', async () => {
@@ -679,5 +712,158 @@ describe('NetSuiteOrderSyncService', () => {
       ifTranId: 'IF90006A',
       items: [],
     });
+  });
+
+  it('loads a linked packing fulfillment directly when fulfillment searches miss it', async () => {
+    const { client, service } = createService();
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
+      if (sql.includes("status IN ('PICKED', 'PACKING')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO70007',
+              status: 'PICKED',
+              netsuite_so_internal_id: '1700007',
+              netsuite_so_tran_id: 'SO70007',
+              netsuite_if_internal_id: '1701007',
+              hours_since_update: '0',
+              hours_since_created: '1',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+    jest.spyOn(client, 'getItemFulfillment').mockResolvedValue({
+      id: '1701007',
+      tranId: 'IF90007',
+      shipStatus: '_packed',
+      createdFrom: { id: '1700007', refName: 'SO70007' },
+      item: { items: [] },
+    } as any);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'incremental' });
+
+    expect(result.updated).toBe(1);
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70007', 'PACKED', {
+      ifInternalId: '1701007',
+      ifTranId: 'IF90007',
+      items: [],
+    });
+  });
+
+  it('moves packing queue orders to packed when the linked fulfillment is gone but NetSuite no longer shows ready to ship', async () => {
+    const { client, service } = createService();
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
+      if (sql.includes("status IN ('PICKED', 'PACKING')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO70008',
+              status: 'PICKED',
+              netsuite_so_internal_id: '1700008',
+              netsuite_so_tran_id: 'SO70008',
+              netsuite_if_internal_id: '1701008',
+              hours_since_update: '0',
+              hours_since_created: '1',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+    jest
+      .spyOn(client, 'getItemFulfillment')
+      .mockRejectedValue(new Error('Failed to fetch item fulfillment 1701008: That record does not exist.'));
+    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
+      baseSalesOrder({
+        id: '1700008',
+        tranId: 'SO70008',
+        readyToShip: false,
+        status: { id: '_pendingFulfillment', refName: 'Pending Fulfillment' },
+      })
+    );
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'incremental' });
+
+    expect(result.updated).toBe(1);
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70008', 'PACKED');
+  });
+
+  it('moves packing queue orders to shipped when the linked fulfillment is gone and the sales order is closed', async () => {
+    const { client, service } = createService();
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
+      if (sql.includes("status IN ('PICKED', 'PACKING')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO70009',
+              status: 'PICKED',
+              netsuite_so_internal_id: '1700009',
+              netsuite_so_tran_id: 'SO70009',
+              netsuite_if_internal_id: '1701009',
+              hours_since_update: '0',
+              hours_since_created: '1',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+    jest
+      .spyOn(client, 'getItemFulfillment')
+      .mockRejectedValue(new Error('Failed to fetch item fulfillment 1701009: That record does not exist.'));
+    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
+      baseSalesOrder({
+        id: '1700009',
+        tranId: 'SO70009',
+        readyToShip: false,
+        status: { id: '_closed', refName: 'Closed' },
+      })
+    );
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'incremental' });
+
+    expect(result.updated).toBe(1);
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70009', 'SHIPPED');
   });
 });

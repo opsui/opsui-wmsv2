@@ -1114,12 +1114,115 @@ export class NetSuiteOrderSyncService {
 
         for (const row of packingOrders.rows) {
           const soId = row.netsuite_so_internal_id;
-          const fulfillments = fulfillmentMap.get(soId) || [];
+          let fulfillments = fulfillmentMap.get(soId) || [];
           const hoursSinceUpdate = parseFloat(row.hours_since_update) || 0;
           const hoursSinceCreated = parseFloat(row.hours_since_created) || 0;
 
+          if (fulfillments.length === 0 && row.netsuite_if_internal_id) {
+            try {
+              const linkedFulfillment = await this.getItemFulfillmentCached(row.netsuite_if_internal_id);
+              if (linkedFulfillment?.id) {
+                fulfillments = [linkedFulfillment];
+                fulfillmentMap.set(soId, fulfillments);
+                logger.info('Phase 3.5: Loaded linked fulfillment directly for packing order', {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  ifInternalId: row.netsuite_if_internal_id,
+                  ifTranId: linkedFulfillment.tranId,
+                  shipStatus: linkedFulfillment.shipStatus,
+                });
+              }
+            } catch (error: any) {
+              logger.warn('Phase 3.5: Linked packing fulfillment could not be fetched directly', {
+                orderId: row.order_id,
+                soTranId: row.netsuite_so_tran_id,
+                ifInternalId: row.netsuite_if_internal_id,
+                error: error.message,
+              });
+            }
+          }
+
           if (fulfillments.length === 0) {
             stats.withoutFulfillment++;
+
+            let soDetail: any = null;
+            let soStatus = 'unknown';
+            let isCancelled = false;
+            let isClosed = false;
+            let isNotReadyToShip = false;
+
+            const shouldInspectLinkedFulfillmentGap = !!row.netsuite_if_internal_id;
+            if (shouldInspectLinkedFulfillmentGap || hoursSinceUpdate > STALE_ORDER_THRESHOLD_HOURS) {
+              try {
+                soDetail = await this.getSalesOrderCached(soId);
+                soStatus = String(soDetail.status?.refName || '').toLowerCase();
+                isCancelled = soStatus.includes('cancelled');
+                isClosed =
+                  soStatus.includes('closed') ||
+                  soStatus.includes('fulfilled') ||
+                  soStatus.includes('billed');
+                isNotReadyToShip = soDetail.readyToShip === false;
+              } catch (error: any) {
+                logger.debug('Could not fetch SO status for packing queue order without fulfillment', {
+                  orderId: row.order_id,
+                  soId,
+                  error: error.message,
+                });
+              }
+            }
+
+            if (shouldInspectLinkedFulfillmentGap && (isCancelled || isClosed || isNotReadyToShip)) {
+              if (isCancelled) {
+                stats.stale.cancelled++;
+                staleOrderActions.movedToCancelled.push(row.netsuite_so_tran_id || soId);
+                logger.info('Packing queue order cancelled in NetSuite - moving to CANCELLED', {
+                  orderId: row.order_id,
+                  soTranId: row.netsuite_so_tran_id,
+                  previousStatus: row.status,
+                  soStatus,
+                });
+                await this.query(
+                  `UPDATE orders SET status = 'CANCELLED'::order_status, cancelled_at = NOW(), updated_at = NOW()
+                   WHERE order_id = $1`,
+                  [row.order_id]
+                );
+                result.cleaned++;
+                result.details.cleaned.push(
+                  `${row.netsuite_so_tran_id || soId} (packing-gap->CANCELLED)`
+                );
+              } else if (isClosed) {
+                logger.info(
+                  'Packing queue order closed in NetSuite with missing linked fulfillment - moving to SHIPPED',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    previousStatus: row.status,
+                    soStatus,
+                    ifInternalId: row.netsuite_if_internal_id,
+                  }
+                );
+                await this.updateOrderStatus(row.order_id, 'SHIPPED');
+                result.updated++;
+                result.details.updated.push(`${row.netsuite_so_tran_id || soId} (packing-gap->SHIPPED)`);
+              } else if (isNotReadyToShip && row.status !== 'PACKED') {
+                logger.info(
+                  'Packing queue order no longer ready to ship in NetSuite with missing linked fulfillment - moving to PACKED',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    previousStatus: row.status,
+                    soStatus,
+                    ifInternalId: row.netsuite_if_internal_id,
+                  }
+                );
+                await this.updateOrderStatus(row.order_id, 'PACKED');
+                result.updated++;
+                result.details.updated.push(`${row.netsuite_so_tran_id || soId} (packing-gap->PACKED)`);
+              }
+
+              await this.markOrderSynced(row.order_id, syncStartTime);
+              continue;
+            }
 
             // Early warning for orders approaching stale threshold
             if (
@@ -1140,24 +1243,23 @@ export class NetSuiteOrderSyncService {
 
             // Order is stale - check SO status to determine action
             if (hoursSinceUpdate > STALE_ORDER_THRESHOLD_HOURS) {
-              // Try to fetch SO status to make smart decision
-              let soStatus = 'unknown';
-              try {
-                const soDetail = await this.getSalesOrderCached(soId);
-                soStatus = (soDetail.status?.refName || '').toLowerCase();
-              } catch (error: any) {
-                logger.debug('Could not fetch SO status for stale order', {
-                  orderId: row.order_id,
-                  soId,
-                  error: error.message,
-                });
+              if (!soDetail) {
+                try {
+                  soDetail = await this.getSalesOrderCached(soId);
+                  soStatus = String(soDetail.status?.refName || '').toLowerCase();
+                  isCancelled = soStatus.includes('cancelled');
+                  isClosed =
+                    soStatus.includes('closed') ||
+                    soStatus.includes('fulfilled') ||
+                    soStatus.includes('billed');
+                } catch (error: any) {
+                  logger.debug('Could not fetch SO status for stale order', {
+                    orderId: row.order_id,
+                    soId,
+                    error: error.message,
+                  });
+                }
               }
-
-              const isCancelled = soStatus.includes('cancelled');
-              const isClosed =
-                soStatus.includes('closed') ||
-                soStatus.includes('fulfilled') ||
-                soStatus.includes('billed');
 
               if (isCancelled) {
                 // SO was cancelled - move to CANCELLED
@@ -1490,8 +1592,13 @@ export class NetSuiteOrderSyncService {
             soInternalId,
           }
         );
-      } else if (hasFulfillment && existing.status === 'PENDING') {
-        // Fulfillment exists — move to PACKED/PICKED based on ship status
+      } else if (
+        hasFulfillment &&
+        ['PENDING', 'PICKED', 'PACKED'].includes(existing.status) &&
+        existing.status !== (isPacked ? 'PACKED' : 'PICKED')
+      ) {
+        // Fulfillment exists — reconcile WMS queue state to the latest NetSuite fulfillment state.
+        // This allows recovery when a fulfillment is deleted/recreated in an earlier state.
         const newStatus = isPacked ? 'PACKED' : 'PICKED';
         await this.updateOrderStatus(existing.orderId, newStatus, {
           ifInternalId: latestFulfillment.id,
@@ -1682,7 +1789,11 @@ export class NetSuiteOrderSyncService {
             tranId,
           });
         }
-      } else if (!isShipped && existing.status === 'PENDING') {
+      } else if (
+        !isShipped &&
+        ['PENDING', 'PICKED', 'PACKED'].includes(existing.status) &&
+        existing.status !== (isPacked ? 'PACKED' : 'PICKED')
+      ) {
         const newStatus = isPacked ? 'PACKED' : 'PICKED';
         await this.updateOrderStatus(existing.orderId, newStatus, {
           ifInternalId,
