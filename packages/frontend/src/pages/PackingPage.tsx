@@ -44,6 +44,61 @@ import { useNavigate, useParams } from 'react-router-dom';
 // COMPONENT
 // ============================================================================
 
+type NzcPackagePreset = {
+  id: string;
+  label: string;
+  kg?: number;
+  cubicM3?: number;
+  length?: number;
+  width?: number;
+  height?: number;
+};
+
+type NzcStockSize = {
+  code?: string;
+  description?: string;
+  length?: number;
+  width?: number;
+  height?: number;
+  cubicM3?: number;
+  kg?: number;
+};
+
+const NZC_CARRIER_FALLBACK: Carrier = {
+  carrierId: 'CARR-NZC',
+  name: 'NZ Couriers',
+  carrierCode: 'NZC',
+  serviceTypes: ['Courier', 'CourierPost', 'Overnight', 'Rural'],
+  isActive: true,
+  requiresAccountNumber: false,
+  requiresPackageDimensions: false,
+  requiresWeight: true,
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+};
+
+const NZC_PACKAGE_PRESETS: NzcPackagePreset[] = [
+  { id: 'CUSTOM', label: '-- Custom --' },
+  { id: '25KG_0015M3', label: '25KG/0.015M3', kg: 25, cubicM3: 0.015 },
+  { id: '25KG_002M3', label: '25KG/0.02M3', kg: 25, cubicM3: 0.02 },
+  { id: '25KG_003M3', label: '25KG/0.03M3', kg: 25, cubicM3: 0.03 },
+  { id: '25KG_004M3', label: '25KG/0.04M3', kg: 25, cubicM3: 0.04 },
+  { id: '25KG_005M3', label: '25KG/0.05M3', kg: 25, cubicM3: 0.05 },
+  { id: '25KG_006M3', label: '25KG/0.06M3', kg: 25, cubicM3: 0.06 },
+  { id: '25KG_0075M3', label: '25KG/0.075M3', kg: 25, cubicM3: 0.075 },
+  { id: '25KG_009M3', label: '25KG/0.09M3', kg: 25, cubicM3: 0.09 },
+  { id: '25KG_01M3', label: '25KG/0.1M3', kg: 25, cubicM3: 0.1 },
+  { id: 'NZC_DP_RIGID_CARD_A4', label: 'NZC DP Rigid Card A4+' },
+  { id: 'NZC_E11_DLE_PLASTIC', label: 'NZC E11 DLE Plastic' },
+  { id: 'NZC_E20_A5', label: 'NZC E20 A5' },
+  { id: 'NZC_E25B', label: 'NZC E25B' },
+  { id: 'NZC_E40_A4', label: 'NZC E40 A4' },
+  { id: 'NZC_E50_FOOLSCAP', label: 'NZC E50 Foolscap' },
+  { id: 'NZC_E60_A3', label: 'NZC E60 A3' },
+  { id: 'NZC_ENVIRO360_E360', label: 'NZC Enviro360 (E360)' },
+  { id: 'NZC_PP_PLASTIC_A3', label: 'NZC PP Plastic A3+' },
+];
+
 export function PackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
@@ -107,6 +162,12 @@ export function PackingPage() {
   const [isFetchingRates, setIsFetchingRates] = useState(false);
   const [shipmentCreated, setShipmentCreated] = useState(false);
   const [nzcConnote, setNzcConnote] = useState<string>('');
+  const [selectedNzcPackagePreset, setSelectedNzcPackagePreset] = useState('CUSTOM');
+  const [nzcCustomLength, setNzcCustomLength] = useState('10');
+  const [nzcCustomWidth, setNzcCustomWidth] = useState('10');
+  const [nzcCustomHeight, setNzcCustomHeight] = useState('10');
+  const [manualAddressEditEnabled, setManualAddressEditEnabled] = useState(false);
+  const [confirmManualAddressEdit, setConfirmManualAddressEdit] = useState(false);
 
   // Helper to convert lbs to kg for NZC API
   const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
@@ -127,13 +188,6 @@ export function PackingPage() {
     phone: rawAddress?.phone || undefined,
     email: rawAddress?.email || undefined,
   });
-  const formatAddressLines = (address: Address): string[] =>
-    [
-      address.addressLine1,
-      address.addressLine2,
-      [address.city, address.state, address.postalCode].filter(Boolean).join(', '),
-      address.country,
-    ].filter(Boolean);
 
   // Fetch carriers for shipping form
   const { data: carriers = [] } = useQuery({
@@ -144,19 +198,81 @@ export function PackingPage() {
     },
   });
 
+  const { data: nzcStockSizes = [] } = useQuery({
+    queryKey: ['nzc', 'stock-sizes'],
+    queryFn: () => nzcApi.getStockSizes(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const completePackingMutation = useCompletePacking();
-  const shipToAddress = normalizeShipToAddress(
+  const baseShipToAddress = normalizeShipToAddress(
     order?.shippingAddress,
     order?.customerName || 'Customer'
   );
+  const [editableShipToAddress, setEditableShipToAddress] = useState<Address>(baseShipToAddress);
   const trackingDefault = [order?.netsuiteSoTranId || order?.orderId, order?.customerPoNumber]
     .filter(Boolean)
     .join(', ');
+  const carriersWithFallback = carriers.some(
+    (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
+  )
+    ? carriers
+    : [...carriers, NZC_CARRIER_FALLBACK];
+  const nzcPackageOptions = nzcStockSizes.length
+    ? [
+        NZC_PACKAGE_PRESETS[0],
+        ...nzcStockSizes.map((stock: NzcStockSize) => ({
+          id: stock.code || stock.description || 'UNKNOWN',
+          label: stock.description
+            ? stock.code
+              ? `${stock.code} ${stock.description}`
+              : stock.description
+            : stock.code || 'NZC Stock',
+          kg: stock.kg,
+          cubicM3: stock.cubicM3,
+          length: stock.length,
+          width: stock.width,
+          height: stock.height,
+        })),
+      ]
+    : NZC_PACKAGE_PRESETS;
+  const selectedCarrier = carriersWithFallback.find(
+    (carrier: Carrier) => carrier.carrierId === selectedCarrierId
+  );
+  const isNZCCarrier = selectedCarrier?.carrierCode === 'NZC';
+  const selectedNzcPreset = nzcPackageOptions.find(
+    preset => preset.id === selectedNzcPackagePreset
+  );
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
   const isClaimingRef = useRef(false);
+
+  const buildNzcPackages = () => {
+    const packageUnits = Math.max(1, parseInt(totalPackages || '1', 10) || 1);
+    const presetWeightKg = selectedNzcPreset?.kg;
+    const customWeightKg = lbsToKg(parseFloat(totalWeight || '0'));
+
+    return [
+      {
+        length:
+          selectedNzcPackagePreset === 'CUSTOM'
+            ? parseFloat(nzcCustomLength || '0') || 10
+            : undefined,
+        width:
+          selectedNzcPackagePreset === 'CUSTOM'
+            ? parseFloat(nzcCustomWidth || '0') || 10
+            : undefined,
+        height:
+          selectedNzcPackagePreset === 'CUSTOM'
+            ? parseFloat(nzcCustomHeight || '0') || 10
+            : undefined,
+        weight: presetWeightKg || customWeightKg,
+        units: packageUnits,
+      },
+    ];
+  };
 
   // Claim order for packing mutation
   const claimMutation = useMutation({
@@ -326,9 +442,6 @@ export function PackingPage() {
   // Fetch NZC rates when NZC carrier is selected
   useEffect(() => {
     const fetchNZCRates = async () => {
-      const isNZCCarrier =
-        carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
-
       if (!isNZCCarrier || !totalWeight || !totalPackages) {
         setNzcRates([]);
         setSelectedQuote(null);
@@ -339,25 +452,19 @@ export function PackingPage() {
       try {
         const response = await nzcApi.getRates({
           destination: {
-            name: shipToAddress.name,
-            company: shipToAddress.company,
-            addressLine1: shipToAddress.addressLine1,
-            city: shipToAddress.city,
-            state: shipToAddress.state,
-            postalCode: shipToAddress.postalCode,
-            country: shipToAddress.country,
-            phone: shipToAddress.phone,
-            email: shipToAddress.email,
+            name: editableShipToAddress.name,
+            company: editableShipToAddress.company,
+            addressLine1: [editableShipToAddress.addressLine1, editableShipToAddress.addressLine2]
+              .filter(Boolean)
+              .join(', '),
+            city: editableShipToAddress.city,
+            state: editableShipToAddress.state,
+            postalCode: editableShipToAddress.postalCode,
+            country: editableShipToAddress.country,
+            phone: editableShipToAddress.phone,
+            email: editableShipToAddress.email,
           },
-          packages: [
-            {
-              length: 10,
-              width: 10,
-              height: 10,
-              weight: lbsToKg(parseFloat(totalWeight)),
-              units: parseInt(totalPackages),
-            },
-          ],
+          packages: buildNzcPackages(),
         });
 
         if (response.Quotes && response.Quotes.length > 0) {
@@ -381,13 +488,40 @@ export function PackingPage() {
 
     const timeoutId = setTimeout(fetchNZCRates, 500);
     return () => clearTimeout(timeoutId);
-  }, [selectedCarrierId, totalWeight, totalPackages, carriers, shipToAddress]);
+  }, [
+    isNZCCarrier,
+    totalWeight,
+    totalPackages,
+    editableShipToAddress,
+    selectedNzcPackagePreset,
+    nzcCustomLength,
+    nzcCustomWidth,
+    nzcCustomHeight,
+  ]);
 
   useEffect(() => {
     if (!trackingNumber.trim() && trackingDefault) {
       setTrackingNumber(trackingDefault);
     }
   }, [trackingDefault, trackingNumber]);
+
+  useEffect(() => {
+    setEditableShipToAddress(baseShipToAddress);
+    setManualAddressEditEnabled(false);
+    setConfirmManualAddressEdit(false);
+  }, [
+    order?.orderId,
+    baseShipToAddress.addressLine1,
+    baseShipToAddress.addressLine2,
+    baseShipToAddress.city,
+    baseShipToAddress.state,
+    baseShipToAddress.postalCode,
+    baseShipToAddress.country,
+    baseShipToAddress.phone,
+    baseShipToAddress.email,
+    baseShipToAddress.name,
+    baseShipToAddress.company,
+  ]);
 
   if (!orderId) {
     return <div>No order ID provided</div>;
@@ -781,8 +915,6 @@ export function PackingPage() {
       return;
     }
 
-    const isNZCCarrier =
-      carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)?.carrierCode === 'NZC';
     if (isNZCCarrier && !selectedQuote) {
       showToast('Please select a shipping rate/quote', 'error');
       return;
@@ -836,25 +968,22 @@ export function PackingPage() {
 
         const nzcShipment = await nzcApi.createShipment({
           destination: {
-            name: shipToAddress.name,
-            company: shipToAddress.company,
-            addressLine1: shipToAddress.addressLine1,
-            city: shipToAddress.city,
-            state: shipToAddress.state,
-            postalCode: shipToAddress.postalCode,
-            country: shipToAddress.country,
-            phone: shipToAddress.phone,
-            email: shipToAddress.email,
+            name: editableShipToAddress.name,
+            company: editableShipToAddress.company,
+            addressLine1: [editableShipToAddress.addressLine1, editableShipToAddress.addressLine2]
+              .filter(Boolean)
+              .join(', '),
+            city: editableShipToAddress.city,
+            state: editableShipToAddress.state,
+            postalCode: editableShipToAddress.postalCode,
+            country: editableShipToAddress.country,
+            phone: editableShipToAddress.phone,
+            email: editableShipToAddress.email,
           },
-          packages: [
-            {
-              length: 10,
-              width: 10,
-              height: 10,
-              weight: weightKg,
-              units: parseInt(totalPackages),
-            },
-          ],
+          packages: buildNzcPackages().map(pkg => ({
+            ...pkg,
+            weight: pkg.weight || weightKg,
+          })),
           quoteId: selectedQuote.QuoteId,
         });
 
@@ -873,7 +1002,7 @@ export function PackingPage() {
           serviceType: selectedQuote.Service,
           shippingMethod: 'STANDARD',
           shipFromAddress,
-          shipToAddress,
+          shipToAddress: editableShipToAddress,
           totalWeight: parseFloat(totalWeight),
           totalPackages: parseInt(totalPackages),
           createdBy: currentUser?.userId,
@@ -895,7 +1024,7 @@ export function PackingPage() {
           serviceType,
           shippingMethod: 'STANDARD',
           shipFromAddress,
-          shipToAddress,
+          shipToAddress: editableShipToAddress,
           totalWeight: parseFloat(totalWeight),
           totalPackages: parseInt(totalPackages),
           createdBy: currentUser?.userId,
@@ -1180,7 +1309,7 @@ export function PackingPage() {
                         className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
                       >
                         <option value="">Select a carrier...</option>
-                        {carriers.map((carrier: Carrier) => (
+                        {carriersWithFallback.map((carrier: Carrier) => (
                           <option key={carrier.carrierId} value={carrier.carrierId}>
                             {carrier.name}
                           </option>
@@ -1189,8 +1318,7 @@ export function PackingPage() {
                     </div>
 
                     {/* Service Type - Only for non-NZC carriers */}
-                    {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)
-                      ?.carrierCode !== 'NZC' && (
+                    {!isNZCCarrier && (
                       <div>
                         <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
                           Service Type <span className="text-error-400">*</span>
@@ -1210,8 +1338,7 @@ export function PackingPage() {
                     )}
 
                     {/* Tracking Number - Only for non-NZC carriers */}
-                    {carriers.find((c: Carrier) => c.carrierId === selectedCarrierId)
-                      ?.carrierCode !== 'NZC' && (
+                    {!isNZCCarrier && (
                       <div>
                         <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
                           Tracking Number (Optional)
@@ -1228,46 +1355,266 @@ export function PackingPage() {
                     )}
 
                     {/* Package Details */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                          Packages <span className="text-error-400">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={totalPackages}
-                          onChange={e => setTotalPackages(e.target.value)}
-                          disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                        />
+                    {isNZCCarrier ? (
+                      <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4 space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
+                            NZC Package Setup
+                          </p>
+                          <span className="text-xs text-gray-500">
+                            Matches NZ Couriers stock naming
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Stock / Package Type <span className="text-error-400">*</span>
+                            </label>
+                            <select
+                              value={selectedNzcPackagePreset}
+                              onChange={e => setSelectedNzcPackagePreset(e.target.value)}
+                              disabled={isCreatingShipment || isViewMode}
+                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 [&_option]:bg-gray-900 [&_option]:text-white"
+                            >
+                              {nzcPackageOptions.map(preset => (
+                                <option key={preset.id} value={preset.id}>
+                                  {preset.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Units <span className="text-error-400">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={totalPackages}
+                              onChange={e => setTotalPackages(e.target.value)}
+                              disabled={isCreatingShipment || isViewMode}
+                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Length (cm)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={
+                                selectedNzcPackagePreset === 'CUSTOM'
+                                  ? nzcCustomLength
+                                  : selectedNzcPreset?.length || ''
+                              }
+                              onChange={e => setNzcCustomLength(e.target.value)}
+                              disabled={
+                                isCreatingShipment ||
+                                isViewMode ||
+                                selectedNzcPackagePreset !== 'CUSTOM'
+                              }
+                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Width (cm)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={
+                                selectedNzcPackagePreset === 'CUSTOM'
+                                  ? nzcCustomWidth
+                                  : selectedNzcPreset?.width || ''
+                              }
+                              onChange={e => setNzcCustomWidth(e.target.value)}
+                              disabled={
+                                isCreatingShipment ||
+                                isViewMode ||
+                                selectedNzcPackagePreset !== 'CUSTOM'
+                              }
+                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Height (cm)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={
+                                selectedNzcPackagePreset === 'CUSTOM'
+                                  ? nzcCustomHeight
+                                  : selectedNzcPreset?.height || ''
+                              }
+                              onChange={e => setNzcCustomHeight(e.target.value)}
+                              disabled={
+                                isCreatingShipment ||
+                                isViewMode ||
+                                selectedNzcPackagePreset !== 'CUSTOM'
+                              }
+                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              KG
+                            </label>
+                            <input
+                              type="text"
+                              readOnly
+                              value={
+                                selectedNzcPreset?.kg != null
+                                  ? selectedNzcPreset.kg.toFixed(3)
+                                  : lbsToKg(parseFloat(totalWeight || '0')).toFixed(3)
+                              }
+                              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Cubic (m3)
+                            </label>
+                            <input
+                              type="text"
+                              readOnly
+                              value={
+                                selectedNzcPreset?.cubicM3 != null
+                                  ? selectedNzcPreset.cubicM3.toFixed(4)
+                                  : 'Custom'
+                              }
+                              className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
+                            />
+                          </div>
+                          <div>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              Weight Reference (lbs)
+                            </label>
+                            <input
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              value={totalWeight}
+                              onChange={e => setTotalWeight(e.target.value)}
+                              placeholder="Enter weight..."
+                              disabled={isCreatingShipment || isViewMode}
+                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                          Weight (lbs) <span className="text-error-400">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={totalWeight}
-                          onChange={e => setTotalWeight(e.target.value)}
-                          placeholder="Enter weight..."
-                          disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                        />
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                            Packages <span className="text-error-400">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={totalPackages}
+                            onChange={e => setTotalPackages(e.target.value)}
+                            disabled={isCreatingShipment || isViewMode}
+                            className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                          />
+                        </div>
+                        <div>
+                          <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                            Weight (lbs) <span className="text-error-400">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={totalWeight}
+                            onChange={e => setTotalWeight(e.target.value)}
+                            placeholder="Enter weight..."
+                            disabled={isCreatingShipment || isViewMode}
+                            className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Shipping Address Info */}
                     <div className="bg-white/[0.02] rounded-xl border border-white/[0.08] p-4">
-                      <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
-                        Shipping To
-                      </p>
-                      <p className="text-white font-semibold">{order.customerName}</p>
-                      <div className="text-sm text-gray-400 mt-1 space-y-1">
-                        {formatAddressLines(shipToAddress).map(line => (
-                          <p key={line}>{line}</p>
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                          <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
+                            Shipping To
+                          </p>
+                          <p className="text-white font-semibold">{editableShipToAddress.name}</p>
+                        </div>
+                        {!manualAddressEditEnabled ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setConfirmManualAddressEdit(true)}
+                            disabled={isCreatingShipment || isViewMode}
+                          >
+                            <PencilSquareIcon className="h-4 w-4 mr-2" />
+                            Manual Edit
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setEditableShipToAddress(baseShipToAddress);
+                              setManualAddressEditEnabled(false);
+                            }}
+                            disabled={isCreatingShipment || isViewMode}
+                          >
+                            Reset
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          ['Name', 'name'],
+                          ['Company', 'company'],
+                          ['Address Line 1', 'addressLine1'],
+                          ['Address Line 2', 'addressLine2'],
+                          ['City', 'city'],
+                          ['State', 'state'],
+                          ['Postal Code', 'postalCode'],
+                          ['Country', 'country'],
+                          ['Phone', 'phone'],
+                          ['Email', 'email'],
+                        ].map(([label, key]) => (
+                          <div key={key}>
+                            <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                              {label}
+                            </label>
+                            <input
+                              type="text"
+                              value={(editableShipToAddress as any)[key] || ''}
+                              onChange={e =>
+                                setEditableShipToAddress(prev => ({
+                                  ...prev,
+                                  [key]: e.target.value,
+                                }))
+                              }
+                              disabled={
+                                isCreatingShipment || isViewMode || !manualAddressEditEnabled
+                              }
+                              className={`w-full rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                                manualAddressEditEnabled
+                                  ? 'bg-white/[0.05] border border-white/[0.08] text-white'
+                                  : 'bg-white/[0.03] border border-white/[0.05] text-gray-400 cursor-not-allowed'
+                              } disabled:opacity-70`}
+                            />
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -1850,6 +2197,20 @@ export function PackingPage() {
           cancelText="Cancel"
           variant="warning"
           isLoading={isCreatingShipment}
+        />
+
+        <ConfirmDialog
+          isOpen={confirmManualAddressEdit}
+          onClose={() => setConfirmManualAddressEdit(false)}
+          onConfirm={() => {
+            setManualAddressEditEnabled(true);
+            setConfirmManualAddressEdit(false);
+          }}
+          title="Enable Manual Address Edit"
+          message="This unlocks the NZC shipping address fields for manual changes. Only do this if the NetSuite address needs to be corrected for this shipment."
+          confirmText="Unlock Address"
+          cancelText="Keep Locked"
+          variant="warning"
         />
 
         {/* Manual Override Modal */}
