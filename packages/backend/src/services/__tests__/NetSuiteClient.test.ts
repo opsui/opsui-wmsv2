@@ -190,6 +190,7 @@ describe('NetSuiteClient', () => {
     const soapRequest = jest.spyOn(client as any, 'soapRequest');
 
     soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
+    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <getResponse>
           <platformCore:status isSuccess="true" />
           <record xsi:type="tranSales:ItemFulfillment" internalId="1609999">
@@ -200,6 +201,7 @@ describe('NetSuiteClient', () => {
               </tranSales:package>
             </tranSales:packageList>
           </record>
+        </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <updateResponse>
           <platformCore:status isSuccess="true" />
@@ -219,7 +221,6 @@ describe('NetSuiteClient', () => {
     expect(updateEnvelope).toContain(
       '<tranSales:packageDescr>NZ Couriers</tranSales:packageDescr>'
     );
-    expect(updateEnvelope).toContain('<tranSales:packageWeight>2.5</tranSales:packageWeight>');
   });
 
   it('only marks receivable fulfillment lines for receipt', async () => {

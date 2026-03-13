@@ -461,8 +461,6 @@ function OrderCard({
     new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
   );
   const locationLabel = locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
-  const rawNetSuiteOrderDate = order.netsuiteOrderDate || order.netsuite_order_date;
-  const netsuiteOrderDateLabel = formatNetSuiteOrderDate(rawNetSuiteOrderDate);
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
@@ -764,6 +762,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const prefersReducedMotion = useReducedMotion();
   const noMotion = isPerf || !!prefersReducedMotion;
   const queueRefetchInterval = noMotion ? PERFORMANCE_QUEUE_REFETCH_MS : STANDARD_QUEUE_REFETCH_MS;
+  const queueRefetchInterval = noMotion ? PERFORMANCE_QUEUE_REFETCH_MS : STANDARD_QUEUE_REFETCH_MS;
   const canPick = useAuthStore(state => state.canPick);
   const canPack = useAuthStore(state => state.canPack);
   const userId = useAuthStore(state => state.user?.userId);
@@ -866,6 +865,15 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   );
 
   const packingQueueResult = useQuery({
+    queryKey: [
+      'orders',
+      cfg.queryKey,
+      statusFilter,
+      priorityFilter,
+      debouncedSearch,
+      page,
+      pageSize,
+    ],
     queryKey: [
       'orders',
       cfg.queryKey,
@@ -985,26 +993,6 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   // Direct navigation when scanning/pasting an exact order ID
   const scannedOrderRef = useRef<string | null>(null);
   useEffect(() => {
-    const trimmedSearch = searchTerm.trim();
-    if (!trimmedSearch || scannedOrderRef.current === trimmedSearch) return;
-
-    // Check all available orders (queue + all orders list)
-    const allOrders = [...(queueData?.orders || []), ...(allOrdersData?.orders || [])];
-    const matchedOrder = allOrders.find(
-      (o: any) =>
-        o.orderId?.toLowerCase() === trimmedSearch.toLowerCase() ||
-        o.netsuiteSoTranId?.toLowerCase() === trimmedSearch.toLowerCase()
-    );
-
-    if (matchedOrder) {
-      scannedOrderRef.current = trimmedSearch;
-      setSearchTerm('');
-      setDebouncedSearch('');
-      navigateToOrderDetail(mode, matchedOrder.orderId);
-    }
-  }, [searchTerm, queueData, allOrdersData, mode, navigateToOrderDetail]);
-
-  useEffect(() => {
     setSearchParams(
       params => {
         if (statusFilter) {
@@ -1019,11 +1007,17 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           params.set('queue', queueParam);
         }
 
+        if (debouncedSearch) {
+          params.set('search', debouncedSearch);
+        } else {
+          params.delete('search');
+        }
+
         return params;
       },
       { replace: true }
     );
-  }, [adminMode, queueParam, setSearchParams, statusFilter]);
+  }, [adminMode, debouncedSearch, queueParam, setSearchParams, statusFilter]);
 
   const orders = queueData?.orders || [];
 

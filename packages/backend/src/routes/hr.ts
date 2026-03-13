@@ -274,10 +274,7 @@ router.post(
   '/timesheets/:id/submit',
   employeeAuth,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const timesheet = await hrService.submitDraftTimesheet(
-      req.params.id,
-      req.user?.userId || ''
-    );
+    const timesheet = await hrService.submitDraftTimesheet(req.params.id, req.user?.userId || '');
     res.json(timesheet);
   })
 );

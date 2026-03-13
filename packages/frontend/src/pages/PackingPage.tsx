@@ -2083,7 +2083,9 @@ export function PackingPage() {
 
                     {/* NZC Rates Display */}
                     {isNZCCarrier && (
-                      <div className={`${packingSurfacePanelClass} border-primary-500/30 space-y-3`}>
+                      <div
+                        className={`${packingSurfacePanelClass} border-primary-500/30 space-y-3`}
+                      >
                         <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
                           Available Shipping Rates
                         </p>
@@ -2163,7 +2165,9 @@ export function PackingPage() {
 
                     {/* NZC Label Display */}
                     {nzcLabel && (
-                      <div className={`${packingSurfacePanelClass} border-success-500/30 space-y-4`}>
+                      <div
+                        className={`${packingSurfacePanelClass} border-success-500/30 space-y-4`}
+                      >
                         <div className="flex items-center justify-between">
                           <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider">
                             Shipping Labels

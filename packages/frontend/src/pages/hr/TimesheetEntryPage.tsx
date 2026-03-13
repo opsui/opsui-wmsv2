@@ -92,9 +92,7 @@ const transformDbEntriesToUiFormat = (dbEntries: any[]): TimesheetEntry[] => {
     }
   }
 
-  return Object.values(entriesByDate).sort((a, b) =>
-    a.workDate.localeCompare(b.workDate)
-  );
+  return Object.values(entriesByDate).sort((a, b) => a.workDate.localeCompare(b.workDate));
 };
 
 export default function TimesheetEntryPage() {
@@ -262,9 +260,9 @@ export default function TimesheetEntryPage() {
       timesheetId: '',
       employeeId: selectedEmployeeId || '',
       employeeName: isManager
-        ? (employees.find(e => e.employeeId === selectedEmployeeId)?.firstName +
+        ? employees.find(e => e.employeeId === selectedEmployeeId)?.firstName +
             ' ' +
-            employees.find(e => e.employeeId === selectedEmployeeId)?.lastName || '')
+            employees.find(e => e.employeeId === selectedEmployeeId)?.lastName || ''
         : 'My Timesheet',
       weekStartDate: weekStart,
       weekEndDate: weekEndObj.toISOString().split('T')[0],
@@ -347,7 +345,9 @@ export default function TimesheetEntryPage() {
       }
     } catch (error) {
       console.error('Error submitting timesheet:', error);
-      alert(`Error submitting timesheet: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Error submitting timesheet: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -446,7 +446,11 @@ export default function TimesheetEntryPage() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {timesheetId ? 'Edit Timesheet' : 'New Timesheet'}
               </h1>
-              {timesheet && <p className="text-gray-500 dark:text-slate-400 text-sm">{timesheet.employeeName}</p>}
+              {timesheet && (
+                <p className="text-gray-500 dark:text-slate-400 text-sm">
+                  {timesheet.employeeName}
+                </p>
+              )}
             </div>
           </div>
 
@@ -469,7 +473,9 @@ export default function TimesheetEntryPage() {
               </span>
 
               {timesheet.approvedBy && (
-                <span className="text-gray-500 dark:text-slate-400 text-sm">Approved by {timesheet.approvedBy}</span>
+                <span className="text-gray-500 dark:text-slate-400 text-sm">
+                  Approved by {timesheet.approvedBy}
+                </span>
               )}
             </div>
           )}
@@ -483,7 +489,9 @@ export default function TimesheetEntryPage() {
             </CardHeader>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-600 dark:text-slate-400 text-sm mb-2">Employee</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-sm mb-2">
+                  Employee
+                </label>
                 <select
                   value={selectedEmployeeId}
                   onChange={e => setSelectedEmployeeId(e.target.value)}
@@ -500,7 +508,9 @@ export default function TimesheetEntryPage() {
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-slate-400 text-sm mb-2">Week Start (includes future weeks)</label>
+                <label className="block text-gray-600 dark:text-slate-400 text-sm mb-2">
+                  Week Start (includes future weeks)
+                </label>
                 <div className="flex gap-2">
                   <button
                     onClick={goToPreviousWeek}
@@ -577,7 +587,9 @@ export default function TimesheetEntryPage() {
               {/* Week Period - no navigation buttons */}
               <Card className="bg-gray-100 dark:bg-slate-800/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Week Period</CardTitle>
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">
+                    Week Period
+                  </CardTitle>
                 </CardHeader>
                 <p className="text-gray-900 dark:text-white text-sm font-medium text-center">
                   {new Date(timesheet.weekStartDate).toLocaleDateString()} -{' '}
@@ -587,7 +599,9 @@ export default function TimesheetEntryPage() {
 
               <Card className="bg-gray-100 dark:bg-slate-800/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Regular Hours</CardTitle>
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">
+                    Regular Hours
+                  </CardTitle>
                 </CardHeader>
                 <p className="!text-blue-600 dark:!text-blue-400 text-2xl font-bold">
                   {timesheet.totalRegularHours.toFixed(1)}h
@@ -596,7 +610,9 @@ export default function TimesheetEntryPage() {
 
               <Card className="bg-gray-100 dark:bg-slate-800/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Overtime 1.5x</CardTitle>
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">
+                    Overtime 1.5x
+                  </CardTitle>
                 </CardHeader>
                 <p className="!text-amber-600 dark:!text-amber-400 text-2xl font-bold">
                   {timesheet.totalOvertime1_5Hours.toFixed(1)}h
@@ -605,7 +621,9 @@ export default function TimesheetEntryPage() {
 
               <Card className="bg-gray-100 dark:bg-slate-800/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Overtime 2.0x</CardTitle>
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">
+                    Overtime 2.0x
+                  </CardTitle>
                 </CardHeader>
                 <p className="!text-purple-600 dark:!text-purple-400 text-2xl font-bold">
                   {timesheet.totalOvertime2_0Hours.toFixed(1)}h
@@ -614,7 +632,9 @@ export default function TimesheetEntryPage() {
 
               <Card className="bg-gray-100 dark:bg-slate-800/50">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">Total Hours</CardTitle>
+                  <CardTitle className="text-sm text-gray-600 dark:text-slate-400">
+                    Total Hours
+                  </CardTitle>
                 </CardHeader>
                 <p className="!text-emerald-600 dark:!text-emerald-400 text-2xl font-bold">
                   {timesheet.totalHours.toFixed(1)}h
@@ -635,11 +655,19 @@ export default function TimesheetEntryPage() {
                     <tr className="text-left text-gray-500 dark:text-slate-400 text-xs border-b border-gray-200 dark:border-slate-700/50">
                       <th className="pb-3 pr-3 font-medium whitespace-nowrap">Day</th>
                       <th className="pb-3 pr-3 font-medium whitespace-nowrap">Date</th>
-                      <th className="pb-3 pr-3 font-medium !text-blue-600 dark:!text-blue-400 whitespace-nowrap">Regular</th>
-                      <th className="pb-3 pr-3 font-medium !text-amber-600 dark:!text-amber-400 whitespace-nowrap">OT 1.5x</th>
-                      <th className="pb-3 pr-3 font-medium !text-purple-600 dark:!text-purple-400 whitespace-nowrap">OT 2.0x</th>
+                      <th className="pb-3 pr-3 font-medium !text-blue-600 dark:!text-blue-400 whitespace-nowrap">
+                        Regular
+                      </th>
+                      <th className="pb-3 pr-3 font-medium !text-amber-600 dark:!text-amber-400 whitespace-nowrap">
+                        OT 1.5x
+                      </th>
+                      <th className="pb-3 pr-3 font-medium !text-purple-600 dark:!text-purple-400 whitespace-nowrap">
+                        OT 2.0x
+                      </th>
                       <th className="pb-3 pr-3 font-medium whitespace-nowrap">Break</th>
-                      <th className="pb-3 pr-3 font-medium !text-emerald-600 dark:!text-emerald-400 whitespace-nowrap">Total</th>
+                      <th className="pb-3 pr-3 font-medium !text-emerald-600 dark:!text-emerald-400 whitespace-nowrap">
+                        Total
+                      </th>
                       <th className="pb-3 font-medium whitespace-nowrap">Notes</th>
                     </tr>
                   </thead>
@@ -650,14 +678,19 @@ export default function TimesheetEntryPage() {
                         (entry.overtime1_5Hours || 0) +
                         (entry.overtime2_0Hours || 0);
                       return (
-                        <tr key={index} className="border-b border-gray-200 dark:border-slate-700/30">
+                        <tr
+                          key={index}
+                          className="border-b border-gray-200 dark:border-slate-700/30"
+                        >
                           <td className="py-3 pr-3 whitespace-nowrap">
                             <span className="text-gray-900 dark:text-white font-medium">
                               {getDayName(entry.workDate)}
                             </span>
                           </td>
                           <td className="py-3 pr-3 whitespace-nowrap">
-                            <span className="text-gray-500 dark:text-slate-400">{getDayNumber(entry.workDate)}</span>
+                            <span className="text-gray-500 dark:text-slate-400">
+                              {getDayNumber(entry.workDate)}
+                            </span>
                           </td>
                           <td className="py-3 pr-3 whitespace-nowrap">
                             {isEditable ? (
@@ -686,7 +719,9 @@ export default function TimesheetEntryPage() {
                                 className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-gray-700 dark:text-slate-300">{entry.regularHours}h</span>
+                              <span className="text-gray-700 dark:text-slate-300">
+                                {entry.regularHours}h
+                              </span>
                             )}
                           </td>
                           <td className="py-3 pr-3 whitespace-nowrap">
@@ -716,7 +751,9 @@ export default function TimesheetEntryPage() {
                                 className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-gray-700 dark:text-slate-300">{entry.overtime1_5Hours}h</span>
+                              <span className="text-gray-700 dark:text-slate-300">
+                                {entry.overtime1_5Hours}h
+                              </span>
                             )}
                           </td>
                           <td className="py-3 pr-3 whitespace-nowrap">
@@ -746,7 +783,9 @@ export default function TimesheetEntryPage() {
                                 className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-gray-700 dark:text-slate-300">{entry.overtime2_0Hours}h</span>
+                              <span className="text-gray-700 dark:text-slate-300">
+                                {entry.overtime2_0Hours}h
+                              </span>
                             )}
                           </td>
                           <td className="py-3 pr-3 whitespace-nowrap">
@@ -772,11 +811,15 @@ export default function TimesheetEntryPage() {
                                 className="w-12 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-1 py-2 text-gray-900 dark:text-white text-sm text-center"
                               />
                             ) : (
-                              <span className="text-gray-700 dark:text-slate-300">{entry.breakMinutes}m</span>
+                              <span className="text-gray-700 dark:text-slate-300">
+                                {entry.breakMinutes}m
+                              </span>
                             )}
                           </td>
                           <td className="py-3 pr-3 whitespace-nowrap">
-                            <span className="text-gray-900 dark:text-white font-semibold">{total.toFixed(1)}h</span>
+                            <span className="text-gray-900 dark:text-white font-semibold">
+                              {total.toFixed(1)}h
+                            </span>
                           </td>
                           <td className="py-3 whitespace-nowrap">
                             {isEditable ? (
@@ -788,7 +831,9 @@ export default function TimesheetEntryPage() {
                                 className="w-24 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded px-2 py-2 text-gray-900 dark:text-white text-sm"
                               />
                             ) : (
-                              <span className="text-gray-500 dark:text-slate-400 text-sm">{entry.notes || '-'}</span>
+                              <span className="text-gray-500 dark:text-slate-400 text-sm">
+                                {entry.notes || '-'}
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -885,7 +930,9 @@ export default function TimesheetEntryPage() {
         {rejectModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-200 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reject Timesheet</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Reject Timesheet
+              </h3>
               <p className="text-gray-600 dark:text-slate-400 text-sm mb-4">
                 Please provide a reason for rejecting this timesheet.
               </p>

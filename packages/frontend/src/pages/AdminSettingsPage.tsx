@@ -632,16 +632,17 @@ function AdminSettingsPage() {
               </div>
             </div>
 
-            <div
-              className="hidden mobile:flex mobile:items-center mobile:justify-between gap-6"
-            >
+            <div className="hidden mobile:flex mobile:items-center mobile:justify-between gap-6">
               <div className="flex items-center gap-5 settings-fade-up min-w-0">
                 {settingsHeroIcon}
                 {settingsHeroCopy}
               </div>
 
               {/* Quick actions */}
-              <div className="flex items-center gap-3 settings-fade-up" style={{ animationDelay: '0.2s' }}>
+              <div
+                className="flex items-center gap-3 settings-fade-up"
+                style={{ animationDelay: '0.2s' }}
+              >
                 {themeBadge}
               </div>
             </div>
@@ -979,7 +980,9 @@ function AdminSettingsPage() {
                           type="button"
                           onClick={() => setSoundEnabled(!soundEnabled)}
                           aria-pressed={soundEnabled}
-                          aria-label={soundEnabled ? 'Disable sound effects' : 'Enable sound effects'}
+                          aria-label={
+                            soundEnabled ? 'Disable sound effects' : 'Enable sound effects'
+                          }
                           className="relative flex h-11 w-14 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 mobile:h-8 mobile:w-16"
                         >
                           <span

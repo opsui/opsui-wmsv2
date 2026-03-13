@@ -52,13 +52,11 @@ const {
         fulfillmentSoCount: soIds.size,
         pickedCount: picked.rows.length,
         missingCount: missing.length,
-        missingSample: missing
-          .slice(0, 10)
-          .map(r => ({
-            order_id: r.order_id,
-            soId: r.netsuite_so_internal_id,
-            soTran: r.netsuite_so_tran_id,
-          })),
+        missingSample: missing.slice(0, 10).map(r => ({
+          order_id: r.order_id,
+          soId: r.netsuite_so_internal_id,
+          soTran: r.netsuite_so_tran_id,
+        })),
       },
       null,
       2

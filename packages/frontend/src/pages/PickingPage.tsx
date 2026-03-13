@@ -662,9 +662,7 @@ export function PickingPage() {
     return (
       <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
         <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
-          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">
-            Order not found
-          </p>
+          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">Order not found</p>
           <Button onClick={() => navigate('/orders')}>Back to Queue</Button>
         </div>
       </div>
