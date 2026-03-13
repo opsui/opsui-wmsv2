@@ -159,6 +159,8 @@ export class NZCService {
    */
   // @ts-ignore - Unused private method kept for API completeness
   private _addressToNZCDestination(address: any): NZCDestination {
+    const countryCode = this._toNzcCountryCode(address.country);
+
     return {
       Name: address.company || address.name || 'Customer',
       NameDisplay: address.company
@@ -169,13 +171,24 @@ export class NZCService {
         Suburb: address.city,
         City: address.city,
         PostCode: address.postalCode,
-        CountryCode: address.country === 'NEW ZEALAND' ? 'NZ' : address.country,
+        CountryCode: countryCode,
         State: address.state || '',
       },
       ContactPerson: address.name,
       PhoneNumber: address.phone || '',
       Email: address.email || '',
     };
+  }
+
+  private _toNzcCountryCode(country?: string): string {
+    if (!country) return 'NZ';
+    const normalized = String(country).trim().toUpperCase();
+    if (normalized === '_NEWZEALAND') return 'NZ';
+    if (normalized === '_AUSTRALIA') return 'AU';
+    if (normalized === 'NEW ZEALAND') return 'NZ';
+    if (normalized === 'AUSTRALIA') return 'AU';
+    if (normalized.length === 2) return normalized;
+    return normalized;
   }
 
   /**

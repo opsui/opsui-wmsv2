@@ -294,6 +294,8 @@ export default router;
 function toNzcCountryCode(country?: string): string {
   if (!country) return 'NZ';
   const normalized = String(country).trim().toUpperCase();
+  if (normalized === '_NEWZEALAND') return 'NZ';
+  if (normalized === '_AUSTRALIA') return 'AU';
   if (normalized === 'NEW ZEALAND') return 'NZ';
   if (normalized === 'AUSTRALIA') return 'AU';
   if (normalized.length === 2) return normalized;
