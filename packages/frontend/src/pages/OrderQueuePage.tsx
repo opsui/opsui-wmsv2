@@ -428,8 +428,7 @@ function OrderCard({
   const locations = Array.from(
     new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
   );
-  const locationLabel =
-    locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
+  const locationLabel = locations.length === 0 ? 'UNASSIGNED' : locations.join(', ');
 
   const CardWrapper = noMotion ? 'div' : motion.div;
   const cardWrapperProps = noMotion
@@ -720,9 +719,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const isPerf = useIsPerformanceMode();
   const prefersReducedMotion = useReducedMotion();
   const noMotion = isPerf || !!prefersReducedMotion;
-  const queueRefetchInterval = noMotion
-    ? PERFORMANCE_QUEUE_REFETCH_MS
-    : STANDARD_QUEUE_REFETCH_MS;
+  const queueRefetchInterval = noMotion ? PERFORMANCE_QUEUE_REFETCH_MS : STANDARD_QUEUE_REFETCH_MS;
   const canPick = useAuthStore(state => state.canPick);
   const canPack = useAuthStore(state => state.canPack);
   const userId = useAuthStore(state => state.user?.userId);
@@ -792,7 +789,15 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   );
 
   const packingQueueResult = useQuery({
-    queryKey: ['orders', cfg.queryKey, statusFilter, priorityFilter, debouncedSearch, page, pageSize],
+    queryKey: [
+      'orders',
+      cfg.queryKey,
+      statusFilter,
+      priorityFilter,
+      debouncedSearch,
+      page,
+      pageSize,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append('status', statusFilter);
@@ -866,21 +871,24 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   }, [searchTerm]);
 
   useEffect(() => {
-    setSearchParams(params => {
-      if (statusFilter) {
-        params.set('status', statusFilter);
-      } else {
-        params.delete('status');
-      }
+    setSearchParams(
+      params => {
+        if (statusFilter) {
+          params.set('status', statusFilter);
+        } else {
+          params.delete('status');
+        }
 
-      if (adminMode) {
-        params.set('queue', adminMode);
-      } else if (queueParam) {
-        params.set('queue', queueParam);
-      }
+        if (adminMode) {
+          params.set('queue', adminMode);
+        } else if (queueParam) {
+          params.set('queue', queueParam);
+        }
 
-      return params;
-    }, { replace: true });
+        return params;
+      },
+      { replace: true }
+    );
   }, [adminMode, queueParam, setSearchParams, statusFilter]);
 
   const orders = queueData?.orders || [];
@@ -1165,7 +1173,11 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
               <ArrowPathIcon className={`h-4 w-4 ${isReloading ? 'animate-spin' : ''}`} />
             ) : (
               <motion.span
-                animate={isReloading ? { rotate: 360 } : { rotate: 0 }}
+                animate={isReloading ? 'spinning' : 'idle'}
+                variants={{
+                  spinning: { rotate: 360 },
+                  idle: { rotate: 0 },
+                }}
                 transition={
                   isReloading
                     ? {
@@ -1176,8 +1188,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                         },
                       }
                     : {
-                        duration: 0.2,
-                        ease: 'easeOut',
+                        duration: 0,
                       }
                 }
                 className="flex items-center justify-center origin-center"
