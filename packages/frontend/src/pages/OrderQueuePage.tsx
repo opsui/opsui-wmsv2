@@ -762,7 +762,6 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const prefersReducedMotion = useReducedMotion();
   const noMotion = isPerf || !!prefersReducedMotion;
   const queueRefetchInterval = noMotion ? PERFORMANCE_QUEUE_REFETCH_MS : STANDARD_QUEUE_REFETCH_MS;
-  const queueRefetchInterval = noMotion ? PERFORMANCE_QUEUE_REFETCH_MS : STANDARD_QUEUE_REFETCH_MS;
   const canPick = useAuthStore(state => state.canPick);
   const canPack = useAuthStore(state => state.canPack);
   const userId = useAuthStore(state => state.user?.userId);
