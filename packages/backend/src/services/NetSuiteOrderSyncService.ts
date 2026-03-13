@@ -1120,7 +1120,9 @@ export class NetSuiteOrderSyncService {
 
           if (fulfillments.length === 0 && row.netsuite_if_internal_id) {
             try {
-              const linkedFulfillment = await this.getItemFulfillmentCached(row.netsuite_if_internal_id);
+              const linkedFulfillment = await this.getItemFulfillmentCached(
+                row.netsuite_if_internal_id
+              );
               if (linkedFulfillment?.id) {
                 fulfillments = [linkedFulfillment];
                 fulfillmentMap.set(soId, fulfillments);
@@ -1152,7 +1154,10 @@ export class NetSuiteOrderSyncService {
             let isNotReadyToShip = false;
 
             const shouldInspectLinkedFulfillmentGap = !!row.netsuite_if_internal_id;
-            if (shouldInspectLinkedFulfillmentGap || hoursSinceUpdate > STALE_ORDER_THRESHOLD_HOURS) {
+            if (
+              shouldInspectLinkedFulfillmentGap ||
+              hoursSinceUpdate > STALE_ORDER_THRESHOLD_HOURS
+            ) {
               try {
                 soDetail = await this.getSalesOrderCached(soId);
                 soStatus = String(soDetail.status?.refName || '').toLowerCase();
@@ -1163,15 +1168,21 @@ export class NetSuiteOrderSyncService {
                   soStatus.includes('billed');
                 isNotReadyToShip = soDetail.readyToShip === false;
               } catch (error: any) {
-                logger.debug('Could not fetch SO status for packing queue order without fulfillment', {
-                  orderId: row.order_id,
-                  soId,
-                  error: error.message,
-                });
+                logger.debug(
+                  'Could not fetch SO status for packing queue order without fulfillment',
+                  {
+                    orderId: row.order_id,
+                    soId,
+                    error: error.message,
+                  }
+                );
               }
             }
 
-            if (shouldInspectLinkedFulfillmentGap && (isCancelled || isClosed || isNotReadyToShip)) {
+            if (
+              shouldInspectLinkedFulfillmentGap &&
+              (isCancelled || isClosed || isNotReadyToShip)
+            ) {
               if (isCancelled) {
                 stats.stale.cancelled++;
                 staleOrderActions.movedToCancelled.push(row.netsuite_so_tran_id || soId);
@@ -1203,7 +1214,9 @@ export class NetSuiteOrderSyncService {
                 );
                 await this.updateOrderStatus(row.order_id, 'SHIPPED');
                 result.updated++;
-                result.details.updated.push(`${row.netsuite_so_tran_id || soId} (packing-gap->SHIPPED)`);
+                result.details.updated.push(
+                  `${row.netsuite_so_tran_id || soId} (packing-gap->SHIPPED)`
+                );
               } else if (isNotReadyToShip && row.status !== 'PACKED') {
                 logger.info(
                   'Packing queue order no longer ready to ship in NetSuite with missing linked fulfillment - moving to PACKED',
@@ -1217,7 +1230,9 @@ export class NetSuiteOrderSyncService {
                 );
                 await this.updateOrderStatus(row.order_id, 'PACKED');
                 result.updated++;
-                result.details.updated.push(`${row.netsuite_so_tran_id || soId} (packing-gap->PACKED)`);
+                result.details.updated.push(
+                  `${row.netsuite_so_tran_id || soId} (packing-gap->PACKED)`
+                );
               }
 
               await this.markOrderSynced(row.order_id, syncStartTime);
@@ -1388,6 +1403,28 @@ export class NetSuiteOrderSyncService {
               shipStatus,
               ifTranId: latestFulfillment.tranId,
             });
+          } else if (
+            !shipStatus.includes('packed') &&
+            !shipStatus.includes('shipped') &&
+            row.status !== 'PICKED'
+          ) {
+            // Fulfillment exists but is only picked - ensure WMS is back in PICKED state.
+            await this.updateOrderStatus(row.order_id, 'PICKED', {
+              ifInternalId: latestFulfillment.id,
+              ifTranId: latestFulfillment.tranId,
+              items: fulfillmentWithItems.item?.items || [],
+            });
+            statusChanged = true;
+            logger.info(
+              'Updated packing queue order back to PICKED (fulfillment is only picked on NetSuite)',
+              {
+                orderId: row.order_id,
+                soTranId: row.netsuite_so_tran_id,
+                previousStatus: row.status,
+                shipStatus,
+                ifTranId: latestFulfillment.tranId,
+              }
+            );
           }
 
           if (statusChanged) {
@@ -2217,12 +2254,28 @@ export class NetSuiteOrderSyncService {
     await this.query(`UPDATE orders SET ${updates.join(', ')} WHERE order_id = $1`, [orderId]);
     this.invalidateOrderLookupCaches();
 
-    // Sync verified_quantity from fulfillment items when moving to PICKED/PACKED/SHIPPED
-    if (
-      ifData?.items &&
-      ifData.items.length > 0 &&
-      ['PICKED', 'PACKED', 'SHIPPED'].includes(newStatus)
-    ) {
+    // If an order moves back to PICKED from a later packing/shipping state,
+    // clear stale packing verification so the pack flow must be redone.
+    if (newStatus === 'PICKED') {
+      try {
+        await this.query(
+          `UPDATE order_items
+           SET verified_quantity = 0,
+               skip_reason = NULL
+           WHERE order_id = $1`,
+          [orderId]
+        );
+      } catch (error: any) {
+        logger.warn('Failed to reset verified_quantity when moving order back to PICKED', {
+          orderId,
+          error: error.message,
+        });
+      }
+    }
+
+    // Sync verified_quantity from fulfillment items only once packing/shipping has actually
+    // progressed in NetSuite. A PICKED fulfillment should not imply items are packed/verified.
+    if (ifData?.items && ifData.items.length > 0 && ['PACKED', 'SHIPPED'].includes(newStatus)) {
       for (const fulfillmentItem of ifData.items) {
         const sku = fulfillmentItem.item?.refName || fulfillmentItem.itemName;
         if (!sku) continue;

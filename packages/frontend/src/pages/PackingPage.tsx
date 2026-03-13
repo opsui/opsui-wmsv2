@@ -320,8 +320,7 @@ export function PackingPage() {
   ) => {
     const labelSource = getNzcLabelSource(label);
     const printWindow =
-      existingPrintWindow ||
-      window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
+      existingPrintWindow || window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
     if (!printWindow) {
       showToast('Popup blocked. Use Print Label to print manually.', 'warning');
       return;
@@ -847,10 +846,38 @@ export function PackingPage() {
     // Verify packing item via API
     setIsVerifying(true);
     try {
-      await apiClient.post(`/orders/${orderId}/verify-packing`, {
-        order_item_id: matchedItem.orderItemId,
-        quantity: 1,
-      });
+      const verifyItem = async () =>
+        apiClient.post(`/orders/${orderId}/verify-packing`, {
+          order_item_id: matchedItem.orderItemId,
+          quantity: 1,
+        });
+
+      try {
+        await verifyItem();
+      } catch (error: any) {
+        const errorMessage =
+          error?.response?.data?.error || error?.message || 'Failed to verify item';
+        const requiresReclaim =
+          error?.response?.status === 409 &&
+          typeof errorMessage === 'string' &&
+          errorMessage.includes('current status: PICKED');
+
+        if (!requiresReclaim) {
+          throw error;
+        }
+
+        showToast('Order moved back to picked. Reclaiming packing session...', 'warning');
+        const latestOrder = await refetch();
+        const latestStatus = latestOrder.data?.status;
+
+        if (latestStatus === OrderStatus.PICKED) {
+          await claimMutation.mutateAsync(orderId!);
+          await refetch();
+          await verifyItem();
+        } else {
+          throw error;
+        }
+      }
 
       // Show success feedback
       setScanSuccess(true);

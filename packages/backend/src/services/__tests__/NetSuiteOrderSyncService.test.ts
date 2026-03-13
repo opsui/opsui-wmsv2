@@ -346,6 +346,95 @@ describe('NetSuiteOrderSyncService', () => {
     });
   });
 
+  it('resets packing verification when moving an order back to picked', async () => {
+    const client = new NetSuiteClient(credentials);
+    const service = new NetSuiteOrderSyncService(client);
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockResolvedValue({ rows: [], rowCount: 0 });
+
+    await (service as any).updateOrderStatus('SO70012', 'PICKED', {
+      ifInternalId: '1702012',
+      ifTranId: 'IF90012',
+      items: [
+        {
+          item: { refName: 'SKU-1' },
+          quantity: 1,
+        },
+      ],
+    });
+
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining("SET status = 'PICKED'::order_status"),
+      ['SO70012']
+    );
+    expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('SET verified_quantity = 0'), [
+      'SO70012',
+    ]);
+    expect(queryMock).not.toHaveBeenCalledWith(
+      expect.stringContaining('SET verified_quantity = $1'),
+      expect.arrayContaining([1, 'SO70012', 'SKU-1'])
+    );
+  });
+
+  it('moves a packing queue order back to picked when the linked fulfillment is only picked', async () => {
+    const { client, service } = createService();
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string) => {
+      if (sql.includes("status IN ('PICKED', 'PACKING')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO70013',
+              status: 'PACKING',
+              netsuite_so_internal_id: '1700013',
+              netsuite_so_tran_id: 'SO70013',
+              netsuite_if_internal_id: '1702013',
+              netsuite_if_tran_id: 'IF90013',
+              netsuite_last_synced_at: '2026-03-13T00:00:00.000Z',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 1,
+      hasMore: false,
+      items: [
+        {
+          id: '1702013',
+          tranId: 'IF90013',
+          shipStatus: '_picked',
+          createdFrom: { id: '1700013', refName: 'SO70013' },
+        },
+      ],
+      offset: 0,
+      totalResults: 1,
+    });
+    jest.spyOn(client, 'getItemFulfillment').mockResolvedValue({
+      id: '1702013',
+      tranId: 'IF90013',
+      shipStatus: '_picked',
+      createdFrom: { id: '1700013', refName: 'SO70013' },
+      item: { items: [] },
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'incremental' });
+
+    expect(result.updated).toBe(1);
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70013', 'PICKED', {
+      ifInternalId: '1702013',
+      ifTranId: 'IF90013',
+      items: [],
+    });
+  });
+
   it('caches order lookups by NetSuite sales order id within a sync cycle', async () => {
     const { service } = createService();
     const queryMock = jest.spyOn(service as any, 'query').mockResolvedValue({
@@ -800,7 +889,9 @@ describe('NetSuiteOrderSyncService', () => {
     jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
     jest
       .spyOn(client, 'getItemFulfillment')
-      .mockRejectedValue(new Error('Failed to fetch item fulfillment 1701008: That record does not exist.'));
+      .mockRejectedValue(
+        new Error('Failed to fetch item fulfillment 1701008: That record does not exist.')
+      );
     jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
       baseSalesOrder({
         id: '1700008',
@@ -851,7 +942,9 @@ describe('NetSuiteOrderSyncService', () => {
     jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
     jest
       .spyOn(client, 'getItemFulfillment')
-      .mockRejectedValue(new Error('Failed to fetch item fulfillment 1701009: That record does not exist.'));
+      .mockRejectedValue(
+        new Error('Failed to fetch item fulfillment 1701009: That record does not exist.')
+      );
     jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
       baseSalesOrder({
         id: '1700009',
