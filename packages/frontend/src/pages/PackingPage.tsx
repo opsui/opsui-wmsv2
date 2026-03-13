@@ -167,6 +167,7 @@ export function PackingPage() {
   const [selectedQuote, setSelectedQuote] = useState<NZCQuote | null>(null);
   const [nzcLabel, setNzcLabel] = useState<{ data: string; contentType: string } | null>(null);
   const [isFetchingRates, setIsFetchingRates] = useState(false);
+  const [nzcRateError, setNzcRateError] = useState<string | null>(null);
   const [shipmentCreated, setShipmentCreated] = useState(false);
   const [nzcConnote, setNzcConnote] = useState<string>('');
   const [selectedNzcPackagePreset, setSelectedNzcPackagePreset] = useState(NZC_DEFAULT_PRESET_ID);
@@ -492,10 +493,12 @@ export function PackingPage() {
       if (!isNZCCarrier || !totalWeight || !totalPackages) {
         setNzcRates([]);
         setSelectedQuote(null);
+        setNzcRateError(null);
         return;
       }
 
       setIsFetchingRates(true);
+      setNzcRateError(null);
       try {
         const response = await nzcApi.getRates({
           destination: {
@@ -521,13 +524,20 @@ export function PackingPage() {
           setNzcRates([]);
           setSelectedQuote(null);
           if (response.Rejected && response.Rejected.length > 0) {
-            showToast(`NZC rejected: ${response.Rejected.map(r => r.Reason).join(', ')}`, 'error');
+            const rejectionMessage = response.Rejected.map(r => r.Reason).join(', ');
+            setNzcRateError(rejectionMessage);
+            showToast(`NZC rejected: ${rejectionMessage}`, 'error');
+          } else {
+            setNzcRateError('No shipping quotes were returned for the current address/package.');
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching NZC rates:', error);
         setNzcRates([]);
         setSelectedQuote(null);
+        setNzcRateError(
+          error?.response?.data?.error || error?.message || 'Failed to fetch NZC rates'
+        );
       } finally {
         setIsFetchingRates(false);
       }
@@ -1739,7 +1749,7 @@ export function PackingPage() {
                     </div>
 
                     {/* NZC Rates Display */}
-                    {nzcRates.length > 0 && (
+                    {isNZCCarrier && (
                       <div className="bg-white/[0.02] rounded-xl border border-primary-500/30 p-4 space-y-3">
                         <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
                           Available Shipping Rates
@@ -1748,6 +1758,17 @@ export function PackingPage() {
                           <div className="flex items-center gap-2 text-gray-400">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
                             <span className="text-sm">Fetching rates...</span>
+                          </div>
+                        )}
+                        {!isFetchingRates && nzcRateError && (
+                          <div className="rounded-xl border border-error-500/30 bg-error-500/10 px-4 py-3 text-sm text-error-200">
+                            {nzcRateError}
+                          </div>
+                        )}
+                        {!isFetchingRates && !nzcRateError && nzcRates.length === 0 && (
+                          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-gray-300">
+                            No NZC rates available yet. Check the shipping address, package stock,
+                            units, and weight.
                           </div>
                         )}
                         {!isFetchingRates && (
