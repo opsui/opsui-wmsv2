@@ -914,6 +914,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       setIsSpinAnimationActive(true);
       if (spinAnimationTimeoutRef.current) {
         clearTimeout(spinAnimationTimeoutRef.current);
+        spinAnimationTimeoutRef.current = null;
       }
     } else if (isSpinAnimationActive) {
       // Fetch completed - keep spinning for minimum duration
