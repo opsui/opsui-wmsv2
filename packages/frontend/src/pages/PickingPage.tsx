@@ -155,6 +155,23 @@ const pickingInputClass =
 
 const fulfillmentSlipHeaderColor = '#b8b8b8';
 const fulfillmentSlipAccentColor = '#6b7280';
+const formatAddressLines = (address?: Address | null): string[] => {
+  if (!address) {
+    return [];
+  }
+
+  return [
+    address.name,
+    address.company,
+    address.addressLine1,
+    address.addressLine2,
+    [address.city, address.state, address.postalCode].filter(Boolean).join(' '),
+    address.country,
+  ]
+    .map(line => (typeof line === 'string' ? line.trim() : ''))
+    .filter(Boolean);
+};
+
 const fulfillmentSlipLogoSvg = `
   <svg width="220" height="96" viewBox="0 0 220 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Arrowhead Alarm Products">
     <rect width="220" height="96" fill="white"/>
@@ -304,6 +321,9 @@ export function PickingPage() {
   // Prevents claim logic from running on first render with potentially stale data
   const hasSeenInitialDataRef = useRef(false);
 
+  // Ref to track auto-print trigger for fulfillment labels
+  const autoPrintFulfillmentRef = useRef(false);
+
   // Claim order mutation
   const claimMutation = useMutation({
     mutationFn: async (orderId: string) => {
@@ -363,6 +383,94 @@ export function PickingPage() {
     autoPrintFulfillmentRef.current = false;
     void handlePrintFulfillmentSlip();
   }, [fulfillmentPreviewOrder]);
+
+  const handleFulfillmentPreviewReady = useCallback((completedOrder: any) => {
+    setFulfillmentPreviewOrder(completedOrder);
+    autoPrintFulfillmentRef.current = true;
+  }, []);
+
+  const handlePrintFulfillmentSlip = useCallback(async () => {
+    const slipElement = document.getElementById('fulfillment-slip-print');
+    if (!slipElement) {
+      showToast('Packing slip preview is not ready yet', 'error');
+      return;
+    }
+
+    setIsPrintingFulfillmentSlip(true);
+
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) {
+        document.body.removeChild(iframe);
+        throw new Error('Unable to open print document');
+      }
+
+      doc.open();
+      doc.write(`
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>Fulfillment Packing Slip</title>
+            <style>
+              @page { size: A4 landscape; margin: 12mm; }
+              html, body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                color: black;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color-adjust: exact;
+                font-family: Inter, Arial, sans-serif;
+              }
+              body {
+                padding: 0;
+              }
+              .fulfillment-slip-print-color {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color-adjust: exact;
+              }
+              #fulfillment-slip-actions, .print-hide {
+                display: none !important;
+              }
+            </style>
+          </head>
+          <body>${slipElement.outerHTML}</body>
+        </html>
+      `);
+      doc.close();
+
+      iframe.onload = () => {
+        const cleanup = () => {
+          setTimeout(() => {
+            if (iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+            }
+          }, 300);
+        };
+
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        cleanup();
+      };
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to print packing slip', 'error');
+    } finally {
+      setIsPrintingFulfillmentSlip(false);
+    }
+  }, [showToast]);
 
   // Claim order on page mount if not already claimed
   // Use useLayoutEffect to ensure ref updates happen synchronously before React StrictMode's second invocation
@@ -1207,7 +1315,9 @@ export function PickingPage() {
             <Breadcrumb
               items={[
                 { label: 'Picking Queue', path: pickingQueuePath },
-                { label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}` },
+                {
+                  label: `Fulfillment ${fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.orderId}`,
+                },
               ]}
             />
 
@@ -1265,25 +1375,36 @@ export function PickingPage() {
                 <div className="px-8 py-5 bg-slate-50 border-b border-slate-200 print:bg-white">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Sales Order</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        Sales Order
+                      </p>
                       <p className="font-mono font-semibold text-slate-900">
-                        {fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId}
+                        {fulfillmentPreviewOrder.netsuiteSoTranId ||
+                          fulfillmentPreviewOrder.orderId}
                       </p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Fulfillment #</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        Fulfillment #
+                      </p>
                       <p className="font-mono font-semibold text-slate-900">
-                        {fulfillmentPreviewOrder.netsuiteIfTranId || fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId}
+                        {fulfillmentPreviewOrder.netsuiteIfTranId ||
+                          fulfillmentPreviewOrder.netsuiteSoTranId ||
+                          fulfillmentPreviewOrder.orderId}
                       </p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Customer PO</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        Customer PO
+                      </p>
                       <p className="font-mono font-semibold text-slate-900">
                         {fulfillmentPreviewOrder.customerPoNumber || '—'}
                       </p>
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-300">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Account #</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        Account #
+                      </p>
                       <p className="font-mono font-semibold text-slate-900">
                         {fulfillmentPreviewOrder.customerId || '—'}
                       </p>
@@ -1304,7 +1425,10 @@ export function PickingPage() {
                       <div className="space-y-0.5 text-sm text-slate-700 pl-1">
                         {previewAddressLines.length > 0 ? (
                           previewAddressLines.map((line, i) => (
-                            <p key={`ship-${line}`} className={i === 0 ? 'font-semibold text-slate-900' : ''}>
+                            <p
+                              key={`ship-${line}`}
+                              className={i === 0 ? 'font-semibold text-slate-900' : ''}
+                            >
                               {line}
                             </p>
                           ))
@@ -1324,7 +1448,10 @@ export function PickingPage() {
                       <div className="space-y-0.5 text-sm text-slate-700 pl-1">
                         {billToLines.length > 0 ? (
                           billToLines.map((line, i) => (
-                            <p key={`bill-${line}`} className={i === 0 ? 'font-semibold text-slate-900' : ''}>
+                            <p
+                              key={`bill-${line}`}
+                              className={i === 0 ? 'font-semibold text-slate-900' : ''}
+                            >
                               {line}
                             </p>
                           ))
@@ -1337,7 +1464,9 @@ export function PickingPage() {
 
                   {/* Shipping Method Badge */}
                   <div className="mt-6 flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Shipping Method</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Shipping Method
+                    </span>
                     <span
                       className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold fulfillment-slip-print-color"
                       style={{ backgroundColor: '#e5e7eb', color: '#374151' }}
@@ -1379,7 +1508,9 @@ export function PickingPage() {
                         >
                           <div className="col-span-3">
                             <p className="font-mono font-bold text-slate-900">{item.sku}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">Bin: {formatBinLocation(item.binLocation)}</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              Bin: {formatBinLocation(item.binLocation)}
+                            </p>
                           </div>
                           <div className="col-span-5">
                             <p className="text-slate-700 font-medium">{item.name}</p>
@@ -1387,9 +1518,7 @@ export function PickingPage() {
                           <div className="col-span-1 text-center font-semibold text-slate-600">
                             {item.quantity}
                           </div>
-                          <div className="col-span-1 text-center text-slate-400">
-                            0
-                          </div>
+                          <div className="col-span-1 text-center text-slate-400">0</div>
                           <div className="col-span-2 text-center">
                             <span
                               className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
@@ -1431,7 +1560,9 @@ export function PickingPage() {
                   <div className="flex items-end justify-between">
                     {/* Picked By */}
                     <div className="text-sm">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Picked By</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        Picked By
+                      </p>
                       <p className="font-semibold text-slate-900">
                         {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
                       </p>
@@ -1450,11 +1581,15 @@ export function PickingPage() {
                     {/* Signature Areas */}
                     <div className="flex gap-12">
                       <div className="text-center">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Packed By</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                          Packed By
+                        </p>
                         <div className="w-36 border-b-2 border-slate-300 h-8" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Verified By</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                          Verified By
+                        </p>
                         <div className="w-36 border-b-2 border-slate-300 h-8" />
                       </div>
                     </div>
@@ -1464,7 +1599,8 @@ export function PickingPage() {
                 {/* Document Footer */}
                 <div className="px-8 py-4 bg-slate-100 border-t border-slate-200 print:bg-white">
                   <p className="text-center text-xs text-slate-400">
-                    This document was generated electronically from OpsUI Warehouse Management System
+                    This document was generated electronically from OpsUI Warehouse Management
+                    System
                   </p>
                 </div>
               </div>

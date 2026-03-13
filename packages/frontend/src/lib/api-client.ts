@@ -6,6 +6,7 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { useOrganizationStore } from '@/stores/organizationStore';
 
 // ============================================================================
 // CONFIGURATION
@@ -34,6 +35,7 @@ apiClient.interceptors.request.use(
     // Add auth token if available
     let token = useAuthStore.getState().accessToken;
     let user = useAuthStore.getState().user;
+    let currentOrganizationId = useOrganizationStore.getState().currentOrganizationId;
 
     // Fallback: read from localStorage directly if Zustand hasn't hydrated yet
     // This prevents 401 errors during initial page load due to race condition
@@ -50,8 +52,26 @@ apiClient.interceptors.request.use(
       }
     }
 
+    // Fallback: read organization context from localStorage directly if Zustand hasn't hydrated yet
+    if (!currentOrganizationId) {
+      try {
+        const storage = localStorage.getItem('organization-storage');
+        if (storage) {
+          const parsed = JSON.parse(storage);
+          currentOrganizationId = parsed.state.currentOrganizationId;
+        }
+      } catch (e) {
+        // Ignore storage parsing errors
+      }
+    }
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Send organization context explicitly so localhost and production resolve the same tenant.
+    if (currentOrganizationId && config.headers) {
+      config.headers['X-Organization-ID'] = currentOrganizationId;
     }
 
     // Add entity ID header if user has an entity assigned

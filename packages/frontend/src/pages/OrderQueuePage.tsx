@@ -40,7 +40,7 @@ import {
   TruckIcon,
 } from '@heroicons/react/24/outline';
 import { Input } from '@/components/shared/Input';
-import { OrderPriority, OrderStatus } from '@opsui/shared';
+import { OrderPriority, OrderStatus, UserRole } from '@opsui/shared';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -813,6 +813,18 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   );
   const mode: QueueMode = adminMode ?? modeProp;
   const cfg = MODE_CONFIG[mode];
+  const assignedQueueRoles = useMemo(() => {
+    const roles = new Set<UserRole>();
+    if (currentUser?.role) {
+      roles.add(currentUser.role);
+    }
+    for (const role of currentUser?.additionalRoles || []) {
+      roles.add(role);
+    }
+    return roles;
+  }, [currentUser]);
+  const showModeSwitcher =
+    isAdmin || (assignedQueueRoles.has(UserRole.PICKER) && assignedQueueRoles.has(UserRole.PACKER));
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus>(cfg.idleStatus);
   const [priorityFilter, setPriorityFilter] = useState<OrderPriority | undefined>();
@@ -1255,40 +1267,10 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
           </p>
         </div>
 
-        {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
-        {(isAdmin || (canPick() && canPack())) && (
-          <div className="flex justify-center">
-            <div className="inline-flex rounded-xl bg-slate-800/80 p-1.5 border-2 border-slate-700">
-              <button
-                onClick={() => handleAdminModeSwitch('picking')}
-                className={`px-6 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 min-h-touch flex items-center gap-2 ${
-                  mode === 'picking'
-                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
-                    : 'text-slate-400 hover:text-purple-400 hover:bg-slate-700/50'
-                }`}
-              >
-                <ShoppingBagIcon className="h-5 w-5" />
-                Picking Queue
-              </button>
-              <button
-                onClick={() => handleAdminModeSwitch('packing')}
-                className={`px-6 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 min-h-touch flex items-center gap-2 ${
-                  mode === 'packing'
-                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30'
-                    : 'text-slate-400 hover:text-purple-400 hover:bg-slate-700/50'
-                }`}
-              >
-                <CubeIcon className="h-5 w-5" />
-                Packing Queue
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="flex justify-center relative z-30">
-          <div className="w-full max-w-5xl rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-2 shadow-lg">
-            <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-2">
-              <div className="relative min-w-0 flex-1 lg:max-w-xs">
+          <div className="rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-3 py-2 shadow-lg">
+            <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:justify-center lg:gap-3">
+              <div className="relative min-w-0 w-full lg:w-44 flex-shrink-0">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
                   type="search"
@@ -1307,18 +1289,21 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-end sm:gap-2 lg:flex-1">
+              <div className="flex items-center justify-center gap-2">
                 <StatusFilterDropdown
                   value={statusFilter}
                   onChange={handleStatusFilterChange}
                   mode={mode}
                 />
                 <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 w-full lg:w-auto flex-shrink-0">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => void handleManualReload()}
-                  className="h-9 px-3 self-end sm:self-auto"
+                  className="h-9 px-3"
                   title={`Reload ${mode} queue`}
                   aria-label={`Reload ${mode} queue`}
                 >
@@ -1326,6 +1311,33 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                     className={`h-4 w-4 ${isReloading ? 'reload-icon-spinning' : ''}`}
                   />
                 </Button>
+                {/* Mode Switcher - Visible for admins OR users with both picker AND packer roles */}
+                {showModeSwitcher && (
+                  <div className="inline-flex rounded-lg bg-slate-800/80 p-1 border border-slate-700">
+                    <button
+                      onClick={() => handleAdminModeSwitch('picking')}
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 ${
+                        mode === 'picking'
+                          ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
+                          : 'text-slate-400 hover:text-purple-400 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <ShoppingBagIcon className="h-4 w-4" />
+                      Picking
+                    </button>
+                    <button
+                      onClick={() => handleAdminModeSwitch('packing')}
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-1.5 ${
+                        mode === 'packing'
+                          ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
+                          : 'text-slate-400 hover:text-purple-400 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <CubeIcon className="h-4 w-4" />
+                      Packing
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

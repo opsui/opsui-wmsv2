@@ -1219,55 +1219,55 @@ function NotificationPanel() {
       className="relative z-[9999] min-w-0 shrink !overflow-visible"
       ref={dropdownRef}
       onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        ref={buttonRef}
+        onClick={handleClick}
+        className="toolbar-btn relative p-2 min-w-0 shrink !overflow-visible dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
+        aria-label={`Notifications: ${unreadCount} unread`}
+        style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
       >
-        <button
-          ref={buttonRef}
-          onClick={handleClick}
-          className="toolbar-btn relative p-2 min-w-0 shrink !overflow-visible dark:text-gray-400 text-gray-700 dark:hover:text-white hover:text-primary-700 dark:hover:bg-white/[0.05] hover:bg-primary-50 rounded-xl transition-all duration-200"
-          aria-label={`Notifications: ${unreadCount} unread`}
-          style={{ '--glow-color': 'rgba(244, 63, 94, 0.15)' }}
+        <BellIcon className="toolbar-icon-bell h-5 w-5 flex-shrink-0" />
+        {unreadCount > 0 && (
+          <span className="notification-badge absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50 z-10">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div
+          className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000] -translate-x-1/2"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}%`,
+          }}
         >
-          <BellIcon className="toolbar-icon-bell h-5 w-5 flex-shrink-0" />
-          {unreadCount > 0 && (
-            <span className="notification-badge absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[10px] font-bold text-white dark:bg-error-600 bg-error-500 rounded-full shadow-lg dark:shadow-error-500/50 z-10">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </button>
-
-        {isOpen && (
-          <div
-            className="fixed w-96 rounded-2xl shadow-2xl animate-fade-in overflow-hidden dropdown-menu-enhanced z-[10000] -translate-x-1/2"
-            style={{
-              top: `${dropdownPosition.top}px`,
-              left: `${dropdownPosition.left}%`,
-            }}
-          >
-            {/* Header with gradient accent */}
-            <div className="relative px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 rounded-t-2xl bg-white dark:bg-gray-800">
-              {/* Gradient accent line at top */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-400 via-purple-400 to-primary-400" />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BellIcon className="h-4 w-4 text-primary-500 dark:text-primary-400" />
-                  <p
-                    className="text-sm font-semibold dark:text-white text-gray-900"
-                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                  >
-                    Notifications
-                  </p>
-                </div>
-                {unreadCount > 0 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 notification-badge-enhanced">
-                    {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
-                  </span>
-                )}
+          {/* Header with gradient accent */}
+          <div className="relative px-5 py-4 border-b border-gray-100 dark:border-gray-700/50 rounded-t-2xl bg-white dark:bg-gray-800">
+            {/* Gradient accent line at top */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-400 via-purple-400 to-primary-400" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BellIcon className="h-4 w-4 text-primary-500 dark:text-primary-400" />
+                <p
+                  className="text-sm font-semibold dark:text-white text-gray-900"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  Notifications
+                </p>
               </div>
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 notification-badge-enhanced">
+                  {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
+                </span>
+              )}
             </div>
+          </div>
 
-            {/* Notification Preview - show recent notifications */}
-            <div className="py-1 max-h-[400px] overflow-y-auto bg-white dark:bg-gray-800">
+          {/* Notification Preview - show recent notifications */}
+          <div className="py-1 max-h-[400px] overflow-y-auto bg-white dark:bg-gray-800">
             <NotificationPreview
               limit={5}
               onNotificationClick={() => setIsOpen(false)}
@@ -2538,7 +2538,7 @@ export function Header() {
                   className={`p-[3px] rounded-full transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-2xl' : ''}`}
                 >
                   <div
-                    className={`flex items-center justify-center gap-1 bg-white dark:bg-gray-900 rounded-[9996px] overflow-visible transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
+                    className={`flex items-center justify-center gap-0.5 bg-white dark:bg-gray-900 rounded-[9996px] overflow-visible transition-all duration-300 ease-out ${isMobileSearchActive ? '!rounded-[12px] px-3 py-1.5' : 'px-2 py-1.5'}`}
                   >
                     {/* Global Search — passes callback so it can hide sibling icons on mobile and desktop */}
                     <GlobalSearch
