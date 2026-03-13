@@ -634,10 +634,11 @@ function OrderCard({
             </div>
           </div>
 
-          {/* Items list */}
-          {items.length > 0 && (
-            <div className="flex-1 overflow-y-auto space-y-2 mb-4 max-h-48">
-              {items.map((item: any, idx: number) => {
+          {/* Items list - wrapper always grows to push button down */}
+          <div className="flex-1 min-h-0">
+            {items.length > 0 && (
+              <div className="overflow-y-auto space-y-2 mb-4 max-h-48">
+                {items.map((item: any, idx: number) => {
                 const qty =
                   mode === 'packing' ? item.verifiedQuantity || 0 : item.pickedQuantity || 0;
                 const isCompleted =
@@ -690,6 +691,7 @@ function OrderCard({
               })}
             </div>
           )}
+          </div>
 
           {/* Action button */}
           <div className="mt-auto pt-2">
