@@ -152,6 +152,79 @@ describe('ShippingService', () => {
   // ==========================================================================
 
   describe('createShipment', () => {
+    it('should self-heal the NZC carrier using jsonb service types', async () => {
+      const dto: CreateShipmentDTO = {
+        orderId: 'ORD-NZC-001',
+        carrierId: 'NZC',
+        serviceType: 'overnight',
+        shippingMethod: 'courier',
+        shipFromAddress: {
+          name: 'Warehouse',
+          addressLine1: '123 Main St',
+          city: 'Auckland',
+          state: 'Auckland',
+          postalCode: '1010',
+          country: 'NZ',
+        } as Address,
+        shipToAddress: {
+          name: 'Customer',
+          addressLine1: '456 Hereford St',
+          city: 'Christchurch',
+          state: 'Canterbury',
+          postalCode: '8051',
+          country: 'NZ',
+        } as Address,
+        totalWeight: 2.5,
+        totalPackages: 1,
+        createdBy: 'user-123',
+      };
+
+      const mockCreatedShipment = {
+        shipment_id: 'SHP-NZC001',
+        order_id: 'ORD-NZC-001',
+        carrier_id: 'CARR-NZC',
+        status: 'pending',
+        created_at: '2024-01-01T00:00:00Z',
+      };
+
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [] }) // BEGIN
+        .mockResolvedValueOnce({ rows: [] }) // direct carrier lookup miss
+        .mockResolvedValueOnce({ rows: [] }) // fallback carrier lookup miss
+        .mockResolvedValueOnce({ rows: [] }) // NZC self-heal insert
+        .mockResolvedValueOnce({ rows: [mockCreatedShipment] }) // shipment insert
+        .mockResolvedValueOnce({ rows: [] }) // COMMIT
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              ...mockCreatedShipment,
+              service_type: 'overnight',
+              shipping_method: 'courier',
+              tracking_number: null,
+              tracking_url: null,
+              ship_from_address: JSON.stringify(dto.shipFromAddress),
+              ship_to_address: JSON.stringify(dto.shipToAddress),
+              total_weight: '2.5',
+              total_packages: '1',
+              dimensions: null,
+              total_cost: '0',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] }); // labels
+
+      await service.createShipment(dto);
+
+      const selfHealCall = global.mockPool.query.mock.calls.find(
+        (call: unknown[]) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('INSERT INTO carriers') &&
+          call[0].includes('jsonb')
+      );
+
+      expect(selfHealCall).toBeDefined();
+    });
+
     it('should create a new shipment successfully', async () => {
       const dto: CreateShipmentDTO = {
         orderId: 'ORD-001',

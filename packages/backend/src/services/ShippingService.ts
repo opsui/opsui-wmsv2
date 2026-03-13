@@ -79,7 +79,7 @@ export class ShippingService {
           'CARR-NZC',
           'NZ Couriers',
           'NZC',
-          ARRAY['Courier', 'CourierPost', 'Overnight', 'Rural'],
+          '["Courier", "CourierPost", "Overnight", "Rural"]'::jsonb,
           'support@nzcouriers.co.nz',
           'https://api.gosweetspot.com',
           true,
