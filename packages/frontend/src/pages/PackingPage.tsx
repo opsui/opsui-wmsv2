@@ -290,6 +290,12 @@ export function PackingPage() {
     const value = Number(rawQuote.TotalPrice ?? rawQuote.charge ?? rawQuote.cost ?? 0);
     return Number.isFinite(value) ? value : 0;
   };
+  const getQuoteZones = (quote: NZCQuote) => {
+    if (quote.IsRuralDelivery) return ['Rural'];
+    const zones = ['Urban'];
+    if (quote.IsResidentialDelivery) zones.push('Residential');
+    return zones;
+  };
 
   const printNZCLabel = (label: { data: string; contentType: string }) => {
     const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
@@ -1795,9 +1801,32 @@ export function PackingPage() {
                                   <p className="picking-title text-white text-sm">
                                     {quote.Service}
                                   </p>
-                                  {quote.TransitDays && (
-                                    <p className="text-sm text-gray-400">
-                                      {quote.TransitDays} days transit
+                                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                                    {quote.DeliveryType && (
+                                      <span className="rounded-full border border-primary-500/30 bg-primary-500/10 px-2 py-0.5 text-xs text-primary-200">
+                                        {quote.DeliveryType}
+                                      </span>
+                                    )}
+                                    {getQuoteZones(quote).map(zone => (
+                                      <span
+                                        key={`${quote.QuoteId}-${zone}`}
+                                        className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-xs text-gray-300"
+                                      >
+                                        {zone}
+                                      </span>
+                                    ))}
+                                    {quote.IsSaturdayDelivery && (
+                                      <span className="rounded-full border border-warning-500/30 bg-warning-500/10 px-2 py-0.5 text-xs text-warning-200">
+                                        Saturday
+                                      </span>
+                                    )}
+                                  </div>
+                                  {(quote.Description || quote.TransitDays) && (
+                                    <p className="mt-2 text-sm text-gray-400">
+                                      {quote.Description?.trim() ||
+                                        (quote.TransitDays
+                                          ? `${quote.TransitDays} days transit`
+                                          : '')}
                                     </p>
                                   )}
                                 </div>

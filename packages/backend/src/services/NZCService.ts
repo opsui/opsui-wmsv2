@@ -72,6 +72,11 @@ export interface NZCQuote {
   Carrier: string;
   Service: string;
   TotalPrice: number;
+  DeliveryType?: string;
+  CarrierServiceType?: string;
+  IsResidentialDelivery?: boolean;
+  IsRuralDelivery?: boolean;
+  IsSaturdayDelivery?: boolean;
   TransitDays?: number;
   Description?: string;
 }
@@ -313,6 +318,10 @@ export class NZCService {
       this._stringOrEmpty(raw.deliverytype) ||
       this._stringOrEmpty(raw.CarrierServiceType) ||
       this._stringOrEmpty(raw.carrierservicetype);
+    const carrierServiceType =
+      this._stringOrEmpty(raw.CarrierServiceType) ||
+      this._stringOrEmpty(raw.carrierservicetype) ||
+      undefined;
     const serviceStandard =
       this._stringOrEmpty(raw.ServiceStandard) ||
       this._stringOrEmpty(raw.servicestandard) ||
@@ -329,8 +338,17 @@ export class NZCService {
     return {
       QuoteId: quoteId,
       Carrier: carrier,
-      Service: serviceStandard || deliveryType || carrier,
+      Service: [carrier, deliveryType].filter(Boolean).join(' - ') || serviceStandard || carrier,
       TotalPrice: totalPrice,
+      DeliveryType: deliveryType || undefined,
+      CarrierServiceType: carrierServiceType,
+      IsResidentialDelivery: this._booleanOrUndefined(
+        raw.IsResidentialDelivery ?? raw.isResidentialDelivery
+      ),
+      IsRuralDelivery: this._booleanOrUndefined(raw.IsRuralDelivery ?? raw.isRuralDelivery),
+      IsSaturdayDelivery: this._booleanOrUndefined(
+        raw.IsSaturdayDelivery ?? raw.isSaturdayDelivery
+      ),
       TransitDays: transitDays,
       Description: description || undefined,
     };
@@ -348,6 +366,11 @@ export class NZCService {
   private _numberOrUndefined(value: unknown): number | undefined {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  private _booleanOrUndefined(value: unknown): boolean | undefined {
+    if (typeof value === 'boolean') return value;
+    return undefined;
   }
 
   /**

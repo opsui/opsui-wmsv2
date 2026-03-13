@@ -2729,6 +2729,11 @@ export interface NZCQuote {
   Carrier: string;
   Service: string;
   TotalPrice: number;
+  DeliveryType?: string;
+  CarrierServiceType?: string;
+  IsResidentialDelivery?: boolean;
+  IsRuralDelivery?: boolean;
+  IsSaturdayDelivery?: boolean;
   TransitDays?: number;
   Description?: string;
 }
