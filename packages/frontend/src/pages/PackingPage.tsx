@@ -314,13 +314,9 @@ export function PackingPage() {
     };
   };
 
-  const printNZCLabel = (
-    label: { data: string; contentType: string },
-    existingPrintWindow?: Window | null
-  ) => {
+  const printNZCLabel = (label: { data: string; contentType: string }) => {
     const labelSource = getNzcLabelSource(label);
-    const printWindow =
-      existingPrintWindow || window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
     if (!printWindow) {
       showToast('Popup blocked. Use Print Label to print manually.', 'warning');
       return;
@@ -1128,53 +1124,6 @@ export function PackingPage() {
     }
 
     setIsCreatingShipment(true);
-    const preparedPrintWindow = isNZCCarrier
-      ? window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200')
-      : null;
-
-    if (preparedPrintWindow) {
-      preparedPrintWindow.document.write(`
-        <html>
-          <head>
-            <title>Preparing NZC Label</title>
-            <style>
-              html, body {
-                margin: 0;
-                min-height: 100%;
-                display: grid;
-                place-items: center;
-                background: #0f172a;
-                color: #e2e8f0;
-                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-              }
-              .wrap {
-                text-align: center;
-              }
-              .spinner {
-                width: 42px;
-                height: 42px;
-                margin: 0 auto 16px;
-                border-radius: 9999px;
-                border: 3px solid rgba(148, 163, 184, 0.25);
-                border-top-color: #22c55e;
-                animation: spin 0.8s linear infinite;
-              }
-              @keyframes spin {
-                to { transform: rotate(360deg); }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="wrap">
-              <div class="spinner"></div>
-              <div>Preparing shipping label...</div>
-            </div>
-          </body>
-        </html>
-      `);
-      preparedPrintWindow.document.close();
-    }
-
     try {
       const shipFromAddress: Address = {
         name: 'Main Warehouse',
@@ -1224,7 +1173,6 @@ export function PackingPage() {
 
         const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
         setNzcLabel(label);
-        printNZCLabel(label, preparedPrintWindow);
 
         showToast(`NZC Shipment created! Connote: ${connote}`, 'success');
 
@@ -1300,9 +1248,6 @@ export function PackingPage() {
         navigate('/packing');
       }
     } catch (error) {
-      if (preparedPrintWindow && !preparedPrintWindow.closed) {
-        preparedPrintWindow.close();
-      }
       showToast(error instanceof Error ? error.message : 'Failed to create shipment', 'error');
     } finally {
       setIsCreatingShipment(false);
