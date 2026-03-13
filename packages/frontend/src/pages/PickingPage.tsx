@@ -155,6 +155,20 @@ const pickingInputClass =
 
 const fulfillmentSlipHeaderColor = '#374151';
 const fulfillmentSlipAccentColor = '#1f2937';
+const formatNetSuiteDisplayText = (value?: string | null): string => {
+  if (!value) {
+    return '';
+  }
+
+  return value
+    .trim()
+    .replace(/^_+/, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, char => char.toUpperCase());
+};
+
 const formatAddressLines = (address?: Address | null): string[] => {
   if (!address) {
     return [];
@@ -166,7 +180,7 @@ const formatAddressLines = (address?: Address | null): string[] => {
     address.addressLine1,
     address.addressLine2,
     [address.city, address.state, address.postalCode].filter(Boolean).join(' '),
-    address.country,
+    formatNetSuiteDisplayText(address.country),
   ]
     .map(line => (typeof line === 'string' ? line.trim() : ''))
     .filter(Boolean);
@@ -245,6 +259,7 @@ export function PickingPage() {
   );
   const [fulfillmentPreviewOrder, setFulfillmentPreviewOrder] = useState<any | null>(null);
   const [isPrintingFulfillmentSlip, setIsPrintingFulfillmentSlip] = useState(false);
+  const hasHydratedFulfillmentPreviewRef = useRef(false);
 
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const pickMutation = usePickItem();
@@ -348,6 +363,7 @@ export function PickingPage() {
     setClaimError(null);
     setFulfillmentPreviewOrder(null);
     autoPrintFulfillmentRef.current = false;
+    hasHydratedFulfillmentPreviewRef.current = false;
   }, [orderId]);
 
   useEffect(() => {
@@ -369,6 +385,10 @@ export function PickingPage() {
       return;
     }
 
+    if (!hasHydratedFulfillmentPreviewRef.current) {
+      return;
+    }
+
     if (!fulfillmentPreviewOrder) {
       sessionStorage.removeItem(fulfillmentPreviewStorageKey);
       return;
@@ -378,9 +398,11 @@ export function PickingPage() {
   }, [fulfillmentPreviewOrder, fulfillmentPreviewStorageKey]);
 
   useEffect(() => {
-    if (!fulfillmentPreviewStorageKey || fulfillmentPreviewOrder) {
+    if (!fulfillmentPreviewStorageKey || hasHydratedFulfillmentPreviewRef.current) {
       return;
     }
+
+    hasHydratedFulfillmentPreviewRef.current = true;
 
     const savedPreview = sessionStorage.getItem(fulfillmentPreviewStorageKey);
     if (!savedPreview) {
@@ -391,13 +413,14 @@ export function PickingPage() {
       const parsedPreview = JSON.parse(savedPreview);
       if (parsedPreview?.orderId === orderId) {
         setFulfillmentPreviewOrder(parsedPreview);
-      } else {
-        sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+        return;
       }
     } catch {
-      sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+      // Fall through to clear invalid session state.
     }
-  }, [fulfillmentPreviewOrder, fulfillmentPreviewStorageKey, orderId]);
+
+    sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+  }, [fulfillmentPreviewStorageKey, orderId]);
 
   const handlePrintFulfillmentSlip = useCallback(async () => {
     const slipElement = document.getElementById('fulfillment-slip-print');
@@ -419,11 +442,17 @@ export function PickingPage() {
       iframe.setAttribute('aria-hidden', 'true');
       document.body.appendChild(iframe);
 
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      if (!doc) {
-        document.body.removeChild(iframe);
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc || !iframe.contentWindow) {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
         throw new Error('Unable to open print document');
       }
+
+      const copiedHeadMarkup = Array.from(document.head.querySelectorAll('link[rel="stylesheet"], style'))
+        .map(node => node.outerHTML)
+        .join('\n');
 
       doc.open();
       doc.write(`
@@ -432,48 +461,54 @@ export function PickingPage() {
           <head>
             <meta charset="utf-8" />
             <title>Fulfillment Packing Slip</title>
+            ${copiedHeadMarkup}
             <style>
-              @page { size: A4 landscape; margin: 12mm; }
+              @page { size: A4 landscape; margin: 10mm; }
               html, body {
-                margin: 0;
-                padding: 0;
-                background: white;
-                color: black;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                color-adjust: exact;
-                font-family: Inter, Arial, sans-serif;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
               }
               body {
-                padding: 0;
+                overflow: hidden !important;
               }
-              .fulfillment-slip-print-color {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-                color-adjust: exact;
-              }
-              #fulfillment-slip-actions, .print-hide {
+              #fulfillment-slip-actions,
+              .print-hide {
                 display: none !important;
+              }
+              #fulfillment-slip-print {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                background: white !important;
+              }
+              #fulfillment-slip-print,
+              #fulfillment-slip-print * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
               }
             </style>
           </head>
-          <body>${slipElement.outerHTML}</body>
+          <body>
+            ${slipElement.outerHTML}
+          </body>
         </html>
       `);
       doc.close();
 
       iframe.onload = () => {
-        const cleanup = () => {
-          setTimeout(() => {
-            if (iframe.parentNode) {
-              iframe.parentNode.removeChild(iframe);
-            }
-          }, 300);
-        };
-
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        cleanup();
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        }, 1000);
       };
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to print packing slip', 'error');
@@ -1287,6 +1322,11 @@ export function PickingPage() {
     const orderDate = fulfillmentPreviewOrder.netsuiteOrderDate
       ? new Date(fulfillmentPreviewOrder.netsuiteOrderDate).toLocaleDateString('en-NZ')
       : new Date().toLocaleDateString('en-NZ');
+    const shippingMethodLabel = formatNetSuiteDisplayText(
+      fulfillmentPreviewOrder.shippingMethod || fulfillmentPreviewOrder.carrier || 'Warehouse Pick'
+    );
+    const netsuiteCustomerId = fulfillmentPreviewOrder.customerId || '-';
+    const pageLabel = 'Page 1 of 1';
 
     return (
       <div className="min-h-screen">
@@ -1294,14 +1334,6 @@ export function PickingPage() {
           @media print {
             @page { size: A4 landscape; margin: 10mm; }
             html, body {
-              background: white !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            /* Hide header, breadcrumb, and action buttons */
-            header, nav, #fulfillment-slip-actions, .print-hide { display: none !important; }
-            /* Print area fills page */
-            #fulfillment-slip-print {
               background: white !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
@@ -1355,20 +1387,29 @@ export function PickingPage() {
                       </div>
 
                       {/* Document Title */}
-                      <div className="text-right">
-                        <div className="inline-block">
-                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
-                            Fulfillment Document
-                          </p>
-                          <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
-                            Packing Slip
-                          </h1>
+                      <div className="ml-auto min-w-[20rem] max-w-[24rem]">
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="text-left">
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
+                              Fulfillment Document
+                            </p>
+                            <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
+                              Packing Slip
+                            </h1>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 print:text-black">
+                              {pageLabel}
+                            </p>
+                          </div>
                         </div>
-                        <div className="mt-4 inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
-                          <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
-                          <span className="text-sm font-medium text-slate-800 print:text-black">
-                            {orderDate}
-                          </span>
+                        <div className="mt-4 flex justify-center">
+                          <div className="inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
+                            <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
+                            <span className="text-sm font-medium text-slate-800 print:text-black">
+                              {orderDate}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1407,10 +1448,10 @@ export function PickingPage() {
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                        Account #
+                        NetSuite Customer ID
                       </p>
                       <p className="font-mono font-semibold text-slate-900 print:text-black">
-                        {fulfillmentPreviewOrder.customerId || '—'}
+                        {netsuiteCustomerId}
                       </p>
                     </div>
                   </div>
@@ -1492,7 +1533,7 @@ export function PickingPage() {
                       style={{ backgroundColor: '#e5e7eb', color: '#1f2937' }}
                     >
                       <TruckIcon className="h-3.5 w-3.5" />
-                      {fulfillmentPreviewOrder.carrier || 'Warehouse Pick'}
+                      {shippingMethodLabel}
                     </span>
                   </div>
                 </div>
