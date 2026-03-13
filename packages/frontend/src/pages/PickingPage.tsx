@@ -181,7 +181,7 @@ export function PickingPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(state => state.user);
-  const userRole = useAuthStore(state => state.user?.role);
+  const userRole = useAuthStore(state => state.user.role);
   const { showToast } = useToast();
 
   // Track current page for admin dashboard
@@ -277,11 +277,11 @@ export function PickingPage() {
   // Subscribe to zone updates (for zone reassignments during picking)
   const handleZoneUpdate = useCallback(
     (data: { zoneId: string; pickerId?: string; taskCount?: number; pickerCount?: number }) => {
-      if (data.pickerId === currentUser?.userId) {
+      if (data.pickerId === currentUser.userId) {
         queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
       }
     },
-    [currentUser?.userId, orderId, queryClient]
+    [currentUser.userId, orderId, queryClient]
   );
   useZoneUpdates(handleZoneUpdate);
 
@@ -302,7 +302,7 @@ export function PickingPage() {
   const claimMutation = useMutation({
     mutationFn: async (orderId: string) => {
       const response = await apiClient.post(`/orders/${orderId}/claim`, {
-        pickerId: useAuthStore.getState().user?.userId,
+        pickerId: useAuthStore.getState().user.userId,
       });
       return response.data;
     },
@@ -383,7 +383,7 @@ export function PickingPage() {
       iframe.setAttribute('aria-hidden', 'true');
       document.body.appendChild(iframe);
 
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
       if (!doc) {
         document.body.removeChild(iframe);
         throw new Error('Unable to open print document');
@@ -435,8 +435,8 @@ export function PickingPage() {
           }, 300);
         };
 
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
         cleanup();
       };
     } catch (error) {
@@ -474,7 +474,7 @@ export function PickingPage() {
       );
 
       // Get current user ID
-      const currentUserId = useAuthStore.getState().user?.userId;
+      const currentUserId = useAuthStore.getState().user.userId;
 
       // CRITICAL: If order is already in PICKING status and assigned to current user, skip claiming
       // This prevents React StrictMode double-render from causing 409 errors
@@ -501,8 +501,8 @@ export function PickingPage() {
       }
 
       // Check if order is already claimed by current user OR is already in PICKING status
-      const isAlreadyClaimed = order?.pickerId === currentUserId;
-      const isAlreadyInProgress = order?.status === OrderStatus.PICKING;
+      const isAlreadyClaimed = order.pickerId === currentUserId;
+      const isAlreadyInProgress = order.status === OrderStatus.PICKING;
 
       // Prevent multiple claim attempts - use ref + isPending check + isClaiming check + isError check
       // This prevents race conditions from rapid useEffect triggers
@@ -638,7 +638,7 @@ export function PickingPage() {
     const isViewMode =
       order &&
       order.pickerId &&
-      order.pickerId !== currentUser?.userId &&
+      order.pickerId !== currentUser.userId &&
       (userRole === 'ADMIN' || userRole === 'SUPERVISOR');
 
     // View mode uses WebSocket events (pick:updated / pick:completed) already
@@ -646,12 +646,12 @@ export function PickingPage() {
   }, [order, currentUser, userRole]);
 
   // Get current pick task
-  const currentTask = order?.items?.[currentTaskIndex];
+  const currentTask = order.items[currentTaskIndex];
 
   // Calculate progress
-  const totalTasks = order?.items?.length || 0;
+  const totalTasks = order.items.length || 0;
   const completedTasks =
-    order?.items?.filter(item => item.pickedQuantity >= item.quantity).length || 0;
+    order.items.filter(item => item.pickedQuantity >= item.quantity).length || 0;
 
   // Reset scan error when current task changes
   useEffect(() => {
@@ -660,7 +660,7 @@ export function PickingPage() {
 
   // Restore the last focused task when possible, otherwise move to the first incomplete item.
   useEffect(() => {
-    if (order?.items && order.items.length > 0) {
+    if (order.items && order.items.length > 0) {
       let nextIndex = order.items.findIndex(item => item.pickedQuantity < item.quantity);
 
       if (pickingTaskStorageKey) {
@@ -792,7 +792,7 @@ export function PickingPage() {
    * This allows scanning items in any order
    */
   const findMatchingItem = (scannedValue: string): { item: any; index: number } | null => {
-    if (!order?.items) return null;
+    if (!order.items) return null;
 
     for (let i = 0; i < order.items.length; i++) {
       const item = order.items[i];
@@ -825,7 +825,7 @@ export function PickingPage() {
 
     if (!matchResult) {
       // Check if it matches a completed or skipped item for better error message
-      if (order?.items) {
+      if (order.items) {
         for (const item of order.items) {
           const matchesBarcode = item.barcode && scanValueTrimmed === item.barcode;
           const matchesSku = scanValueTrimmed === item.sku;
@@ -892,7 +892,7 @@ export function PickingPage() {
 
   const handleCompleteOrder = async () => {
     // Check for skipped items
-    const skippedItems = order?.items?.filter(item => item.status === 'SKIPPED');
+    const skippedItems = order.items.filter(item => item.status === 'SKIPPED');
 
     if (skippedItems && skippedItems.length > 0) {
       // Show confirmation dialog for skipped items
@@ -939,7 +939,7 @@ export function PickingPage() {
   };
 
   const handleUnskipItem = async (index: number) => {
-    const item = order?.items?.[index];
+    const item = order.items[index];
     if (!item) return;
 
     setUnskipConfirm({ isOpen: true, index, item });
@@ -973,7 +973,7 @@ export function PickingPage() {
   };
 
   const handleUndoPick = async (index: number) => {
-    const item = order?.items?.[index];
+    const item = order.items[index];
     if (!item) return;
 
     // Can only undo if there's something picked
@@ -985,7 +985,7 @@ export function PickingPage() {
   };
 
   const handleConfirmUndoPick = async (reason: string, notes: string) => {
-    const item = undoPickItemIndex !== null && order?.items ? order.items[undoPickItemIndex] : null;
+    const item = undoPickItemIndex !== null && order.items ? order.items[undoPickItemIndex] : null;
     if (!item || undoPickItemIndex === null) return;
 
     setIsUndoingPick(true);
@@ -1074,7 +1074,7 @@ export function PickingPage() {
   // ==========================================================================
 
   const handleSkipItem = (index: number) => {
-    const item = order?.items?.[index];
+    const item = order.items[index];
     if (!item) return;
 
     setSkipItemIndex(index);
@@ -1083,7 +1083,7 @@ export function PickingPage() {
   };
 
   const handleConfirmSkip = async () => {
-    if (skipItemIndex === null || !order?.items?.[skipItemIndex]) return;
+    if (skipItemIndex === null || !order.items[skipItemIndex]) return;
 
     const item = order.items[skipItemIndex];
     setIsSkipping(true);
@@ -1116,7 +1116,7 @@ export function PickingPage() {
   // ==========================================================================
 
   const handleManualOverride = (index: number) => {
-    const item = order?.items?.[index];
+    const item = order.items[index];
     if (!item) return;
 
     setOverrideItemIndex(index);
@@ -1127,7 +1127,7 @@ export function PickingPage() {
   };
 
   const handleConfirmOverride = async () => {
-    if (overrideItemIndex === null || !order?.items?.[overrideItemIndex]) return;
+    if (overrideItemIndex === null || !order.items[overrideItemIndex]) return;
 
     const item = order.items[overrideItemIndex];
     const quantity = parseInt(overrideQuantity, 10) || 0;
@@ -1236,12 +1236,12 @@ export function PickingPage() {
   const isViewMode =
     order &&
     (userRole === 'ADMIN' || userRole === 'SUPERVISOR') &&
-    ((order.pickerId && order.pickerId !== currentUser?.userId) ||
+    ((order.pickerId && order.pickerId !== currentUser.userId) ||
       order.status === 'PICKED' ||
       order.status === 'SHIPPED');
 
   // Calculate progress percentage for ring
-  const progressPercent = order?.progress || 0;
+  const progressPercent = order.progress || 0;
   const circumference = 2 * Math.PI * 45; // radius = 45
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
@@ -1316,20 +1316,22 @@ export function PickingPage() {
                           alt="Arrowhead Alarm Products"
                           className="w-36 h-auto"
                         />
-                        <div className="pt-1 text-sm leading-relaxed text-slate-800 print:text-black">
-                          <p className="font-semibold text-slate-900 print:text-black">Arrowhead Alarm Products</p>
-                          <p>1A Emirali Road</p>
-                          <p>Silverdale 0932, Auckland</p>
-                          <p>New Zealand</p>
+                        <div className="pt-1 text-sm leading-relaxed">
+                          <p className="font-semibold text-gray-900 print:text-black">
+                            Arrowhead Alarm Products
+                          </p>
+                          <p className="text-gray-800 print:text-black">1A Emirali Road</p>
+                          <p className="text-gray-800 print:text-black">
+                            Silverdale 0932, Auckland
+                          </p>
+                          <p className="text-gray-800 print:text-black">New Zealand</p>
                         </div>
                       </div>
 
                       {/* Document Title */}
                       <div className="text-right">
                         <div className="inline-block">
-                          <p
-                            className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black"
-                          >
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
                             Fulfillment Document
                           </p>
                           <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
@@ -1338,7 +1340,9 @@ export function PickingPage() {
                         </div>
                         <div className="mt-4 inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
                           <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
-                          <span className="text-sm font-medium text-slate-800 print:text-black">{orderDate}</span>
+                          <span className="text-sm font-medium text-slate-800 print:text-black">
+                            {orderDate}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1394,20 +1398,28 @@ export function PickingPage() {
                       <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-600 to-slate-500 rounded-full print:bg-gray-500" />
                       <div className="flex items-center gap-2 mb-3">
                         <TruckIcon className="h-5 w-5 text-slate-600 print:text-gray-600" />
-                        <h2 className="text-lg font-bold text-slate-900 print:text-black">Ship To</h2>
+                        <h2 className="text-lg font-bold text-slate-900 print:text-black">
+                          Ship To
+                        </h2>
                       </div>
-                      <div className="space-y-0.5 text-sm text-slate-800 pl-1 print:text-black">
+                      <div className="space-y-0.5 text-sm pl-1">
                         {previewAddressLines.length > 0 ? (
                           previewAddressLines.map((line, i) => (
                             <p
                               key={`ship-${line}`}
-                              className={i === 0 ? 'font-semibold text-slate-900 print:text-black' : ''}
+                              className={
+                                i === 0
+                                  ? 'font-semibold text-gray-900 print:text-black'
+                                  : 'text-gray-800 print:text-black'
+                              }
                             >
                               {line}
                             </p>
                           ))
                         ) : (
-                          <p className="text-slate-600 italic print:text-black">No shipping details available</p>
+                          <p className="text-gray-600 italic print:text-black">
+                            No shipping details available
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1417,20 +1429,28 @@ export function PickingPage() {
                       <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-500 to-slate-400 rounded-full print:bg-gray-400" />
                       <div className="flex items-center gap-2 mb-3">
                         <DocumentChartBarIcon className="h-5 w-5 text-slate-500 print:text-gray-600" />
-                        <h2 className="text-lg font-bold text-slate-900 print:text-black">Bill To</h2>
+                        <h2 className="text-lg font-bold text-slate-900 print:text-black">
+                          Bill To
+                        </h2>
                       </div>
-                      <div className="space-y-0.5 text-sm text-slate-800 pl-1 print:text-black">
+                      <div className="space-y-0.5 text-sm pl-1">
                         {billToLines.length > 0 ? (
                           billToLines.map((line, i) => (
                             <p
                               key={`bill-${line}`}
-                              className={i === 0 ? 'font-semibold text-slate-900 print:text-black' : ''}
+                              className={
+                                i === 0
+                                  ? 'font-semibold text-gray-900 print:text-black'
+                                  : 'text-gray-800 print:text-black'
+                              }
                             >
                               {line}
                             </p>
                           ))
                         ) : (
-                          <p className="text-slate-600 italic print:text-black">Same as shipping address</p>
+                          <p className="text-gray-600 italic print:text-black">
+                            Same as shipping address
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1481,18 +1501,24 @@ export function PickingPage() {
                           } print:bg-white`}
                         >
                           <div className="col-span-3">
-                            <p className="font-mono font-bold text-slate-900 print:text-black">{item.sku}</p>
+                            <p className="font-mono font-bold text-slate-900 print:text-black">
+                              {item.sku}
+                            </p>
                             <p className="text-xs text-slate-600 mt-0.5 print:text-black">
                               Bin: {formatBinLocation(item.binLocation)}
                             </p>
                           </div>
                           <div className="col-span-5">
-                            <p className="text-slate-800 font-medium print:text-black">{item.name}</p>
+                            <p className="text-slate-800 font-medium print:text-black">
+                              {item.name}
+                            </p>
                           </div>
                           <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
                             {item.quantity}
                           </div>
-                          <div className="col-span-1 text-center text-slate-600 print:text-black">0</div>
+                          <div className="col-span-1 text-center text-slate-600 print:text-black">
+                            0
+                          </div>
                           <div className="col-span-2 text-center">
                             <span
                               className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
@@ -1538,7 +1564,7 @@ export function PickingPage() {
                         Picked By
                       </p>
                       <p className="font-semibold text-slate-900 print:text-black">
-                        {fulfillmentPreviewOrder.pickerId || currentUser?.userId || 'Unknown'}
+                        {fulfillmentPreviewOrder.pickerId || currentUser.userId || 'Unknown'}
                       </p>
                       <p className="text-slate-700 text-xs mt-1 print:text-black">
                         {new Date().toLocaleString('en-NZ', {
@@ -1938,10 +1964,10 @@ export function PickingPage() {
                     {/* Items in Order - Integrated into Current Pick Task */}
                     <div className={pickingSurfacePanelClass}>
                       <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider mb-4">
-                        Items in Order ({order.items?.length || 0})
+                        Items in Order ({order.items.length || 0})
                       </p>
                       <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
-                        {order.items?.map((item, index) => {
+                        {order.items.map((item, index) => {
                           const isCompleted = item.pickedQuantity >= item.quantity;
                           const isSkipped = item.status === 'SKIPPED';
                           const isCurrent = index === currentTaskIndex;
@@ -2485,13 +2511,13 @@ export function PickingPage() {
                 setUndoPickItemIndex(null);
               }}
               onConfirm={handleConfirmUndoPick}
-              itemName={order.items?.[undoPickItemIndex]?.name || ''}
-              sku={order.items?.[undoPickItemIndex]?.sku || ''}
-              currentQuantity={order.items?.[undoPickItemIndex]?.pickedQuantity || 0}
-              totalQuantity={order.items?.[undoPickItemIndex]?.quantity || 0}
+              itemName={order.items[undoPickItemIndex]?.name || ''}
+              sku={order.items[undoPickItemIndex]?.sku || ''}
+              currentQuantity={order.items[undoPickItemIndex]?.pickedQuantity || 0}
+              totalQuantity={order.items[undoPickItemIndex]?.quantity || 0}
               wasCompleted={
-                (order.items?.[undoPickItemIndex]?.pickedQuantity || 0) >=
-                (order.items?.[undoPickItemIndex]?.quantity || 0)
+                (order.items[undoPickItemIndex]?.pickedQuantity || 0) >=
+                (order.items[undoPickItemIndex]?.quantity || 0)
               }
               isLoading={isUndoingPick}
             />
@@ -2537,7 +2563,7 @@ export function PickingPage() {
           />
 
           {/* Skip Item Modal */}
-          {showSkipModal && skipItemIndex !== null && order?.items?.[skipItemIndex] && (
+          {showSkipModal && skipItemIndex !== null && order.items[skipItemIndex] && (
             <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
               <div className="scanner-modal-content max-w-md w-full rounded-2xl">
                 <div className="bg-gradient-to-r from-warning-500 to-warning-600 text-white px-6 py-4 rounded-t-2xl">
@@ -2603,7 +2629,7 @@ export function PickingPage() {
           )}
 
           {/* Manual Override Modal */}
-          {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
+          {showOverrideModal && overrideItemIndex !== null && order.items[overrideItemIndex] && (
             <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
               <div className="scanner-modal-content max-w-md w-full rounded-2xl">
                 <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
