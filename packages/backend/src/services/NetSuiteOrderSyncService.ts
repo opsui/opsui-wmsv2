@@ -1060,7 +1060,7 @@ export class NetSuiteOrderSyncService {
       }
 
       // ====================================================================
-      // PHASE 3.5: Sync packing queue (PICKED/PACKING) with NetSuite fulfillments
+      // PHASE 3.5: Sync packing queue (PICKED/PACKING/PACKED) with NetSuite fulfillments
       // Orders in packing queue may have been packed/shipped on NetSuite
       // ====================================================================
 
@@ -1077,7 +1077,7 @@ export class NetSuiteOrderSyncService {
                   EXTRACT(EPOCH FROM (NOW() - created_at)) / 3600 as hours_since_created
            FROM orders
            WHERE netsuite_source = 'NETSUITE'
-             AND status IN ('PICKED', 'PACKING')
+             AND status IN ('PICKED', 'PACKING', 'PACKED')
              AND netsuite_so_internal_id IS NOT NULL`
         );
 
@@ -1095,6 +1095,7 @@ export class NetSuiteOrderSyncService {
           byStatus: {
             PICKED: packingOrders.rows.filter((r: any) => r.status === 'PICKED').length,
             PACKING: packingOrders.rows.filter((r: any) => r.status === 'PACKING').length,
+            PACKED: packingOrders.rows.filter((r: any) => r.status === 'PACKED').length,
           },
           fulfillmentMapSize: fulfillmentMap.size,
           staleThresholdHours: STALE_ORDER_THRESHOLD_HOURS,
@@ -1184,6 +1185,7 @@ export class NetSuiteOrderSyncService {
             let isCancelled = false;
             let isClosed = false;
             let isNotReadyToShip = false;
+            let isPendingReadyToShip = false;
 
             const shouldInspectLinkedFulfillmentGap = !!row.netsuite_if_internal_id;
             if (
@@ -1199,6 +1201,8 @@ export class NetSuiteOrderSyncService {
                   soStatus.includes('fulfilled') ||
                   soStatus.includes('billed');
                 isNotReadyToShip = soDetail.readyToShip === false;
+                isPendingReadyToShip =
+                  soStatus.includes('pending fulfillment') && soDetail.readyToShip === true;
               } catch (error: any) {
                 logger.debug(
                   'Could not fetch SO status for packing queue order without fulfillment',
@@ -1213,9 +1217,27 @@ export class NetSuiteOrderSyncService {
 
             if (
               shouldInspectLinkedFulfillmentGap &&
-              (isCancelled || isClosed || isNotReadyToShip)
+              (isPendingReadyToShip || isCancelled || isClosed || isNotReadyToShip)
             ) {
-              if (isCancelled) {
+              if (isPendingReadyToShip) {
+                stats.stale.pending++;
+                staleOrderActions.movedToPending.push(row.netsuite_so_tran_id || soId);
+                logger.warn(
+                  'Packing queue order lost its linked fulfillment but SO is back to pending fulfillment - moving to PENDING',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    previousStatus: row.status,
+                    soStatus,
+                    ifInternalId: row.netsuite_if_internal_id,
+                  }
+                );
+                await this.updateOrderStatus(row.order_id, 'PENDING');
+                result.updated++;
+                result.details.updated.push(
+                  `${row.netsuite_so_tran_id || soId} (packing-gap->PENDING)`
+                );
+              } else if (isCancelled) {
                 stats.stale.cancelled++;
                 staleOrderActions.movedToCancelled.push(row.netsuite_so_tran_id || soId);
                 logger.info('Packing queue order cancelled in NetSuite - moving to CANCELLED', {
