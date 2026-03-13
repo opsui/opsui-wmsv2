@@ -55,14 +55,18 @@ type NzcPackagePreset = {
 };
 
 type NzcStockSize = {
-  code?: string;
-  description?: string;
-  length?: number;
-  width?: number;
-  height?: number;
-  cubicM3?: number;
-  kg?: number;
+  PackageStockId?: number;
+  Name?: string;
+  Height?: number;
+  Length?: number;
+  Width?: number;
+  Cubic?: number;
+  Weight?: number;
+  Type?: string;
+  Availability?: string;
 };
+
+const NZC_DEFAULT_PRESET_ID = 'CUSTOM';
 
 const NZC_CARRIER_FALLBACK: Carrier = {
   carrierId: 'CARR-NZC',
@@ -78,7 +82,7 @@ const NZC_CARRIER_FALLBACK: Carrier = {
 };
 
 const NZC_PACKAGE_PRESETS: NzcPackagePreset[] = [
-  { id: 'CUSTOM', label: '-- Custom --' },
+  { id: NZC_DEFAULT_PRESET_ID, label: '-- Custom --' },
   { id: '25KG_0015M3', label: '25KG/0.015M3', kg: 25, cubicM3: 0.015 },
   { id: '25KG_002M3', label: '25KG/0.02M3', kg: 25, cubicM3: 0.02 },
   { id: '25KG_003M3', label: '25KG/0.03M3', kg: 25, cubicM3: 0.03 },
@@ -162,7 +166,7 @@ export function PackingPage() {
   const [isFetchingRates, setIsFetchingRates] = useState(false);
   const [shipmentCreated, setShipmentCreated] = useState(false);
   const [nzcConnote, setNzcConnote] = useState<string>('');
-  const [selectedNzcPackagePreset, setSelectedNzcPackagePreset] = useState('CUSTOM');
+  const [selectedNzcPackagePreset, setSelectedNzcPackagePreset] = useState(NZC_DEFAULT_PRESET_ID);
   const [nzcCustomLength, setNzcCustomLength] = useState('10');
   const [nzcCustomWidth, setNzcCustomWidth] = useState('10');
   const [nzcCustomHeight, setNzcCustomHeight] = useState('10');
@@ -171,6 +175,7 @@ export function PackingPage() {
 
   // Helper to convert lbs to kg for NZC API
   const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
+  const kgToLbs = (kg: number): number => Math.round((kg / 0.453592) * 100) / 100;
   const normalizeShipToAddress = (rawAddress: any, fallbackName: string): Address => ({
     name: rawAddress?.name || fallbackName || 'Customer',
     company: rawAddress?.company || undefined,
@@ -223,17 +228,13 @@ export function PackingPage() {
     ? [
         NZC_PACKAGE_PRESETS[0],
         ...nzcStockSizes.map((stock: NzcStockSize) => ({
-          id: stock.code || stock.description || 'UNKNOWN',
-          label: stock.description
-            ? stock.code
-              ? `${stock.code} ${stock.description}`
-              : stock.description
-            : stock.code || 'NZC Stock',
-          kg: stock.kg,
-          cubicM3: stock.cubicM3,
-          length: stock.length,
-          width: stock.width,
-          height: stock.height,
+          id: String(stock.PackageStockId || stock.Name || 'UNKNOWN'),
+          label: stock.Name || 'NZC Stock',
+          kg: stock.Weight,
+          cubicM3: stock.Cubic,
+          length: stock.Length,
+          width: stock.Width,
+          height: stock.Height,
         })),
       ]
     : NZC_PACKAGE_PRESETS;
@@ -244,6 +245,7 @@ export function PackingPage() {
   const selectedNzcPreset = nzcPackageOptions.find(
     preset => preset.id === selectedNzcPackagePreset
   );
+  const selectedNzcPackageIsCustom = selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID;
 
   // Ref to track if we've already attempted to claim this order
   const hasClaimedRef = useRef(false);
@@ -256,18 +258,15 @@ export function PackingPage() {
 
     return [
       {
-        length:
-          selectedNzcPackagePreset === 'CUSTOM'
-            ? parseFloat(nzcCustomLength || '0') || 10
-            : undefined,
-        width:
-          selectedNzcPackagePreset === 'CUSTOM'
-            ? parseFloat(nzcCustomWidth || '0') || 10
-            : undefined,
-        height:
-          selectedNzcPackagePreset === 'CUSTOM'
-            ? parseFloat(nzcCustomHeight || '0') || 10
-            : undefined,
+        length: selectedNzcPackageIsCustom
+          ? parseFloat(nzcCustomLength || '0') || 10
+          : selectedNzcPreset?.length,
+        width: selectedNzcPackageIsCustom
+          ? parseFloat(nzcCustomWidth || '0') || 10
+          : selectedNzcPreset?.width,
+        height: selectedNzcPackageIsCustom
+          ? parseFloat(nzcCustomHeight || '0') || 10
+          : selectedNzcPreset?.height,
         weight: presetWeightKg || customWeightKg,
         units: packageUnits,
       },
@@ -504,6 +503,59 @@ export function PackingPage() {
       setTrackingNumber(trackingDefault);
     }
   }, [trackingDefault, trackingNumber]);
+
+  useEffect(() => {
+    if (selectedCarrierId) {
+      return;
+    }
+
+    const nzcCarrier = carriersWithFallback.find(
+      (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
+    );
+
+    if (nzcCarrier) {
+      setSelectedCarrierId(nzcCarrier.carrierId);
+    }
+  }, [selectedCarrierId, carriersWithFallback]);
+
+  useEffect(() => {
+    if (!isNZCCarrier) {
+      return;
+    }
+
+    const defaultPreset =
+      nzcPackageOptions.find(preset => preset.id !== NZC_DEFAULT_PRESET_ID) || nzcPackageOptions[0];
+
+    if (!defaultPreset) {
+      return;
+    }
+
+    if (
+      selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID ||
+      !nzcPackageOptions.some(preset => preset.id === selectedNzcPackagePreset)
+    ) {
+      setSelectedNzcPackagePreset(defaultPreset.id);
+    }
+  }, [isNZCCarrier, nzcPackageOptions, selectedNzcPackagePreset]);
+
+  useEffect(() => {
+    if (!selectedNzcPreset || selectedNzcPackageIsCustom) {
+      return;
+    }
+
+    if (selectedNzcPreset.length != null) {
+      setNzcCustomLength(String(selectedNzcPreset.length));
+    }
+    if (selectedNzcPreset.width != null) {
+      setNzcCustomWidth(String(selectedNzcPreset.width));
+    }
+    if (selectedNzcPreset.height != null) {
+      setNzcCustomHeight(String(selectedNzcPreset.height));
+    }
+    if (selectedNzcPreset.kg != null) {
+      setTotalWeight(String(kgToLbs(selectedNzcPreset.kg)));
+    }
+  }, [selectedNzcPreset, selectedNzcPackageIsCustom]);
 
   useEffect(() => {
     setEditableShipToAddress(baseShipToAddress);
@@ -1337,22 +1389,22 @@ export function PackingPage() {
                       </div>
                     )}
 
-                    {/* Tracking Number - Only for non-NZC carriers */}
-                    {!isNZCCarrier && (
-                      <div>
-                        <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
-                          Tracking Number (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={trackingNumber}
-                          onChange={e => setTrackingNumber(e.target.value)}
-                          placeholder="Enter tracking number..."
-                          disabled={isCreatingShipment || isViewMode}
-                          className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
-                        />
-                      </div>
-                    )}
+                    <div>
+                      <label className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2 block">
+                        {isNZCCarrier ? 'Sender Reference' : 'Tracking Number'}
+                        {!isNZCCarrier && ' (Optional)'}
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingNumber}
+                        onChange={e => setTrackingNumber(e.target.value)}
+                        placeholder={
+                          isNZCCarrier ? 'Enter sender reference...' : 'Enter tracking number...'
+                        }
+                        disabled={isCreatingShipment || isViewMode}
+                        className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                      />
+                    </div>
 
                     {/* Package Details */}
                     {isNZCCarrier ? (
@@ -1407,15 +1459,13 @@ export function PackingPage() {
                               min="0"
                               step="0.1"
                               value={
-                                selectedNzcPackagePreset === 'CUSTOM'
+                                selectedNzcPackageIsCustom
                                   ? nzcCustomLength
                                   : selectedNzcPreset?.length || ''
                               }
                               onChange={e => setNzcCustomLength(e.target.value)}
                               disabled={
-                                isCreatingShipment ||
-                                isViewMode ||
-                                selectedNzcPackagePreset !== 'CUSTOM'
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
                               }
                               className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                             />
@@ -1429,15 +1479,13 @@ export function PackingPage() {
                               min="0"
                               step="0.1"
                               value={
-                                selectedNzcPackagePreset === 'CUSTOM'
+                                selectedNzcPackageIsCustom
                                   ? nzcCustomWidth
                                   : selectedNzcPreset?.width || ''
                               }
                               onChange={e => setNzcCustomWidth(e.target.value)}
                               disabled={
-                                isCreatingShipment ||
-                                isViewMode ||
-                                selectedNzcPackagePreset !== 'CUSTOM'
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
                               }
                               className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                             />
@@ -1451,15 +1499,13 @@ export function PackingPage() {
                               min="0"
                               step="0.1"
                               value={
-                                selectedNzcPackagePreset === 'CUSTOM'
+                                selectedNzcPackageIsCustom
                                   ? nzcCustomHeight
                                   : selectedNzcPreset?.height || ''
                               }
                               onChange={e => setNzcCustomHeight(e.target.value)}
                               disabled={
-                                isCreatingShipment ||
-                                isViewMode ||
-                                selectedNzcPackagePreset !== 'CUSTOM'
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
                               }
                               className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                             />
@@ -1491,7 +1537,9 @@ export function PackingPage() {
                               value={
                                 selectedNzcPreset?.cubicM3 != null
                                   ? selectedNzcPreset.cubicM3.toFixed(4)
-                                  : 'Custom'
+                                  : selectedNzcPackageIsCustom
+                                    ? 'Custom'
+                                    : '0.0000'
                               }
                               className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-gray-300 focus:outline-none disabled:opacity-70"
                             />
@@ -1507,8 +1555,14 @@ export function PackingPage() {
                               value={totalWeight}
                               onChange={e => setTotalWeight(e.target.value)}
                               placeholder="Enter weight..."
-                              disabled={isCreatingShipment || isViewMode}
-                              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                              disabled={
+                                isCreatingShipment || isViewMode || !selectedNzcPackageIsCustom
+                              }
+                              className={`w-full rounded-xl px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                                selectedNzcPackageIsCustom
+                                  ? 'bg-white/[0.05] border border-white/[0.08] text-white'
+                                  : 'bg-white/[0.03] border border-white/[0.05] text-gray-400 cursor-not-allowed'
+                              } disabled:opacity-50`}
                             />
                           </div>
                         </div>
