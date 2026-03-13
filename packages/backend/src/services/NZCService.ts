@@ -23,8 +23,9 @@ export interface NZCDestination {
   Address: {
     StreetAddress: string;
     Suburb: string;
-    Postcode: string;
-    Country: string;
+    City?: string;
+    PostCode: string;
+    CountryCode: string;
     State?: string;
   };
   ContactPerson?: string;
@@ -166,8 +167,9 @@ export class NZCService {
       Address: {
         StreetAddress: address.addressLine1,
         Suburb: address.city,
-        Postcode: address.postalCode,
-        Country: address.country === 'NZ' ? 'NEW ZEALAND' : address.country,
+        City: address.city,
+        PostCode: address.postalCode,
+        CountryCode: address.country === 'NEW ZEALAND' ? 'NZ' : address.country,
         State: address.state || '',
       },
       ContactPerson: address.name,

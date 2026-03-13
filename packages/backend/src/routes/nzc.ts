@@ -96,8 +96,9 @@ router.post(
       Address: {
         StreetAddress: destination.addressLine1,
         Suburb: destination.city,
-        Postcode: destination.postalCode,
-        Country: destination.country === 'NZ' ? 'NEW ZEALAND' : destination.country,
+        City: destination.city,
+        PostCode: destination.postalCode,
+        CountryCode: toNzcCountryCode(destination.country),
         State: destination.state || '',
       },
       ContactPerson: destination.name,
@@ -174,8 +175,9 @@ router.post(
       Address: {
         StreetAddress: destination.addressLine1,
         Suburb: destination.city,
-        Postcode: destination.postalCode,
-        Country: destination.country === 'NZ' ? 'NEW ZEALAND' : destination.country,
+        City: destination.city,
+        PostCode: destination.postalCode,
+        CountryCode: toNzcCountryCode(destination.country),
         State: destination.state || '',
       },
       ContactPerson: destination.name,
@@ -289,3 +291,11 @@ router.get(
 );
 
 export default router;
+function toNzcCountryCode(country?: string): string {
+  if (!country) return 'NZ';
+  const normalized = String(country).trim().toUpperCase();
+  if (normalized === 'NEW ZEALAND') return 'NZ';
+  if (normalized === 'AUSTRALIA') return 'AU';
+  if (normalized.length === 2) return normalized;
+  return normalized;
+}
