@@ -1305,7 +1305,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                 initial="hidden"
                 animate="visible"
                 exit={{ opacity: 0 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-responsive"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-responsive items-stretch"
               >
                 <AnimatePresence mode="popLayout">
                   {filteredOrders.map((order: any) => (
