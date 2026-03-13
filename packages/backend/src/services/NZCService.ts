@@ -114,6 +114,10 @@ export interface NZCShipmentResponse {
     ConsignmentNo: string;
     ConsignmentId: string;
   }>;
+  Errors?: Array<{
+    Message?: string;
+    Property?: string;
+  }>;
 }
 
 /**
@@ -415,7 +419,26 @@ export class NZCService {
         throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = (await response.json()) as NZCShipmentResponse;
+      const rawData = (await response.json()) as unknown;
+      const data = this._normalizeShipmentResponse(rawData);
+
+      if (data.Errors && data.Errors.length > 0) {
+        logger.error('[NZC] Shipment creation returned errors', {
+          errors: data.Errors,
+        });
+        throw new Error(
+          data.Errors.map(error => error.Message || error.Property || 'NZC shipment error')
+            .filter(Boolean)
+            .join(', ')
+        );
+      }
+
+      if (!data.ConsignmentNo) {
+        logger.error('[NZC] Shipment creation returned no consignment number', {
+          response: rawData,
+        });
+        throw new Error('NZC shipment creation did not return a consignment number');
+      }
 
       logger.info('[NZC] Shipment created successfully', {
         consignmentNo: data.ConsignmentNo,
@@ -475,6 +498,40 @@ export class NZCService {
       logger.error('[NZC] Error fetching label', error);
       throw error;
     }
+  }
+
+  private _normalizeShipmentResponse(rawData: unknown): NZCShipmentResponse {
+    const raw = rawData && typeof rawData === 'object' ? (rawData as Record<string, unknown>) : {};
+    const consignments = Array.isArray(raw.Consignments)
+      ? (raw.Consignments as Array<Record<string, unknown>>)
+      : [];
+    const firstConsignment = consignments[0] || {};
+    const errors = Array.isArray(raw.Errors)
+      ? (raw.Errors as Array<Record<string, unknown>>).map(error => ({
+          Message: this._stringOrEmpty(error.Message),
+          Property: this._stringOrEmpty(error.Property),
+        }))
+      : [];
+
+    return {
+      ConsignmentNo:
+        this._stringOrEmpty(raw.ConsignmentNo) ||
+        this._stringOrEmpty(firstConsignment.ConsignmentNo) ||
+        this._stringOrEmpty(firstConsignment.ConsignmentNumber),
+      ConsignmentId:
+        this._stringOrEmpty(raw.ConsignmentId) ||
+        this._stringOrEmpty(firstConsignment.ConsignmentId) ||
+        this._stringOrEmpty(firstConsignment.Id),
+      Packages: consignments.map(consignment => ({
+        ConsignmentNo:
+          this._stringOrEmpty(consignment.ConsignmentNo) ||
+          this._stringOrEmpty(consignment.ConsignmentNumber),
+        ConsignmentId:
+          this._stringOrEmpty(consignment.ConsignmentId) ||
+          this._stringOrEmpty(consignment.Id),
+      })),
+      Errors: errors,
+    };
   }
 
   /**

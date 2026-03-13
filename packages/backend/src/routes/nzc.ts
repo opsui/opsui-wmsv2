@@ -273,11 +273,15 @@ function buildNzcDestination(destination: any) {
       ? region
       : locality;
 
+  const receiverName = truncateNzcField(
+    String(destination.name || destination.company || 'Customer').trim() || 'Customer',
+    50
+  );
+  const nameDisplayBase = String(destination.company || destination.name || receiverName).trim();
+
   return {
-    Name: destination.company || destination.name || 'Customer',
-    NameDisplay: destination.company
-      ? `${destination.company} - ${locality || city}`
-      : `${destination.name} - ${locality || city}`,
+    Name: receiverName,
+    NameDisplay: truncateNzcField(`${nameDisplayBase} - ${locality || city}`, 100),
     Address: {
       StreetAddress: destination.addressLine1,
       Suburb: suburb,
@@ -286,10 +290,14 @@ function buildNzcDestination(destination: any) {
       CountryCode: countryCode,
       State: region,
     },
-    ContactPerson: destination.name,
+    ContactPerson: receiverName,
     PhoneNumber: destination.phone || '',
     Email: destination.email || '',
   };
+}
+
+function truncateNzcField(value: string, maxLength: number): string {
+  return value.length > maxLength ? value.slice(0, maxLength) : value;
 }
 
 function toNzcCountryCode(country?: string): string {
