@@ -897,20 +897,41 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const activeQueueResult = mode === 'picking' ? pickingQueueResult : packingQueueResult;
   const activeAllOrdersResult = mode === 'picking' ? pickingAllOrders : packingAllOrders;
 
-  // Minimum spin duration for smooth reload animation
-  const [isManualReloading, setIsManualReloading] = useState(false);
-  const manualReloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isReloading =
-    isManualReloading || activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
+  // Minimum spin duration for smooth reload animation (both manual and auto)
+  const [isSpinAnimationActive, setIsSpinAnimationActive] = useState(false);
+  const spinAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isActuallyFetching =
+    activeQueueResult.isFetching || activeAllOrdersResult.isFetching;
+
+  // Track fetches and ensure minimum spin duration
+  useEffect(() => {
+    if (isActuallyFetching) {
+      // Fetch started - ensure minimum 500ms spin
+      setIsSpinAnimationActive(true);
+      if (spinAnimationTimeoutRef.current) {
+        clearTimeout(spinAnimationTimeoutRef.current);
+      }
+    } else if (isSpinAnimationActive) {
+      // Fetch completed - keep spinning for minimum duration
+      if (!spinAnimationTimeoutRef.current) {
+        spinAnimationTimeoutRef.current = setTimeout(() => {
+          setIsSpinAnimationActive(false);
+          spinAnimationTimeoutRef.current = null;
+        }, 500);
+      }
+    }
+  }, [isActuallyFetching, isSpinAnimationActive]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      if (manualReloadTimeoutRef.current) {
-        clearTimeout(manualReloadTimeoutRef.current);
+      if (spinAnimationTimeoutRef.current) {
+        clearTimeout(spinAnimationTimeoutRef.current);
       }
     };
   }, []);
+
+  const isReloading = isSpinAnimationActive;
 
   useEffect(() => {
     setPage(1);
@@ -956,27 +977,15 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   };
 
   const handleManualReload = useCallback(async () => {
-    // Ensure minimum spin duration for smooth animation
-    setIsManualReloading(true);
-    if (manualReloadTimeoutRef.current) {
-      clearTimeout(manualReloadTimeoutRef.current);
-    }
-
-    const minSpinDuration = new Promise(resolve => {
-      manualReloadTimeoutRef.current = setTimeout(resolve, 500);
-    });
-
+    // Spin animation is handled automatically by the isActuallyFetching effect
     try {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['orders'] }),
         activeQueueResult.refetch(),
         activeAllOrdersResult.refetch(),
-        minSpinDuration,
       ]);
     } catch {
       showToast(`Failed to reload ${mode} queue`, 'error');
-    } finally {
-      setIsManualReloading(false);
     }
   }, [activeAllOrdersResult, activeQueueResult, mode, queryClient, showToast]);
 
