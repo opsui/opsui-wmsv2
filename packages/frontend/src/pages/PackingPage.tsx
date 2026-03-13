@@ -462,7 +462,7 @@ export function PackingPage() {
       isClaimingRef.current = false;
       setClaimError(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
     },
     onError: (error: any) => {
       console.error('[PackingPage] Claim error:', error);
@@ -1419,7 +1419,7 @@ export function PackingPage() {
       setClaimError(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['orders', 'packing-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
       queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
       navigate('/packing');
     } catch (error) {

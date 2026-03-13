@@ -1075,6 +1075,9 @@ export const useOrder = (orderId: string) => {
     queryKey: ['orders', orderId],
     queryFn: () => orderApi.getOrder(orderId),
     enabled: !!orderId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 };
 

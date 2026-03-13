@@ -116,6 +116,7 @@ export function PickingPage() {
   const pickMutation = usePickItem();
   const completeMutation = useCompleteOrder();
   const logExceptionMutation = useLogException();
+  const pickingTaskStorageKey = orderId ? `picking-current-task:${orderId}` : null;
 
   // ==========================================================================
   // Real-time WebSocket Subscriptions
@@ -125,7 +126,7 @@ export function PickingPage() {
   const handlePickUpdate = useCallback(
     (data: { orderId: string; orderItemId: string; pickedQuantity?: number }) => {
       if (data.orderId === orderId) {
-        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+        queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
       }
     },
     [orderId, queryClient]
@@ -136,7 +137,7 @@ export function PickingPage() {
   const handleZoneUpdate = useCallback(
     (data: { zoneId: string; pickerId?: string; taskCount?: number; pickerCount?: number }) => {
       if (data.pickerId === currentUser?.userId) {
-        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+        queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
       }
     },
     [currentUser?.userId, orderId, queryClient]
@@ -166,7 +167,7 @@ export function PickingPage() {
       hasClaimedRef.current = true;
       isClaimingRef.current = false;
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
     },
     onError: (error: any) => {
       console.error('[PickingPage] Claim error:', error);
@@ -414,17 +415,34 @@ export function PickingPage() {
     setScanError(null);
   }, [currentTaskIndex]);
 
-  // Auto-select first incomplete item when order loads
+  // Restore the last focused task when possible, otherwise move to the first incomplete item.
   useEffect(() => {
     if (order?.items && order.items.length > 0) {
-      const firstIncompleteIndex = order.items.findIndex(
-        item => item.pickedQuantity < item.quantity
-      );
-      if (firstIncompleteIndex !== -1 && firstIncompleteIndex !== currentTaskIndex) {
-        setCurrentTaskIndex(firstIncompleteIndex);
+      let nextIndex = order.items.findIndex(item => item.pickedQuantity < item.quantity);
+
+      if (pickingTaskStorageKey) {
+        const storedIndex = Number(sessionStorage.getItem(pickingTaskStorageKey));
+        if (
+          Number.isInteger(storedIndex) &&
+          storedIndex >= 0 &&
+          storedIndex < order.items.length &&
+          order.items[storedIndex].pickedQuantity < order.items[storedIndex].quantity
+        ) {
+          nextIndex = storedIndex;
+        }
+      }
+
+      if (nextIndex !== -1 && nextIndex !== currentTaskIndex) {
+        setCurrentTaskIndex(nextIndex);
       }
     }
-  }, [order]);
+  }, [currentTaskIndex, order, pickingTaskStorageKey]);
+
+  useEffect(() => {
+    if (pickingTaskStorageKey) {
+      sessionStorage.setItem(pickingTaskStorageKey, String(currentTaskIndex));
+    }
+  }, [currentTaskIndex, pickingTaskStorageKey]);
 
   if (!orderId) {
     return <div>No order ID provided</div>;
@@ -637,6 +655,9 @@ export function PickingPage() {
           pickerId: order.pickerId || '',
         },
       });
+      if (pickingTaskStorageKey) {
+        sessionStorage.removeItem(pickingTaskStorageKey);
+      }
       showToast('Order completed!', 'success');
       navigate('/orders');
     } catch (error) {
@@ -653,6 +674,9 @@ export function PickingPage() {
           pickerId: order.pickerId || '',
         },
       });
+      if (pickingTaskStorageKey) {
+        sessionStorage.removeItem(pickingTaskStorageKey);
+      }
       showToast('Order completed!', 'success');
       setCompleteOrderConfirm({ isOpen: false, skippedItems: [] });
       navigate('/orders');
@@ -764,9 +788,12 @@ export function PickingPage() {
       // Clear all order-related queries to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
       await queryClient.invalidateQueries({ queryKey: ['orders', 'queue'] });
-      await queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      await queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
       await queryClient.invalidateQueries({ queryKey: ['metrics', 'picker-activity'] });
       await queryClient.invalidateQueries({ queryKey: ['metrics', 'dashboard'] });
+      if (pickingTaskStorageKey) {
+        sessionStorage.removeItem(pickingTaskStorageKey);
+      }
 
       // Force a full page reload to ensure fresh state and proper URL param reading
       window.location.href = '/orders?status=PENDING';
