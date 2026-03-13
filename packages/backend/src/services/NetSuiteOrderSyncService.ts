@@ -1604,9 +1604,11 @@ export class NetSuiteOrderSyncService {
         const salesOrder = await loadParentSalesOrder();
         soTranId = salesOrder?.tranId || soTranId;
       }
-      const derivedSubtotal = parentSalesOrder?.subTotal != null ? parentSalesOrder.subTotal : 0;
+      const parentSalesOrderData: NetSuiteSalesOrder | null = parentSalesOrder;
+      const derivedSubtotal =
+        parentSalesOrderData?.subTotal != null ? parentSalesOrderData.subTotal : 0;
       const derivedTotal =
-        parentSalesOrder?.total != null ? parentSalesOrder.total : derivedSubtotal;
+        parentSalesOrderData?.total != null ? parentSalesOrderData.total : derivedSubtotal;
 
       // Backfill totals if missing/zero
       try {
@@ -1621,8 +1623,8 @@ export class NetSuiteOrderSyncService {
             derivedSubtotal,
             derivedTotal,
             existing.orderId,
-            parentSalesOrder?.otherRefNum || null,
-            parentSalesOrder?.tranDate || null,
+            parentSalesOrderData?.otherRefNum || null,
+            parentSalesOrderData?.tranDate || null,
           ]
         );
       } catch {
