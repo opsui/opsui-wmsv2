@@ -296,6 +296,14 @@ export class OrderService {
         ),
       }));
 
+    if (fulfillmentLines.length === 0) {
+      logger.info('No items to fulfill in NetSuite (all items skipped), skipping IF creation', {
+        orderId,
+        netsuiteSoTranId: order.netsuiteSoTranId,
+      });
+      return;
+    }
+
     const existingFulfillments = await client.getItemFulfillmentsBySalesOrder([
       order.netsuiteSoInternalId,
     ]);
@@ -1372,7 +1380,15 @@ export class OrderService {
     }
 
     // Create NetSuite fulfillment now (after packing), so skipped packing items are excluded
-    await this.createNetSuiteFulfillmentForPickedOrder(orderId);
+    try {
+      await this.createNetSuiteFulfillmentForPickedOrder(orderId);
+    } catch (error: any) {
+      logger.error('Failed to create NetSuite fulfillment during packing completion', {
+        orderId,
+        error: error.message,
+      });
+      // Non-fatal: packing completes in our system even if NetSuite sync fails
+    }
 
     // Update order status to PACKED
     await orderRepository.update(orderId, {
