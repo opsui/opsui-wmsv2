@@ -28,6 +28,14 @@ export interface JWTPayload {
   exp?: number;
 }
 
+// Make Express.User (used by @types/passport) compatible with JWTPayload
+// so that AuthenticatedRequest is assignable to Express Request
+declare global {
+  namespace Express {
+    interface User extends JWTPayload {}
+  }
+}
+
 /**
  * Compact JWT payload for optimized token size (~40% smaller)
  * Uses shortened field names to reduce token payload
@@ -159,6 +167,8 @@ export function authenticate(req: AuthenticatedRequest, _res: Response, next: Ne
       baseRole: payload.role as UserRole,
       activeRole: payload.activeRole || null,
       effectiveRole: effectiveRole as UserRole,
+      organizationId: payload.organizationId ?? null,
+      organizationRole: payload.organizationRole ?? null,
     };
 
     logger.debug('User authenticated', {
@@ -276,12 +286,16 @@ export function generateToken(user: {
   email: string;
   role: UserRole;
   activeRole?: UserRole | null;
+  organizationId?: string | null;
+  organizationRole?: string | null;
 }): string {
   const payload: CompactJWTPayload = {
     uid: user.userId,
     eml: user.email,
     r: user.role,
     ar: user.activeRole,
+    oid: user.organizationId ?? null,
+    or: user.organizationRole ?? null,
   };
 
   return jwt.sign(payload, config.jwt.secret, {
@@ -297,12 +311,16 @@ export function generateRefreshToken(user: {
   email: string;
   role: UserRole;
   activeRole?: UserRole | null;
+  organizationId?: string | null;
+  organizationRole?: string | null;
 }): string {
   const payload: CompactJWTPayload = {
     uid: user.userId,
     eml: user.email,
     r: user.role,
     ar: user.activeRole,
+    oid: user.organizationId ?? null,
+    or: user.organizationRole ?? null,
   };
 
   return jwt.sign(payload, config.jwt.secret, {

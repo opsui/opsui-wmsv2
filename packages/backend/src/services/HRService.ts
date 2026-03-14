@@ -506,7 +506,9 @@ class HRService {
       return null;
     }
 
-    return await hrRepository.timesheets.findWithEntries(timesheet.timesheetId);
+    return (await hrRepository.timesheets.findWithEntries(timesheet.timesheetId)) as
+      | (HRTimesheet & { entries: HRTimesheetEntry[] })
+      | null;
   }
 
   /**
@@ -644,7 +646,9 @@ class HRService {
         );
       }
 
-      return (await hrRepository.timesheets.findWithEntries(timesheetId))!;
+      return (await hrRepository.timesheets.findWithEntries(timesheetId))! as HRTimesheet & {
+        entries: HRTimesheetEntry[];
+      };
     });
   }
 

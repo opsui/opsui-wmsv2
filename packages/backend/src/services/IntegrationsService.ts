@@ -115,13 +115,16 @@ export class IntegrationsService {
       throw new Error('Integration not found');
     }
 
-    if (integration.status !== IntegrationStatus.CONNECTED && integration.status !== 'ACTIVE') {
+    if (
+      integration.status !== IntegrationStatus.CONNECTED &&
+      (integration.status as string) !== 'ACTIVE'
+    ) {
       throw new Error('Integration must be connected to run sync jobs');
     }
 
     const job = await this.repository.createSyncJob({
       integrationId,
-      syncType,
+      syncType: syncType as unknown as 'FULL' | 'INCREMENTAL',
       direction: integration.syncSettings?.direction || 'INBOUND',
       status: SyncStatus.PENDING,
       startedAt: new Date(),
@@ -242,7 +245,9 @@ export class IntegrationsService {
     details: any;
   }> {
     try {
-      const authConfig = integration.configuration?.auth || integration.configuration || {};
+      const authConfig = (integration.configuration?.auth ||
+        integration.configuration ||
+        {}) as any;
       const netSuiteSyncService = new NetSuiteOrderSyncService({
         accountId: authConfig.accountId,
         tokenId: authConfig.tokenId,

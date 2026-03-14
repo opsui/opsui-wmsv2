@@ -122,12 +122,14 @@ export class AuthService {
       userId: user.userId,
       email: user.email,
       role: user.role,
+      organizationId: (user as any).defaultOrganizationId ?? null,
     });
 
     const refreshToken = generateRefreshToken({
       userId: user.userId,
       email: user.email,
       role: user.role,
+      organizationId: (user as any).defaultOrganizationId ?? null,
     });
 
     logger.info('Login successful', { email: credentials.email, userId: user.userId });
@@ -268,12 +270,14 @@ export class AuthService {
       userId: user.userId,
       email: user.email,
       role: user.role,
+      organizationId: (user as any).defaultOrganizationId ?? null,
     });
 
     const newRefreshToken = generateRefreshToken({
       userId: user.userId,
       email: user.email,
       role: user.role,
+      organizationId: (user as any).defaultOrganizationId ?? null,
     });
 
     logger.info('Token refreshed', { userId: user.userId });

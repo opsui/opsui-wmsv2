@@ -99,6 +99,22 @@ export async function waitForDrain(timeoutMs: number = 30000): Promise<boolean> 
   return true;
 }
 
+function getConfiguredCorsOrigins(corsOrigins: string | string[]): string[] {
+  if (Array.isArray(corsOrigins)) {
+    return corsOrigins;
+  }
+
+  return typeof corsOrigins === 'string' && corsOrigins !== '' ? [corsOrigins] : [];
+}
+
+function isAllowedCorsOrigin(origin: string, allowedOrigins: string[]): boolean {
+  if (allowedOrigins.includes(origin) || allowedOrigins.length === 0) {
+    return true;
+  }
+
+  return config.isDevelopment() && (origin.includes('localhost') || origin.includes('127.0.0.1'));
+}
+
 // ============================================================================
 // CREATE APP - HELPER FUNCTIONS
 // ============================================================================
@@ -116,34 +132,31 @@ function setupSecurityMiddleware(app: Application): void {
   // CORS configuration - use configured origins from environment
   // In production, this allows the frontend domain to access the API
   const corsOrigins = config.cors.origin;
+  const allowedOrigins = getConfiguredCorsOrigins(corsOrigins);
   app.use(
     cors({
       origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) {
-          return callback(null, true);
+        if (origin === undefined || origin === '') {
+          return callback(null, true); // eslint-disable-line unicorn/no-null
         }
-        // Check if origin is in allowed list
-        const allowedOrigins = Array.isArray(corsOrigins)
-          ? corsOrigins
-          : [corsOrigins].filter(Boolean);
-        if (allowedOrigins.includes(origin) || allowedOrigins.length === 0) {
-          callback(null, true);
+        if (isAllowedCorsOrigin(origin, allowedOrigins)) {
+          callback(null, true); // eslint-disable-line unicorn/no-null
         } else {
-          // In development, be permissive
-          if (
-            config.isDevelopment() &&
-            (origin.includes('localhost') || origin.includes('127.0.0.1'))
-          ) {
-            callback(null, true);
-          } else {
-            callback(new Error('Not allowed by CORS'));
-          }
+          callback(new Error('Not allowed by CORS'));
         }
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-Id'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'X-Request-Id',
+        'X-Organization-ID',
+        'x-organization-id',
+        'x-entity-id',
+      ],
       exposedHeaders: ['X-Request-Id'],
       preflightContinue: false,
       optionsSuccessStatus: 204,

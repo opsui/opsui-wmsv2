@@ -627,9 +627,15 @@ export function PackingPage() {
       const currentUserId = useAuthStore.getState().user?.userId;
 
       try {
-        const response = await apiClient.post(`/orders/${orderId}/claim-for-packing`, {
-          packer_id: currentUserId,
-        });
+        const response = await apiClient.post(
+          `/orders/${orderId}/claim-for-packing`,
+          {
+            packer_id: currentUserId,
+          },
+          {
+            suppressErrorStatuses: [409],
+          } as any
+        );
         return response.data;
       } catch (error: any) {
         const errorMessage = error?.response?.data?.error || error?.message || '';
@@ -1900,25 +1906,40 @@ export function PackingPage() {
     try {
       setIsFinalizingShipment(true);
 
+      const latestOrderResponse = await refetch();
+      const latestOrder = latestOrderResponse.data ?? order;
+
       const currentTrackingNumber =
         isNZCCarrier && nzcConnotes.length > 0 ? nzcConnotes.join(', ') : trackingNumber.trim();
       const currentCarrier = selectedCarrier?.name || selectedCarrier?.carrierCode || 'Carrier';
 
       if (
-        order?.status === OrderStatus.PICKING ||
-        order?.status === OrderStatus.PICKED ||
-        order?.status === OrderStatus.PACKING
+        latestOrder?.status === OrderStatus.PICKING ||
+        latestOrder?.status === OrderStatus.PICKED ||
+        latestOrder?.status === OrderStatus.PACKING
       ) {
-        await completePackingMutation.mutateAsync({
-          orderId,
-          dto: {
+        try {
+          await completePackingMutation.mutateAsync({
             orderId,
-            packerId: order.packerId || currentUser.userId,
-          },
-        });
+            dto: {
+              orderId,
+              packerId: latestOrder?.packerId || currentUser.userId,
+            },
+          });
+        } catch (error) {
+          const refreshedOrderResponse = await refetch();
+          const refreshedOrder = refreshedOrderResponse.data;
+
+          if (
+            refreshedOrder?.status !== OrderStatus.PACKED &&
+            refreshedOrder?.status !== OrderStatus.SHIPPED
+          ) {
+            throw error;
+          }
+        }
       }
 
-      if (order?.status !== OrderStatus.SHIPPED) {
+      if (latestOrder?.status !== OrderStatus.SHIPPED) {
         if (!currentTrackingNumber) {
           throw new Error('Tracking/connote is required before marking this order as shipped');
         }
@@ -3164,7 +3185,10 @@ export function PackingPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="picking-title text-lg">Skip Item</h2>
                   <button
-                    onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}
+                    onClick={() => {
+                      setShowSkipModal(false);
+                      setSkipQuantity(1);
+                    }}
                     className="text-white hover:text-warning-200 transition-colors"
                   >
                     <ExclamationTriangleIcon className="h-6 w-6" />
@@ -3224,10 +3248,14 @@ export function PackingPage() {
                     >
                       −
                     </button>
-                    <span className="text-gray-900 dark:text-white font-bold text-lg w-12 text-center">{skipQuantity}</span>
+                    <span className="text-gray-900 dark:text-white font-bold text-lg w-12 text-center">
+                      {skipQuantity}
+                    </span>
                     <button
                       onClick={() => {
-                        const maxSkip = order.items[skipItemIndex].quantity - (order.items[skipItemIndex].verifiedQuantity || 0);
+                        const maxSkip =
+                          order.items[skipItemIndex].quantity -
+                          (order.items[skipItemIndex].verifiedQuantity || 0);
                         setSkipQuantity(q => Math.min(maxSkip, q + 1));
                       }}
                       className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/[0.15] transition-colors border-gray-200 dark:border-white/[0.12]"
@@ -3235,7 +3263,10 @@ export function PackingPage() {
                       +
                     </button>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      of {order.items[skipItemIndex].quantity - (order.items[skipItemIndex].verifiedQuantity || 0)} remaining units
+                      of{' '}
+                      {order.items[skipItemIndex].quantity -
+                        (order.items[skipItemIndex].verifiedQuantity || 0)}{' '}
+                      remaining units
                     </span>
                   </div>
                 </div>
@@ -3262,7 +3293,13 @@ export function PackingPage() {
               </div>
 
               <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowSkipModal(false);
+                    setSkipQuantity(1);
+                  }}
+                >
                   Cancel
                 </Button>
                 <Button

@@ -252,6 +252,32 @@ export function initializePerformanceMode(): void {
 // Global debounce tracking for hover sounds
 let lastHoverSoundTime = 0;
 const HOVER_DEBOUNCE_MS = 150;
+let hasUserInteracted = false;
+let audioUnlockListenersBound = false;
+
+function markAudioUnlocked(): void {
+  hasUserInteracted = true;
+
+  if (typeof document === 'undefined' || !audioUnlockListenersBound) {
+    return;
+  }
+
+  document.removeEventListener('pointerdown', markAudioUnlocked);
+  document.removeEventListener('keydown', markAudioUnlocked);
+  document.removeEventListener('touchstart', markAudioUnlocked);
+  audioUnlockListenersBound = false;
+}
+
+function ensureAudioUnlockListeners(): void {
+  if (typeof document === 'undefined' || audioUnlockListenersBound || hasUserInteracted) {
+    return;
+  }
+
+  document.addEventListener('pointerdown', markAudioUnlocked, { passive: true });
+  document.addEventListener('keydown', markAudioUnlocked, { passive: true });
+  document.addEventListener('touchstart', markAudioUnlocked, { passive: true });
+  audioUnlockListenersBound = true;
+}
 
 /**
  * Play a sound notification
@@ -270,6 +296,12 @@ export function playSound(
       return;
     }
     lastHoverSoundTime = now;
+  }
+
+  ensureAudioUnlockListeners();
+
+  if (!hasUserInteracted) {
+    return;
   }
 
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();

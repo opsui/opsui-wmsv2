@@ -1614,9 +1614,15 @@ export const packingApi = {
    * Claim an order for packing
    */
   claimForPacking: async (orderId: string, packerId: string): Promise<Order> => {
-    const response = await apiClient.post<Order>(`/orders/${orderId}/claim-for-packing`, {
-      packer_id: packerId,
-    });
+    const response = await apiClient.post<Order>(
+      `/orders/${orderId}/claim-for-packing`,
+      {
+        packer_id: packerId,
+      },
+      {
+        suppressErrorStatuses: [409],
+      } as any
+    );
     return response.data;
   },
 

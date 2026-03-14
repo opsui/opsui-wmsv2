@@ -283,6 +283,7 @@ router.post(
       email: user.email,
       role: user.role,
       activeRole: role,
+      organizationId: (user as any).defaultOrganizationId ?? null,
     });
 
     res.json({ user, activeRole: role, accessToken: newAccessToken });

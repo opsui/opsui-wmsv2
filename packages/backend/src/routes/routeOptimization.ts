@@ -96,7 +96,7 @@ router.post('/optimize', async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors,
+        details: error.issues,
       });
       return;
     }
@@ -292,7 +292,7 @@ router.post('/predict-duration', async (req: Request, res: Response): Promise<vo
       res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors,
+        details: error.issues,
       });
       return;
     }
@@ -333,7 +333,7 @@ router.post('/predict-duration-batch', async (req: Request, res: Response): Prom
       res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors,
+        details: error.issues,
       });
       return;
     }
@@ -375,7 +375,7 @@ router.post('/forecast-demand', async (req: Request, res: Response): Promise<voi
       res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors,
+        details: error.issues,
       });
       return;
     }

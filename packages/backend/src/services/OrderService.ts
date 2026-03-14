@@ -167,6 +167,82 @@ export class OrderService {
     };
   }
 
+  private normalizeNetSuiteOrderMetadata(source: Record<string, unknown> | null | undefined): {
+    orderId?: string;
+    organizationId?: string;
+    netsuiteSource?: string;
+    netsuiteSoInternalId?: string;
+    netsuiteSoTranId?: string;
+  } {
+    if (!source) {
+      return {};
+    }
+
+    return {
+      orderId: (source.orderId as string) ?? (source.order_id as string) ?? undefined,
+      organizationId:
+        (source.organizationId as string) ?? (source.organization_id as string) ?? undefined,
+      netsuiteSource:
+        (source.netsuiteSource as string) ?? (source.netsuite_source as string) ?? undefined,
+      netsuiteSoInternalId:
+        (source.netsuiteSoInternalId as string) ??
+        (source.netsuite_so_internal_id as string) ??
+        undefined,
+      netsuiteSoTranId:
+        (source.netsuiteSoTranId as string) ?? (source.netsuite_so_tran_id as string) ?? undefined,
+    };
+  }
+
+  private async markNetSuiteOrderNotReadyToShip(
+    orderId: string,
+    source?: Record<string, unknown> | null,
+    reason?: string
+  ): Promise<void> {
+    let metadata = this.normalizeNetSuiteOrderMetadata(source);
+
+    if (!metadata.organizationId || !metadata.netsuiteSoInternalId || !metadata.netsuiteSource) {
+      const orderResult = await query(
+        `SELECT
+           order_id AS "orderId",
+           organization_id AS "organizationId",
+           netsuite_source AS "netsuiteSource",
+           netsuite_so_internal_id AS "netsuiteSoInternalId",
+           netsuite_so_tran_id AS "netsuiteSoTranId"
+         FROM orders
+         WHERE order_id = $1
+         LIMIT 1`,
+        [orderId]
+      );
+      metadata = this.normalizeNetSuiteOrderMetadata(orderResult.rows[0]);
+    }
+
+    if (
+      metadata.netsuiteSource !== 'NETSUITE' ||
+      !metadata.organizationId ||
+      !metadata.netsuiteSoInternalId
+    ) {
+      return;
+    }
+
+    const integration = await this.getNetSuiteClientForOrganization(metadata.organizationId);
+    if (!integration) {
+      throw new ValidationError(
+        `No enabled NetSuite integration found to disable Ready To Ship for order ${orderId}`
+      );
+    }
+
+    await integration.client.updateSalesOrderStatus(String(metadata.netsuiteSoInternalId), {
+      custbody8: false,
+    });
+
+    logger.info('Marked NetSuite sales order as not ready to ship after skip/backorder', {
+      orderId,
+      netsuiteSoInternalId: metadata.netsuiteSoInternalId,
+      netsuiteSoTranId: metadata.netsuiteSoTranId,
+      reason,
+    });
+  }
+
   private pickBestExistingFulfillment(
     fulfillments: Array<{ id?: string; tranId?: string; shipStatus?: string }>
   ): { id?: string; tranId?: string; shipStatus?: string } | null {
@@ -281,20 +357,30 @@ export class OrderService {
     );
 
     const fulfillmentLines = orderItemsResult.rows
-      .filter(
-        (item: any) =>
-          item.status !== 'SKIPPED' &&
-          (Number(item.verifiedQuantity || 0) > 0 || Number(item.pickedQuantity || 0) > 0)
-      )
-      .map((item: any) => ({
-        sku: item.sku,
-        itemName: item.name,
-        // Prefer verifiedQuantity (set during packing) over pickedQuantity
-        quantity: Math.min(
-          Number(item.verifiedQuantity || item.pickedQuantity || 0),
-          Number(item.quantity || 0)
-        ),
-      }));
+      .map((item: any) => {
+        const verifiedQuantity = Number(item.verifiedQuantity || 0);
+        const pickedQuantity = Number(item.pickedQuantity || 0);
+        const orderedQuantity = Number(item.quantity || 0);
+        const itemStatus = String(item.status || '').toUpperCase();
+
+        // Verified quantity is the strongest source of truth during packing.
+        // If we have no verification yet, only fall back to picked quantity for
+        // lines that are actually in a picked state. This prevents stale picked
+        // quantities on PENDING lines from leaking into NetSuite fulfillments.
+        const fulfillmentQuantity =
+          verifiedQuantity > 0
+            ? verifiedQuantity
+            : itemStatus !== 'SKIPPED' && itemStatus !== 'PENDING'
+              ? pickedQuantity
+              : 0;
+
+        return {
+          sku: item.sku,
+          itemName: item.name,
+          quantity: Math.min(fulfillmentQuantity, orderedQuantity),
+        };
+      })
+      .filter((item: any) => item.quantity > 0);
 
     if (fulfillmentLines.length === 0) {
       logger.info('No items to fulfill in NetSuite (all items skipped), skipping IF creation', {
@@ -332,9 +418,49 @@ export class OrderService {
       return;
     }
 
-    const fulfillmentId = await client.createItemFulfillment(order.netsuiteSoInternalId, {
-      lines: fulfillmentLines,
-    });
+    let fulfillmentId: string;
+    try {
+      fulfillmentId = await client.createItemFulfillment(order.netsuiteSoInternalId, {
+        lines: fulfillmentLines,
+      });
+    } catch (createError: any) {
+      // "no receivable fulfillment lines" means NetSuite has the lines committed to an existing IF
+      // that our pre-creation search missed (search index lag). Retry the search to find and link it.
+      const createErrorMessage = String(createError?.message || '').toLowerCase();
+      if (createErrorMessage.includes('receivable fulfillment lines')) {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          if (attempt > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
+
+          const retryFulfillments = await client.getItemFulfillmentsBySalesOrder([
+            order.netsuiteSoInternalId,
+          ]);
+          const retryFulfillment = this.pickBestExistingFulfillment(retryFulfillments);
+          if (retryFulfillment?.id) {
+            await query(
+              `UPDATE orders
+               SET netsuite_if_internal_id = $1,
+                   netsuite_if_tran_id = COALESCE($2, netsuite_if_tran_id),
+                   netsuite_last_synced_at = NOW(),
+                   updated_at = NOW()
+               WHERE order_id = $3`,
+              [retryFulfillment.id, retryFulfillment.tranId || null, orderId]
+            );
+            logger.info('Linked existing NetSuite fulfillment after "no receivable lines" error', {
+              orderId,
+              integrationId: integration.integrationId,
+              netsuiteSoTranId: order.netsuiteSoTranId,
+              netsuiteIfInternalId: retryFulfillment.id,
+              netsuiteIfTranId: retryFulfillment.tranId || null,
+              attempt: attempt + 1,
+            });
+            return;
+          }
+        }
+      }
+      throw createError;
+    }
     let fulfillmentTranId: string | null = null;
 
     try {
@@ -702,16 +828,21 @@ export class OrderService {
     logger.info('Skipping pick task', { pickTaskId, reason, pickerId, skipQuantity });
 
     // Fetch the task first so we know the full quantity
-    const taskResult = await query(
-      `SELECT * FROM pick_tasks WHERE pick_task_id = $1`,
-      [pickTaskId]
-    );
+    const taskResult = await query(`SELECT * FROM pick_tasks WHERE pick_task_id = $1`, [
+      pickTaskId,
+    ]);
 
     if (taskResult.rows.length === 0) {
       throw new NotFoundError('PickTask', pickTaskId);
     }
 
     const task = taskResult.rows[0] as any;
+    const orderId = String(task.orderId ?? task.order_id ?? '');
+
+    if (orderId) {
+      await this.markNetSuiteOrderNotReadyToShip(orderId, task, reason);
+    }
+
     const isPartialSkip =
       skipQuantity !== undefined && skipQuantity !== null && skipQuantity < task.quantity;
 
@@ -737,7 +868,10 @@ export class OrderService {
 
       if (task.order_item_id) {
         await query(
-          `UPDATE order_items SET status = 'SKIPPED' WHERE order_item_id = $1`,
+          `UPDATE order_items
+             SET status = 'SKIPPED',
+                 picked_quantity = 0
+           WHERE order_item_id = $1`,
           [task.order_item_id]
         );
       }
@@ -1528,6 +1662,8 @@ export class OrderService {
     }
 
     const item = itemResult.rows[0] as any;
+    await this.markNetSuiteOrderNotReadyToShip(orderId, order as any, reason);
+
     const totalQty: number = item.quantity;
     const isPartialSkip =
       skipQuantity !== undefined && skipQuantity !== null && skipQuantity < totalQty;

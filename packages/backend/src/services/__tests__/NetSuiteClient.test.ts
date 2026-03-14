@@ -190,7 +190,6 @@ describe('NetSuiteClient', () => {
     const soapRequest = jest.spyOn(client as any, 'soapRequest');
 
     soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
-    soapRequest.mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <getResponse>
           <platformCore:status isSuccess="true" />
           <record xsi:type="tranSales:ItemFulfillment" internalId="1609999">
@@ -201,7 +200,6 @@ describe('NetSuiteClient', () => {
               </tranSales:package>
             </tranSales:packageList>
           </record>
-        </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         </getResponse>`).mockResolvedValueOnce(`<?xml version="1.0" encoding="UTF-8"?>
         <updateResponse>
           <platformCore:status isSuccess="true" />
@@ -221,6 +219,28 @@ describe('NetSuiteClient', () => {
     expect(updateEnvelope).toContain(
       '<tranSales:packageDescr>NZ Couriers</tranSales:packageDescr>'
     );
+  });
+
+  it('updates ready to ship using a NetSuite custom body field', async () => {
+    const client = new NetSuiteClient(credentials);
+    const soapRequest = jest.spyOn(client as any, 'soapRequest')
+      .mockResolvedValue(`<?xml version="1.0" encoding="UTF-8"?>
+        <updateResponse>
+          <platformCore:status isSuccess="true" />
+        </updateResponse>`);
+
+    await client.updateSalesOrderStatus('1604613', {
+      custbody8: false,
+      memo: 'Backordered line skipped',
+    });
+
+    const [, updateEnvelope] = soapRequest.mock.calls[0];
+    expect(updateEnvelope).toContain('<tranSales:memo>Backordered line skipped</tranSales:memo>');
+    expect(updateEnvelope).toContain('<tranSales:customFieldList>');
+    expect(updateEnvelope).toContain(
+      '<platformCore:customField xsi:type="platformCore:BooleanCustomFieldRef" scriptId="custbody8">'
+    );
+    expect(updateEnvelope).toContain('<platformCore:value>false</platformCore:value>');
   });
 
   it('only marks receivable fulfillment lines for receipt', async () => {

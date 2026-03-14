@@ -692,6 +692,7 @@ export interface PickTask {
 export interface User {
   userId: string;
   entityId?: string | null; // The entity/company this user belongs to (from entity_users table)
+  defaultOrganizationId?: string | null; // Primary org for multi-tenant routing
   name: string;
   email: string;
   role: UserRole;

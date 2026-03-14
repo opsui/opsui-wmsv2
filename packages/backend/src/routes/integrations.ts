@@ -809,7 +809,11 @@ router.post(
       }
 
       // Log to sync job
-      const job = await service.createSyncJob(integration.integrationId, 'CSV_IMPORT', userId);
+      const job = await service.createSyncJob(
+        integration.integrationId,
+        'CSV_IMPORT' as any,
+        userId
+      );
 
       res.json({ jobId: job.jobId, ...result });
     } catch (error) {

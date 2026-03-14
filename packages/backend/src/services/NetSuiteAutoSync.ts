@@ -190,9 +190,7 @@ export class NetSuiteAutoSync {
         const isEnabled = i.enabled !== false;
         // Accept both CONNECTED and ACTIVE status (some integrations use ACTIVE)
         const isActive =
-          i.status === IntegrationStatus.CONNECTED ||
-          i.status === 'CONNECTED' ||
-          i.status === 'ACTIVE';
+          i.status === IntegrationStatus.CONNECTED || (i.status as string) === 'ACTIVE';
 
         if (!isEnabled) {
           logger.debug('Skipping disabled NetSuite integration', {
@@ -385,10 +383,10 @@ export class NetSuiteAutoSync {
           lastError: result.failed > 0 ? `${result.failed} orders failed to sync` : undefined,
           configuration:
             syncMode === 'full'
-              ? {
+              ? ({
                   ...config,
                   autoSync,
-                }
+                } as any)
               : undefined,
         });
       } catch (err: any) {

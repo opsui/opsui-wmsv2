@@ -853,6 +853,114 @@ export function PickingPage() {
     setFulfillmentItemBarcodeImageMap(itemBarcodeImages);
   }, [fulfillmentPreviewOrder]);
 
+  const fulfillmentSlipPrintStyles = `
+    @page { size: A4 landscape; margin: 10mm; }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: white !important;
+      color: black !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    body.fulfillment-slip-print-preview {
+      overflow: hidden !important;
+    }
+    #fulfillment-slip-actions,
+    .print-hide {
+      display: none !important;
+    }
+    #fulfillment-slip-print {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      background: white !important;
+    }
+    #fulfillment-slip-print,
+    #fulfillment-slip-print * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    #fulfillment-slip-print svg[role="img"] {
+      max-width: none !important;
+      flex: none !important;
+      width: auto !important;
+      height: auto !important;
+    }
+    .fulfillment-slip-page {
+      background: white;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(15, 76, 129, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .fulfillment-slip-page:last-child {
+      margin-bottom: 0;
+    }
+    .opsui-gradient-header {
+      background: linear-gradient(135deg, #16324f 0%, #0f4c81 50%, #0b3b63 100%);
+    }
+    .opsui-accent-bar {
+      background: linear-gradient(90deg, #3b82a6 0%, #0f4c81 25%, #16324f 50%, #0f4c81 75%, #3b82a6 100%);
+    }
+    .opsui-badge {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+    }
+    .opsui-section-card {
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      border: 1px solid #dbe5ef;
+      border-radius: 12px;
+    }
+    .opsui-table-header {
+      background: linear-gradient(135deg, #16324f 0%, #0f4c81 100%);
+    }
+    body.fulfillment-slip-print-preview .fulfillment-slip-page {
+      margin-bottom: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      break-after: page;
+      page-break-after: always;
+    }
+    body.fulfillment-slip-print-preview .fulfillment-slip-page:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+    body.fulfillment-slip-print-preview .opsui-gradient-header,
+    body.fulfillment-slip-print-preview .opsui-accent-bar,
+    body.fulfillment-slip-print-preview .opsui-table-header,
+    body.fulfillment-slip-print-preview .fulfillment-slip-print-color {
+      background-image: none !important;
+      box-shadow: none !important;
+    }
+    body.fulfillment-slip-print-preview .opsui-accent-bar {
+      background-color: #1e3a5f !important;
+    }
+    body.fulfillment-slip-print-preview .opsui-badge,
+    body.fulfillment-slip-print-preview .rounded-xl,
+    body.fulfillment-slip-print-preview .rounded-lg,
+    body.fulfillment-slip-print-preview .rounded-md,
+    body.fulfillment-slip-print-preview .rounded-full {
+      border-radius: 6px !important;
+      box-shadow: none !important;
+    }
+    body.fulfillment-slip-print-preview .bg-gradient-to-r,
+    body.fulfillment-slip-print-preview .bg-clip-text,
+    body.fulfillment-slip-print-preview .text-transparent {
+      background-image: none !important;
+      color: #0f172a !important;
+      -webkit-text-fill-color: #0f172a !important;
+    }
+    body.fulfillment-slip-print-preview .fulfillment-slip-item-image {
+      display: none !important;
+    }
+    body.fulfillment-slip-print-preview .fulfillment-slip-item-meta {
+      padding-left: 0 !important;
+    }
+  `;
+
   const handlePrintFulfillmentSlip = useCallback(async () => {
     const slipElement = document.getElementById('fulfillment-slip-print');
     if (!slipElement) {
@@ -884,6 +992,16 @@ export function PickingPage() {
       const copiedHeadMarkup = Array.from(
         document.head.querySelectorAll('link[rel="stylesheet"], style')
       )
+        .filter(node => {
+          if (node.tagName === 'LINK') {
+            return true;
+          }
+
+          const viteDevId = node.getAttribute('data-vite-dev-id');
+          return Boolean(
+            viteDevId && (viteDevId.includes('/src/') || viteDevId.includes('/node_modules/'))
+          );
+        })
         .map(node => node.outerHTML)
         .join('\n');
 
@@ -895,45 +1013,9 @@ export function PickingPage() {
             <meta charset="utf-8" />
             <title>Fulfillment Packing Slip</title>
             ${copiedHeadMarkup}
-            <style>
-              @page { size: A4 landscape; margin: 10mm; }
-              html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-                color: black !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
-              body {
-                overflow: hidden !important;
-              }
-              #fulfillment-slip-actions,
-              .print-hide {
-                display: none !important;
-              }
-              #fulfillment-slip-print {
-                width: 100% !important;
-                max-width: none !important;
-                margin: 0 !important;
-                background: white !important;
-              }
-              #fulfillment-slip-print,
-              #fulfillment-slip-print * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
-              #fulfillment-slip-print svg[role="img"] {
-                max-width: none !important;
-                flex: none !important;
-                width: auto !important;
-                height: auto !important;
-              }
-            </style>
+            <style>${fulfillmentSlipPrintStyles}</style>
           </head>
-          <body>
+          <body class="fulfillment-slip-print-preview">
             ${slipElement.outerHTML}
           </body>
         </html>
@@ -954,7 +1036,7 @@ export function PickingPage() {
     } finally {
       setIsPrintingFulfillmentSlip(false);
     }
-  }, [showToast]);
+  }, [fulfillmentSlipPrintStyles, showToast]);
 
   // Claim order on page mount if not already claimed
   // Use useLayoutEffect to ensure ref updates happen synchronously before React StrictMode's second invocation
@@ -1392,9 +1474,11 @@ export function PickingPage() {
     const currentFulfillmentStatus = fulfillmentPreviewOrder?.status || order?.status;
 
     try {
-      let effectiveStatus = currentFulfillmentStatus;
+      const latestOrderResponse = await refetch();
+      const latestOrder = latestOrderResponse.data;
+      let effectiveStatus = latestOrder?.status || currentFulfillmentStatus;
 
-      if (currentFulfillmentStatus === OrderStatus.PICKED) {
+      if (effectiveStatus === OrderStatus.PICKED) {
         try {
           await claimForPackingMutation.mutateAsync({
             orderId: completionOrderId,
@@ -1420,13 +1504,25 @@ export function PickingPage() {
       }
 
       if (effectiveStatus === OrderStatus.PICKED || effectiveStatus === OrderStatus.PACKING) {
-        await completePackingMutation.mutateAsync({
-          orderId: completionOrderId,
-          dto: {
+        try {
+          await completePackingMutation.mutateAsync({
             orderId: completionOrderId,
-            packerId: currentUser.userId,
-          },
-        });
+            dto: {
+              orderId: completionOrderId,
+              packerId: currentUser.userId,
+            },
+          });
+        } catch (error) {
+          const refreshedOrderResponse = await refetch();
+          const refreshedOrder = refreshedOrderResponse.data;
+
+          if (
+            refreshedOrder?.status !== OrderStatus.PACKED &&
+            refreshedOrder?.status !== OrderStatus.SHIPPED
+          ) {
+            throw error;
+          }
+        }
       }
 
       if (fulfillmentPreviewStorageKey) {
@@ -1449,6 +1545,7 @@ export function PickingPage() {
     order?.status,
     orderId,
     pickingQueuePath,
+    refetch,
     showToast,
   ]);
 
@@ -2035,7 +2132,7 @@ export function PickingPage() {
                           <img
                             src={fulfillmentSlipLogoUrl}
                             alt="Arrowhead Alarm Products"
-                            className="w-36 h-auto"
+                            className="fulfillment-slip-brand-logo w-36 h-auto"
                           />
                           <div className="pt-1 text-sm leading-relaxed">
                             <p className="font-bold text-gray-900 print:text-black">
@@ -2300,7 +2397,7 @@ export function PickingPage() {
                               } print:bg-white`}
                             >
                               <div className="col-span-4 flex items-start gap-3">
-                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+                                <div className="fulfillment-slip-item-image h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
                                   {itemImage ? (
                                     <img
                                       src={itemImage}
@@ -2313,7 +2410,7 @@ export function PickingPage() {
                                     </div>
                                   )}
                                 </div>
-                                <div className="min-w-0">
+                                <div className="fulfillment-slip-item-meta min-w-0">
                                   <p className="font-mono font-bold text-slate-900 print:text-black">
                                     {item.sku}
                                   </p>
@@ -2528,7 +2625,7 @@ export function PickingPage() {
                               <img
                                 src={fulfillmentSlipLogoUrl}
                                 alt="Arrowhead Alarm Products"
-                                className="w-36 h-auto"
+                                className="fulfillment-slip-brand-logo w-36 h-auto"
                               />
                               <div className="pt-1 text-sm leading-relaxed">
                                 <p className="font-semibold text-gray-900 print:text-black">
@@ -2597,7 +2694,7 @@ export function PickingPage() {
                                   } print:bg-white`}
                                 >
                                   <div className="col-span-4 flex items-start gap-3">
-                                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+                                    <div className="fulfillment-slip-item-image h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
                                       {itemImage ? (
                                         <img
                                           src={itemImage}
@@ -2610,7 +2707,7 @@ export function PickingPage() {
                                         </div>
                                       )}
                                     </div>
-                                    <div className="min-w-0">
+                                    <div className="fulfillment-slip-item-meta min-w-0">
                                       <p className="font-mono font-bold text-slate-900 print:text-black">
                                         {item.sku}
                                       </p>
@@ -3802,7 +3899,10 @@ export function PickingPage() {
                   <div className="flex items-center justify-between">
                     <h2 className="picking-title text-lg">Skip Item</h2>
                     <button
-                      onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}
+                      onClick={() => {
+                        setShowSkipModal(false);
+                        setSkipQuantity(1);
+                      }}
                       className="text-white hover:text-warning-200 transition-colors"
                     >
                       <XMarkIcon className="h-6 w-6" />
@@ -3862,14 +3962,20 @@ export function PickingPage() {
                       >
                         −
                       </button>
-                      <span className="text-white font-bold text-lg w-12 text-center">{skipQuantity}</span>
+                      <span className="text-white font-bold text-lg w-12 text-center">
+                        {skipQuantity}
+                      </span>
                       <button
-                        onClick={() => setSkipQuantity(q => Math.min(order.items[skipItemIndex].quantity, q + 1))}
+                        onClick={() =>
+                          setSkipQuantity(q => Math.min(order.items[skipItemIndex].quantity, q + 1))
+                        }
                         className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center hover:bg-white/[0.15] transition-colors"
                       >
                         +
                       </button>
-                      <span className="text-sm text-gray-400">of {order.items[skipItemIndex].quantity} units</span>
+                      <span className="text-sm text-gray-400">
+                        of {order.items[skipItemIndex].quantity} units
+                      </span>
                     </div>
                   </div>
 
@@ -3895,7 +4001,13 @@ export function PickingPage() {
                 </div>
 
                 <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                  <Button variant="ghost" onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setShowSkipModal(false);
+                      setSkipQuantity(1);
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button

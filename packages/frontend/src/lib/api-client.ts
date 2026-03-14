@@ -14,6 +14,10 @@ import { useOrganizationStore } from '@/stores/organizationStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
+type APIRequestConfig = InternalAxiosRequestConfig & {
+  suppressErrorStatuses?: number[];
+};
+
 // ============================================================================
 // CREATE AXIOS INSTANCE
 // ============================================================================
@@ -63,6 +67,13 @@ apiClient.interceptors.request.use(
       } catch (e) {
         // Ignore storage parsing errors
       }
+    }
+
+    // Final fallback: use the authenticated user's default organization when
+    // the dedicated organization store is empty or stale.
+    if (!currentOrganizationId) {
+      currentOrganizationId =
+        (user as { defaultOrganizationId?: string | null } | null)?.defaultOrganizationId || null;
     }
 
     if (token && config.headers) {
@@ -121,7 +132,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<unknown>) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as APIRequestConfig & { _retry?: boolean };
 
     // Handle 401 Unauthorized - try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -210,8 +221,12 @@ apiClient.interceptors.response.use(
           !!(window as any).__PLAYWRIGHT_TEST__);
 
       const isTest401 = isAutomatedTest && error.response?.status === 401;
+      const isSuppressedStatus = Boolean(
+        error.response?.status &&
+        originalRequest.suppressErrorStatuses?.includes(error.response.status)
+      );
 
-      if (!isOptional404 && !isTest401) {
+      if (!isOptional404 && !isTest401 && !isSuppressedStatus) {
         console.error('[api-client] API Error:', {
           status: error.response?.status,
           statusText: error.response?.statusText,

@@ -1011,18 +1011,35 @@ export class NetSuiteClient {
    * Update a sales order status in NetSuite (e.g., mark as fulfilled)
    */
   async updateSalesOrderStatus(id: string, updates: Record<string, unknown>): Promise<void> {
-    // Build field updates
-    const fields = Object.entries(updates)
-      .map(
-        ([key, value]) =>
-          `<tranSales:${this.escapeXml(key)}>${this.escapeXml(String(value))}</tranSales:${this.escapeXml(key)}>`
-      )
-      .join('\n');
+    const standardFields: string[] = [];
+    const customFields: string[] = [];
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (/^custbody/i.test(key)) {
+        const customFieldType =
+          typeof value === 'boolean' ? 'BooleanCustomFieldRef' : 'StringCustomFieldRef';
+        customFields.push(
+          [
+            `      <platformCore:customField xsi:type="platformCore:${customFieldType}" scriptId="${this.escapeXml(key)}">`,
+            `        <platformCore:value>${this.escapeXml(String(value))}</platformCore:value>`,
+            '      </platformCore:customField>',
+          ].join('\n')
+        );
+        continue;
+      }
+
+      standardFields.push(
+        `    <tranSales:${this.escapeXml(key)}>${this.escapeXml(String(value))}</tranSales:${this.escapeXml(key)}>`
+      );
+    }
 
     const body = [
       '<tns:update>',
       `  <tns:record xsi:type="tranSales:SalesOrder" internalId="${this.escapeXml(id)}">`,
-      `    ${fields}`,
+      ...standardFields,
+      ...(customFields.length > 0
+        ? ['    <tranSales:customFieldList>', ...customFields, '    </tranSales:customFieldList>']
+        : []),
       '  </tns:record>',
       '</tns:update>',
     ].join('\n');
@@ -1324,6 +1341,7 @@ export class NetSuiteClient {
   ): { recordXml: string; receivableLineCount: number } {
     let receivableLineCount = 0;
     const lineSelections = this.parseFulfillmentLineSelections(fulfillmentData);
+    const normalize = (value: string | undefined): string => (value || '').trim().toLowerCase();
 
     const recordXml = initializedRecord.replace(
       /<tranSales:item>([\s\S]*?<tranSales:quantityRemaining>[\s\S]*?<\/tranSales:quantityRemaining>[\s\S]*?)<\/tranSales:item>/g,
@@ -1332,15 +1350,18 @@ export class NetSuiteClient {
         const quantityRemaining = Number(quantityRemainingRaw);
         const orderLine = this.extractTag(itemBody, 'orderLine') || '';
         const itemInternalId = this.extractAttribute(itemBody, 'item', 'internalId') || '';
-        const itemName =
-          this.extractTag(itemBody, 'name') || this.extractTag(itemBody, 'description') || '';
+        const itemSkuName =
+          this.extractTag(itemBody, 'itemName') || this.extractTag(itemBody, 'name') || '';
+        const itemDescription = this.extractTag(itemBody, 'description') || '';
+        const candidateNames = new Set(
+          [normalize(itemSkuName), normalize(itemDescription)].filter(Boolean)
+        );
         const selectedLine = lineSelections.find(
           line =>
             (line.orderLine && line.orderLine === orderLine) ||
             (line.itemId && line.itemId === itemInternalId) ||
-            (line.itemName &&
-              itemName &&
-              line.itemName.trim().toLowerCase() === itemName.trim().toLowerCase())
+            (line.itemName && candidateNames.has(normalize(line.itemName))) ||
+            (line.sku && candidateNames.has(normalize(line.sku)))
         );
         const shouldReceive = selectedLine
           ? Number.isFinite(quantityRemaining) && quantityRemaining > 0 && selectedLine.quantity > 0
@@ -1401,14 +1422,19 @@ export class NetSuiteClient {
     return { recordXml, receivableLineCount };
   }
 
-  private parseFulfillmentLineSelections(
-    fulfillmentData: Record<string, unknown>
-  ): Array<{ orderLine?: string; itemId?: string; itemName?: string; quantity: number }> {
+  private parseFulfillmentLineSelections(fulfillmentData: Record<string, unknown>): Array<{
+    orderLine?: string;
+    itemId?: string;
+    itemName?: string;
+    sku?: string;
+    quantity: number;
+  }> {
     const lines = Array.isArray(fulfillmentData.lines) ? fulfillmentData.lines : [];
     const parsed: Array<{
       orderLine?: string;
       itemId?: string;
       itemName?: string;
+      sku?: string;
       quantity: number;
     }> = [];
 
@@ -1423,18 +1449,17 @@ export class NetSuiteClient {
           : undefined;
       const itemId =
         candidate.itemId != null && candidate.itemId !== '' ? String(candidate.itemId) : undefined;
+      const sku = candidate.sku != null && candidate.sku !== '' ? String(candidate.sku) : undefined;
       const itemName =
         candidate.itemName != null && candidate.itemName !== ''
           ? String(candidate.itemName)
-          : candidate.sku != null && candidate.sku !== ''
-            ? String(candidate.sku)
-            : undefined;
+          : undefined;
 
-      if ((!orderLine && !itemId && !itemName) || !Number.isFinite(quantity)) {
+      if ((!orderLine && !itemId && !itemName && !sku) || !Number.isFinite(quantity)) {
         continue;
       }
 
-      parsed.push({ orderLine, itemId, itemName, quantity });
+      parsed.push({ orderLine, itemId, itemName, sku, quantity });
     }
 
     return parsed;

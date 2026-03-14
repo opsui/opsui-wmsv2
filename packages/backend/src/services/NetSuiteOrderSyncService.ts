@@ -469,6 +469,7 @@ export class NetSuiteOrderSyncService {
 
     const syncStartTime = _options.syncStartTime || new Date();
     const syncMode = _options.mode || 'full';
+    const lastSyncAt = _options.lastSyncAt;
 
     const result: NetSuiteSyncResult = {
       totalProcessed: 0,
@@ -2060,9 +2061,8 @@ export class NetSuiteOrderSyncService {
       return { created: false, updated: false, skipped: true, reason: 'No line items', tranId };
     }
 
-    const resolvedCustomerName = parentSalesOrder
-      ? parentSalesOrder.entity?.refName || initialCustomerName
-      : initialCustomerName;
+    const resolvedCustomerName =
+      (parentSalesOrder as NetSuiteSalesOrder | null)?.entity?.refName || initialCustomerName;
     if (isExcludedQueueCustomerName(resolvedCustomerName)) {
       logger.info('Fulfillment skipped before WMS order creation - excluded customer', {
         tranId,
