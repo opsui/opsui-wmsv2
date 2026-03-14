@@ -30,7 +30,13 @@ import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
-import { useCompleteOrder, useLogException, useOrder, usePickItem } from '@/services/api';
+import {
+  skuApi,
+  useCompleteOrder,
+  useLogException,
+  useOrder,
+  usePickItem,
+} from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
@@ -153,8 +159,152 @@ const pickingSurfacePanelClass =
 const pickingInputClass =
   'w-full px-4 py-3 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500';
 
-const fulfillmentSlipHeaderColor = '#374151';
-const fulfillmentSlipAccentColor = '#1f2937';
+// OpsUI Purple Theme Colors for Fulfillment Slip
+const fulfillmentSlipPrimaryColor = '#7c3aed'; // Purple 600
+const fulfillmentSlipSecondaryColor = '#a855f7'; // Purple 500
+const fulfillmentSlipAccentColor = '#6d28d9'; // Purple 700
+const fulfillmentSlipHeaderColor = '#1e1b4b'; // Indigo 950
+const code39Patterns: Record<string, string> = {
+  '0': 'nnnwwnwnn',
+  '1': 'wnnwnnnnw',
+  '2': 'nnwwnnnnw',
+  '3': 'wnwwnnnnn',
+  '4': 'nnnwwnnnw',
+  '5': 'wnnwwnnnn',
+  '6': 'nnwwwnnnn',
+  '7': 'nnnwnnwnw',
+  '8': 'wnnwnnwnn',
+  '9': 'nnwwnnwnn',
+  A: 'wnnnnwnnw',
+  B: 'nnwnnwnnw',
+  C: 'wnwnnwnnn',
+  D: 'nnnnwwnnw',
+  E: 'wnnnwwnnn',
+  F: 'nnwnwwnnn',
+  G: 'nnnnnwwnw',
+  H: 'wnnnnwwnn',
+  I: 'nnwnnwwnn',
+  J: 'nnnnwwwnn',
+  K: 'wnnnnnnww',
+  L: 'nnwnnnnww',
+  M: 'wnwnnnnwn',
+  N: 'nnnnwnnww',
+  O: 'wnnnwnnwn',
+  P: 'nnwnwnnwn',
+  Q: 'nnnnnnwww',
+  R: 'wnnnnnwwn',
+  S: 'nnwnnnwwn',
+  T: 'nnnnwnwwn',
+  U: 'wwnnnnnnw',
+  V: 'nwwnnnnnw',
+  W: 'wwwnnnnnn',
+  X: 'nwnnwnnnw',
+  Y: 'wwnnwnnnn',
+  Z: 'nwwnwnnnn',
+  '-': 'nwnnnnwnw',
+  '.': 'wwnnnnwnn',
+  ' ': 'nwwnnnwnn',
+  '$': 'nwnwnwnnn',
+  '/': 'nwnwnnnwn',
+  '+': 'nwnnnwnwn',
+  '%': 'nnnwnwnwn',
+  '*': 'nwnnwnwnn',
+};
+
+const buildCode39Barcode = (value?: string | null) => {
+  const normalizedValue = value?.trim().toUpperCase() || '';
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const encodedValue = `*${normalizedValue}*`;
+  const segments: Array<{ isBar: boolean; width: number }> = [];
+
+  for (const [charIndex, char] of Array.from(encodedValue).entries()) {
+    const pattern = code39Patterns[char];
+    if (!pattern) {
+      return null;
+    }
+
+    for (const [elementIndex, token] of Array.from(pattern).entries()) {
+      segments.push({
+        isBar: elementIndex % 2 === 0,
+        width: token === 'w' ? 3 : 1,
+      });
+    }
+
+    if (charIndex < encodedValue.length - 1) {
+      segments.push({ isBar: false, width: 1 });
+    }
+  }
+
+  const quietZone = 10;
+  const totalWidth = segments.reduce((sum, segment) => sum + segment.width, quietZone * 2);
+
+  return {
+    displayValue: normalizedValue,
+    quietZone,
+    segments,
+    totalWidth,
+  };
+};
+
+const extractNetSuiteAccountNumber = (customerName?: string | null, customerId?: string | null) => {
+  const trimmedCustomerName = customerName?.trim() || '';
+  const accountMatch = trimmedCustomerName.match(/^(\d{3,})\b/);
+
+  if (accountMatch) {
+    return {
+      accountNumber: accountMatch[1],
+      caption: 'NetSuite customer number',
+    };
+  }
+
+  return {
+    accountNumber: customerId?.trim() || '-',
+    caption: 'NetSuite internal customer ID',
+  };
+};
+
+const chunkFulfillmentSlipItems = <T,>(
+  items: T[],
+  firstPageSize: number,
+  continuationPageSize: number
+): T[][] => {
+  if (items.length === 0) {
+    return [[]];
+  }
+
+  const pages: T[][] = [];
+  let cursor = 0;
+
+  pages.push(items.slice(cursor, cursor + firstPageSize));
+  cursor += firstPageSize;
+
+  while (cursor < items.length) {
+    pages.push(items.slice(cursor, cursor + continuationPageSize));
+    cursor += continuationPageSize;
+  }
+
+  return pages;
+};
+
+const renderBarcodeDimensions = (
+  totalWidth: number,
+  barHeight: number,
+  moduleWidthMm: number,
+  heightMm: number
+): { widthPx: number; heightPx: number; widthMm: string; heightMm: string } => {
+  const widthMmValue = Number((totalWidth * moduleWidthMm).toFixed(2));
+
+  return {
+    widthPx: Math.round(widthMmValue * 3.78),
+    heightPx: Math.round(heightMm * 3.78),
+    widthMm: `${widthMmValue}mm`,
+    heightMm: `${heightMm}mm`,
+  };
+};
+
 const formatNetSuiteDisplayText = (value?: string | null): string => {
   if (!value) {
     return '';
@@ -218,6 +368,7 @@ export function PickingPage() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [fulfillmentItemImageMap, setFulfillmentItemImageMap] = useState<Record<string, string>>({});
 
   // Exception modal state
   const [showExceptionModal, setShowExceptionModal] = useState(false);
@@ -434,6 +585,61 @@ export function PickingPage() {
     sessionStorage.removeItem(fulfillmentPreviewStorageKey);
   }, [fulfillmentPreviewStorageKey, orderId]);
 
+  useEffect(() => {
+    if (!fulfillmentPreviewOrder?.items?.length) {
+      setFulfillmentItemImageMap({});
+      return;
+    }
+
+    const previewItems = fulfillmentPreviewOrder.items as Array<{
+      sku?: string;
+      image?: string | null;
+    }>;
+    const missingSkus = Array.from(
+      new Set(
+        previewItems
+          .filter(item => item?.sku && !item.image)
+          .map(item => String(item.sku))
+      )
+    );
+
+    const seededImages = previewItems.reduce<Record<string, string>>((acc, item) => {
+      if (item?.sku && item.image) {
+        acc[String(item.sku)] = item.image;
+      }
+      return acc;
+    }, {});
+
+    setFulfillmentItemImageMap(current => ({ ...seededImages, ...current }));
+
+    if (missingSkus.length === 0) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void Promise.allSettled(missingSkus.map(sku => skuApi.getWithInventory(sku))).then(results => {
+      if (isCancelled) {
+        return;
+      }
+
+      const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
+        if (result.status === 'fulfilled' && result.value?.image) {
+          acc[missingSkus[index]] = result.value.image;
+        }
+        return acc;
+      }, {});
+
+      if (Object.keys(fetchedImages).length > 0) {
+        setFulfillmentItemImageMap(current => ({ ...current, ...fetchedImages }));
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [fulfillmentPreviewOrder]);
+
   const handlePrintFulfillmentSlip = useCallback(async () => {
     const slipElement = document.getElementById('fulfillment-slip-print');
     if (!slipElement) {
@@ -503,6 +709,12 @@ export function PickingPage() {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 color-adjust: exact !important;
+              }
+              #fulfillment-slip-print svg[role="img"] {
+                max-width: none !important;
+                flex: none !important;
+                width: auto !important;
+                height: auto !important;
               }
             </style>
           </head>
@@ -1337,16 +1549,88 @@ export function PickingPage() {
     const shippingMethodLabel = formatNetSuiteDisplayText(
       fulfillmentPreviewOrder.shippingMethod || fulfillmentPreviewOrder.carrier || 'Not specified'
     );
-    const netsuiteCustomerId = fulfillmentPreviewOrder.customerId || '-';
-    const pageLabel = 'Page 1 of 1';
+    const accountNumberDetails = extractNetSuiteAccountNumber(
+      fulfillmentPreviewOrder.customerName,
+      fulfillmentPreviewOrder.customerId
+    );
+    const salesOrderBarcode = buildCode39Barcode(
+      fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId
+    );
+    const salesOrderBarcodeSize = salesOrderBarcode
+      ? renderBarcodeDimensions(salesOrderBarcode.totalWidth, 38, 0.33, 12.5)
+      : null;
+    const pickedByLabel =
+      fulfillmentPreviewOrder.pickerName ||
+      (fulfillmentPreviewOrder.pickerId === currentUser.userId ? currentUser.name : null) ||
+      currentUser.name ||
+      fulfillmentPreviewOrder.pickerId ||
+      'Unknown';
+    const allFulfillmentItems = fulfillmentPreviewOrder.items || [];
+    const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 2, 4);
+    const totalSlipPages = slipPages.length;
 
     return (
       <div className="min-h-screen">
         <style>{`
+          .fulfillment-slip-page {
+            background: white;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(124, 58, 237, 0.15);
+            border-radius: 16px;
+            overflow: hidden;
+          }
+
+          .fulfillment-slip-page:last-child {
+            margin-bottom: 0;
+          }
+
+          .opsui-gradient-header {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
+          }
+
+          .opsui-accent-bar {
+            background: linear-gradient(90deg, #a855f7 0%, #7c3aed 25%, #6d28d9 50%, #7c3aed 75%, #a855f7 100%);
+          }
+
+          .opsui-badge {
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+            border: 1px solid #ddd6fe;
+          }
+
+          .opsui-section-card {
+            background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);
+            border: 1px solid #ede9fe;
+            border-radius: 12px;
+          }
+
+          .opsui-table-header {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+          }
+
           @media print {
             @page { size: A4 landscape; margin: 10mm; }
             html, body {
               background: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .fulfillment-slip-page {
+              margin-bottom: 0 !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              break-after: page;
+              page-break-after: always;
+            }
+
+            .fulfillment-slip-page:last-child {
+              break-after: auto;
+              page-break-after: auto;
+            }
+
+            .opsui-gradient-header,
+            .opsui-accent-bar,
+            .opsui-table-header {
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
@@ -1367,34 +1651,33 @@ export function PickingPage() {
 
             <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
               <div id="fulfillment-slip-print" className="bg-white text-slate-900">
+                <section className="fulfillment-slip-page">
                 {/* Header Section */}
-                <div className="relative border-b-2 border-slate-200">
-                  {/* Accent stripe */}
-                  <div
-                    className="h-2 fulfillment-slip-print-color"
-                    style={{
-                      background: `linear-gradient(to right, ${fulfillmentSlipAccentColor}, ${fulfillmentSlipHeaderColor}, ${fulfillmentSlipAccentColor})`,
-                    }}
-                  />
+                <div className="relative">
+                  {/* Purple accent stripe */}
+                  <div className="opsui-accent-bar h-2" />
 
                   <div className="px-8 py-6">
                     <div className="flex items-start justify-between gap-8">
                       {/* Logo & Company */}
                       <div className="flex items-start gap-5">
-                        <img
-                          src={fulfillmentSlipLogoUrl}
-                          alt="Arrowhead Alarm Products"
-                          className="w-36 h-auto"
-                        />
+                        <div className="relative">
+                          <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl blur-sm" />
+                          <img
+                            src={fulfillmentSlipLogoUrl}
+                            alt="Arrowhead Alarm Products"
+                            className="relative w-36 h-auto"
+                          />
+                        </div>
                         <div className="pt-1 text-sm leading-relaxed">
-                          <p className="font-semibold text-gray-900 print:text-black">
+                          <p className="font-bold text-gray-900 print:text-black">
                             Arrowhead Alarm Products
                           </p>
-                          <p className="text-gray-800 print:text-black">1A Emirali Road</p>
-                          <p className="text-gray-800 print:text-black">
+                          <p className="text-gray-600 print:text-black">1A Emirali Road</p>
+                          <p className="text-gray-600 print:text-black">
                             Silverdale 0932, Auckland
                           </p>
-                          <p className="text-gray-800 print:text-black">New Zealand</p>
+                          <p className="text-gray-600 print:text-black">New Zealand</p>
                         </div>
                       </div>
 
@@ -1402,25 +1685,26 @@ export function PickingPage() {
                       <div className="ml-auto min-w-[20rem] max-w-[24rem]">
                         <div className="flex items-start justify-between gap-6">
                           <div className="text-center">
-                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider print:bg-purple-50 print:text-purple-800">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 print:bg-purple-600" />
                               Fulfillment Document
-                            </p>
-                            <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
+                            </div>
+                            <h1 className="mt-2 text-4xl font-black tracking-tight bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 bg-clip-text text-transparent print:text-purple-900">
                               Packing Slip
                             </h1>
                             <div className="mt-3 flex justify-center">
-                              <div className="inline-flex items-center gap-2 bg-slate-100 rounded-lg px-4 py-2 print:bg-white print:border print:border-gray-400">
-                                <CalendarDaysIcon className="h-4 w-4 text-slate-600 print:text-black" />
-                                <span className="text-sm font-medium text-slate-800 print:text-black">
+                              <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-purple-50 print:border-purple-200">
+                                <CalendarDaysIcon className="h-4 w-4 text-purple-600 print:text-purple-700" />
+                                <span className="text-sm font-semibold text-purple-800 print:text-purple-900">
                                   {orderDate}
                                 </span>
                               </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 print:text-black">
-                              {pageLabel}
-                            </p>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+                              {`Page 1 of ${totalSlipPages}`}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1460,14 +1744,63 @@ export function PickingPage() {
                     </div>
                     <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                        NetSuite Customer ID
+                        Account #
                       </p>
                       <p className="font-mono font-semibold text-slate-900 print:text-black">
-                        {netsuiteCustomerId}
+                        {accountNumberDetails.accountNumber}
+                      </p>
+                      <p className="mt-1 text-[10px] text-slate-500 print:text-black">
+                        {accountNumberDetails.caption}
                       </p>
                     </div>
                   </div>
                 </div>
+
+                {salesOrderBarcode && (
+                  <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
+                    <div className="flex justify-center">
+                      <div className="rounded-lg border border-slate-200 bg-white px-5 py-3 print:border-gray-400">
+                        <svg
+                          aria-label={`Barcode ${salesOrderBarcode.displayValue}`}
+                          className="block"
+                          width={salesOrderBarcodeSize?.widthMm}
+                          height={salesOrderBarcodeSize?.heightMm}
+                          style={{
+                            width: salesOrderBarcodeSize?.widthMm,
+                            height: salesOrderBarcodeSize?.heightMm,
+                          }}
+                          viewBox={`0 0 ${salesOrderBarcode.totalWidth} 38`}
+                          preserveAspectRatio="xMidYMid meet"
+                          role="img"
+                          shapeRendering="crispEdges"
+                        >
+                          {(() => {
+                            let currentX = salesOrderBarcode.quietZone;
+
+                            return salesOrderBarcode.segments.map((segment, index) => {
+                              const rect = segment.isBar ? (
+                                <rect
+                                  key={`barcode-${index}`}
+                                  x={currentX}
+                                  y={0}
+                                  width={segment.width}
+                                  height={38}
+                                  fill="#111827"
+                                />
+                              ) : null;
+
+                              currentX += segment.width;
+                              return rect;
+                            });
+                          })()}
+                        </svg>
+                        <p className="mt-1 text-center font-mono text-lg font-semibold tracking-tight text-slate-900 print:text-black">
+                          {salesOrderBarcode.displayValue}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Addresses Section */}
                 <div className="px-8 py-6">
@@ -1566,35 +1899,109 @@ export function PickingPage() {
                         className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
                         style={{ color: '#ffffff' }}
                       >
-                        <span className="col-span-3">Item / SKU</span>
+                        <span className="col-span-4">Item / SKU</span>
                         <span className="col-span-5">Description</span>
                         <span className="col-span-1 text-center">Ord</span>
                         <span className="col-span-1 text-center">B/O</span>
-                        <span className="col-span-2 text-center">Shipped</span>
+                        <span className="col-span-1 text-center">Shipped</span>
                       </div>
                     </div>
 
                     {/* Table Body */}
                     <div className="divide-y divide-slate-200 print:divide-gray-300">
-                      {(fulfillmentPreviewOrder.items || []).map((item: any, idx: number) => (
+                      {slipPages[0].map((item: any, idx: number) => {
+                        const itemImage = item.image || fulfillmentItemImageMap[item.sku] || null;
+
+                        return (
                         <div
                           key={item.orderItemId}
                           className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
                             idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
                           } print:bg-white`}
                         >
-                          <div className="col-span-3">
-                            <p className="font-mono font-bold text-slate-900 print:text-black">
-                              {item.sku}
-                            </p>
-                            <p className="text-xs text-slate-600 mt-0.5 print:text-black">
-                              Bin: {formatBinLocation(item.binLocation)}
-                            </p>
+                          <div className="col-span-4 flex items-start gap-3">
+                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+                              {itemImage ? (
+                                <img
+                                  src={itemImage}
+                                  alt={item.name || item.sku}
+                                  className="h-full w-full object-contain"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 print:text-gray-500">
+                                  No Image
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-mono font-bold text-slate-900 print:text-black">
+                                {item.sku}
+                              </p>
+                              <p className="mt-0.5 text-xs text-slate-600 print:text-black">
+                                Bin: {formatBinLocation(item.binLocation)}
+                              </p>
+                            </div>
                           </div>
                           <div className="col-span-5">
                             <p className="text-slate-800 font-medium print:text-black">
                               {item.name}
                             </p>
+                            {item.barcode && (
+                              <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
+                                {(() => {
+                                  const itemBarcode = buildCode39Barcode(item.barcode);
+                                  if (!itemBarcode) {
+                                    return (
+                                      <p className="font-mono text-xs text-slate-600 print:text-black">
+                                        Barcode: {item.barcode}
+                                      </p>
+                                    );
+                                  }
+
+                                  return (
+                                    <>
+                                  <svg
+                                        aria-label={`Item barcode ${itemBarcode.displayValue}`}
+                                        className="block"
+                                        width={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm}
+                                        height={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm}
+                                        style={{
+                                          width: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm,
+                                          height: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm,
+                                        }}
+                                        viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
+                                        preserveAspectRatio="xMidYMid meet"
+                                        role="img"
+                                        shapeRendering="crispEdges"
+                                      >
+                                        {(() => {
+                                          let currentX = itemBarcode.quietZone;
+
+                                          return itemBarcode.segments.map((segment, index) => {
+                                            const rect = segment.isBar ? (
+                                              <rect
+                                                key={`item-barcode-${item.orderItemId}-${index}`}
+                                                x={currentX}
+                                                y={0}
+                                                width={segment.width}
+                                                height={32}
+                                                fill="#111827"
+                                              />
+                                            ) : null;
+
+                                            currentX += segment.width;
+                                            return rect;
+                                          });
+                                        })()}
+                                      </svg>
+                                      <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
+                                        {itemBarcode.displayValue}
+                                      </p>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            )}
                           </div>
                           <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
                             {item.quantity}
@@ -1602,7 +2009,7 @@ export function PickingPage() {
                           <div className="col-span-1 text-center text-slate-600 print:text-black">
                             0
                           </div>
-                          <div className="col-span-2 text-center">
+                          <div className="col-span-1 text-center">
                             <span
                               className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
                               style={{ backgroundColor: '#d1d5db', color: '#111827' }}
@@ -1611,34 +2018,38 @@ export function PickingPage() {
                             </span>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
-                    {/* Table Footer */}
-                    <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                          <ClipboardDocumentListIcon className="h-4 w-4" />
-                          <span>Total Items:</span>
-                          <span className="font-bold text-slate-900 print:text-black">
-                            {(fulfillmentPreviewOrder.items || []).reduce(
-                              (sum: number, item: any) => sum + item.pickedQuantity,
-                              0
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                          <span>SKUs:</span>
-                          <span className="font-bold text-slate-900 print:text-black">
-                            {(fulfillmentPreviewOrder.items || []).length}
-                          </span>
+                    {totalSlipPages === 1 && (
+                      <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2 text-slate-800 print:text-black">
+                            <ClipboardDocumentListIcon className="h-4 w-4" />
+                            <span>Total Items:</span>
+                            <span className="font-bold text-slate-900 print:text-black">
+                              {allFulfillmentItems.reduce(
+                                (sum: number, item: any) => sum + item.pickedQuantity,
+                                0
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-800 print:text-black">
+                            <span>SKUs:</span>
+                            <span className="font-bold text-slate-900 print:text-black">
+                              {allFulfillmentItems.length}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
+                </section>
 
                 {/* Footer Section */}
+                {totalSlipPages === 1 && (
                 <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
                   <div className="flex items-end justify-between">
                     {/* Picked By */}
@@ -1647,7 +2058,7 @@ export function PickingPage() {
                         Picked By
                       </p>
                       <p className="font-semibold text-slate-900 print:text-black">
-                        {fulfillmentPreviewOrder.pickerId || currentUser.userId || 'Unknown'}
+                        {pickedByLabel}
                       </p>
                       <p className="text-slate-700 text-xs mt-1 print:text-black">
                         {new Date().toLocaleString('en-NZ', {
@@ -1669,23 +2080,281 @@ export function PickingPage() {
                         </p>
                         <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                          Verified By
-                        </p>
-                        <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
-                      </div>
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Document Footer */}
+                {totalSlipPages === 1 && (
                 <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
                   <p className="text-center text-xs text-slate-600 print:text-black">
                     This document was generated electronically from OpsUI Warehouse Management
                     System
                   </p>
                 </div>
+                )}
+
+                {slipPages.slice(1).map((pageItems: any[], continuationIndex: number) => {
+                  const pageNumber = continuationIndex + 2;
+                  const isLastPage = pageNumber === totalSlipPages;
+
+                  return (
+                    <section key={`continuation-page-${pageNumber}`} className="fulfillment-slip-page">
+                      <div className="relative border-b-2 border-slate-200">
+                        <div
+                          className="h-2 fulfillment-slip-print-color"
+                          style={{
+                            background: `linear-gradient(to right, ${fulfillmentSlipAccentColor}, ${fulfillmentSlipHeaderColor}, ${fulfillmentSlipAccentColor})`,
+                          }}
+                        />
+
+                        <div className="px-8 py-6">
+                          <div className="flex items-start justify-between gap-8">
+                            <div className="flex items-start gap-5">
+                              <img
+                                src={fulfillmentSlipLogoUrl}
+                                alt="Arrowhead Alarm Products"
+                                className="w-36 h-auto"
+                              />
+                              <div className="pt-1 text-sm leading-relaxed">
+                                <p className="font-semibold text-gray-900 print:text-black">
+                                  Arrowhead Alarm Products
+                                </p>
+                                <p className="text-gray-800 print:text-black">1A Emirali Road</p>
+                                <p className="text-gray-800 print:text-black">
+                                  Silverdale 0932, Auckland
+                                </p>
+                                <p className="text-gray-800 print:text-black">New Zealand</p>
+                              </div>
+                            </div>
+
+                            <div className="ml-auto min-w-[20rem] max-w-[24rem]">
+                              <div className="flex items-start justify-between gap-6">
+                                <div className="text-center">
+                                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
+                                    Fulfillment Document
+                                  </p>
+                                  <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
+                                    Packing Slip
+                                  </h1>
+                                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 print:text-black">
+                                    Continued
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 print:text-black">
+                                    {`Page ${pageNumber} of ${totalSlipPages}`}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-8 py-6">
+                        <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none print:border-gray-400">
+                          <div
+                            className="fulfillment-slip-print-color"
+                            style={{ backgroundColor: fulfillmentSlipHeaderColor }}
+                          >
+                            <div
+                              className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
+                              style={{ color: '#ffffff' }}
+                            >
+                              <span className="col-span-4">Item / SKU</span>
+                              <span className="col-span-5">Description</span>
+                              <span className="col-span-1 text-center">Ord</span>
+                              <span className="col-span-1 text-center">B/O</span>
+                              <span className="col-span-1 text-center">Shipped</span>
+                            </div>
+                          </div>
+
+                          <div className="divide-y divide-slate-200 print:divide-gray-300">
+                            {pageItems.map((item: any, idx: number) => {
+                              const itemImage = item.image || fulfillmentItemImageMap[item.sku] || null;
+
+                              return (
+                                <div
+                                  key={`${item.orderItemId}-continuation-${pageNumber}`}
+                                  className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
+                                    idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                                  } print:bg-white`}
+                                >
+                                  <div className="col-span-4 flex items-start gap-3">
+                                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+                                      {itemImage ? (
+                                        <img
+                                          src={itemImage}
+                                          alt={item.name || item.sku}
+                                          className="h-full w-full object-contain"
+                                        />
+                                      ) : (
+                                        <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 print:text-gray-500">
+                                          No Image
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-mono font-bold text-slate-900 print:text-black">
+                                        {item.sku}
+                                      </p>
+                                      <p className="mt-0.5 text-xs text-slate-600 print:text-black">
+                                        Bin: {formatBinLocation(item.binLocation)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="col-span-5">
+                                    <p className="text-slate-800 font-medium print:text-black">
+                                      {item.name}
+                                    </p>
+                                    {item.barcode && (
+                                      <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
+                                        {(() => {
+                                          const itemBarcode = buildCode39Barcode(item.barcode);
+                                          if (!itemBarcode) {
+                                            return (
+                                              <p className="font-mono text-xs text-slate-600 print:text-black">
+                                                Barcode: {item.barcode}
+                                              </p>
+                                            );
+                                          }
+
+                                          return (
+                                            <>
+                                              <svg
+                                                aria-label={`Item barcode ${itemBarcode.displayValue}`}
+                                                className="block"
+                                                width={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm}
+                                                height={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm}
+                                                style={{
+                                                  width: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm,
+                                                  height: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm,
+                                                }}
+                                                viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
+                                                preserveAspectRatio="xMidYMid meet"
+                                                role="img"
+                                                shapeRendering="crispEdges"
+                                              >
+                                                {(() => {
+                                                  let currentX = itemBarcode.quietZone;
+
+                                                  return itemBarcode.segments.map((segment, index) => {
+                                                    const rect = segment.isBar ? (
+                                                      <rect
+                                                        key={`continued-item-barcode-${item.orderItemId}-${pageNumber}-${index}`}
+                                                        x={currentX}
+                                                        y={0}
+                                                        width={segment.width}
+                                                        height={32}
+                                                        fill="#111827"
+                                                      />
+                                                    ) : null;
+
+                                                    currentX += segment.width;
+                                                    return rect;
+                                                  });
+                                                })()}
+                                              </svg>
+                                              <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
+                                                {itemBarcode.displayValue}
+                                              </p>
+                                            </>
+                                          );
+                                        })()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
+                                    {item.quantity}
+                                  </div>
+                                  <div className="col-span-1 text-center text-slate-600 print:text-black">
+                                    0
+                                  </div>
+                                  <div className="col-span-1 text-center">
+                                    <span
+                                      className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
+                                      style={{ backgroundColor: '#d1d5db', color: '#111827' }}
+                                    >
+                                      {item.pickedQuantity}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {isLastPage && (
+                            <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2 text-slate-800 print:text-black">
+                                  <ClipboardDocumentListIcon className="h-4 w-4" />
+                                  <span>Total Items:</span>
+                                  <span className="font-bold text-slate-900 print:text-black">
+                                    {allFulfillmentItems.reduce(
+                                      (sum: number, item: any) => sum + item.pickedQuantity,
+                                      0
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-800 print:text-black">
+                                  <span>SKUs:</span>
+                                  <span className="font-bold text-slate-900 print:text-black">
+                                    {allFulfillmentItems.length}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {isLastPage && (
+                        <>
+                          <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
+                            <div className="flex items-end justify-between">
+                              <div className="text-sm">
+                                <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
+                                  Picked By
+                                </p>
+                                <p className="font-semibold text-slate-900 print:text-black">
+                                  {pickedByLabel}
+                                </p>
+                                <p className="text-slate-700 text-xs mt-1 print:text-black">
+                                  {new Date().toLocaleString('en-NZ', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+
+                              <div className="flex gap-12">
+                                <div className="text-center">
+                                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
+                                    Packed By
+                                  </p>
+                                  <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
+                            <p className="text-center text-xs text-slate-600 print:text-black">
+                              This document was generated electronically from OpsUI Warehouse Management
+                              System
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </section>
+                  );
+                })}
               </div>
 
               {/* Action Buttons (not printed) */}
