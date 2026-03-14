@@ -15,7 +15,7 @@
  * ============================================================================
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import {
   TruckIcon,
   DocumentArrowDownIcon,
@@ -33,6 +33,7 @@ import {
 import { Header, Button, Badge, Breadcrumb } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useShippedOrders } from '@/services/api';
 
 // ============================================================================
 // TYPES
@@ -57,82 +58,30 @@ interface ShippedOrder {
 
 export function ShippedOrdersPage() {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<ShippedOrder[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<ShippedOrder | null>(null);
 
-  useEffect(() => {
-    // Simulated data - in real app, this would be an API call
-    const mockOrders: ShippedOrder[] = [
-      {
-        id: '1',
-        orderNumber: 'ORD-2024-001234',
-        customerName: 'Acme Corp',
-        carrier: 'FedEx',
-        trackingNumber: '794644790230',
-        shippedAt: '2024-01-15T10:30:00Z',
-        estimatedDelivery: '2024-01-18T16:00:00Z',
-        status: 'in_transit',
-        items: 5,
-        destination: 'Los Angeles, CA',
-      },
-      {
-        id: '2',
-        orderNumber: 'ORD-2024-001235',
-        customerName: 'TechStart Inc',
-        carrier: 'UPS',
-        trackingNumber: '1Z999AA10123456784',
-        shippedAt: '2024-01-15T11:45:00Z',
-        estimatedDelivery: '2024-01-17T12:00:00Z',
-        status: 'out_for_delivery',
-        items: 2,
-        destination: 'San Francisco, CA',
-      },
-      {
-        id: '3',
-        orderNumber: 'ORD-2024-001236',
-        customerName: 'Global Retail',
-        carrier: 'DHL',
-        trackingNumber: '1234567890',
-        shippedAt: '2024-01-14T09:00:00Z',
-        estimatedDelivery: '2024-01-16T14:00:00Z',
-        status: 'delivered',
-        items: 8,
-        destination: 'New York, NY',
-      },
-      {
-        id: '4',
-        orderNumber: 'ORD-2024-001237',
-        customerName: 'Speed Logistics',
-        carrier: 'USPS',
-        trackingNumber: '9400111899223385111111',
-        shippedAt: '2024-01-15T14:20:00Z',
-        estimatedDelivery: '2024-01-19T18:00:00Z',
-        status: 'exception',
-        items: 3,
-        destination: 'Chicago, IL',
-      },
-      {
-        id: '5',
-        orderNumber: 'ORD-2024-001238',
-        customerName: 'Metro Supplies',
-        carrier: 'FedEx',
-        trackingNumber: '794644790231',
-        shippedAt: '2024-01-15T08:15:00Z',
-        estimatedDelivery: '2024-01-18T10:00:00Z',
-        status: 'in_transit',
-        items: 12,
-        destination: 'Seattle, WA',
-      },
-    ];
+  const { data: shippedData, isLoading: loading } = useShippedOrders({ limit: 100 });
+  const apiResponse = shippedData?.data;
 
-    setTimeout(() => {
-      setOrders(mockOrders);
-      setLoading(false);
-    }, 500);
-  }, []);
+  const orders: ShippedOrder[] = useMemo(() => {
+    if (!apiResponse?.orders) return [];
+    return apiResponse.orders.map(o => ({
+      id: o.id,
+      orderNumber: o.orderId,
+      customerName: o.customerName,
+      carrier: o.carrier || 'Unknown',
+      trackingNumber: o.trackingNumber || '—',
+      shippedAt: o.shippedAt,
+      estimatedDelivery: o.deliveredAt || o.shippedAt,
+      status: (o.deliveredAt ? 'delivered' : 'in_transit') as ShippedOrder['status'],
+      items: o.itemCount,
+      destination: o.shippingAddress || '—',
+    }));
+  }, [apiResponse]);
+
+  const stats = apiResponse?.stats;
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch =
@@ -222,20 +171,22 @@ export function ShippedOrdersPage() {
           </div>
           <div className="shipping-hero-stats">
             <div className="shipping-stat-mini">
-              <span className="shipping-stat-mini-value">{orders.length}</span>
+              <span className="shipping-stat-mini-value">
+                {stats?.totalShipped ?? orders.length}
+              </span>
               <span className="shipping-stat-mini-label">Total Shipped</span>
             </div>
             <div className="shipping-stat-mini">
               <span className="shipping-stat-mini-value shipping-stat-success">
-                {orders.filter(o => o.status === 'delivered').length}
+                {stats?.delivered ?? orders.filter(o => o.status === 'delivered').length}
               </span>
               <span className="shipping-stat-mini-label">Delivered</span>
             </div>
             <div className="shipping-stat-mini">
               <span className="shipping-stat-mini-value shipping-stat-warning">
-                {orders.filter(o => o.status === 'exception').length}
+                {stats?.pendingDelivery ?? orders.filter(o => o.status === 'in_transit').length}
               </span>
-              <span className="shipping-stat-mini-label">Exceptions</span>
+              <span className="shipping-stat-mini-label">Pending Delivery</span>
             </div>
           </div>
         </div>
