@@ -5558,6 +5558,16 @@ export const useNZCReprintLabel = () => {
   });
 };
 
+export const useNZCTracking = (connote: string | null, enabled = true) => {
+  return useQuery({
+    queryKey: ['nzc', 'tracking', connote],
+    queryFn: () => apiClient.get(`/nzc/tracking/${encodeURIComponent(connote!)}`),
+    enabled: enabled && !!connote,
+    staleTime: 60 * 1000, // 1 minute
+    retry: 1,
+  });
+};
+
 // ============================================================================
 // NOTIFICATIONS API
 // ============================================================================

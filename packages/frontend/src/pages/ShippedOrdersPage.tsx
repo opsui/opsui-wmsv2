@@ -33,7 +33,7 @@ import {
 import { Header, Button, Badge, Breadcrumb } from '@/components/shared';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { useShippedOrders } from '@/services/api';
+import { useShippedOrders, useNZCTracking } from '@/services/api';
 
 // ============================================================================
 // TYPES
@@ -50,6 +50,55 @@ interface ShippedOrder {
   status: 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception';
   items: number;
   destination: string;
+}
+
+// ============================================================================
+// NZC TRACKING PANEL
+// ============================================================================
+
+function NZCTrackingPanel({ connote }: { connote: string }) {
+  const { data, isLoading, isError } = useNZCTracking(connote);
+  const results: any[] = data?.data ?? [];
+  const events: any[] = results[0]?.Packages?.[0]?.TrackingEvents ?? [];
+  const status: string = results[0]?.Status ?? results[0]?.Packages?.[0]?.Status ?? '';
+
+  if (isLoading) {
+    return <p className="shipping-history-status text-xs opacity-60">Loading tracking…</p>;
+  }
+  if (isError) {
+    return (
+      <p className="shipping-history-status text-xs opacity-60">Could not load tracking info</p>
+    );
+  }
+  if (events.length === 0) {
+    return (
+      <p className="shipping-history-status text-xs opacity-60">
+        {status || 'No tracking events yet'}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {events.map((event: any, i: number) => (
+        <div key={i} className="shipping-history-item">
+          <div className={cn('shipping-history-dot', i === 0 && 'shipping-history-active')} />
+          <div className="shipping-history-content">
+            <span className="shipping-history-status">{event.Description}</span>
+            {event.Location && <span className="shipping-history-location">{event.Location}</span>}
+            <span className="shipping-history-time">
+              {new Date(event.DateTime).toLocaleString('en-NZ', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </div>
+        </div>
+      ))}
+    </>
+  );
 }
 
 // ============================================================================
@@ -331,40 +380,32 @@ export function ShippedOrdersPage() {
                       <div className="shipping-expanded-section">
                         <h4 className="shipping-expanded-title">Tracking History</h4>
                         <div className="shipping-tracking-history">
-                          <div className="shipping-history-item">
-                            <div className="shipping-history-dot shipping-history-active" />
-                            <div className="shipping-history-content">
-                              <span className="shipping-history-status">Package shipped</span>
-                              <span className="shipping-history-location">Origin facility</span>
-                              <span className="shipping-history-time">
-                                {formatDate(order.shippedAt)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="shipping-history-item">
-                            <div className="shipping-history-dot" />
-                            <div className="shipping-history-content">
-                              <span className="shipping-history-status">
-                                In transit to destination
-                              </span>
-                              <span className="shipping-history-location">Regional hub</span>
-                            </div>
-                          </div>
-                          <div className="shipping-history-item">
-                            <div className="shipping-history-dot" />
-                            <div className="shipping-history-content">
-                              <span className="shipping-history-status">Out for delivery</span>
-                              <span className="shipping-history-location">Local facility</span>
-                            </div>
-                          </div>
+                          {order.carrier.toUpperCase().includes('NZC') &&
+                          order.trackingNumber !== '—' ? (
+                            <NZCTrackingPanel connote={order.trackingNumber} />
+                          ) : (
+                            <p className="shipping-history-status text-xs opacity-60">
+                              Live tracking not available for this carrier
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
                   )}
 
                   <div className="shipping-order-footer">
-                    <button className="shipping-track-btn">
-                      Track Package
+                    <button
+                      className="shipping-track-btn"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setSelectedOrder(selectedOrder?.id === order.id ? null : order);
+                      }}
+                    >
+                      {order.carrier.toUpperCase().includes('NZC')
+                        ? selectedOrder?.id === order.id
+                          ? 'Hide Tracking'
+                          : 'Track Package'
+                        : 'Track Package'}
                       <ChevronRightIcon className="h-4 w-4" />
                     </button>
                   </div>

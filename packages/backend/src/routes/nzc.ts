@@ -273,6 +273,31 @@ router.post(
 );
 
 // ============================================================================
+// TRACKING ROUTES
+// ============================================================================
+
+/**
+ * GET /api/nzc/tracking/:connote
+ * Get tracking status and events for a consignment
+ */
+router.get(
+  '/tracking/:connote',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
+    const { connote } = req.params;
+    const result = await nzcService.getTracking(connote);
+    res.json(result);
+  })
+);
+
+// ============================================================================
 // UTILITY ROUTES
 // ============================================================================
 

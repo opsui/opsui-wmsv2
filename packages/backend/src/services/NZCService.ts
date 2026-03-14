@@ -122,6 +122,34 @@ export interface NZCShipmentResponse {
 }
 
 /**
+ * NZC Tracking event
+ */
+export interface NZCTrackingEvent {
+  DateTime: string;
+  Description: string;
+  Location?: string;
+}
+
+/**
+ * NZC Tracking package
+ */
+export interface NZCTrackingPackage {
+  Connote: string;
+  Status: string;
+  TrackingEvents: NZCTrackingEvent[];
+}
+
+/**
+ * NZC Tracking result (one per consignment)
+ */
+export interface NZCTrackingResult {
+  Consignment: string;
+  Carrier: string;
+  Status: string;
+  Packages: NZCTrackingPackage[];
+}
+
+/**
  * NZC Label Format options
  */
 export enum NZCLabelFormat {
@@ -682,6 +710,49 @@ export class NZCService {
       return data;
     } catch (error) {
       logger.error('[NZC] Error fetching printers', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get tracking status and events for a consignment
+   */
+  async getTracking(connote: string): Promise<NZCTrackingResult[]> {
+    try {
+      logger.info('[NZC] Fetching tracking', { connote });
+
+      const response = await fetch(
+        `${this.baseUrl}/api/trackingresults?consignment=${encodeURIComponent(connote)}`,
+        {
+          method: 'GET',
+          headers: this.getHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('[NZC] Tracking fetch failed', {
+          status: response.status,
+          error: errorText,
+        });
+        throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
+      }
+
+      const rawData = (await response.json()) as unknown;
+      const results = Array.isArray(rawData)
+        ? (rawData as NZCTrackingResult[])
+        : rawData && typeof rawData === 'object'
+          ? [rawData as NZCTrackingResult]
+          : [];
+
+      logger.info('[NZC] Tracking fetched successfully', {
+        connote,
+        resultCount: results.length,
+      });
+
+      return results;
+    } catch (error) {
+      logger.error('[NZC] Error fetching tracking', error);
       throw error;
     }
   }
