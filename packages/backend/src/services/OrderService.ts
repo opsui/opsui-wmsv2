@@ -1380,15 +1380,7 @@ export class OrderService {
     }
 
     // Create NetSuite fulfillment now (after packing), so skipped packing items are excluded
-    try {
-      await this.createNetSuiteFulfillmentForPickedOrder(orderId);
-    } catch (error: any) {
-      logger.error('Failed to create NetSuite fulfillment during packing completion', {
-        orderId,
-        error: error.message,
-      });
-      // Non-fatal: packing completes in our system even if NetSuite sync fails
-    }
+    await this.createNetSuiteFulfillmentForPickedOrder(orderId);
 
     // Update order status to PACKED
     await orderRepository.update(orderId, {
