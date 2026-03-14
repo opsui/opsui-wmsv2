@@ -123,7 +123,7 @@ router.get(
  */
 router.get(
   '/packing-queue',
-  authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
+  authorize(UserRole.PICKER, UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
   cache({ ttl: 5000 }),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
     const orders = await orderService.getPackingQueue();
@@ -663,11 +663,7 @@ router.post(
     }
 
     try {
-      const order = await orderService.skipPickTask(
-        pickTaskId,
-        `TEMP_SKIP: ${reason.trim()}`,
-        req.user.userId
-      );
+      const order = await orderService.skipPickTask(pickTaskId, reason.trim(), req.user.userId);
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not found')) {
@@ -790,7 +786,7 @@ router.post(
  */
 router.post(
   '/:orderId/claim-for-packing',
-  authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
+  authorize(UserRole.PICKER, UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {
@@ -837,7 +833,7 @@ router.post(
  */
 router.post(
   '/:orderId/complete-packing',
-  authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
+  authorize(UserRole.PICKER, UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     if (!req.user) {

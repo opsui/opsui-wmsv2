@@ -32,6 +32,8 @@ import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
 import {
   skuApi,
+  useClaimOrderForPacking,
+  useCompletePacking,
   useCompleteOrder,
   useLogException,
   useOrder,
@@ -66,6 +68,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 // ============================================================================
 
 const PICKING_THEME_STYLE_ID = 'picking-live-theme-styles';
+const SKU_LOOKUP_PATTERN = /^[A-Z0-9-]{2,50}$/;
 
 const pickingThemeStyles = `
   html.light .picking-live-page .picking-card {
@@ -159,11 +162,11 @@ const pickingSurfacePanelClass =
 const pickingInputClass =
   'w-full px-4 py-3 bg-white dark:bg-white/[0.05] border border-gray-300 dark:border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500';
 
-// OpsUI Purple Theme Colors for Fulfillment Slip
-const fulfillmentSlipPrimaryColor = '#7c3aed'; // Purple 600
-const fulfillmentSlipSecondaryColor = '#a855f7'; // Purple 500
-const fulfillmentSlipAccentColor = '#6d28d9'; // Purple 700
-const fulfillmentSlipHeaderColor = '#1e1b4b'; // Indigo 950
+// Professional blue theme colors for the fulfillment slip
+const fulfillmentSlipPrimaryColor = '#0f4c81'; // deep document blue
+const fulfillmentSlipSecondaryColor = '#3b82a6'; // muted steel blue
+const fulfillmentSlipAccentColor = '#1e3a5f'; // dark navy accent
+const fulfillmentSlipHeaderColor = '#16324f'; // table/header navy
 const code39Patterns: Record<string, string> = {
   '0': 'nnnwwnwnn',
   '1': 'wnnwnnnnw',
@@ -204,7 +207,7 @@ const code39Patterns: Record<string, string> = {
   '-': 'nwnnnnwnw',
   '.': 'wwnnnnwnn',
   ' ': 'nwwnnnwnn',
-  '$': 'nwnwnwnnn',
+  $: 'nwnwnwnnn',
   '/': 'nwnwnnnwn',
   '+': 'nwnnnwnwn',
   '%': 'nnnwnwnwn',
@@ -305,6 +308,76 @@ const renderBarcodeDimensions = (
   };
 };
 
+const getOrderItemDisplayName = (item?: any | null) =>
+  item?.itemName || item?.item_name || item?.name || item?.sku || 'Item';
+
+const getOrderItemDescription = (item?: any | null) => {
+  const description = item?.description || item?.itemDescription || item?.item_description || null;
+  const displayName = getOrderItemDisplayName(item);
+
+  if (!description || description === displayName || description === item?.sku) {
+    return null;
+  }
+
+  return description;
+};
+
+const formatInventoryQuantity = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined || value === '') {
+    return '0';
+  }
+
+  const numericValue = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return String(value);
+  }
+
+  return Number.isInteger(numericValue)
+    ? String(numericValue)
+    : numericValue.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 3,
+      });
+};
+
+const createBarcodePngDataUrl = (
+  barcode: ReturnType<typeof buildCode39Barcode>,
+  size: ReturnType<typeof renderBarcodeDimensions>
+) => {
+  if (!barcode || !size || typeof document === 'undefined') {
+    return null;
+  }
+
+  const scale = 4;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, size.widthPx * scale);
+  canvas.height = Math.max(1, size.heightPx * scale);
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return null;
+  }
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#111827';
+
+  const moduleWidthPx = canvas.width / barcode.totalWidth;
+  let currentX = barcode.quietZone * moduleWidthPx;
+
+  for (const segment of barcode.segments) {
+    const segmentWidth = segment.width * moduleWidthPx;
+
+    if (segment.isBar) {
+      context.fillRect(currentX, 0, Math.max(1, segmentWidth), canvas.height);
+    }
+
+    currentX += segmentWidth;
+  }
+
+  return canvas.toDataURL('image/png');
+};
+
 const formatNetSuiteDisplayText = (value?: string | null): string => {
   if (!value) {
     return '';
@@ -368,7 +441,16 @@ export function PickingPage() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
-  const [fulfillmentItemImageMap, setFulfillmentItemImageMap] = useState<Record<string, string>>({});
+  const [activeOrderItemImageMap, setActiveOrderItemImageMap] = useState<Record<string, string>>(
+    {}
+  );
+  const [fulfillmentItemImageMap, setFulfillmentItemImageMap] = useState<Record<string, string>>(
+    {}
+  );
+  const [fulfillmentItemBarcodeImageMap, setFulfillmentItemBarcodeImageMap] = useState<
+    Record<string, string>
+  >({});
+  const [salesOrderBarcodeImage, setSalesOrderBarcodeImage] = useState<string | null>(null);
 
   // Exception modal state
   const [showExceptionModal, setShowExceptionModal] = useState(false);
@@ -388,7 +470,6 @@ export function PickingPage() {
   const [isSkipping, setIsSkipping] = useState(false);
 
   // Track skipped items for blocking completion
-  const [skippedItemIds, setSkippedItemIds] = useState<Set<string>>(new Set());
   const [exceptionType, setExceptionType] = useState<ExceptionType>(ExceptionType.OUT_OF_STOCK);
   const [exceptionReason, setExceptionReason] = useState('');
   const [exceptionQuantity, setExceptionQuantity] = useState(0);
@@ -423,10 +504,13 @@ export function PickingPage() {
   const [fulfillmentPreviewOrder, setFulfillmentPreviewOrder] = useState<any | null>(null);
   const [isPrintingFulfillmentSlip, setIsPrintingFulfillmentSlip] = useState(false);
   const hasHydratedFulfillmentPreviewRef = useRef(false);
+  const hasAutoOpenedFulfillmentRef = useRef(false);
 
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const pickMutation = usePickItem();
   const completeMutation = useCompleteOrder();
+  const claimForPackingMutation = useClaimOrderForPacking();
+  const completePackingMutation = useCompletePacking();
   const logExceptionMutation = useLogException();
 
   useEffect(() => {
@@ -476,6 +560,16 @@ export function PickingPage() {
 
   // Ref to track auto-print trigger for fulfillment labels
   const autoPrintFulfillmentRef = useRef(false);
+
+  const setSelectedTaskIndex = useCallback(
+    (index: number) => {
+      if (pickingTaskStorageKey) {
+        sessionStorage.setItem(pickingTaskStorageKey, String(index));
+      }
+      setCurrentTaskIndex(index);
+    },
+    [pickingTaskStorageKey]
+  );
 
   // Claim order mutation
   const claimMutation = useMutation({
@@ -527,6 +621,7 @@ export function PickingPage() {
     setFulfillmentPreviewOrder(null);
     autoPrintFulfillmentRef.current = false;
     hasHydratedFulfillmentPreviewRef.current = false;
+    hasAutoOpenedFulfillmentRef.current = false;
   }, [orderId]);
 
   useEffect(() => {
@@ -586,6 +681,62 @@ export function PickingPage() {
   }, [fulfillmentPreviewStorageKey, orderId]);
 
   useEffect(() => {
+    if (!order?.items?.length) {
+      setActiveOrderItemImageMap({});
+      return;
+    }
+
+    const activeItems = order.items as Array<{
+      sku?: string;
+      image?: string | null;
+    }>;
+    const missingSkus = Array.from(
+      new Set(
+        activeItems
+          .filter(item => item?.sku && !item.image)
+          .map(item => String(item.sku).trim().toUpperCase())
+          .filter(sku => SKU_LOOKUP_PATTERN.test(sku))
+      )
+    );
+
+    const seededImages = activeItems.reduce<Record<string, string>>((acc, item) => {
+      if (item?.sku && item.image) {
+        acc[String(item.sku)] = item.image;
+      }
+      return acc;
+    }, {});
+
+    setActiveOrderItemImageMap(current => ({ ...seededImages, ...current }));
+
+    if (missingSkus.length === 0) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void Promise.allSettled(missingSkus.map(sku => skuApi.getWithInventory(sku))).then(results => {
+      if (isCancelled) {
+        return;
+      }
+
+      const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
+        if (result.status === 'fulfilled' && result.value?.image) {
+          acc[missingSkus[index]] = result.value.image;
+        }
+        return acc;
+      }, {});
+
+      if (Object.keys(fetchedImages).length > 0) {
+        setActiveOrderItemImageMap(current => ({ ...current, ...fetchedImages }));
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [order]);
+
+  useEffect(() => {
     if (!fulfillmentPreviewOrder?.items?.length) {
       setFulfillmentItemImageMap({});
       return;
@@ -599,7 +750,8 @@ export function PickingPage() {
       new Set(
         previewItems
           .filter(item => item?.sku && !item.image)
-          .map(item => String(item.sku))
+          .map(item => String(item.sku).trim().toUpperCase())
+          .filter(sku => SKU_LOOKUP_PATTERN.test(sku))
       )
     );
 
@@ -640,6 +792,51 @@ export function PickingPage() {
     };
   }, [fulfillmentPreviewOrder]);
 
+  useEffect(() => {
+    if (!fulfillmentPreviewOrder) {
+      setSalesOrderBarcodeImage(null);
+      setFulfillmentItemBarcodeImageMap({});
+      return;
+    }
+
+    const previewSalesOrderBarcode = buildCode39Barcode(
+      fulfillmentPreviewOrder.netsuiteSoTranId || fulfillmentPreviewOrder.orderId
+    );
+    const previewSalesOrderBarcodeSize = previewSalesOrderBarcode
+      ? renderBarcodeDimensions(previewSalesOrderBarcode.totalWidth, 38, 0.33, 12.5)
+      : null;
+
+    setSalesOrderBarcodeImage(
+      previewSalesOrderBarcode && previewSalesOrderBarcodeSize
+        ? createBarcodePngDataUrl(previewSalesOrderBarcode, previewSalesOrderBarcodeSize)
+        : null
+    );
+
+    const itemBarcodeImages = (fulfillmentPreviewOrder.items || []).reduce<Record<string, string>>(
+      (acc: Record<string, string>, item: any) => {
+        if (!item?.barcode || !item?.orderItemId) {
+          return acc;
+        }
+
+        const barcode = buildCode39Barcode(item.barcode);
+        const barcodeSize = barcode
+          ? renderBarcodeDimensions(barcode.totalWidth, 32, 0.22, 7.5)
+          : null;
+        const dataUrl =
+          barcode && barcodeSize ? createBarcodePngDataUrl(barcode, barcodeSize) : null;
+
+        if (dataUrl) {
+          acc[String(item.orderItemId)] = dataUrl;
+        }
+
+        return acc;
+      },
+      {}
+    );
+
+    setFulfillmentItemBarcodeImageMap(itemBarcodeImages);
+  }, [fulfillmentPreviewOrder]);
+
   const handlePrintFulfillmentSlip = useCallback(async () => {
     const slipElement = document.getElementById('fulfillment-slip-print');
     if (!slipElement) {
@@ -668,7 +865,9 @@ export function PickingPage() {
         throw new Error('Unable to open print document');
       }
 
-      const copiedHeadMarkup = Array.from(document.head.querySelectorAll('link[rel="stylesheet"], style'))
+      const copiedHeadMarkup = Array.from(
+        document.head.querySelectorAll('link[rel="stylesheet"], style')
+      )
         .map(node => node.outerHTML)
         .join('\n');
 
@@ -946,7 +1145,8 @@ export function PickingPage() {
   // Calculate progress
   const totalTasks = order?.items?.length || 0;
   const completedTasks =
-    order?.items?.filter(item => item.pickedQuantity >= item.quantity).length || 0;
+    order?.items?.filter(item => item.pickedQuantity >= item.quantity || item.status === 'SKIPPED')
+      .length || 0;
 
   // Reset scan error when current task changes
   useEffect(() => {
@@ -956,7 +1156,9 @@ export function PickingPage() {
   // Restore the last focused task when possible, otherwise move to the first incomplete item.
   useEffect(() => {
     if (order?.items && order.items.length > 0) {
-      let nextIndex = order.items.findIndex(item => item.pickedQuantity < item.quantity);
+      let nextIndex = order.items.findIndex(
+        item => item.status !== 'SKIPPED' && item.pickedQuantity < item.quantity
+      );
 
       if (pickingTaskStorageKey) {
         const storedIndex = Number(sessionStorage.getItem(pickingTaskStorageKey));
@@ -964,17 +1166,24 @@ export function PickingPage() {
           Number.isInteger(storedIndex) &&
           storedIndex >= 0 &&
           storedIndex < order.items.length &&
+          order.items[storedIndex].status !== 'SKIPPED' &&
           order.items[storedIndex].pickedQuantity < order.items[storedIndex].quantity
         ) {
           nextIndex = storedIndex;
         }
       }
 
-      if (nextIndex !== -1 && nextIndex !== currentTaskIndex) {
-        setCurrentTaskIndex(nextIndex);
+      const currentItem = order.items[currentTaskIndex];
+      const isCurrentItemSelectable =
+        currentItem &&
+        currentItem.status !== 'SKIPPED' &&
+        currentItem.pickedQuantity < currentItem.quantity;
+
+      if (!isCurrentItemSelectable && nextIndex !== -1 && nextIndex !== currentTaskIndex) {
+        setSelectedTaskIndex(nextIndex);
       }
     }
-  }, [currentTaskIndex, order, pickingTaskStorageKey]);
+  }, [currentTaskIndex, order, setSelectedTaskIndex]);
 
   useEffect(() => {
     if (pickingTaskStorageKey) {
@@ -982,101 +1191,22 @@ export function PickingPage() {
     }
   }, [currentTaskIndex, pickingTaskStorageKey]);
 
-  if (!orderId) {
-    return <div>No order ID provided</div>;
-  }
+  useEffect(() => {
+    if (!showOverrideModal) {
+      return;
+    }
 
-  // Show claim loading state - Distinctive warehouse loading animation
-  if (claimMutation.isPending) {
-    return (
-      <div className="picking-live-page min-h-screen flex items-center justify-center">
-        <div className="warehouse-loading">
-          <div className="warehouse-loading-icon" />
-          <div className="warehouse-loading-bars">
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-          </div>
-          <div className="text-center">
-            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
-              Claiming Order
-            </p>
-            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
-              Preparing your pick list...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
 
-  // Show claim error
-  if (claimError) {
-    return (
-      <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
-        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-error-500/20 flex items-center justify-center">
-            <ExclamationCircleIcon className="h-8 w-8 text-error-400" />
-          </div>
-          <h2 className="picking-title text-2xl text-gray-900 dark:text-white mb-3">
-            Cannot Start Picking
-          </h2>
-          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">{claimError}</p>
-          <div className="flex gap-3 justify-center">
-            <Button variant="secondary" onClick={() => navigate(pickingQueuePath)}>
-              Back to Queue
-            </Button>
-            <Button
-              onClick={() => {
-                setClaimError(null);
-                claimMutation.mutate(orderId!);
-              }}
-            >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 
-  if (isLoading) {
-    return (
-      <div className="picking-live-page min-h-screen flex items-center justify-center">
-        <div className="warehouse-loading">
-          <div className="warehouse-loading-icon" />
-          <div className="warehouse-loading-bars">
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-            <div className="warehouse-loading-bar" />
-          </div>
-          <div className="text-center">
-            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
-              Loading Order
-            </p>
-            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
-              Retrieving pick details...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!order) {
-    return (
-      <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
-        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
-          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">Order not found</p>
-          <Button onClick={() => navigate('/orders')}>Back to Queue</Button>
-        </div>
-      </div>
-    );
-  }
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [showOverrideModal]);
 
   // ==========================================================================
   // ANY-ORDER SCANNING LOGIC
@@ -1126,9 +1256,11 @@ export function PickingPage() {
           const matchesSku = scanValueTrimmed === item.sku;
           if (matchesBarcode || matchesSku) {
             if (item.status === 'SKIPPED') {
-              setScanError(`Item was skipped: ${item.name}. Revert the skip to pick it.`);
+              setScanError(
+                `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to pick it.`
+              );
             } else if (item.pickedQuantity >= item.quantity) {
-              setScanError(`Item already fully picked: ${item.name}`);
+              setScanError(`Item already fully picked: ${getOrderItemDisplayName(item)}`);
             }
             showToast('Item already processed', 'warning');
             return;
@@ -1147,14 +1279,14 @@ export function PickingPage() {
 
     // Check for over-scanning
     if (matchedItem.pickedQuantity >= matchedItem.quantity) {
-      setScanError(`Item already fully picked: ${matchedItem.name}`);
+      setScanError(`Item already fully picked: ${getOrderItemDisplayName(matchedItem)}`);
       showToast('Item already fully picked', 'warning');
       return;
     }
 
     // Switch to the matched item's task if different from current
     if (matchedIndex !== currentTaskIndex) {
-      setCurrentTaskIndex(matchedIndex);
+      setSelectedTaskIndex(matchedIndex);
     }
 
     // Perform pick - backend already handles both barcode and SKU validation
@@ -1173,7 +1305,7 @@ export function PickingPage() {
       setScanSuccess(true);
       setTimeout(() => setScanSuccess(false), 600);
 
-      showToast(`${matchedItem.name} picked!`, 'success');
+      showToast(`${getOrderItemDisplayName(matchedItem)} picked!`, 'success');
 
       // Refetch order data to get updated state
       await refetch();
@@ -1209,6 +1341,7 @@ export function PickingPage() {
       showToast('Order completed!', 'success');
       handleFulfillmentPreviewReady(completedOrder);
     } catch (error) {
+      hasAutoOpenedFulfillmentRef.current = false;
       showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }
   };
@@ -1232,6 +1365,76 @@ export function PickingPage() {
       showToast(error instanceof Error ? error.message : 'Failed to complete order', 'error');
     }
   };
+
+  const handleFulfillmentDone = useCallback(async () => {
+    const completionOrderId = fulfillmentPreviewOrder?.orderId || orderId;
+    if (!completionOrderId) {
+      navigate(pickingQueuePath);
+      return;
+    }
+
+    const currentFulfillmentStatus = fulfillmentPreviewOrder?.status || order?.status;
+
+    try {
+      let effectiveStatus = currentFulfillmentStatus;
+
+      if (currentFulfillmentStatus === OrderStatus.PICKED) {
+        try {
+          await claimForPackingMutation.mutateAsync({
+            orderId: completionOrderId,
+            packerId: currentUser.userId,
+          });
+          effectiveStatus = OrderStatus.PACKING;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+          const isAlreadyAdvancedConflict =
+            errorMessage.includes('409') ||
+            errorMessage.includes('conflict') ||
+            errorMessage.includes('already claimed') ||
+            errorMessage.includes('already assigned') ||
+            errorMessage.includes('packing');
+
+          if (!isAlreadyAdvancedConflict) {
+            throw error;
+          }
+
+          effectiveStatus = OrderStatus.PACKING;
+        }
+      }
+
+      if (effectiveStatus === OrderStatus.PICKED || effectiveStatus === OrderStatus.PACKING) {
+        await completePackingMutation.mutateAsync({
+          orderId: completionOrderId,
+          dto: {
+            orderId: completionOrderId,
+            packerId: currentUser.userId,
+          },
+        });
+      }
+
+      if (fulfillmentPreviewStorageKey) {
+        sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+      }
+
+      setFulfillmentPreviewOrder(null);
+      showToast('Order packed!', 'success');
+      navigate(pickingQueuePath);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Failed to complete packing', 'error');
+    }
+  }, [
+    claimForPackingMutation,
+    completePackingMutation,
+    currentUser.userId,
+    fulfillmentPreviewOrder,
+    fulfillmentPreviewStorageKey,
+    navigate,
+    order?.status,
+    orderId,
+    pickingQueuePath,
+    showToast,
+  ]);
 
   const handleUnskipItem = async (index: number) => {
     const item = order.items[index];
@@ -1258,7 +1461,7 @@ export function PickingPage() {
 
       // Set this as current task if it's not completed
       if (item.pickedQuantity < item.quantity) {
-        setCurrentTaskIndex(index);
+        setSelectedTaskIndex(index);
         setScanValue('');
         setScanError(null);
       }
@@ -1303,7 +1506,7 @@ export function PickingPage() {
       // If we undid current item, it stays current
       // If we undid an item above current one, navigate to that item
       if (undoPickItemIndex < currentTaskIndex) {
-        setCurrentTaskIndex(undoPickItemIndex);
+        setSelectedTaskIndex(undoPickItemIndex);
         setScanValue('');
         setScanError(null);
       }
@@ -1384,18 +1587,25 @@ export function PickingPage() {
     setIsSkipping(true);
 
     try {
+      await logExceptionMutation.mutateAsync({
+        orderId: orderId!,
+        orderItemId: item.orderItemId,
+        sku: item.sku,
+        type: ExceptionType.SHORT_PICK_BACKORDER,
+        quantityExpected: item.quantity,
+        quantityActual: item.pickedQuantity || 0,
+        reason: skipReason || 'No reason provided',
+      });
+
       await apiClient.post(`/orders/${orderId}/skip-item`, {
         pickTaskId: item.orderItemId,
         reason: skipReason || 'No reason provided',
       });
 
-      showToast('Item skipped!', 'warning');
+      showToast('Item skipped and logged for backorder!', 'warning');
       setShowSkipModal(false);
       setSkipItemIndex(null);
       setSkipReason('');
-
-      // Track skipped item for completion blocking
-      setSkippedItemIds(prev => new Set(prev).add(item.orderItemId));
 
       // Refetch order data
       await refetch();
@@ -1513,7 +1723,7 @@ export function PickingPage() {
       // Refetch and move to next task
       await refetch();
       if (currentTaskIndex < totalTasks - 1) {
-        setCurrentTaskIndex(currentTaskIndex + 1);
+        setSelectedTaskIndex(currentTaskIndex + 1);
         setScanValue('');
         setScanError(null);
       }
@@ -1523,6 +1733,27 @@ export function PickingPage() {
   };
 
   const isOrderComplete = completedTasks === totalTasks && totalTasks > 0;
+  const currentTaskPrimaryName =
+    currentTask?.itemName ||
+    currentTask?.item_name ||
+    currentTask?.name ||
+    currentTask?.sku ||
+    'Item';
+  const currentTaskDescriptionRaw =
+    currentTask?.description ||
+    currentTask?.itemDescription ||
+    currentTask?.item_description ||
+    null;
+  const currentTaskDescription =
+    currentTaskDescriptionRaw &&
+    currentTaskDescriptionRaw !== currentTaskPrimaryName &&
+    currentTaskDescriptionRaw !== currentTask?.sku
+      ? currentTaskDescriptionRaw
+      : null;
+  const currentTaskImage =
+    currentTask?.image ||
+    (currentTask?.sku ? activeOrderItemImageMap[currentTask.sku] : null) ||
+    null;
 
   // Determine if user is viewing in "view-only mode"
   // This is true when:
@@ -1534,6 +1765,127 @@ export function PickingPage() {
     ((order.pickerId && order.pickerId !== currentUser.userId) ||
       order.status === 'PICKED' ||
       order.status === 'SHIPPED');
+
+  useEffect(() => {
+    if (!order || !isOrderComplete || fulfillmentPreviewOrder || completeMutation.isPending) {
+      if (!isOrderComplete) {
+        hasAutoOpenedFulfillmentRef.current = false;
+      }
+      return;
+    }
+
+    if (isViewMode || order.status !== OrderStatus.PICKING) {
+      return;
+    }
+
+    if (hasAutoOpenedFulfillmentRef.current) {
+      return;
+    }
+
+    hasAutoOpenedFulfillmentRef.current = true;
+    void handleCompleteOrder();
+  }, [
+    completeMutation.isPending,
+    fulfillmentPreviewOrder,
+    handleCompleteOrder,
+    isOrderComplete,
+    isViewMode,
+    order,
+  ]);
+
+  if (!orderId) {
+    return <div>No order ID provided</div>;
+  }
+
+  if (claimMutation.isPending) {
+    return (
+      <div className="picking-live-page min-h-screen flex items-center justify-center">
+        <div className="warehouse-loading">
+          <div className="warehouse-loading-icon" />
+          <div className="warehouse-loading-bars">
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+          </div>
+          <div className="text-center">
+            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
+              Claiming Order
+            </p>
+            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+              Preparing your pick list...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (claimError) {
+    return (
+      <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
+        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-error-500/20 flex items-center justify-center">
+            <ExclamationCircleIcon className="h-8 w-8 text-error-400" />
+          </div>
+          <h2 className="picking-title text-2xl text-gray-900 dark:text-white mb-3">
+            Cannot Start Picking
+          </h2>
+          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">{claimError}</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="secondary" onClick={() => navigate(pickingQueuePath)}>
+              Back to Queue
+            </Button>
+            <Button
+              onClick={() => {
+                setClaimError(null);
+                claimMutation.mutate(orderId);
+              }}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="picking-live-page min-h-screen flex items-center justify-center">
+        <div className="warehouse-loading">
+          <div className="warehouse-loading-icon" />
+          <div className="warehouse-loading-bars">
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+            <div className="warehouse-loading-bar" />
+          </div>
+          <div className="text-center">
+            <p className="picking-title text-gray-900 dark:text-white text-xl mb-2">
+              Loading Order
+            </p>
+            <p className="picking-subtitle text-gray-600 dark:text-gray-400 text-sm">
+              Retrieving pick details...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="picking-live-page min-h-screen flex items-center justify-center p-4">
+        <div className="picking-card rounded-2xl p-8 max-w-md w-full text-center industrial-corners">
+          <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-6">Order not found</p>
+          <Button onClick={() => navigate('/orders')}>Back to Queue</Button>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate progress percentage for ring
   const progressPercent = order.progress || 0;
@@ -1575,7 +1927,7 @@ export function PickingPage() {
           .fulfillment-slip-page {
             background: white;
             margin-bottom: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(124, 58, 237, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(15, 76, 129, 0.12);
             border-radius: 16px;
             overflow: hidden;
           }
@@ -1585,26 +1937,26 @@ export function PickingPage() {
           }
 
           .opsui-gradient-header {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
+            background: linear-gradient(135deg, #16324f 0%, #0f4c81 50%, #0b3b63 100%);
           }
 
           .opsui-accent-bar {
-            background: linear-gradient(90deg, #a855f7 0%, #7c3aed 25%, #6d28d9 50%, #7c3aed 75%, #a855f7 100%);
+            background: linear-gradient(90deg, #3b82a6 0%, #0f4c81 25%, #16324f 50%, #0f4c81 75%, #3b82a6 100%);
           }
 
           .opsui-badge {
-            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-            border: 1px solid #ddd6fe;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e1;
           }
 
           .opsui-section-card {
-            background: linear-gradient(180deg, #faf5ff 0%, #ffffff 100%);
-            border: 1px solid #ede9fe;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #dbe5ef;
             border-radius: 12px;
           }
 
           .opsui-table-header {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            background: linear-gradient(135deg, #16324f 0%, #0f4c81 100%);
           }
 
           @media print {
@@ -1652,447 +2004,486 @@ export function PickingPage() {
             <div className="picking-card rounded-2xl industrial-corners overflow-hidden">
               <div id="fulfillment-slip-print" className="bg-white text-slate-900">
                 <section className="fulfillment-slip-page">
-                {/* Header Section */}
-                <div className="relative">
-                  {/* Purple accent stripe */}
-                  <div className="opsui-accent-bar h-2" />
+                  {/* Header Section */}
+                  <div className="relative">
+                    {/* Professional blue accent stripe */}
+                    <div className="opsui-accent-bar h-2" />
 
-                  <div className="px-8 py-6">
-                    <div className="flex items-start justify-between gap-8">
-                      {/* Logo & Company */}
-                      <div className="flex items-start gap-5">
-                        <div className="relative">
-                          <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl blur-sm" />
+                    <div className="px-8 py-6">
+                      <div className="flex items-start justify-between gap-8">
+                        {/* Logo & Company */}
+                        <div className="flex items-start gap-5">
                           <img
                             src={fulfillmentSlipLogoUrl}
                             alt="Arrowhead Alarm Products"
-                            className="relative w-36 h-auto"
+                            className="w-36 h-auto"
                           />
+                          <div className="pt-1 text-sm leading-relaxed">
+                            <p className="font-bold text-gray-900 print:text-black">
+                              Arrowhead Alarm Products
+                            </p>
+                            <p className="text-gray-600 print:text-black">1A Emirali Road</p>
+                            <p className="text-gray-600 print:text-black">
+                              Silverdale 0932, Auckland
+                            </p>
+                            <p className="text-gray-600 print:text-black">New Zealand</p>
+                          </div>
                         </div>
-                        <div className="pt-1 text-sm leading-relaxed">
-                          <p className="font-bold text-gray-900 print:text-black">
-                            Arrowhead Alarm Products
-                          </p>
-                          <p className="text-gray-600 print:text-black">1A Emirali Road</p>
-                          <p className="text-gray-600 print:text-black">
-                            Silverdale 0932, Auckland
-                          </p>
-                          <p className="text-gray-600 print:text-black">New Zealand</p>
-                        </div>
-                      </div>
 
-                      {/* Document Title */}
-                      <div className="ml-auto min-w-[20rem] max-w-[24rem]">
-                        <div className="flex items-start justify-between gap-6">
-                          <div className="text-center">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold uppercase tracking-wider print:bg-purple-50 print:text-purple-800">
-                              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 print:bg-purple-600" />
-                              Fulfillment Document
+                        {/* Document Title */}
+                        <div className="ml-auto min-w-[20rem] max-w-[24rem]">
+                          <div className="flex items-start justify-between gap-6">
+                            <div className="text-center">
+                              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-sky-900 text-xs font-bold uppercase tracking-wider print:bg-slate-50 print:text-sky-950">
+                                <span className="w-1.5 h-1.5 rounded-full bg-sky-800 print:bg-sky-900" />
+                                Fulfillment Document
+                              </div>
+                              <h1 className="mt-2 text-4xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
+                                Packing Slip
+                              </h1>
+                              <div className="mt-3 flex justify-center">
+                                <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-slate-50 print:border-slate-300">
+                                  <CalendarDaysIcon className="h-4 w-4 text-sky-800 print:text-sky-900" />
+                                  <span className="text-sm font-semibold text-sky-950 print:text-sky-950">
+                                    {orderDate}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <h1 className="mt-2 text-4xl font-black tracking-tight bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 bg-clip-text text-transparent print:text-purple-900">
-                              Packing Slip
-                            </h1>
-                            <div className="mt-3 flex justify-center">
-                              <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-purple-50 print:border-purple-200">
-                                <CalendarDaysIcon className="h-4 w-4 text-purple-600 print:text-purple-700" />
-                                <span className="text-sm font-semibold text-purple-800 print:text-purple-900">
-                                  {orderDate}
-                                </span>
+                            <div className="text-right">
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
+                                {`Page 1 of ${totalSlipPages}`}
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold uppercase tracking-wider print:bg-slate-50 print:text-slate-700">
-                              {`Page 1 of ${totalSlipPages}`}
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Order Info Grid */}
-                <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                        Sales Order
-                      </p>
-                      <p className="font-mono font-semibold text-slate-900 print:text-black">
-                        {fulfillmentPreviewOrder.netsuiteSoTranId ||
-                          fulfillmentPreviewOrder.orderId}
-                      </p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                        Fulfillment #
-                      </p>
-                      <p className="font-mono font-semibold text-slate-900 print:text-black">
-                        {fulfillmentPreviewOrder.netsuiteIfTranId ||
-                          fulfillmentPreviewOrder.netsuiteSoTranId ||
-                          fulfillmentPreviewOrder.orderId}
-                      </p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                        Customer PO
-                      </p>
-                      <p className="font-mono font-semibold text-slate-900 print:text-black">
-                        {fulfillmentPreviewOrder.customerPoNumber || '—'}
-                      </p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                        Account #
-                      </p>
-                      <p className="font-mono font-semibold text-slate-900 print:text-black">
-                        {accountNumberDetails.accountNumber}
-                      </p>
-                      <p className="mt-1 text-[10px] text-slate-500 print:text-black">
-                        {accountNumberDetails.caption}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {salesOrderBarcode && (
+                  {/* Order Info Grid */}
                   <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
-                    <div className="flex justify-center">
-                      <div className="rounded-lg border border-slate-200 bg-white px-5 py-3 print:border-gray-400">
-                        <svg
-                          aria-label={`Barcode ${salesOrderBarcode.displayValue}`}
-                          className="block"
-                          width={salesOrderBarcodeSize?.widthMm}
-                          height={salesOrderBarcodeSize?.heightMm}
-                          style={{
-                            width: salesOrderBarcodeSize?.widthMm,
-                            height: salesOrderBarcodeSize?.heightMm,
-                          }}
-                          viewBox={`0 0 ${salesOrderBarcode.totalWidth} 38`}
-                          preserveAspectRatio="xMidYMid meet"
-                          role="img"
-                          shapeRendering="crispEdges"
-                        >
-                          {(() => {
-                            let currentX = salesOrderBarcode.quietZone;
-
-                            return salesOrderBarcode.segments.map((segment, index) => {
-                              const rect = segment.isBar ? (
-                                <rect
-                                  key={`barcode-${index}`}
-                                  x={currentX}
-                                  y={0}
-                                  width={segment.width}
-                                  height={38}
-                                  fill="#111827"
-                                />
-                              ) : null;
-
-                              currentX += segment.width;
-                              return rect;
-                            });
-                          })()}
-                        </svg>
-                        <p className="mt-1 text-center font-mono text-lg font-semibold tracking-tight text-slate-900 print:text-black">
-                          {salesOrderBarcode.displayValue}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
+                          Sales Order
+                        </p>
+                        <p className="font-mono font-semibold text-slate-900 print:text-black">
+                          {fulfillmentPreviewOrder.netsuiteSoTranId ||
+                            fulfillmentPreviewOrder.orderId}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
+                          Fulfillment #
+                        </p>
+                        <p className="font-mono font-semibold text-slate-900 print:text-black">
+                          {fulfillmentPreviewOrder.netsuiteIfTranId ||
+                            fulfillmentPreviewOrder.netsuiteSoTranId ||
+                            fulfillmentPreviewOrder.orderId}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
+                          Customer PO
+                        </p>
+                        <p className="font-mono font-semibold text-slate-900 print:text-black">
+                          {fulfillmentPreviewOrder.customerPoNumber || '—'}
+                        </p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
+                          Account #
+                        </p>
+                        <p className="font-mono font-semibold text-slate-900 print:text-black">
+                          {accountNumberDetails.accountNumber}
+                        </p>
+                        <p className="mt-1 text-[10px] text-slate-500 print:text-black">
+                          {accountNumberDetails.caption}
                         </p>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Addresses Section */}
-                <div className="px-8 py-6">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    {/* Ship To */}
-                    <div className="relative">
-                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-600 to-slate-500 rounded-full print:bg-gray-500" />
-                      <div className="flex items-center gap-2 mb-3">
-                        <TruckIcon className="h-5 w-5 text-slate-600 print:text-gray-600" />
-                        <h2 className="text-lg font-bold text-slate-900 print:text-black">
-                          Ship To
-                        </h2>
-                      </div>
-                      <div className="space-y-1 text-sm pl-1">
-                        {previewAddressLines.length > 0 ? (
-                          previewAddressLines.map((line, i) => (
-                            <p key={`ship-${i}`} className="text-gray-800 print:text-black">
-                              {line.label ? (
-                                <>
-                                  <span className="font-medium text-gray-600 print:text-black">
-                                    {line.label}:
-                                  </span>{' '}
-                                  {line.value}
-                                </>
-                              ) : (
-                                line.value
-                              )}
-                            </p>
-                          ))
-                        ) : (
-                          <p className="text-gray-600 italic print:text-black">
-                            No shipping details available
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Bill To */}
-                    <div className="relative">
-                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-500 to-slate-400 rounded-full print:bg-gray-400" />
-                      <div className="flex items-center gap-2 mb-3">
-                        <DocumentChartBarIcon className="h-5 w-5 text-slate-500 print:text-gray-600" />
-                        <h2 className="text-lg font-bold text-slate-900 print:text-black">
-                          Bill To
-                        </h2>
-                      </div>
-                      <div className="space-y-1 text-sm pl-1">
-                        {billToLines.length > 0 ? (
-                          billToLines.map((line, i) => (
-                            <p key={`bill-${i}`} className="text-gray-800 print:text-black">
-                              {line.label ? (
-                                <>
-                                  <span className="font-medium text-gray-600 print:text-black">
-                                    {line.label}:
-                                  </span>{' '}
-                                  {line.value}
-                                </>
-                              ) : (
-                                line.value
-                              )}
-                            </p>
-                          ))
-                        ) : (
-                          <p className="text-gray-600 italic print:text-black">
-                            Same as shipping address
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Shipping Method Badge */}
-                  <div className="mt-6 flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 print:text-black">
-                      Shipping Method
-                    </span>
-                    <span
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold fulfillment-slip-print-color"
-                      style={{ backgroundColor: '#e5e7eb', color: '#1f2937' }}
-                    >
-                      <TruckIcon className="h-3.5 w-3.5" />
-                      {shippingMethodLabel}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Items Table */}
-                <div className="px-8 pb-6">
-                  <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none print:border-gray-400">
-                    {/* Table Header */}
-                    <div
-                      className="fulfillment-slip-print-color"
-                      style={{ backgroundColor: fulfillmentSlipHeaderColor }}
-                    >
-                      <div
-                        className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
-                        style={{ color: '#ffffff' }}
-                      >
-                        <span className="col-span-4">Item / SKU</span>
-                        <span className="col-span-5">Description</span>
-                        <span className="col-span-1 text-center">Ord</span>
-                        <span className="col-span-1 text-center">B/O</span>
-                        <span className="col-span-1 text-center">Shipped</span>
-                      </div>
-                    </div>
-
-                    {/* Table Body */}
-                    <div className="divide-y divide-slate-200 print:divide-gray-300">
-                      {slipPages[0].map((item: any, idx: number) => {
-                        const itemImage = item.image || fulfillmentItemImageMap[item.sku] || null;
-
-                        return (
-                        <div
-                          key={item.orderItemId}
-                          className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
-                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
-                          } print:bg-white`}
-                        >
-                          <div className="col-span-4 flex items-start gap-3">
-                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
-                              {itemImage ? (
-                                <img
-                                  src={itemImage}
-                                  alt={item.name || item.sku}
-                                  className="h-full w-full object-contain"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 print:text-gray-500">
-                                  No Image
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-mono font-bold text-slate-900 print:text-black">
-                                {item.sku}
-                              </p>
-                              <p className="mt-0.5 text-xs text-slate-600 print:text-black">
-                                Bin: {formatBinLocation(item.binLocation)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="col-span-5">
-                            <p className="text-slate-800 font-medium print:text-black">
-                              {item.name}
-                            </p>
-                            {item.barcode && (
-                              <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
-                                {(() => {
-                                  const itemBarcode = buildCode39Barcode(item.barcode);
-                                  if (!itemBarcode) {
-                                    return (
-                                      <p className="font-mono text-xs text-slate-600 print:text-black">
-                                        Barcode: {item.barcode}
-                                      </p>
-                                    );
-                                  }
-
-                                  return (
-                                    <>
-                                  <svg
-                                        aria-label={`Item barcode ${itemBarcode.displayValue}`}
-                                        className="block"
-                                        width={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm}
-                                        height={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm}
-                                        style={{
-                                          width: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm,
-                                          height: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm,
-                                        }}
-                                        viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
-                                        preserveAspectRatio="xMidYMid meet"
-                                        role="img"
-                                        shapeRendering="crispEdges"
-                                      >
-                                        {(() => {
-                                          let currentX = itemBarcode.quietZone;
-
-                                          return itemBarcode.segments.map((segment, index) => {
-                                            const rect = segment.isBar ? (
-                                              <rect
-                                                key={`item-barcode-${item.orderItemId}-${index}`}
-                                                x={currentX}
-                                                y={0}
-                                                width={segment.width}
-                                                height={32}
-                                                fill="#111827"
-                                              />
-                                            ) : null;
-
-                                            currentX += segment.width;
-                                            return rect;
-                                          });
-                                        })()}
-                                      </svg>
-                                      <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
-                                        {itemBarcode.displayValue}
-                                      </p>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
-                            {item.quantity}
-                          </div>
-                          <div className="col-span-1 text-center text-slate-600 print:text-black">
-                            0
-                          </div>
-                          <div className="col-span-1 text-center">
-                            <span
-                              className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
-                              style={{ backgroundColor: '#d1d5db', color: '#111827' }}
+                  {salesOrderBarcode && (
+                    <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
+                      <div className="flex justify-center">
+                        <div className="rounded-lg border border-slate-200 bg-white px-5 py-3 print:border-gray-400">
+                          {salesOrderBarcodeImage ? (
+                            <img
+                              src={salesOrderBarcodeImage}
+                              alt={`Barcode ${salesOrderBarcode.displayValue}`}
+                              className="block"
+                              style={{
+                                width: salesOrderBarcodeSize?.widthMm,
+                                height: salesOrderBarcodeSize?.heightMm,
+                              }}
+                            />
+                          ) : (
+                            <svg
+                              aria-label={`Barcode ${salesOrderBarcode.displayValue}`}
+                              className="block"
+                              width={salesOrderBarcodeSize?.widthMm}
+                              height={salesOrderBarcodeSize?.heightMm}
+                              style={{
+                                width: salesOrderBarcodeSize?.widthMm,
+                                height: salesOrderBarcodeSize?.heightMm,
+                              }}
+                              viewBox={`0 0 ${salesOrderBarcode.totalWidth} 38`}
+                              preserveAspectRatio="xMidYMid meet"
+                              role="img"
+                              shapeRendering="crispEdges"
                             >
-                              {item.pickedQuantity}
-                            </span>
-                          </div>
-                        </div>
-                        );
-                      })}
-                    </div>
+                              {(() => {
+                                let currentX = salesOrderBarcode.quietZone;
 
-                    {totalSlipPages === 1 && (
-                      <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                            <ClipboardDocumentListIcon className="h-4 w-4" />
-                            <span>Total Items:</span>
-                            <span className="font-bold text-slate-900 print:text-black">
-                              {allFulfillmentItems.reduce(
-                                (sum: number, item: any) => sum + item.pickedQuantity,
-                                0
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-slate-800 print:text-black">
-                            <span>SKUs:</span>
-                            <span className="font-bold text-slate-900 print:text-black">
-                              {allFulfillmentItems.length}
-                            </span>
-                          </div>
+                                return salesOrderBarcode.segments.map((segment, index) => {
+                                  const rect = segment.isBar ? (
+                                    <rect
+                                      key={`barcode-${index}`}
+                                      x={currentX}
+                                      y={0}
+                                      width={segment.width}
+                                      height={38}
+                                      fill="#111827"
+                                    />
+                                  ) : null;
+
+                                  currentX += segment.width;
+                                  return rect;
+                                });
+                              })()}
+                            </svg>
+                          )}
+                          <p className="mt-1 text-center font-mono text-lg font-semibold tracking-tight text-slate-900 print:text-black">
+                            {salesOrderBarcode.displayValue}
+                          </p>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  {/* Addresses Section */}
+                  <div className="px-8 py-6">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      {/* Ship To */}
+                      <div className="relative">
+                        <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-600 to-slate-500 rounded-full print:bg-gray-500" />
+                        <div className="flex items-center gap-2 mb-3">
+                          <TruckIcon className="h-5 w-5 text-slate-600 print:text-gray-600" />
+                          <h2 className="text-lg font-bold text-slate-900 print:text-black">
+                            Ship To
+                          </h2>
+                        </div>
+                        <div className="space-y-1 text-sm pl-1">
+                          {previewAddressLines.length > 0 ? (
+                            previewAddressLines.map((line, i) => (
+                              <p key={`ship-${i}`} className="text-gray-800 print:text-black">
+                                {line.label ? (
+                                  <>
+                                    <span className="font-medium text-gray-600 print:text-black">
+                                      {line.label}:
+                                    </span>{' '}
+                                    {line.value}
+                                  </>
+                                ) : (
+                                  line.value
+                                )}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="text-gray-600 italic print:text-black">
+                              No shipping details available
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bill To */}
+                      <div className="relative">
+                        <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-500 to-slate-400 rounded-full print:bg-gray-400" />
+                        <div className="flex items-center gap-2 mb-3">
+                          <DocumentChartBarIcon className="h-5 w-5 text-slate-500 print:text-gray-600" />
+                          <h2 className="text-lg font-bold text-slate-900 print:text-black">
+                            Bill To
+                          </h2>
+                        </div>
+                        <div className="space-y-1 text-sm pl-1">
+                          {billToLines.length > 0 ? (
+                            billToLines.map((line, i) => (
+                              <p key={`bill-${i}`} className="text-gray-800 print:text-black">
+                                {line.label ? (
+                                  <>
+                                    <span className="font-medium text-gray-600 print:text-black">
+                                      {line.label}:
+                                    </span>{' '}
+                                    {line.value}
+                                  </>
+                                ) : (
+                                  line.value
+                                )}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="text-gray-600 italic print:text-black">
+                              Same as shipping address
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shipping Method Badge */}
+                    <div className="mt-6 flex items-center gap-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-600 print:text-black">
+                        Shipping Method
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold fulfillment-slip-print-color"
+                        style={{ backgroundColor: '#e5e7eb', color: '#1f2937' }}
+                      >
+                        <TruckIcon className="h-3.5 w-3.5" />
+                        {shippingMethodLabel}
+                      </span>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Items Table */}
+                  <div className="px-8 pb-6">
+                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:rounded-none print:border-gray-400">
+                      {/* Table Header */}
+                      <div
+                        className="fulfillment-slip-print-color"
+                        style={{ backgroundColor: fulfillmentSlipHeaderColor }}
+                      >
+                        <div
+                          className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
+                          style={{ color: '#ffffff' }}
+                        >
+                          <span className="col-span-4">Item / SKU</span>
+                          <span className="col-span-5">Description</span>
+                          <span className="col-span-1 text-center">Ord</span>
+                          <span className="col-span-1 text-center">B/O</span>
+                          <span className="col-span-1 text-center">Shipped</span>
+                        </div>
+                      </div>
+
+                      {/* Table Body */}
+                      <div className="divide-y divide-slate-200 print:divide-gray-300">
+                        {slipPages[0].map((item: any, idx: number) => {
+                          const itemImage = item.image || fulfillmentItemImageMap[item.sku] || null;
+
+                          return (
+                            <div
+                              key={item.orderItemId}
+                              className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${
+                                idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'
+                              } print:bg-white`}
+                            >
+                              <div className="col-span-4 flex items-start gap-3">
+                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+                                  {itemImage ? (
+                                    <img
+                                      src={itemImage}
+                                      alt={item.name || item.sku}
+                                      className="h-full w-full object-contain"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-400 print:text-gray-500">
+                                      No Image
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-mono font-bold text-slate-900 print:text-black">
+                                    {item.sku}
+                                  </p>
+                                  <p className="mt-0.5 text-xs text-slate-600 print:text-black">
+                                    Bin: {formatBinLocation(item.binLocation)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="col-span-5">
+                                <p className="text-slate-800 font-medium print:text-black">
+                                  {getOrderItemDisplayName(item)}
+                                </p>
+                                {getOrderItemDescription(item) && (
+                                  <p className="mt-1 text-xs leading-relaxed text-slate-600 print:text-black">
+                                    {getOrderItemDescription(item)}
+                                  </p>
+                                )}
+                                {item.barcode && (
+                                  <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
+                                    {(() => {
+                                      const itemBarcode = buildCode39Barcode(item.barcode);
+                                      const itemBarcodeSize = itemBarcode
+                                        ? renderBarcodeDimensions(
+                                            itemBarcode.totalWidth,
+                                            32,
+                                            0.22,
+                                            7.5
+                                          )
+                                        : null;
+                                      const itemBarcodeImage =
+                                        fulfillmentItemBarcodeImageMap[String(item.orderItemId)] ||
+                                        null;
+                                      if (!itemBarcode) {
+                                        return (
+                                          <p className="font-mono text-xs text-slate-600 print:text-black">
+                                            Barcode: {item.barcode}
+                                          </p>
+                                        );
+                                      }
+
+                                      return (
+                                        <>
+                                          {itemBarcodeImage && itemBarcodeSize ? (
+                                            <img
+                                              src={itemBarcodeImage}
+                                              alt={`Item barcode ${itemBarcode.displayValue}`}
+                                              className="block"
+                                              style={{
+                                                width: itemBarcodeSize.widthMm,
+                                                height: itemBarcodeSize.heightMm,
+                                              }}
+                                            />
+                                          ) : (
+                                            <svg
+                                              aria-label={`Item barcode ${itemBarcode.displayValue}`}
+                                              className="block"
+                                              width={itemBarcodeSize?.widthMm}
+                                              height={itemBarcodeSize?.heightMm}
+                                              style={{
+                                                width: itemBarcodeSize?.widthMm,
+                                                height: itemBarcodeSize?.heightMm,
+                                              }}
+                                              viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
+                                              preserveAspectRatio="xMidYMid meet"
+                                              role="img"
+                                              shapeRendering="crispEdges"
+                                            >
+                                              {(() => {
+                                                let currentX = itemBarcode.quietZone;
+
+                                                return itemBarcode.segments.map(
+                                                  (segment, index) => {
+                                                    const rect = segment.isBar ? (
+                                                      <rect
+                                                        key={`item-barcode-${item.orderItemId}-${index}`}
+                                                        x={currentX}
+                                                        y={0}
+                                                        width={segment.width}
+                                                        height={32}
+                                                        fill="#111827"
+                                                      />
+                                                    ) : null;
+
+                                                    currentX += segment.width;
+                                                    return rect;
+                                                  }
+                                                );
+                                              })()}
+                                            </svg>
+                                          )}
+                                          <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
+                                            {itemBarcode.displayValue}
+                                          </p>
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="col-span-1 text-center font-semibold text-slate-800 print:text-black">
+                                {item.quantity}
+                              </div>
+                              <div className="col-span-1 text-center text-slate-600 print:text-black">
+                                {Math.max(0, item.quantity - (item.pickedQuantity || 0))}
+                              </div>
+                              <div className="col-span-1 text-center">
+                                <span
+                                  className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-md font-bold fulfillment-slip-print-color"
+                                  style={{ backgroundColor: '#d1d5db', color: '#111827' }}
+                                >
+                                  {item.pickedQuantity}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {totalSlipPages === 1 && (
+                        <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2 text-slate-800 print:text-black">
+                              <ClipboardDocumentListIcon className="h-4 w-4" />
+                              <span>Total Items:</span>
+                              <span className="font-bold text-slate-900 print:text-black">
+                                {allFulfillmentItems.reduce(
+                                  (sum: number, item: any) => sum + item.pickedQuantity,
+                                  0
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-800 print:text-black">
+                              <span>SKUs:</span>
+                              <span className="font-bold text-slate-900 print:text-black">
+                                {allFulfillmentItems.length}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </section>
 
                 {/* Footer Section */}
                 {totalSlipPages === 1 && (
-                <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
-                  <div className="flex items-end justify-between">
-                    {/* Picked By */}
-                    <div className="text-sm">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                        Picked By
-                      </p>
-                      <p className="font-semibold text-slate-900 print:text-black">
-                        {pickedByLabel}
-                      </p>
-                      <p className="text-slate-700 text-xs mt-1 print:text-black">
-                        {new Date().toLocaleString('en-NZ', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-
-                    {/* Signature Areas */}
-                    <div className="flex gap-12">
-                      <div className="text-center">
+                  <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
+                    <div className="flex items-end justify-between">
+                      {/* Picked By */}
+                      <div className="text-sm">
                         <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
-                          Packed By
+                          Picked By
                         </p>
-                        <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
+                        <p className="font-semibold text-slate-900 print:text-black">
+                          {pickedByLabel}
+                        </p>
+                        <p className="text-slate-700 text-xs mt-1 print:text-black">
+                          {new Date().toLocaleString('en-NZ', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+
+                      {/* Signature Areas */}
+                      <div className="flex gap-12">
+                        <div className="text-center">
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
+                            Packed By
+                          </p>
+                          <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 )}
 
                 {/* Document Footer */}
                 {totalSlipPages === 1 && (
-                <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
-                  <p className="text-center text-xs text-slate-600 print:text-black">
-                    This document was generated electronically from OpsUI Warehouse Management
-                    System
-                  </p>
-                </div>
+                  <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
+                    <p className="text-center text-xs text-slate-600 print:text-black">
+                      This document was generated electronically from OpsUI Warehouse Management
+                      System
+                    </p>
+                  </div>
                 )}
 
                 {slipPages.slice(1).map((pageItems: any[], continuationIndex: number) => {
@@ -2100,7 +2491,10 @@ export function PickingPage() {
                   const isLastPage = pageNumber === totalSlipPages;
 
                   return (
-                    <section key={`continuation-page-${pageNumber}`} className="fulfillment-slip-page">
+                    <section
+                      key={`continuation-page-${pageNumber}`}
+                      className="fulfillment-slip-page"
+                    >
                       <div className="relative border-b-2 border-slate-200">
                         <div
                           className="h-2 fulfillment-slip-print-color"
@@ -2132,13 +2526,13 @@ export function PickingPage() {
                             <div className="ml-auto min-w-[20rem] max-w-[24rem]">
                               <div className="flex items-start justify-between gap-6">
                                 <div className="text-center">
-                                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600 print:text-black">
+                                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-900 print:text-sky-950">
                                     Fulfillment Document
                                   </p>
-                                  <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-900 print:text-black">
+                                  <h1 className="mt-1 text-4xl font-black tracking-tight text-sky-950 print:text-sky-950">
                                     Packing Slip
                                   </h1>
-                                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 print:text-black">
+                                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 print:text-slate-700">
                                     Continued
                                   </p>
                                 </div>
@@ -2173,7 +2567,8 @@ export function PickingPage() {
 
                           <div className="divide-y divide-slate-200 print:divide-gray-300">
                             {pageItems.map((item: any, idx: number) => {
-                              const itemImage = item.image || fulfillmentItemImageMap[item.sku] || null;
+                              const itemImage =
+                                item.image || fulfillmentItemImageMap[item.sku] || null;
 
                               return (
                                 <div
@@ -2191,7 +2586,7 @@ export function PickingPage() {
                                           className="h-full w-full object-contain"
                                         />
                                       ) : (
-                                        <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 print:text-gray-500">
+                                        <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-slate-400 print:text-gray-500">
                                           No Image
                                         </div>
                                       )}
@@ -2207,12 +2602,29 @@ export function PickingPage() {
                                   </div>
                                   <div className="col-span-5">
                                     <p className="text-slate-800 font-medium print:text-black">
-                                      {item.name}
+                                      {getOrderItemDisplayName(item)}
                                     </p>
+                                    {getOrderItemDescription(item) && (
+                                      <p className="mt-1 text-xs leading-relaxed text-slate-600 print:text-black">
+                                        {getOrderItemDescription(item)}
+                                      </p>
+                                    )}
                                     {item.barcode && (
                                       <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
                                         {(() => {
                                           const itemBarcode = buildCode39Barcode(item.barcode);
+                                          const itemBarcodeSize = itemBarcode
+                                            ? renderBarcodeDimensions(
+                                                itemBarcode.totalWidth,
+                                                32,
+                                                0.22,
+                                                7.5
+                                              )
+                                            : null;
+                                          const itemBarcodeImage =
+                                            fulfillmentItemBarcodeImageMap[
+                                              String(item.orderItemId)
+                                            ] || null;
                                           if (!itemBarcode) {
                                             return (
                                               <p className="font-mono text-xs text-slate-600 print:text-black">
@@ -2223,40 +2635,54 @@ export function PickingPage() {
 
                                           return (
                                             <>
-                                              <svg
-                                                aria-label={`Item barcode ${itemBarcode.displayValue}`}
-                                                className="block"
-                                                width={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm}
-                                                height={renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm}
-                                                style={{
-                                                  width: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).widthMm,
-                                                  height: renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.3, 8.5).heightMm,
-                                                }}
-                                                viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
-                                                preserveAspectRatio="xMidYMid meet"
-                                                role="img"
-                                                shapeRendering="crispEdges"
-                                              >
-                                                {(() => {
-                                                  let currentX = itemBarcode.quietZone;
+                                              {itemBarcodeImage && itemBarcodeSize ? (
+                                                <img
+                                                  src={itemBarcodeImage}
+                                                  alt={`Item barcode ${itemBarcode.displayValue}`}
+                                                  className="block"
+                                                  style={{
+                                                    width: itemBarcodeSize.widthMm,
+                                                    height: itemBarcodeSize.heightMm,
+                                                  }}
+                                                />
+                                              ) : (
+                                                <svg
+                                                  aria-label={`Item barcode ${itemBarcode.displayValue}`}
+                                                  className="block"
+                                                  width={itemBarcodeSize?.widthMm}
+                                                  height={itemBarcodeSize?.heightMm}
+                                                  style={{
+                                                    width: itemBarcodeSize?.widthMm,
+                                                    height: itemBarcodeSize?.heightMm,
+                                                  }}
+                                                  viewBox={`0 0 ${itemBarcode.totalWidth} 32`}
+                                                  preserveAspectRatio="xMidYMid meet"
+                                                  role="img"
+                                                  shapeRendering="crispEdges"
+                                                >
+                                                  {(() => {
+                                                    let currentX = itemBarcode.quietZone;
 
-                                                  return itemBarcode.segments.map((segment, index) => {
-                                                    const rect = segment.isBar ? (
-                                                      <rect
-                                                        key={`continued-item-barcode-${item.orderItemId}-${pageNumber}-${index}`}
-                                                        x={currentX}
-                                                        y={0}
-                                                        width={segment.width}
-                                                        height={32}
-                                                        fill="#111827"
-                                                      />
-                                                    ) : null;
+                                                    return itemBarcode.segments.map(
+                                                      (segment, index) => {
+                                                        const rect = segment.isBar ? (
+                                                          <rect
+                                                            key={`continued-item-barcode-${item.orderItemId}-${pageNumber}-${index}`}
+                                                            x={currentX}
+                                                            y={0}
+                                                            width={segment.width}
+                                                            height={32}
+                                                            fill="#111827"
+                                                          />
+                                                        ) : null;
 
-                                                    currentX += segment.width;
-                                                    return rect;
-                                                  });
-                                                })()}
-                                              </svg>
+                                                        currentX += segment.width;
+                                                        return rect;
+                                                      }
+                                                    );
+                                                  })()}
+                                                </svg>
+                                              )}
                                               <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
                                                 {itemBarcode.displayValue}
                                               </p>
@@ -2270,7 +2696,7 @@ export function PickingPage() {
                                     {item.quantity}
                                   </div>
                                   <div className="col-span-1 text-center text-slate-600 print:text-black">
-                                    0
+                                    {Math.max(0, item.quantity - (item.pickedQuantity || 0))}
                                   </div>
                                   <div className="col-span-1 text-center">
                                     <span
@@ -2346,8 +2772,8 @@ export function PickingPage() {
 
                           <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
                             <p className="text-center text-xs text-slate-600 print:text-black">
-                              This document was generated electronically from OpsUI Warehouse Management
-                              System
+                              This document was generated electronically from OpsUI Warehouse
+                              Management System
                             </p>
                           </div>
                         </>
@@ -2372,12 +2798,8 @@ export function PickingPage() {
                 </Button>
                 <Button
                   variant="success"
-                  onClick={() => {
-                    if (fulfillmentPreviewStorageKey) {
-                      sessionStorage.removeItem(fulfillmentPreviewStorageKey);
-                    }
-                    navigate('/orders?status=PENDING');
-                  }}
+                  onClick={handleFulfillmentDone}
+                  isLoading={claimForPackingMutation.isPending || completePackingMutation.isPending}
                 >
                   Done
                 </Button>
@@ -2526,16 +2948,11 @@ export function PickingPage() {
                   </div>
 
                   {isOrderComplete && (
-                    <Button
-                      size="lg"
-                      variant="success"
-                      onClick={handleCompleteOrder}
-                      isLoading={completeMutation.isPending}
-                      disabled={isViewMode ? true : undefined}
-                      className="w-full action-button-enhanced touch-target"
-                    >
-                      Complete Order
-                    </Button>
+                    <div className="w-full rounded-xl border border-success-500/30 bg-success-500/10 px-4 py-3 text-center">
+                      <p className="picking-subtitle text-success-700 dark:text-success-300 text-sm">
+                        Preparing packing slip...
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -2579,18 +2996,14 @@ export function PickingPage() {
                       All Items Picked!
                     </h2>
                     <p className="picking-subtitle text-gray-600 dark:text-gray-400 mb-8">
-                      Order is ready to be completed and sent to packing.
+                      Handing this order straight to the packing slip.
                     </p>
-                    <Button
-                      size="lg"
-                      variant="success"
-                      onClick={handleCompleteOrder}
-                      isLoading={completeMutation.isPending}
-                      disabled={isViewMode ? true : undefined}
-                      className="action-button-enhanced touch-target animate-pop-in"
-                    >
-                      Complete Order
-                    </Button>
+                    <div className="inline-flex items-center gap-3 rounded-xl border border-success-500/30 bg-success-500/10 px-5 py-3 animate-pop-in">
+                      <div className="h-5 w-5 rounded-full border-2 border-success-400 border-t-transparent animate-spin" />
+                      <span className="picking-subtitle text-success-700 dark:text-success-300">
+                        Preparing packing slip...
+                      </span>
+                    </div>
                   </div>
                 </div>
               ) : currentTask ? (
@@ -2600,13 +3013,33 @@ export function PickingPage() {
                 >
                   <div className="p-6 border-b picking-divider border-white/[0.08]">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
-                          Current Pick Task
-                        </p>
-                        <h2 className="picking-title text-xl text-gray-900 dark:text-white">
-                          {currentTask.name}
-                        </h2>
+                      <div className="flex items-start gap-4 min-w-0">
+                        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.04]">
+                          {currentTaskImage ? (
+                            <img
+                              src={currentTaskImage}
+                              alt={currentTaskPrimaryName}
+                              className="h-full w-full object-contain"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                              No Image
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
+                            Current Pick Task
+                          </p>
+                          <h2 className="picking-title text-xl text-gray-900 dark:text-white">
+                            {currentTaskPrimaryName}
+                          </h2>
+                          {currentTaskDescription && (
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                              {currentTaskDescription}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3">
                         {!isViewMode && (
@@ -2683,7 +3116,7 @@ export function PickingPage() {
                                 : 'text-error-400'
                           }`}
                         >
-                          {currentTask.onHandQuantity ?? 0}
+                          {formatInventoryQuantity(currentTask.onHandQuantity)}
                         </p>
                       </div>
                     </div>
@@ -2702,7 +3135,7 @@ export function PickingPage() {
                               : 'text-error-400'
                         }`}
                       >
-                        {currentTask.onHandQuantity ?? 0}
+                        {formatInventoryQuantity(currentTask.onHandQuantity)}
                       </span>
                       {(currentTask.onHandQuantity ?? 0) < currentTask.quantity && (
                         <span className="text-xs text-error-700 dark:text-error-400 bg-error-500/20 px-2 py-0.5 rounded-full">
@@ -2731,6 +3164,7 @@ export function PickingPage() {
                           const isCompleted = item.pickedQuantity >= item.quantity;
                           const isSkipped = item.status === 'SKIPPED';
                           const isCurrent = index === currentTaskIndex;
+                          const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
 
                           return (
                             <div
@@ -2738,7 +3172,7 @@ export function PickingPage() {
                               onClick={() => {
                                 // Allow clicking on any incomplete/non-skipped item to select it
                                 if (!isCompleted && !isSkipped && !isViewMode) {
-                                  setCurrentTaskIndex(index);
+                                  setSelectedTaskIndex(index);
                                 }
                               }}
                               className={`pick-item-card flex items-center justify-between p-3 rounded-xl transition-all duration-200 animate-fade-in-up ${
@@ -2756,6 +3190,19 @@ export function PickingPage() {
                               }}
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                                  {itemImage ? (
+                                    <img
+                                      src={itemImage}
+                                      alt={getOrderItemDisplayName(item)}
+                                      className="h-full w-full object-contain"
+                                    />
+                                  ) : (
+                                    <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                                      No Image
+                                    </div>
+                                  )}
+                                </div>
                                 {/* Status Icon */}
                                 <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
                                   {isCompleted && (
@@ -2800,8 +3247,13 @@ export function PickingPage() {
                                             : 'text-gray-700 dark:text-gray-300'
                                     }`}
                                   >
-                                    {item.name}
+                                    {getOrderItemDisplayName(item)}
                                   </p>
+                                  {getOrderItemDescription(item) && (
+                                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+                                      {getOrderItemDescription(item)}
+                                    </p>
+                                  )}
                                   <div className="flex items-center gap-2">
                                     <p className="text-xs text-gray-500 font-mono truncate">
                                       {item.binLocation}
@@ -3271,7 +3723,7 @@ export function PickingPage() {
                 setUndoPickItemIndex(null);
               }}
               onConfirm={handleConfirmUndoPick}
-              itemName={order.items[undoPickItemIndex]?.name || ''}
+              itemName={getOrderItemDisplayName(order.items[undoPickItemIndex])}
               sku={order.items[undoPickItemIndex]?.sku || ''}
               currentQuantity={order.items[undoPickItemIndex]?.pickedQuantity || 0}
               totalQuantity={order.items[undoPickItemIndex]?.quantity || 0}
@@ -3295,7 +3747,8 @@ export function PickingPage() {
                 <ul className="list-disc pl-5 mb-3 space-y-1">
                   {completeOrderConfirm.skippedItems.map((item: any, i: number) => (
                     <li key={i}>
-                      {item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}
+                      {getOrderItemDisplayName(item)} ({item.sku}) -{' '}
+                      {item.skipReason || 'No reason provided'}
                     </li>
                   ))}
                 </ul>
@@ -3316,7 +3769,7 @@ export function PickingPage() {
             onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
             onConfirm={confirmUnskipItem}
             title="Revert Skip"
-            message={`Do you want to revert the skip for ${unskipConfirm.item?.name} (${unskipConfirm.item?.sku})?`}
+            message={`Do you want to revert the skip for ${getOrderItemDisplayName(unskipConfirm.item)} (${unskipConfirm.item?.sku})?`}
             confirmText="Revert"
             cancelText="Cancel"
             variant="success"
@@ -3340,14 +3793,42 @@ export function PickingPage() {
 
                 <div className="p-6 space-y-4">
                   <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
-                    <p className="picking-title text-white">{order.items[skipItemIndex].name}</p>
-                    <p className="text-sm text-gray-400 font-mono mt-1">
-                      {order.items[skipItemIndex].sku}
-                    </p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
-                      {order.items[skipItemIndex].binLocation}
-                    </p>
+                    <div className="flex items-start gap-4">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                        {order.items[skipItemIndex].image ||
+                        activeOrderItemImageMap[order.items[skipItemIndex].sku] ? (
+                          <img
+                            src={
+                              order.items[skipItemIndex].image ||
+                              activeOrderItemImageMap[order.items[skipItemIndex].sku]
+                            }
+                            alt={getOrderItemDisplayName(order.items[skipItemIndex])}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="picking-title text-white">
+                          {getOrderItemDisplayName(order.items[skipItemIndex])}
+                        </p>
+                        {getOrderItemDescription(order.items[skipItemIndex]) && (
+                          <p className="text-sm text-gray-300 mt-1">
+                            {getOrderItemDescription(order.items[skipItemIndex])}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-400 font-mono mt-1">
+                          {order.items[skipItemIndex].sku}
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
+                          {order.items[skipItemIndex].binLocation}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -3390,8 +3871,8 @@ export function PickingPage() {
 
           {/* Manual Override Modal */}
           {showOverrideModal && overrideItemIndex !== null && order.items[overrideItemIndex] && (
-            <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
-              <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+            <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-[120] p-3 sm:p-6 lg:p-8">
+              <div className="scanner-modal-content relative z-[121] w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl">
                 <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
                   <div className="flex items-center justify-between">
                     <h2 className="picking-title text-lg">Manual Override</h2>
@@ -3404,70 +3885,98 @@ export function PickingPage() {
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-4 lg:grid lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] lg:gap-6 lg:space-y-0">
                   <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
-                    <p className="picking-title text-white">
-                      {order.items[overrideItemIndex].name}
-                    </p>
-                    <p className="text-sm text-gray-400 font-mono mt-1">
-                      {order.items[overrideItemIndex].sku}
-                    </p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Required: {order.items[overrideItemIndex].quantity} | Currently Picked:{' '}
-                      {order.items[overrideItemIndex].pickedQuantity}
-                    </p>
+                    <div className="flex items-start gap-4">
+                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                        {order.items[overrideItemIndex].image ||
+                        activeOrderItemImageMap[order.items[overrideItemIndex].sku] ? (
+                          <img
+                            src={
+                              order.items[overrideItemIndex].image ||
+                              activeOrderItemImageMap[order.items[overrideItemIndex].sku]
+                            }
+                            alt={getOrderItemDisplayName(order.items[overrideItemIndex])}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="picking-title text-white">
+                          {getOrderItemDisplayName(order.items[overrideItemIndex])}
+                        </p>
+                        {getOrderItemDescription(order.items[overrideItemIndex]) && (
+                          <p className="text-sm text-gray-300 mt-1">
+                            {getOrderItemDescription(order.items[overrideItemIndex])}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-400 font-mono mt-1">
+                          {order.items[overrideItemIndex].sku}
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Required: {order.items[overrideItemIndex].quantity} | Currently Picked:{' '}
+                          {order.items[overrideItemIndex].pickedQuantity}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
-                      New Picked Quantity <span className="text-error-400">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={order.items[overrideItemIndex].quantity}
-                      value={overrideQuantity}
-                      onChange={e => setOverrideQuantity(e.target.value)}
-                      onFocus={e => e.target.select()}
-                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Max: {order.items[overrideItemIndex].quantity} (cannot exceed required
-                      quantity)
-                    </p>
-                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        New Picked Quantity <span className="text-error-400">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={order.items[overrideItemIndex].quantity}
+                        value={overrideQuantity}
+                        onChange={e => setOverrideQuantity(e.target.value)}
+                        onFocus={e => e.target.select()}
+                        className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500 font-mono text-lg"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Max: {order.items[overrideItemIndex].quantity} (cannot exceed required
+                        quantity)
+                      </p>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
-                      Reason <span className="text-error-400">*</span>
-                    </label>
-                    <textarea
-                      value={overrideReason}
-                      onChange={e => setOverrideReason(e.target.value)}
-                      rows={2}
-                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
-                      placeholder="e.g., Found damaged item, Correcting count, etc."
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Reason <span className="text-error-400">*</span>
+                      </label>
+                      <textarea
+                        value={overrideReason}
+                        onChange={e => setOverrideReason(e.target.value)}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                        placeholder="e.g., Found damaged item, Correcting count, etc."
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-2">
-                      Additional Notes (optional)
-                    </label>
-                    <textarea
-                      value={overrideNotes}
-                      onChange={e => setOverrideNotes(e.target.value)}
-                      rows={2}
-                      className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
-                      placeholder="Any additional details..."
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Additional Notes (optional)
+                      </label>
+                      <textarea
+                        value={overrideNotes}
+                        onChange={e => setOverrideNotes(e.target.value)}
+                        rows={5}
+                        className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-white placeholder-gray-500"
+                        placeholder="Any additional details..."
+                      />
+                    </div>
 
-                  <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                    <p className="picking-subtitle text-primary-300 text-sm">
-                      <strong>Note:</strong> This action will be logged and audited. Supervisors
-                      will be able to review this override.
-                    </p>
+                    <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                      <p className="picking-subtitle text-primary-300 text-sm">
+                        <strong>Note:</strong> This action will be logged and audited. Supervisors
+                        will be able to review this override.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

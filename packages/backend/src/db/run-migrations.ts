@@ -86,6 +86,11 @@ const REQUIRED_MIGRATIONS = [
     filename: '052_add_order_state_changes_table.sql',
     description: 'Order state changes tracking table and trigger',
   },
+  {
+    name: '053_purchasing_workflow',
+    filename: '053_purchasing_workflow.sql',
+    description: 'Purchasing workflow schema - requisitions, RFQs, POs, receipts, approvals',
+  },
 ];
 
 // ============================================================================

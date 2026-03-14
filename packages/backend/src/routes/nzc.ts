@@ -50,6 +50,14 @@ router.use(authenticate);
 router.post(
   '/rates',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
     const { destination, packages } = req.body;
 
     // Validate required fields
@@ -125,6 +133,14 @@ router.post(
   '/shipments',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
     const { destination, packages, quoteId, senderReference, printToPrinter } = req.body;
 
     // Validate required fields
@@ -189,6 +205,14 @@ router.post(
 router.get(
   '/labels/:connote',
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
     const { connote } = req.params;
     const format = (req.query.format as string) || 'LABEL_PNG_100X175';
 
@@ -218,14 +242,33 @@ router.post(
   '/labels/:connote/reprint',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
     const { connote } = req.params;
     const { copies = 1, printerName } = req.body;
 
-    await nzcService.reprintLabel(connote, copies, printerName);
-    res.json({
-      success: true,
-      message: `Label reprint queued for ${copies} copy/copies`,
-    });
+    try {
+      await nzcService.reprintLabel(connote, copies, printerName);
+      res.json({
+        success: true,
+        message: `Label reprint queued for ${copies} copy/copies`,
+      });
+    } catch (error: any) {
+      const message = error instanceof Error ? error.message : 'Failed to reprint label';
+      const status =
+        typeof message === 'string' && message.includes('NZC API error: 400') ? 400 : 500;
+
+      res.status(status).json({
+        error: message,
+        code: status === 400 ? 'NZC_REPRINT_FAILED' : 'NZC_REPRINT_ERROR',
+      });
+    }
   })
 );
 
@@ -241,6 +284,11 @@ router.get(
   '/printers',
   authorize(UserRole.SUPERVISOR, UserRole.ADMIN),
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.json([]);
+      return;
+    }
+
     const printers = await nzcService.getPrinters();
     res.json(printers);
   })
@@ -253,8 +301,17 @@ router.get(
 router.get(
   '/stocksizes',
   asyncHandler(async (_req: AuthenticatedRequest, res) => {
-    const stockSizes = await nzcService.getStockSizes();
-    res.json(stockSizes);
+    if (!nzcService.isConfigured()) {
+      res.json([]);
+      return;
+    }
+
+    try {
+      const stockSizes = await nzcService.getStockSizes();
+      res.json(stockSizes);
+    } catch {
+      res.json([]);
+    }
   })
 );
 

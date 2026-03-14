@@ -25,6 +25,7 @@ import { query as sharedQuery } from '../db/client';
 import { tenantPoolManager } from '../db/tenantContext';
 import { OrderPriority } from '@opsui/shared';
 import { Pool } from 'pg';
+import { isExcludedQueueCustomerName } from '../utils/orderQueueExclusions';
 
 // ============================================================================
 // TYPES
@@ -97,6 +98,7 @@ function decodeHtmlEntities(text: string): string {
 interface NetSuiteItemDetails {
   itemId: string;
   displayName: string;
+  description: string;
   upcCode: string;
   binNumber: string;
 }
@@ -496,17 +498,23 @@ export class NetSuiteOrderSyncService {
 
       let allSalesOrders: NetSuiteSalesOrder[] = [];
       let pendingSalesOrderSummaries: NetSuiteSalesOrder[] = [];
+      let detailedPendingSalesOrders: NetSuiteSalesOrder[] = [];
+      const detailedPendingSalesOrdersById = new Map<string, NetSuiteSalesOrder>();
       let allFulfillments: any[] = [];
       let phase1FetchSucceeded = false;
-      if (syncMode === 'full') {
+      {
         try {
+          const salesOrderModifiedAfter =
+            syncMode === 'incremental' && lastSyncAt
+              ? new Date(lastSyncAt.getTime() - 2 * 60 * 1000)
+              : undefined;
           const soResponse = await this.client.getSalesOrders({
             status: '_pendingFulfillment',
+            modifiedAfter: salesOrderModifiedAfter,
           });
           pendingSalesOrderSummaries = (soResponse.items || []) as NetSuiteSalesOrder[];
-          const readySalesOrderSummaries = pendingSalesOrderSummaries.filter(so => so.readyToShip);
           const salesOrderDetails = await this.mapWithConcurrency(
-            readySalesOrderSummaries,
+            pendingSalesOrderSummaries,
             2,
             async salesOrder => {
               try {
@@ -521,14 +529,21 @@ export class NetSuiteOrderSyncService {
               }
             }
           );
-          allSalesOrders = salesOrderDetails.filter(Boolean) as NetSuiteSalesOrder[];
+          detailedPendingSalesOrders = salesOrderDetails.filter(Boolean) as NetSuiteSalesOrder[];
+          for (const so of detailedPendingSalesOrders) {
+            detailedPendingSalesOrdersById.set(so.id, so);
+          }
+          allSalesOrders = detailedPendingSalesOrders.filter(so => so.readyToShip === true);
           phase1FetchSucceeded = true;
           logger.info('Phase 1: Fetched pending sales orders from NetSuite', {
             count: allSalesOrders.length,
             summariesFetched: pendingSalesOrderSummaries.length,
-            readySummariesFetched: readySalesOrderSummaries.length,
-            detailFetchFailed: readySalesOrderSummaries.length - allSalesOrders.length,
+            detailsFetched: detailedPendingSalesOrders.length,
+            readyDetailedFetched: allSalesOrders.length,
+            detailFetchFailed:
+              pendingSalesOrderSummaries.length - detailedPendingSalesOrders.length,
             mode: syncMode,
+            modifiedAfter: salesOrderModifiedAfter?.toISOString() || null,
           });
         } catch (error: any) {
           logger.warn('Phase 1: Failed to fetch sales orders', {
@@ -536,8 +551,6 @@ export class NetSuiteOrderSyncService {
             mode: syncMode,
           });
         }
-      } else {
-        logger.info('Phase 1: Skipping sales-order discovery in incremental mode');
       }
 
       // Track all pending-fulfillment orders plus the subset that should remain in the WMS queue.
@@ -545,7 +558,9 @@ export class NetSuiteOrderSyncService {
       const currentReadyToShipSoIds = new Set<string>();
       for (const so of pendingSalesOrderSummaries) {
         currentPendingSoIds.add(so.id);
-        if (so.readyToShip) currentReadyToShipSoIds.add(so.id);
+      }
+      for (const so of detailedPendingSalesOrders) {
+        if (so.readyToShip === true) currentReadyToShipSoIds.add(so.id);
       }
 
       result.totalProcessed = allSalesOrders.length;
@@ -867,6 +882,31 @@ export class NetSuiteOrderSyncService {
           }
 
           if (phase1Succeeded && currentPendingSoIds.has(soId)) {
+            let pendingDetail = detailedPendingSalesOrdersById.get(soId) || null;
+
+            if (!pendingDetail) {
+              try {
+                pendingDetail = await this.getSalesOrderCached(soId);
+              } catch (error: any) {
+                logger.warn(
+                  'Skipping cancellation for pending fulfillment order because detail refetch failed',
+                  {
+                    orderId: row.order_id,
+                    soTranId: row.netsuite_so_tran_id,
+                    soId,
+                    error: error.message,
+                  }
+                );
+                await this.markOrderSynced(row.order_id, syncStartTime);
+                continue;
+              }
+            }
+
+            if (pendingDetail.readyToShip === true) {
+              await this.markOrderSynced(row.order_id, syncStartTime);
+              continue;
+            }
+
             await this.query(
               `UPDATE orders
                SET status = 'CANCELLED'::order_status,
@@ -1564,6 +1604,7 @@ export class NetSuiteOrderSyncService {
     const soInternalId = salesOrder.id;
     const soTranId = salesOrder.tranId;
     const parentSalesOrder = salesOrder;
+    const customerName = salesOrder.entity?.refName || 'Unknown Customer';
 
     // Check line items
     const lineItems = salesOrder.item?.items || [];
@@ -1575,6 +1616,20 @@ export class NetSuiteOrderSyncService {
     if (!salesOrder.readyToShip) {
       logger.debug('Sales order skipped — readyToShip is false', { tranId });
       return { created: false, updated: false, skipped: true, reason: 'Not ready to ship', tranId };
+    }
+
+    if (isExcludedQueueCustomerName(customerName)) {
+      logger.info('Sales order skipped - excluded customer', {
+        tranId,
+        customerName,
+      });
+      return {
+        created: false,
+        updated: false,
+        skipped: true,
+        reason: 'Excluded customer',
+        tranId,
+      };
     }
 
     // Check if fulfillment exists for this SO
@@ -1663,7 +1718,7 @@ export class NetSuiteOrderSyncService {
           tranId,
         });
       } else if (
-        existing.status === 'SHIPPED' &&
+        ['PICKED', 'PACKED', 'SHIPPED', 'CANCELLED'].includes(existing.status) &&
         salesOrder.readyToShip &&
         !hasFulfillment &&
         (salesOrder.status?.refName || '').toLowerCase().includes('pending fulfillment')
@@ -1671,11 +1726,12 @@ export class NetSuiteOrderSyncService {
         await this.updateOrderStatus(existing.orderId, 'PENDING');
         updated = true;
         logger.warn(
-          'Reverted SHIPPED order to PENDING (SO still pending fulfillment with no fulfillment)',
+          'Reverted order to PENDING (SO still pending fulfillment with no fulfillment)',
           {
             orderId: existing.orderId,
             tranId,
             soInternalId,
+            previousStatus: existing.status,
           }
         );
       } else if (
@@ -1787,6 +1843,8 @@ export class NetSuiteOrderSyncService {
     let soTranId: string | null = null;
     let parentSalesOrder: NetSuiteSalesOrder | null = null;
     soTranId = createdFromTranId;
+    const initialCustomerName =
+      fulfillment.entity?.refName || fulfillment.createdFrom?.refName || 'NetSuite Order';
 
     const loadParentSalesOrder = async (): Promise<NetSuiteSalesOrder | null> => {
       if (parentSalesOrder || !soInternalId) return parentSalesOrder;
@@ -1808,6 +1866,20 @@ export class NetSuiteOrderSyncService {
       }
       return parentSalesOrder;
     };
+
+    if (isExcludedQueueCustomerName(initialCustomerName)) {
+      logger.info('Fulfillment skipped - excluded customer', {
+        tranId,
+        customerName: initialCustomerName,
+      });
+      return {
+        created: false,
+        updated: false,
+        skipped: true,
+        reason: 'Excluded customer',
+        tranId,
+      };
+    }
 
     // Try to find existing WMS order by the parent SO
     let existing: ExistingOrder | null = null;
@@ -1834,6 +1906,21 @@ export class NetSuiteOrderSyncService {
         soTranId = salesOrder?.tranId || soTranId;
       }
       const parentSalesOrderData = soInternalId ? await loadParentSalesOrder() : parentSalesOrder;
+      if (
+        isExcludedQueueCustomerName(parentSalesOrderData?.entity?.refName || initialCustomerName)
+      ) {
+        logger.info('Fulfillment skipped after parent SO lookup - excluded customer', {
+          tranId,
+          customerName: parentSalesOrderData?.entity?.refName || initialCustomerName,
+        });
+        return {
+          created: false,
+          updated: false,
+          skipped: true,
+          reason: 'Excluded customer',
+          tranId,
+        };
+      }
       const derivedSubtotal =
         parentSalesOrderData?.subTotal != null ? parentSalesOrderData.subTotal : 0;
       const derivedTotal =
@@ -1934,6 +2021,19 @@ export class NetSuiteOrderSyncService {
     if (!Array.isArray(lineItems) || lineItems.length === 0) {
       // Fall back to parent Sales Order line items if fulfillment has none
       const salesOrder = parentSalesOrder || (await loadParentSalesOrder());
+      if (isExcludedQueueCustomerName(salesOrder?.entity?.refName || initialCustomerName)) {
+        logger.info('Fulfillment skipped during SO fallback - excluded customer', {
+          tranId,
+          customerName: salesOrder?.entity?.refName || initialCustomerName,
+        });
+        return {
+          created: false,
+          updated: false,
+          skipped: true,
+          reason: 'Excluded customer',
+          tranId,
+        };
+      }
       if (salesOrder && (salesOrder.item?.items || []).length > 0) {
         const shipStatus = (fulfillmentWithItems.shipStatus || '').toLowerCase();
         const targetStatus = shipStatus.includes('shipped')
@@ -1958,6 +2058,23 @@ export class NetSuiteOrderSyncService {
       }
 
       return { created: false, updated: false, skipped: true, reason: 'No line items', tranId };
+    }
+
+    const resolvedCustomerName = parentSalesOrder
+      ? parentSalesOrder.entity?.refName || initialCustomerName
+      : initialCustomerName;
+    if (isExcludedQueueCustomerName(resolvedCustomerName)) {
+      logger.info('Fulfillment skipped before WMS order creation - excluded customer', {
+        tranId,
+        customerName: resolvedCustomerName,
+      });
+      return {
+        created: false,
+        updated: false,
+        skipped: true,
+        reason: 'Excluded customer',
+        tranId,
+      };
     }
 
     const order = await this.createWMSOrderFromFulfillment(
@@ -2286,10 +2403,13 @@ export class NetSuiteOrderSyncService {
       updates.push('picker_id = NULL');
       updates.push('packer_id = NULL');
       updates.push('claimed_at = NULL');
+      updates.push('picked_at = NULL');
       updates.push('packed_at = NULL');
       updates.push('shipped_at = NULL');
+      updates.push('cancelled_at = NULL');
       updates.push('netsuite_if_internal_id = NULL');
       updates.push('netsuite_if_tran_id = NULL');
+      updates.push('tracking_number = NULL');
       updates.push('progress = 0');
     } else if (newStatus === 'PICKED') {
       updates.push('picked_at = COALESCE(picked_at, NOW())');
@@ -2418,18 +2538,20 @@ export class NetSuiteOrderSyncService {
     return map;
   }
 
-  private buildWmsShippingAddress(address?: {
-    addressee?: string;
-    attention?: string;
-    addr1?: string;
-    addr2?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    phone?: string;
-    email?: string;
-    country?: { id?: string; refName?: string } | string;
-  } | null) {
+  private buildWmsShippingAddress(
+    address?: {
+      addressee?: string;
+      attention?: string;
+      addr1?: string;
+      addr2?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+      phone?: string;
+      email?: string;
+      country?: { id?: string; refName?: string } | string;
+    } | null
+  ) {
     if (!address) {
       return null;
     }
@@ -2556,12 +2678,13 @@ export class NetSuiteOrderSyncService {
       const skuCode = sku || line.item?.refName || line.item?.id || `NS-${i}`;
 
       const itemDetails = await this.getItemDetails(line.item?.id);
-      const rawName = itemDetails?.displayName || line.item?.refName || skuCode;
+      const rawName =
+        line.item?.refName || itemDetails?.itemId || itemDetails?.displayName || skuCode;
       const itemName = decodeHtmlEntities(rawName);
       const barcode = itemDetails?.upcCode || undefined;
       const nsBin = itemDetails?.binNumber || undefined;
 
-      await this.ensureSku(skuCode, itemName, barcode, nsBin);
+      await this.ensureSku(skuCode, itemName, itemDetails?.description, barcode, nsBin);
 
       const skuResult = await this.query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
@@ -2668,12 +2791,17 @@ export class NetSuiteOrderSyncService {
       const skuCode = sku || line.item?.refName || line.itemName || `NS-${i}`;
 
       const itemDetails = await this.getItemDetails(line.item?.id);
-      const rawName = itemDetails?.displayName || line.item?.refName || line.itemName || skuCode;
+      const rawName =
+        line.item?.refName ||
+        line.itemName ||
+        itemDetails?.itemId ||
+        itemDetails?.displayName ||
+        skuCode;
       const itemName = decodeHtmlEntities(rawName);
       const barcode = itemDetails?.upcCode || undefined;
       const nsBin = itemDetails?.binNumber || undefined;
 
-      await this.ensureSku(skuCode, itemName, barcode, nsBin);
+      await this.ensureSku(skuCode, itemName, itemDetails?.description, barcode, nsBin);
 
       const skuResult = await this.query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,
@@ -2742,6 +2870,7 @@ export class NetSuiteOrderSyncService {
       const details: NetSuiteItemDetails = {
         itemId: item.itemId,
         displayName: item.displayName,
+        description: item.description,
         upcCode: item.upcCode,
         binNumber: item.binNumber,
       };
@@ -2789,19 +2918,31 @@ export class NetSuiteOrderSyncService {
   private async ensureSku(
     skuCode: string,
     itemName: string,
+    itemDescription?: string,
     barcode?: string,
     binLocation?: string
   ): Promise<void> {
     const cleanName = decodeHtmlEntities(itemName);
+    const cleanDescription = itemDescription ? decodeHtmlEntities(itemDescription) : undefined;
     const bin = binLocation || 'UNASSIGNED';
     const result = await this.query(`SELECT sku FROM skus WHERE sku = $1`, [skuCode]);
 
     if (result.rows.length > 0) {
-      if (barcode || binLocation) {
+      if (cleanName || cleanDescription || barcode || binLocation) {
         const updates: string[] = [];
         const params: any[] = [];
         let idx = 1;
 
+        if (cleanName) {
+          updates.push(`name = $${idx}`);
+          params.push(cleanName);
+          idx++;
+        }
+        if (cleanDescription) {
+          updates.push(`description = $${idx}`);
+          params.push(cleanDescription);
+          idx++;
+        }
         if (barcode) {
           updates.push(`barcode = COALESCE(NULLIF(barcode, ''), $${idx})`);
           params.push(barcode);
@@ -2827,10 +2968,10 @@ export class NetSuiteOrderSyncService {
     }
 
     await this.query(
-      `INSERT INTO skus (sku, name, barcode, category, active, bin_locations, organization_id, created_at, updated_at)
-       VALUES ($1, $2, $3, 'NETSUITE', true, ARRAY[$4]::varchar[], $5, NOW(), NOW())
+      `INSERT INTO skus (sku, name, description, barcode, category, active, bin_locations, organization_id, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, 'NETSUITE', true, ARRAY[$5]::varchar[], $6, NOW(), NOW())
        ON CONFLICT (sku) DO NOTHING`,
-      [skuCode, cleanName, barcode || null, bin, this.organizationId]
+      [skuCode, cleanName, cleanDescription || null, barcode || null, bin, this.organizationId]
     );
     logger.info('Auto-created SKU from NetSuite item', {
       sku: skuCode,
@@ -2850,12 +2991,13 @@ export class NetSuiteOrderSyncService {
       if (!skuCode) continue;
 
       const itemDetails = await this.getItemDetails(line.item?.id);
-      const rawName = itemDetails?.displayName || line.item?.refName || skuCode;
+      const rawName =
+        line.item?.refName || itemDetails?.itemId || itemDetails?.displayName || skuCode;
       const itemName = decodeHtmlEntities(rawName);
       const barcode = itemDetails?.upcCode || undefined;
       const nsBin = itemDetails?.binNumber || undefined;
 
-      await this.ensureSku(skuCode, itemName, barcode, nsBin);
+      await this.ensureSku(skuCode, itemName, itemDetails?.description, barcode, nsBin);
 
       const skuResult = await this.query(
         `SELECT bin_locations[1] as bin_location FROM skus WHERE sku = $1 AND active = true`,

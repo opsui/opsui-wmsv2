@@ -152,6 +152,10 @@ export class NZCService {
     }
   }
 
+  isConfigured(): boolean {
+    return Boolean(this.apiKey && this.siteId);
+  }
+
   /**
    * Get request headers for NZC API
    */
@@ -484,13 +488,12 @@ export class NZCService {
 
       const headerContentType = response.headers.get('content-type') || '';
       const contentType = this._normalizeLabelContentType(headerContentType, format);
-      const buffer = await response.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
+      const base64 = await this._extractLabelBase64(response, headerContentType, format);
 
       logger.info('[NZC] Label fetched successfully', {
         connote,
         contentType,
-        size: buffer.byteLength,
+        size: base64.length,
       });
 
       return {
@@ -520,6 +523,63 @@ export class NZCService {
     }
 
     return 'image/png';
+  }
+
+  private async _extractLabelBase64(
+    response: Response,
+    contentType: string,
+    format: NZCLabelFormat
+  ): Promise<string> {
+    const normalizedContentType = contentType.toLowerCase();
+
+    if (normalizedContentType.includes('application/json')) {
+      const rawText = await response.text();
+      let parsed: unknown;
+
+      try {
+        parsed = JSON.parse(rawText);
+      } catch {
+        throw new Error('NZC label response was JSON but could not be parsed');
+      }
+
+      const extracted = this._extractBase64FromJson(parsed);
+
+      if (!extracted) {
+        throw new Error('NZC label response did not include a base64 label payload');
+      }
+
+      return extracted;
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return buffer.toString('base64');
+  }
+
+  private _extractBase64FromJson(payload: unknown): string | null {
+    if (typeof payload === 'string') {
+      return payload;
+    }
+
+    if (Array.isArray(payload)) {
+      for (const value of payload) {
+        const extracted = this._extractBase64FromJson(value);
+        if (extracted) {
+          return extracted;
+        }
+      }
+      return null;
+    }
+
+    if (payload && typeof payload === 'object') {
+      for (const value of Object.values(payload as Record<string, unknown>)) {
+        const extracted = this._extractBase64FromJson(value);
+        if (extracted) {
+          return extracted;
+        }
+      }
+    }
+
+    return null;
   }
 
   private _normalizeShipmentResponse(rawData: unknown): NZCShipmentResponse {
@@ -581,7 +641,12 @@ export class NZCService {
           status: response.status,
           error: errorText,
         });
-        throw new Error(`NZC API error: ${response.status} ${response.statusText}`);
+        const normalizedError = errorText.replace(/^"+|"+$/g, '').trim();
+        throw new Error(
+          normalizedError
+            ? `NZC API error: ${response.status} ${response.statusText} - ${normalizedError}`
+            : `NZC API error: ${response.status} ${response.statusText}`
+        );
       }
 
       logger.info('[NZC] Label reprinted successfully', { connote, copies });

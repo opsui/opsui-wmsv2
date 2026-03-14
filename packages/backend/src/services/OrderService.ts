@@ -56,6 +56,7 @@ import { logger } from '../config/logger';
 import { getDefaultPool, query } from '../db/client';
 import { notificationService } from './NotificationService';
 import { NetSuiteClient } from './NetSuiteClient';
+import { NetSuiteOrderSyncService } from './NetSuiteOrderSyncService';
 import wsServer from '../websocket';
 
 // ============================================================================
@@ -192,6 +193,49 @@ export class OrderService {
     })[0];
   }
 
+  private async refreshNetSuiteOrderForClaim(orderId: string): Promise<boolean> {
+    const orderResult = await query(
+      `SELECT order_id, organization_id, netsuite_source, netsuite_so_internal_id
+       FROM orders
+       WHERE order_id = $1
+       LIMIT 1`,
+      [orderId]
+    );
+
+    const order = orderResult.rows[0];
+    if (
+      !order?.organizationId ||
+      order?.netsuiteSource !== 'NETSUITE' ||
+      !order?.netsuiteSoInternalId
+    ) {
+      return false;
+    }
+
+    const integration = await this.getNetSuiteClientForOrganization(order.organizationId);
+    if (!integration) {
+      return false;
+    }
+
+    try {
+      const salesOrder = await integration.client.getSalesOrder(order.netsuiteSoInternalId);
+      const syncService = new NetSuiteOrderSyncService(integration.client);
+      await syncService.syncSingleOrder(salesOrder, integration.integrationId);
+
+      const refreshedResult = await query(`SELECT status FROM orders WHERE order_id = $1 LIMIT 1`, [
+        orderId,
+      ]);
+
+      return refreshedResult.rows[0]?.status === OrderStatus.PENDING;
+    } catch (error: any) {
+      logger.warn('Failed to refresh NetSuite order during claim recovery', {
+        orderId,
+        netsuiteSoInternalId: order.netsuiteSoInternalId,
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
   private async createNetSuiteFulfillmentForPickedOrder(orderId: string): Promise<void> {
     const orderResult = await query(
       `SELECT
@@ -227,6 +271,22 @@ export class OrderService {
     }
     const client = integration.client;
 
+    const orderItemsResult = await query(
+      `SELECT sku, name, quantity, picked_quantity, status
+       FROM order_items
+       WHERE order_id = $1
+       ORDER BY order_item_id`,
+      [orderId]
+    );
+
+    const fulfillmentLines = orderItemsResult.rows
+      .filter((item: any) => item.status !== 'SKIPPED' && Number(item.picked_quantity || 0) > 0)
+      .map((item: any) => ({
+        sku: item.sku,
+        itemName: item.name,
+        quantity: Math.min(Number(item.picked_quantity || 0), Number(item.quantity || 0)),
+      }));
+
     const existingFulfillments = await client.getItemFulfillmentsBySalesOrder([
       order.netsuiteSoInternalId,
     ]);
@@ -255,7 +315,9 @@ export class OrderService {
       return;
     }
 
-    const fulfillmentId = await client.createItemFulfillment(order.netsuiteSoInternalId, {});
+    const fulfillmentId = await client.createItemFulfillment(order.netsuiteSoInternalId, {
+      lines: fulfillmentLines,
+    });
     let fulfillmentTranId: string | null = null;
 
     try {
@@ -619,6 +681,21 @@ export class OrderService {
 
     const pickTask = await pickTaskRepository.skipPickTask(pickTaskId, reason);
 
+    // Recalculate order progress so skipped tasks count toward completion immediately
+    await query(
+      `UPDATE orders
+         SET progress = (
+           SELECT FLOOR(
+             (CAST(COUNT(*) FILTER (WHERE pt.status IN ('COMPLETED', 'SKIPPED')) AS NUMERIC) /
+              NULLIF(COUNT(*), 0)) * 100 + 0.5
+           )
+           FROM pick_tasks pt
+           WHERE pt.order_id = $1
+         )
+         WHERE order_id = $1`,
+      [pickTask.orderId]
+    );
+
     // Return updated order
     return this.getOrder(pickTask.orderId);
   }
@@ -964,7 +1041,27 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async claimOrder(orderId: string, dto: ClaimOrderDTO): Promise<Order> {
-    const order = await orderRepository.claimOrder(orderId, dto.pickerId);
+    let order: Order;
+
+    try {
+      order = await orderRepository.claimOrder(orderId, dto.pickerId);
+    } catch (error: any) {
+      const isShippedConflict =
+        error instanceof ConflictError &&
+        typeof error.message === 'string' &&
+        error.message.includes('status: SHIPPED');
+
+      if (!isShippedConflict) {
+        throw error;
+      }
+
+      const recovered = await this.refreshNetSuiteOrderForClaim(orderId);
+      if (!recovered) {
+        throw error;
+      }
+
+      order = await orderRepository.claimOrder(orderId, dto.pickerId);
+    }
 
     // Simple deduplication key using just orderId and pickerId
     const dedupKey = `${dto.pickerId}:${orderId}`;
@@ -1040,8 +1137,6 @@ export class OrderService {
   // --------------------------------------------------------------------------
 
   async completeOrder(orderId: string, dto: CompleteOrderDTO): Promise<Order> {
-    await this.createNetSuiteFulfillmentForPickedOrder(orderId);
-
     const order = await orderRepository.updateStatus(orderId, OrderStatus.PICKED);
 
     // Send notification to all users about order being completed
@@ -1221,6 +1316,9 @@ export class OrderService {
     if (order.status !== OrderStatus.PACKING) {
       throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
     }
+
+    // Create NetSuite fulfillment now (after packing), so skipped packing items are excluded
+    await this.createNetSuiteFulfillmentForPickedOrder(orderId);
 
     // Update order status to PACKED
     await orderRepository.update(orderId, {

@@ -578,6 +578,8 @@ export interface OrderItem {
   orderId: string;
   sku: string;
   name: string;
+  itemName?: string;
+  description?: string;
   quantity: number;
   pickedQuantity: number;
   verifiedQuantity?: number; // For packing stage - quantity verified by packer

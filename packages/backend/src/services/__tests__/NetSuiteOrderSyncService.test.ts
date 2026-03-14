@@ -237,6 +237,113 @@ describe('NetSuiteOrderSyncService', () => {
     );
   });
 
+  it('keeps ready-to-ship orders in sync when the pending-fulfillment summary omits readyToShip', async () => {
+    const { client, service } = createService();
+    jest.spyOn(service as any, 'query').mockResolvedValue({ rows: [], rowCount: 0 });
+    jest.spyOn(service as any, 'findOrderByNetSuiteSoId').mockResolvedValue({
+      orderId: 'SO68563',
+      status: 'CANCELLED',
+      netsuiteIfInternalId: null,
+    });
+    jest.spyOn(service as any, 'findOrderByExternalIdFull').mockResolvedValue(null);
+    jest.spyOn(service as any, 'syncExistingOrderItemsFromSalesOrder').mockResolvedValue(undefined);
+
+    jest.spyOn(client, 'getSalesOrders').mockResolvedValue({
+      links: [],
+      count: 1,
+      hasMore: false,
+      items: [
+        baseSalesOrder({
+          id: '1708563',
+          tranId: 'SO68563',
+          readyToShip: undefined as any,
+        }) as any,
+      ],
+      offset: 0,
+      totalResults: 1,
+    });
+    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
+      baseSalesOrder({
+        id: '1708563',
+        tranId: 'SO68563',
+        readyToShip: true,
+      })
+    );
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
+
+    expect(result.updated).toBe(1);
+    expect(client.getSalesOrder).toHaveBeenCalledWith('1708563');
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO68563', 'PENDING');
+    expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
+  });
+
+  it('does not cancel a pending order when pending-fulfillment detail fetch fails during cleanup', async () => {
+    const { client, service } = createService();
+    const queryMock = jest
+      .spyOn(service as any, 'query')
+      .mockImplementation(async (sql: string) => {
+        if (sql.includes("status IN ('PENDING', 'PICKING', 'SHIPPED')")) {
+          return {
+            rows: [
+              {
+                order_id: 'SO68563',
+                status: 'PENDING',
+                netsuite_so_internal_id: '1708563',
+                netsuite_so_tran_id: 'SO68563',
+              },
+            ],
+            rowCount: 1,
+          };
+        }
+
+        return { rows: [], rowCount: 0 };
+      });
+
+    jest.spyOn(client, 'getSalesOrders').mockResolvedValue({
+      links: [],
+      count: 1,
+      hasMore: false,
+      items: [
+        baseSalesOrder({ id: '1708563', tranId: 'SO68563', readyToShip: undefined as any }) as any,
+      ],
+      offset: 0,
+      totalResults: 1,
+    });
+    jest
+      .spyOn(client, 'getSalesOrder')
+      .mockRejectedValue(
+        new Error('SuiteTalk concurrent request limit exceeded. Request blocked.')
+      );
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
+
+    expect(result.cleaned).toBe(0);
+    expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
+    expect(queryMock).not.toHaveBeenCalledWith(
+      expect.stringContaining("SET status = 'CANCELLED'::order_status"),
+      ['SO68563']
+    );
+  });
+
   it('reverts shipped orders to pending when the sales order is still pending fulfillment without a fulfillment', async () => {
     const { service } = createService();
 
@@ -297,9 +404,9 @@ describe('NetSuiteOrderSyncService', () => {
       offset: 0,
       totalResults: 1,
     });
-    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
-      baseSalesOrder({ id: '1708563', tranId: 'SO68563' })
-    );
+    jest
+      .spyOn(client, 'getSalesOrder')
+      .mockResolvedValue(baseSalesOrder({ id: '1708563', tranId: 'SO68563' }));
     jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
       links: [],
       count: 0,
@@ -313,6 +420,36 @@ describe('NetSuiteOrderSyncService', () => {
     const result = await service.syncOrders('INT-AAP-NS01', { mode: 'full' });
 
     expect(result.updated).toBe(1);
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO68563', 'PENDING');
+    expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
+  });
+
+  it('reopens cancelled orders to pending when NetSuite returns the sales order to ready-to-ship without a fulfillment', async () => {
+    const { service } = createService();
+
+    jest.spyOn(service as any, 'findOrderByNetSuiteSoId').mockResolvedValue({
+      orderId: 'SO68563',
+      status: 'CANCELLED',
+      netsuiteIfInternalId: null,
+    });
+    jest.spyOn(service as any, 'findOrderByExternalIdFull').mockResolvedValue(null);
+    jest.spyOn(service as any, 'syncExistingOrderItemsFromSalesOrder').mockResolvedValue(undefined);
+
+    const result = await (service as any).upsertFromSalesOrder(
+      baseSalesOrder({ id: '1708563', tranId: 'SO68563' }),
+      new Map(),
+      new Date('2026-03-14T00:00:00.000Z'),
+      {}
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        created: false,
+        updated: true,
+        skipped: false,
+        tranId: 'SO68563',
+      })
+    );
     expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO68563', 'PENDING');
     expect((service as any).markOrderSynced).toHaveBeenCalledWith('SO68563', expect.any(Date));
   });
@@ -437,6 +574,9 @@ describe('NetSuiteOrderSyncService', () => {
     expect(updateSql).toContain('picker_id = NULL');
     expect(updateSql).toContain('packer_id = NULL');
     expect(updateSql).toContain('claimed_at = NULL');
+    expect(updateSql).toContain('picked_at = NULL');
+    expect(updateSql).toContain('cancelled_at = NULL');
+    expect(updateSql).toContain('tracking_number = NULL');
     expect(updateSql).toContain('progress = 0');
     expect(updateSql).toContain('netsuite_if_internal_id = NULL');
     expect(updateSql).toContain('netsuite_if_tran_id = NULL');

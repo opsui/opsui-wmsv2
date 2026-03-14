@@ -311,186 +311,6 @@ describe('OrderService', () => {
       expect(result).toEqual(completedOrder);
       expect(orderRepository.updateStatus).toHaveBeenCalledWith('ORD-TEST-001', OrderStatus.PICKED);
     });
-
-    it('should create NetSuite fulfillment before completing NetSuite-backed orders', async () => {
-      const completeDTO: CompleteOrderDTO = {
-        orderId: 'SO68539',
-        pickerId: 'picker-123',
-      };
-      const completedOrder = { ...mockOrder, orderId: 'SO68539', status: OrderStatus.PICKED };
-      const defaultPoolQuery = jest.fn().mockResolvedValue({
-        rows: [
-          {
-            integration_id: 'INT-AAP-NS01',
-            configuration: {
-              auth: {
-                accountId: 'acc',
-                tokenId: 'tid',
-                tokenSecret: 'tsec',
-                consumerKey: 'ck',
-                consumerSecret: 'cs',
-              },
-            },
-          },
-        ],
-        rowCount: 1,
-      });
-      const getItemFulfillment = jest.fn().mockResolvedValue({ id: '1606001', tranId: 'IF73600' });
-      const createItemFulfillment = jest.fn().mockResolvedValue('1606001');
-      const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([]);
-
-      NetSuiteClient.mockImplementation(() => ({
-        createItemFulfillment,
-        getItemFulfillment,
-        getItemFulfillmentsBySalesOrder,
-      }));
-
-      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
-
-      query
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              organizationId: 'ORG320EDF1',
-              netsuiteSoInternalId: '1604613',
-              netsuiteSoTranId: 'SO68539',
-              netsuiteIfInternalId: null,
-            },
-          ],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 1 });
-
-      orderRepository.updateStatus.mockResolvedValue(completedOrder);
-
-      const result = await orderService.completeOrder('SO68539', completeDTO);
-
-      expect(getItemFulfillmentsBySalesOrder).toHaveBeenCalledWith(['1604613']);
-      expect(createItemFulfillment).toHaveBeenCalledWith('1604613', {});
-      expect(getItemFulfillment).toHaveBeenCalledWith('1606001');
-      expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('UPDATE orders'), [
-        '1606001',
-        'IF73600',
-        'SO68539',
-      ]);
-      expect(orderRepository.updateStatus).toHaveBeenCalledWith('SO68539', OrderStatus.PICKED);
-      expect(result).toEqual(completedOrder);
-    });
-
-    it('should fail completion when NetSuite fulfillment creation fails for a NetSuite-backed order', async () => {
-      const completeDTO: CompleteOrderDTO = {
-        orderId: 'SO68539',
-        pickerId: 'picker-123',
-      };
-      const defaultPoolQuery = jest.fn().mockResolvedValue({
-        rows: [
-          {
-            integration_id: 'INT-AAP-NS01',
-            configuration: {
-              auth: {
-                accountId: 'acc',
-                tokenId: 'tid',
-                tokenSecret: 'tsec',
-                consumerKey: 'ck',
-                consumerSecret: 'cs',
-              },
-            },
-          },
-        ],
-        rowCount: 1,
-      });
-      const createItemFulfillment = jest
-        .fn()
-        .mockRejectedValue(new Error('Failed to create item fulfillment for SO 1604613: blocked'));
-
-      NetSuiteClient.mockImplementation(() => ({
-        createItemFulfillment,
-        getItemFulfillment: jest.fn(),
-        getItemFulfillmentsBySalesOrder: jest.fn().mockResolvedValue([]),
-      }));
-
-      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
-
-      query.mockResolvedValueOnce({
-        rows: [
-          {
-            organizationId: 'ORG320EDF1',
-            netsuiteSoInternalId: '1604613',
-            netsuiteSoTranId: 'SO68539',
-            netsuiteIfInternalId: null,
-          },
-        ],
-        rowCount: 1,
-      });
-
-      await expect(orderService.completeOrder('SO68539', completeDTO)).rejects.toThrow(
-        'Failed to create item fulfillment for SO 1604613: blocked'
-      );
-      expect(orderRepository.updateStatus).not.toHaveBeenCalled();
-    });
-
-    it('should link an existing NetSuite fulfillment instead of creating a duplicate', async () => {
-      const completeDTO: CompleteOrderDTO = {
-        orderId: 'SO68539',
-        pickerId: 'picker-123',
-      };
-      const completedOrder = { ...mockOrder, orderId: 'SO68539', status: OrderStatus.PICKED };
-      const defaultPoolQuery = jest.fn().mockResolvedValue({
-        rows: [
-          {
-            integration_id: 'INT-AAP-NS01',
-            configuration: {
-              auth: {
-                accountId: 'acc',
-                tokenId: 'tid',
-                tokenSecret: 'tsec',
-                consumerKey: 'ck',
-                consumerSecret: 'cs',
-              },
-            },
-          },
-        ],
-        rowCount: 1,
-      });
-      const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([
-        { id: '1607002', tranId: 'IF73610', shipStatus: '_picked' },
-        { id: '1607001', tranId: 'IF73609', shipStatus: '_picked' },
-      ]);
-      const createItemFulfillment = jest.fn();
-
-      NetSuiteClient.mockImplementation(() => ({
-        createItemFulfillment,
-        getItemFulfillment: jest.fn(),
-        getItemFulfillmentsBySalesOrder,
-      }));
-
-      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
-      query
-        .mockResolvedValueOnce({
-          rows: [
-            {
-              organizationId: 'ORG320EDF1',
-              netsuiteSoInternalId: '1604613',
-              netsuiteSoTranId: 'SO68539',
-              netsuiteIfInternalId: null,
-            },
-          ],
-          rowCount: 1,
-        })
-        .mockResolvedValueOnce({ rows: [], rowCount: 1 });
-
-      orderRepository.updateStatus.mockResolvedValue(completedOrder);
-
-      await orderService.completeOrder('SO68539', completeDTO);
-
-      expect(createItemFulfillment).not.toHaveBeenCalled();
-      expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('UPDATE orders'), [
-        '1607002',
-        'IF73610',
-        'SO68539',
-      ]);
-      expect(orderRepository.updateStatus).toHaveBeenCalledWith('SO68539', OrderStatus.PICKED);
-    });
   });
 
   // ==========================================================================
@@ -696,6 +516,208 @@ describe('OrderService', () => {
       await expect(orderService.completePacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
         ConflictError
       );
+    });
+
+    it('should create NetSuite fulfillment (excluding skipped items) when completing packing of a NetSuite-backed order', async () => {
+      const packingOrder = {
+        ...mockOrder,
+        orderId: 'SO68539',
+        status: OrderStatus.PACKING,
+        packerId: 'packer-123',
+      };
+      const packedOrder = {
+        ...mockOrder,
+        orderId: 'SO68539',
+        status: OrderStatus.PACKED,
+        packedAt: new Date(),
+      };
+      const defaultPoolQuery = jest.fn().mockResolvedValue({
+        rows: [
+          {
+            integration_id: 'INT-AAP-NS01',
+            configuration: {
+              auth: {
+                accountId: 'acc',
+                tokenId: 'tid',
+                tokenSecret: 'tsec',
+                consumerKey: 'ck',
+                consumerSecret: 'cs',
+              },
+            },
+          },
+        ],
+        rowCount: 1,
+      });
+      const getItemFulfillment = jest.fn().mockResolvedValue({ id: '1606001', tranId: 'IF73600' });
+      const createItemFulfillment = jest.fn().mockResolvedValue('1606001');
+      const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([]);
+
+      NetSuiteClient.mockImplementation(() => ({
+        createItemFulfillment,
+        getItemFulfillment,
+        getItemFulfillmentsBySalesOrder,
+      }));
+
+      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(packedOrder);
+      orderRepository.update.mockResolvedValue(undefined);
+
+      query
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              organizationId: 'ORG320EDF1',
+              netsuiteSoInternalId: '1604613',
+              netsuiteSoTranId: 'SO68539',
+              netsuiteIfInternalId: null,
+            },
+          ],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // order_items query (no skipped items)
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // UPDATE orders
+
+      const result = await orderService.completePacking('SO68539', 'packer-123');
+
+      expect(getItemFulfillmentsBySalesOrder).toHaveBeenCalledWith(['1604613']);
+      expect(createItemFulfillment).toHaveBeenCalledWith('1604613', { lines: [] });
+      expect(getItemFulfillment).toHaveBeenCalledWith('1606001');
+      expect(result.status).toBe(OrderStatus.PACKED);
+    });
+
+    it('should fail packing completion when NetSuite fulfillment creation fails for a NetSuite-backed order', async () => {
+      const packingOrder = {
+        ...mockOrder,
+        orderId: 'SO68539',
+        status: OrderStatus.PACKING,
+        packerId: 'packer-123',
+      };
+      const defaultPoolQuery = jest.fn().mockResolvedValue({
+        rows: [
+          {
+            integration_id: 'INT-AAP-NS01',
+            configuration: {
+              auth: {
+                accountId: 'acc',
+                tokenId: 'tid',
+                tokenSecret: 'tsec',
+                consumerKey: 'ck',
+                consumerSecret: 'cs',
+              },
+            },
+          },
+        ],
+        rowCount: 1,
+      });
+      const createItemFulfillment = jest
+        .fn()
+        .mockRejectedValue(new Error('Failed to create item fulfillment for SO 1604613: blocked'));
+
+      NetSuiteClient.mockImplementation(() => ({
+        createItemFulfillment,
+        getItemFulfillment: jest.fn(),
+        getItemFulfillmentsBySalesOrder: jest.fn().mockResolvedValue([]),
+      }));
+
+      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+
+      orderRepository.getOrderWithItems.mockResolvedValue(packingOrder);
+
+      query
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              organizationId: 'ORG320EDF1',
+              netsuiteSoInternalId: '1604613',
+              netsuiteSoTranId: 'SO68539',
+              netsuiteIfInternalId: null,
+            },
+          ],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 }); // order_items query
+
+      await expect(orderService.completePacking('SO68539', 'packer-123')).rejects.toThrow(
+        'Failed to create item fulfillment for SO 1604613: blocked'
+      );
+      expect(orderRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should link an existing NetSuite fulfillment when completing packing instead of creating a duplicate', async () => {
+      const packingOrder = {
+        ...mockOrder,
+        orderId: 'SO68539',
+        status: OrderStatus.PACKING,
+        packerId: 'packer-123',
+      };
+      const packedOrder = {
+        ...mockOrder,
+        orderId: 'SO68539',
+        status: OrderStatus.PACKED,
+        packedAt: new Date(),
+      };
+      const defaultPoolQuery = jest.fn().mockResolvedValue({
+        rows: [
+          {
+            integration_id: 'INT-AAP-NS01',
+            configuration: {
+              auth: {
+                accountId: 'acc',
+                tokenId: 'tid',
+                tokenSecret: 'tsec',
+                consumerKey: 'ck',
+                consumerSecret: 'cs',
+              },
+            },
+          },
+        ],
+        rowCount: 1,
+      });
+      const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([
+        { id: '1607002', tranId: 'IF73610', shipStatus: '_picked' },
+        { id: '1607001', tranId: 'IF73609', shipStatus: '_picked' },
+      ]);
+      const createItemFulfillment = jest.fn();
+
+      NetSuiteClient.mockImplementation(() => ({
+        createItemFulfillment,
+        getItemFulfillment: jest.fn(),
+        getItemFulfillmentsBySalesOrder,
+      }));
+
+      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+
+      orderRepository.getOrderWithItems
+        .mockResolvedValueOnce(packingOrder)
+        .mockResolvedValueOnce(packedOrder);
+      orderRepository.update.mockResolvedValue(undefined);
+
+      query
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              organizationId: 'ORG320EDF1',
+              netsuiteSoInternalId: '1604613',
+              netsuiteSoTranId: 'SO68539',
+              netsuiteIfInternalId: null,
+            },
+          ],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // order_items query
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 }); // UPDATE orders
+
+      await orderService.completePacking('SO68539', 'packer-123');
+
+      expect(createItemFulfillment).not.toHaveBeenCalled();
+      expect(query).toHaveBeenNthCalledWith(3, expect.stringContaining('UPDATE orders'), [
+        '1607002',
+        'IF73610',
+        'SO68539',
+      ]);
     });
   });
 

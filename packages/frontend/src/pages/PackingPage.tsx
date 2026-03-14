@@ -23,7 +23,14 @@ import {
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { apiClient } from '@/lib/api-client';
 import { formatBinLocation } from '@/lib/utils';
-import { nzcApi, useCompletePacking, useOrder, useShipOrder } from '@/services/api';
+import {
+  nzcApi,
+  skuApi,
+  useCompletePacking,
+  useLogException,
+  useOrder,
+  useShipOrder,
+} from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
   ArrowPathIcon,
@@ -35,7 +42,7 @@ import {
   ForwardIcon,
   PencilSquareIcon,
 } from '@heroicons/react/24/outline';
-import { Address, Carrier, NZCQuote, OrderStatus } from '@opsui/shared';
+import { Address, Carrier, ExceptionType, NZCQuote, OrderStatus } from '@opsui/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -122,6 +129,16 @@ const NZC_PACKAGE_PRESETS: NzcPackagePreset[] = [
   { id: 'NZC_PP_PLASTIC_A3', label: 'NZC PP Plastic A3+' },
 ];
 
+const createNzcPackageRow = (presetId: string = NZC_DEFAULT_PRESET_ID): NzcPackageRow => ({
+  rowId: `nzc-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  presetId,
+  units: '1',
+  customLength: '',
+  customWidth: '',
+  customHeight: '',
+  customWeightLbs: '',
+});
+
 const PACKING_THEME_STYLE_ID = 'packing-live-theme-styles';
 
 const packingThemeStyles = `
@@ -202,6 +219,31 @@ const packingSelectClass = `${packingInputClass} [&_option]:bg-white dark:[&_opt
 const packingReadonlyInputClass =
   'packing-input w-full rounded-xl px-4 py-3 bg-gray-100 dark:bg-white/[0.03] border border-gray-300 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 focus:outline-none disabled:opacity-70';
 
+const SKU_LOOKUP_PATTERN = /^[A-Z0-9-]{2,50}$/;
+
+const getOrderItemDisplayName = (item?: any | null) =>
+  item?.itemName || item?.item_name || item?.name || item?.sku || 'Item';
+
+const getOrderItemDescription = (item?: any | null) => {
+  const description = item?.description || item?.itemDescription || item?.item_description || null;
+  const displayName = getOrderItemDisplayName(item);
+
+  if (!description || description === displayName || description === item?.sku) {
+    return null;
+  }
+
+  return description;
+};
+
+type PersistedPackingShippingState = {
+  orderId: string;
+  showShippingForm: boolean;
+  shipmentCreated: boolean;
+  nzcLabels: NzcRenderedLabel[];
+  nzcConnotes: string[];
+  selectedCarrierId: string;
+};
+
 export function PackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
@@ -221,6 +263,9 @@ export function PackingPage() {
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [activeOrderItemImageMap, setActiveOrderItemImageMap] = useState<Record<string, string>>(
+    {}
+  );
 
   // Skip modal state
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -267,17 +312,27 @@ export function PackingPage() {
   const [isFetchingRates, setIsFetchingRates] = useState(false);
   const [nzcRateError, setNzcRateError] = useState<string | null>(null);
   const [shipmentCreated, setShipmentCreated] = useState(false);
+  const [isFinalizingShipment, setIsFinalizingShipment] = useState(false);
   const [nzcConnotes, setNzcConnotes] = useState<string[]>([]);
   const [nzcPackageRows, setNzcPackageRows] = useState<NzcPackageRow[]>([createNzcPackageRow()]);
+  const [selectedNzcPackagePreset, setSelectedNzcPackagePreset] =
+    useState<string>(NZC_DEFAULT_PRESET_ID);
+  const [nzcCustomLength, setNzcCustomLength] = useState('');
+  const [nzcCustomWidth, setNzcCustomWidth] = useState('');
+  const [nzcCustomHeight, setNzcCustomHeight] = useState('');
   const [reprintingConnotes, setReprintingConnotes] = useState<Record<string, boolean>>({});
   const [manualAddressEditEnabled, setManualAddressEditEnabled] = useState(false);
   const [confirmManualAddressEdit, setConfirmManualAddressEdit] = useState(false);
+  const packingShippingStateStorageKey = orderId ? `packing-shipping-state:${orderId}` : null;
+  const hasHydratedPackingShippingStateRef = useRef(false);
+  const restoredShippingStageRef = useRef(false);
+  const hydratedShipmentPreviewKeyRef = useRef<string | null>(null);
   const packingQueuePath =
     typeof location.state?.returnTo === 'string' && location.state.returnTo.length > 0
       ? location.state.returnTo
       : typeof returnToFromSearch === 'string' && returnToFromSearch.length > 0
         ? returnToFromSearch
-      : '/packing?status=PACKING';
+        : '/packing?status=PACKING';
 
   // Helper to convert lbs to kg for NZC API
   const lbsToKg = (lbs: number): number => Math.round(lbs * 0.453592 * 100) / 100;
@@ -309,14 +364,9 @@ export function PackingPage() {
     },
   });
 
-  const { data: nzcStockSizes = [] } = useQuery({
-    queryKey: ['nzc', 'stock-sizes'],
-    queryFn: () => nzcApi.getStockSizes(),
-    staleTime: 5 * 60 * 1000,
-  });
-
   const { data: order, isLoading, refetch } = useOrder(orderId!);
   const completePackingMutation = useCompletePacking();
+  const logExceptionMutation = useLogException();
   const shipOrderMutation = useShipOrder();
   const baseShipToAddress = normalizeShipToAddress(
     order?.shippingAddress,
@@ -327,12 +377,28 @@ export function PackingPage() {
     .filter(Boolean)
     .join(', ');
   const carrierList: Carrier[] = Array.isArray(carriers) ? carriers : [];
-  const nzcStockSizeList: NzcStockSize[] = Array.isArray(nzcStockSizes) ? nzcStockSizes : [];
   const carriersWithFallback = carrierList.some(
     (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
   )
     ? carrierList
     : [...carrierList, NZC_CARRIER_FALLBACK];
+  const hasRealNzcCarrier = carrierList.some(
+    (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
+  );
+  const selectedCarrier = carriersWithFallback.find(
+    (carrier: Carrier) => carrier.carrierId === selectedCarrierId
+  );
+  const isNZCCarrier = selectedCarrier?.carrierCode === 'NZC';
+
+  const { data: nzcStockSizes = [] } = useQuery({
+    queryKey: ['nzc', 'stock-sizes'],
+    queryFn: () => nzcApi.getStockSizes(),
+    staleTime: 5 * 60 * 1000,
+    enabled: isNZCCarrier,
+    retry: false,
+  });
+  const nzcStockSizeList: NzcStockSize[] = Array.isArray(nzcStockSizes) ? nzcStockSizes : [];
+
   const nzcPackageOptions = nzcStockSizeList.length
     ? [
         NZC_PACKAGE_PRESETS[0],
@@ -350,14 +416,53 @@ export function PackingPage() {
         })),
       ]
     : NZC_PACKAGE_PRESETS;
-  const selectedCarrier = carriersWithFallback.find(
-    (carrier: Carrier) => carrier.carrierId === selectedCarrierId
-  );
-  const isNZCCarrier = selectedCarrier?.carrierCode === 'NZC';
   const selectedNzcPreset = nzcPackageOptions.find(
     preset => preset.id === selectedNzcPackagePreset
   );
   const selectedNzcPackageIsCustom = selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID;
+
+  useEffect(() => {
+    setNzcPackageRows(rows => {
+      if (rows.length === 0) {
+        return [createNzcPackageRow(selectedNzcPackagePreset)];
+      }
+
+      const firstRow = rows[0];
+      const nextUnits = totalPackages || '1';
+      const nextWeightLbs = totalWeight || '';
+      const nextRow: NzcPackageRow = {
+        ...firstRow,
+        presetId: selectedNzcPackagePreset,
+        units: nextUnits,
+        customLength: selectedNzcPackageIsCustom ? nzcCustomLength : firstRow.customLength,
+        customWidth: selectedNzcPackageIsCustom ? nzcCustomWidth : firstRow.customWidth,
+        customHeight: selectedNzcPackageIsCustom ? nzcCustomHeight : firstRow.customHeight,
+        customWeightLbs: selectedNzcPackageIsCustom ? nextWeightLbs : firstRow.customWeightLbs,
+      };
+
+      const didChange =
+        firstRow.presetId !== nextRow.presetId ||
+        firstRow.units !== nextRow.units ||
+        firstRow.customLength !== nextRow.customLength ||
+        firstRow.customWidth !== nextRow.customWidth ||
+        firstRow.customHeight !== nextRow.customHeight ||
+        firstRow.customWeightLbs !== nextRow.customWeightLbs;
+
+      if (!didChange) {
+        return rows;
+      }
+
+      return [nextRow, ...rows.slice(1)];
+    });
+  }, [
+    nzcCustomHeight,
+    nzcCustomLength,
+    nzcCustomWidth,
+    selectedNzcPackageIsCustom,
+    selectedNzcPackagePreset,
+    totalPackages,
+    totalWeight,
+  ]);
 
   useEffect(() => {
     if (!document.getElementById(PACKING_THEME_STYLE_ID)) {
@@ -404,6 +509,8 @@ export function PackingPage() {
   );
   const derivedNzcTotalWeightLbs = Math.round(kgToLbs(derivedNzcTotalWeightKg) * 100) / 100;
   const nzcRateList = Array.isArray(nzcRates) ? nzcRates : [];
+  const nzcLabel = nzcLabels[0] || null;
+  const nzcConnote = nzcConnotes[0] || '';
   const getQuotePrice = (quote: NZCQuote) => {
     const rawQuote = quote as NZCQuote & { charge?: number; cost?: number };
     const value = Number(rawQuote.TotalPrice ?? rawQuote.charge ?? rawQuote.cost ?? 0);
@@ -661,6 +768,12 @@ export function PackingPage() {
 
   // Get current item to verify
   const currentItem = order?.items?.[currentItemIndex];
+  const currentItemDisplayName = getOrderItemDisplayName(currentItem);
+  const currentItemDescription = getOrderItemDescription(currentItem);
+  const currentItemImage =
+    currentItem?.image ||
+    (currentItem?.sku ? activeOrderItemImageMap[String(currentItem.sku)] : null) ||
+    null;
 
   // Calculate progress
   const totalItems = order?.items?.length || 0;
@@ -668,6 +781,67 @@ export function PackingPage() {
     order?.items?.filter(item => (item.verifiedQuantity || 0) >= item.quantity) || [];
   const allVerified = completedItems.length === totalItems && totalItems > 0;
   const verifiedCount = completedItems.length;
+  const hasCompletedShippingSession =
+    shipmentCreated || nzcLabels.length > 0 || nzcConnotes.length > 0;
+  const shouldShowShippingStage =
+    showShippingForm || hasCompletedShippingSession || restoredShippingStageRef.current;
+  const areRatesLocked = nzcConnotes.length > 0 || nzcLabels.length > 0 || shipmentCreated;
+
+  useEffect(() => {
+    if (!order?.items?.length) {
+      setActiveOrderItemImageMap({});
+      return;
+    }
+
+    const activeItems = order.items as Array<{
+      sku?: string;
+      image?: string | null;
+    }>;
+    const missingSkus = Array.from(
+      new Set(
+        activeItems
+          .filter(item => item?.sku && !item.image)
+          .map(item => String(item.sku).trim().toUpperCase())
+          .filter(sku => SKU_LOOKUP_PATTERN.test(sku))
+      )
+    );
+
+    const seededImages = activeItems.reduce<Record<string, string>>((acc, item) => {
+      if (item?.sku && item.image) {
+        acc[String(item.sku)] = item.image;
+      }
+      return acc;
+    }, {});
+
+    setActiveOrderItemImageMap(current => ({ ...seededImages, ...current }));
+
+    if (missingSkus.length === 0) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void Promise.allSettled(missingSkus.map(sku => skuApi.getWithInventory(sku))).then(results => {
+      if (isCancelled) {
+        return;
+      }
+
+      const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
+        if (result.status === 'fulfilled' && result.value?.image) {
+          acc[missingSkus[index]] = result.value.image;
+        }
+        return acc;
+      }, {});
+
+      if (Object.keys(fetchedImages).length > 0) {
+        setActiveOrderItemImageMap(current => ({ ...current, ...fetchedImages }));
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [order]);
 
   // Reset current index when order changes
   useEffect(() => {
@@ -699,14 +873,18 @@ export function PackingPage() {
     }
 
     const shouldHoldShippingForm =
-      packingSessionActiveRef.current &&
-      !!order &&
-      [OrderStatus.PICKED, OrderStatus.PACKING, OrderStatus.PACKED].includes(order.status);
+      restoredShippingStageRef.current ||
+      hasCompletedShippingSession ||
+      (packingSessionActiveRef.current &&
+        !!order &&
+        [OrderStatus.PICKED, OrderStatus.PACKING, OrderStatus.PACKED, OrderStatus.SHIPPED].includes(
+          order.status
+        ));
 
     if (!allVerified && showShippingForm && !shouldHoldShippingForm) {
       setShowShippingForm(false);
     }
-  }, [allVerified, order, showShippingForm]);
+  }, [allVerified, hasCompletedShippingSession, order, showShippingForm]);
 
   // Scroll shipping form into view when it appears
   useEffect(() => {
@@ -719,6 +897,23 @@ export function PackingPage() {
   useEffect(() => {
     setScanError(null);
   }, [currentItemIndex]);
+
+  useEffect(() => {
+    if (!showOverrideModal) {
+      return;
+    }
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [showOverrideModal]);
 
   // Fetch NZC rates when NZC carrier is selected
   useEffect(() => {
@@ -752,7 +947,9 @@ export function PackingPage() {
 
         if (response.Quotes && response.Quotes.length > 0) {
           setNzcRates(response.Quotes);
-          setSelectedQuote(response.Quotes[0]);
+          const matchedQuote =
+            response.Quotes.find(quote => quote.Service === serviceType) || response.Quotes[0];
+          setSelectedQuote(matchedQuote);
         } else {
           setNzcRates([]);
           setSelectedQuote(null);
@@ -778,7 +975,7 @@ export function PackingPage() {
 
     const timeoutId = setTimeout(fetchNZCRates, 500);
     return () => clearTimeout(timeoutId);
-  }, [isNZCCarrier, builtNzcPackagesKey, editableShipToAddress]);
+  }, [builtNzcPackagesKey, editableShipToAddress, isNZCCarrier, serviceType]);
 
   useEffect(() => {
     if (!trackingNumber.trim() && trackingDefault) {
@@ -791,14 +988,46 @@ export function PackingPage() {
       return;
     }
 
-    const nzcCarrier = carriersWithFallback.find(
-      (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
-    );
+    const preferredCarrier =
+      carrierList.find((carrier: Carrier) => carrier.isActive && carrier.carrierCode !== 'NZC') ||
+      carrierList.find((carrier: Carrier) => carrier.isActive) ||
+      null;
 
-    if (nzcCarrier) {
-      setSelectedCarrierId(nzcCarrier.carrierId);
+    if (preferredCarrier) {
+      setSelectedCarrierId(preferredCarrier.carrierId);
+      return;
     }
-  }, [selectedCarrierId, carriersWithFallback]);
+
+    if (hasRealNzcCarrier) {
+      const nzcCarrier = carrierList.find(
+        (carrier: Carrier) => carrier.carrierCode === NZC_CARRIER_FALLBACK.carrierCode
+      );
+
+      if (nzcCarrier) {
+        setSelectedCarrierId(nzcCarrier.carrierId);
+      }
+    }
+  }, [selectedCarrierId, carrierList, hasRealNzcCarrier]);
+
+  useEffect(() => {
+    const firstRealOptionId =
+      nzcPackageOptions.find(preset => preset.id !== NZC_DEFAULT_PRESET_ID)?.id ||
+      nzcPackageOptions[0]?.id;
+    if (!firstRealOptionId) {
+      return;
+    }
+
+    const hasSelectedOption = nzcPackageOptions.some(
+      preset => preset.id === selectedNzcPackagePreset
+    );
+    if (hasSelectedOption && selectedNzcPackagePreset === firstRealOptionId) {
+      return;
+    }
+
+    if (!hasSelectedOption || selectedNzcPackagePreset === NZC_DEFAULT_PRESET_ID) {
+      setSelectedNzcPackagePreset(firstRealOptionId);
+    }
+  }, [nzcPackageOptions, selectedNzcPackagePreset]);
 
   useEffect(() => {
     if (!isNZCCarrier) {
@@ -812,25 +1041,36 @@ export function PackingPage() {
       return;
     }
 
-    setNzcPackageRows(rows =>
-      rows.map(row =>
-        row.presetId === NZC_DEFAULT_PRESET_ID ||
-        !nzcPackageOptions.some(preset => preset.id === row.presetId)
-          ? { ...createNzcPackageRow(defaultPreset.id), rowId: row.rowId, units: row.units }
-          : row
-      )
-    );
+    setNzcPackageRows(rows => {
+      let didChange = false;
+
+      const nextRows = rows.map(row => {
+        const shouldReplace =
+          row.presetId === NZC_DEFAULT_PRESET_ID ||
+          !nzcPackageOptions.some(preset => preset.id === row.presetId);
+
+        if (!shouldReplace) {
+          return row;
+        }
+
+        didChange = true;
+        return {
+          ...row,
+          presetId: defaultPreset.id,
+          customLength: '',
+          customWidth: '',
+          customHeight: '',
+          customWeightLbs: '',
+        };
+      });
+
+      return didChange ? nextRows : rows;
+    });
   }, [isNZCCarrier, nzcPackageOptions]);
 
   useEffect(() => {
     setEditableShipToAddress(baseShipToAddress);
-    setManualAddressEditEnabled(false);
-    setConfirmManualAddressEdit(false);
-    setShipmentCreated(false);
-    setNzcLabels([]);
-    setNzcConnotes([]);
   }, [
-    order?.orderId,
     baseShipToAddress.addressLine1,
     baseShipToAddress.addressLine2,
     baseShipToAddress.city,
@@ -842,6 +1082,173 @@ export function PackingPage() {
     baseShipToAddress.name,
     baseShipToAddress.company,
   ]);
+
+  useEffect(() => {
+    hasHydratedPackingShippingStateRef.current = false;
+    restoredShippingStageRef.current = false;
+    hydratedShipmentPreviewKeyRef.current = null;
+    setManualAddressEditEnabled(false);
+    setConfirmManualAddressEdit(false);
+    setShipmentCreated(false);
+    setNzcLabels([]);
+    setNzcConnotes([]);
+    setShowShippingForm(false);
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!packingShippingStateStorageKey || hasHydratedPackingShippingStateRef.current) {
+      return;
+    }
+
+    hasHydratedPackingShippingStateRef.current = true;
+
+    const savedState = sessionStorage.getItem(packingShippingStateStorageKey);
+    if (!savedState) {
+      return;
+    }
+
+    try {
+      const parsedState = JSON.parse(savedState) as PersistedPackingShippingState;
+      if (parsedState.orderId !== orderId) {
+        sessionStorage.removeItem(packingShippingStateStorageKey);
+        return;
+      }
+
+      restoredShippingStageRef.current = Boolean(
+        parsedState.showShippingForm ||
+        parsedState.shipmentCreated ||
+        (Array.isArray(parsedState.nzcLabels) && parsedState.nzcLabels.length > 0) ||
+        (Array.isArray(parsedState.nzcConnotes) && parsedState.nzcConnotes.length > 0)
+      );
+      setShowShippingForm(Boolean(parsedState.showShippingForm || parsedState.shipmentCreated));
+      setShipmentCreated(Boolean(parsedState.shipmentCreated));
+      setNzcLabels(Array.isArray(parsedState.nzcLabels) ? parsedState.nzcLabels : []);
+      setNzcConnotes(Array.isArray(parsedState.nzcConnotes) ? parsedState.nzcConnotes : []);
+      if (parsedState.selectedCarrierId) {
+        setSelectedCarrierId(parsedState.selectedCarrierId);
+      }
+    } catch {
+      restoredShippingStageRef.current = false;
+      sessionStorage.removeItem(packingShippingStateStorageKey);
+    }
+  }, [orderId, packingShippingStateStorageKey]);
+
+  useEffect(() => {
+    if (!packingShippingStateStorageKey || !hasHydratedPackingShippingStateRef.current) {
+      return;
+    }
+
+    if (
+      !showShippingForm &&
+      !shipmentCreated &&
+      nzcLabels.length === 0 &&
+      nzcConnotes.length === 0
+    ) {
+      sessionStorage.removeItem(packingShippingStateStorageKey);
+      return;
+    }
+
+    const persistedState: PersistedPackingShippingState = {
+      orderId: orderId || '',
+      showShippingForm,
+      shipmentCreated,
+      nzcLabels,
+      nzcConnotes,
+      selectedCarrierId,
+    };
+
+    sessionStorage.setItem(packingShippingStateStorageKey, JSON.stringify(persistedState));
+  }, [
+    nzcConnotes,
+    nzcLabels,
+    orderId,
+    packingShippingStateStorageKey,
+    selectedCarrierId,
+    shipmentCreated,
+    showShippingForm,
+  ]);
+
+  useEffect(() => {
+    const hydrateExistingNzcPreview = async () => {
+      if (
+        !orderId ||
+        !shouldShowShippingStage ||
+        nzcLabels.length > 0 ||
+        order?.status !== OrderStatus.SHIPPED
+      ) {
+        return;
+      }
+
+      try {
+        const response = await apiClient.get(`/shipping/orders/${orderId}/shipment`);
+        const shipment = response.data as {
+          carrierId?: string;
+          serviceType?: string | null;
+          trackingNumber?: string | null;
+        };
+
+        const trackingTokens = String(shipment?.trackingNumber || '')
+          .split(',')
+          .map((value: string) => value.trim())
+          .filter(Boolean);
+
+        if (trackingTokens.length === 0) {
+          return;
+        }
+
+        const shipmentCarrier = carriersWithFallback.find(
+          (carrier: Carrier) => carrier.carrierId === shipment?.carrierId
+        );
+        const isNzcShipment =
+          shipmentCarrier?.carrierCode === 'NZC' ||
+          shipment?.carrierId === NZC_CARRIER_FALLBACK.carrierId;
+
+        if (!isNzcShipment) {
+          return;
+        }
+
+        const previewKey = `${orderId}:${trackingTokens.join(',')}`;
+        if (hydratedShipmentPreviewKeyRef.current === previewKey) {
+          return;
+        }
+        hydratedShipmentPreviewKeyRef.current = previewKey;
+
+        if (shipment?.carrierId) {
+          setSelectedCarrierId(shipment.carrierId);
+        }
+        if (shipment?.serviceType) {
+          setServiceType(shipment.serviceType);
+        }
+
+        restoredShippingStageRef.current = true;
+        setShowShippingForm(true);
+        setShipmentCreated(true);
+        setNzcConnotes(trackingTokens);
+
+        const labels = await Promise.all(
+          trackingTokens.map(async connote => {
+            const label = await nzcApi.getLabel(connote, 'LABEL_PNG_100X175');
+            return {
+              connote,
+              data: label.data,
+              contentType: label.contentType,
+            };
+          })
+        );
+
+        setNzcLabels(labels);
+      } catch (error: any) {
+        if (error?.response?.status === 404) {
+          return;
+        }
+
+        hydratedShipmentPreviewKeyRef.current = null;
+        console.error('Failed to rehydrate NZC label preview:', error);
+      }
+    };
+
+    void hydrateExistingNzcPreview();
+  }, [carriersWithFallback, nzcLabels.length, order?.status, orderId, shouldShowShippingStage]);
 
   if (!orderId) {
     return <div>No order ID provided</div>;
@@ -988,9 +1395,11 @@ export function PackingPage() {
           const matchesSku = scanValueTrimmed === item.sku;
           if (matchesBarcode || matchesSku) {
             if (item.status === 'SKIPPED') {
-              setScanError(`Item was skipped: ${item.name}. Revert the skip to verify it.`);
+              setScanError(
+                `Item was skipped: ${getOrderItemDisplayName(item)}. Revert the skip to verify it.`
+              );
             } else if ((item.verifiedQuantity || 0) >= item.quantity) {
-              setScanError(`Item already fully verified: ${item.name}`);
+              setScanError(`Item already fully verified: ${getOrderItemDisplayName(item)}`);
             }
             showToast('Item already processed', 'warning');
             return;
@@ -1010,7 +1419,7 @@ export function PackingPage() {
     // Check for over-scanning
     const currentVerified = matchedItem.verifiedQuantity || 0;
     if (currentVerified >= matchedItem.quantity) {
-      setScanError(`Item already fully verified: ${matchedItem.name}`);
+      setScanError(`Item already fully verified: ${getOrderItemDisplayName(matchedItem)}`);
       showToast('Item already fully verified', 'warning');
       return;
     }
@@ -1131,12 +1540,22 @@ export function PackingPage() {
     setIsSkipping(true);
 
     try {
+      await logExceptionMutation.mutateAsync({
+        orderId: orderId!,
+        orderItemId: item.orderItemId,
+        sku: item.sku,
+        type: ExceptionType.SHORT_PICK_BACKORDER,
+        quantityExpected: item.quantity,
+        quantityActual: item.verifiedQuantity || 0,
+        reason: skipReason || 'No reason provided',
+      });
+
       await apiClient.post(`/orders/${orderId}/skip-packing-item`, {
         order_item_id: item.orderItemId,
         reason: skipReason || 'No reason provided',
       });
 
-      showToast('Item skipped!', 'warning');
+      showToast('Item skipped and logged for backorder!', 'warning');
       setShowShippingForm(false);
       setShowSkipModal(false);
       setSkipItemIndex(null);
@@ -1219,7 +1638,7 @@ export function PackingPage() {
 
       const reason =
         prompt(
-          `Remove 1 verified item from ${item.name} (${item.sku})?\n\n` +
+          `Remove 1 verified item from ${getOrderItemDisplayName(item)} (${item.sku})?\n\n` +
             `Current: ${currentVerified}/${item.quantity}\n\n` +
             `After undo: ${Math.max(0, currentVerified - 1)}/${item.quantity}\n\n` +
             `Please provide a reason:`
@@ -1423,24 +1842,10 @@ export function PackingPage() {
             trackingNumber: connoteList.join(', '),
           });
         }
-
-        await completePackingMutation.mutateAsync({
-          orderId,
-          dto: {
-            orderId,
-            packerId: order.packerId || '',
-          },
-        });
-
-        await shipOrderMutation.mutateAsync({
-          orderId,
-          carrier: selectedCarrier?.name || selectedCarrier?.carrierCode || 'NZ Couriers',
-          trackingNumber: connoteList.join(', '),
-          packageWeight: derivedNzcTotalWeightLbs,
-        });
-
-        showToast('Order packed and shipped successfully!', 'success');
-        navigate(packingQueuePath);
+        showToast(
+          'NZC shipment created. Press Done when you are ready to mark it as shipped.',
+          'success'
+        );
       } else {
         const shipmentResponse = await apiClient.post('/shipping/shipments', {
           orderId,
@@ -1464,16 +1869,11 @@ export function PackingPage() {
 
         showToast(`Shipment created! Tracking: ${trackingNumber || 'Pending'}`, 'success');
 
-        await completePackingMutation.mutateAsync({
-          orderId,
-          dto: {
-            orderId,
-            packerId: order.packerId || '',
-          },
-        });
-
-        showToast('Order packed and shipped successfully!', 'success');
-        navigate(packingQueuePath);
+        setShipmentCreated(true);
+        showToast(
+          'Shipment created. Press Done when you are ready to mark it as shipped.',
+          'success'
+        );
       }
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Failed to create shipment', 'error');
@@ -1484,6 +1884,62 @@ export function PackingPage() {
 
   const handleUnclaimOrder = async () => {
     setShowUnclaimModal(true);
+  };
+
+  const handleShippingDone = async () => {
+    if (!orderId) {
+      navigate(packingQueuePath);
+      return;
+    }
+
+    try {
+      setIsFinalizingShipment(true);
+
+      const currentTrackingNumber =
+        isNZCCarrier && nzcConnotes.length > 0 ? nzcConnotes.join(', ') : trackingNumber.trim();
+      const currentCarrier = selectedCarrier?.name || selectedCarrier?.carrierCode || 'Carrier';
+
+      if (
+        order?.status === OrderStatus.PICKING ||
+        order?.status === OrderStatus.PICKED ||
+        order?.status === OrderStatus.PACKING
+      ) {
+        await completePackingMutation.mutateAsync({
+          orderId,
+          dto: {
+            orderId,
+            packerId: order.packerId || currentUser.userId,
+          },
+        });
+      }
+
+      if (order?.status !== OrderStatus.SHIPPED) {
+        if (!currentTrackingNumber) {
+          throw new Error('Tracking/connote is required before marking this order as shipped');
+        }
+
+        await shipOrderMutation.mutateAsync({
+          orderId,
+          carrier: currentCarrier,
+          trackingNumber: currentTrackingNumber,
+          packageWeight: isNZCCarrier ? derivedNzcTotalWeightLbs : parseFloat(totalWeight),
+        });
+      }
+
+      restoredShippingStageRef.current = false;
+      if (packingShippingStateStorageKey) {
+        sessionStorage.removeItem(packingShippingStateStorageKey);
+      }
+      showToast('Order marked as shipped.', 'success');
+      navigate(packingQueuePath);
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : 'Failed to mark order as shipped',
+        'error'
+      );
+    } finally {
+      setIsFinalizingShipment(false);
+    }
   };
 
   // ==========================================================================
@@ -1721,7 +2177,7 @@ export function PackingPage() {
 
           {/* Current Task - Right side */}
           <div className="flex-1 min-w-0">
-            {showShippingForm ? (
+            {shouldShowShippingStage ? (
               /* Shipping Details Form */
               <div ref={shippingFormRef}>
                 <div className="picking-card rounded-2xl border-primary-500/50 border-2 industrial-corners">
@@ -2089,6 +2545,11 @@ export function PackingPage() {
                         <p className="picking-subtitle text-gray-400 text-xs uppercase tracking-wider mb-2">
                           Available Shipping Rates
                         </p>
+                        {areRatesLocked && (
+                          <div className="rounded-xl border border-primary-500/30 bg-primary-500/10 px-4 py-3 text-sm text-primary-700 dark:text-primary-200">
+                            Shipping rate selection is locked after a connote has been created.
+                          </div>
+                        )}
                         {isFetchingRates && (
                           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500" />
@@ -2111,12 +2572,25 @@ export function PackingPage() {
                             {nzcRateList.map(quote => (
                               <div
                                 key={quote.QuoteId}
-                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
                                   selectedQuote?.QuoteId === quote.QuoteId
-                                    ? 'bg-primary-500/20 border-primary-500'
-                                    : 'bg-gray-50 dark:bg-white/[0.02] border-gray-200 dark:border-white/[0.08] hover:bg-gray-100 dark:hover:bg-white/[0.05]'
+                                    ? areRatesLocked
+                                      ? 'bg-primary-500/25 border-primary-400 ring-2 ring-primary-400/40 shadow-[0_0_0_1px_rgba(168,85,247,0.25)]'
+                                      : 'bg-primary-500/20 border-primary-500'
+                                    : 'bg-gray-50 dark:bg-white/[0.02] border-gray-200 dark:border-white/[0.08]'
+                                } ${
+                                  areRatesLocked
+                                    ? selectedQuote?.QuoteId === quote.QuoteId
+                                      ? 'cursor-not-allowed'
+                                      : 'cursor-not-allowed opacity-55'
+                                    : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-white/[0.05]'
                                 }`}
-                                onClick={() => setSelectedQuote(quote)}
+                                onClick={() => {
+                                  if (areRatesLocked) {
+                                    return;
+                                  }
+                                  setSelectedQuote(quote);
+                                }}
                               >
                                 <div className="flex-1">
                                   <p className="picking-title text-sm text-gray-900 dark:text-white">
@@ -2225,17 +2699,6 @@ export function PackingPage() {
                             );
                           })}
                         </div>
-                        <div className="flex gap-2">
-                          {shipmentCreated && (
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={() => navigate(packingQueuePath)}
-                            >
-                              Done
-                            </Button>
-                          )}
-                        </div>
                       </div>
                     )}
 
@@ -2252,6 +2715,20 @@ export function PackingPage() {
                       >
                         <PrinterIcon className="h-5 w-5 mr-2" />
                         Create Shipment & Complete
+                      </Button>
+                    )}
+
+                    {shipmentCreated && (
+                      <Button
+                        variant="success"
+                        size="lg"
+                        fullWidth
+                        onClick={handleShippingDone}
+                        isLoading={isFinalizingShipment}
+                        disabled={isFinalizingShipment}
+                        className="action-button-enhanced touch-target"
+                      >
+                        Done & Mark Shipped
                       </Button>
                     )}
 
@@ -2321,13 +2798,33 @@ export function PackingPage() {
               >
                 <div className="p-6 border-b packing-divider border-white/[0.08]">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
-                        Current Pack Task
-                      </p>
-                      <h2 className="picking-title text-xl text-gray-900 dark:text-white">
-                        {currentItem.name}
-                      </h2>
+                    <div className="flex items-start gap-4 min-w-0">
+                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.04]">
+                        {currentItemImage ? (
+                          <img
+                            src={currentItemImage}
+                            alt={currentItemDisplayName}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="picking-subtitle text-primary-600 dark:text-primary-400 text-xs uppercase tracking-wider mb-1">
+                          Current Pack Task
+                        </p>
+                        <h2 className="picking-title text-xl text-gray-900 dark:text-white">
+                          {currentItemDisplayName}
+                        </h2>
+                        {currentItemDescription && (
+                          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                            {currentItemDescription}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       {!isViewMode && (
@@ -2410,6 +2907,7 @@ export function PackingPage() {
                         const isCompleted = (item.verifiedQuantity || 0) >= item.quantity;
                         const isSkipped = item.status === 'SKIPPED';
                         const isCurrent = index === currentItemIndex;
+                        const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
 
                         return (
                           <div
@@ -2435,6 +2933,19 @@ export function PackingPage() {
                             }}
                           >
                             <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                                {itemImage ? (
+                                  <img
+                                    src={itemImage}
+                                    alt={getOrderItemDisplayName(item)}
+                                    className="h-full w-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                                    No Image
+                                  </div>
+                                )}
+                              </div>
                               {/* Status Icon */}
                               <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
                                 {isCompleted && (
@@ -2479,8 +2990,13 @@ export function PackingPage() {
                                           : 'text-gray-700 dark:text-gray-300'
                                   }`}
                                 >
-                                  {item.name}
+                                  {getOrderItemDisplayName(item)}
                                 </p>
+                                {getOrderItemDescription(item) && (
+                                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {getOrderItemDescription(item)}
+                                  </p>
+                                )}
                                 <div className="flex items-center gap-2">
                                   <p className="text-xs text-gray-500 font-mono truncate">
                                     {item.binLocation}
@@ -2629,7 +3145,7 @@ export function PackingPage() {
           onClose={() => setUnskipConfirm({ isOpen: false, index: -1, item: null })}
           onConfirm={confirmUnskipItem}
           title="Revert Skip"
-          message={`Do you want to revert the skip for ${unskipConfirm.item?.name} (${unskipConfirm.item?.sku})?`}
+          message={`Do you want to revert the skip for ${getOrderItemDisplayName(unskipConfirm.item)} (${unskipConfirm.item?.sku})?`}
           confirmText="Revert"
           cancelText="Cancel"
           variant="success"
@@ -2653,16 +3169,42 @@ export function PackingPage() {
 
               <div className="p-6 space-y-4">
                 <div className={packingSurfacePanelClass}>
-                  <p className="picking-title text-gray-900 dark:text-white">
-                    {order.items[skipItemIndex].name}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
-                    {order.items[skipItemIndex].sku}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
-                    {order.items[skipItemIndex].binLocation}
-                  </p>
+                  <div className="flex items-start gap-4">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                      {order.items[skipItemIndex].image ||
+                      activeOrderItemImageMap[order.items[skipItemIndex].sku] ? (
+                        <img
+                          src={
+                            order.items[skipItemIndex].image ||
+                            activeOrderItemImageMap[order.items[skipItemIndex].sku]
+                          }
+                          alt={getOrderItemDisplayName(order.items[skipItemIndex])}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="picking-title text-gray-900 dark:text-white">
+                        {getOrderItemDisplayName(order.items[skipItemIndex])}
+                      </p>
+                      {getOrderItemDescription(order.items[skipItemIndex]) && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {getOrderItemDescription(order.items[skipItemIndex])}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
+                        {order.items[skipItemIndex].sku}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Qty: {order.items[skipItemIndex].quantity} | Bin:{' '}
+                        {order.items[skipItemIndex].binLocation}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -2715,7 +3257,8 @@ export function PackingPage() {
               <ul className="list-disc pl-5 mb-3 space-y-1">
                 {completeShipmentConfirm.skippedItems.map((item: any, i: number) => (
                   <li key={i}>
-                    {item.name} ({item.sku}) - {item.skipReason || 'No reason provided'}
+                    {getOrderItemDisplayName(item)} ({item.sku}) -{' '}
+                    {item.skipReason || 'No reason provided'}
                   </li>
                 ))}
               </ul>
@@ -2746,8 +3289,8 @@ export function PackingPage() {
 
         {/* Manual Override Modal */}
         {showOverrideModal && overrideItemIndex !== null && order?.items?.[overrideItemIndex] && (
-          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-50 p-4">
-            <div className="scanner-modal-content max-w-md w-full rounded-2xl">
+          <div className="fixed inset-0 scanner-modal-overlay flex items-center justify-center z-[120] p-3 sm:p-6 lg:p-8">
+            <div className="scanner-modal-content relative z-[121] w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl">
               <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-4 rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <h2 className="picking-title text-lg">Manual Override</h2>
@@ -2755,74 +3298,103 @@ export function PackingPage() {
                     onClick={() => setShowOverrideModal(false)}
                     className="text-white hover:text-primary-200 transition-colors"
                   >
-                    <PencilSquareIcon className="h-6 w-6" />
+                    <ExclamationCircleIcon className="h-6 w-6" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 lg:grid lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] lg:gap-6 lg:space-y-0">
                 <div className={packingSurfacePanelClass}>
-                  <p className="picking-title text-gray-900 dark:text-white">
-                    {order.items[overrideItemIndex].name}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
-                    {order.items[overrideItemIndex].sku}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Required: {order.items[overrideItemIndex].quantity} | Currently Verified:{' '}
-                    {order.items[overrideItemIndex].verifiedQuantity || 0}
-                  </p>
+                  <div className="flex items-start gap-4">
+                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
+                      {order.items[overrideItemIndex].image ||
+                      activeOrderItemImageMap[order.items[overrideItemIndex].sku] ? (
+                        <img
+                          src={
+                            order.items[overrideItemIndex].image ||
+                            activeOrderItemImageMap[order.items[overrideItemIndex].sku]
+                          }
+                          alt={getOrderItemDisplayName(order.items[overrideItemIndex])}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="picking-title text-gray-900 dark:text-white">
+                        {getOrderItemDisplayName(order.items[overrideItemIndex])}
+                      </p>
+                      {getOrderItemDescription(order.items[overrideItemIndex]) && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {getOrderItemDescription(order.items[overrideItemIndex])}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-1">
+                        {order.items[overrideItemIndex].sku}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Required: {order.items[overrideItemIndex].quantity} | Currently Verified:{' '}
+                        {order.items[overrideItemIndex].verifiedQuantity || 0}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    New Verified Quantity <span className="text-error-400">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={order.items[overrideItemIndex].quantity}
-                    value={overrideQuantity}
-                    onChange={e => setOverrideQuantity(e.target.value)}
-                    onFocus={e => e.target.select()}
-                    className={`${packingInputClass} font-mono text-lg`}
-                  />
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    Max: {order.items[overrideItemIndex].quantity} (cannot exceed required quantity)
-                  </p>
-                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      New Verified Quantity <span className="text-error-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={order.items[overrideItemIndex].quantity}
+                      value={overrideQuantity}
+                      onChange={e => setOverrideQuantity(e.target.value)}
+                      onFocus={e => e.target.select()}
+                      className={`${packingInputClass} font-mono text-lg`}
+                    />
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      Max: {order.items[overrideItemIndex].quantity} (cannot exceed required
+                      quantity)
+                    </p>
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Reason <span className="text-error-400">*</span>
-                  </label>
-                  <textarea
-                    value={overrideReason}
-                    onChange={e => setOverrideReason(e.target.value)}
-                    rows={2}
-                    className={packingInputClass}
-                    placeholder="e.g., Found damaged item, Correcting count, etc."
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Reason <span className="text-error-400">*</span>
+                    </label>
+                    <textarea
+                      value={overrideReason}
+                      onChange={e => setOverrideReason(e.target.value)}
+                      rows={3}
+                      className={packingInputClass}
+                      placeholder="e.g., Found damaged item, Correcting count, etc."
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                    Additional Notes (optional)
-                  </label>
-                  <textarea
-                    value={overrideNotes}
-                    onChange={e => setOverrideNotes(e.target.value)}
-                    rows={2}
-                    className={packingInputClass}
-                    placeholder="Any additional details..."
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Additional Notes (optional)
+                    </label>
+                    <textarea
+                      value={overrideNotes}
+                      onChange={e => setOverrideNotes(e.target.value)}
+                      rows={5}
+                      className={packingInputClass}
+                      placeholder="Any additional details..."
+                    />
+                  </div>
 
-                <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                  <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
-                    <strong>Note:</strong> This action will be logged and audited. Supervisors will
-                    be able to review this override.
-                  </p>
+                  <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
+                    <p className="picking-subtitle text-primary-700 dark:text-primary-300 text-sm">
+                      <strong>Note:</strong> This action will be logged and audited. Supervisors
+                      will be able to review this override.
+                    </p>
+                  </div>
                 </div>
               </div>
 

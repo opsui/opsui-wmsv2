@@ -24,6 +24,8 @@ export const FETCH_PICK_TASKS_WITH_BARCODE_QUERY = `
     pt.order_id,
     pt.sku,
     pt.name,
+    COALESCE(NULLIF(s.name, ''), pt.name) as item_name,
+    s.description,
     pt.target_bin as bin_location,
     pt.quantity,
     pt.picked_quantity as picked_quantity,
@@ -63,6 +65,8 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     oi.order_id,
     oi.sku,
     oi.name,
+    COALESCE(NULLIF(s.name, ''), oi.name) as item_name,
+    s.description,
     oi.bin_location,
     oi.quantity,
     oi.picked_quantity,
@@ -127,17 +131,25 @@ export const UPDATE_ORDER_PROGRESS_QUERY = `
  * Handles both pick tasks and order items
  */
 export function mapOrderItem(row: any): any {
+  const rawSkipReason = row.skip_reason || row.skipReason || null;
+  const skipReason =
+    typeof rawSkipReason === 'string'
+      ? rawSkipReason.replace(/^TEMP_SKIP:\s*/i, '').trim()
+      : rawSkipReason;
+
   return {
     orderItemId: row.order_item_id || row.orderItemId,
     orderId: row.order_id || row.orderId,
     sku: row.sku,
     name: row.name,
+    itemName: row.item_name || row.itemName || row.name,
+    description: row.description || null,
     binLocation: row.bin_location || row.binLocation,
     quantity: row.quantity,
     pickedQuantity: row.picked_quantity || row.pickedQuantity,
     verifiedQuantity: row.verified_quantity || row.verifiedQuantity || 0,
     status: row.status,
-    skipReason: row.skip_reason || row.skipReason,
+    skipReason,
     completedAt: row.completed_at || row.completedAt,
     barcode: row.barcode || null,
     onHandQuantity: row.on_hand_quantity ?? row.onHandQuantity ?? 0,

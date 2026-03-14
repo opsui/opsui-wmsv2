@@ -579,6 +579,7 @@ export class NetSuiteClient {
       limit?: number;
       offset?: number;
       status?: string;
+      modifiedAfter?: Date;
     } = {}
   ): Promise<NetSuiteListResponse<NetSuiteSalesOrder>> {
     // Use page size 200 (NetSuite default max for searches with body fields)
@@ -593,11 +594,15 @@ export class NetSuiteClient {
       '</tns:searchPreferences>',
     ].join('\n');
 
-    // Fetch recent sales orders (last 7 days) and filter statuses client-side.
+    // Fetch recent sales orders and filter statuses client-side.
     // The SOAP status filter returned false-zero results in production.
-    const recentSoDate = new Date();
-    recentSoDate.setDate(recentSoDate.getDate() - 7);
-    const dateFrom = recentSoDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    const dateFrom = options.modifiedAfter
+      ? new Date(options.modifiedAfter).toISOString()
+      : (() => {
+          const recentSoDate = new Date();
+          recentSoDate.setDate(recentSoDate.getDate() - 7);
+          return recentSoDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+        })();
 
     const searchBody = [
       '<tns:search>',
@@ -714,6 +719,7 @@ export class NetSuiteClient {
       totalRecords,
       totalPages,
       statusFilter: options.status || 'none',
+      modifiedAfter: options.modifiedAfter ? dateFrom : null,
       usedServerSideStatusFilter: false,
     });
 
@@ -1326,10 +1332,15 @@ export class NetSuiteClient {
         const quantityRemaining = Number(quantityRemainingRaw);
         const orderLine = this.extractTag(itemBody, 'orderLine') || '';
         const itemInternalId = this.extractAttribute(itemBody, 'item', 'internalId') || '';
+        const itemName =
+          this.extractTag(itemBody, 'name') || this.extractTag(itemBody, 'description') || '';
         const selectedLine = lineSelections.find(
           line =>
             (line.orderLine && line.orderLine === orderLine) ||
-            (line.itemId && line.itemId === itemInternalId)
+            (line.itemId && line.itemId === itemInternalId) ||
+            (line.itemName &&
+              itemName &&
+              line.itemName.trim().toLowerCase() === itemName.trim().toLowerCase())
         );
         const shouldReceive = selectedLine
           ? Number.isFinite(quantityRemaining) && quantityRemaining > 0 && selectedLine.quantity > 0
@@ -1366,6 +1377,21 @@ export class NetSuiteClient {
           } else {
             updatedBody = `${updatedBody}<tranSales:quantity>${selectedLine.quantity}</tranSales:quantity>`;
           }
+        } else if (!shouldReceive) {
+          // Explicitly zero out quantity so NetSuite doesn't autofill from the SO
+          if (updatedBody.includes('<tranSales:quantity>')) {
+            updatedBody = updatedBody.replace(
+              /<tranSales:quantity>[\s\S]*?<\/tranSales:quantity>/,
+              `<tranSales:quantity>0</tranSales:quantity>`
+            );
+          } else if (updatedBody.includes('<tranSales:quantityRemaining>')) {
+            updatedBody = updatedBody.replace(
+              /<tranSales:quantityRemaining>[\s\S]*?<\/tranSales:quantityRemaining>/,
+              match => `${match}<tranSales:quantity>0</tranSales:quantity>`
+            );
+          } else {
+            updatedBody = `${updatedBody}<tranSales:quantity>0</tranSales:quantity>`;
+          }
         }
 
         return `<tranSales:item>${updatedBody}</tranSales:item>`;
@@ -1377,9 +1403,14 @@ export class NetSuiteClient {
 
   private parseFulfillmentLineSelections(
     fulfillmentData: Record<string, unknown>
-  ): Array<{ orderLine?: string; itemId?: string; quantity: number }> {
+  ): Array<{ orderLine?: string; itemId?: string; itemName?: string; quantity: number }> {
     const lines = Array.isArray(fulfillmentData.lines) ? fulfillmentData.lines : [];
-    const parsed: Array<{ orderLine?: string; itemId?: string; quantity: number }> = [];
+    const parsed: Array<{
+      orderLine?: string;
+      itemId?: string;
+      itemName?: string;
+      quantity: number;
+    }> = [];
 
     for (const line of lines as unknown[]) {
       if (!line || typeof line !== 'object') continue;
@@ -1392,12 +1423,18 @@ export class NetSuiteClient {
           : undefined;
       const itemId =
         candidate.itemId != null && candidate.itemId !== '' ? String(candidate.itemId) : undefined;
+      const itemName =
+        candidate.itemName != null && candidate.itemName !== ''
+          ? String(candidate.itemName)
+          : candidate.sku != null && candidate.sku !== ''
+            ? String(candidate.sku)
+            : undefined;
 
-      if ((!orderLine && !itemId) || !Number.isFinite(quantity)) {
+      if ((!orderLine && !itemId && !itemName) || !Number.isFinite(quantity)) {
         continue;
       }
 
-      parsed.push({ orderLine, itemId, quantity });
+      parsed.push({ orderLine, itemId, itemName, quantity });
     }
 
     return parsed;

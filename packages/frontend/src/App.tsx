@@ -590,7 +590,14 @@ function AppInner() {
         <Route
           path="/packing"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.PICKER,
+                UserRole.PACKER,
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+              ]}
+            >
               <PackingQueuePage />
             </ProtectedRoute>
           }
@@ -598,7 +605,14 @@ function AppInner() {
         <Route
           path="/packing/:orderId/pack"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.PICKER,
+                UserRole.PACKER,
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+              ]}
+            >
               <PackingPage />
             </ProtectedRoute>
           }

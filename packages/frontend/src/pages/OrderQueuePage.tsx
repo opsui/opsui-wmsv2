@@ -24,6 +24,7 @@ import {
   useContinueOrder,
   useOrderQueue,
   useClaimOrderForPacking,
+  skuApi,
 } from '@/services/api';
 import { useAuthStore } from '@/stores';
 import {
@@ -42,7 +43,7 @@ import {
 import { Input } from '@/components/shared/Input';
 import { OrderPriority, OrderStatus, UserRole } from '@opsui/shared';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useIsPerformanceMode } from '@/hooks/useHardwareCapabilities';
@@ -56,6 +57,7 @@ export type QueueMode = 'picking' | 'packing';
 
 const STANDARD_QUEUE_REFETCH_MS = 5000;
 const PERFORMANCE_QUEUE_REFETCH_MS = 15000;
+const SKU_LOOKUP_PATTERN = /^[A-Z0-9-]{2,50}$/;
 
 function formatNetSuiteOrderDate(value: string | Date | undefined): string | null {
   if (!value) {
@@ -88,6 +90,28 @@ function formatNetSuiteOrderDate(value: string | Date | undefined): string | nul
     timeZone: 'UTC',
   });
 }
+
+const getOrderItemDisplayName = (item?: any | null) =>
+  item?.itemName || item?.item_name || item?.name || item?.sku || 'Item';
+
+const getOrderItemDescription = (item?: any | null) => {
+  const description = item?.description || item?.itemDescription || item?.item_description || null;
+  const displayName = getOrderItemDisplayName(item);
+
+  if (!description || description === displayName || description === item?.sku) {
+    return null;
+  }
+
+  return description;
+};
+
+const getOrderItemImage = (item: any, imageMap: Record<string, string>) => {
+  const sku = String(item?.sku || '')
+    .trim()
+    .toUpperCase();
+
+  return item?.image || (sku ? imageMap[sku] : undefined) || null;
+};
 
 // Per-mode configuration
 const MODE_CONFIG = {
@@ -436,19 +460,17 @@ function PriorityFilterDropdown({
 // ORDER CARD
 // ============================================================================
 
-function OrderCard({
-  order,
-  onClaim,
-  isClaiming,
-  claimingOrderId,
-  mode,
-}: {
-  order: any;
-  onClaim: (orderId: string, status: OrderStatus) => void;
-  isClaiming: boolean;
-  claimingOrderId: string | null;
-  mode: QueueMode;
-}) {
+const OrderCard = forwardRef<
+  HTMLDivElement,
+  {
+    order: any;
+    onClaim: (orderId: string, status: OrderStatus) => void;
+    isClaiming: boolean;
+    claimingOrderId: string | null;
+    mode: QueueMode;
+    itemImageMap: Record<string, string>;
+  }
+>(({ order, onClaim, isClaiming, claimingOrderId, mode, itemImageMap }, ref) => {
   const cfg = MODE_CONFIG[mode];
   const isUrgent = order.priority === 'URGENT' || order.priority === 'HIGH';
   const isActive = order.status === cfg.activeStatus;
@@ -513,7 +535,11 @@ function OrderCard({
       };
 
   return (
-    <CardWrapper {...(cardWrapperProps as any)} className="relative group h-full flex flex-col">
+    <CardWrapper
+      {...(cardWrapperProps as any)}
+      ref={ref}
+      className="relative group h-full flex flex-col"
+    >
       {isUrgent &&
         (noMotion ? (
           <div className="absolute -inset-1 rounded-2xl border border-orange-500/40" />
@@ -547,9 +573,6 @@ function OrderCard({
                 <h3 className="font-black text-lg text-white tracking-tight truncate uppercase">
                   {order.netsuiteSoTranId || order.orderId}
                 </h3>
-                {order.netsuiteSoTranId && (
-                  <span className="text-[10px] text-slate-500 font-mono">({order.orderId})</span>
-                )}
                 {isUrgent &&
                   (noMotion ? (
                     <BoltIcon className="h-5 w-5 text-orange-400" />
@@ -674,6 +697,7 @@ function OrderCard({
                 {items.map((item: any, idx: number) => {
                   const qty =
                     mode === 'packing' ? item.verifiedQuantity || 0 : item.pickedQuantity || 0;
+                  const itemImage = getOrderItemImage(item, itemImageMap);
                   const isCompleted =
                     item.status === 'COMPLETED' ||
                     item.status === 'FULLY_PICKED' ||
@@ -704,11 +728,31 @@ function OrderCard({
                       {...(itemProps as any)}
                       className={`text-xs p-3 rounded-lg border-l-4 ${statusStyles}`}
                     >
+                      <div className="mb-2 h-12 w-12 overflow-hidden rounded-lg border border-slate-700/60 bg-slate-900/80">
+                        {itemImage ? (
+                          <img
+                            src={itemImage}
+                            alt={getOrderItemDisplayName(item)}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center px-1 text-center text-[9px] font-semibold uppercase tracking-wide text-slate-500 leading-tight">
+                            No Image
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-start gap-2 mb-1">
                         <span className="font-bold text-slate-200 text-xs">{item.sku}</span>
                         <span className="text-slate-500">·</span>
-                        <span className="text-slate-400 flex-1 truncate">{item.name}</span>
+                        <span className="text-slate-400 flex-1 truncate">
+                          {getOrderItemDisplayName(item)}
+                        </span>
                       </div>
+                      {getOrderItemDescription(item) && (
+                        <div className="mb-1 text-[10px] leading-relaxed text-slate-500 line-clamp-2">
+                          {getOrderItemDescription(item)}
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500 text-[10px]">
                           LOC: <span className="text-slate-300 font-bold">{item.binLocation}</span>
@@ -782,7 +826,9 @@ function OrderCard({
       </Card>
     </CardWrapper>
   );
-}
+});
+
+OrderCard.displayName = 'OrderCard';
 
 // ============================================================================
 // MAIN COMPONENT
@@ -831,6 +877,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('search') || '');
   const [claimingOrderId, setClaimingOrderId] = useState<string | null>(null);
+  const [queueItemImageMap, setQueueItemImageMap] = useState<Record<string, string>>({});
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const isClaimingRef = useRef(false);
   const lastClaimedOrderIdRef = useRef<string | null>(null);
@@ -946,10 +994,10 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   const isLoading =
     mode === 'picking' ? pickingQueueResult.isLoading : packingQueueResult.isLoading;
 
-  const pickingAllOrders = useOrderQueue(
+  const pickingActiveOrders = useOrderQueue(
     mode === 'picking'
       ? {
-          status: undefined as any,
+          status: OrderStatus.PICKING,
           pickerId: userId,
           page: 1,
           limit: 100,
@@ -960,7 +1008,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       : { status: 'PENDING' as OrderStatus, page: 1, limit: 1, enabled: false }
   );
 
-  const packingAllOrders = useQuery({
+  const packingActiveOrders = useQuery({
     queryKey: ['orders', 'all-packing', currentUser?.userId],
     queryFn: async () => {
       if (!currentUser?.userId) return { orders: [] };
@@ -975,9 +1023,9 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     refetchInterval: () => (document.hidden ? false : queueRefetchInterval),
   });
 
-  const allOrdersData = mode === 'picking' ? pickingAllOrders.data : packingAllOrders.data;
+  const activeOrdersData = mode === 'picking' ? pickingActiveOrders.data : packingActiveOrders.data;
   const activeQueueResult = mode === 'picking' ? pickingQueueResult : packingQueueResult;
-  const activeAllOrdersResult = mode === 'picking' ? pickingAllOrders : packingAllOrders;
+  const activeAllOrdersResult = mode === 'picking' ? pickingActiveOrders : packingActiveOrders;
 
   // Minimum spin duration for smooth reload animation (both manual and auto)
   const [isSpinAnimationActive, setIsSpinAnimationActive] = useState(false);
@@ -1027,8 +1075,91 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  useEffect(() => {
+    if (mode !== 'packing' || isLoading || !queueData) {
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let frameIdOne: number | null = null;
+    let frameIdTwo: number | null = null;
+
+    const focusSearch = () => {
+      if (document.hidden) {
+        return;
+      }
+
+      frameIdOne = requestAnimationFrame(() => {
+        frameIdTwo = requestAnimationFrame(() => {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        });
+      });
+    };
+
+    timeoutId = setTimeout(focusSearch, 75);
+    window.addEventListener('focus', focusSearch);
+    document.addEventListener('visibilitychange', focusSearch);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (frameIdOne !== null) {
+        cancelAnimationFrame(frameIdOne);
+      }
+      if (frameIdTwo !== null) {
+        cancelAnimationFrame(frameIdTwo);
+      }
+      window.removeEventListener('focus', focusSearch);
+      document.removeEventListener('visibilitychange', focusSearch);
+    };
+  }, [isLoading, mode, page, priorityFilter, queueData, statusFilter]);
+
   // Direct navigation when scanning/pasting an exact order ID
   const scannedOrderRef = useRef<string | null>(null);
+  useEffect(() => {
+    const trimmedSearch = debouncedSearch.trim().toUpperCase();
+
+    if (!trimmedSearch || scannedOrderRef.current === trimmedSearch) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const openExactMatchedOrder = async () => {
+      try {
+        const response = await apiClient.get(
+          `/orders/full?search=${encodeURIComponent(trimmedSearch)}&limit=25`
+        );
+        const matchedOrder = (response.data?.orders || []).find((order: any) => {
+          const orderId = String(order.orderId || '')
+            .trim()
+            .toUpperCase();
+          const netsuiteSoTranId = String(order.netsuiteSoTranId || '')
+            .trim()
+            .toUpperCase();
+          return orderId === trimmedSearch || netsuiteSoTranId === trimmedSearch;
+        });
+
+        if (!matchedOrder || cancelled) {
+          return;
+        }
+
+        scannedOrderRef.current = trimmedSearch;
+        navigateToOrderDetail(mode, matchedOrder.orderId, { hardReload: mode === 'picking' });
+      } catch {
+        // Leave the normal filtered search experience in place if exact lookup fails.
+      }
+    };
+
+    void openExactMatchedOrder();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, mode, navigateToOrderDetail]);
+
   useEffect(() => {
     setSearchParams(
       params => {
@@ -1057,6 +1188,63 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
   }, [adminMode, debouncedSearch, queueParam, setSearchParams, statusFilter]);
 
   const orders = queueData?.orders || [];
+  const visibleQueueItems = useMemo<any[]>(
+    () => orders.flatMap((order: any) => order.items || []),
+    [orders]
+  );
+
+  useEffect(() => {
+    if (visibleQueueItems.length === 0) {
+      return;
+    }
+
+    const seededImages = visibleQueueItems.reduce((acc: Record<string, string>, item: any) => {
+      if (item?.sku && item.image) {
+        acc[String(item.sku).trim().toUpperCase()] = item.image;
+      }
+      return acc;
+    }, {});
+
+    if (Object.keys(seededImages).length > 0) {
+      setQueueItemImageMap(current => ({ ...current, ...seededImages }));
+    }
+
+    const missingSkus: string[] = Array.from(
+      new Set(
+        visibleQueueItems
+          .filter((item: any) => item?.sku && !item.image)
+          .map((item: any) => String(item.sku).trim().toUpperCase())
+          .filter(sku => SKU_LOOKUP_PATTERN.test(sku) && !queueItemImageMap[sku])
+      )
+    );
+
+    if (missingSkus.length === 0) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void Promise.allSettled(missingSkus.map(sku => skuApi.getWithInventory(sku))).then(results => {
+      if (isCancelled) {
+        return;
+      }
+
+      const fetchedImages = results.reduce((acc: Record<string, string>, result, index) => {
+        if (result.status === 'fulfilled' && result.value?.image) {
+          acc[missingSkus[index]] = result.value.image;
+        }
+        return acc;
+      }, {});
+
+      if (Object.keys(fetchedImages).length > 0) {
+        setQueueItemImageMap(current => ({ ...current, ...fetchedImages }));
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [queueItemImageMap, visibleQueueItems]);
 
   // Use orders directly without client-side filtering
   const filteredOrders = orders;
@@ -1084,23 +1272,19 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
     if (hasAutoDetectedRef.current) return;
     const urlStatus = searchParams.get('status') as OrderStatus | null;
     const hasExplicitUrlStatus = urlStatus && Object.values(OrderStatus).includes(urlStatus);
-    if (allOrdersData?.orders) {
-      if (hasExplicitUrlStatus) {
-        setStatusFilter(urlStatus!);
-        hasAutoDetectedRef.current = true;
-        return;
-      }
-      const active = allOrdersData.orders.filter((o: any) => o.status === cfg.activeStatus);
-      if (active.length > 0) {
+    if (activeOrdersData?.orders) {
+      if (activeOrdersData.orders.length > 0) {
         setStatusFilter(cfg.activeStatus);
         setSearchParams({ status: cfg.activeStatus }, { replace: true });
+      } else if (hasExplicitUrlStatus) {
+        setStatusFilter(urlStatus!);
       } else {
         setStatusFilter(cfg.idleStatus);
       }
       hasAutoDetectedRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrdersData]);
+  }, [activeOrdersData, cfg.activeStatus, cfg.idleStatus, searchParams, setSearchParams]);
 
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -1273,6 +1457,8 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
               <div className="relative min-w-0 w-full lg:w-44 flex-shrink-0">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
+                  ref={searchInputRef}
+                  autoFocus={mode === 'packing'}
                   type="search"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
@@ -1363,6 +1549,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                   isClaiming={isClaiming}
                   claimingOrderId={claimingOrderId}
                   mode={mode}
+                  itemImageMap={queueItemImageMap}
                 />
               ))}
             </ResponsiveGrid>
@@ -1407,6 +1594,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
                       isClaiming={isClaiming}
                       claimingOrderId={claimingOrderId}
                       mode={mode}
+                      itemImageMap={queueItemImageMap}
                     />
                   ))}
                 </AnimatePresence>

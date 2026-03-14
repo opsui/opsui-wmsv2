@@ -16,6 +16,7 @@ import {
 } from '@opsui/shared';
 import { logger } from '../config/logger';
 import { query } from '../db/client';
+import { appendExcludedQueueCustomerConditions } from '../utils/orderQueueExclusions';
 import { BaseRepository } from './BaseRepository';
 import { getOrderItemsQuery, mapOrderItem } from './queries/OrderQueries';
 
@@ -153,7 +154,7 @@ export class OrderRepository extends BaseRepository<Order> {
     if (order.status === OrderStatus.PICKING && itemsResult.rows.length > 0) {
       const totalTasks = itemsResult.rows.length;
       const completedTasks = itemsResult.rows.filter(
-        (item: any) => item.status === 'COMPLETED'
+        (item: any) => item.status === 'COMPLETED' || item.status === 'SKIPPED'
       ).length;
       progress = Math.round((completedTasks / totalTasks) * 100);
     }
@@ -174,7 +175,7 @@ export class OrderRepository extends BaseRepository<Order> {
 
     return {
       ...order,
-      items: itemsResult.rows,
+      items: itemsResult.rows.map((item: any) => mapOrderItem(item)),
       progress,
     } as Order;
   }
@@ -202,6 +203,8 @@ export class OrderRepository extends BaseRepository<Order> {
       conditions.push(`o.organization_id = $${paramIndex++}`);
       params.push(filters.organizationId);
     }
+
+    paramIndex = appendExcludedQueueCustomerConditions(conditions, params, paramIndex);
 
     if (filters.status) {
       conditions.push(`o.status = $${paramIndex++}`);
@@ -350,6 +353,8 @@ export class OrderRepository extends BaseRepository<Order> {
       conditions.push(`o.organization_id = $${paramIndex++}`);
       params.push(filters.organizationId);
     }
+
+    paramIndex = appendExcludedQueueCustomerConditions(conditions, params, paramIndex);
 
     if (filters.status) {
       conditions.push(`o.status = $${paramIndex++}`);
