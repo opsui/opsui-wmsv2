@@ -1258,6 +1258,52 @@ export class NetSuiteOrderSyncService {
 
             if (
               shouldInspectLinkedFulfillmentGap &&
+              isNotReadyToShip &&
+              !isCancelled &&
+              !isClosed
+            ) {
+              const hasSkippedItems = await this.orderHasSkippedItems(row.order_id);
+
+              if (hasSkippedItems) {
+                try {
+                  await this.client.updateSalesOrderStatus(String(soId), { custbody8: true });
+
+                  stats.stale.pending++;
+                  staleOrderActions.movedToPending.push(row.netsuite_so_tran_id || soId);
+                  logger.warn(
+                    'Packing queue order lost its linked fulfillment and had skipped items - restoring ready to ship and moving to PENDING',
+                    {
+                      orderId: row.order_id,
+                      soTranId: row.netsuite_so_tran_id,
+                      previousStatus: row.status,
+                      soStatus,
+                      ifInternalId: row.netsuite_if_internal_id,
+                    }
+                  );
+                  await this.updateOrderStatus(row.order_id, 'PENDING');
+                  result.updated++;
+                  result.details.updated.push(
+                    `${row.netsuite_so_tran_id || soId} (packing-gap->PENDING:ready-to-ship-restored)`
+                  );
+                  await this.markOrderSynced(row.order_id, syncStartTime);
+                  continue;
+                } catch (error: any) {
+                  logger.warn(
+                    'Failed to restore ready to ship for skipped order after linked fulfillment disappeared',
+                    {
+                      orderId: row.order_id,
+                      soTranId: row.netsuite_so_tran_id,
+                      soId,
+                      ifInternalId: row.netsuite_if_internal_id,
+                      error: error.message,
+                    }
+                  );
+                }
+              }
+            }
+
+            if (
+              shouldInspectLinkedFulfillmentGap &&
               (isPendingReadyToShip || isCancelled || isClosed || isNotReadyToShip)
             ) {
               if (isPendingReadyToShip) {
@@ -2506,6 +2552,27 @@ export class NetSuiteOrderSyncService {
         itemCount: ifData.items.length,
         newStatus,
       });
+    }
+  }
+
+  private async orderHasSkippedItems(orderId: string): Promise<boolean> {
+    try {
+      const result = await this.query(
+        `SELECT 1
+         FROM order_items
+         WHERE order_id = $1
+           AND (status = 'SKIPPED'::order_item_status OR skip_reason IS NOT NULL)
+         LIMIT 1`,
+        [orderId]
+      );
+
+      return result.rows.length > 0;
+    } catch (error: any) {
+      logger.warn('Failed to inspect skipped order items during NetSuite recovery', {
+        orderId,
+        error: error.message,
+      });
+      return false;
     }
   }
 

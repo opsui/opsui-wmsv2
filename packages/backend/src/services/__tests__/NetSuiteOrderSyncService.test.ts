@@ -1170,6 +1170,74 @@ describe('NetSuiteOrderSyncService', () => {
     expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70008', 'PACKED');
   });
 
+  it('restores ready to ship and moves skipped orders back to pending when the linked fulfillment was deleted', async () => {
+    const { client, service } = createService();
+
+    jest.spyOn(service as any, 'query').mockImplementation(async (sql: string, params?: any[]) => {
+      if (sql.includes("status IN ('PICKED', 'PACKING', 'PACKED')")) {
+        return {
+          rows: [
+            {
+              order_id: 'SO70008B',
+              status: 'PACKED',
+              netsuite_so_internal_id: '1700008B',
+              netsuite_so_tran_id: 'SO70008B',
+              netsuite_if_internal_id: '1701008B',
+              hours_since_update: '0',
+              hours_since_created: '1',
+            },
+          ],
+          rowCount: 1,
+        };
+      }
+
+      if (
+        sql.includes('FROM order_items') &&
+        params?.[0] === 'SO70008B' &&
+        sql.includes("status = 'SKIPPED'::order_item_status")
+      ) {
+        return {
+          rows: [{ '?column?': 1 }],
+          rowCount: 1,
+        };
+      }
+
+      return { rows: [], rowCount: 0 };
+    });
+
+    jest.spyOn(client, 'getItemFulfillments').mockResolvedValue({
+      links: [],
+      count: 0,
+      hasMore: false,
+      items: [],
+      offset: 0,
+      totalResults: 0,
+    });
+    jest.spyOn(client, 'getItemFulfillmentsBySalesOrder').mockResolvedValue([]);
+    jest
+      .spyOn(client, 'getItemFulfillment')
+      .mockRejectedValue(
+        new Error('Failed to fetch item fulfillment 1701008B: That record does not exist.')
+      );
+    jest.spyOn(client, 'getSalesOrder').mockResolvedValue(
+      baseSalesOrder({
+        id: '1700008B',
+        tranId: 'SO70008B',
+        readyToShip: false,
+        status: { id: '_pendingFulfillment', refName: 'Pending Fulfillment' },
+      })
+    );
+    const updateSalesOrderStatus = jest
+      .spyOn(client, 'updateSalesOrderStatus')
+      .mockResolvedValue(undefined);
+
+    const result = await service.syncOrders('INT-AAP-NS01', { mode: 'incremental' });
+
+    expect(result.updated).toBe(1);
+    expect(updateSalesOrderStatus).toHaveBeenCalledWith('1700008B', { custbody8: true });
+    expect((service as any).updateOrderStatus).toHaveBeenCalledWith('SO70008B', 'PENDING');
+  });
+
   it('moves packing queue orders to shipped when the linked fulfillment is gone and the sales order is closed', async () => {
     const { client, service } = createService();
 
