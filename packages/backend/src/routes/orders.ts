@@ -644,7 +644,7 @@ router.post(
       return;
     }
 
-    const { pickTaskId, reason } = req.body;
+    const { pickTaskId, reason, skipQuantity } = req.body;
 
     if (!pickTaskId) {
       res.status(400).json({
@@ -663,7 +663,12 @@ router.post(
     }
 
     try {
-      const order = await orderService.skipPickTask(pickTaskId, reason.trim(), req.user.userId);
+      const order = await orderService.skipPickTask(
+        pickTaskId,
+        reason.trim(),
+        req.user.userId,
+        typeof skipQuantity === 'number' ? skipQuantity : undefined
+      );
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not found')) {
@@ -981,7 +986,13 @@ router.post(
   authorize(UserRole.PACKER, UserRole.ADMIN, UserRole.SUPERVISOR),
   validate.orderId,
   asyncHandler(async (req: AuthenticatedRequest, res) => {
-    const { order_item_id, reason } = req.body;
+    const { order_item_id, reason, skip_quantity, skipQuantity } = req.body;
+    const resolvedSkipQuantity: number | undefined =
+      typeof skip_quantity === 'number'
+        ? skip_quantity
+        : typeof skipQuantity === 'number'
+          ? skipQuantity
+          : undefined;
 
     if (!order_item_id) {
       res.status(400).json({
@@ -1000,7 +1011,12 @@ router.post(
     }
 
     try {
-      const order = await orderService.skipPackingItem(req.params.orderId, order_item_id, reason);
+      const order = await orderService.skipPackingItem(
+        req.params.orderId,
+        order_item_id,
+        reason,
+        resolvedSkipQuantity
+      );
       res.json(order);
     } catch (error: any) {
       if (error?.message?.includes('not in PACKING status')) {

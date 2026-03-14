@@ -467,6 +467,7 @@ export function PickingPage() {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [skipItemIndex, setSkipItemIndex] = useState<number | null>(null);
   const [skipReason, setSkipReason] = useState('');
+  const [skipQuantity, setSkipQuantity] = useState(1);
   const [isSkipping, setIsSkipping] = useState(false);
 
   // Track skipped items for blocking completion
@@ -1577,6 +1578,7 @@ export function PickingPage() {
 
     setSkipItemIndex(index);
     setSkipReason('');
+    setSkipQuantity(item.quantity);
     setShowSkipModal(true);
   };
 
@@ -1593,19 +1595,21 @@ export function PickingPage() {
         sku: item.sku,
         type: ExceptionType.SHORT_PICK_BACKORDER,
         quantityExpected: item.quantity,
-        quantityActual: item.pickedQuantity || 0,
+        quantityActual: item.quantity - skipQuantity,
         reason: skipReason || 'No reason provided',
       });
 
       await apiClient.post(`/orders/${orderId}/skip-item`, {
         pickTaskId: item.orderItemId,
         reason: skipReason || 'No reason provided',
+        skipQuantity,
       });
 
       showToast('Item skipped and logged for backorder!', 'warning');
       setShowSkipModal(false);
       setSkipItemIndex(null);
       setSkipReason('');
+      setSkipQuantity(1);
 
       // Refetch order data
       await refetch();
@@ -3783,7 +3787,7 @@ export function PickingPage() {
                   <div className="flex items-center justify-between">
                     <h2 className="picking-title text-lg">Skip Item</h2>
                     <button
-                      onClick={() => setShowSkipModal(false)}
+                      onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}
                       className="text-white hover:text-warning-200 transition-colors"
                     >
                       <XMarkIcon className="h-6 w-6" />
@@ -3831,6 +3835,29 @@ export function PickingPage() {
                     </div>
                   </div>
 
+                  {/* Quantity to skip */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Quantity to skip (backorder)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setSkipQuantity(q => Math.max(1, q - 1))}
+                        className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center hover:bg-white/[0.15] transition-colors"
+                      >
+                        −
+                      </button>
+                      <span className="text-white font-bold text-lg w-12 text-center">{skipQuantity}</span>
+                      <button
+                        onClick={() => setSkipQuantity(q => Math.min(order.items[skipItemIndex].quantity, q + 1))}
+                        className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center hover:bg-white/[0.15] transition-colors"
+                      >
+                        +
+                      </button>
+                      <span className="text-sm text-gray-400">of {order.items[skipItemIndex].quantity} units</span>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-white mb-2">
                       Reason for skipping <span className="text-error-400">*</span>
@@ -3853,7 +3880,7 @@ export function PickingPage() {
                 </div>
 
                 <div className="px-6 py-4 border-t border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                  <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
+                  <Button variant="ghost" onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}>
                     Cancel
                   </Button>
                   <Button

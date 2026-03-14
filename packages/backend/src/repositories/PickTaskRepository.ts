@@ -243,6 +243,28 @@ export class PickTaskRepository extends BaseRepository<PickTask> {
   }
 
   // --------------------------------------------------------------------------
+  // PARTIAL SKIP PICK TASK (complete with reduced quantity)
+  // --------------------------------------------------------------------------
+
+  async partialSkipPickTask(pickTaskId: string, pickedQuantity: number): Promise<PickTask> {
+    const result = await query(
+      `UPDATE pick_tasks
+       SET status = 'COMPLETED',
+           picked_quantity = $1,
+           completed_at = NOW()
+       WHERE pick_task_id = $2 AND status != 'COMPLETED'
+       RETURNING *`,
+      [pickedQuantity, pickTaskId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError('PickTask', pickTaskId);
+    }
+
+    return result.rows[0] as PickTask;
+  }
+
+  // --------------------------------------------------------------------------
   // UPDATE PICK TASK STATUS
   // --------------------------------------------------------------------------
 

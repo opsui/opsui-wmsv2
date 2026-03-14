@@ -271,6 +271,7 @@ export function PackingPage() {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [skipItemIndex, setSkipItemIndex] = useState<number | null>(null);
   const [skipReason, setSkipReason] = useState('');
+  const [skipQuantity, setSkipQuantity] = useState(1);
   const [isSkipping, setIsSkipping] = useState(false);
 
   // Manual override modal state
@@ -1528,6 +1529,8 @@ export function PackingPage() {
     const item = order?.items?.[index];
     if (!item) return;
 
+    const remaining = item.quantity - (item.verifiedQuantity || 0);
+    setSkipQuantity(Math.max(1, remaining));
     setSkipItemIndex(index);
     setSkipReason('');
     setShowSkipModal(true);
@@ -1546,13 +1549,14 @@ export function PackingPage() {
         sku: item.sku,
         type: ExceptionType.SHORT_PICK_BACKORDER,
         quantityExpected: item.quantity,
-        quantityActual: item.verifiedQuantity || 0,
+        quantityActual: item.quantity - skipQuantity,
         reason: skipReason || 'No reason provided',
       });
 
       await apiClient.post(`/orders/${orderId}/skip-packing-item`, {
         order_item_id: item.orderItemId,
         reason: skipReason || 'No reason provided',
+        skip_quantity: skipQuantity,
       });
 
       showToast('Item skipped and logged for backorder!', 'warning');
@@ -1560,6 +1564,7 @@ export function PackingPage() {
       setShowSkipModal(false);
       setSkipItemIndex(null);
       setSkipReason('');
+      setSkipQuantity(1);
 
       // Refetch order data
       await refetch();
@@ -3159,7 +3164,7 @@ export function PackingPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="picking-title text-lg">Skip Item</h2>
                   <button
-                    onClick={() => setShowSkipModal(false)}
+                    onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}
                     className="text-white hover:text-warning-200 transition-colors"
                   >
                     <ExclamationTriangleIcon className="h-6 w-6" />
@@ -3207,6 +3212,34 @@ export function PackingPage() {
                   </div>
                 </div>
 
+                {/* Quantity to skip */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                    Quantity to skip (backorder)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSkipQuantity(q => Math.max(1, q - 1))}
+                      className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/[0.15] transition-colors border-gray-200 dark:border-white/[0.12]"
+                    >
+                      −
+                    </button>
+                    <span className="text-gray-900 dark:text-white font-bold text-lg w-12 text-center">{skipQuantity}</span>
+                    <button
+                      onClick={() => {
+                        const maxSkip = order.items[skipItemIndex].quantity - (order.items[skipItemIndex].verifiedQuantity || 0);
+                        setSkipQuantity(q => Math.min(maxSkip, q + 1));
+                      }}
+                      className="h-9 w-9 rounded-lg bg-white/[0.08] border border-white/[0.12] text-gray-900 dark:text-white flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/[0.15] transition-colors border-gray-200 dark:border-white/[0.12]"
+                    >
+                      +
+                    </button>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      of {order.items[skipItemIndex].quantity - (order.items[skipItemIndex].verifiedQuantity || 0)} remaining units
+                    </span>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Reason for skipping <span className="text-error-400">*</span>
@@ -3229,7 +3262,7 @@ export function PackingPage() {
               </div>
 
               <div className="px-6 py-4 border-t packing-divider border-white/[0.08] rounded-b-2xl flex justify-end gap-3">
-                <Button variant="ghost" onClick={() => setShowSkipModal(false)}>
+                <Button variant="ghost" onClick={() => { setShowSkipModal(false); setSkipQuantity(1); }}>
                   Cancel
                 </Button>
                 <Button

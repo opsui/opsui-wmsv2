@@ -37,6 +37,7 @@
 import {
   Order,
   OrderStatus,
+  PickTask,
   OrderPriority,
   TaskStatus,
   CreateOrderDTO,
@@ -676,12 +677,57 @@ export class OrderService {
   // SKIP PICK TASK
   // --------------------------------------------------------------------------
 
-  async skipPickTask(pickTaskId: string, reason: string, pickerId: string): Promise<Order> {
-    logger.info('Skipping pick task', { pickTaskId, reason, pickerId });
+  async skipPickTask(
+    pickTaskId: string,
+    reason: string,
+    pickerId: string,
+    skipQuantity?: number
+  ): Promise<Order> {
+    logger.info('Skipping pick task', { pickTaskId, reason, pickerId, skipQuantity });
 
-    const pickTask = await pickTaskRepository.skipPickTask(pickTaskId, reason);
+    // Fetch the task first so we know the full quantity
+    const taskResult = await query(
+      `SELECT * FROM pick_tasks WHERE pick_task_id = $1`,
+      [pickTaskId]
+    );
 
-    // Recalculate order progress so skipped tasks count toward completion immediately
+    if (taskResult.rows.length === 0) {
+      throw new NotFoundError('PickTask', pickTaskId);
+    }
+
+    const task = taskResult.rows[0] as any;
+    const isPartialSkip =
+      skipQuantity !== undefined && skipQuantity !== null && skipQuantity < task.quantity;
+
+    let pickTask: PickTask;
+
+    if (isPartialSkip) {
+      // Partial skip: mark task COMPLETED with the remaining picked quantity
+      const pickedQuantity = task.quantity - skipQuantity!;
+      pickTask = await pickTaskRepository.partialSkipPickTask(pickTaskId, pickedQuantity);
+
+      // Update order_item to reflect partial pick
+      if (task.order_item_id) {
+        await query(
+          `UPDATE order_items
+             SET picked_quantity = $1, status = 'FULLY_PICKED'
+             WHERE order_item_id = $2`,
+          [pickedQuantity, task.order_item_id]
+        );
+      }
+    } else {
+      // Full skip: existing behaviour
+      pickTask = await pickTaskRepository.skipPickTask(pickTaskId, reason);
+
+      if (task.order_item_id) {
+        await query(
+          `UPDATE order_items SET status = 'SKIPPED' WHERE order_item_id = $1`,
+          [task.order_item_id]
+        );
+      }
+    }
+
+    // Recalculate order progress so skipped/completed tasks count toward completion immediately
     await query(
       `UPDATE orders
          SET progress = (
@@ -1440,8 +1486,13 @@ export class OrderService {
     return this.getOrder(orderId);
   }
 
-  async skipPackingItem(orderId: string, orderItemId: string, reason: string): Promise<Order> {
-    logger.info('Skipping packing item', { orderId, orderItemId, reason });
+  async skipPackingItem(
+    orderId: string,
+    orderItemId: string,
+    reason: string,
+    skipQuantity?: number
+  ): Promise<Order> {
+    logger.info('Skipping packing item', { orderId, orderItemId, reason, skipQuantity });
 
     const order = await this.getOrder(orderId);
 
@@ -1450,13 +1501,39 @@ export class OrderService {
       throw new ConflictError(`Order is not in PACKING status (current status: ${order.status})`);
     }
 
-    // Update item status to SKIPPED with reason
-    await query(
-      `UPDATE order_items SET status = 'SKIPPED', skip_reason = $1 WHERE order_item_id = $2`,
-      [reason, orderItemId]
+    // Fetch the order item to know its quantity
+    const itemResult = await query(
+      `SELECT order_item_id, quantity, verified_quantity FROM order_items WHERE order_item_id = $1 AND order_id = $2`,
+      [orderItemId, orderId]
     );
 
-    logger.info('Packing item skipped', { orderId, orderItemId, reason });
+    if (itemResult.rows.length === 0) {
+      throw new NotFoundError('OrderItem', orderItemId);
+    }
+
+    const item = itemResult.rows[0] as any;
+    const totalQty: number = item.quantity;
+    const isPartialSkip =
+      skipQuantity !== undefined && skipQuantity !== null && skipQuantity < totalQty;
+
+    if (isPartialSkip) {
+      // Partial skip: set verified_quantity to the non-backordered portion, still mark SKIPPED
+      const verifiedQuantity = totalQty - skipQuantity!;
+      await query(
+        `UPDATE order_items
+           SET status = 'SKIPPED', skip_reason = $1, verified_quantity = $2
+           WHERE order_item_id = $3`,
+        [reason, verifiedQuantity, orderItemId]
+      );
+    } else {
+      // Full skip: existing behaviour
+      await query(
+        `UPDATE order_items SET status = 'SKIPPED', skip_reason = $1 WHERE order_item_id = $2`,
+        [reason, orderItemId]
+      );
+    }
+
+    logger.info('Packing item skipped', { orderId, orderItemId, reason, skipQuantity });
 
     return this.getOrder(orderId);
   }
