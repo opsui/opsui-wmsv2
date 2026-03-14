@@ -273,7 +273,7 @@ export class OrderService {
     const client = integration.client;
 
     const orderItemsResult = await query(
-      `SELECT sku, name, quantity, picked_quantity, status
+      `SELECT sku, name, quantity, picked_quantity, verified_quantity, status
        FROM order_items
        WHERE order_id = $1
        ORDER BY order_item_id`,
@@ -281,11 +281,19 @@ export class OrderService {
     );
 
     const fulfillmentLines = orderItemsResult.rows
-      .filter((item: any) => item.status !== 'SKIPPED' && Number(item.picked_quantity || 0) > 0)
+      .filter(
+        (item: any) =>
+          item.status !== 'SKIPPED' &&
+          (Number(item.verifiedQuantity || 0) > 0 || Number(item.pickedQuantity || 0) > 0)
+      )
       .map((item: any) => ({
         sku: item.sku,
         itemName: item.name,
-        quantity: Math.min(Number(item.picked_quantity || 0), Number(item.quantity || 0)),
+        // Prefer verifiedQuantity (set during packing) over pickedQuantity
+        quantity: Math.min(
+          Number(item.verifiedQuantity || item.pickedQuantity || 0),
+          Number(item.quantity || 0)
+        ),
       }));
 
     const existingFulfillments = await client.getItemFulfillmentsBySalesOrder([
