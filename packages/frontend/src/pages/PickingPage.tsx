@@ -681,6 +681,21 @@ export function PickingPage() {
     sessionStorage.removeItem(fulfillmentPreviewStorageKey);
   }, [fulfillmentPreviewStorageKey, orderId]);
 
+  // If the order is back in PICKING status (e.g. re-opened after being reset), clear any stale
+  // fulfillment preview that may have been hydrated from sessionStorage.
+  useEffect(() => {
+    if (!order || !fulfillmentPreviewStorageKey) return;
+    if (
+      order.status !== OrderStatus.PICKED &&
+      order.status !== 'PACKING' &&
+      order.status !== 'PACKED' &&
+      order.status !== 'SHIPPED'
+    ) {
+      setFulfillmentPreviewOrder(null);
+      sessionStorage.removeItem(fulfillmentPreviewStorageKey);
+    }
+  }, [order?.status, fulfillmentPreviewStorageKey]);
+
   useEffect(() => {
     if (!order?.items?.length) {
       setActiveOrderItemImageMap({});
