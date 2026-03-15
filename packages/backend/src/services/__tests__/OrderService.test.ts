@@ -1605,7 +1605,7 @@ describe('OrderService', () => {
       ]);
     });
 
-    it('should preserve NetSuite ready to ship when other packable lines remain after a skip', async () => {
+    it('should restore NetSuite ready to ship when other packable lines remain after a skip', async () => {
       const skippedTask = { ...mockPickTask, orderId: 'SO68561', skipReason: 'Out of stock' };
       const defaultPoolQuery = jest.fn().mockResolvedValue({
         rows: [
@@ -1660,7 +1660,7 @@ describe('OrderService', () => {
 
       await orderService.skipPickTask('pt-001', 'Out of stock', 'picker-123');
 
-      expect(updateSalesOrderStatus).not.toHaveBeenCalled();
+      expect(updateSalesOrderStatus).toHaveBeenCalledWith('1604613', { custbody8: true });
     });
 
     it('should disable NetSuite ready to ship when a skip leaves no packable lines', async () => {

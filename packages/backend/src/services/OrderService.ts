@@ -193,9 +193,10 @@ export class OrderService {
     };
   }
 
-  private async markNetSuiteOrderNotReadyToShip(
+  private async updateNetSuiteReadyToShipFlag(
     orderId: string,
     source?: Record<string, unknown> | null,
+    readyToShip?: boolean,
     reason?: string
   ): Promise<void> {
     let metadata = this.normalizeNetSuiteOrderMetadata(source);
@@ -227,20 +228,36 @@ export class OrderService {
     const integration = await this.getNetSuiteClientForOrganization(metadata.organizationId);
     if (!integration) {
       throw new ValidationError(
-        `No enabled NetSuite integration found to disable Ready To Ship for order ${orderId}`
+        `No enabled NetSuite integration found to update Ready To Ship for order ${orderId}`
       );
     }
 
     await integration.client.updateSalesOrderStatus(String(metadata.netsuiteSoInternalId), {
-      custbody8: false,
+      custbody8: readyToShip,
     });
 
-    logger.info('Marked NetSuite sales order as not ready to ship after skip/backorder', {
+    logger.info(`Marked NetSuite sales order as ${readyToShip ? 'ready' : 'not ready'} to ship`, {
       orderId,
       netsuiteSoInternalId: metadata.netsuiteSoInternalId,
       netsuiteSoTranId: metadata.netsuiteSoTranId,
       reason,
     });
+  }
+
+  private async markNetSuiteOrderNotReadyToShip(
+    orderId: string,
+    source?: Record<string, unknown> | null,
+    reason?: string
+  ): Promise<void> {
+    await this.updateNetSuiteReadyToShipFlag(orderId, source, false, reason);
+  }
+
+  private async markNetSuiteOrderReadyToShip(
+    orderId: string,
+    source?: Record<string, unknown> | null,
+    reason?: string
+  ): Promise<void> {
+    await this.updateNetSuiteReadyToShipFlag(orderId, source, true, reason);
   }
 
   private pickBestExistingFulfillment(
@@ -377,6 +394,7 @@ export class OrderService {
     });
 
     if (hasAnyPackableLines) {
+      await this.markNetSuiteOrderReadyToShip(orderId, source, reason);
       return;
     }
 
