@@ -280,9 +280,14 @@ router.post(
  * GET /api/nzc/tracking/:connote
  * Get tracking status and events for a consignment
  */
-router.get(
+router.use(
   '/tracking/:connote',
-  asyncHandler(async (req: AuthenticatedRequest, res) => {
+  asyncHandler(async (req: AuthenticatedRequest, res, next) => {
+    if (req.method !== 'GET') {
+      next();
+      return;
+    }
+
     if (!nzcService.isConfigured()) {
       res.status(503).json({
         error: 'NZC is not configured on this backend',
