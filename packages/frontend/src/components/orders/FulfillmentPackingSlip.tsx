@@ -649,7 +649,7 @@ export function FulfillmentPackingSlip({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
                   Ship To
                 </p>
-                <div className="text-xs leading-tight text-gray-800 print:text-black">
+                <div className="text-xs leading-tight text-black">
                   {previewAddressLines.length > 0 ? (
                     previewAddressLines.map((line, index) => (
                       <p key={`ship-${index}`}>{line.value}</p>
@@ -663,7 +663,7 @@ export function FulfillmentPackingSlip({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
                   Bill To
                 </p>
-                <div className="text-xs leading-tight text-gray-800 print:text-black">
+                <div className="text-xs leading-tight text-black">
                   {billToLines.length > 0 ? (
                     billToLines.map((line, index) => <p key={`bill-${index}`}>{line.value}</p>)
                   ) : (
