@@ -48,7 +48,8 @@ interface ShippedOrder {
   shippedAt: string;
   estimatedDelivery: string;
   status: 'in_transit' | 'out_for_delivery' | 'delivered' | 'exception';
-  items: number;
+  itemCount: number;
+  items: Array<{ sku: string; name: string; quantity: number; image?: string }>;
   destination: { company?: string; address: string; phone?: string };
 }
 
@@ -138,7 +139,8 @@ export function ShippedOrdersPage() {
       shippedAt: o.shippedAt,
       estimatedDelivery: o.deliveredAt || o.shippedAt,
       status: (o.deliveredAt ? 'delivered' : 'in_transit') as ShippedOrder['status'],
-      items: o.itemCount,
+      itemCount: o.itemCount,
+      items: (o as any).items ?? [],
       destination: parseDestination(o.shippingAddress),
     }));
   }, [apiResponse]);
@@ -337,12 +339,41 @@ export function ShippedOrdersPage() {
                     <div className="shipping-detail-row">
                       <div className="shipping-detail-item">
                         <CubeIcon className="h-4 w-4" />
-                        <span>{order.items} items</span>
+                        <span>{order.itemCount} items</span>
                       </div>
                       <div className={cn('shipping-carrier-badge', getCarrierClass(order.carrier))}>
                         {order.carrier}
                       </div>
                     </div>
+
+                    {order.items.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {order.items.map(item => (
+                          <div
+                            key={item.sku}
+                            className="flex items-center gap-1.5 bg-white/8 rounded-lg px-2 py-1 text-xs text-white/90"
+                          >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-8 h-8 rounded object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
+                                <CubeIcon className="h-4 w-4 text-white/50" />
+                              </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium truncate max-w-[120px] text-white/90">
+                                {item.name}
+                              </span>
+                              <span className="text-white/50">×{item.quantity}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="shipping-detail-row">
                       <div className="shipping-detail-item" style={{ alignItems: 'flex-start' }}>

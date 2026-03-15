@@ -169,6 +169,7 @@ export class ShippingService {
       status: string;
       priority: string;
       itemCount: number;
+      items: Array<{ sku: string; name: string; quantity: number; image?: string }>;
       totalValue: number;
       shippedAt: string;
       deliveredAt?: string;
@@ -252,21 +253,29 @@ export class ShippingService {
     const total = parseInt(countResult.rows[0].count, 10);
     const totalPages = Math.ceil(total / limit);
 
-    // Get orders with calculated item_count
+    // Get orders with item details via JSON aggregation
     const result = await client.query(
       `SELECT
         o.order_id,
         o.customer_name,
         o.status,
         o.priority,
-        (SELECT COUNT(*) FROM order_items WHERE order_id = o.order_id) as item_count,
         0 as total_value,
         COALESCE(s.shipped_at, o.shipped_at) as shipped_at,
         s.delivered_at,
         s.tracking_number,
         s.carrier_id,
         s.ship_to_address,
-        s.shipped_by
+        s.shipped_by,
+        (SELECT json_agg(json_build_object(
+          'sku', oi.sku,
+          'name', oi.name,
+          'quantity', oi.quantity,
+          'image', sk.image
+        ) ORDER BY oi.order_item_id)
+         FROM order_items oi
+         JOIN skus sk ON oi.sku = sk.sku
+         WHERE oi.order_id = o.order_id) as items
        FROM orders o
        LEFT JOIN shipments s ON o.order_id = s.order_id
        WHERE ${whereClause}
@@ -281,7 +290,14 @@ export class ShippingService {
       customerName: row.customer_name || 'N/A',
       status: row.status,
       priority: row.priority,
-      itemCount: parseInt(row.item_count, 10),
+      itemCount: Array.isArray(row.items) ? row.items.length : 0,
+      items:
+        (row.items as Array<{
+          sku: string;
+          name: string;
+          quantity: number;
+          image?: string;
+        }> | null) ?? [],
       totalValue: parseFloat(row.total_value) || 0,
       shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : new Date().toISOString(),
       deliveredAt: row.delivered_at ? new Date(row.delivered_at).toISOString() : undefined,
