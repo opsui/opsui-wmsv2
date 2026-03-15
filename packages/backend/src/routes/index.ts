@@ -5,7 +5,8 @@
  */
 
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { authenticate, AuthenticatedRequest } from '../middleware/auth';
+import { asyncHandler } from '../middleware/errorHandler';
 import { organizationContext } from '../middleware/organizationContext';
 import accountingRoutes from './accounting';
 import advancedInventoryRoutes from './advancedInventory';
@@ -44,6 +45,7 @@ import shippingRoutes from './shipping';
 import skuRoutes from './skus';
 import stockControlRoutes from './stockControl';
 import userRoutes from './users';
+import { nzcService } from '../services/NZCService';
 
 // New enhanced routes
 import auditRoutes from './audit';
@@ -81,6 +83,26 @@ v1Router.use((req, res, next) => {
     organizationContext(req as any, res, next).catch(next);
   });
 });
+
+// Register NZC tracking directly on the v1 router.
+// Production has intermittently fallen through the mounted NZC sub-router for this path,
+// while sibling NZC routes such as labels still match correctly.
+v1Router.get(
+  '/nzc/tracking/:connote',
+  asyncHandler(async (req: AuthenticatedRequest, res) => {
+    if (!nzcService.isConfigured()) {
+      res.status(503).json({
+        error: 'NZC is not configured on this backend',
+        code: 'NZC_NOT_CONFIGURED',
+      });
+      return;
+    }
+
+    const { connote } = req.params;
+    const result = await nzcService.getTracking(connote);
+    res.json(result);
+  })
+);
 
 v1Router.use('/orders', orderRoutes);
 v1Router.use('/inventory', inventoryRoutes);
