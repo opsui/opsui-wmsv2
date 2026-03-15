@@ -1628,6 +1628,20 @@ export function PickingPage() {
     ((order.pickerId && order.pickerId !== currentUser.userId) ||
       order.status === 'PICKED' ||
       order.status === 'SHIPPED');
+  const canRecoverFulfillmentPreview =
+    Boolean(order) &&
+    isOrderComplete &&
+    (order.status === OrderStatus.PICKED ||
+      order.status === 'PACKING' ||
+      order.status === 'PACKED');
+
+  useEffect(() => {
+    if (!canRecoverFulfillmentPreview || fulfillmentPreviewOrder || completeMutation.isPending) {
+      return;
+    }
+
+    setFulfillmentPreviewOrder(order);
+  }, [canRecoverFulfillmentPreview, completeMutation.isPending, fulfillmentPreviewOrder, order]);
 
   useEffect(() => {
     if (!order || !isOrderComplete || fulfillmentPreviewOrder || completeMutation.isPending) {
@@ -1772,7 +1786,7 @@ export function PickingPage() {
               items={[
                 { label: 'Picking Queue', path: pickingQueuePath },
                 {
-                  label: Fulfillment,
+                  label: 'Fulfillment',
                 },
               ]}
             />

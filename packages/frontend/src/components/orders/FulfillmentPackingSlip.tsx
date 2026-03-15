@@ -99,11 +99,8 @@ export const FULFILLMENT_SLIP_PRINT_STYLES = `
     break-after: auto;
     page-break-after: auto;
   }
-  body.fulfillment-slip-print-preview .fulfillment-slip-item-image {
-    display: none !important;
-  }
-  body.fulfillment-slip-print-preview .fulfillment-slip-item-meta {
-    padding-left: 0 !important;
+  body.fulfillment-slip-print-preview .fulfillment-slip-item-image img {
+    display: block !important;
   }
 `;
 
@@ -149,6 +146,7 @@ export interface FulfillmentPackingSlipProps {
     shippingMethod?: string | null;
   };
   pickedByLabel: string;
+  packedByLabel?: string | null;
   salesOrderBarcodeImage?: string | null;
   itemImageMap?: Record<string, string>;
   itemBarcodeImageMap?: Record<string, string>;
@@ -241,6 +239,22 @@ const formatNetSuiteDisplayText = (value?: string | null): string => {
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/\b\w/g, char => char.toUpperCase());
+};
+
+const formatFulfillmentActorTimestamp = (value?: string | Date | null) => {
+  if (!value) return null;
+
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return parsed.toLocaleString('en-NZ', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const formatAddressLines = (address?: Address | null): AddressLine[] => {
@@ -487,6 +501,7 @@ function FulfillmentSlipItemsTable({
 export function FulfillmentPackingSlip({
   order,
   pickedByLabel,
+  packedByLabel = null,
   salesOrderBarcodeImage = null,
   itemImageMap = {},
   itemBarcodeImageMap = {},
@@ -509,6 +524,9 @@ export function FulfillmentPackingSlip({
   const salesOrderBarcodeSize = salesOrderBarcode
     ? renderBarcodeDimensions(salesOrderBarcode.totalWidth, 38, 0.33, 12.5)
     : null;
+  const pickedAtLabel =
+    formatFulfillmentActorTimestamp(order.pickedAt) || formatFulfillmentActorTimestamp(new Date());
+  const packedAtLabel = formatFulfillmentActorTimestamp(order.packedAt);
   const allFulfillmentItems = order.items || [];
   const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 2, 4);
   const totalSlipPages = slipPages.length;
@@ -718,7 +736,14 @@ export function FulfillmentPackingSlip({
             />
           </div>
 
-          {totalSlipPages === 1 && <FulfillmentSlipFooter pickedByLabel={pickedByLabel} />}
+          {totalSlipPages === 1 && (
+            <FulfillmentSlipFooter
+              pickedByLabel={pickedByLabel}
+              packedByLabel={packedByLabel}
+              pickedAtLabel={pickedAtLabel}
+              packedAtLabel={packedAtLabel}
+            />
+          )}
         </section>
 
         {slipPages.slice(1).map((pageItems: any[], continuationIndex: number) => {
@@ -782,7 +807,14 @@ export function FulfillmentPackingSlip({
                   pageNumber={pageNumber}
                 />
               </div>
-              {isLastPage && <FulfillmentSlipFooter pickedByLabel={pickedByLabel} />}
+              {isLastPage && (
+                <FulfillmentSlipFooter
+                  pickedByLabel={pickedByLabel}
+                  packedByLabel={packedByLabel}
+                  pickedAtLabel={pickedAtLabel}
+                  packedAtLabel={packedAtLabel}
+                />
+              )}
             </section>
           );
         })}
@@ -791,7 +823,17 @@ export function FulfillmentPackingSlip({
   );
 }
 
-function FulfillmentSlipFooter({ pickedByLabel }: { pickedByLabel: string }) {
+function FulfillmentSlipFooter({
+  pickedByLabel,
+  packedByLabel,
+  pickedAtLabel,
+  packedAtLabel,
+}: {
+  pickedByLabel: string;
+  packedByLabel?: string | null;
+  pickedAtLabel?: string | null;
+  packedAtLabel?: string | null;
+}) {
   return (
     <>
       <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
@@ -801,23 +843,27 @@ function FulfillmentSlipFooter({ pickedByLabel }: { pickedByLabel: string }) {
               Picked By
             </p>
             <p className="font-semibold text-slate-900 print:text-black">{pickedByLabel}</p>
-            <p className="text-slate-700 text-xs mt-1 print:text-black">
-              {new Date().toLocaleString('en-NZ', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
+            {pickedAtLabel ? (
+              <p className="text-slate-700 text-xs mt-1 print:text-black">{pickedAtLabel}</p>
+            ) : null}
           </div>
           <div className="flex gap-12">
             <div className="text-center">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
                 Packed By
               </p>
-              <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
+              {packedByLabel ? (
+                <div className="min-w-[9rem] px-2 text-center">
+                  <p className="text-sm font-semibold text-slate-900 print:text-black">
+                    {packedByLabel}
+                  </p>
+                  {packedAtLabel ? (
+                    <p className="mt-1 text-xs text-slate-700 print:text-black">{packedAtLabel}</p>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="w-36 border-b-2 border-slate-400 h-8 print:border-gray-500" />
+              )}
             </div>
           </div>
         </div>

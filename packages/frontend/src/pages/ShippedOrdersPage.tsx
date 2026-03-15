@@ -43,6 +43,7 @@ import { cn } from '@/lib/utils';
 import {
   nzcApi,
   orderApi,
+  authApi,
   useShippedOrders,
   useNZCTracking,
   useExportShippedOrders,
@@ -325,6 +326,11 @@ export function ShippedOrdersPage() {
   const { data: shippedData, isLoading: loading } = useShippedOrders({ limit: 100 });
   const apiResponse = shippedData?.data;
   const exportMutation = useExportShippedOrders();
+  const { data: assignableUsers = [] } = useQuery({
+    queryKey: ['users', 'assignable'],
+    queryFn: authApi.getAssignableUsers,
+    staleTime: 300000,
+  });
 
   const orders: ShippedOrder[] = useMemo(() => {
     if (!apiResponse?.orders) return [];
@@ -389,6 +395,50 @@ export function ShippedOrdersPage() {
     enabled: selectedConnotes.length > 0,
     staleTime: 300000,
   });
+
+  const assignableUserNameMap = useMemo(
+    () =>
+      assignableUsers.reduce<Record<string, string>>((acc, user) => {
+        acc[user.userId] = user.name;
+        return acc;
+      }, {}),
+    [assignableUsers]
+  );
+
+  const selectedOrderItemImageMap = useMemo(() => {
+    const detailItems = Array.isArray((selectedOrderDetail as any)?.items)
+      ? (selectedOrderDetail as any).items
+      : [];
+    const listItems = Array.isArray(selectedOrder?.items) ? selectedOrder.items : [];
+
+    return [...detailItems, ...listItems].reduce<Record<string, string>>((acc, item: any) => {
+      if (item?.sku && item?.image) {
+        acc[String(item.sku)] = String(item.image);
+      }
+      return acc;
+    }, {});
+  }, [selectedOrder?.items, selectedOrderDetail]);
+
+  const selectedOrderPickedByLabel = useMemo(() => {
+    if (!selectedOrderDetail) return 'Unknown';
+
+    const pickerName = (selectedOrderDetail as any).pickerName;
+    if (pickerName) return pickerName;
+
+    const pickerId = (selectedOrderDetail as any).pickerId;
+    return (pickerId && assignableUserNameMap[pickerId]) || pickerId || 'Unknown';
+  }, [assignableUserNameMap, selectedOrderDetail]);
+
+  const selectedOrderPackedByLabel = useMemo(() => {
+    if (!selectedOrderDetail) return null;
+
+    const packerName = (selectedOrderDetail as any).packerName;
+    if (packerName) return packerName;
+
+    const packerId = (selectedOrderDetail as any).packerId;
+    return (packerId && assignableUserNameMap[packerId]) || packerId || null;
+  }, [assignableUserNameMap, selectedOrderDetail]);
+
   const packingSlipElementId = selectedOrderDetail
     ? `shipped-packing-slip-${selectedOrderDetail.orderId}`
     : 'shipped-packing-slip-preview';
@@ -822,11 +872,9 @@ export function ShippedOrdersPage() {
                                 >
                                   <FulfillmentPackingSlip
                                     order={selectedOrderDetail}
-                                    pickedByLabel={
-                                      (selectedOrderDetail as any).pickerName ||
-                                      (selectedOrderDetail as any).pickerId ||
-                                      'Unknown'
-                                    }
+                                    pickedByLabel={selectedOrderPickedByLabel}
+                                    packedByLabel={selectedOrderPackedByLabel}
+                                    itemImageMap={selectedOrderItemImageMap}
                                     containerId={`${packingSlipElementId}-preview`}
                                   />
                                 </div>
@@ -886,11 +934,9 @@ export function ShippedOrdersPage() {
                                   <div className="max-h-[42rem] overflow-auto">
                                     <FulfillmentPackingSlip
                                       order={selectedOrderDetail}
-                                      pickedByLabel={
-                                        (selectedOrderDetail as any).pickerName ||
-                                        (selectedOrderDetail as any).pickerId ||
-                                        'Unknown'
-                                      }
+                                      pickedByLabel={selectedOrderPickedByLabel}
+                                      packedByLabel={selectedOrderPackedByLabel}
+                                      itemImageMap={selectedOrderItemImageMap}
                                       containerId={packingSlipElementId}
                                     />
                                   </div>

@@ -545,7 +545,9 @@ export interface Order {
   cancelledAt?: Date;
   items?: OrderItem[]; // Optional for queue responses
   pickerId?: string;
+  pickerName?: string;
   packerId?: string;
+  packerName?: string;
   progress: number; // 0-100, calculated server-side
   // NetSuite integration fields
   netsuiteSoTranId?: string; // NetSuite Sales Order transaction ID (e.g., "SO-1234")

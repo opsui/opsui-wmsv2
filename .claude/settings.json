@@ -78,18 +78,6 @@
         "@modelcontextprotocol/server-filesystem",
         "C:\\Users\\Heinricht\\Documents\\Warehouse Management System"
       ]
-    },
-    "glm": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "tsx",
-        "C:\\Users\\Heinricht\\Documents\\Warehouse Management System\\tools\\mcp-server-glm\\src\\index.ts"
-      ],
-      "env": {
-        "GLM_API_KEY": "1c4e10d1249440e0b6a5430c21450dc7.tn1bVz1mkDUHbgAW",
-        "GLM_MODEL": "glm-4.7"
-      }
     }
   }
 }

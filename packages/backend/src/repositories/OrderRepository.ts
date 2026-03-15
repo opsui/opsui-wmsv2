@@ -20,6 +20,11 @@ import { appendExcludedQueueCustomerConditions } from '../utils/orderQueueExclus
 import { BaseRepository } from './BaseRepository';
 import { getOrderItemsQuery, mapOrderItem } from './queries/OrderQueries';
 
+type OrderWithActorNames = Order & {
+  pickerName?: string;
+  packerName?: string;
+};
+
 // ============================================================================
 // ORDER REPOSITORY
 // ============================================================================
@@ -43,7 +48,7 @@ export class OrderRepository extends BaseRepository<Order> {
       let subtotal = 0;
 
       // Create order
-      const orderResult = await this.insert(
+      await this.insert(
         {
           orderId,
           customerId: dto.customerId,
@@ -141,7 +146,23 @@ export class OrderRepository extends BaseRepository<Order> {
   // --------------------------------------------------------------------------
 
   async getOrderWithItems(orderId: string): Promise<Order> {
-    const order = await this.findByIdOrThrow(orderId);
+    const orderResult = await query<OrderWithActorNames>(
+      `SELECT
+         o.*,
+         picker_user.name AS picker_name,
+         packer_user.name AS packer_name
+       FROM orders o
+       LEFT JOIN users picker_user ON picker_user.user_id = o.picker_id
+       LEFT JOIN users packer_user ON packer_user.user_id = o.packer_id
+       WHERE o.order_id = $1`,
+      [orderId]
+    );
+
+    if (orderResult.rows.length === 0) {
+      throw new NotFoundError('Order', orderId);
+    }
+
+    const order = orderResult.rows[0] as OrderWithActorNames;
 
     let itemsResult: any;
     let progress = 0;
@@ -175,6 +196,8 @@ export class OrderRepository extends BaseRepository<Order> {
 
     return {
       ...order,
+      pickerName: order.pickerName || order.pickerId || undefined,
+      packerName: order.packerName || order.packerId || undefined,
       items: itemsResult.rows.map((item: any) => mapOrderItem(item)),
       progress,
     } as Order;
