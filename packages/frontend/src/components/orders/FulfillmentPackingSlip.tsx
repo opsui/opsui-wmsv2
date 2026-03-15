@@ -364,10 +364,10 @@ function FulfillmentSlipItemRow({
   return (
     <div
       key={rowKey}
-      className={`grid grid-cols-12 gap-2 px-3 py-1.5 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} print:bg-white`}
+      className={`grid grid-cols-12 gap-2 px-2 py-1 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} print:bg-white`}
     >
       <div className="col-span-4 flex items-start gap-2">
-        <div className="fulfillment-slip-item-image h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+        <div className="fulfillment-slip-item-image h-7 w-7 shrink-0 overflow-hidden rounded border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
           {itemImage ? (
             <img
               src={itemImage}
@@ -388,11 +388,8 @@ function FulfillmentSlipItemRow({
         </div>
       </div>
       <div className="col-span-5">
-        <p className="text-slate-800 font-medium print:text-black">
-          {getOrderItemDisplayName(item)}
-        </p>
         {getOrderItemDescription(item) && (
-          <p className="mt-1 text-xs leading-relaxed text-slate-600 print:text-black">
+          <p className="text-xs leading-snug text-slate-700 print:text-black">
             {getOrderItemDescription(item)}
           </p>
         )}
@@ -457,7 +454,7 @@ function FulfillmentSlipItemsTable({
         style={{ backgroundColor: fulfillmentSlipHeaderColor }}
       >
         <div
-          className="grid grid-cols-12 gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider"
+          className="grid grid-cols-12 gap-2 px-3 py-1 text-xs font-bold uppercase tracking-wider"
           style={{ color: '#ffffff' }}
         >
           <span className="col-span-4">Item / SKU</span>
@@ -481,7 +478,7 @@ function FulfillmentSlipItemsTable({
         ))}
       </div>
       {summary && (
-        <div className="border-t border-slate-200 px-4 py-1.5 print:border-gray-400">
+        <div className="border-t border-slate-200 px-4 py-1 print:border-gray-400">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-slate-800 print:text-black">
               <ClipboardDocumentListIcon className="h-4 w-4" />
@@ -531,7 +528,7 @@ export function FulfillmentPackingSlip({
     formatFulfillmentActorTimestamp(order.pickedAt) || formatFulfillmentActorTimestamp(new Date());
   const packedAtLabel = formatFulfillmentActorTimestamp(order.packedAt);
   const allFulfillmentItems = order.items || [];
-  const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 5, 8);
+  const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 7, 12);
   const totalSlipPages = slipPages.length;
   const summary = {
     totalItems: allFulfillmentItems.reduce(
@@ -638,13 +635,13 @@ export function FulfillmentPackingSlip({
             </div>
           </div>
 
-          <div className="px-6 py-1.5 border-b border-slate-200">
-            <div className="grid md:grid-cols-2 gap-3">
+          <div className="px-6 py-1 border-b border-slate-200">
+            <div className="grid md:grid-cols-2 gap-2">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
                   Ship To
                 </p>
-                <div className="text-xs leading-tight">
+                <div className="text-[10px] leading-[1.3]">
                   {previewAddressLines.length > 0 ? (
                     previewAddressLines.map((line, index) => (
                       <p key={`ship-${index}`} className="text-black">
@@ -657,10 +654,10 @@ export function FulfillmentPackingSlip({
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0 print:text-black">
                   Bill To
                 </p>
-                <div className="text-xs leading-tight">
+                <div className="text-[10px] leading-[1.3]">
                   {billToLines.length > 0 ? (
                     billToLines.map((line, index) => (
                       <p key={`bill-${index}`} className="text-black">
@@ -673,11 +670,11 @@ export function FulfillmentPackingSlip({
                 </div>
               </div>
             </div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 print:text-black">
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 print:text-black">
                 Via:
               </span>
-              <span className="text-xs font-semibold text-slate-800 print:text-black">
+              <span className="text-[10px] font-semibold text-slate-800 print:text-black">
                 {shippingMethodLabel}
               </span>
             </div>
