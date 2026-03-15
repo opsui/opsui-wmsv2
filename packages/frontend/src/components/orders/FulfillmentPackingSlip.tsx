@@ -1,10 +1,11 @@
 import {
   CalendarDaysIcon,
   ClipboardDocumentListIcon,
-  DocumentChartBarIcon,
   TruckIcon,
 } from '@heroicons/react/24/outline';
 import type { Address, Order } from '@opsui/shared';
+import { resolveProductImage } from '@/lib/resolve-product-image';
+import { getSkuLookupKey } from '@/lib/sku-lookup';
 import { formatBinLocation } from '@/lib/utils';
 
 const fulfillmentSlipAccentColor = '#1e3a5f';
@@ -351,20 +352,22 @@ function FulfillmentSlipItemRow({
   itemBarcodeImageMap: Record<string, string>;
   barcodeKeyPrefix: string;
 }) {
-  const itemImage = item.image || itemImageMap[item.sku] || null;
+  const itemImage = resolveProductImage(
+    item.image || itemImageMap[getSkuLookupKey(item.sku)] || itemImageMap[item.sku] || null
+  );
   const itemBarcode = buildCode39Barcode(item.barcode);
   const itemBarcodeSize = itemBarcode
-    ? renderBarcodeDimensions(itemBarcode.totalWidth, 32, 0.22, 7.5)
+    ? renderBarcodeDimensions(itemBarcode.totalWidth, 20, 0.19, 5.5)
     : null;
   const itemBarcodeImage = itemBarcodeImageMap[String(item.orderItemId)] || null;
 
   return (
     <div
       key={rowKey}
-      className={`grid grid-cols-12 gap-2 px-4 py-4 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} print:bg-white`}
+      className={`grid grid-cols-12 gap-2 px-3 py-1.5 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'} print:bg-white`}
     >
-      <div className="col-span-4 flex items-start gap-3">
-        <div className="fulfillment-slip-item-image h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
+      <div className="col-span-4 flex items-start gap-2">
+        <div className="fulfillment-slip-item-image h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 print:border-gray-400 print:bg-white">
           {itemImage ? (
             <img
               src={itemImage}
@@ -394,14 +397,14 @@ function FulfillmentSlipItemRow({
           </p>
         )}
         {item.barcode && (
-          <div className="mt-2 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
+          <div className="mt-1 inline-flex flex-col rounded border border-slate-200 bg-white px-2 py-1 print:border-gray-400">
             {itemBarcode ? (
               <>
                 <BarcodeGraphic
                   barcode={itemBarcode}
                   size={itemBarcodeSize}
                   image={itemBarcodeImage}
-                  height={32}
+                  height={20}
                   rectKeyPrefix={barcodeKeyPrefix}
                 />
                 <p className="mt-1 text-center font-mono text-[10px] text-slate-600 print:text-black">
@@ -454,7 +457,7 @@ function FulfillmentSlipItemsTable({
         style={{ backgroundColor: fulfillmentSlipHeaderColor }}
       >
         <div
-          className="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider"
+          className="grid grid-cols-12 gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider"
           style={{ color: '#ffffff' }}
         >
           <span className="col-span-4">Item / SKU</span>
@@ -478,7 +481,7 @@ function FulfillmentSlipItemsTable({
         ))}
       </div>
       {summary && (
-        <div className="border-t border-slate-200 px-4 py-3 print:border-gray-400">
+        <div className="border-t border-slate-200 px-4 py-1.5 print:border-gray-400">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-slate-800 print:text-black">
               <ClipboardDocumentListIcon className="h-4 w-4" />
@@ -522,13 +525,13 @@ export function FulfillmentPackingSlip({
   const accountNumberDetails = extractNetSuiteAccountNumber(order.customerName, order.customerId);
   const salesOrderBarcode = buildCode39Barcode(order.netsuiteSoTranId || order.orderId);
   const salesOrderBarcodeSize = salesOrderBarcode
-    ? renderBarcodeDimensions(salesOrderBarcode.totalWidth, 38, 0.33, 12.5)
+    ? renderBarcodeDimensions(salesOrderBarcode.totalWidth, 24, 0.28, 8.5)
     : null;
   const pickedAtLabel =
     formatFulfillmentActorTimestamp(order.pickedAt) || formatFulfillmentActorTimestamp(new Date());
   const packedAtLabel = formatFulfillmentActorTimestamp(order.packedAt);
   const allFulfillmentItems = order.items || [];
-  const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 2, 4);
+  const slipPages = chunkFulfillmentSlipItems(allFulfillmentItems, 5, 8);
   const totalSlipPages = slipPages.length;
   const summary = {
     totalItems: allFulfillmentItems.reduce(
@@ -545,13 +548,13 @@ export function FulfillmentPackingSlip({
         <section className="fulfillment-slip-page">
           <div className="relative">
             <div className="opsui-accent-bar h-2" />
-            <div className="px-8 py-6">
+            <div className="px-6 py-3">
               <div className="flex items-start justify-between gap-8">
                 <div className="flex items-start gap-5">
                   <img
                     src={fulfillmentSlipLogoUrl}
                     alt="Arrowhead Alarm Products"
-                    className="fulfillment-slip-brand-logo w-36 h-auto"
+                    className="fulfillment-slip-brand-logo w-24 h-auto"
                   />
                   <div className="pt-1 text-sm leading-relaxed">
                     <p className="font-bold text-gray-900 print:text-black">
@@ -569,10 +572,10 @@ export function FulfillmentPackingSlip({
                         <span className="w-1.5 h-1.5 rounded-full bg-sky-800 print:bg-sky-900" />
                         Fulfillment Document
                       </div>
-                      <h1 className="mt-2 text-4xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
+                      <h1 className="mt-1 text-2xl font-black tracking-tight bg-gradient-to-r from-sky-950 via-slate-700 to-sky-900 bg-clip-text text-transparent print:text-sky-950">
                         Packing Slip
                       </h1>
-                      <div className="mt-3 flex justify-center">
+                      <div className="mt-1 flex justify-center">
                         <div className="opsui-badge inline-flex items-center gap-2 rounded-full px-4 py-2 print:bg-slate-50 print:border-slate-300">
                           <CalendarDaysIcon className="h-4 w-4 text-sky-800 print:text-sky-900" />
                           <span className="text-sm font-semibold text-sky-950 print:text-sky-950">
@@ -592,58 +595,47 @@ export function FulfillmentPackingSlip({
             </div>
           </div>
 
-          <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                  Sales Order
-                </p>
-                <p className="font-mono font-semibold text-slate-900 print:text-black">
+          <div className="px-6 py-1.5 border-b border-slate-200 print:bg-white">
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+              <div>
+                <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
+                  SO:{' '}
+                </span>
+                <span className="font-mono font-semibold text-slate-900 print:text-black">
                   {order.netsuiteSoTranId || order.orderId}
-                </p>
+                </span>
               </div>
-              <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                  Fulfillment #
-                </p>
-                <p className="font-mono font-semibold text-slate-900 print:text-black">
-                  {order.netsuiteIfTranId || order.netsuiteSoTranId || order.orderId}
-                </p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                  Customer PO
-                </p>
-                <p className="font-mono font-semibold text-slate-900 print:text-black">
+              <div>
+                <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
+                  Customer PO:{' '}
+                </span>
+                <span className="font-mono font-semibold text-slate-900 print:text-black">
                   {order.customerPoNumber || '—'}
-                </p>
+                </span>
               </div>
-              <div className="bg-white rounded-lg p-3 border border-slate-200 print:border-gray-400">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1 print:text-black">
-                  Account #
-                </p>
-                <p className="font-mono font-semibold text-slate-900 print:text-black">
+              <div>
+                <span className="font-bold uppercase tracking-wider text-slate-500 print:text-black">
+                  Account:{' '}
+                </span>
+                <span className="font-mono font-semibold text-slate-900 print:text-black">
                   {accountNumberDetails.accountNumber}
-                </p>
-                <p className="mt-1 text-[10px] text-slate-500 print:text-black">
-                  {accountNumberDetails.caption}
-                </p>
+                </span>
               </div>
             </div>
           </div>
 
           {salesOrderBarcode && (
-            <div className="px-8 py-5 border-b border-slate-200 print:bg-white">
+            <div className="px-6 py-2 border-b border-slate-200 print:bg-white">
               <div className="flex justify-center">
-                <div className="rounded-lg border border-slate-200 bg-white px-5 py-3 print:border-gray-400">
+                <div className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 print:border-gray-400">
                   <BarcodeGraphic
                     barcode={salesOrderBarcode}
                     size={salesOrderBarcodeSize}
                     image={salesOrderBarcodeImage}
-                    height={38}
+                    height={24}
                     rectKeyPrefix="sales-order-barcode"
                   />
-                  <p className="mt-1 text-center font-mono text-lg font-semibold tracking-tight text-slate-900 print:text-black">
+                  <p className="mt-1 text-center font-mono text-xs font-semibold tracking-tight text-slate-900 print:text-black">
                     {salesOrderBarcode.displayValue}
                   </p>
                 </div>
@@ -651,82 +643,46 @@ export function FulfillmentPackingSlip({
             </div>
           )}
 
-          <div className="px-8 py-6">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="relative">
-                <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-600 to-slate-500 rounded-full print:bg-gray-500" />
-                <div className="flex items-center gap-2 mb-3">
-                  <TruckIcon className="h-5 w-5 text-slate-600 print:text-gray-600" />
-                  <h2 className="text-lg font-bold text-slate-900 print:text-black">Ship To</h2>
-                </div>
-                <div className="space-y-1 text-sm pl-1">
+          <div className="px-6 py-1.5 border-b border-slate-200">
+            <div className="grid md:grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
+                  Ship To
+                </p>
+                <div className="text-xs leading-tight text-gray-800 print:text-black">
                   {previewAddressLines.length > 0 ? (
                     previewAddressLines.map((line, index) => (
-                      <p key={`ship-${index}`} className="text-gray-800 print:text-black">
-                        {line.label ? (
-                          <>
-                            <span className="font-medium text-gray-600 print:text-black">
-                              {line.label}:
-                            </span>{' '}
-                            {line.value}
-                          </>
-                        ) : (
-                          line.value
-                        )}
-                      </p>
+                      <p key={`ship-${index}`}>{line.value}</p>
                     ))
                   ) : (
-                    <p className="text-gray-600 italic print:text-black">
-                      No shipping details available
-                    </p>
+                    <p className="italic text-gray-500">No shipping details available</p>
                   )}
                 </div>
               </div>
-              <div className="relative">
-                <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-slate-500 to-slate-400 rounded-full print:bg-gray-400" />
-                <div className="flex items-center gap-2 mb-3">
-                  <DocumentChartBarIcon className="h-5 w-5 text-slate-500 print:text-gray-600" />
-                  <h2 className="text-lg font-bold text-slate-900 print:text-black">Bill To</h2>
-                </div>
-                <div className="space-y-1 text-sm pl-1">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
+                  Bill To
+                </p>
+                <div className="text-xs leading-tight text-gray-800 print:text-black">
                   {billToLines.length > 0 ? (
-                    billToLines.map((line, index) => (
-                      <p key={`bill-${index}`} className="text-gray-800 print:text-black">
-                        {line.label ? (
-                          <>
-                            <span className="font-medium text-gray-600 print:text-black">
-                              {line.label}:
-                            </span>{' '}
-                            {line.value}
-                          </>
-                        ) : (
-                          line.value
-                        )}
-                      </p>
-                    ))
+                    billToLines.map((line, index) => <p key={`bill-${index}`}>{line.value}</p>)
                   ) : (
-                    <p className="text-gray-600 italic print:text-black">
-                      Same as shipping address
-                    </p>
+                    <p className="italic text-gray-500">Same as shipping address</p>
                   )}
                 </div>
               </div>
             </div>
-            <div className="mt-6 flex items-center gap-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 print:text-black">
-                Shipping Method
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 print:text-black">
+                Via:
               </span>
-              <span
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold fulfillment-slip-print-color"
-                style={{ backgroundColor: '#e5e7eb', color: '#1f2937' }}
-              >
-                <TruckIcon className="h-3.5 w-3.5" />
+              <span className="text-xs font-semibold text-slate-800 print:text-black">
                 {shippingMethodLabel}
               </span>
             </div>
           </div>
 
-          <div className="px-8 pb-6">
+          <div className="px-6 pb-3">
             <FulfillmentSlipItemsTable
               items={slipPages[0]}
               itemImageMap={itemImageMap}
@@ -758,13 +714,13 @@ export function FulfillmentPackingSlip({
                     background: `linear-gradient(to right, ${fulfillmentSlipAccentColor}, ${fulfillmentSlipHeaderColor}, ${fulfillmentSlipAccentColor})`,
                   }}
                 />
-                <div className="px-8 py-6">
+                <div className="px-6 py-3">
                   <div className="flex items-start justify-between gap-8">
                     <div className="flex items-start gap-5">
                       <img
                         src={fulfillmentSlipLogoUrl}
                         alt="Arrowhead Alarm Products"
-                        className="fulfillment-slip-brand-logo w-36 h-auto"
+                        className="fulfillment-slip-brand-logo w-24 h-auto"
                       />
                       <div className="pt-1 text-sm leading-relaxed">
                         <p className="font-semibold text-gray-900 print:text-black">
@@ -781,7 +737,7 @@ export function FulfillmentPackingSlip({
                           <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-900 print:text-sky-950">
                             Fulfillment Document
                           </p>
-                          <h1 className="mt-1 text-4xl font-black tracking-tight text-sky-950 print:text-sky-950">
+                          <h1 className="mt-1 text-2xl font-black tracking-tight text-sky-950 print:text-sky-950">
                             Packing Slip
                           </h1>
                           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 print:text-slate-700">
@@ -798,7 +754,7 @@ export function FulfillmentPackingSlip({
                   </div>
                 </div>
               </div>
-              <div className="px-8 py-6">
+              <div className="px-6 py-3">
                 <FulfillmentSlipItemsTable
                   items={pageItems}
                   itemImageMap={itemImageMap}
@@ -836,7 +792,7 @@ function FulfillmentSlipFooter({
 }) {
   return (
     <>
-      <div className="px-8 py-6 border-t-2 border-slate-200 print:border-gray-400">
+      <div className="px-6 py-3 border-t-2 border-slate-200 print:border-gray-400">
         <div className="flex items-end justify-between">
           <div className="text-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 print:text-black">
@@ -868,7 +824,7 @@ function FulfillmentSlipFooter({
           </div>
         </div>
       </div>
-      <div className="px-8 py-4 border-t border-slate-200 print:border-gray-400">
+      <div className="px-6 py-2 border-t border-slate-200 print:border-gray-400">
         <p className="text-center text-xs text-slate-600 print:text-black">
           This document was generated electronically from OpsUI Warehouse Management System
         </p>

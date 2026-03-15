@@ -40,10 +40,12 @@ import {
 } from '@/components/orders/FulfillmentPackingSlip';
 import { Header, Breadcrumb, useToast } from '@/components/shared';
 import { cn } from '@/lib/utils';
+import { canLookupSku, getSkuLookupKey, normalizeSkuLookupValue } from '@/lib/sku-lookup';
 import {
   nzcApi,
   orderApi,
   authApi,
+  skuApi,
   useShippedOrders,
   useNZCTracking,
   useExportShippedOrders,
@@ -349,6 +351,9 @@ export function ShippedOrdersPage() {
   const [isPackingSlipOpen, setIsPackingSlipOpen] = useState(false);
   const [isNzcLabelOpen, setIsNzcLabelOpen] = useState(false);
   const [reprintingConnotes, setReprintingConnotes] = useState<Record<string, boolean>>({});
+  const [selectedOrderItemImageMap, setSelectedOrderItemImageMap] = useState<
+    Record<string, string>
+  >({});
   const handledDeletedConnotesRef = useRef<Set<string>>(new Set());
 
   const { data: shippedData, isLoading: loading } = useShippedOrders({ limit: 100 });
@@ -394,6 +399,7 @@ export function ShippedOrdersPage() {
   useEffect(() => {
     setIsPackingSlipOpen(false);
     setIsNzcLabelOpen(false);
+    setSelectedOrderItemImageMap({});
   }, [selectedOrder?.id]);
 
   useEffect(() => {
@@ -439,18 +445,59 @@ export function ShippedOrdersPage() {
     [assignableUsers]
   );
 
-  const selectedOrderItemImageMap = useMemo(() => {
+  useEffect(() => {
     const detailItems = Array.isArray((selectedOrderDetail as any)?.items)
       ? (selectedOrderDetail as any).items
       : [];
     const listItems = Array.isArray(selectedOrder?.items) ? selectedOrder.items : [];
+    const allItems: any[] = [...detailItems, ...listItems];
 
-    return [...detailItems, ...listItems].reduce<Record<string, string>>((acc, item: any) => {
+    if (allItems.length === 0) {
+      setSelectedOrderItemImageMap({});
+      return;
+    }
+
+    const seededImages = allItems.reduce<Record<string, string>>((acc, item: any) => {
       if (item?.sku && item?.image) {
-        acc[String(item.sku)] = String(item.image);
+        acc[getSkuLookupKey(item.sku)] = String(item.image);
       }
       return acc;
     }, {});
+
+    setSelectedOrderItemImageMap(current => ({ ...seededImages, ...current }));
+
+    const missingSkuEntries = new Map<string, string>();
+    for (const item of allItems) {
+      if (!item?.sku || item.image) continue;
+      const rawSku = normalizeSkuLookupValue(item.sku);
+      const skuKey = getSkuLookupKey(rawSku);
+      if (!canLookupSku(rawSku) || !skuKey || seededImages[skuKey]) continue;
+      if (!missingSkuEntries.has(skuKey)) missingSkuEntries.set(skuKey, rawSku);
+    }
+
+    const missingSkuKeys = Array.from(missingSkuEntries.keys());
+    const missingSkus = Array.from(missingSkuEntries.values());
+
+    if (missingSkus.length === 0) return;
+
+    let isCancelled = false;
+
+    void Promise.allSettled(missingSkus.map(sku => skuApi.getWithInventory(sku))).then(results => {
+      if (isCancelled) return;
+      const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
+        if (result.status === 'fulfilled' && result.value?.image) {
+          acc[missingSkuKeys[index]] = result.value.image;
+        }
+        return acc;
+      }, {});
+      if (Object.keys(fetchedImages).length > 0) {
+        setSelectedOrderItemImageMap(current => ({ ...current, ...fetchedImages }));
+      }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [selectedOrder?.items, selectedOrderDetail]);
 
   const selectedOrderPickedByLabel = useMemo(() => {
