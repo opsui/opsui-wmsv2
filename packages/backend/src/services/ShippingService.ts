@@ -174,6 +174,7 @@ export class ShippingService {
       shippedAt: string;
       deliveredAt?: string;
       estimatedDeliveryDate?: string;
+      serviceType?: string;
       trackingNumber?: string;
       carrier?: string;
       shippingAddress: string;
@@ -269,6 +270,7 @@ export class ShippingService {
         s.ship_to_address,
         s.shipped_by,
         s.estimated_delivery_date,
+        s.service_type,
         (SELECT json_agg(json_build_object(
           'sku', oi.sku,
           'name', oi.name,
@@ -306,6 +308,7 @@ export class ShippingService {
       estimatedDeliveryDate: row.estimated_delivery_date
         ? new Date(row.estimated_delivery_date).toISOString()
         : undefined,
+      serviceType: row.service_type as string | undefined,
       trackingNumber: row.tracking_number,
       carrier: row.carrier_id,
       shippingAddress:
