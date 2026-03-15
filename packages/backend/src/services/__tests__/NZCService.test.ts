@@ -293,6 +293,27 @@ describe('NZCService', () => {
       expect(result.format).toBe(NZCLabelFormat.PDF);
     });
 
+    it('should unwrap JSON-wrapped base64 label payloads', async () => {
+      const connote = 'CN-123456';
+      const mockBase64Data = Buffer.from('mock image data').toString('base64');
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: {
+          get: (name: string) => (name === 'content-type' ? 'image/png' : null),
+        },
+        arrayBuffer: async () => Buffer.from(JSON.stringify([mockBase64Data])),
+      } as unknown as Response);
+
+      const result = await service.getLabel(connote);
+
+      expect(result.data).toBe(mockBase64Data);
+      expect(result.contentType).toBe('image/png');
+      expect(result.format).toBe(NZCLabelFormat.PNG_100X175);
+    });
+
     it('should throw error when label fetch fails', async () => {
       const connote = 'INVALID-CONNOTE';
 

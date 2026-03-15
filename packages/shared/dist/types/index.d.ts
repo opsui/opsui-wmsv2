@@ -246,6 +246,7 @@ export interface Order {
     progress: number;
     netsuiteSoTranId?: string;
     netsuiteSoInternalId?: string;
+    netsuiteOrderDate?: Date | string;
     netsuiteIfTranId?: string;
     netsuiteIfInternalId?: string;
     netsuiteSource?: string;
