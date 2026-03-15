@@ -358,6 +358,112 @@ describe('OrderService', () => {
         })
       ).rejects.toThrow(ValidationError);
     });
+
+    it('should create a NetSuite fulfillment for picked lines when a partially skipped order is completed', async () => {
+      const completeDTO: CompleteOrderDTO = {
+        orderId: 'SO68563',
+        pickerId: 'picker-123',
+      };
+      const pickingOrder = {
+        ...mockOrder,
+        orderId: 'SO68563',
+        status: OrderStatus.PICKING,
+        pickerId: 'picker-123',
+        organizationId: 'ORG320EDF1',
+        netsuiteSource: 'NETSUITE',
+        netsuiteSoInternalId: '1605078',
+        netsuiteSoTranId: 'SO68563',
+      };
+      const completedOrder = {
+        ...pickingOrder,
+        status: OrderStatus.PICKED,
+      };
+      const defaultPoolQuery = jest.fn().mockResolvedValue({
+        rows: [
+          {
+            integration_id: 'INT-AAP-NS01',
+            configuration: {
+              auth: {
+                accountId: 'acc',
+                tokenId: 'tid',
+                tokenSecret: 'tsec',
+                consumerKey: 'ck',
+                consumerSecret: 'cs',
+              },
+            },
+          },
+        ],
+        rowCount: 1,
+      });
+      const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([]);
+      const createItemFulfillment = jest.fn().mockResolvedValue('1608001');
+      const getItemFulfillment = jest.fn().mockResolvedValue({ id: '1608001', tranId: 'IF74001' });
+
+      NetSuiteClient.mockImplementation(() => ({
+        getItemFulfillmentsBySalesOrder,
+        createItemFulfillment,
+        getItemFulfillment,
+      }));
+      getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
+
+      orderRepository.getOrderWithItems.mockResolvedValueOnce(pickingOrder);
+      query
+        .mockResolvedValueOnce({
+          rows: [{ total_tasks: 2, incomplete_tasks: 0 }],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              organizationId: 'ORG320EDF1',
+              netsuiteSoInternalId: '1605078',
+              netsuiteSoTranId: 'SO68563',
+              netsuiteIfInternalId: null,
+            },
+          ],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              sku: 'EC-TOUCH W',
+              name: 'Skipped line',
+              quantity: 1,
+              pickedQuantity: 0,
+              verifiedQuantity: 0,
+              status: 'PENDING',
+              skip_reason: 'Backordered',
+            },
+            {
+              sku: 'EC-KIT KP W',
+              name: 'Picked line',
+              quantity: 1,
+              pickedQuantity: 1,
+              verifiedQuantity: 0,
+              status: 'FULLY_PICKED',
+              skip_reason: null,
+            },
+          ],
+          rowCount: 2,
+        })
+        .mockResolvedValueOnce({
+          rows: [],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({
+          rows: [],
+          rowCount: 1,
+        });
+      orderRepository.updateStatus.mockResolvedValue(completedOrder);
+
+      const result = await orderService.completeOrder('SO68563', completeDTO);
+
+      expect(result.status).toBe(OrderStatus.PICKED);
+      expect(createItemFulfillment).toHaveBeenCalledWith('1605078', {
+        lines: [{ sku: 'EC-KIT KP W', itemName: 'Picked line', quantity: 1 }],
+      });
+      expect(orderRepository.updateStatus).toHaveBeenCalledWith('SO68563', OrderStatus.PICKED);
+    });
   });
 
   // ==========================================================================
@@ -972,9 +1078,9 @@ describe('OrderService', () => {
                 sku: 'BACKORDER-SKU',
                 name: 'Backordered item',
                 quantity: 1,
-                pickedQuantity: 1,
+                pickedQuantity: 0,
                 verifiedQuantity: 0,
-                status: 'FULLY_PICKED',
+                status: 'PENDING',
                 skip_reason: 'Backordered',
               },
               {

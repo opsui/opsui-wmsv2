@@ -528,20 +528,20 @@ export class OrderService {
     const fulfillmentLines = orderItemsResult.rows
       .map((item: any) => {
         const verifiedQuantity = Number(item.verifiedQuantity || 0);
-        const pickedQuantity = Number(item.pickedQuantity || 0);
         const orderedQuantity = Number(item.quantity || 0);
         const itemStatus = String(item.status || '').toUpperCase();
-        const hasSkipReason = this.hasSkipReason(item.skipReason ?? item.skip_reason);
+        const requiredFulfillmentQuantity = this.getRequiredPackingQuantity(item);
 
         // Verified quantity is the strongest source of truth during packing.
-        // If we have no verification yet, only fall back to picked quantity for
-        // lines that are actually in a picked state. This prevents stale picked
-        // quantities on PENDING lines from leaking into NetSuite fulfillments.
+        // If we have no verification yet, fall back to the packable quantity for
+        // lines that are actually in a picked state. This lets partial backorders
+        // create a fulfillment for the picked quantity without pulling in fully
+        // skipped lines.
         const fulfillmentQuantity =
           verifiedQuantity > 0
             ? verifiedQuantity
-            : !hasSkipReason && itemStatus !== 'PENDING'
-              ? pickedQuantity
+            : itemStatus !== 'PENDING'
+              ? requiredFulfillmentQuantity
               : 0;
 
         return {
@@ -1631,6 +1631,8 @@ export class OrderService {
         `Cannot complete order while ${incompleteTasks} pick task${incompleteTasks === 1 ? '' : 's'} remain incomplete`
       );
     }
+
+    await this.createNetSuiteFulfillmentForPickedOrder(orderId);
 
     const completedOrder = await orderRepository.updateStatus(orderId, OrderStatus.PICKED);
 
