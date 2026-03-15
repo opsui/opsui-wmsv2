@@ -234,6 +234,20 @@ export class OrderRepository extends BaseRepository<Order> {
       params.push(filters.status);
     }
 
+    if (filters.status === OrderStatus.PICKED || filters.status === OrderStatus.PACKING) {
+      conditions.push(`EXISTS (
+        SELECT 1
+        FROM order_items oi
+        LEFT JOIN pick_tasks pt ON pt.order_item_id = oi.order_item_id
+        WHERE oi.order_id = o.order_id
+          AND GREATEST(
+            COALESCE(oi.picked_quantity, 0),
+            COALESCE(pt.picked_quantity, 0),
+            COALESCE(oi.verified_quantity, 0)
+          ) > 0
+      )`);
+    }
+
     if (filters.priority) {
       conditions.push(`o.priority = $${paramIndex++}`);
       params.push(filters.priority);

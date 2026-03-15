@@ -570,7 +570,20 @@ describe('OrderService', () => {
 
   describe('claimOrderForPacking', () => {
     it('should claim order for packing', async () => {
-      const pickedOrder = { ...mockOrder, status: OrderStatus.PICKED };
+      const pickedOrder = {
+        ...mockOrder,
+        status: OrderStatus.PICKED,
+        items: [
+          {
+            orderItemId: 'oi-001',
+            sku: 'SKU-001',
+            quantity: 1,
+            pickedQuantity: 1,
+            verifiedQuantity: 0,
+            skipReason: null,
+          },
+        ],
+      };
       const packingOrder = { ...mockOrder, status: OrderStatus.PACKING, packerId: 'packer-123' };
 
       orderRepository.getOrderWithItems.mockResolvedValue(pickedOrder);
@@ -609,6 +622,33 @@ describe('OrderService', () => {
       await expect(orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
         ConflictError
       );
+    });
+
+    it('should return invalid picked orders to PENDING when no packable lines exist', async () => {
+      orderRepository.getOrderWithItems.mockResolvedValue({
+        ...mockOrder,
+        status: OrderStatus.PICKED,
+        items: [
+          {
+            orderItemId: 'oi-001',
+            sku: 'SKU-001',
+            quantity: 1,
+            pickedQuantity: 0,
+            verifiedQuantity: 0,
+            skipReason: null,
+          },
+        ],
+      });
+
+      await expect(orderService.claimOrderForPacking('ORD-TEST-001', 'packer-123')).rejects.toThrow(
+        'Order has no picked lines in WMS yet, so it was returned to the picking queue'
+      );
+
+      expect(query).toHaveBeenCalledWith(
+        expect.stringContaining("SET status = 'PENDING'::order_status"),
+        ['ORD-TEST-001']
+      );
+      expect(orderRepository.update).not.toHaveBeenCalled();
     });
   });
 

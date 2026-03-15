@@ -69,7 +69,11 @@ export const FETCH_ORDER_ITEMS_WITH_BARCODE_QUERY = `
     s.description,
     oi.bin_location,
     oi.quantity,
-    oi.picked_quantity,
+    GREATEST(
+      COALESCE(oi.picked_quantity, 0),
+      COALESCE(pt.picked_quantity, 0),
+      COALESCE(oi.verified_quantity, 0)
+    ) as picked_quantity,
     COALESCE(oi.verified_quantity, 0) as verified_quantity,
     oi.status,
     COALESCE(NULLIF(TRIM(oi.skip_reason), ''), NULLIF(TRIM(pt.skip_reason), '')) as skip_reason,
@@ -151,8 +155,8 @@ export function mapOrderItem(row: any): any {
     description: row.description || null,
     binLocation: row.bin_location || row.binLocation,
     quantity: row.quantity,
-    pickedQuantity: row.picked_quantity || row.pickedQuantity,
-    verifiedQuantity: row.verified_quantity || row.verifiedQuantity || 0,
+    pickedQuantity: row.picked_quantity ?? row.pickedQuantity ?? 0,
+    verifiedQuantity: row.verified_quantity ?? row.verifiedQuantity ?? 0,
     status: row.status,
     skipReason,
     completedAt: row.completed_at || row.completedAt,

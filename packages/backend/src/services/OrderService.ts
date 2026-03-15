@@ -372,6 +372,32 @@ export class OrderService {
     );
   }
 
+  private hasPackablePackingLines(
+    items: Array<{
+      pickedQuantity?: unknown;
+      picked_quantity?: unknown;
+      verifiedQuantity?: unknown;
+      verified_quantity?: unknown;
+      quantity?: unknown;
+      skipReason?: unknown;
+      skip_reason?: unknown;
+    }> = []
+  ): boolean {
+    return items.some(item => {
+      if (this.isFullySkippedPackingLine(item)) {
+        return false;
+      }
+
+      const effectivePackedOrVerified = Math.max(
+        0,
+        Number(item.verifiedQuantity ?? item.verified_quantity ?? 0),
+        Number(item.pickedQuantity ?? item.picked_quantity ?? 0)
+      );
+
+      return effectivePackedOrVerified > 0;
+    });
+  }
+
   private async syncNetSuiteReadyToShipForPickingSkip(
     orderId: string,
     source?: Record<string, unknown> | null,
@@ -1821,6 +1847,30 @@ export class OrderService {
     // Check if order is already claimed by another packer
     if (order.packerId && order.packerId !== packerId) {
       throw new ConflictError(`Order is already claimed by another packer`);
+    }
+
+    if (!this.hasPackablePackingLines(order.items || [])) {
+      logger.warn('Order marked as PICKED without packable lines, returning to picking queue', {
+        orderId,
+        packerId,
+      });
+
+      await query(
+        `UPDATE orders
+         SET status = 'PENDING'::order_status,
+             progress = 0,
+             picker_id = NULL,
+             packer_id = NULL,
+             claimed_at = NULL,
+             picked_at = NULL,
+             updated_at = NOW()
+         WHERE order_id = $1`,
+        [orderId]
+      );
+
+      throw new ConflictError(
+        'Order has no picked lines in WMS yet, so it was returned to the picking queue'
+      );
     }
 
     // Update order status to PACKING, assign packer, and reset progress to 0

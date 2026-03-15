@@ -2500,9 +2500,14 @@ export class NetSuiteOrderSyncService {
       }
     }
 
-    // Sync verified_quantity from fulfillment items only once packing/shipping has actually
-    // progressed in NetSuite. A PICKED fulfillment should not imply items are packed/verified.
-    if (ifData?.items && ifData.items.length > 0 && ['PACKED', 'SHIPPED'].includes(newStatus)) {
+    // Sync picked quantities from the latest NetSuite fulfillment whenever one exists.
+    // PICKED orders need this too; otherwise they can enter the packing queue with
+    // local lines still stuck at picked_quantity = 0.
+    if (
+      ifData?.items &&
+      ifData.items.length > 0 &&
+      ['PICKED', 'PACKED', 'SHIPPED'].includes(newStatus)
+    ) {
       for (const fulfillmentItem of ifData.items) {
         const sku = fulfillmentItem.item?.refName || fulfillmentItem.itemName;
         if (!sku) continue;
@@ -2513,21 +2518,33 @@ export class NetSuiteOrderSyncService {
         try {
           await this.query(
             `UPDATE order_items
-             SET verified_quantity = $1,
-                 status = 'FULLY_PICKED'::order_item_status
+             SET picked_quantity = GREATEST(COALESCE(picked_quantity, 0), $1),
+                 verified_quantity = CASE
+                   WHEN $4 IN ('PACKED', 'SHIPPED')
+                     THEN GREATEST(COALESCE(verified_quantity, 0), $1)
+                   ELSE COALESCE(verified_quantity, 0)
+                 END,
+                 status = CASE
+                   WHEN GREATEST(COALESCE(quantity, 0), 0) <= GREATEST(COALESCE(picked_quantity, 0), $1)
+                     THEN 'FULLY_PICKED'::order_item_status
+                   WHEN GREATEST(COALESCE(picked_quantity, 0), $1) > 0
+                     THEN 'PARTIAL_PICKED'::order_item_status
+                   ELSE status
+                 END
              WHERE order_id = $2 AND sku = $3`,
-            [fulfilledQty, orderId, sku]
+            [fulfilledQty, orderId, sku, newStatus]
           );
         } catch (error: any) {
-          logger.warn('Failed to sync verified_quantity for item', {
+          logger.warn('Failed to sync fulfillment quantities for item', {
             orderId,
             sku,
             fulfilledQty,
+            newStatus,
             error: error.message,
           });
         }
       }
-      logger.debug('Synced verified_quantity from NetSuite fulfillment', {
+      logger.debug('Synced fulfillment quantities from NetSuite fulfillment', {
         orderId,
         itemCount: ifData.items.length,
         newStatus,

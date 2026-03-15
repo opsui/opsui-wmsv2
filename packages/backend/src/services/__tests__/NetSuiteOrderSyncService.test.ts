@@ -520,7 +520,7 @@ describe('NetSuiteOrderSyncService', () => {
     });
   });
 
-  it('resets packing verification when moving an order back to picked', async () => {
+  it('resets packing verification while syncing picked quantities when moving an order back to picked', async () => {
     const client = new NetSuiteClient(credentials);
     const service = new NetSuiteOrderSyncService(client);
     const queryMock = jest
@@ -545,9 +545,9 @@ describe('NetSuiteOrderSyncService', () => {
     expect(queryMock).toHaveBeenCalledWith(expect.stringContaining('SET verified_quantity = 0'), [
       'SO70012',
     ]);
-    expect(queryMock).not.toHaveBeenCalledWith(
-      expect.stringContaining('SET verified_quantity = $1'),
-      expect.arrayContaining([1, 'SO70012', 'SKU-1'])
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.stringContaining('SET picked_quantity = GREATEST(COALESCE(picked_quantity, 0), $1)'),
+      [1, 'SO70012', 'SKU-1', 'PICKED']
     );
   });
 
