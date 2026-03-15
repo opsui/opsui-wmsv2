@@ -23,6 +23,8 @@ import {
 import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
+import { resolveProductImage } from '@/lib/resolve-product-image';
+import { canLookupSku, getSkuLookupKey, normalizeSkuLookupValue } from '@/lib/sku-lookup';
 import { formatBinLocation } from '@/lib/utils';
 import {
   nzcApi,
@@ -218,8 +220,6 @@ const packingInputClass =
 const packingSelectClass = `${packingInputClass} [&_option]:bg-white dark:[&_option]:bg-gray-900 [&_option]:text-gray-900 dark:[&_option]:text-white`;
 const packingReadonlyInputClass =
   'packing-input w-full rounded-xl px-4 py-3 bg-gray-100 dark:bg-white/[0.03] border border-gray-300 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 focus:outline-none disabled:opacity-70';
-
-const SKU_LOOKUP_PATTERN = /^[A-Z0-9-]{2,50}$/;
 
 const getOrderItemDisplayName = (item?: any | null) =>
   item?.itemName || item?.item_name || item?.name || item?.sku || 'Item';
@@ -846,9 +846,10 @@ export function PackingPage() {
   const currentItemDisplayName = getOrderItemDisplayName(currentItem);
   const currentItemDescription = getOrderItemDescription(currentItem);
   const currentItemImage =
-    currentItem?.image ||
-    (currentItem?.sku ? activeOrderItemImageMap[String(currentItem.sku)] : null) ||
-    null;
+    resolveProductImage(
+      currentItem?.image ||
+        (currentItem?.sku ? activeOrderItemImageMap[getSkuLookupKey(currentItem.sku)] : null)
+    ) || null;
 
   // Calculate progress
   const totalItems = visiblePackingItems.length;
@@ -872,17 +873,20 @@ export function PackingPage() {
       image?: string | null;
     }>;
     const missingSkus = Array.from(
-      new Set(
+      new Map(
         activeItems
           .filter(item => item?.sku && !item.image)
-          .map(item => String(item.sku).trim().toUpperCase())
-          .filter(sku => SKU_LOOKUP_PATTERN.test(sku))
-      )
+          .map(item => {
+            const rawSku = normalizeSkuLookupValue(item.sku);
+            return [getSkuLookupKey(rawSku), rawSku] as const;
+          })
+          .filter(([skuKey, rawSku]) => skuKey && canLookupSku(rawSku))
+      ).values()
     );
 
     const seededImages = activeItems.reduce<Record<string, string>>((acc, item) => {
       if (item?.sku && item.image) {
-        acc[String(item.sku)] = item.image;
+        acc[getSkuLookupKey(item.sku)] = item.image;
       }
       return acc;
     }, {});
@@ -902,7 +906,7 @@ export function PackingPage() {
 
       const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
         if (result.status === 'fulfilled' && result.value?.image) {
-          acc[missingSkus[index]] = result.value.image;
+          acc[getSkuLookupKey(missingSkus[index])] = result.value.image;
         }
         return acc;
       }, {});
@@ -2984,7 +2988,10 @@ export function PackingPage() {
                         const requiredPackingQuantity = getRequiredPackingQuantity(item);
                         const isCompleted = isPackingItemComplete(item);
                         const isCurrent = index === currentItemIndex;
-                        const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
+                        const itemImage =
+                          resolveProductImage(
+                            item.image || activeOrderItemImageMap[getSkuLookupKey(item.sku)] || null
+                          ) || null;
 
                         return (
                           <div
@@ -3349,12 +3356,20 @@ export function PackingPage() {
                   <div className={packingSurfacePanelClass}>
                     <div className="flex items-start gap-4">
                       <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
-                        {visiblePackingItems[overrideItemIndex].image ||
-                        activeOrderItemImageMap[visiblePackingItems[overrideItemIndex].sku] ? (
+                        {resolveProductImage(
+                          visiblePackingItems[overrideItemIndex].image ||
+                            activeOrderItemImageMap[
+                              getSkuLookupKey(visiblePackingItems[overrideItemIndex].sku)
+                            ]
+                        ) ? (
                           <img
                             src={
-                              visiblePackingItems[overrideItemIndex].image ||
-                              activeOrderItemImageMap[visiblePackingItems[overrideItemIndex].sku]
+                              resolveProductImage(
+                                visiblePackingItems[overrideItemIndex].image ||
+                                  activeOrderItemImageMap[
+                                    getSkuLookupKey(visiblePackingItems[overrideItemIndex].sku)
+                                  ]
+                              ) || undefined
                             }
                             alt={getOrderItemDisplayName(visiblePackingItems[overrideItemIndex])}
                             className="h-full w-full object-contain"

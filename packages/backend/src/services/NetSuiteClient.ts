@@ -63,6 +63,11 @@ export interface NetSuiteSalesOrderLine {
   line: number;
 }
 
+interface NetSuiteSelectFieldValue {
+  internalId?: string;
+  name?: string;
+}
+
 export interface NetSuiteListResponse<T> {
   links: Array<{ rel: string; href: string }>;
   count: number;
@@ -288,6 +293,49 @@ export class NetSuiteClient {
     }
 
     return idsByScriptId;
+  }
+
+  private extractSelectCustomFieldValue(
+    xml: string,
+    scriptId: string
+  ): NetSuiteSelectFieldValue | null {
+    const regex = new RegExp(
+      `<(?:[\\w-]+:)?customField[^>]*scriptId="${scriptId}"[^>]*>[\\s\\S]*?<\\/(?:[\\w-]+:)?customField>`,
+      'i'
+    );
+    const match = xml.match(regex);
+    if (!match) return null;
+
+    const valueBlockMatch = match[0].match(
+      /<(?:[\w-]+:)?value\b([^>]*)>([\s\S]*?)<\/(?:[\w-]+:)?value>/i
+    );
+    if (!valueBlockMatch) return null;
+
+    const attrs = valueBlockMatch[1] || '';
+    const body = valueBlockMatch[2] || '';
+
+    return {
+      internalId: attrs.match(/\binternalId="([^"]+)"/i)?.[1],
+      name: this.extractTag(body, 'name') || body.replace(/<[^>]*>/g, '').trim() || undefined,
+    };
+  }
+
+  private guessContentType(fileName?: string, fileType?: string): string {
+    const normalizedType = (fileType || '').toLowerCase().trim();
+    if (normalizedType.includes('png')) return 'image/png';
+    if (normalizedType.includes('jpg') || normalizedType.includes('jpeg')) return 'image/jpeg';
+    if (normalizedType.includes('gif')) return 'image/gif';
+    if (normalizedType.includes('webp')) return 'image/webp';
+    if (normalizedType.includes('svg')) return 'image/svg+xml';
+
+    const lowerName = (fileName || '').toLowerCase().trim();
+    if (lowerName.endsWith('.png')) return 'image/png';
+    if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg';
+    if (lowerName.endsWith('.gif')) return 'image/gif';
+    if (lowerName.endsWith('.webp')) return 'image/webp';
+    if (lowerName.endsWith('.svg')) return 'image/svg+xml';
+
+    return 'application/octet-stream';
   }
 
   private extractAllRecords(xml: string): string[] {
@@ -1166,6 +1214,8 @@ export class NetSuiteClient {
     upcCode: string;
     binNumber: string;
     description: string;
+    imageFileId?: string;
+    imageFileName?: string;
   }> {
     // NetSuite line items can point at multiple concrete item record types.
     const itemTypes = [
@@ -1211,6 +1261,7 @@ export class NetSuiteClient {
       this.extractTag(response, 'salesDescription') ||
       this.extractTag(response, 'description') ||
       '';
+    const imageField = this.extractSelectCustomFieldValue(response, 'custitemaap_image');
 
     // Bin number - try preferredBin, then binNumber, then location
     const preferredBinName =
@@ -1226,6 +1277,112 @@ export class NetSuiteClient {
       upcCode: upcCode.replace(/<[^>]*>/g, '').trim(),
       binNumber,
       description: description.replace(/<[^>]*>/g, '').trim(),
+      imageFileId: imageField?.internalId,
+      imageFileName: imageField?.name,
+    };
+  }
+
+  async findInventoryItemInternalId({
+    itemId,
+    upcCode,
+  }: {
+    itemId?: string;
+    upcCode?: string;
+  }): Promise<string | null> {
+    const searchPrefs = [
+      '<tns:searchPreferences>',
+      '  <tns:pageSize>10</tns:pageSize>',
+      '  <tns:bodyFieldsOnly>true</tns:bodyFieldsOnly>',
+      '</tns:searchPreferences>',
+    ].join('\n');
+
+    const searchAttempts = [
+      itemId
+        ? [
+            '    <platformCommon:itemId operator="is">',
+            `      <platformCore:searchValue>${this.escapeXml(itemId)}</platformCore:searchValue>`,
+            '    </platformCommon:itemId>',
+          ].join('\n')
+        : null,
+      upcCode
+        ? [
+            '    <platformCommon:upcCode operator="is">',
+            `      <platformCore:searchValue>${this.escapeXml(upcCode)}</platformCore:searchValue>`,
+            '    </platformCommon:upcCode>',
+          ].join('\n')
+        : null,
+    ].filter(Boolean) as string[];
+
+    for (const criteria of searchAttempts) {
+      const searchBody = [
+        '<tns:search>',
+        '  <tns:searchRecord xsi:type="platformCommon:ItemSearchBasic">',
+        '    <platformCommon:type operator="anyOf">',
+        '      <platformCore:searchValue>_inventoryItem</platformCore:searchValue>',
+        '      <platformCore:searchValue>_assemblyItem</platformCore:searchValue>',
+        '      <platformCore:searchValue>_kitItem</platformCore:searchValue>',
+        '      <platformCore:searchValue>_lotNumberedInventoryItem</platformCore:searchValue>',
+        '      <platformCore:searchValue>_serializedInventoryItem</platformCore:searchValue>',
+        '      <platformCore:searchValue>_nonInventorySaleItem</platformCore:searchValue>',
+        '    </platformCommon:type>',
+        criteria,
+        '  </tns:searchRecord>',
+        '</tns:search>',
+      ].join('\n');
+
+      const envelope = this.buildEnvelope(searchPrefs, searchBody);
+      const response = await this.soapRequest('search', envelope);
+
+      if (!response.includes('isSuccess="true"')) {
+        continue;
+      }
+
+      const recordMatch = response.match(
+        /<(?:[\w-]+:)?record\b[^>]*internalId="([^"]+)"[\s\S]*?<\/(?:[\w-]+:)?record>/i
+      );
+      if (recordMatch?.[1]) {
+        return recordMatch[1];
+      }
+    }
+
+    return null;
+  }
+
+  async getFile(fileId: string): Promise<{
+    id: string;
+    name?: string;
+    contentType: string;
+    data?: string;
+    url?: string;
+  }> {
+    const body = [
+      '<tns:get>',
+      '  <tns:baseRef xsi:type="platformCore:RecordRef"',
+      `    type="file" internalId="${this.escapeXml(fileId)}"/>`,
+      '</tns:get>',
+    ].join('\n');
+
+    const envelope = this.buildEnvelope('', body);
+    const response = await this.soapRequest('get', envelope);
+
+    if (!response.includes('isSuccess="true"')) {
+      const fault =
+        this.extractTag(response, 'faultstring') || this.extractTag(response, 'message');
+      throw new Error(`Failed to fetch NetSuite file ${fileId}: ${fault || 'Unknown error'}`);
+    }
+
+    const fileName =
+      this.extractTag(response, 'name') || this.extractTag(response, 'fileName') || undefined;
+    const fileType = this.extractTag(response, 'fileType') || undefined;
+    const fileUrl = this.extractTag(response, 'url') || undefined;
+    const fileContent = this.extractTag(response, 'content') || undefined;
+
+    return {
+      id: fileId,
+      name: fileName ? fileName.replace(/<[^>]*>/g, '').trim() : undefined,
+      contentType: this.guessContentType(fileName, fileType),
+      data: fileContent ? fileContent.replace(/<[^>]*>/g, '').trim() : undefined,
+      url: fileUrl ? fileUrl.replace(/<[^>]*>/g, '').trim() : undefined,
     };
   }
 

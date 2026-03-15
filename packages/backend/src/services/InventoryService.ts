@@ -37,7 +37,9 @@ import { InventoryUnit, TransactionType, InventoryTransaction } from '@opsui/sha
 import { inventoryRepository } from '../repositories/InventoryRepository';
 import { skuRepository } from '../repositories/SKURepository';
 import { logger } from '../config/logger';
+import { getDefaultPool } from '../db/client';
 import { notificationService } from './NotificationService';
+import { NetSuiteClient } from './NetSuiteClient';
 import wsServer from '../websocket';
 
 // ============================================================================
@@ -306,6 +308,77 @@ export class InventoryService {
       binLocations: skuData.binLocations,
       inventory: (skuData as any).inventory,
     };
+  }
+
+  async hydrateNetSuiteSKUImage(
+    sku: string,
+    organizationId?: string | null
+  ): Promise<string | undefined> {
+    if (!organizationId) {
+      return undefined;
+    }
+
+    const skuData = await skuRepository.findById(sku);
+    if (!skuData) {
+      return undefined;
+    }
+
+    if (skuData.image) {
+      return skuData.image;
+    }
+
+    const integrationResult = await getDefaultPool().query(
+      `SELECT i.configuration
+       FROM integrations i
+       JOIN integration_organizations io ON io.integration_id = i.integration_id
+       WHERE io.organization_id = $1
+         AND i.provider = 'NETSUITE'
+       ORDER BY i.created_at DESC NULLS LAST
+       LIMIT 1`,
+      [organizationId]
+    );
+
+    const integrationConfig = integrationResult.rows[0]?.configuration;
+    const authConfig = integrationConfig?.auth || integrationConfig;
+
+    if (!authConfig?.accountId || !authConfig?.tokenId || !authConfig?.consumerKey) {
+      return undefined;
+    }
+
+    try {
+      const client = new NetSuiteClient({
+        accountId: authConfig.accountId,
+        tokenId: authConfig.tokenId,
+        tokenSecret: authConfig.tokenSecret,
+        consumerKey: authConfig.consumerKey,
+        consumerSecret: authConfig.consumerSecret,
+      });
+
+      const itemInternalId = await client.findInventoryItemInternalId({
+        itemId: skuData.sku,
+        upcCode: skuData.barcode,
+      });
+
+      if (!itemInternalId) {
+        return undefined;
+      }
+
+      const item = await client.getInventoryItem(itemInternalId);
+      if (!item.imageFileId) {
+        return undefined;
+      }
+
+      const imageToken = `netsuite-file:${item.imageFileId}?org=${encodeURIComponent(organizationId)}`;
+      await skuRepository.updateSKU(skuData.sku, { image: imageToken });
+      return imageToken;
+    } catch (error: any) {
+      logger.warn('Failed to hydrate NetSuite SKU image', {
+        sku,
+        organizationId,
+        error: error.message,
+      });
+      return undefined;
+    }
   }
 
   // --------------------------------------------------------------------------

@@ -34,6 +34,8 @@ import { PageViews, usePageTracking } from '@/hooks/usePageTracking';
 import { usePickUpdates, useZoneUpdates } from '@/hooks/useWebSocket';
 import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
+import { resolveProductImage } from '@/lib/resolve-product-image';
+import { canLookupSku, getSkuLookupKey, normalizeSkuLookupValue } from '@/lib/sku-lookup';
 import { formatBinLocation } from '@/lib/utils';
 import { skuApi, useCompleteOrder, useLogException, useOrder, usePickItem } from '@/services/api';
 import { useAuthStore } from '@/stores';
@@ -62,7 +64,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 // ============================================================================
 
 const PICKING_THEME_STYLE_ID = 'picking-live-theme-styles';
-const SKU_LOOKUP_PATTERN = /^[A-Z0-9-]{2,50}$/;
 
 const pickingThemeStyles = `
   html.light .picking-live-page .picking-card {
@@ -619,17 +620,20 @@ export function PickingPage() {
       image?: string | null;
     }>;
     const missingSkus = Array.from(
-      new Set(
+      new Map(
         activeItems
           .filter(item => item?.sku && !item.image)
-          .map(item => String(item.sku).trim().toUpperCase())
-          .filter(sku => SKU_LOOKUP_PATTERN.test(sku))
-      )
+          .map(item => {
+            const rawSku = normalizeSkuLookupValue(item.sku);
+            return [getSkuLookupKey(rawSku), rawSku] as const;
+          })
+          .filter(([skuKey, rawSku]) => skuKey && canLookupSku(rawSku))
+      ).values()
     );
 
     const seededImages = activeItems.reduce<Record<string, string>>((acc, item) => {
       if (item?.sku && item.image) {
-        acc[String(item.sku)] = item.image;
+        acc[getSkuLookupKey(item.sku)] = item.image;
       }
       return acc;
     }, {});
@@ -649,7 +653,7 @@ export function PickingPage() {
 
       const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
         if (result.status === 'fulfilled' && result.value?.image) {
-          acc[missingSkus[index]] = result.value.image;
+          acc[getSkuLookupKey(missingSkus[index])] = result.value.image;
         }
         return acc;
       }, {});
@@ -675,17 +679,20 @@ export function PickingPage() {
       image?: string | null;
     }>;
     const missingSkus = Array.from(
-      new Set(
+      new Map(
         previewItems
           .filter(item => item?.sku && !item.image)
-          .map(item => String(item.sku).trim().toUpperCase())
-          .filter(sku => SKU_LOOKUP_PATTERN.test(sku))
-      )
+          .map(item => {
+            const rawSku = normalizeSkuLookupValue(item.sku);
+            return [getSkuLookupKey(rawSku), rawSku] as const;
+          })
+          .filter(([skuKey, rawSku]) => skuKey && canLookupSku(rawSku))
+      ).values()
     );
 
     const seededImages = previewItems.reduce<Record<string, string>>((acc, item) => {
       if (item?.sku && item.image) {
-        acc[String(item.sku)] = item.image;
+        acc[getSkuLookupKey(item.sku)] = item.image;
       }
       return acc;
     }, {});
@@ -705,7 +712,7 @@ export function PickingPage() {
 
       const fetchedImages = results.reduce<Record<string, string>>((acc, result, index) => {
         if (result.status === 'fulfilled' && result.value?.image) {
-          acc[missingSkus[index]] = result.value.image;
+          acc[getSkuLookupKey(missingSkus[index])] = result.value.image;
         }
         return acc;
       }, {});
@@ -1557,9 +1564,10 @@ export function PickingPage() {
       ? currentTaskDescriptionRaw
       : null;
   const currentTaskImage =
-    currentTask?.image ||
-    (currentTask?.sku ? activeOrderItemImageMap[currentTask.sku] : null) ||
-    null;
+    resolveProductImage(
+      currentTask?.image ||
+        (currentTask?.sku ? activeOrderItemImageMap[getSkuLookupKey(currentTask.sku)] : null)
+    ) || null;
 
   // Determine if user is viewing in "view-only mode"
   // This is true when:
@@ -2118,7 +2126,12 @@ export function PickingPage() {
                           const isCompleted = isItemResolved(item) && !isItemSkipped(item);
                           const isSkipped = isItemSkipped(item);
                           const isCurrent = index === currentTaskIndex;
-                          const itemImage = item.image || activeOrderItemImageMap[item.sku] || null;
+                          const itemImage =
+                            resolveProductImage(
+                              item.image ||
+                                activeOrderItemImageMap[getSkuLookupKey(item.sku)] ||
+                                null
+                            ) || null;
 
                           return (
                             <div
@@ -2752,12 +2765,18 @@ export function PickingPage() {
                   <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
                     <div className="flex items-start gap-4">
                       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
-                        {order.items[skipItemIndex].image ||
-                        activeOrderItemImageMap[order.items[skipItemIndex].sku] ? (
+                        {resolveProductImage(
+                          order.items[skipItemIndex].image ||
+                            activeOrderItemImageMap[getSkuLookupKey(order.items[skipItemIndex].sku)]
+                        ) ? (
                           <img
                             src={
-                              order.items[skipItemIndex].image ||
-                              activeOrderItemImageMap[order.items[skipItemIndex].sku]
+                              resolveProductImage(
+                                order.items[skipItemIndex].image ||
+                                  activeOrderItemImageMap[
+                                    getSkuLookupKey(order.items[skipItemIndex].sku)
+                                  ]
+                              ) || undefined
                             }
                             alt={getOrderItemDisplayName(order.items[skipItemIndex])}
                             className="h-full w-full object-contain"
@@ -2881,12 +2900,20 @@ export function PickingPage() {
                   <div className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.08]">
                     <div className="flex items-start gap-4">
                       <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-white/[0.08] bg-white/[0.04]">
-                        {order.items[overrideItemIndex].image ||
-                        activeOrderItemImageMap[order.items[overrideItemIndex].sku] ? (
+                        {resolveProductImage(
+                          order.items[overrideItemIndex].image ||
+                            activeOrderItemImageMap[
+                              getSkuLookupKey(order.items[overrideItemIndex].sku)
+                            ]
+                        ) ? (
                           <img
                             src={
-                              order.items[overrideItemIndex].image ||
-                              activeOrderItemImageMap[order.items[overrideItemIndex].sku]
+                              resolveProductImage(
+                                order.items[overrideItemIndex].image ||
+                                  activeOrderItemImageMap[
+                                    getSkuLookupKey(order.items[overrideItemIndex].sku)
+                                  ]
+                              ) || undefined
                             }
                             alt={getOrderItemDisplayName(order.items[overrideItemIndex])}
                             className="h-full w-full object-contain"

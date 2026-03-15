@@ -49,6 +49,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useIsPerformanceMode } from '@/hooks/useHardwareCapabilities';
 import { useFeedbackSounds } from '@/hooks/useSoundEffects';
 import { apiClient } from '@/lib/api-client';
+import { resolveProductImage } from '@/lib/resolve-product-image';
+import { canLookupSku, getSkuLookupKey, normalizeSkuLookupValue } from '@/lib/sku-lookup';
 
 // ============================================================================
 // TYPES
@@ -58,8 +60,6 @@ export type QueueMode = 'picking' | 'packing';
 
 const STANDARD_QUEUE_REFETCH_MS = 5000;
 const PERFORMANCE_QUEUE_REFETCH_MS = 15000;
-const SKU_LOOKUP_PATTERN = /^[A-Z0-9-]{2,50}$/;
-
 function formatNetSuiteOrderDate(value: string | Date | undefined): string | null {
   if (!value) {
     return null;
@@ -107,11 +107,9 @@ const getOrderItemDescription = (item?: any | null) => {
 };
 
 const getOrderItemImage = (item: any, imageMap: Record<string, string>) => {
-  const sku = String(item?.sku || '')
-    .trim()
-    .toUpperCase();
+  const sku = getSkuLookupKey(item?.sku);
 
-  return item?.image || (sku ? imageMap[sku] : undefined) || null;
+  return resolveProductImage(item?.image || (sku ? imageMap[sku] : undefined) || null);
 };
 
 // Per-mode configuration
@@ -1189,7 +1187,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
     const seededImages = visibleQueueItems.reduce((acc: Record<string, string>, item: any) => {
       if (item?.sku && item.image) {
-        acc[String(item.sku).trim().toUpperCase()] = item.image;
+        acc[getSkuLookupKey(item.sku)] = item.image;
       }
       return acc;
     }, {});
@@ -1198,14 +1196,25 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
       setQueueItemImageMap(current => ({ ...current, ...seededImages }));
     }
 
-    const missingSkus: string[] = Array.from(
-      new Set(
-        visibleQueueItems
-          .filter((item: any) => item?.sku && !item.image)
-          .map((item: any) => String(item.sku).trim().toUpperCase())
-          .filter(sku => SKU_LOOKUP_PATTERN.test(sku) && !queueItemImageMap[sku])
-      )
-    );
+    const missingSkuEntries = new Map<string, string>();
+    for (const item of visibleQueueItems) {
+      if (!item?.sku || item.image) {
+        continue;
+      }
+
+      const rawSku = normalizeSkuLookupValue(item.sku);
+      const skuKey = getSkuLookupKey(rawSku);
+      if (!canLookupSku(rawSku) || !skuKey || queueItemImageMap[skuKey]) {
+        continue;
+      }
+
+      if (!missingSkuEntries.has(skuKey)) {
+        missingSkuEntries.set(skuKey, rawSku);
+      }
+    }
+
+    const missingSkuKeys = Array.from(missingSkuEntries.keys());
+    const missingSkus = Array.from(missingSkuEntries.values());
 
     if (missingSkus.length === 0) {
       return;
@@ -1220,7 +1229,7 @@ export function OrderQueuePage({ mode: modeProp = 'picking' }: { mode?: QueueMod
 
       const fetchedImages = results.reduce((acc: Record<string, string>, result, index) => {
         if (result.status === 'fulfilled' && result.value?.image) {
-          acc[missingSkus[index]] = result.value.image;
+          acc[missingSkuKeys[index]] = result.value.image;
         }
         return acc;
       }, {});

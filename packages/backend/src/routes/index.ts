@@ -46,6 +46,7 @@ import skuRoutes from './skus';
 import stockControlRoutes from './stockControl';
 import userRoutes from './users';
 import { nzcService } from '../services/NZCService';
+import { isPublicV1Route } from './publicRouteMatchers';
 
 // New enhanced routes
 import auditRoutes from './audit';
@@ -73,8 +74,8 @@ v1Router.use('/auth', authRoutes);
 
 // Tenant database routing - authenticate first, then resolve org and route to dedicated DB
 v1Router.use((req, res, next) => {
-  // Skip for auth routes - they handle their own auth
-  if (req.path.startsWith('/auth')) return next();
+  // Public routes handle their own access rules.
+  if (isPublicV1Route(req.path)) return next();
 
   // Authenticate to get req.user, then set org context for tenant routing
   authenticate(req as any, res, (err?: any) => {

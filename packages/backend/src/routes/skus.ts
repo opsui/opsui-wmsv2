@@ -4,13 +4,81 @@
 
 import { Router } from 'express';
 import { inventoryService } from '../services/InventoryService';
+import { getDefaultPool } from '../db/client';
 import { asyncHandler, authenticate, authorize } from '../middleware';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { NetSuiteClient } from '../services/NetSuiteClient';
 import { UserRole, validateSKU } from '@opsui/shared';
 
 const router = Router();
 
-// All SKU routes require authentication
+router.get(
+  '/netsuite-image/:fileId',
+  asyncHandler(async (req, res) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+    const fileId = String(req.params.fileId || '').trim();
+    const organizationId = String(req.query.org || '').trim();
+
+    if (!fileId || !organizationId) {
+      res.status(400).json({ error: 'fileId and org are required' });
+      return;
+    }
+
+    const integrationResult = await getDefaultPool().query(
+      `SELECT i.configuration
+       FROM integrations i
+       JOIN integration_organizations io ON io.integration_id = i.integration_id
+       WHERE io.organization_id = $1
+         AND i.provider = 'NETSUITE'
+       ORDER BY i.created_at DESC NULLS LAST
+       LIMIT 1`,
+      [organizationId]
+    );
+
+    const integrationConfig = integrationResult.rows[0]?.configuration;
+    const authConfig = integrationConfig?.auth || integrationConfig;
+
+    if (!authConfig?.accountId || !authConfig?.tokenId || !authConfig?.consumerKey) {
+      res.status(404).json({ error: 'NetSuite integration not configured for organization' });
+      return;
+    }
+
+    const client = new NetSuiteClient({
+      accountId: authConfig.accountId,
+      tokenId: authConfig.tokenId,
+      tokenSecret: authConfig.tokenSecret,
+      consumerKey: authConfig.consumerKey,
+      consumerSecret: authConfig.consumerSecret,
+    });
+
+    try {
+      const file = await client.getFile(fileId);
+
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+
+      if (file.data) {
+        res.type(file.contentType);
+        res.send(Buffer.from(file.data, 'base64'));
+        return;
+      }
+
+      if (file.url) {
+        res.redirect(file.url);
+        return;
+      }
+
+      res.status(404).json({ error: 'File content not available' });
+    } catch (error: any) {
+      res.status(502).json({
+        error: 'Failed to fetch NetSuite image',
+        message: error.message,
+      });
+    }
+  })
+);
+
+// All remaining SKU routes require authentication
 router.use(authenticate);
 
 /**
@@ -113,6 +181,15 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res) => {
     validateSKU(req.params.sku);
     const sku = await inventoryService.getSKUWithInventory(req.params.sku);
+    if (!sku.image) {
+      const hydratedImage = await inventoryService.hydrateNetSuiteSKUImage(
+        req.params.sku,
+        req.user?.organizationId
+      );
+      if (hydratedImage) {
+        sku.image = hydratedImage;
+      }
+    }
     res.json(sku);
   })
 );

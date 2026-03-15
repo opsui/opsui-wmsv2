@@ -762,7 +762,7 @@ export const skuApi = {
    * Get SKU details with inventory
    */
   getWithInventory: async (sku: string) => {
-    const response = await apiClient.get(`/skus/${sku}`);
+    const response = await apiClient.get(`/skus/${encodeURIComponent(sku)}`);
     return response.data;
   },
 };

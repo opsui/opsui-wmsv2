@@ -10,18 +10,18 @@ import { ValidationError } from '../types';
 // SKU VALIDATION
 // ============================================================================
 
-const SKU_PATTERN = /^[A-Z0-9-]{2,50}$/;
+const SKU_PATTERN = /^[A-Z0-9][A-Z0-9 .@&()+/_-]{1,79}$/;
 
 export function validateSKU(sku: string): void {
   if (!sku || typeof sku !== 'string') {
     throw new ValidationError('SKU is required');
   }
 
-  const trimmed = sku.trim().toUpperCase();
+  const trimmed = sku.trim().replace(/\s+/g, ' ').toUpperCase();
 
   if (!SKU_PATTERN.test(trimmed)) {
     throw new ValidationError(
-      'Invalid SKU format. Must be 2-50 alphanumeric characters (A-Z, 0-9, hyphens)'
+      'Invalid SKU format. Must be 2-80 characters using letters, numbers, spaces, and common SKU punctuation'
     );
   }
 }
