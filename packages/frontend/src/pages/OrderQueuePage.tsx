@@ -479,7 +479,33 @@ const OrderCard = forwardRef<
   const prefersReducedMotion = useReducedMotion();
   const noMotion = isPerf || !!prefersReducedMotion;
 
-  const items: any[] = order.items || [];
+  const rawItems: any[] = order.items || [];
+  const hasSkipReason = (item: any) =>
+    Boolean(item?.skipReason && String(item.skipReason).trim().length > 0);
+  const getRequiredPackingQuantity = (item: any) => {
+    const orderedQuantity = Math.max(0, Number(item?.quantity || 0));
+    const pickedQuantity = Math.max(0, Number(item?.pickedQuantity || 0));
+
+    if (!hasSkipReason(item)) {
+      return orderedQuantity;
+    }
+
+    return Math.min(orderedQuantity, pickedQuantity);
+  };
+  const items =
+    mode === 'packing' ? rawItems.filter(item => getRequiredPackingQuantity(item) > 0) : rawItems;
+  const packingVerifiedTotal =
+    mode === 'packing'
+      ? items.reduce((sum: number, item: any) => sum + (item.verifiedQuantity || 0), 0)
+      : 0;
+  const packingRequiredTotal =
+    mode === 'packing'
+      ? items.reduce((sum: number, item: any) => sum + getRequiredPackingQuantity(item), 0)
+      : 0;
+  const packingProgress =
+    mode === 'packing'
+      ? Math.round((packingVerifiedTotal / Math.max(1, packingRequiredTotal)) * 100)
+      : 0;
   const locations = Array.from(
     new Set(items.map(item => item.binLocation).filter((loc: string) => !!loc))
   );
@@ -624,41 +650,14 @@ const OrderCard = forwardRef<
                 {cfg.progressLabel}
               </span>
               <span className="text-sm font-black text-purple-400">
-                {mode === 'packing'
-                  ? Math.round(
-                      (items.reduce(
-                        (sum: number, item: any) => sum + (item.verifiedQuantity || 0),
-                        0
-                      ) /
-                        Math.max(
-                          1,
-                          items.reduce((sum: number, item: any) => sum + item.quantity, 0)
-                        )) *
-                        100
-                    )
-                  : order.progress || 0}
-                %
+                {mode === 'packing' ? packingProgress : order.progress || 0}%
               </span>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700/50">
               {noMotion ? (
                 <div
                   style={{
-                    width: `${
-                      mode === 'packing'
-                        ? Math.round(
-                            (items.reduce(
-                              (sum: number, item: any) => sum + (item.verifiedQuantity || 0),
-                              0
-                            ) /
-                              Math.max(
-                                1,
-                                items.reduce((sum: number, item: any) => sum + item.quantity, 0)
-                              )) *
-                              100
-                          )
-                        : order.progress || 0
-                    }%`,
+                    width: `${mode === 'packing' ? packingProgress : order.progress || 0}%`,
                   }}
                   className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400"
                 />
@@ -666,21 +665,7 @@ const OrderCard = forwardRef<
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
-                    width: `${
-                      mode === 'packing'
-                        ? Math.round(
-                            (items.reduce(
-                              (sum: number, item: any) => sum + (item.verifiedQuantity || 0),
-                              0
-                            ) /
-                              Math.max(
-                                1,
-                                items.reduce((sum: number, item: any) => sum + item.quantity, 0)
-                              )) *
-                              100
-                          )
-                        : order.progress || 0
-                    }%`,
+                    width: `${mode === 'packing' ? packingProgress : order.progress || 0}%`,
                   }}
                   transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
                   className="h-full rounded-full bg-gradient-to-r from-purple-500 to-violet-400 relative"
@@ -696,15 +681,17 @@ const OrderCard = forwardRef<
             {items.length > 0 && (
               <div className="overflow-y-auto space-y-2 mb-4 max-h-48">
                 {items.map((item: any, idx: number) => {
+                  const requiredQuantity =
+                    mode === 'packing' ? getRequiredPackingQuantity(item) : item.quantity;
                   const qty =
                     mode === 'packing' ? item.verifiedQuantity || 0 : item.pickedQuantity || 0;
                   const itemImage = getOrderItemImage(item, itemImageMap);
                   const isCompleted =
                     item.status === 'COMPLETED' ||
                     item.status === 'FULLY_PICKED' ||
-                    qty >= item.quantity;
+                    qty >= requiredQuantity;
                   const isSkipped = item.status === 'SKIPPED';
-                  const isPartial = !isCompleted && !isSkipped && qty > 0 && qty < item.quantity;
+                  const isPartial = !isCompleted && !isSkipped && qty > 0 && qty < requiredQuantity;
 
                   const statusStyles = isCompleted
                     ? 'border-purple-500/50 bg-purple-500/10'
@@ -761,7 +748,7 @@ const OrderCard = forwardRef<
                         <span
                           className={`font-bold text-sm ${isCompleted ? 'text-purple-400' : isSkipped ? 'text-orange-400' : 'text-slate-300'}`}
                         >
-                          {isSkipped ? 'SKIPPED' : `${qty}/${item.quantity}`}
+                          {isSkipped ? 'SKIPPED' : `${qty}/${requiredQuantity}`}
                         </span>
                       </div>
                     </ItemEl>
