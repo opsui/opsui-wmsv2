@@ -52,6 +52,17 @@ interface ShippedOrder {
   destination: string;
 }
 
+function formatAddress(raw: string | null | undefined): string {
+  if (!raw) return '—';
+  try {
+    const a = JSON.parse(raw);
+    const parts = [a.addressLine1, a.addressLine2, a.city, a.postalCode].filter(Boolean);
+    return parts.join(', ') || '—';
+  } catch {
+    return raw;
+  }
+}
+
 // ============================================================================
 // TRACKING PANEL
 // ============================================================================
@@ -126,7 +137,7 @@ export function ShippedOrdersPage() {
       estimatedDelivery: o.deliveredAt || o.shippedAt,
       status: (o.deliveredAt ? 'delivered' : 'in_transit') as ShippedOrder['status'],
       items: o.itemCount,
-      destination: o.shippingAddress || '—',
+      destination: formatAddress(o.shippingAddress),
     }));
   }, [apiResponse]);
 
