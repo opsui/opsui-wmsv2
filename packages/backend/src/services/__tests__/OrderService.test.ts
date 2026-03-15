@@ -398,11 +398,13 @@ describe('OrderService', () => {
       const getItemFulfillmentsBySalesOrder = jest.fn().mockResolvedValue([]);
       const createItemFulfillment = jest.fn().mockResolvedValue('1608001');
       const getItemFulfillment = jest.fn().mockResolvedValue({ id: '1608001', tranId: 'IF74001' });
+      const updateSalesOrderStatus = jest.fn().mockResolvedValue(undefined);
 
       NetSuiteClient.mockImplementation(() => ({
         getItemFulfillmentsBySalesOrder,
         createItemFulfillment,
         getItemFulfillment,
+        updateSalesOrderStatus,
       }));
       getDefaultPool.mockReturnValue({ query: defaultPoolQuery });
 
@@ -416,6 +418,7 @@ describe('OrderService', () => {
           rows: [
             {
               organizationId: 'ORG320EDF1',
+              netsuiteSource: 'NETSUITE',
               netsuiteSoInternalId: '1605078',
               netsuiteSoTranId: 'SO68563',
               netsuiteIfInternalId: null,
@@ -462,6 +465,7 @@ describe('OrderService', () => {
       expect(createItemFulfillment).toHaveBeenCalledWith('1605078', {
         lines: [{ sku: 'EC-KIT KP W', itemName: 'Picked line', quantity: 1 }],
       });
+      expect(updateSalesOrderStatus).toHaveBeenCalledWith('1605078', { custbody8: false });
       expect(orderRepository.updateStatus).toHaveBeenCalledWith('SO68563', OrderStatus.PICKED);
     });
   });

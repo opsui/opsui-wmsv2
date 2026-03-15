@@ -486,6 +486,7 @@ export class OrderService {
     const orderResult = await query(
       `SELECT
          o.organization_id,
+         o.netsuite_source,
          o.netsuite_so_internal_id,
          o.netsuite_so_tran_id,
          o.netsuite_if_internal_id
@@ -551,6 +552,10 @@ export class OrderService {
         };
       })
       .filter((item: any) => item.quantity > 0);
+    const hasBackorderedRemainder = orderItemsResult.rows.some((item: any) => {
+      const orderedQuantity = Math.max(0, Number(item.quantity || 0));
+      return this.getRequiredPackingQuantity(item) < orderedQuantity;
+    });
 
     if (fulfillmentLines.length === 0) {
       logger.info('No items to fulfill in NetSuite (all items skipped), skipping IF creation', {
@@ -585,6 +590,15 @@ export class OrderService {
         netsuiteIfTranId: existingFulfillment.tranId || null,
         shipStatus: existingFulfillment.shipStatus || null,
       });
+
+      if (hasBackorderedRemainder) {
+        await this.markNetSuiteOrderNotReadyToShip(
+          orderId,
+          order,
+          'Remaining lines are backordered after partial fulfillment'
+        );
+      }
+
       return;
     }
 
@@ -664,6 +678,14 @@ export class OrderService {
       netsuiteIfInternalId: fulfillmentId,
       netsuiteIfTranId: fulfillmentTranId,
     });
+
+    if (hasBackorderedRemainder) {
+      await this.markNetSuiteOrderNotReadyToShip(
+        orderId,
+        order,
+        'Remaining lines are backordered after partial fulfillment'
+      );
+    }
   }
 
   private async syncNetSuiteShipment(
