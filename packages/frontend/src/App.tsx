@@ -622,7 +622,14 @@ function AppInner() {
         <Route
           path="/shipped-orders"
           element={
-            <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.SUPERVISOR, UserRole.PACKER]}>
+            <ProtectedRoute
+              requiredRoles={[
+                UserRole.ADMIN,
+                UserRole.SUPERVISOR,
+                UserRole.PACKER,
+                UserRole.DISPATCH,
+              ]}
+            >
               <ShippedOrdersPage />
             </ProtectedRoute>
           }
