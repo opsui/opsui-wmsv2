@@ -649,10 +649,12 @@ export function FulfillmentPackingSlip({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
                   Ship To
                 </p>
-                <div className="text-xs leading-tight text-black">
+                <div className="text-xs leading-tight">
                   {previewAddressLines.length > 0 ? (
                     previewAddressLines.map((line, index) => (
-                      <p key={`ship-${index}`}>{line.value}</p>
+                      <p key={`ship-${index}`} className="text-black">
+                        {line.value}
+                      </p>
                     ))
                   ) : (
                     <p className="italic text-gray-500">No shipping details available</p>
@@ -663,9 +665,13 @@ export function FulfillmentPackingSlip({
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 print:text-black">
                   Bill To
                 </p>
-                <div className="text-xs leading-tight text-black">
+                <div className="text-xs leading-tight">
                   {billToLines.length > 0 ? (
-                    billToLines.map((line, index) => <p key={`bill-${index}`}>{line.value}</p>)
+                    billToLines.map((line, index) => (
+                      <p key={`bill-${index}`} className="text-black">
+                        {line.value}
+                      </p>
+                    ))
                   ) : (
                     <p className="italic text-gray-500">Same as shipping address</p>
                   )}
@@ -858,17 +864,15 @@ export async function printFulfillmentSlipElement(
       throw new Error('Unable to open print document');
     }
 
-    const copiedHeadMarkup = Array.from(
-      document.head.querySelectorAll('link[rel="stylesheet"], style')
-    )
-      .filter(node => {
-        if (node.tagName === 'LINK') return true;
-        const viteDevId = node.getAttribute('data-vite-dev-id');
-        return Boolean(
-          viteDevId && (viteDevId.includes('/src/') || viteDevId.includes('/node_modules/'))
-        );
+    // Extract already-loaded CSS inline to avoid re-fetching external stylesheets
+    const inlinedCss = Array.from(document.styleSheets)
+      .flatMap(sheet => {
+        try {
+          return Array.from(sheet.cssRules).map(rule => rule.cssText);
+        } catch {
+          return [];
+        }
       })
-      .map(node => node.outerHTML)
       .join('\n');
 
     doc.open();
@@ -878,7 +882,7 @@ export async function printFulfillmentSlipElement(
         <head>
           <meta charset="utf-8" />
           <title>${title}</title>
-          ${copiedHeadMarkup}
+          <style>${inlinedCss}</style>
           <style>${FULFILLMENT_SLIP_PRINT_STYLES}</style>
         </head>
         <body class="fulfillment-slip-print-preview">
@@ -895,7 +899,7 @@ export async function printFulfillmentSlipElement(
         if (iframe.parentNode) {
           iframe.parentNode.removeChild(iframe);
         }
-      }, 1000);
+      }, 3000);
     };
   } catch (error) {
     if (iframe.parentNode) {
