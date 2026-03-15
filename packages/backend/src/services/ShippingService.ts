@@ -25,12 +25,75 @@ import {
   NotificationPriority,
 } from './NotificationHelper';
 import { NetSuiteClient } from './NetSuiteClient';
+import { nzcService } from './NZCService';
 
 // ============================================================================
 // SHIPPING SERVICE
 // ============================================================================
 
 export class ShippingService {
+  private isNZCCarrier(carrierId: string | null | undefined): boolean {
+    const normalizedCarrierId = String(carrierId || '')
+      .trim()
+      .toUpperCase();
+
+    return (
+      normalizedCarrierId === 'CARR-NZC' ||
+      normalizedCarrierId === 'NZC' ||
+      normalizedCarrierId === 'NZ COURIERS'
+    );
+  }
+
+  private async reconcileDeletedNZCConsignmentsForShippedOrders(
+    rows: Array<{
+      carrier_id?: string | null;
+      tracking_number?: string | null;
+    }>
+  ): Promise<boolean> {
+    if (!nzcService.isConfigured()) {
+      return false;
+    }
+
+    const connotes = Array.from(
+      new Set(
+        rows.flatMap(row => {
+          if (!this.isNZCCarrier(row.carrier_id)) {
+            return [];
+          }
+
+          return this.parseTrackingTokens(row.tracking_number);
+        })
+      )
+    );
+
+    if (connotes.length === 0) {
+      return false;
+    }
+
+    let reconciledAny = false;
+
+    for (const connote of connotes) {
+      try {
+        await nzcService.getTracking(connote);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+
+        if (!message.includes('NZC API error: 404')) {
+          logger.warn('Skipping shipped order NZC reconciliation after tracking lookup failed', {
+            connote,
+            error: message,
+          });
+          continue;
+        }
+
+        const reconciliation = await this.reconcileDeletedNZCConsignment(connote);
+        reconciledAny = reconciliation.reconciled || reconciledAny;
+      }
+    }
+
+    return reconciledAny;
+  }
+
   private async getNetSuiteClientForOrganization(organizationId: string): Promise<{
     client: NetSuiteClient;
     integrationId: string;
@@ -278,6 +341,27 @@ export class ShippingService {
     const page = filters?.page || 1;
     const limit = filters?.limit || 20;
     const offset = (page - 1) * limit;
+    type ShippedOrderRow = {
+      order_id: string;
+      customer_name: string | null;
+      status: string;
+      priority: string;
+      total_value: string | null;
+      shipped_at: string | null;
+      delivered_at: string | null;
+      tracking_number: string | null;
+      carrier_id: string | null;
+      ship_to_address: unknown;
+      shipped_by: string | null;
+      estimated_delivery_date: string | null;
+      service_type: string | null;
+      items: Array<{
+        sku: string;
+        name: string;
+        quantity: number;
+        image?: string;
+      }> | null;
+    };
 
     // Build WHERE conditions
     const conditions: string[] = ["o.status = 'SHIPPED'"];
@@ -327,51 +411,68 @@ export class ShippingService {
     const sortOrder = filters?.sortOrder || 'desc';
     const orderBy = `${sortColumn} ${sortOrder.toUpperCase()}`;
 
-    // Get total count
-    const countResult = await client.query(
-      `SELECT COUNT(*) as count
-       FROM orders o
-       LEFT JOIN shipments s ON o.order_id = s.order_id
-       WHERE ${whereClause}`,
-      params
-    );
-    const total = parseInt(countResult.rows[0].count, 10);
-    const totalPages = Math.ceil(total / limit);
+    const loadShippedOrdersPage = async (): Promise<{
+      total: number;
+      totalPages: number;
+      rows: ShippedOrderRow[];
+    }> => {
+      const countResult = await client.query<{ count: string }>(
+        `SELECT COUNT(*) as count
+         FROM orders o
+         LEFT JOIN shipments s ON o.order_id = s.order_id
+         WHERE ${whereClause}`,
+        params
+      );
+      const nextTotal = parseInt(countResult.rows[0].count, 10);
 
-    // Get orders with item details via JSON aggregation
-    const result = await client.query(
-      `SELECT
-        o.order_id,
-        o.customer_name,
-        o.status,
-        o.priority,
-        0 as total_value,
-        COALESCE(s.shipped_at, o.shipped_at) as shipped_at,
-        s.delivered_at,
-        s.tracking_number,
-        s.carrier_id,
-        s.ship_to_address,
-        s.shipped_by,
-        s.estimated_delivery_date,
-        s.service_type,
-        (SELECT json_agg(json_build_object(
-          'sku', oi.sku,
-          'name', oi.name,
-          'quantity', oi.quantity,
-          'image', sk.image
-        ) ORDER BY oi.order_item_id)
-         FROM order_items oi
-         JOIN skus sk ON oi.sku = sk.sku
-         WHERE oi.order_id = o.order_id) as items
-       FROM orders o
-       LEFT JOIN shipments s ON o.order_id = s.order_id
-       WHERE ${whereClause}
-       ORDER BY ${orderBy}
-       LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
-      [...params, limit, offset]
-    );
+      const result = await client.query<ShippedOrderRow>(
+        `SELECT
+          o.order_id,
+          o.customer_name,
+          o.status,
+          o.priority,
+          0 as total_value,
+          COALESCE(s.shipped_at, o.shipped_at) as shipped_at,
+          s.delivered_at,
+          s.tracking_number,
+          s.carrier_id,
+          s.ship_to_address,
+          s.shipped_by,
+          s.estimated_delivery_date,
+          s.service_type,
+          (SELECT json_agg(json_build_object(
+            'sku', oi.sku,
+            'name', oi.name,
+            'quantity', oi.quantity,
+            'image', sk.image
+          ) ORDER BY oi.order_item_id)
+           FROM order_items oi
+           JOIN skus sk ON oi.sku = sk.sku
+           WHERE oi.order_id = o.order_id) as items
+         FROM orders o
+         LEFT JOIN shipments s ON o.order_id = s.order_id
+         WHERE ${whereClause}
+         ORDER BY ${orderBy}
+         LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
+        [...params, limit, offset]
+      );
 
-    const orders = result.rows.map(row => ({
+      return {
+        total: nextTotal,
+        totalPages: Math.ceil(nextTotal / limit),
+        rows: result.rows,
+      };
+    };
+
+    let { total, totalPages, rows } = await loadShippedOrdersPage();
+    const reconciledDeletedConsignment =
+      await this.reconcileDeletedNZCConsignmentsForShippedOrders(rows);
+
+    if (reconciledDeletedConsignment) {
+      ({ total, totalPages, rows } = await loadShippedOrdersPage());
+    }
+
+    const orders = rows.map(row => ({
       id: row.order_id,
       orderId: row.order_id,
       customerName: row.customer_name || 'N/A',
@@ -385,15 +486,15 @@ export class ShippingService {
           quantity: number;
           image?: string;
         }> | null) ?? [],
-      totalValue: parseFloat(row.total_value) || 0,
+      totalValue: parseFloat(row.total_value ?? '0') || 0,
       shippedAt: row.shipped_at ? new Date(row.shipped_at).toISOString() : new Date().toISOString(),
       deliveredAt: row.delivered_at ? new Date(row.delivered_at).toISOString() : undefined,
       estimatedDeliveryDate: row.estimated_delivery_date
         ? new Date(row.estimated_delivery_date).toISOString()
         : undefined,
       serviceType: row.service_type as string | undefined,
-      trackingNumber: row.tracking_number,
-      carrier: row.carrier_id,
+      trackingNumber: row.tracking_number || undefined,
+      carrier: row.carrier_id || undefined,
       shippingAddress:
         typeof row.ship_to_address === 'string'
           ? row.ship_to_address

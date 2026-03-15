@@ -6,6 +6,7 @@
 
 import { ShippingService, shippingService } from '../ShippingService';
 import { logger } from '../../config/logger';
+import { nzcService } from '../NZCService';
 import {
   ShipmentStatus,
   LabelFormat,
@@ -35,6 +36,7 @@ describe('ShippingService', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
@@ -144,6 +146,67 @@ describe('ShippingService', () => {
       await expect(service.getCarrier('NONEXISTENT')).rejects.toThrow(
         'Carrier NONEXISTENT not found'
       );
+    });
+  });
+
+  // ==========================================================================
+  // SHIPPED ORDERS METHODS
+  // ==========================================================================
+
+  describe('getShippedOrders', () => {
+    it('should reconcile deleted NZC consignments before returning shipped orders', async () => {
+      jest.spyOn(nzcService, 'isConfigured').mockReturnValue(true);
+      const trackingSpy = jest
+        .spyOn(nzcService, 'getTracking')
+        .mockRejectedValueOnce(new Error('NZC API error: 404 Not Found'));
+      const reconcileSpy = jest.spyOn(service, 'reconcileDeletedNZCConsignment').mockResolvedValue({
+        reconciled: true,
+        affectedOrderIds: ['SO-123'],
+        affectedShipmentIds: ['SHP-123'],
+      });
+
+      global.mockPool.query
+        .mockResolvedValueOnce({ rows: [{ count: '1' }] }) // initial count
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              order_id: 'SO-123',
+              customer_name: 'Acme Co',
+              status: 'SHIPPED',
+              priority: 'NORMAL',
+              total_value: '0',
+              shipped_at: '2024-01-01T00:00:00Z',
+              delivered_at: null,
+              tracking_number: 'BYAF038655',
+              carrier_id: 'CARR-NZC',
+              ship_to_address: { city: 'Auckland' },
+              shipped_by: 'user-1',
+              estimated_delivery_date: null,
+              service_type: 'Courier',
+              items: [],
+            },
+          ],
+        }) // initial rows
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] }) // refreshed count
+        .mockResolvedValueOnce({ rows: [] }) // refreshed rows
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              total_shipped: '0',
+              total_value: '0',
+              delivered: '0',
+              pending_delivery: '0',
+            },
+          ],
+        }); // stats
+
+      const result = await service.getShippedOrders({ limit: 20, page: 1 });
+
+      expect(trackingSpy).toHaveBeenCalledWith('BYAF038655');
+      expect(reconcileSpy).toHaveBeenCalledWith('BYAF038655');
+      expect(result.orders).toEqual([]);
+      expect(result.total).toBe(0);
+      expect(result.totalPages).toBe(0);
     });
   });
 
