@@ -866,15 +866,19 @@ export class NetSuiteOrderSyncService {
           // No fulfillment found - check if SO is still pending in NetSuite
           if (phase1Succeeded && currentReadyToShipSoIds.has(soId)) {
             if (orderStatus === 'SHIPPED') {
+              await this.updateOrderStatus(row.order_id, 'PENDING');
+              await this.markOrderSynced(row.order_id, syncStartTime);
+              result.updated++;
+              result.details.updated.push(row.netsuite_so_tran_id || soId);
               logger.warn(
-                'Leaving SHIPPED order in place despite pending-fulfillment SO with no fulfillment match',
+                'Moved SHIPPED order back to PENDING (sales order is ready to ship and no fulfillment exists)',
                 {
                   orderId: row.order_id,
                   soTranId: row.netsuite_so_tran_id,
                   soId,
-                  note: 'Avoid reintroducing already-fulfilled orders into the picking queue',
                 }
               );
+              continue;
             }
             await this.markOrderSynced(row.order_id, syncStartTime);
             continue;
@@ -973,15 +977,17 @@ export class NetSuiteOrderSyncService {
               }
 
               if (orderStatus === 'SHIPPED') {
+                await this.updateOrderStatus(row.order_id, 'PENDING');
                 await this.markOrderSynced(row.order_id, syncStartTime);
+                result.updated++;
+                result.details.updated.push(row.netsuite_so_tran_id || soId);
                 logger.warn(
-                  'Leaving SHIPPED order in place during sales-order fallback despite pending-fulfillment SO',
+                  'Moved SHIPPED order back to PENDING during sales-order fallback (pending fulfillment with no fulfillment match)',
                   {
                     orderId: row.order_id,
                     soTranId: row.netsuite_so_tran_id,
                     soId,
                     soStatus,
-                    note: 'Avoid resurrecting shipped orders when NetSuite temporarily shows them as pending',
                   }
                 );
                 continue;
